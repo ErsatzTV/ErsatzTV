@@ -1,5 +1,4 @@
 ﻿using System;
-using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels

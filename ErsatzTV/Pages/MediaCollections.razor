@@ -10,7 +10,7 @@
         <MudText Typo="Typo.h6">Media Collections</MudText>
         <MudToolBarSpacer/>
         <MudTextField T="string" ValueChanged="@OnSearch" Placeholder="Search" Adornment="Adornment.Start"
-                      AdornmentIcon="@Filled.Search" IconSize="Size.Medium" Class="mt-0">
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0">
         </MudTextField>
     </ToolBarContent>
     <ColGroup>
@@ -38,14 +38,14 @@
         <MudTd>
             @if (context.IsSimple)
             {
-                <MudMenu Icon="@Filled.MoreVert">
-                    <MudMenuItem Icon="@Filled.Edit" Link="@($"/media/collections/{context.Id}")">
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/media/collections/{context.Id}")">
                         Edit Properties
                     </MudMenuItem>
-                    <MudMenuItem Icon="@Filled.Edit" Link="@($"/media/collections/{context.Id}/items")">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/media/collections/{context.Id}/items")">
                         Edit Media Items
                     </MudMenuItem>
-                    <MudMenuItem Icon="@Filled.Delete" OnClick="@(_ => DeleteMediaCollectionAsync(context))">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteMediaCollectionAsync(context))">
                         Delete
                     </MudMenuItem>
                 </MudMenu>

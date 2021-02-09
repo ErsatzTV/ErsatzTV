@@ -82,16 +82,16 @@
     {
         try
         {
-            // TODO: don't bother going to the database for this, we probably want a "save changes" button
-            // to save all added, deleted, modified items
-            
+    // TODO: don't bother going to the database for this, we probably want a "save changes" button
+    // to save all added, deleted, modified items
+
             MediaCollectionViewModel mediaCollection = await Mediator.Send(new GetAllMediaCollections()).Map(list => list.Head());
             await Mediator.Send(new AddProgramScheduleItem(Id, StartType.Dynamic, null, PlayoutMode.One, mediaCollection.Id, null, null, null));
             await LoadScheduleItems();
         }
         catch (Exception ex)
         {
-            // TODO: something?
+    // TODO: something?
         }
     }
 

@@ -27,7 +27,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using MudBlazor;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -75,10 +74,19 @@ namespace ErsatzTV
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            services.AddMudBlazorDialog()
-                .AddMudBlazorSnackbar()
-                .AddMudBlazorResizeListener();
+            services.AddMudServices();
 
+            Log.Logger.Warning("This is pre-alpha software and is likely to be unstable");
+            Log.Logger.Warning(
+                "Give feedback at {GitHub} or {Discord}",
+                "https://github.com/jasongdove/ErsatzTV",
+                "https://discord.gg/hHaJm3yGy6");
+
+            Log.Logger.Information(
+                "Server will listen on port {Port} - try UI at {UI}",
+                8989,
+                "http://localhost:8989");
+            
             if (!Directory.Exists(FileSystemLayout.AppDataFolder))
             {
                 Directory.CreateDirectory(FileSystemLayout.AppDataFolder);

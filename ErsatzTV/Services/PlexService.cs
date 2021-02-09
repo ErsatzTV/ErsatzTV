@@ -40,7 +40,7 @@ namespace ErsatzTV.Services
             {
                 await File.WriteAllTextAsync(FileSystemLayout.PlexSecretsPath, "{}", cancellationToken);
             }
-            
+
             _logger.LogInformation(
                 "Plex service started; secrets are at {PlexSecretsPath}",
                 FileSystemLayout.PlexSecretsPath);

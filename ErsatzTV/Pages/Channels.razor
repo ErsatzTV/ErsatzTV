@@ -48,11 +48,11 @@
             }
         </MudTd>
         <MudTd>
-            <MudMenu Icon="@Filled.MoreVert">
-                <MudMenuItem Icon="@Filled.Edit" Link="@($"/channels/{context.Id}")">
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/channels/{context.Id}")">
                     Edit
                 </MudMenuItem>
-                <MudMenuItem Icon="@Filled.Delete" OnClick="@(_ => DeleteChannelAsync(context))">
+                <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteChannelAsync(context))">
                     Delete
                 </MudMenuItem>
             </MudMenu>

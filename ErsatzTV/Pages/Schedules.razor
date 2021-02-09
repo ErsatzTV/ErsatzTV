@@ -26,14 +26,14 @@
         <MudTd DataLabel="Name">@context.Name</MudTd>
         <MudTd DataLabel="Name">@context.MediaCollectionPlaybackOrder</MudTd>
         <MudTd>
-            <MudMenu Icon="@Filled.MoreVert">
-                <MudMenuItem Icon="@Filled.Edit" Link="@($"/schedules/{context.Id}")">
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/schedules/{context.Id}")">
                     Edit Properties
                 </MudMenuItem>
-                <MudMenuItem Icon="@Filled.Edit" Link="@($"/schedules/{context.Id}/items")">
+                <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/schedules/{context.Id}/items")">
                     Edit Schedule Items
                 </MudMenuItem>
-                <MudMenuItem Icon="@Filled.Delete" OnClick="@(_ => DeleteSchedule(context))">
+                <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteSchedule(context))">
                     Delete
                 </MudMenuItem>
             </MudMenu>

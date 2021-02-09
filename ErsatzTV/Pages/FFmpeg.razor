@@ -75,11 +75,11 @@
             </MudText>
         </MudTd>
         <MudTd>
-            <MudMenu Icon="@Filled.MoreVert">
-                <MudMenuItem Icon="@Filled.Edit" Link="@($"/ffmpeg/{context.Id}")">
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+                <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/ffmpeg/{context.Id}")">
                     Edit
                 </MudMenuItem>
-                <MudMenuItem Icon="@Filled.Delete" OnClick="@(_ => DeleteProfileAsync(context))">
+                <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteProfileAsync(context))">
                     Delete
                 </MudMenuItem>
             </MudMenu>
