@@ -1,0 +1,128 @@
+﻿@page "/ffmpeg"
+@using ErsatzTV.Application.FFmpegProfiles
+@using ErsatzTV.Application.FFmpegProfiles.Commands
+@using ErsatzTV.Application.FFmpegProfiles.Queries
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">FFmpeg Settings</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudForm @bind-IsValid="@_success">
+            <MudTextField T="string" Label="FFmpeg Path" @bind-Value="_ffmpegSettings.FFmpegPath" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFmpeg path is required!"/>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudTextField T="string" Label="FFprobe Path" @bind-Value="_ffmpegSettings.FFprobePath" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFprobe path is required!"/>
+            </MudElement>
+            <MudElement HtmlTag="div" Class="mt-3">
+                <MudSelect Label="Default Profile" @bind-Value="_ffmpegSettings.DefaultFFmpegProfileId" For="@(() => _ffmpegSettings.DefaultFFmpegProfileId)">
+                    @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
+                    {
+                        <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudElement>
+        </MudForm>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="@(_ => SaveSettings())">Save Settings</MudButton>
+    </MudCardActions>
+</MudCard>
+
+<MudTable Hover="true" Items="_ffmpegProfiles" Class="mt-8">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">FFmpeg Profiles</MudText>
+        <MudToolBarSpacer></MudToolBarSpacer>
+        <MudText Color="Color.Primary">Colored settings will be normalized</MudText>
+    </ToolBarContent>
+    <ColGroup>
+        <col/>
+        <col/>
+        <col/>
+        <col/>
+        <col/>
+        <col style="width: 60px;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Transcode</MudTh>
+        <MudTh>Resolution</MudTh>
+        <MudTh>Video Codec</MudTh>
+        <MudTh>Audio Codec</MudTh>
+        <MudTh/>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Transcode">
+            @(context.Transcode ? "Yes" : "No")
+        </MudTd>
+        <MudTd DataLabel="Resolution">
+            <MudText Color="@(context.Transcode && context.NormalizeResolution ? Color.Primary : Color.Inherit)">
+                @context.Resolution.Name
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Video Codec">
+            <MudText Color="@(context.Transcode && context.NormalizeVideoCodec ? Color.Primary : Color.Inherit)">
+                @context.VideoCodec
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Audio Codec">
+            <MudText Color="@(context.Transcode && context.NormalizeAudioCodec ? Color.Primary : Color.Inherit)">
+                @context.AudioCodec
+            </MudText>
+        </MudTd>
+        <MudTd>
+            <MudMenu Icon="@Filled.MoreVert">
+                <MudMenuItem Icon="@Filled.Edit" Link="@($"/ffmpeg/{context.Id}")">
+                    Edit
+                </MudMenuItem>
+                <MudMenuItem Icon="@Filled.Delete" OnClick="@(_ => DeleteProfileAsync(context))">
+                    Delete
+                </MudMenuItem>
+            </MudMenu>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/ffmpeg/add" Class="mt-4">
+    Add Profile
+</MudButton>
+
+@code {
+
+    private bool _success;
+    private FFmpegSettingsViewModel _ffmpegSettings;
+
+    private List<FFmpegProfileViewModel> _ffmpegProfiles;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ffmpegSettings = await Mediator.Send(new GetFFmpegSettings());
+        _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
+        await LoadFFmpegProfilesAsync();
+    }
+
+    private Task SaveSettings() => Mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings));
+
+    private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
+
+    private async Task LoadFFmpegProfilesAsync() =>
+        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());
+
+    private async Task DeleteProfileAsync(FFmpegProfileViewModel ffmpegProfile)
+    {
+        var parameters = new DialogParameters { { "EntityType", "ffmpeg profile" }, { "EntityName", ffmpegProfile.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete FFmpeg Profile", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id));
+            await LoadFFmpegProfilesAsync();
+        }
+    }
+
+}

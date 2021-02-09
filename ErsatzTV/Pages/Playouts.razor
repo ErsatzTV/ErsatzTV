@@ -1,0 +1,56 @@
+﻿@page "/playouts"
+@using ErsatzTV.Application.Playouts
+@using ErsatzTV.Application.Playouts.Queries
+@inject IMediator Mediator
+
+<MudTable Hover="true" Items="_playouts" SelectedItemChanged="@(async (PlayoutViewModel x) => await PlayoutSelected(x))">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Playouts</MudText>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Channel</MudTh>
+        <MudTh>Schedule</MudTh>
+        <MudTh>Playout Type</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Channel">@context.Channel.Name</MudTd>
+        <MudTd DataLabel="Schedule">@context.ProgramSchedule.Name</MudTd>
+        <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd>
+    </RowTemplate>
+</MudTable>
+
+@if (_selectedPlayoutItems != null)
+{
+    <MudTable Hover="true" Dense="true" Items="_selectedPlayoutItems.OrderBy(i => i.Start)" Class="mt-8">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Playout Detail</MudText>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Start</MudTh>
+            <MudTh>Media Item</MudTh>
+            <MudTh>Duration</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Start">@context.Start.ToString("G")</MudTd>
+            <MudTd DataLabel="Media Item">@context.Title</MudTd>
+            <MudTd DataLabel="Duration">@context.Duration</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    private List<PlayoutViewModel> _playouts;
+    private List<PlayoutItemViewModel> _selectedPlayoutItems;
+
+    protected override async Task OnParametersSetAsync() =>
+        _playouts = await Mediator.Send(new GetAllPlayouts());
+
+    private async Task PlayoutSelected(PlayoutViewModel playout) =>
+        _selectedPlayoutItems = await Mediator.Send(new GetPlayoutItemsById(playout.Id));
+
+}

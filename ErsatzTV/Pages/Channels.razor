@@ -1,0 +1,91 @@
+﻿@page "/channels"
+@using ErsatzTV.Application.Channels
+@using ErsatzTV.Application.Channels.Commands
+@using ErsatzTV.Application.Channels.Queries
+@using ErsatzTV.Application.FFmpegProfiles
+@using ErsatzTV.Application.FFmpegProfiles.Queries
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudTable Hover="true" Items="_channels">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Channels</MudText>
+    </ToolBarContent>
+    <ColGroup>
+        <col style="width: 60px;"/>
+        <col/>
+        <col style="width: 20%"/>
+        <col style="width: 20%"/>
+        <col style="width: 20%"/>
+        <col style="width: 60px;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>
+            <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => x.Number)">Number</MudTableSortLabel>
+        </MudTh>
+        <MudTh>Logo</MudTh>
+        <MudTh>
+            <MudTableSortLabel SortBy="new Func<ChannelViewModel, object>(x => x.Name)">Name</MudTableSortLabel>
+        </MudTh>
+        <MudTh>Streaming Mode</MudTh>
+        <MudTh>FFmpeg Profile</MudTh>
+        <MudTh/>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Number">@context.Number</MudTd>
+        <MudTd DataLabel="Logo">
+            @if (!string.IsNullOrWhiteSpace(context.Logo))
+            {
+                <MudElement HtmlTag="img" src="@($"iptv/images/{context.Logo}")" Style="max-height: 50px"/>
+            }
+        </MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Streaming Mode">@context.StreamingMode</MudTd>
+        <MudTd DataLabel="FFmpeg Profile">
+            @if (context.StreamingMode == StreamingMode.TransportStream)
+            {
+                @_ffmpegProfiles.Find(p => p.Id == context.FFmpegProfileId)?.Name
+            }
+        </MudTd>
+        <MudTd>
+            <MudMenu Icon="@Filled.MoreVert">
+                <MudMenuItem Icon="@Filled.Edit" Link="@($"/channels/{context.Id}")">
+                    Edit
+                </MudMenuItem>
+                <MudMenuItem Icon="@Filled.Delete" OnClick="@(_ => DeleteChannelAsync(context))">
+                    Delete
+                </MudMenuItem>
+            </MudMenu>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/channels/add" Class="mt-4">
+    Add Channel
+</MudButton>
+
+@code {
+    private List<ChannelViewModel> _channels;
+    private List<FFmpegProfileViewModel> _ffmpegProfiles;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());
+        await LoadChannelsAsync();
+    }
+
+    private async Task DeleteChannelAsync(ChannelViewModel channel)
+    {
+        var parameters = new DialogParameters { { "EntityType", "channel" }, { "EntityName", channel.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Channel", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(new DeleteChannel(channel.Id));
+            await LoadChannelsAsync();
+        }
+    }
+
+    private async Task LoadChannelsAsync() => _channels = await Mediator.Send(new GetAllChannels());
+}

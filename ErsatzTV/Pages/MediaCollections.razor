@@ -1,0 +1,104 @@
+﻿@page "/media/collections"
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.MediaCollections.Queries
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudTable @ref="_table" Hover="true" ServerData="@(new Func<TableState, Task<TableData<MediaCollectionSummaryViewModel>>>(ServerReload))">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Media Collections</MudText>
+        <MudToolBarSpacer/>
+        <MudTextField T="string" ValueChanged="@OnSearch" Placeholder="Search" Adornment="Adornment.Start"
+                      AdornmentIcon="@Filled.Search" IconSize="Size.Medium" Class="mt-0">
+        </MudTextField>
+    </ToolBarContent>
+    <ColGroup>
+        <col/>
+        <col/>
+        <col style="width: 60px;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Media Items</MudTh>
+        <MudTh/>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">
+            @if (context.IsSimple)
+            {
+                @context.Name
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Color="Color.Primary">@context.Name</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Media Items">@context.ItemCount</MudTd>
+        <MudTd>
+            @if (context.IsSimple)
+            {
+                <MudMenu Icon="@Filled.MoreVert">
+                    <MudMenuItem Icon="@Filled.Edit" Link="@($"/media/collections/{context.Id}")">
+                        Edit Properties
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Filled.Edit" Link="@($"/media/collections/{context.Id}/items")">
+                        Edit Media Items
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Filled.Delete" OnClick="@(_ => DeleteMediaCollectionAsync(context))">
+                        Delete
+                    </MudMenuItem>
+                </MudMenu>
+            }
+        </MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
+    Add Media Collection
+</MudButton>
+
+@code {
+    private IEnumerable<MediaCollectionSummaryViewModel> _pagedData;
+    private MudTable<MediaCollectionSummaryViewModel> _table;
+
+    private int _totalItems;
+    private string _searchString;
+
+    private async Task DeleteMediaCollectionAsync(MediaCollectionSummaryViewModel mediaCollection)
+    {
+        if (mediaCollection.IsSimple)
+        {
+            var parameters = new DialogParameters { { "EntityType", "media collection" }, { "EntityName", mediaCollection.Name } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Media Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled)
+            {
+                await Mediator.Send(new DeleteSimpleMediaCollection(mediaCollection.Id));
+                _table.ReloadServerData();
+            }
+        }
+    }
+
+    private async Task<TableData<MediaCollectionSummaryViewModel>> ServerReload(TableState state)
+    {
+        List<MediaCollectionSummaryViewModel> aggregateData =
+            await Mediator.Send(new GetMediaCollectionSummaries(_searchString));
+
+        _totalItems = aggregateData.Count;
+
+        _pagedData = aggregateData.Skip(state.Page * state.PageSize).Take(state.PageSize);
+        return new TableData<MediaCollectionSummaryViewModel> { TotalItems = _totalItems, Items = _pagedData };
+    }
+
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+        _table.ReloadServerData();
+    }
+
+}

@@ -1,0 +1,18 @@
+﻿@page "/media/items"
+@inject IDbContextFactory<TvContext> DbFactory
+
+<MudTabs Elevation="1">
+    <MudTabPanel Text="TV Shows">
+        <MediaItemTable MediaType="@MediaType.TvShow"/>
+    </MudTabPanel>
+    <MudTabPanel Text="Movies">
+        <MediaItemTable MediaType="@MediaType.Movie"/>
+    </MudTabPanel>
+    <MudTabPanel Text="Other">
+        <MediaItemTable MediaType="@MediaType.Other"/>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+
+}

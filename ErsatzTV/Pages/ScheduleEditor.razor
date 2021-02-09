@@ -1,0 +1,91 @@
+﻿@page "/schedules/{Id:int}"
+@page "/schedules/add"
+@using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Application.ProgramSchedules.Queries
+@inject NavigationManager NavigationManager
+@inject ILogger<ScheduleEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<div style="max-width: 400px;">
+    <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Schedule" : "Add Schedule")</MudText>
+
+    <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+        <FluentValidator/>
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                <MudSelect Class="mt-3" Label="Media Collection Playback Order" @bind-Value="_model.MediaCollectionPlaybackOrder" For="@(() => _model.MediaCollectionPlaybackOrder)">
+                    @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
+                    {
+                        <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                    @(IsEdit ? "Save Changes" : "Add Schedule")
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+</div>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private readonly ProgramScheduleEditViewModel _model = new();
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsEdit)
+        {
+            Option<ProgramScheduleViewModel> maybeProgramSchedule = await Mediator.Send(new GetProgramScheduleById(Id));
+            maybeProgramSchedule.Match(
+                viewModel =>
+                {
+                    _model.Id = viewModel.Id;
+                    _model.Name = viewModel.Name;
+                    _model.MediaCollectionPlaybackOrder = viewModel.MediaCollectionPlaybackOrder;
+                },
+                () => NavigationManager.NavigateTo("404"));
+        }
+        else
+        {
+            _model.Name = "New Schedule";
+            _model.MediaCollectionPlaybackOrder = PlaybackOrder.Shuffle;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private bool IsEdit => Id > 0;
+
+    private async Task HandleSubmitAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            Seq<BaseError> errorMessage = IsEdit ?
+                (await Mediator.Send(_model.ToUpdate())).LeftToSeq() :
+                (await Mediator.Send(_model.ToCreate())).LeftToSeq();
+
+            errorMessage.HeadOrNone().Match(
+                error =>
+                {
+                    Snackbar.Add(error.Value);
+                    Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
+                },
+                () => NavigationManager.NavigateTo("/schedules"));
+        }
+    }
+
+}

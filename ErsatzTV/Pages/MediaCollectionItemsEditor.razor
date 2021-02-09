@@ -1,0 +1,126 @@
+﻿@page "/media/collections/{Id:int}/items"
+@inject IDbContextFactory<TvContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<MudTable Hover="true" Items="_mediaCollection.Items">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@_mediaCollection.Name Media Items</MudText>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Source</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Title</MudTh>
+        <MudTh>Duration</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Source">@context.Source.Name</MudTd>
+        <MudTd DataLabel="Type">@context.GetDisplayMediaType()</MudTd>
+        <MudTd DataLabel="Title">@context.GetDisplayTitle()</MudTd>
+        <MudTd DataLabel="Duration">@context.Metadata.Duration.ToString(@"hh\:mm\:ss\.fff")</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        @if (_mediaCollection.Items.Count > 0)
+        {
+            <MudTablePager/>
+        }
+    </PagerContent>
+</MudTable>
+
+<MudTable @ref="_table" Hover="true" ServerData="@(new Func<TableState, Task<TableData<MediaItem>>>(ServerReload))" Class="mt-8">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">All Media Items</MudText>
+        <MudToolBarSpacer/>
+        <MudTextField T="string" ValueChanged="@OnSearch" Placeholder="Search" Adornment="Adornment.Start"
+                      AdornmentIcon="@Filled.Search" IconSize="Size.Medium" Class="mt-0">
+        </MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Source</MudTh>
+        <MudTh>Type</MudTh>
+        <MudTh>Title</MudTh>
+        <MudTh>Duration</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Source">@context.Source.Name</MudTd>
+        <MudTd DataLabel="Type">@context.GetDisplayMediaType()</MudTd>
+        <MudTd DataLabel="Title">@context.GetDisplayTitle()</MudTd>
+        <MudTd DataLabel="Duration">@context.GetDisplayDuration()</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(AddResultsAsync)" Class="mt-4">
+    Add Results
+</MudButton>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private SimpleMediaCollection _mediaCollection;
+
+    protected override async Task OnParametersSetAsync() => await LoadMediaCollectionAsync();
+
+    private List<int> _mediaItemIds;
+    private IEnumerable<MediaItem> _pagedData;
+    private MudTable<MediaItem> _table;
+
+    private int _totalItems;
+    private string _searchString;
+
+    private async Task<TableData<MediaItem>> ServerReload(TableState state)
+    {
+        await using TvContext context = DbFactory.CreateDbContext();
+        IQueryable<MediaItem> data = from c in context.MediaItems.Include(c => c.Source) select c;
+
+        if (!string.IsNullOrEmpty(_searchString))
+        {
+            data = data.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{_searchString}%"));
+        }
+
+        _mediaItemIds = data.Map(c => c.Id).ToList();
+        _totalItems = data.Count();
+
+        _pagedData = data.OrderBy(c => c.Id).Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
+        return new TableData<MediaItem> { TotalItems = _totalItems, Items = _pagedData };
+    }
+
+    private void OnSearch(string text)
+    {
+        _searchString = text;
+        _table.ReloadServerData();
+    }
+
+    private async Task AddResultsAsync()
+    {
+        await using TvContext context = DbFactory.CreateDbContext();
+
+        SimpleMediaCollection mediaCollection = await context.SimpleMediaCollections.FindAsync(_mediaCollection.Id);
+        await context.Entry(mediaCollection).Collection(cg => cg.Items).LoadAsync();
+        IEnumerable<int> existingMediaItems = _mediaCollection.Items.Select(c => c.Id);
+        IQueryable<MediaItem> mediaItemsToAdd = from c in context.MediaItems
+            where _mediaItemIds.Contains(c.Id) && !existingMediaItems.Contains(c.Id)
+            select c;
+        foreach (MediaItem mediaItem in mediaItemsToAdd)
+        {
+            mediaCollection.Items.Add(mediaItem);
+        }
+        context.MediaCollections.Update(mediaCollection);
+        await context.SaveChangesAsync();
+
+        await LoadMediaCollectionAsync();
+    }
+
+    private async Task LoadMediaCollectionAsync()
+    {
+        await using TvContext context = DbFactory.CreateDbContext();
+        _mediaCollection = await context.SimpleMediaCollections
+            .AsNoTracking()
+            .Include(cg => cg.Items)
+            .ThenInclude(c => c.Source)
+            .FirstAsync(cg => cg.Id == Id);
+    }
+
+}

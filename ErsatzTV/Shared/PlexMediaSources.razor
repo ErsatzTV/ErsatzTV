@@ -1,0 +1,90 @@
+﻿@using ErsatzTV.Application.MediaSources
+@using ErsatzTV.Application.MediaSources.Commands
+@using ErsatzTV.Application.MediaSources.Queries
+@inject IDialogService Dialog
+@inject IMediator Mediator
+@inject ISnackbar Snackbar
+@inject ILogger<PlexMediaSources> Logger
+@inject IJSRuntime JsRuntime
+
+<MudTable Hover="true" Dense="true" Items="_mediaSources">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Plex Media Sources</MudText>
+    </ToolBarContent>
+    <ColGroup>
+        <col/>
+        <col/>
+        <col style="width: 60px;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Address</MudTh>
+        <MudTh/>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Address">@context.Address</MudTd>
+        <MudTd>
+            <MudMenu Icon="@Filled.MoreVert">
+                <MudMenuItem Icon="@Filled.Edit" Link="@($"/media/sources/plex/{context.Id}/libraries")">
+                    Edit Libraries
+                </MudMenuItem>
+                @* <MudMenuItem Icon="@Filled.Edit" Link="@($"/media/collections/{context.Id}/items")"> *@
+                @*     Edit Path Replacements *@
+                @* </MudMenuItem> *@
+            </MudMenu>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddPlexMediaSource())" Class="mt-4">
+    Add Plex Media Source
+</MudButton>
+
+@code {
+    private List<PlexMediaSourceViewModel> _mediaSources;
+
+    protected override async Task OnParametersSetAsync() => await LoadMediaSources();
+
+    private async Task LoadMediaSources() =>
+        _mediaSources = await Mediator.Send(new GetAllPlexMediaSources());
+
+    // private async Task DeleteMediaSource(PlexMediaSourceViewModel mediaSource)
+    // {
+    //     int count = await Mediator.Send(new CountMediaItemsById(mediaSource.Id));
+    //
+    //     var parameters = new DialogParameters
+    //     {
+    //         { "EntityType", "media source" },
+    //         { "EntityName", mediaSource.Name },
+    //         { "DetailText", $"This media source contains {count} media items." },
+    //         { "DetailHighlight", count.ToString() }
+    //     };
+    //     var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+    //
+    //     IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Media Source", parameters, options);
+    //     DialogResult result = await dialog.Result;
+    //     if (!result.Cancelled)
+    //     {
+    //         await Mediator.Send(new DeleteLocalMediaSource(mediaSource.Id));
+    //         await LoadMediaSources();
+    //     }
+    // }
+
+    // edit media source
+    // - manage libraries to include in smart collections
+    // - manage list of path replacements
+
+    private async Task AddPlexMediaSource()
+    {
+        Either<BaseError, string> maybeUrl = await Mediator.Send(new StartPlexPinFlow());
+        await maybeUrl.Match(
+            async url => await JsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" }),
+            error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error generating plex auth app url: {Error}", error.Value);
+                return Task.CompletedTask;
+            });
+    }
+
+}

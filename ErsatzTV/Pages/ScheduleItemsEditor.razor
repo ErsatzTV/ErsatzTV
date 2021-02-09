@@ -1,0 +1,98 @@
+﻿@page "/schedules/{Id:int}/items"
+@using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Application.ProgramSchedules.Commands
+@using ErsatzTV.Application.ProgramSchedules.Queries
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Queries
+@inject IMediator Mediator
+
+<MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Class="mt-8">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">@_schedule.Name Items</MudText>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh>Start Time</MudTh>
+        <MudTh>Media Collection</MudTh>
+        <MudTh>Playout Mode</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Start Time">
+            @(context.StartType == StartType.Fixed ? context.StartTime : "Dynamic")
+        </MudTd>
+        <MudTd DataLabel="Media Collection">@context.MediaCollectionName</MudTd>
+        <MudTd DataLabel="Media Collection">@context.PlayoutMode</MudTd>
+    </RowTemplate>
+    @* <RowEditingTemplate> *@
+    @*     <MudTd> *@
+    @*         Start Time *@
+    @*     </MudTd> *@
+    @*     <MudTd> *@
+    @*         <MudTextField @bind-Value="@context.MediaCollectionName"></MudTextField> *@
+    @*     </MudTd> *@
+    @*     <MudTd> *@
+    @*         <MudSelect @bind-Value="@context.PlayoutMode"> *@
+    @*             @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>()) *@
+    @*             { *@
+    @*                 <MudSelectItem Value="@playoutMode">@playoutMode</MudSelectItem> *@
+    @*             } *@
+    @*         </MudSelect> *@
+    @*     </MudTd> *@
+    @* </RowEditingTemplate> *@
+    <PagerContent>
+        <MudTablePager/>
+    </PagerContent>
+</MudTable>
+@* TODO: only enable this button when media collections exist *@
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddScheduleItem())" Class="mt-4">
+    Add Schedule Item
+</MudButton>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private ProgramScheduleItemsEditViewModel _schedule;
+
+    protected override Task OnParametersSetAsync() => LoadScheduleItems();
+
+    private async Task LoadScheduleItems()
+    {
+        string name = string.Empty;
+        Option<ProgramScheduleViewModel> maybeSchedule = await Mediator.Send(new GetProgramScheduleById(Id));
+        maybeSchedule.IfSome(vm => name = vm.Name);
+
+        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await Mediator.Send(new GetProgramScheduleItems(Id));
+        maybeResults.IfSome(items => _schedule = new ProgramScheduleItemsEditViewModel
+        {
+            Name = name,
+            Items = items.Map(i => new ProgramScheduleItemEditViewModel
+            {
+                Id = i.Id,
+                Index = i.Index,
+                StartType = i.StartType,
+                StartTime = i.StartTime,
+                PlayoutMode = i.PlayoutMode,
+                MediaCollectionName = i.MediaCollection.Name
+            }).ToList()
+        });
+    }
+
+    private async Task AddScheduleItem()
+    {
+        try
+        {
+            // TODO: don't bother going to the database for this, we probably want a "save changes" button
+            // to save all added, deleted, modified items
+            
+            MediaCollectionViewModel mediaCollection = await Mediator.Send(new GetAllMediaCollections()).Map(list => list.Head());
+            await Mediator.Send(new AddProgramScheduleItem(Id, StartType.Dynamic, null, PlayoutMode.One, mediaCollection.Id, null, null, null));
+            await LoadScheduleItems();
+        }
+        catch (Exception ex)
+        {
+            // TODO: something?
+        }
+    }
+
+}

@@ -1,0 +1,102 @@
+﻿@page "/schedules"
+@using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Application.ProgramSchedules.Commands
+@using ErsatzTV.Application.ProgramSchedules.Queries
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudTable Hover="true" Items="_schedules" SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Schedules</MudText>
+    </ToolBarContent>
+    <ColGroup>
+        <col/>
+        <col/>
+        <col/>
+        <col style="width: 60px;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Name</MudTh>
+        <MudTh>Media Collection Playback Order</MudTh>
+        <MudTh/>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Name">@context.MediaCollectionPlaybackOrder</MudTd>
+        <MudTd>
+            <MudMenu Icon="@Filled.MoreVert">
+                <MudMenuItem Icon="@Filled.Edit" Link="@($"/schedules/{context.Id}")">
+                    Edit Properties
+                </MudMenuItem>
+                <MudMenuItem Icon="@Filled.Edit" Link="@($"/schedules/{context.Id}/items")">
+                    Edit Schedule Items
+                </MudMenuItem>
+                <MudMenuItem Icon="@Filled.Delete" OnClick="@(_ => DeleteSchedule(context))">
+                    Delete
+                </MudMenuItem>
+            </MudMenu>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/schedules/add" Class="mt-4">
+    Add Schedule
+</MudButton>
+
+@if (_selectedScheduleItems != null)
+{
+    <MudTable Hover="true" Items="_selectedScheduleItems.OrderBy(i => i.Index)" Class="mt-8">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">@_selectedSchedule.Name Items</MudText>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Start Time</MudTh>
+            <MudTh>Media Collection</MudTh>
+            <MudTh>Playout Mode</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Start Time">
+                @(context.StartType == StartType.Fixed ? context.StartTime : "Dynamic")
+            </MudTd>
+            <MudTd DataLabel="Media Collection">@context.MediaCollection.Name</MudTd>
+            <MudTd DataLabel="Media Collection">@context.PlayoutMode</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    private List<ProgramScheduleViewModel> _schedules;
+    private List<ProgramScheduleItemViewModel> _selectedScheduleItems;
+    private ProgramScheduleViewModel _selectedSchedule;
+
+    protected override Task OnParametersSetAsync() => LoadSchedules();
+
+    private async Task ScheduleSelected(ProgramScheduleViewModel schedule)
+    {
+        _selectedSchedule = schedule;
+        await Mediator.Send(new GetProgramScheduleItems(schedule.Id))
+            .IterT(results => _selectedScheduleItems = results.ToList());
+    }
+
+    private async Task DeleteSchedule(ProgramScheduleViewModel programSchedule)
+    {
+        var parameters = new DialogParameters { { "EntityType", "schedule" }, { "EntityName", programSchedule.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Schedule", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(new DeleteProgramSchedule(programSchedule.Id));
+            await LoadSchedules();
+        }
+    }
+
+    private async Task LoadSchedules() =>
+        _schedules = await Mediator.Send(new GetAllProgramSchedules());
+
+}

@@ -1,0 +1,60 @@
+﻿@using ErsatzTV.Application.MediaSources
+@using ErsatzTV.Application.MediaSources.Commands
+@using ErsatzTV.Application.MediaSources.Queries
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudTable Hover="true" Items="_mediaSources">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Local Media Sources</MudText>
+    </ToolBarContent>
+    <ColGroup>
+        <col/>
+        <col style="width: 60px;"/>
+    </ColGroup>
+    <HeaderContent>
+        <MudTh>Folder</MudTh>
+        <MudTh/>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Folder">@context.Folder</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Filled.Delete" OnClick="@(_ => DeleteMediaSource(context))"></MudIconButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/sources/local/add" Class="mt-4">
+    Add Local Media Source
+</MudButton>
+
+@code {
+    private IList<LocalMediaSourceViewModel> _mediaSources;
+
+    protected override async Task OnParametersSetAsync() => await LoadMediaSources();
+
+    private async Task LoadMediaSources() =>
+        _mediaSources = await Mediator.Send(new GetAllMediaSources()).Map(list => list.OfType<LocalMediaSourceViewModel>().ToList());
+
+    private async Task DeleteMediaSource(LocalMediaSourceViewModel mediaSource)
+    {
+        int count = await Mediator.Send(new CountMediaItemsById(mediaSource.Id));
+
+        var parameters = new DialogParameters
+        {
+            { "EntityType", "media source" },
+            { "EntityName", mediaSource.Name },
+            { "DetailText", $"This media source contains {count} media items." },
+            { "DetailHighlight", count.ToString() }
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Media Source", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(new DeleteLocalMediaSource(mediaSource.Id));
+            await LoadMediaSources();
+        }
+    }
+
+}

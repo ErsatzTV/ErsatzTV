@@ -1,0 +1,35 @@
+﻿using System.Threading;
+using System.Threading.Tasks;
+using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.Repositories;
+using LanguageExt;
+using MediatR;
+
+namespace ErsatzTV.Application.Streaming.Queries
+{
+    public class
+        GetConcatPlaylistByChannelNumberHandler : IRequestHandler<GetConcatPlaylistByChannelNumber,
+            Either<BaseError, ConcatPlaylist>>
+    {
+        private readonly IChannelRepository _channelRepository;
+
+        public GetConcatPlaylistByChannelNumberHandler(IChannelRepository channelRepository) =>
+            _channelRepository = channelRepository;
+
+        public Task<Either<BaseError, ConcatPlaylist>> Handle(
+            GetConcatPlaylistByChannelNumber request,
+            CancellationToken cancellationToken) =>
+            Validate(request)
+                .MapT(channel => new ConcatPlaylist(request.Scheme, request.Host, channel.Number))
+                .Map(v => v.ToEither<ConcatPlaylist>());
+
+        private Task<Validation<BaseError, Channel>> Validate(GetConcatPlaylistByChannelNumber request) =>
+            ChannelMustExist(request);
+
+        private async Task<Validation<BaseError, Channel>> ChannelMustExist(GetConcatPlaylistByChannelNumber request) =>
+            (await _channelRepository.GetByNumber(request.ChannelNumber))
+            .ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist.");
+    }
+}

@@ -1,0 +1,7 @@
+﻿docs/
+sdk/
+**/.vs/
+**/bin/
+**/obj/
+.idea/
+Dockerfile

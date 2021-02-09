@@ -1,0 +1,57 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider Theme="_ersatzTvTheme"/>
+<MudDialogProvider DisableBackdropClick="true"/>
+<MudSnackbarProvider/>
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(_ => DrawerToggle())"/>
+        <MudText Typo="Typo.h5" Class="ml-3">ErsatzTV</MudText>
+        <MudAppBarSpacer/>
+        <MudIconButton Icon="@Brands.GitHub" Color="Color.Inherit" Link="https://github.com/jasongdove/ErsatzTV" Target="_blank"/>
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/ffmpeg">FFmpeg</MudNavLink>
+            <MudNavLink Href="/channels">Channels</MudNavLink>
+            <MudNavGroup Title="Media" Expanded="true">
+                <MudNavLink Href="/media/sources">Media Sources</MudNavLink>
+                <MudNavLink Href="/media/items">Media Items</MudNavLink>
+                <MudNavLink Href="/media/collections">Media Collections</MudNavLink>
+            </MudNavGroup>
+            <MudNavLink Href="/schedules">Schedules</MudNavLink>
+            <MudNavLink Href="/playouts">Playouts</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="pt-8">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+
+    private void DrawerToggle() => _drawerOpen = !_drawerOpen;
+
+    private MudTheme _ersatzTvTheme
+    {
+        get
+        {
+            var current = new MudTheme();
+
+            return new MudTheme
+            {
+                Palette = new Palette
+                {
+                    DrawerBackground = current.Palette.Background,
+                    Background = current.Palette.BackgroundGrey
+                }
+            };
+        }
+    }
+
+}
