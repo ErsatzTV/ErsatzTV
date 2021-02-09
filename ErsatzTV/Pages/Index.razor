@@ -3,5 +3,67 @@
 <MudCard>
     <MudCardContent>
         <MudText Typo="Typo.h3">Welcome to ErsatzTV!</MudText>
+        <MudElement HtmlTag="div" Class="mt-6">
+            <MudText Typo="Typo.h4" GutterBottom="true">Channels</MudText>
+            <MudText>
+                <MudLink Href="/channels">Channels</MudLink> are not directly associated with any media. Channels have a <b>number</b>, a <b>name</b>, and a <b>streaming mode</b> that indicates how the channel will play media.
+            </MudText>
+            <MudText Class="mt-3">
+                In <b>TransportStream</b> mode, the channel will also require an <b>FFmpeg profile</b> to configure transcoding and normalization.
+                In <b>HttpLiveStreaming</b> mode, the channel will attempt to serve the channel's media without transcoding or normalization beyond the container format.
+            </MudText>
+        </MudElement>
+        <MudElement HtmlTag="div" Class="mt-6">
+            <MudText Typo="Typo.h4" GutterBottom="true">FFmpeg Profiles</MudText>
+            <MudText>
+                <MudLink Href="/ffmpeg">FFmpeg Profiles</MudLink> are collections of FFmpeg settings that are applied at the channel level.
+                All content on a given channel will use the same FFmpeg settings. This also means the same content on different channels can use different settings.
+            </MudText>
+        </MudElement>
+        <MudElement HtmlTag="div" Class="mt-6">
+            <MudText Typo="Typo.h4" GutterBottom="true">Media Sources</MudText>
+            <MudText>
+                Local <MudLink Href="/media/sources">media sources</MudLink> have a <b>media type</b> and a <b>folder</b> to regularly scan for media items.
+                Plex media sources are under active development and Jellyfin media sources are planned.
+            </MudText>
+        </MudElement>
+        <MudElement HtmlTag="div" Class="mt-6">
+            <MudText Typo="Typo.h4" GutterBottom="true">Media Collections</MudText>
+            <MudText>
+                <MudLink Href="/media/collections">Media collections</MudLink> have a <b>name</b> and contain a logical grouping of <MudLink Href="/media/items">media items</MudLink>.
+                Television media collections are automatically created and maintained, while manually-created media collections allow further customization.
+            </MudText>
+        </MudElement>
+        <MudElement HtmlTag="div" Class="mt-6">
+            <MudText Typo="Typo.h4" GutterBottom="true">Schedules</MudText>
+            <MudText>
+                <MudLink Href="/schedules">Schedules</MudLink> have a <b>name</b>, a <b>collection playback order</b> and <b>items</b> to continually loop through.
+            </MudText>
+            <MudText Class="mt-3 mb-2">Three <b>collection playback orders</b> are supported:</MudText>
+            <ul class="mud-typography-body1">
+                <li><b>Random</b> - to randomly play collection items; repeating is allowed before all collection items have been played.</li>
+                <li><b>Shuffle</b> - to randomly play collection items; repeating is <i>not</i> allowed until all collection items have been played.</li>
+                <li><b>Chronological</b> - to play collection items sorted by air date and then by season and episode number (for when multiple episodes aired on a single day).</li>
+            </ul>
+            <MudText Class="mt-3">
+                Schedule items have a <b>start type</b>, a <b>start time</b>, a <b>media collection</b> and a <b>playout mode</b>.
+            </MudText>
+            <MudText Class="mt-3">
+                A <b>fixed</b> start type requires a <b>start time</b>, while a <b>dynamic</b> start type means the schedule item will start immediately after the preceding schedule item.
+            </MudText>
+            <MudText Class="mt-3 mb-2">Four <b>playout modes</b> are supported:</MudText>
+            <ul class="mud-typography-body1">
+                <li><b>One</b> - to play one media item from the collection before advancing to the next schedule item.</li>
+                <li><b>Multiple</b> - to play a specified <b>count</b> of media items from the collection before advancing to the next schedule item.</li>
+                <li><b>Duration</b> - to play the maximum number of complete media items that will fit in the specified <b>playout duration</b>, before either going offline for the remainder of the <b>playout duration</b> (an <b>offline tail</b>), or immediately advancing to the next schedule item.</li>
+                <li><b>Flood</b> - to play media items from the collection forever, or until the next schedule item's <b>start time</b> if one exists.</li>
+            </ul>
+        </MudElement>
+        <MudElement HtmlTag="div" Class="mt-6">
+            <MudText Typo="Typo.h4" GutterBottom="true">Playouts</MudText>
+            <MudText>
+                <MudLink Href="/playouts">Playouts</MudLink> assign a <b>schedule</b> to a <b>channel</b> and individually track the ordered playback of collection items.
+            </MudText>
+        </MudElement>
     </MudCardContent>
 </MudCard>
