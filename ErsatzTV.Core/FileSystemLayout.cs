@@ -6,7 +6,7 @@ namespace ErsatzTV.Core
     public static class FileSystemLayout
     {
         public static readonly string AppDataFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create),
             "ersatztv");
 
         public static readonly string DatabasePath = Path.Combine(AppDataFolder, "ersatztv.sqlite3");
