@@ -9,8 +9,18 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(_ => DrawerToggle())"/>
         <MudText Typo="Typo.h5" Class="ml-3">ErsatzTV</MudText>
         <MudAppBarSpacer/>
-        <MudIconButton Icon="fab fa-discord" Color="Color.Inherit" Link="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
-        <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/jasongdove/ErsatzTV" Target="_blank"/>
+        <MudTooltip Text="Channels M3U">
+            <MudIconButton Icon="fa fa-file-video" Color="Color.Inherit" Link="/iptv/channels.m3u" Target="_blank"/>
+        </MudTooltip>
+        <MudTooltip Text="EPG XMLTV">
+            <MudIconButton Icon="fa fa-file-code" Color="Color.Inherit" Link="/iptv/xmltv.xml" Target="_blank"/>
+        </MudTooltip>
+        <MudTooltip Text="Discord">
+            <MudIconButton Icon="fab fa-discord" Color="Color.Inherit" Link="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
+        </MudTooltip>
+        <MudTooltip Text="GitHub">
+            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/jasongdove/ErsatzTV" Target="_blank"/>
+        </MudTooltip>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
         <MudNavMenu>
