@@ -37,6 +37,22 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 ![Plex Live TV Stream](docs/plex-live-tv-stream.png)
 Sintel is © copyright Blender Foundation | durian.blender.org
 
+## Running ErsatzTV
+
+The easiest way to run ErsatzTV is with Docker:
+
+```
+docker run -d \
+  -e TZ=America/Chicago \
+  -p 8989:8989 \
+  -v /path/to/appdata/config:/root/.local/share/ersatztv \
+  -v /path/to/shared/media:/path/to/shared/media:ro \
+  --restart unless-stopped \
+  jasongdove/ersatztv
+```
+
+After running ErsatzTV for the first time, configure it by visiting the web UI at http://[address]:8989.
+
 ## Development
 
 See [development documentation](docs/development.md).

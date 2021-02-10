@@ -31,5 +31,7 @@ RUN dotnet publish -c release -o /app -r linux-x64 --self-contained false --no-r
 # final stage/image
 FROM runtime-base
 WORKDIR /app
+EXPOSE 8989
+ENV ASPNETCORE_URLS http://+:8989
 COPY --from=build /app ./
 ENTRYPOINT ["./ErsatzTV"]
