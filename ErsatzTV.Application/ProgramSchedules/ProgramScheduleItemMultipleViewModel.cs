@@ -17,7 +17,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             index,
             startType,
             startTime,
-            PlayoutMode.Duration,
+            PlayoutMode.Multiple,
             mediaCollection) =>
             Count = count;
 

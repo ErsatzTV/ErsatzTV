@@ -86,7 +86,7 @@ namespace ErsatzTV
                 "Server will listen on port {Port} - try UI at {UI}",
                 8989,
                 "http://localhost:8989");
-            
+
             if (!Directory.Exists(FileSystemLayout.AppDataFolder))
             {
                 Directory.CreateDirectory(FileSystemLayout.AppDataFolder);

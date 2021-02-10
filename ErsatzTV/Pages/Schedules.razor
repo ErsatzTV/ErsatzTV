@@ -5,7 +5,7 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudTable Hover="true" Items="_schedules" SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))">
+<MudTable Hover="true" Items="_schedules" Dense="true" SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Schedules</MudText>
     </ToolBarContent>

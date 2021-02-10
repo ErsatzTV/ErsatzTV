@@ -1,51 +1,96 @@
 ﻿@page "/schedules/{Id:int}/items"
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Queries
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using ErsatzTV.Application.ProgramSchedules.Queries
-@using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Queries
+@inject NavigationManager NavigationManager
+@inject ILogger<ChannelEditor> Logger
+@inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Class="mt-8">
+<MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Dense="true" Class="mt-8" @bind-SelectedItem="_selectedItem">
     <ToolBarContent>
         <MudText Typo="Typo.h6">@_schedule.Name Items</MudText>
     </ToolBarContent>
+    <ColGroup>
+        <col/>
+        <col/>
+        <col/>
+        <col style="width: 60px;"/>
+    </ColGroup>
     <HeaderContent>
         <MudTh>Start Time</MudTh>
         <MudTh>Media Collection</MudTh>
         <MudTh>Playout Mode</MudTh>
+        <MudTh/>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Start Time">
-            @(context.StartType == StartType.Fixed ? context.StartTime : "Dynamic")
+            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                @(context.StartType == StartType.Fixed ? context.StartTime : "Dynamic")
+            </MudText>
         </MudTd>
-        <MudTd DataLabel="Media Collection">@context.MediaCollectionName</MudTd>
-        <MudTd DataLabel="Media Collection">@context.PlayoutMode</MudTd>
+        <MudTd DataLabel="Media Collection">
+            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                @context.MediaCollection.Name
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="Media Collection">
+            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                @context.PlayoutMode
+                @if (context.PlayoutMode == PlayoutMode.Multiple && context.MultipleCount.HasValue)
+                {
+                    @($" ({context.MultipleCount})")
+                }
+            </MudText>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => RemoveScheduleItem(context))"></MudIconButton>
+        </MudTd>
     </RowTemplate>
-    @* <RowEditingTemplate> *@
-    @*     <MudTd> *@
-    @*         Start Time *@
-    @*     </MudTd> *@
-    @*     <MudTd> *@
-    @*         <MudTextField @bind-Value="@context.MediaCollectionName"></MudTextField> *@
-    @*     </MudTd> *@
-    @*     <MudTd> *@
-    @*         <MudSelect @bind-Value="@context.PlayoutMode"> *@
-    @*             @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>()) *@
-    @*             { *@
-    @*                 <MudSelectItem Value="@playoutMode">@playoutMode</MudSelectItem> *@
-    @*             } *@
-    @*         </MudSelect> *@
-    @*     </MudTd> *@
-    @* </RowEditingTemplate> *@
     <PagerContent>
         <MudTablePager/>
     </PagerContent>
 </MudTable>
-@* TODO: only enable this button when media collections exist *@
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddScheduleItem())" Class="mt-4">
+<MudButton Variant="Variant.Filled" Color="Color.Default" Disabled="@_defaultCollection.IsNone" OnClick="@(_ => AddScheduleItem())" Class="mt-4">
     Add Schedule Item
 </MudButton>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+    Save Changes
+</MudButton>
+
+@if (_selectedItem is not null)
+{
+    <div style="max-width: 400px;">
+        <EditForm Model="_selectedItem">
+            <FluentValidator/>
+            <MudCard Class="mt-6">
+                <MudCardContent>
+                    <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
+                        @foreach (StartType startType in Enum.GetValues<StartType>())
+                        {
+                            <MudSelectItem Value="@startType">@startType</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField Class="mt-3" Label="Start Time" @bind-Value="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
+                    <MudAutocomplete T="MediaCollectionViewModel" Label="Media Collection" @bind-value="_selectedItem.MediaCollection" SearchFunc="@SearchMediaCollections" ToStringFunc="@(c => c?.Name)"/>
+                    <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
+                        @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
+                        {
+                            <MudSelectItem Value="@playoutMode">@playoutMode</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
+                    <MudTextField Class="mt-3" Label="Playout Duration" @bind-Value="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudSwitch Label="Offline Tail" @bind-Checked="@_selectedItem.OfflineTail" For="@(() => _selectedItem.OfflineTail)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                    </MudElement>
+                </MudCardContent>
+            </MudCard>
+        </EditForm>
+    </div>
+}
 
 @code {
 
@@ -53,11 +98,18 @@
     public int Id { get; set; }
 
     private ProgramScheduleItemsEditViewModel _schedule;
+    private List<MediaCollectionViewModel> _mediaCollections;
+    private Option<MediaCollectionViewModel> _defaultCollection;
+
+    private ProgramScheduleItemEditViewModel _selectedItem;
 
     protected override Task OnParametersSetAsync() => LoadScheduleItems();
 
     private async Task LoadScheduleItems()
     {
+        _mediaCollections = await Mediator.Send(new GetAllMediaCollections());
+        _defaultCollection = _mediaCollections.HeadOrNone();
+
         string name = string.Empty;
         Option<ProgramScheduleViewModel> maybeSchedule = await Mediator.Send(new GetProgramScheduleById(Id));
         maybeSchedule.IfSome(vm => name = vm.Name);
@@ -66,33 +118,80 @@
         maybeResults.IfSome(items => _schedule = new ProgramScheduleItemsEditViewModel
         {
             Name = name,
-            Items = items.Map(i => new ProgramScheduleItemEditViewModel
-            {
-                Id = i.Id,
-                Index = i.Index,
-                StartType = i.StartType,
-                StartTime = i.StartTime,
-                PlayoutMode = i.PlayoutMode,
-                MediaCollectionName = i.MediaCollection.Name
-            }).ToList()
+            Items = items.Map(ProjectToEditViewModel).ToList()
         });
     }
 
-    private async Task AddScheduleItem()
+    private ProgramScheduleItemEditViewModel ProjectToEditViewModel(ProgramScheduleItemViewModel item)
     {
-        try
+        var result = new ProgramScheduleItemEditViewModel
         {
-    // TODO: don't bother going to the database for this, we probably want a "save changes" button
-    // to save all added, deleted, modified items
+            Id = item.Id,
+            Index = item.Index,
+            StartType = item.StartType,
+            StartTime = item.StartTime,
+            PlayoutMode = item.PlayoutMode,
+            MediaCollection = item.MediaCollection
+        };
 
-            MediaCollectionViewModel mediaCollection = await Mediator.Send(new GetAllMediaCollections()).Map(list => list.Head());
-            await Mediator.Send(new AddProgramScheduleItem(Id, StartType.Dynamic, null, PlayoutMode.One, mediaCollection.Id, null, null, null));
-            await LoadScheduleItems();
-        }
-        catch (Exception ex)
+        switch (item)
         {
-    // TODO: something?
+            case ProgramScheduleItemMultipleViewModel multiple:
+                result.MultipleCount = multiple.Count;
+                break;
+            case ProgramScheduleItemDurationViewModel duration:
+                result.PlayoutDuration = duration.PlayoutDuration;
+                result.OfflineTail = duration.OfflineTail;
+                break;
         }
+
+        return result;
+    }
+
+    private void AddScheduleItem()
+    {
+        var item = new ProgramScheduleItemEditViewModel
+        {
+            Index = _schedule.Items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
+            StartType = StartType.Dynamic,
+            PlayoutMode = PlayoutMode.One
+        };
+
+        _defaultCollection.IfSome(c => item.MediaCollection = c);
+
+        _schedule.Items.Add(item);
+        _selectedItem = item;
+    }
+
+    private void RemoveScheduleItem(ProgramScheduleItemEditViewModel item)
+    {
+        _selectedItem = null;
+        _schedule.Items.Remove(item);
+    }
+
+    private async Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) => _mediaCollections.Filter(c => c.Name.StartsWith(value));
+
+    private async Task SaveChanges()
+    {
+        var items = _schedule.Items.Map(item => new ReplaceProgramScheduleItem(
+            item.Index,
+            item.StartType,
+            item.StartTime,
+            item.PlayoutMode,
+            item.MediaCollection.Id,
+            item.MultipleCount,
+            item.PlayoutDuration,
+            item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null)).ToList();
+
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
+
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving schedule: {error.Value}");
+                Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/schedules"));
     }
 
 }
