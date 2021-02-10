@@ -5,7 +5,7 @@
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using ErsatzTV.Application.ProgramSchedules.Queries
 @inject NavigationManager NavigationManager
-@inject ILogger<ChannelEditor> Logger
+@inject ILogger<ScheduleItemsEditor> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
@@ -74,7 +74,7 @@
                         }
                     </MudSelect>
                     <MudTextField Class="mt-3" Label="Start Time" @bind-Value="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
-                    <MudAutocomplete T="MediaCollectionViewModel" Label="Media Collection" @bind-value="_selectedItem.MediaCollection" SearchFunc="@SearchMediaCollections" ToStringFunc="@(c => c?.Name)"/>
+                    <MudAutocomplete Class="mt-3" T="MediaCollectionViewModel" Label="Media Collection" @bind-value="_selectedItem.MediaCollection" SearchFunc="@SearchMediaCollections" ToStringFunc="@(c => c?.Name)"/>
                     <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
                         @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
                         {
@@ -169,7 +169,8 @@
         _schedule.Items.Remove(item);
     }
 
-    private async Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) => _mediaCollections.Filter(c => c.Name.StartsWith(value));
+    private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
+        _mediaCollections.Filter(c => c.Name.ToLowerInvariant().StartsWith(value ?? string.Empty)).AsTask();
 
     private async Task SaveChanges()
     {

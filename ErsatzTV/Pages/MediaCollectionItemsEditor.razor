@@ -87,10 +87,10 @@
         return new TableData<MediaItem> { TotalItems = _totalItems, Items = _pagedData };
     }
 
-    private void OnSearch(string text)
+    private async Task OnSearch(string text)
     {
         _searchString = text;
-        _table.ReloadServerData();
+        await _table.ReloadServerData();
     }
 
     private async Task AddResultsAsync()

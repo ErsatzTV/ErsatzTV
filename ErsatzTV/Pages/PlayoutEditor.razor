@@ -1,0 +1,75 @@
+﻿@page "/playouts/add"
+@using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Application.ProgramSchedules.Queries
+@using ErsatzTV.Application.Channels
+@using ErsatzTV.Application.Channels.Queries
+@inject NavigationManager NavigationManager
+@inject ILogger<PlayoutEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+
+<div style="max-width: 400px;">
+    <MudText Typo="Typo.h4" Class="mb-4">Add Playout</MudText>
+
+    <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+        <FluentValidator/>
+        <MudCard>
+            <MudCardContent>
+                <MudAutocomplete T="ChannelViewModel" Label="Channel" @bind-value="_model.Channel" SearchFunc="@SearchChannels" ToStringFunc="@(c => c is null ? null : $"{c.Number} - {c.Name}")"/>
+                <MudAutocomplete Class="mt-3" T="ProgramScheduleViewModel" Label="Schedule" @bind-value="_model.ProgramSchedule" SearchFunc="@SearchProgramSchedules" ToStringFunc="@(s => s?.Name)"/>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                    Add Playout
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+</div>
+
+@code {
+
+    private readonly PlayoutEditViewModel _model = new();
+    private List<ChannelViewModel> _channels;
+    private List<ProgramScheduleViewModel> _programSchedules;
+    
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _channels = await Mediator.Send(new GetAllChannels());
+        _programSchedules = await Mediator.Send(new GetAllProgramSchedules());
+    }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private Task<IEnumerable<ChannelViewModel>> SearchChannels(string value) =>
+        _channels.Filter(c => $"{c.Number} - {c.Name}".ToLowerInvariant().Contains(value ?? string.Empty)).AsTask();
+
+    private Task<IEnumerable<ProgramScheduleViewModel>> SearchProgramSchedules(string value) =>
+        _programSchedules.Filter(c => c.Name.ToLowerInvariant().StartsWith(value ?? string.Empty)).AsTask();
+
+
+    private async Task HandleSubmitAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            Seq<BaseError> errorMessage = (await Mediator.Send(_model.ToCreate())).LeftToSeq();
+
+            errorMessage.HeadOrNone().Match(
+                error =>
+                {
+                    Snackbar.Add(error.Value);
+                    Logger.LogError("Unexpected error saving playout: {Error}", error.Value);
+                },
+                () => NavigationManager.NavigateTo("/playouts"));
+        }
+    }
+
+}

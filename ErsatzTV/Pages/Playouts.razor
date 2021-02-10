@@ -1,25 +1,40 @@
 ﻿@page "/playouts"
 @using ErsatzTV.Application.Playouts
+@using ErsatzTV.Application.Playouts.Commands
 @using ErsatzTV.Application.Playouts.Queries
+@inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudTable Hover="true" Items="_playouts" SelectedItemChanged="@(async (PlayoutViewModel x) => await PlayoutSelected(x))">
+<MudTable Hover="true" Dense="true" Items="_playouts" SelectedItemChanged="@(async (PlayoutViewModel x) => await PlayoutSelected(x))">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Playouts</MudText>
     </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col/>
+            <col style="width: 60px;"/>
+        </ColGroup>
     <HeaderContent>
         <MudTh>Id</MudTh>
         <MudTh>Channel</MudTh>
         <MudTh>Schedule</MudTh>
-        <MudTh>Playout Type</MudTh>
+        @* <MudTh>Playout Type</MudTh> *@
+        <MudTh/>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Id</MudTd>
-        <MudTd DataLabel="Channel">@context.Channel.Name</MudTd>
+        <MudTd DataLabel="Channel">@context.Channel.Number - @context.Channel.Name</MudTd>
         <MudTd DataLabel="Schedule">@context.ProgramSchedule.Name</MudTd>
-        <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd>
+        @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeletePlayout(context))"></MudIconButton>
+        </MudTd>
     </RowTemplate>
 </MudTable>
+<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/playouts/add" Class="mt-4">
+    Add Playout
+</MudButton>
 
 @if (_selectedPlayoutItems != null)
 {
@@ -47,10 +62,28 @@
     private List<PlayoutViewModel> _playouts;
     private List<PlayoutItemViewModel> _selectedPlayoutItems;
 
-    protected override async Task OnParametersSetAsync() =>
-        _playouts = await Mediator.Send(new GetAllPlayouts());
+    protected override Task OnParametersSetAsync() =>
+        LoadAllPlayouts();
 
     private async Task PlayoutSelected(PlayoutViewModel playout) =>
         _selectedPlayoutItems = await Mediator.Send(new GetPlayoutItemsById(playout.Id));
+    
+    private async Task DeletePlayout(PlayoutViewModel playout)
+    {
+        var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ProgramSchedule.Name} on {playout.Channel.Number} - {playout.Channel.Name}" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Media Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(new DeletePlayout(playout.Id));
+            await LoadAllPlayouts();
+        }
+    }
+
+    private async Task LoadAllPlayouts() =>
+        _playouts = await Mediator.Send(new GetAllPlayouts());
+    
 
 }

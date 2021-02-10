@@ -79,7 +79,7 @@
             if (!result.Cancelled)
             {
                 await Mediator.Send(new DeleteSimpleMediaCollection(mediaCollection.Id));
-                _table.ReloadServerData();
+                await _table.ReloadServerData();
             }
         }
     }
@@ -95,10 +95,10 @@
         return new TableData<MediaCollectionSummaryViewModel> { TotalItems = _totalItems, Items = _pagedData };
     }
 
-    private void OnSearch(string text)
+    private async Task OnSearch(string text)
     {
         _searchString = text;
-        _table.ReloadServerData();
+        await _table.ReloadServerData();
     }
 
 }

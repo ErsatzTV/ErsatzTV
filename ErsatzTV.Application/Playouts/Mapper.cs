@@ -16,7 +16,7 @@ namespace ErsatzTV.Application.Playouts
             new(GetDisplayTitle(playoutItem.MediaItem), playoutItem.Start, GetDisplayDuration(playoutItem.MediaItem));
 
         private static PlayoutChannelViewModel Project(Channel channel) =>
-            new(channel.Id, channel.Name);
+            new(channel.Id, channel.Number, channel.Name);
 
         private static PlayoutProgramScheduleViewModel Project(ProgramSchedule programSchedule) =>
             new(programSchedule.Id, programSchedule.Name);
