@@ -2,6 +2,8 @@
 
 **ErsatzTV** is pre-alpha software for configuring and streaming custom live channels using your media library. The software is currently unstable and under active development.
 
+Want to join the community or have a question? Join us on [Discord](https://discord.gg/hHaJm3yGy6).
+
 ## Current Features
 
 - Use local media files and optional sidecar [NFO metadata](https://kodi.wiki/view/NFO_files); no need for a full media server
