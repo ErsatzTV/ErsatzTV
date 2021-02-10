@@ -10,8 +10,8 @@ namespace ErsatzTV.Core.Interfaces.Scheduling
 
         public Task<Playout> BuildPlayoutItems(
             Playout playout,
-            DateTimeOffset start,
-            DateTimeOffset finish,
+            DateTimeOffset playoutStart,
+            DateTimeOffset playoutFinish,
             bool rebuild = false);
     }
 }

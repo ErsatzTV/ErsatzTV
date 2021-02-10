@@ -7,7 +7,6 @@ namespace ErsatzTV.Core.Interfaces.Scheduling
     {
         MediaCollectionEnumeratorState State { get; }
         public Option<MediaItem> Current { get; }
-        public Option<MediaItem> Peek { get; }
         public void MoveNext();
     }
 }

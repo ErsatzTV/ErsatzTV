@@ -59,26 +59,6 @@ namespace ErsatzTV.Core.Tests.Scheduling
             }
         }
 
-        [Test]
-        public void Peek_Should_Not_Impact_Current_Or_Wrapping()
-        {
-            List<MediaItem> contents = Episodes(10);
-            var state = new MediaCollectionEnumeratorState();
-
-            var chronologicalContent = new ChronologicalMediaCollectionEnumerator(contents, state);
-
-            for (var i = 0; i < 100; i++)
-            {
-                chronologicalContent.Current.IsSome.Should().BeTrue();
-
-                chronologicalContent.Current.Map(x => x.Id).IfNone(-1).Should().Be(i % 10 + 1);
-                chronologicalContent.Peek.Map(x => x.Id).IfNone(-1).Should().Be((i + 1) % 10 + 1);
-                chronologicalContent.Peek.Map(x => x.Id).IfNone(-1).Should().Be((i + 1) % 10 + 1);
-
-                chronologicalContent.MoveNext();
-            }
-        }
-
         private static List<MediaItem> Episodes(int count) =>
             Range(1, count).Map(
                     i => new MediaItem

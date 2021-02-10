@@ -11,6 +11,6 @@ namespace ErsatzTV.ViewModels
         public ProgramScheduleViewModel ProgramSchedule { get; set; }
 
         public CreatePlayout ToCreate() =>
-            new CreatePlayout(Channel.Id, ProgramSchedule.Id, ProgramSchedulePlayoutType.Flood);
+            new(Channel.Id, ProgramSchedule.Id, ProgramSchedulePlayoutType.Flood);
     }
 }

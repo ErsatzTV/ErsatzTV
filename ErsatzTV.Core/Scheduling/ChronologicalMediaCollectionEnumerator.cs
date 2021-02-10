@@ -32,10 +32,6 @@ namespace ErsatzTV.Core.Scheduling
 
         public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
 
-        public Option<MediaItem> Peek => _sortedMediaItems.Any()
-            ? _sortedMediaItems[(State.Index + 1) % _sortedMediaItems.Count]
-            : None;
-
         public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
     }
 }

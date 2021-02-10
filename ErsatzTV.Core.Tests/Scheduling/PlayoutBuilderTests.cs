@@ -413,7 +413,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         }
 
         [Test]
-        public async Task FloodContent_Should_FloodAroundFixedContent_DurationWithOfflineTail()
+        public async Task FloodContent_Should_FloodAroundFixedContent_DurationWithoutOfflineTail()
         {
             var floodCollection = new SimpleMediaCollection
             {
@@ -433,7 +433,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Items = new List<MediaItem>
                 {
                     TestMovie(3, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 1)),
-                    TestMovie(4, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 2))
+                    TestMovie(4, TimeSpan.FromHours(1.5), new DateTime(2020, 1, 2))
                 }
             };
 
@@ -458,7 +458,96 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     MediaCollectionId = fixedCollection.Id,
                     StartTime = TimeSpan.FromHours(2),
                     PlayoutDuration = TimeSpan.FromHours(2),
-                    OfflineTail = true // last 30 minutes will be offline
+                    OfflineTail = false // immediately continue
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items,
+                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
+            };
+
+            var builder = new PlayoutBuilder(fakeRepository, _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+            Playout result = await builder.BuildPlayoutItems(playout, start, finish);
+
+            result.Items.Count.Should().Be(7);
+
+            result.Items[0].Start.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[0].MediaItemId.Should().Be(1);
+            result.Items[1].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[1].MediaItemId.Should().Be(2);
+
+            result.Items[2].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[2].MediaItemId.Should().Be(3);
+
+            result.Items[3].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2.75));
+            result.Items[3].MediaItemId.Should().Be(1);
+            result.Items[4].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(3.75));
+            result.Items[4].MediaItemId.Should().Be(2);
+
+            result.Items[5].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(4.75));
+            result.Items[5].MediaItemId.Should().Be(1);
+            result.Items[6].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(5.75));
+            result.Items[6].MediaItemId.Should().Be(2);
+        }
+
+        [Test]
+        public async Task MultipleContent_Should_WrapAroundDynamicContent_DurationWithoutOfflineTail()
+        {
+            var multipleCollection = new SimpleMediaCollection
+            {
+                Id = 1,
+                Name = "Multiple Items",
+                Items = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
+                }
+            };
+
+            var dynamicCollection = new SimpleMediaCollection
+            {
+                Id = 2,
+                Name = "Dynamic Items",
+                Items = new List<MediaItem>
+                {
+                    TestMovie(3, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 1)),
+                    TestMovie(4, TimeSpan.FromHours(1.5), new DateTime(2020, 1, 2))
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (multipleCollection.Id, multipleCollection.Items.ToList()),
+                    (dynamicCollection.Id, dynamicCollection.Items.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemMultiple
+                {
+                    Index = 1,
+                    MediaCollection = multipleCollection,
+                    MediaCollectionId = multipleCollection.Id,
+                    StartTime = null,
+                    Count = 2
+                },
+                new ProgramScheduleItemDuration
+                {
+                    Index = 2,
+                    MediaCollection = dynamicCollection,
+                    MediaCollectionId = dynamicCollection.Id,
+                    StartTime = null,
+                    PlayoutDuration = TimeSpan.FromHours(2),
+                    OfflineTail = false // immediately continue
                 }
             };
 
@@ -488,13 +577,14 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             result.Items[2].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
             result.Items[2].MediaItemId.Should().Be(3);
-            result.Items[3].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2.75));
-            result.Items[3].MediaItemId.Should().Be(4);
 
-            result.Items[4].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(4));
-            result.Items[4].MediaItemId.Should().Be(1);
-            result.Items[5].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
-            result.Items[5].MediaItemId.Should().Be(2);
+            result.Items[3].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2.75));
+            result.Items[3].MediaItemId.Should().Be(1);
+            result.Items[4].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(3.75));
+            result.Items[4].MediaItemId.Should().Be(2);
+
+            result.Items[5].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(4.75));
+            result.Items[5].MediaItemId.Should().Be(4);
         }
 
         private static DateTimeOffset HoursAfterMidnight(int hours)

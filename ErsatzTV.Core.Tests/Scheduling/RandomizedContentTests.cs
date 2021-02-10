@@ -77,24 +77,6 @@ namespace ErsatzTV.Core.Tests.Scheduling
             }
         }
 
-        [Test]
-        public void Peek_Should_Not_Impact_Current_Or_Wrapping()
-        {
-            List<MediaItem> contents = Episodes(10);
-            var state = new MediaCollectionEnumeratorState { Seed = KnownSeed };
-
-            var randomizedContent = new RandomizedMediaCollectionEnumerator(contents, state);
-
-            for (var i = 0; i < 97; i++)
-            {
-                randomizedContent.MoveNext();
-                randomizedContent.Current.IsSome.Should().BeTrue();
-                randomizedContent.Current.Map(x => x.Id).IfNone(-1).Should().Be(_expected[i]);
-                randomizedContent.Peek.Map(x => x.Id).IfNone(-1).Should().Be(_expected[i + 1]);
-                randomizedContent.Peek.Map(x => x.Id).IfNone(-1).Should().Be(_expected[i + 1]);
-            }
-        }
-
         private static List<MediaItem> Episodes(int count) =>
             Range(1, count).Map(
                     i => new MediaItem

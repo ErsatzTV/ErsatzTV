@@ -34,8 +34,8 @@ namespace ErsatzTV.Core.Scheduling
 
         public async Task<Playout> BuildPlayoutItems(
             Playout playout,
-            DateTimeOffset start,
-            DateTimeOffset finish,
+            DateTimeOffset playoutStart,
+            DateTimeOffset playoutFinish,
             bool rebuild = false)
         {
             var collections = playout.ProgramSchedule.Items.Map(i => i.MediaCollection).Distinct().ToList();
@@ -71,7 +71,7 @@ namespace ErsatzTV.Core.Scheduling
                 MapExtensions.Map(collectionMediaItems, (c, i) => GetMediaCollectionEnumerator(playout, c, i));
 
             // find start anchor
-            PlayoutAnchor startAnchor = FindStartAnchor(playout, start, sortedScheduleItems);
+            PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, sortedScheduleItems);
 
             // start at the previously-decided time
             DateTimeOffset currentTime = startAnchor.NextStart;
@@ -88,35 +88,39 @@ namespace ErsatzTV.Core.Scheduling
             Option<int> multipleRemaining = None;
             Option<DateTimeOffset> durationFinish = None;
             // loop until we're done filling the desired amount of time
-            while (currentTime < finish)
+            while (currentTime < playoutFinish)
             {
                 // get the schedule item out of the sorted list
                 ProgramScheduleItem scheduleItem = sortedScheduleItems[index % sortedScheduleItems.Count];
 
                 // find when we should start this item, based on the current time
-                DateTimeOffset startTime = GetStartTimeAfter(
+                DateTimeOffset itemStartTime = GetStartTimeAfter(
                     scheduleItem,
                     currentTime,
                     multipleRemaining.IsSome,
                     durationFinish.IsSome);
-                _logger.LogDebug(
-                    "Schedule item: {ScheduleItemNumber} / {MediaCollectionName} / {StartTime}",
-                    scheduleItem.Index,
-                    scheduleItem.MediaCollection.Name,
-                    startTime);
 
                 IMediaCollectionEnumerator enumerator = collectionEnumerators[scheduleItem.MediaCollection];
                 enumerator.Current.IfSome(
                     mediaItem =>
                     {
+                        _logger.LogDebug(
+                            "Scheduling media item: {ScheduleItemNumber} / {MediaCollectionId} - {MediaCollectionName} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
+                            scheduleItem.Index,
+                            scheduleItem.MediaCollection.Id,
+                            scheduleItem.MediaCollection.Name,
+                            mediaItem.Id,
+                            DisplayTitle(mediaItem),
+                            itemStartTime);
+
                         var playoutItem = new PlayoutItem
                         {
                             MediaItemId = mediaItem.Id,
-                            Start = startTime,
-                            Finish = startTime + mediaItem.Metadata.Duration
+                            Start = itemStartTime,
+                            Finish = itemStartTime + mediaItem.Metadata.Duration
                         };
 
-                        currentTime = startTime + mediaItem.Metadata.Duration;
+                        currentTime = itemStartTime + mediaItem.Metadata.Duration;
                         enumerator.MoveNext();
 
                         playout.Items.Add(playoutItem);
@@ -126,7 +130,7 @@ namespace ErsatzTV.Core.Scheduling
                             case ProgramScheduleItemOne:
                                 // only play one item from collection, so always advance to the next item
                                 _logger.LogDebug(
-                                    "Advancing to next playout item after playout mode {PlayoutMode}",
+                                    "Advancing to next schedule item after playout mode {PlayoutMode}",
                                     "One");
                                 index++;
                                 break;
@@ -139,13 +143,16 @@ namespace ErsatzTV.Core.Scheduling
                                 multipleRemaining = multipleRemaining.Map(i => i - 1);
                                 if (multipleRemaining.IfNone(-1) == 0)
                                 {
+                                    _logger.LogDebug(
+                                        "Advancing to next schedule item after playout mode {PlayoutMode}",
+                                        "Multiple");
                                     index++;
                                     multipleRemaining = None;
                                 }
 
                                 break;
                             case ProgramScheduleItemFlood:
-                                enumerator.Peek.Do(
+                                enumerator.Current.Do(
                                     peekMediaItem =>
                                     {
                                         ProgramScheduleItem peekScheduleItem =
@@ -163,25 +170,32 @@ namespace ErsatzTV.Core.Scheduling
                                                                    peekScheduleItemStart;
                                         if (willNotFinishInTime)
                                         {
+                                            _logger.LogDebug(
+                                                "Advancing to next schedule item after playout mode {PlayoutMode}",
+                                                "Flood");
                                             index++;
                                         }
                                     });
                                 break;
                             case ProgramScheduleItemDuration duration:
-                                enumerator.Peek.Do(
+                                enumerator.Current.Do(
                                     peekMediaItem =>
                                     {
+                                        // remember when we need to finish this duration item
                                         if (durationFinish.IsNone)
                                         {
-                                            durationFinish = startTime + duration.PlayoutDuration;
+                                            durationFinish = itemStartTime + duration.PlayoutDuration;
                                         }
 
-                                        DateTimeOffset finish = durationFinish.IfNone(DateTime.MinValue);
-                                        bool willNotFinishInTime = currentTime <= finish &&
-                                                                   currentTime + peekMediaItem.Metadata.Duration >
-                                                                   finish;
+                                        bool willNotFinishInTime =
+                                            currentTime <= durationFinish.IfNone(DateTime.MinValue) &&
+                                            currentTime + peekMediaItem.Metadata.Duration >
+                                            durationFinish.IfNone(DateTime.MinValue);
                                         if (willNotFinishInTime)
                                         {
+                                            _logger.LogDebug(
+                                                "Advancing to next schedule item after playout mode {PlayoutMode}",
+                                                "Duration");
                                             index++;
 
                                             if (duration.OfflineTail)
@@ -211,7 +225,7 @@ namespace ErsatzTV.Core.Scheduling
             playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
 
             // remove any items outside the desired range
-            playout.Items.RemoveAll(old => old.Finish < start || old.Start > finish);
+            playout.Items.RemoveAll(old => old.Finish < playoutStart || old.Start > playoutFinish);
 
             return playout;
         }
@@ -332,5 +346,10 @@ namespace ErsatzTV.Core.Scheduling
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
             }
         }
+
+        private static string DisplayTitle(MediaItem mediaItem) =>
+            mediaItem.Metadata.MediaType == MediaType.TvShow
+                ? $"{mediaItem.Metadata.Title} - s{mediaItem.Metadata.SeasonNumber:00}e{mediaItem.Metadata.EpisodeNumber:00}"
+                : mediaItem.Metadata.Title;
     }
 }

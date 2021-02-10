@@ -9,12 +9,12 @@
     <ToolBarContent>
         <MudText Typo="Typo.h6">Playouts</MudText>
     </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col/>
-            <col/>
-            <col style="width: 60px;"/>
-        </ColGroup>
+    <ColGroup>
+        <col/>
+        <col/>
+        <col/>
+        <col style="width: 60px;"/>
+    </ColGroup>
     <HeaderContent>
         <MudTh>Id</MudTh>
         <MudTh>Channel</MudTh>
@@ -67,7 +67,7 @@
 
     private async Task PlayoutSelected(PlayoutViewModel playout) =>
         _selectedPlayoutItems = await Mediator.Send(new GetPlayoutItemsById(playout.Id));
-    
+
     private async Task DeletePlayout(PlayoutViewModel playout)
     {
         var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ProgramSchedule.Name} on {playout.Channel.Number} - {playout.Channel.Name}" } };
@@ -84,6 +84,6 @@
 
     private async Task LoadAllPlayouts() =>
         _playouts = await Mediator.Send(new GetAllPlayouts());
-    
+
 
 }

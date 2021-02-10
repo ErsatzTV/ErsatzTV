@@ -1,8 +1,8 @@
 ﻿@page "/playouts/add"
-@using ErsatzTV.Application.ProgramSchedules
-@using ErsatzTV.Application.ProgramSchedules.Queries
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Channels.Queries
+@using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Application.ProgramSchedules.Queries
 @inject NavigationManager NavigationManager
 @inject ILogger<PlayoutEditor> Logger
 @inject ISnackbar Snackbar
@@ -32,7 +32,7 @@
     private readonly PlayoutEditViewModel _model = new();
     private List<ChannelViewModel> _channels;
     private List<ProgramScheduleViewModel> _programSchedules;
-    
+
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
