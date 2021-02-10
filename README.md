@@ -1,19 +1,34 @@
 # ErsatzTV
 
-ErsatzTV is pre-alpha software for configuring and streaming custom live channels using your own media. The software is currently unstable and under active development.
+**ErsatzTV** is pre-alpha software for configuring and streaming custom live channels using your media library. The software is currently unstable and under active development.
 
-## Features
+## Current Features
 
-- Multiple content sources
-  - Local files and [NFO metadata](https://kodi.wiki/view/NFO_files) (mostly working)
-  - [Plex](https://www.plex.tv/) content and metadata (under active development)
-  - [Jellyfin](https://jellyfin.org/) content and metadata (future)
-- IPTV server and [HDHomeRun](https://info.hdhomerun.com/info/http_api) emulation support a wide range of client applications
-  - Plex Live TV (via HDHomeRun emulation)
-  - [Channels](https://getchannels.com/) (via IPTV server)
-  - [TiviMate IPTV Player](https://play.google.com/store/apps/details?id=ar.tvplayer.tv)
+- Use local media files and optional sidecar [NFO metadata](https://kodi.wiki/view/NFO_files); no need for a full media server
+- IPTV server and HDHomeRun emulation support a wide range of client applications
+- Channel-specific streaming mode (MPEG-TS or HLS) and transcoding settings
+- Automatic creation of television media collections
+- Powerful scheduling options such as chronological collection playback throughout the day or over multiple days
+- OpenAPI spec for easy scripting from other languages (available while running at `/swagger/v1/swagger.json`)
+- Command line project for easy shell scripting
 
-## Screenshots
+## In Development
+
+- [Plex](https://www.plex.tv/) media, metadata and collections
+- Published Docker image
+  
+## Planned Features
+
+- [Jellyfin](https://jellyfin.org/) media, metadata and collections 
+- Meta collections to logically group other collections
+- Run as a Windows service
+- Spots to fill unscheduled gaps
+
+## Preview
+
+### ErsatzTV UI
+
+![ErsatzTV UI](docs/ersatztv-ui-channels.png)
 
 ### Plex Live TV
 
@@ -22,29 +37,7 @@ Sintel is © copyright Blender Foundation | durian.blender.org
 
 ## Development
 
-### Requirements
-
-- [.NET 5.0](https://dotnet.microsoft.com/download)
-- [ffmpeg and ffprobe](https://ffmpeg.org/download.html)
-
-### Run server
-
-```shell
-cd ErsatzTV
-dotnet run
-```
-
-### Run tests
-
-```shell
-dotnet test
-```
-
-### Cleanup code
-
-```shell
-./scripts/cleanup-code.sh
-```
+See [development documentation](docs/development.md).
 
 ## License
 
