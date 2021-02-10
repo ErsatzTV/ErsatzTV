@@ -5,7 +5,7 @@ services:
         build:
             context: .
         ports:
-            - "8989:80"
+            - "8409:80"
         volumes:
             - ersatztv:/root/.local/share/ersatztv
             #- /media/shared:/media/shared:ro 

@@ -84,8 +84,8 @@ namespace ErsatzTV
 
             Log.Logger.Information(
                 "Server will listen on port {Port} - try UI at {UI}",
-                8989,
-                "http://localhost:8989");
+                8409,
+                "http://localhost:8409");
 
             if (!Directory.Exists(FileSystemLayout.AppDataFolder))
             {

@@ -44,14 +44,14 @@ The easiest way to run ErsatzTV is with Docker:
 ```
 docker run -d \
   -e TZ=America/Chicago \
-  -p 8989:8989 \
+  -p 8409:8409 \
   -v /path/to/appdata/config:/root/.local/share/ersatztv \
   -v /path/to/shared/media:/path/to/shared/media:ro \
   --restart unless-stopped \
   jasongdove/ersatztv
 ```
 
-After running ErsatzTV for the first time, configure it by visiting the web UI at http://[address]:8989.
+After running ErsatzTV for the first time, configure it by visiting the web UI at http://[address]:8409.
 
 ## Development
 
