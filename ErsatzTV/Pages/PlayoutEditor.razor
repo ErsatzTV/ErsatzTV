@@ -49,10 +49,10 @@
     }
 
     private Task<IEnumerable<ChannelViewModel>> SearchChannels(string value) =>
-        _channels.Filter(c => $"{c.Number} - {c.Name}".ToLowerInvariant().Contains(value ?? string.Empty)).AsTask();
+        _channels.Filter(c => $"{c.Number} - {c.Name}".Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
     private Task<IEnumerable<ProgramScheduleViewModel>> SearchProgramSchedules(string value) =>
-        _programSchedules.Filter(c => c.Name.ToLowerInvariant().StartsWith(value ?? string.Empty)).AsTask();
+        _programSchedules.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
 
     private async Task HandleSubmitAsync()

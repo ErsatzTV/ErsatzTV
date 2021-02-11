@@ -170,7 +170,7 @@
     }
 
     private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
-        _mediaCollections.Filter(c => c.Name.ToLowerInvariant().Contains((value ?? string.Empty).ToLowerInvariant())).AsTask();
+        _mediaCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
     private async Task SaveChanges()
     {

@@ -21,7 +21,8 @@ namespace ErsatzTV.Core.Metadata
         public async Task RefreshMetadata(MediaItem mediaItem)
         {
             Option<MediaMetadata> maybeMetadata = await LoadMetadata(mediaItem);
-            MediaMetadata metadata = maybeMetadata.IfNone(() => GetFallbackMetadata(mediaItem));
+            MediaMetadata metadata =
+                maybeMetadata.IfNone(() => FallbackMetadataProvider.GetFallbackMetadata(mediaItem.Path));
             await ApplyMetadataUpdate(mediaItem, metadata);
         }
 
@@ -97,27 +98,6 @@ namespace ErsatzTV.Core.Metadata
                     }
                 },
                 None);
-        }
-
-        private MediaMetadata GetFallbackMetadata(MediaItem mediaItem)
-        {
-            string fileName = Path.GetFileName(mediaItem.Path);
-            var metadata = new MediaMetadata { Title = fileName ?? mediaItem.Path };
-
-            if (fileName != null)
-            {
-                const string PATTERN = @"^(.*?)[\s-]+[sS](\d+)[eE](\d+)\.\w+$";
-                Match match = Regex.Match(fileName, PATTERN);
-                if (match.Success)
-                {
-                    metadata.MediaType = MediaType.TvShow;
-                    metadata.Title = match.Groups[1].Value;
-                    metadata.SeasonNumber = int.Parse(match.Groups[2].Value);
-                    metadata.EpisodeNumber = int.Parse(match.Groups[3].Value);
-                }
-            }
-
-            return metadata;
         }
 
         private static DateTime? GetAired(string aired)
