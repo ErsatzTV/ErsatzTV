@@ -9,20 +9,15 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(_ => DrawerToggle())"/>
         <MudText Typo="Typo.h5" Class="ml-3">ErsatzTV</MudText>
         <MudAppBarSpacer/>
-        <MudTooltip Text="Channels M3U">
-            <MudIconButton Icon="@Icons.Custom.FileFormats.FileVideo" Color="Color.Inherit" Link="/iptv/channels.m3u" Target="_blank"/>
-        </MudTooltip>
-        <MudTooltip Text="EPG XMLTV">
-            <MudIconButton Icon="@Icons.Custom.FileFormats.FileCode" Color="Color.Inherit" Link="/iptv/xmltv.xml" Target="_blank"/>
-        </MudTooltip>
+        <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
+        <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+        <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink>
+        <MudDivider Vertical="true" FlexItem="true" DividerType="DividerType.Middle" Class="mx-4 my-5" />
         <MudTooltip Text="Discord">
             <MudIconButton Icon="fab fa-discord" Color="Color.Inherit" Link="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
         </MudTooltip>
         <MudTooltip Text="GitHub">
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/jasongdove/ErsatzTV" Target="_blank"/>
-        </MudTooltip>
-        <MudTooltip Text="OpenAPI">
-            <MudIconButton Icon="@Icons.Material.Filled.Api" Color="Color.Inherit" Link="/swagger" Target="_blank"/>
         </MudTooltip>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
