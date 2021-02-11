@@ -61,6 +61,7 @@ jobs:
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
+          prerelease: true
           files: |
             ErsatzTV*.zip
             ErsatzTV*.tar.gz
