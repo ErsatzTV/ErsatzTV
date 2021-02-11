@@ -25,6 +25,8 @@ namespace ErsatzTV.Core.Tests.Metadata
         [TestCase("Awesome Show - S01E02 - Episode Title-720p.mkv", "Awesome Show", 1, 2)]
         [TestCase("Awesome Show - s1e2 - Episode Title-720p.mkv", "Awesome Show", 1, 2)]
         [TestCase("Awesome Show - S1E2 - Episode Title-720p.mkv", "Awesome Show", 1, 2)]
+        [TestCase("Awesome Show (2021) - S01E02 - Description; More Description (1080p QUALITY codec GROUP).mkv", "Awesome Show (2021)", 1, 2)]
+        [TestCase("Awesome.Show.S01E02.Description.more.Description.QUAlity.codec.CODEC-GROUP.mkv", "Awesome.Show", 1, 2)]
         public void GetFallbackMetadata_ShouldHandleVariousFormats(string path, string title, int season, int episode)
         {
             var metadata = FallbackMetadataProvider.GetFallbackMetadata(path);

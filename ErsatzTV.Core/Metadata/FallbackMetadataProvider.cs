@@ -13,7 +13,7 @@ namespace ErsatzTV.Core.Metadata
 
             if (fileName != null)
             {
-                const string PATTERN = @"^(.*?)[\s-]+[sS](\d+)[eE](\d+).*\.\w+$";
+                const string PATTERN = @"^(.*?)[.\s-]+[sS](\d+)[eE](\d+).*\.\w+$";
                 Match match = Regex.Match(fileName, PATTERN);
                 if (match.Success)
                 {
