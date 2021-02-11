@@ -19,6 +19,11 @@ namespace ErsatzTV.Core.Hdhr
 
         public string GuideNumber => _channel.Number.ToString();
         public string GuideName => _channel.Name;
-        public string URL => $"{_scheme}://{_host}/iptv/channel/{_channel.Number}";
+
+        public string URL => _channel.StreamingMode switch
+        {
+            StreamingMode.HttpLiveStreaming => $"{_scheme}://{_host}/iptv/channel/{_channel.Number}.m3u8",
+            _ => $"{_scheme}://{_host}/iptv/channel/{_channel.Number}.ts"
+        };
     }
 }
