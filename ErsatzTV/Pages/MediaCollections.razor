@@ -91,7 +91,11 @@
 
         _totalItems = aggregateData.Count;
 
-        _pagedData = aggregateData.Skip(state.Page * state.PageSize).Take(state.PageSize);
+        _pagedData = aggregateData
+            .Skip(_totalItems <= state.PageSize ? 0 : state.Page * state.PageSize)
+            .Take(state.PageSize)
+            .OrderBy(c => c.Name);
+
         return new TableData<MediaCollectionSummaryViewModel> { TotalItems = _totalItems, Items = _pagedData };
     }
 
