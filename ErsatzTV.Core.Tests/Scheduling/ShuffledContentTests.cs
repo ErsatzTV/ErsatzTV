@@ -9,6 +9,7 @@ using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Scheduling
 {
+    [TestFixture]
     public class ShuffledContentTests
     {
         // this seed will produce (shuffle) 1-10 in order

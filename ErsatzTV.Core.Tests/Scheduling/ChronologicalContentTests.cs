@@ -9,6 +9,7 @@ using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Scheduling
 {
+    [TestFixture]
     public class ChronologicalContentTests
     {
         [Test]
