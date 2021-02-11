@@ -23,8 +23,8 @@ namespace ErsatzTV.Core.Iptv
 
         public string ToXml()
         {
-            var sb = new StringBuilder();
-            using var xml = XmlWriter.Create(sb);
+            using var ms = new MemoryStream();
+            using var xml = XmlWriter.Create(ms);
             xml.WriteStartDocument();
             
             xml.WriteStartElement("tv");
@@ -113,7 +113,8 @@ namespace ErsatzTV.Core.Iptv
             xml.WriteEndElement(); // tv
             xml.WriteEndDocument();
 
-            return sb.ToString();
+            xml.Flush();
+            return Encoding.UTF8.GetString(ms.ToArray());
         }
     }
 }
