@@ -6,6 +6,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
@@ -14,17 +15,21 @@ namespace ErsatzTV.Core.Metadata
     {
         private static readonly XmlSerializer MovieSerializer = new(typeof(MovieNfo));
         private static readonly XmlSerializer TvShowSerializer = new(typeof(TvShowEpisodeNfo));
+        private readonly ILogger<LocalMetadataProvider> _logger;
 
         private readonly IMediaItemRepository _mediaItemRepository;
 
-        public LocalMetadataProvider(IMediaItemRepository mediaItemRepository) =>
+        public LocalMetadataProvider(IMediaItemRepository mediaItemRepository, ILogger<LocalMetadataProvider> logger)
+        {
             _mediaItemRepository = mediaItemRepository;
+            _logger = logger;
+        }
 
         public async Task RefreshMetadata(MediaItem mediaItem)
         {
             Option<MediaMetadata> maybeMetadata = await LoadMetadata(mediaItem);
             MediaMetadata metadata =
-                maybeMetadata.IfNone(() => FallbackMetadataProvider.GetFallbackMetadata(mediaItem.Path));
+                maybeMetadata.IfNone(() => FallbackMetadataProvider.GetFallbackMetadata(mediaItem));
             await ApplyMetadataUpdate(mediaItem, metadata);
         }
 
@@ -52,11 +57,13 @@ namespace ErsatzTV.Core.Metadata
             string nfoFileName = Path.ChangeExtension(mediaItem.Path, "nfo");
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
+                _logger.LogDebug("NFO file does not exist at {Path}", nfoFileName);
                 return None;
             }
 
             if (!(mediaItem.Source is LocalMediaSource localMediaSource))
             {
+                _logger.LogDebug("Media source {Name} is not a local media source", mediaItem.Source.Name);
                 return None;
             }
 
@@ -68,7 +75,7 @@ namespace ErsatzTV.Core.Metadata
             };
         }
 
-        private static async Task<Option<MediaMetadata>> LoadTvShowMetadata(string nfoFileName)
+        private async Task<Option<MediaMetadata>> LoadTvShowMetadata(string nfoFileName)
         {
             try
             {
@@ -87,13 +94,14 @@ namespace ErsatzTV.Core.Metadata
                     },
                     None);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogDebug(ex, "Failed to read TV nfo metadata from {Path}", nfoFileName);
                 return None;
             }
         }
 
-        private static async Task<Option<MediaMetadata>> LoadMovieMetadata(string nfoFileName)
+        private async Task<Option<MediaMetadata>> LoadMovieMetadata(string nfoFileName)
         {
             try
             {
@@ -110,8 +118,9 @@ namespace ErsatzTV.Core.Metadata
                     },
                     None);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogDebug(ex, "Failed to read Movie nfo metadata from {Path}", nfoFileName);
                 return None;
             }
         }
