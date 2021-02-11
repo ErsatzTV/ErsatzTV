@@ -39,19 +39,24 @@ jobs:
           # Define some variables for things we need
           tag=$(git describe --tags --abbrev=0)
           release_name="ErsatzTV-$tag-${{ matrix.target }}"
+          release_name_cli="ErsatzTV.CommandLine-$tag-${{ matrix.target }}"
 
           # Build everything
           dotnet publish ErsatzTV/ErsatzTV.csproj --framework net5.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name"
+          dotnet publish ErsatzTV.CommandLine/ErsatzTV.CommandLine.csproj --framework net5.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name_cli"
 
           # Pack files
           if [ "${{ matrix.target }}" == "win-x64" ]; then
             7z a -tzip "${release_name}.zip" "./${release_name}/*"
+            7z a -tzip "${release_name_cli}.zip" "./${release_name_cli}/*"
           else
             tar czvf "${release_name}.tar.gz" "$release_name"
+            tar czvf "${release_name_cli}.tar.gz" "$release_name_cli"
           fi
 
           # Delete output directory
           rm -r "$release_name"
+          rm -r "$release_name_cli"
 
       - name: Publish
         uses: softprops/action-gh-release@v1
