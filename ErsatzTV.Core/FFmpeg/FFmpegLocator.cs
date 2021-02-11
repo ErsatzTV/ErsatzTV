@@ -51,10 +51,21 @@ namespace ErsatzTV.Core.FFmpeg
 
         private async Task<Option<string>> LocateExecutableOnPathAsync(string executableBase)
         {
-            string locateCommand = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "where" : "which";
             string executable = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? $"{executableBase}.exe"
                 : executableBase;
+
+            string processFileName = Process.GetCurrentProcess().MainModule?.FileName ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(processFileName))
+            {
+                string localFileName = Path.Combine(Path.GetDirectoryName(processFileName) ?? string.Empty, executable);
+                if (File.Exists(localFileName))
+                {
+                    return localFileName;
+                }
+            }
+
+            string locateCommand = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "where" : "which";
             using var p = new Process
             {
                 StartInfo = new ProcessStartInfo
