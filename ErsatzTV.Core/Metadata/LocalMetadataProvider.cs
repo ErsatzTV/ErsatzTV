@@ -79,7 +79,7 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open);
+                await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<TvShowEpisodeNfo> maybeNfo = TvShowSerializer.Deserialize(fileStream) as TvShowEpisodeNfo;
                 return maybeNfo.Match<Option<MediaMetadata>>(
                     nfo => new MediaMetadata
@@ -105,7 +105,7 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open);
+                await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<MovieNfo> maybeNfo = MovieSerializer.Deserialize(fileStream) as MovieNfo;
                 return maybeNfo.Match<Option<MediaMetadata>>(
                     nfo => new MediaMetadata
