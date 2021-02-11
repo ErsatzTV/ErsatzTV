@@ -37,7 +37,8 @@ namespace ErsatzTV.Core.Tests.Metadata
             2)]
         public void GetFallbackMetadata_ShouldHandleVariousFormats(string path, string title, int season, int episode)
         {
-            MediaMetadata metadata = FallbackMetadataProvider.GetFallbackMetadata(new MediaItem { Path = path });
+            MediaMetadata metadata = FallbackMetadataProvider.GetFallbackMetadata(
+                new MediaItem { Path = path, Source = new LocalMediaSource { MediaType = MediaType.TvShow } });
 
             metadata.MediaType.Should().Be(MediaType.TvShow);
             metadata.Title.Should().Be(title);
