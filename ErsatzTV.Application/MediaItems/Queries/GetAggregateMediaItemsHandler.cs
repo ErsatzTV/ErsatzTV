@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,7 +26,7 @@ namespace ErsatzTV.Application.MediaItems.Queries
             if (!string.IsNullOrEmpty(request.SearchString))
             {
                 allItems = allItems.Filter(
-                    i => i.Metadata?.Title.ToLowerInvariant().Contains(request.SearchString.ToLowerInvariant()) ==
+                    i => i.Metadata?.Title.Contains(request.SearchString, StringComparison.OrdinalIgnoreCase) ==
                          true);
             }
 
