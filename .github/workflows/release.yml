@@ -38,7 +38,7 @@ jobs:
           release_name="ErsatzTV-$tag-${{ matrix.target }}"
 
           # Build everything
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net50 --runtime "${{ matrix.target }}" -c Release -o "$release_name"
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net5.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name"
 
           # Pack files
           if [ "${{ matrix.target }}" == "win-x64" ]; then
