@@ -24,7 +24,9 @@ namespace ErsatzTV.Application.MediaItems.Queries
 
             if (!string.IsNullOrEmpty(request.SearchString))
             {
-                allItems = allItems.Filter(i => i.Metadata?.Title.Contains(request.SearchString) == true);
+                allItems = allItems.Filter(
+                    i => i.Metadata?.Title.ToLowerInvariant().Contains(request.SearchString.ToLowerInvariant()) ==
+                         true);
             }
 
             return allItems.GroupBy(c => new { c.Source.Name, c.Metadata.Title }).Map(
