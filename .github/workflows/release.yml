@@ -27,6 +27,9 @@ jobs:
         with:
           dotnet-version: 5.0.x
 
+      - name: Clean
+        run: dotnet clean --configuration Release && dotnet nuget locals all --clear
+
       - name: Install dependencies
         run: dotnet restore
 
@@ -53,6 +56,8 @@ jobs:
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
-          files: "ErsatzTV*"
+          files: |
+            ErsatzTV*.zip
+            ErsatzTV*.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
