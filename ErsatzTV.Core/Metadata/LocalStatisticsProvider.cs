@@ -82,7 +82,7 @@ namespace ErsatzTV.Core.Metadata
 
         private MediaMetadata ProjectToMediaMetadata(FFprobe probeOutput) =>
             Optional(probeOutput)
-                .Filter(json => json != null)
+                .Filter(json => json?.format != null && json.streams != null)
                 .ToValidation<BaseError>("Unable to parse ffprobe output")
                 .ToEither<FFprobe>()
                 .Match(
