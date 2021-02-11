@@ -6,6 +6,7 @@ using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.FFmpeg
 {
+    [TestFixture]
     public class FFmpegPlaybackSettingsCalculatorTests
     {
         public class CalculateSettings

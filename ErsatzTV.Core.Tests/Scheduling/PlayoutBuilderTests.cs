@@ -14,6 +14,7 @@ using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Scheduling
 {
+    [TestFixture]
     public class PlayoutBuilderTests
     {
         private readonly ILogger<PlayoutBuilder> _logger;

@@ -9,6 +9,7 @@ using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Scheduling
 {
+    [TestFixture]
     public class RandomizedContentTests
     {
         private const int KnownSeed = 22295;
