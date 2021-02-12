@@ -63,8 +63,19 @@ namespace ErsatzTV.Core.Metadata
                 ".avi", ".wmv", ".mov", ".mkv", ".ts"
             };
 
-            var allFiles = Directory.GetFiles(localMediaSource.Folder, "*", SearchOption.AllDirectories)
+            var allDirectories = Directory
+                .GetDirectories(localMediaSource.Folder, "*", SearchOption.AllDirectories)
+                .ToSeq();
+
+            // remove any directories with an .etvignore file locally, or in any parent directory
+            Seq<string> excluded = allDirectories.Filter(ShouldExcludeDirectory);
+            Seq<string> relevantDirectories = allDirectories
+                .Filter(d => !excluded.Any(d.StartsWith));
+
+            var allFiles = relevantDirectories
+                .Collect(d => Directory.GetFiles(d, "*", SearchOption.TopDirectoryOnly))
                 .Filter(file => knownExtensions.Contains(Path.GetExtension(file)))
+                .OrderBy(identity)
                 .ToSeq();
 
             // check if the media item exists
@@ -137,5 +148,7 @@ namespace ErsatzTV.Core.Metadata
             await _localMetadataProvider.RefreshMetadata(mediaItem);
             await _smartCollectionBuilder.RefreshSmartCollections(mediaItem);
         }
+
+        private static bool ShouldExcludeDirectory(string path) => File.Exists(Path.Combine(path, ".etvignore"));
     }
 }
