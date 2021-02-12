@@ -42,8 +42,8 @@ jobs:
           release_name_cli="ErsatzTV.CommandLine-$tag-${{ matrix.target }}"
 
           # Build everything
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net5.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name"
-          dotnet publish ErsatzTV.CommandLine/ErsatzTV.CommandLine.csproj --framework net5.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name_cli"
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net5.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" /property:InformationalVersion="${tag:1}-${{ matrix.target }}"
+          dotnet publish ErsatzTV.CommandLine/ErsatzTV.CommandLine.csproj --framework net5.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name_cli" /property:InformationalVersion="${tag:1}-${{ matrix.target }}"
 
           # Pack files
           if [ "${{ matrix.target }}" == "win-x64" ]; then

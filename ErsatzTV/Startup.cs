@@ -108,6 +108,9 @@ namespace ErsatzTV
                         o.MigrationsAssembly("ErsatzTV.Infrastructure");
                     }));
 
+            services.AddDbContext<LogContext>(
+                options => options.UseSqlite($"Data Source={FileSystemLayout.LogDatabasePath}"));
+
             services.AddMediatR(typeof(GetAllChannels).Assembly);
 
             services.AddRefitClient<IPlexTvApi>()
@@ -156,6 +159,7 @@ namespace ErsatzTV
             services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
             services.AddScoped<IProgramScheduleRepository, ProgramScheduleRepository>();
             services.AddScoped<IPlayoutRepository, PlayoutRepository>();
+            services.AddScoped<ILogRepository, LogRepository>();
             services.AddScoped<IFFmpegLocator, FFmpegLocator>();
             services.AddScoped<ISmartCollectionBuilder, SmartCollectionBuilder>();
             services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
