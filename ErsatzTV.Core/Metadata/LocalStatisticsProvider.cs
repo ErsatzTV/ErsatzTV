@@ -15,10 +15,12 @@ namespace ErsatzTV.Core.Metadata
 {
     public class LocalStatisticsProvider : ILocalStatisticsProvider
     {
-        private readonly IMediaItemRepository _mediaItemRepository;
         private readonly ILogger<LocalStatisticsProvider> _logger;
+        private readonly IMediaItemRepository _mediaItemRepository;
 
-        public LocalStatisticsProvider(IMediaItemRepository mediaItemRepository, ILogger<LocalStatisticsProvider> logger)
+        public LocalStatisticsProvider(
+            IMediaItemRepository mediaItemRepository,
+            ILogger<LocalStatisticsProvider> logger)
         {
             _mediaItemRepository = mediaItemRepository;
             _logger = logger;

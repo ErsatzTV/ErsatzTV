@@ -1,8 +1,16 @@
 ﻿@page "/media/collections/{Id:int}/items"
-@inject IDbContextFactory<TvContext> DbFactory
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.MediaCollections.Queries
+@using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.MediaItems.Queries
+@using Unit = LanguageExt.Unit
 @inject NavigationManager NavigationManager
+@inject IMediator Mediator
+@inject ILogger<MediaCollectionItemsEditor> Logger
+@inject ISnackbar Snackbar
 
-<MudTable Hover="true" Items="_mediaCollection.Items">
+<MudTable Hover="true" Items="_collectionItems">
     <ToolBarContent>
         <MudText Typo="Typo.h6">@_mediaCollection.Name Media Items</MudText>
     </ToolBarContent>
@@ -13,20 +21,20 @@
         <MudTh>Duration</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Source">@context.Source.Name</MudTd>
-        <MudTd DataLabel="Type">@context.GetDisplayMediaType()</MudTd>
-        <MudTd DataLabel="Title">@context.GetDisplayTitle()</MudTd>
-        <MudTd DataLabel="Duration">@context.Metadata.Duration.ToString(@"hh\:mm\:ss\.fff")</MudTd>
+        <MudTd DataLabel="Source">@context.Source</MudTd>
+        <MudTd DataLabel="Type">@context.MediaType</MudTd>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Duration">@context.Duration</MudTd>
     </RowTemplate>
     <PagerContent>
-        @if (_mediaCollection.Items.Count > 0)
+        @if (_collectionItems.Any())
         {
             <MudTablePager/>
         }
     </PagerContent>
 </MudTable>
 
-<MudTable @ref="_table" Hover="true" ServerData="@(new Func<TableState, Task<TableData<MediaItem>>>(ServerReload))" Class="mt-8">
+<MudTable @ref="_table" Hover="true" ServerData="@(new Func<TableState, Task<TableData<MediaItemSearchResultViewModel>>>(ServerReload))" Class="mt-8">
     <ToolBarContent>
         <MudText Typo="Typo.h6">All Media Items</MudText>
         <MudToolBarSpacer/>
@@ -41,10 +49,10 @@
         <MudTh>Duration</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Source">@context.Source.Name</MudTd>
-        <MudTd DataLabel="Type">@context.GetDisplayMediaType()</MudTd>
-        <MudTd DataLabel="Title">@context.GetDisplayTitle()</MudTd>
-        <MudTd DataLabel="Duration">@context.GetDisplayDuration()</MudTd>
+        <MudTd DataLabel="Source">@context.Source</MudTd>
+        <MudTd DataLabel="Type">@context.MediaType</MudTd>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Duration">@context.Duration</MudTd>
     </RowTemplate>
     <PagerContent>
         <MudTablePager/>
@@ -59,32 +67,27 @@
     [Parameter]
     public int Id { get; set; }
 
-    private SimpleMediaCollection _mediaCollection;
+    private MediaCollectionViewModel _mediaCollection;
+    private IEnumerable<MediaItemSearchResultViewModel> _collectionItems;
 
     protected override async Task OnParametersSetAsync() => await LoadMediaCollectionAsync();
 
     private List<int> _mediaItemIds;
-    private IEnumerable<MediaItem> _pagedData;
-    private MudTable<MediaItem> _table;
+    private IEnumerable<MediaItemSearchResultViewModel> _pagedData;
+    private MudTable<MediaItemSearchResultViewModel> _table;
 
     private int _totalItems;
     private string _searchString;
 
-    private async Task<TableData<MediaItem>> ServerReload(TableState state)
+    private async Task<TableData<MediaItemSearchResultViewModel>> ServerReload(TableState state)
     {
-        await using TvContext context = DbFactory.CreateDbContext();
-        IQueryable<MediaItem> data = from c in context.MediaItems.Include(c => c.Source) select c;
-
-        if (!string.IsNullOrEmpty(_searchString))
-        {
-            data = data.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{_searchString}%"));
-        }
+        List<MediaItemSearchResultViewModel> data = await Mediator.Send(new SearchAllMediaItems(_searchString));
 
         _mediaItemIds = data.Map(c => c.Id).ToList();
-        _totalItems = data.Count();
+        _totalItems = data.Count;
 
         _pagedData = data.OrderBy(c => c.Id).Skip(state.Page * state.PageSize).Take(state.PageSize).ToArray();
-        return new TableData<MediaItem> { TotalItems = _totalItems, Items = _pagedData };
+        return new TableData<MediaItemSearchResultViewModel> { TotalItems = _totalItems, Items = _pagedData };
     }
 
     private async Task OnSearch(string text)
@@ -95,32 +98,24 @@
 
     private async Task AddResultsAsync()
     {
-        await using TvContext context = DbFactory.CreateDbContext();
-
-        SimpleMediaCollection mediaCollection = await context.SimpleMediaCollections.FindAsync(_mediaCollection.Id);
-        await context.Entry(mediaCollection).Collection(cg => cg.Items).LoadAsync();
-        IEnumerable<int> existingMediaItems = _mediaCollection.Items.Select(c => c.Id);
-        IQueryable<MediaItem> mediaItemsToAdd = from c in context.MediaItems
-            where _mediaItemIds.Contains(c.Id) && !existingMediaItems.Contains(c.Id)
-            select c;
-        foreach (MediaItem mediaItem in mediaItemsToAdd)
-        {
-            mediaCollection.Items.Add(mediaItem);
-        }
-        context.MediaCollections.Update(mediaCollection);
-        await context.SaveChangesAsync();
-
-        await LoadMediaCollectionAsync();
+        Either<BaseError, Unit> result = await Mediator.Send(new AddItemsToSimpleMediaCollection(Id, _mediaItemIds));
+        await result.Match(
+            async _ => await LoadMediaCollectionAsync(),
+            error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Error adding items to media collection: {Error}", error.Value);
+                return Task.CompletedTask;
+            });
     }
 
     private async Task LoadMediaCollectionAsync()
     {
-        await using TvContext context = DbFactory.CreateDbContext();
-        _mediaCollection = await context.SimpleMediaCollections
-            .AsNoTracking()
-            .Include(cg => cg.Items)
-            .ThenInclude(c => c.Source)
-            .FirstAsync(cg => cg.Id == Id);
+        Option<Tuple<MediaCollectionViewModel, List<MediaItemSearchResultViewModel>>> maybeResult =
+            await Mediator.Send(new GetSimpleMediaCollectionWithItemsById(Id));
+        maybeResult.Match(
+            result => (_mediaCollection, _collectionItems) = result,
+            () => NavigationManager.NavigateTo("404"));
     }
 
 }

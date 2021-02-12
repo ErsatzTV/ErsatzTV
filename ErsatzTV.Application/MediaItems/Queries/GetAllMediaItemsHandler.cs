@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Interfaces.Repositories;
+using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.MediaItems.Mapper;
 
@@ -15,9 +16,9 @@ namespace ErsatzTV.Application.MediaItems.Queries
         public GetAllMediaItemsHandler(IMediaItemRepository mediaItemRepository) =>
             _mediaItemRepository = mediaItemRepository;
 
-        public async Task<List<MediaItemViewModel>> Handle(
+        public Task<List<MediaItemViewModel>> Handle(
             GetAllMediaItems request,
             CancellationToken cancellationToken) =>
-            (await _mediaItemRepository.GetAll()).Map(ProjectToViewModel).ToList();
+            _mediaItemRepository.GetAll().Map(list => list.Map(ProjectToViewModel).ToList());
     }
 }
