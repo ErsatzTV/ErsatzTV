@@ -11,6 +11,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         public Task<SimpleMediaCollection> Add(SimpleMediaCollection collection);
         public Task<Option<MediaCollection>> Get(int id);
         public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollection(int id);
+        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id);
         public Task<Option<TelevisionMediaCollection>> GetTelevisionMediaCollection(int id);
         public Task<List<SimpleMediaCollection>> GetSimpleMediaCollections();
         public Task<List<MediaCollection>> GetAll();

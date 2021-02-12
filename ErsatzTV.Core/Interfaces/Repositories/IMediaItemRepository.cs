@@ -10,6 +10,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         public Task<int> Add(MediaItem mediaItem);
         public Task<Option<MediaItem>> Get(int id);
         public Task<List<MediaItem>> GetAll();
+        public Task<List<MediaItem>> Search(string searchString);
         public Task<List<MediaItem>> GetAll(MediaType mediaType);
         public Task<List<MediaItem>> GetAllByMediaSourceId(int mediaSourceId);
         public Task Update(MediaItem mediaItem);

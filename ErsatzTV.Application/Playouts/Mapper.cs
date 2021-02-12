@@ -28,7 +28,7 @@ namespace ErsatzTV.Application.Playouts
                 ? $"{mediaItem.Metadata.Title} s{mediaItem.Metadata.SeasonNumber:00}e{mediaItem.Metadata.EpisodeNumber:00}"
                 : mediaItem.Metadata.Title;
 
-        public static string GetDisplayDuration(MediaItem mediaItem) =>
+        private static string GetDisplayDuration(MediaItem mediaItem) =>
             string.Format(
                 mediaItem.Metadata.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
                 mediaItem.Metadata.Duration);

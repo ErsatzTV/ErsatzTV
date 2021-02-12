@@ -22,6 +22,9 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollection(int id) =>
             throw new NotSupportedException();
 
+        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id) =>
+            throw new NotSupportedException();
+
         public Task<Option<TelevisionMediaCollection>> GetTelevisionMediaCollection(int id) =>
             throw new NotSupportedException();
 

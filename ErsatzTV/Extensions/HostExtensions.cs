@@ -1,6 +1,7 @@
 ﻿using System;
 using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -28,7 +29,7 @@ namespace ErsatzTV.Extensions
 
         private static TvContext Migrate(TvContext context)
         {
-            context.Database.EnsureCreated();
+            context.Database.Migrate();
             return context;
         }
 
