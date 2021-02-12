@@ -26,7 +26,8 @@ COPY ErsatzTV.Core/. ./ErsatzTV.Core/
 COPY ErsatzTV.Core.Tests/. ./ErsatzTV.Core.Tests/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
 WORKDIR /source/ErsatzTV
-RUN dotnet publish -c release -o /app -r linux-x64 --self-contained false --no-restore
+ARG INFO_VERSION="unknown"
+RUN dotnet publish -c release -o /app -r linux-x64 --self-contained false --no-restore /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
 FROM runtime-base
