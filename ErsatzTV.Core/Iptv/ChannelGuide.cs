@@ -26,15 +26,15 @@ namespace ErsatzTV.Core.Iptv
             using var ms = new MemoryStream();
             using var xml = XmlWriter.Create(ms);
             xml.WriteStartDocument();
-            
+
             xml.WriteStartElement("tv");
             xml.WriteAttributeString("generator-info-name", "ersatztv");
-            
+
             foreach (Channel channel in _channels)
             {
                 xml.WriteStartElement("channel");
                 xml.WriteAttributeString("id", channel.Number.ToString());
-                
+
                 xml.WriteStartElement("display-name");
                 xml.WriteAttributeString("lang", "en");
                 xml.WriteString(channel.Name);
@@ -72,7 +72,7 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteAttributeString("lang", "en");
                     xml.WriteString(metadata.Title);
                     xml.WriteEndElement(); // title
-                    
+
                     xml.WriteStartElement("previously-shown");
                     xml.WriteEndElement(); // previously-shown
 

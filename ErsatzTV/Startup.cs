@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading.Channels;
 using ErsatzTV.Application;
@@ -100,23 +99,14 @@ namespace ErsatzTV
             // string xmltvPath = Path.Combine(appDataFolder, "xmltv.xml");
             // Log.Logger.Information("XMLTV is at {XmltvPath}", xmltvPath);
 
-            services.AddDbContextFactory<TvContext>(
-                options =>
-                {
-                    options.UseSqlite(
-                        $"Data Source={FileSystemLayout.DatabasePath}",
-                        o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery));
-
-                    if (Debugger.IsAttached)
-                    {
-                        options.EnableSensitiveDataLogging();
-                    }
-                });
-
             services.AddDbContext<TvContext>(
                 options => options.UseSqlite(
                     $"Data Source={FileSystemLayout.DatabasePath}",
-                    o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)));
+                    o =>
+                    {
+                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                    }));
 
             services.AddMediatR(typeof(GetAllChannels).Assembly);
 

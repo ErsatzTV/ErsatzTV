@@ -29,6 +29,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollection(int id) =>
             Get(id).Map(c => c.OfType<SimpleMediaCollection>().HeadOrNone());
 
+        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id) =>
+            _dbContext.SimpleMediaCollections
+                .Include(s => s.Items)
+                .ThenInclude(i => i.Source)
+                .SingleOrDefaultAsync(c => c.Id == id)
+                .Map(Optional);
+
         public Task<Option<TelevisionMediaCollection>> GetTelevisionMediaCollection(int id) =>
             Get(id).Map(c => c.OfType<TelevisionMediaCollection>().HeadOrNone());
 
