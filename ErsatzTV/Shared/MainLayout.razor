@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Reflection
+@inherits LayoutComponentBase
 
 <MudThemeProvider Theme="_ersatzTvTheme"/>
 <MudDialogProvider DisableBackdropClick="true"/>
@@ -32,6 +33,11 @@
             </MudNavGroup>
             <MudNavLink Href="/schedules">Schedules</MudNavLink>
             <MudNavLink Href="/playouts">Playouts</MudNavLink>
+            <MudDivider Class="my-6" DividerType="DividerType.Middle" />
+            <MudContainer Style="text-align: right" Class="mr-6">
+                <MudText Typo="Typo.body2">ErsatzTV Version</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Info">@InfoVersion</MudText>
+            </MudContainer>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
@@ -42,7 +48,9 @@
 </MudLayout>
 
 @code {
-    bool _drawerOpen = true;
+    private static readonly string InfoVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
+
+    private bool _drawerOpen = true;
 
     private void DrawerToggle() => _drawerOpen = !_drawerOpen;
 
