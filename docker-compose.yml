@@ -4,6 +4,8 @@ services:
     ersatztv:
         build:
             context: .
+            args:
+                INFO_VERSION: "docker-compose-develop"
         ports:
             - "8409:8409"
         volumes:
