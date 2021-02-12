@@ -63,9 +63,9 @@ namespace ErsatzTV.Core.Metadata
                 ".avi", ".wmv", ".mov", ".mkv", ".ts"
             };
 
-            var allDirectories = Directory
+            Seq<string> allDirectories = Directory
                 .GetDirectories(localMediaSource.Folder, "*", SearchOption.AllDirectories)
-                .ToSeq();
+                .ToSeq().Add(localMediaSource.Folder);
 
             // remove any directories with an .etvignore file locally, or in any parent directory
             Seq<string> excluded = allDirectories.Filter(ShouldExcludeDirectory);
