@@ -7,6 +7,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using static LanguageExt.Prelude;
 
@@ -15,15 +16,26 @@ namespace ErsatzTV.Core.Metadata
     public class LocalStatisticsProvider : ILocalStatisticsProvider
     {
         private readonly IMediaItemRepository _mediaItemRepository;
+        private readonly ILogger<LocalStatisticsProvider> _logger;
 
-        public LocalStatisticsProvider(IMediaItemRepository mediaItemRepository) =>
+        public LocalStatisticsProvider(IMediaItemRepository mediaItemRepository, ILogger<LocalStatisticsProvider> logger)
+        {
             _mediaItemRepository = mediaItemRepository;
+            _logger = logger;
+        }
 
         public async Task RefreshStatistics(string ffprobePath, MediaItem mediaItem)
         {
-            FFprobe ffprobe = await GetProbeOutput(ffprobePath, mediaItem);
-            MediaMetadata metadata = ProjectToMediaMetadata(ffprobe);
-            await ApplyStatisticsUpdate(mediaItem, metadata);
+            try
+            {
+                FFprobe ffprobe = await GetProbeOutput(ffprobePath, mediaItem);
+                MediaMetadata metadata = ProjectToMediaMetadata(ffprobe);
+                await ApplyStatisticsUpdate(mediaItem, metadata);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to refresh statistics for media item at {Path}", mediaItem.Path);
+            }
         }
 
         private async Task ApplyStatisticsUpdate(
