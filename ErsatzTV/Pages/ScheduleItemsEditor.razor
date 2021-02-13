@@ -28,7 +28,7 @@
     <RowTemplate>
         <MudTd DataLabel="Start Time">
             <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @(context.StartType == StartType.Fixed ? context.StartTime : "Dynamic")
+                @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
             </MudText>
         </MudTd>
         <MudTd DataLabel="Media Collection">
@@ -73,7 +73,7 @@
                             <MudSelectItem Value="@startType">@startType</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudTextField Class="mt-3" Label="Start Time" @bind-Value="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
+                    <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
                     <MudAutocomplete Class="mt-3" T="MediaCollectionViewModel" Label="Media Collection" @bind-value="_selectedItem.MediaCollection" SearchFunc="@SearchMediaCollections" ToStringFunc="@(c => c?.Name)"/>
                     <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
                         @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
@@ -82,7 +82,7 @@
                         }
                     </MudSelect>
                     <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
-                    <MudTextField Class="mt-3" Label="Playout Duration" @bind-Value="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                    <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudSwitch Label="Offline Tail" @bind-Checked="@_selectedItem.OfflineTail" For="@(() => _selectedItem.OfflineTail)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
                     </MudElement>
