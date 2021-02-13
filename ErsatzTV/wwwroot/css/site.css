@@ -1,1 +1,28 @@
-﻿
+﻿.media-card-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.media-card-container {
+    width: 152px;
+}
+
+.media-card {
+    display: flex;
+    flex-direction: column;
+    height: 220px;
+    justify-content: center;
+    width: 152px;
+}
+
+.media-card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.media-card-poster-placeholder {
+    font-weight: bold;
+}

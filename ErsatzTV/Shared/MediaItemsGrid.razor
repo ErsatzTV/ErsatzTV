@@ -2,7 +2,7 @@
 @using ErsatzTV.Application.MediaItems.Queries
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.False" Style="display: flex; flex-direction: row; flex-wrap: wrap">
+<MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
     @foreach (AggregateMediaItemViewModel item in _data.OrderBy(i => i.SortTitle))
     {
         <MediaCard Data="@item"/>
