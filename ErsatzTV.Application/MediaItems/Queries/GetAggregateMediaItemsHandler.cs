@@ -34,6 +34,9 @@ namespace ErsatzTV.Application.MediaItems.Queries
                     group => new AggregateMediaItemViewModel(
                         group.Key.Name,
                         group.Key.Title,
+                        request.MediaType == MediaType.TvShow
+                            ? $"{group.Count()} Episodes"
+                            : group.Min(i => i.Metadata?.Aired?.Year).ToString(),
                         group.Count(),
                         group.Count() == 1 ? DisplayDuration(group.Head()) : string.Empty))
                 .ToList();

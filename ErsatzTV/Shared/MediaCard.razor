@@ -1,0 +1,28 @@
+﻿<div style="width: 152px" class="mx-3 pb-3">
+    <MudPaper Style="display: flex; flex-direction: column; height: 220px; justify-content: center; width: 152px;">
+        <MudText Align="Align.Center"
+                 Typo="Typo.h1"
+                 Style="font-weight: bold"
+                 Class="mud-text-disabled">
+            @Data.SortTitle.Substring(0, 1)
+        </MudText>
+    </MudPaper>
+    <MudText Align="Align.Center"
+             UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })"
+             Style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%;">
+        @Data.Title
+    </MudText>
+    <MudText Typo="Typo.body2"
+             Align="Align.Center"
+             Style="text-overflow: ellipsis"
+             Class="mud-text-secondary">
+        @Data.Subtitle
+    </MudText>
+</div>
+
+@code {
+
+    [Parameter]
+    public IMediaCard Data { get; set; }
+
+}

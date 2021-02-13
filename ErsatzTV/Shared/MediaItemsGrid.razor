@@ -1,0 +1,22 @@
+﻿@using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Application.MediaItems.Queries
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.False" Style="display: flex; flex-direction: row; flex-wrap: wrap">
+    @foreach (AggregateMediaItemViewModel item in _data.OrderBy(i => i.SortTitle))
+    {
+        <MediaCard Data="@item"/>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public MediaType MediaType { get; set; }
+
+    private List<AggregateMediaItemViewModel> _data;
+
+    protected override async Task OnInitializedAsync() =>
+        _data = await Mediator.Send(new GetAggregateMediaItems(MediaType, string.Empty));
+
+}
