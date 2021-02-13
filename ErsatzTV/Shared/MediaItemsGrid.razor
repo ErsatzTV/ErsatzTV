@@ -2,17 +2,35 @@
 @using ErsatzTV.Application.MediaItems.Queries
 @inject IMediator Mediator
 
+<MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
+    <MudPaper Style="display: flex; justify-content: center; align-items: center">
+        <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                       OnClick="@(() => _pageNumber -= 1)"
+                       Disabled="@(_pageNumber <= 1)">
+        </MudIconButton>
+        <MudText Style="flex-grow: 1"
+                 Align="Align.Center">
+            @((_pageNumber - 1) * PageSize + 1)-@Math.Min(_data.Count, _pageNumber * PageSize) of @_data.Count
+        </MudText>
+        <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                       OnClick="@(() => _pageNumber += 1)" Disabled="@(_pageNumber * PageSize > _data.Count)">
+        </MudIconButton>
+    </MudPaper>
+</MudContainer>
+
 <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-    @foreach (AggregateMediaItemViewModel item in _data.OrderBy(i => i.SortTitle))
+    @foreach (AggregateMediaItemViewModel item in _data.OrderBy(i => i.SortTitle).Skip(PageSize * (_pageNumber - 1)).Take(PageSize))
     {
         <MediaCard Data="@item"/>
     }
 </MudContainer>
 
 @code {
-
     [Parameter]
     public MediaType MediaType { get; set; }
+
+    private int PageSize => 100;
+    private int _pageNumber = 1;
 
     private List<AggregateMediaItemViewModel> _data;
 
