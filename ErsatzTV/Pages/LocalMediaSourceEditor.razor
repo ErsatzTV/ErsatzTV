@@ -67,7 +67,13 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            var command = new CreateLocalMediaSource(_model.Folder, _model.MediaType, _model.Folder);
+            var command = new CreateLocalMediaSource(
+                Convert.ToBase64String(Guid.NewGuid().ToByteArray())
+                    .TrimEnd('=')
+                    .Replace("/", "_")
+                    .Replace("+", "-"),
+                _model.MediaType,
+                _model.Folder);
             Either<BaseError, MediaSourceViewModel> result = await Mediator.Send(command);
             await result.Match(
                 Left: error =>
@@ -83,5 +89,7 @@
                 });
         }
     }
+
+
 
 }

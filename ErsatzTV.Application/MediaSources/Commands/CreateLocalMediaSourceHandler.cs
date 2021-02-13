@@ -41,28 +41,28 @@ namespace ErsatzTV.Application.MediaSources.Commands
                         Folder = folder
                     });
 
-        private async Task<Validation<BaseError, string>> ValidateName(CreateLocalMediaSource createCollection)
+        private async Task<Validation<BaseError, string>> ValidateName(CreateLocalMediaSource request)
         {
             List<string> allNames = await _mediaSourceRepository.GetAll()
                 .Map(list => list.Map(c => c.Name).ToList());
 
-            Validation<BaseError, string> result1 = createCollection.NotEmpty(c => c.Name)
-                .Bind(_ => createCollection.NotLongerThan(50)(c => c.Name));
+            Validation<BaseError, string> result1 = request.NotEmpty(c => c.Name)
+                .Bind(_ => request.NotLongerThan(50)(c => c.Name));
 
-            var result2 = Optional(createCollection.Name)
+            var result2 = Optional(request.Name)
                 .Filter(name => !allNames.Contains(name))
                 .ToValidation<BaseError>("Media source name must be unique");
 
-            return (result1, result2).Apply((_, _) => createCollection.Name);
+            return (result1, result2).Apply((_, _) => request.Name);
         }
 
-        private async Task<Validation<BaseError, string>> ValidateFolder(CreateLocalMediaSource createCollection)
+        private async Task<Validation<BaseError, string>> ValidateFolder(CreateLocalMediaSource request)
         {
             List<string> allFolders = await _mediaSourceRepository.GetAll()
                 .Map(list => list.OfType<LocalMediaSource>().Map(c => c.Folder).ToList());
 
 
-            return Optional(createCollection.Folder)
+            return Optional(request.Folder)
                 .Filter(folder => allFolders.ForAll(f => !AreSubPaths(f, folder)))
                 .ToValidation<BaseError>("Folder must not belong to another media source");
         }
