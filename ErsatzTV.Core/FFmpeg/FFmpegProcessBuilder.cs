@@ -285,7 +285,7 @@ namespace ErsatzTV.Core.FFmpeg
             bool hasVideoFilters = _videoFilters.Any();
             if (hasVideoFilters)
             {
-                (string filter, string finalLabel) = GenerateFilter(_videoFilters, StreamType.Video);
+                (string filter, string finalLabel) = GenerateVideoFilter(_videoFilters);
                 complexFilter.Append(filter);
                 videoLabel = finalLabel;
             }
@@ -297,7 +297,7 @@ namespace ErsatzTV.Core.FFmpeg
                     complexFilter.Append(';');
                 }
 
-                (string filter, string finalLabel) = GenerateFilter(_audioFilters, StreamType.Audio);
+                (string filter, string finalLabel) = GenerateAudioFilter(_audioFilters);
                 complexFilter.Append(filter);
                 audioLabel = finalLabel;
             }
@@ -348,20 +348,16 @@ namespace ErsatzTV.Core.FFmpeg
             };
         }
 
-        private FilterResult GenerateFilter(Queue<string> filterQueue, StreamType streamType)
+        private FilterResult GenerateVideoFilter(Queue<string> filterQueue) =>
+            GenerateFilter(filterQueue, "null", 'v');
+
+        private FilterResult GenerateAudioFilter(Queue<string> filterQueue) =>
+            GenerateFilter(filterQueue, "anull", 'a');
+
+        private static FilterResult GenerateFilter(Queue<string> filterQueue, string nullFilter, char av)
         {
             var filter = new StringBuilder();
             var index = 0;
-            string nullFilter = streamType switch
-            {
-                StreamType.Audio => "anull",
-                StreamType.Video => "null"
-            };
-            char av = streamType switch
-            {
-                StreamType.Audio => 'a',
-                StreamType.Video => 'v'
-            };
             filter.Append($"[0:{av}]{nullFilter}[{av}{index}]");
             while (filterQueue.TryDequeue(out string result))
             {
@@ -372,11 +368,5 @@ namespace ErsatzTV.Core.FFmpeg
         }
 
         private record FilterResult(string Filter, string FinalLabel);
-
-        private enum StreamType
-        {
-            Audio,
-            Video
-        }
     }
 }
