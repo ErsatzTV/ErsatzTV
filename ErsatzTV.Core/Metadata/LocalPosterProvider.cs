@@ -56,7 +56,19 @@ namespace ErsatzTV.Core.Metadata
             return None;
         }
 
-        private Option<string> RefreshTelevisionPoster(MediaItem mediaItem) => None;
+        private Option<string> RefreshTelevisionPoster(MediaItem mediaItem)
+        {
+            string folder = Directory.GetParent(Path.GetDirectoryName(mediaItem.Path) ?? string.Empty)?.FullName;
+            if (folder != null)
+            {
+                string[] possiblePaths = { "poster.jpg" };
+                Option<string> maybePoster =
+                    possiblePaths.Map(p => Path.Combine(folder, p)).FirstOrDefault(File.Exists);
+                return maybePoster;
+            }
+
+            return None;
+        }
 
         private async Task SavePosterToDisk(MediaItem mediaItem, string posterPath)
         {

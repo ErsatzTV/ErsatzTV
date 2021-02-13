@@ -62,7 +62,7 @@ LIMIT {0} OFFSET {1}",
     Metadata_Title AS Title,
     Metadata_SortTitle AS SortTitle,
     count(*) || ' Episodes' AS Subtitle,
-    Poster
+    min(Poster) AS Poster
 FROM MediaItems WHERE Metadata_MediaType=1
 GROUP BY Metadata_Title, Metadata_SortTitle
 ORDER BY Metadata_SortTitle
