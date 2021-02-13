@@ -44,20 +44,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<MediaItemSummary>> GetPageByType(MediaType mediaType, int pageNumber, int pageSize) =>
             mediaType switch
             {
-                MediaType.Movie => _dbContext.MediaItems
+                MediaType.Movie => _dbContext.MediaItemSummaries.FromSqlRaw(
+                        @"SELECT Metadata_Title AS Title, Metadata_SortTitle AS SortTitle, substr(Metadata_Aired, 1, 4) AS Subtitle
+FROM MediaItems WHERE Metadata_MediaType=2
+ORDER BY Metadata_SortTitle
+LIMIT {0} OFFSET {1}",
+                        pageSize,
+                        (pageNumber - 1) * pageSize)
                     .AsNoTracking()
-                    .Filter(i => i.Metadata.MediaType == mediaType)
-                    .OrderBy(i => i.Metadata.SortTitle)
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync()
-                    .Map(
-                        list => list.Map(
-                                i => new MediaItemSummary(
-                                    i.Metadata.Title,
-                                    i.Metadata.SortTitle,
-                                    i.Metadata.Aired?.Year.ToString()))
-                            .ToList()),
+                    .ToListAsync(),
                 MediaType.TvShow => _dbContext.MediaItemSummaries.FromSqlRaw(
                         @"SELECT Metadata_Title AS Title, Metadata_SortTitle AS SortTitle, count(*) || ' Episodes' AS Subtitle
 FROM MediaItems WHERE Metadata_MediaType=1
