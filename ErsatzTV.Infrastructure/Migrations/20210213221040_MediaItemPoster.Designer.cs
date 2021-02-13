@@ -9,14 +9,50 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20210213191309_MediaItemPosterPath")]
-    partial class MediaItemPosterPath
+    [Migration("20210213221040_MediaItemPoster")]
+    partial class MediaItemPoster
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "5.0.3");
+
+            modelBuilder.Entity("ErsatzTV.Core.AggregateModels.GenericIntegerId", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.AggregateModels.MediaCollectionSummary", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSimple")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ItemCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.AggregateModels.MediaItemSummary", b =>
+                {
+                    b.Property<string>("Poster")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SortTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Subtitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+                });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Channel", b =>
                 {
@@ -168,7 +204,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("Path")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PosterPath")
+                    b.Property<string>("Poster")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

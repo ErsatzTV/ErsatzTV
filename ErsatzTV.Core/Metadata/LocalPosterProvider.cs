@@ -2,35 +2,42 @@
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
 {
     public class LocalPosterProvider : ILocalPosterProvider
     {
+        private readonly IImageCache _imageCache;
+        private readonly ILogger<LocalPosterProvider> _logger;
         private readonly IMediaItemRepository _mediaItemRepository;
 
-        public LocalPosterProvider(IMediaItemRepository mediaItemRepository) =>
-            _mediaItemRepository = mediaItemRepository;
-
-        public Task RefreshPoster(MediaItem mediaItem)
+        public LocalPosterProvider(
+            IMediaItemRepository mediaItemRepository,
+            IImageCache imageCache,
+            ILogger<LocalPosterProvider> logger)
         {
-            Option<string> maybePoster = mediaItem.Metadata.MediaType switch
+            _mediaItemRepository = mediaItemRepository;
+            _imageCache = imageCache;
+            _logger = logger;
+        }
+
+        public async Task RefreshPoster(MediaItem mediaItem)
+        {
+            Option<string> maybePosterPath = mediaItem.Metadata.MediaType switch
             {
                 MediaType.Movie => RefreshMoviePoster(mediaItem),
                 MediaType.TvShow => RefreshTelevisionPoster(mediaItem),
                 _ => None
             };
 
-            return maybePoster.Match(
-                path =>
-                {
-                    mediaItem.PosterPath = path;
-                    return _mediaItemRepository.Update(mediaItem);
-                },
+            await maybePosterPath.Match(
+                path => SavePosterToDisk(mediaItem, path),
                 Task.CompletedTask);
         }
 
@@ -50,5 +57,22 @@ namespace ErsatzTV.Core.Metadata
         }
 
         private Option<string> RefreshTelevisionPoster(MediaItem mediaItem) => None;
+
+        private async Task SavePosterToDisk(MediaItem mediaItem, string posterPath)
+        {
+            byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
+            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, 220, null);
+            await maybeHash.Match(
+                hash =>
+                {
+                    mediaItem.Poster = hash;
+                    return _mediaItemRepository.Update(mediaItem);
+                },
+                error =>
+                {
+                    _logger.LogWarning("Unable to save poster to disk from {Path}: {Error}", posterPath, error.Value);
+                    return Task.CompletedTask;
+                });
+        }
     }
 }

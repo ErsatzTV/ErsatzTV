@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
-    public partial class MediaItemPosterPath : Migration
+    public partial class MediaItemPoster : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -13,7 +13,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                 "MediaCollectionSummaries");
 
             migrationBuilder.AddColumn<string>(
-                "PosterPath",
+                "Poster",
                 "MediaItems",
                 "TEXT",
                 nullable: true);
@@ -22,7 +22,7 @@ namespace ErsatzTV.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                "PosterPath",
+                "Poster",
                 "MediaItems");
 
             migrationBuilder.CreateTable(

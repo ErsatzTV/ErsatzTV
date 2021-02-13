@@ -1,9 +1,9 @@
 ﻿@using ErsatzTV.Application.MediaItems
 <div class="media-card-container mx-3 pb-3">
     <MudPaper Class="media-card">
-        @if (Data.HasPoster)
+        @if (!string.IsNullOrWhiteSpace(Data.Poster))
         {
-            <img src="@($"/posters/{Data.MediaItemId}")" style="max-height: 220px"/>
+            <img src="@($"/posters/{Data.Poster}")" style="max-height: 220px"/>
         }
         else
         {

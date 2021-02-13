@@ -39,12 +39,12 @@ namespace ErsatzTV.Application.MediaItems.Queries
             try
             {
                 return await _memoryCache.GetOrCreateAsync(
-                    mediaItem.PosterPath,
+                    mediaItem.Poster,
                     async entry =>
                     {
                         entry.SlidingExpiration = TimeSpan.FromHours(1);
 
-                        byte[] contents = await File.ReadAllBytesAsync(mediaItem.PosterPath);
+                        byte[] contents = await File.ReadAllBytesAsync(mediaItem.Poster);
                         MimeType mimeType = MimeTypes.GetMimeType(contents);
                         return new ImageViewModel(contents, mimeType.Name);
                     });
@@ -63,7 +63,7 @@ namespace ErsatzTV.Application.MediaItems.Queries
             .ToValidation<BaseError>($"MediaItem {request.MediaItemId} does not exist.");
 
         private static Validation<BaseError, MediaItem> PosterPathMustExist(MediaItem mediaItem) =>
-            Optional(mediaItem.PosterPath)
+            Optional(mediaItem.Poster)
                 .Filter(p => !string.IsNullOrWhiteSpace(p) && File.Exists(p))
                 .Map(_ => mediaItem)
                 .ToValidation<BaseError>($"MediaItem {mediaItem.Id} does not have a poster");

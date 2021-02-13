@@ -6,6 +6,7 @@ using ErsatzTV.Application.Channels.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -15,6 +16,7 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
+using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
@@ -167,6 +169,7 @@ namespace ErsatzTV
             services.AddScoped<ILocalPosterProvider, LocalPosterProvider>();
             services.AddScoped<ILocalMediaScanner, LocalMediaScanner>();
             services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
+            services.AddScoped<IImageCache, ImageCache>();
 
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();
