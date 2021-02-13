@@ -28,7 +28,13 @@ namespace ErsatzTV.Application.MediaItems.Queries
                 request.PageSize);
 
             var results = allItems
-                .Map(s => new AggregateMediaItemViewModel(s.Title, s.Subtitle, s.SortTitle))
+                .Map(
+                    s => new AggregateMediaItemViewModel(
+                        s.MediaItemId,
+                        s.Title,
+                        s.Subtitle,
+                        s.SortTitle,
+                        !string.IsNullOrWhiteSpace(s.PosterPath)))
                 .ToList();
 
             return new AggregateMediaItemResults(count, results);

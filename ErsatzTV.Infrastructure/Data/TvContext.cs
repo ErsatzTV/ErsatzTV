@@ -40,6 +40,11 @@ namespace ErsatzTV.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Ignore<MediaCollectionSummary>();
+            builder.Ignore<GenericIntegerId>();
+            builder.Ignore<MediaItemSummary>();
+
             builder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);
         }
     }

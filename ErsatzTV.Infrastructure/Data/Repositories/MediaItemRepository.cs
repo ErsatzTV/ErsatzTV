@@ -45,7 +45,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             mediaType switch
             {
                 MediaType.Movie => _dbContext.MediaItemSummaries.FromSqlRaw(
-                        @"SELECT Metadata_Title AS Title, Metadata_SortTitle AS SortTitle, substr(Metadata_Aired, 1, 4) AS Subtitle
+                        @"SELECT
+    Metadata_Title AS Title,
+    Metadata_SortTitle AS SortTitle,
+    substr(Metadata_Aired, 1, 4) AS Subtitle,
+    PosterPath,
+    Id as MediaItemId
 FROM MediaItems WHERE Metadata_MediaType=2
 ORDER BY Metadata_SortTitle
 LIMIT {0} OFFSET {1}",
@@ -54,7 +59,12 @@ LIMIT {0} OFFSET {1}",
                     .AsNoTracking()
                     .ToListAsync(),
                 MediaType.TvShow => _dbContext.MediaItemSummaries.FromSqlRaw(
-                        @"SELECT Metadata_Title AS Title, Metadata_SortTitle AS SortTitle, count(*) || ' Episodes' AS Subtitle
+                        @"SELECT
+    Metadata_Title AS Title,
+    Metadata_SortTitle AS SortTitle,
+    count(*) || ' Episodes' AS Subtitle,
+    PosterPath,
+    min(Id) as MediaItemId
 FROM MediaItems WHERE Metadata_MediaType=1
 GROUP BY Metadata_Title, Metadata_SortTitle
 ORDER BY Metadata_SortTitle

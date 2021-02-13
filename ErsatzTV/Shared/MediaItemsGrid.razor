@@ -3,7 +3,7 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
-    <MudPaper Style="display: flex; justify-content: center; align-items: center">
+    <MudPaper Style="align-items: center; display: flex; justify-content: center;">
         <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
                        OnClick="@(() => PrevPage())"
                        Disabled="@(_pageNumber <= 1)">
@@ -45,7 +45,7 @@
         _pageNumber -= 1;
         await RefreshData();
     }
-    
+
     private async Task NextPage()
     {
         _pageNumber += 1;

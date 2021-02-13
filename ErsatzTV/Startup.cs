@@ -164,6 +164,7 @@ namespace ErsatzTV
             services.AddScoped<ISmartCollectionBuilder, SmartCollectionBuilder>();
             services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
             services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
+            services.AddScoped<ILocalPosterProvider, LocalPosterProvider>();
             services.AddScoped<ILocalMediaScanner, LocalMediaScanner>();
             services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
 

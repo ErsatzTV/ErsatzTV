@@ -7,9 +7,9 @@ namespace ErsatzTV.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "Metadata_SortTitle",
-                table: "MediaItems",
-                type: "TEXT",
+                "Metadata_SortTitle",
+                "MediaItems",
+                "TEXT",
                 nullable: true);
 
             migrationBuilder.Sql(
@@ -22,11 +22,9 @@ SET Metadata_SortTitle = substr(Metadata_Title, 5)
 WHERE Metadata_Title LIKE 'the %'");
         }
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
+        protected override void Down(MigrationBuilder migrationBuilder) =>
             migrationBuilder.DropColumn(
-                name: "Metadata_SortTitle",
-                table: "MediaItems");
-        }
+                "Metadata_SortTitle",
+                "MediaItems");
     }
 }

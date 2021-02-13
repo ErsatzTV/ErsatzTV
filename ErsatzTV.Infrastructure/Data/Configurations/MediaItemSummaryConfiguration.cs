@@ -7,6 +7,6 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     public class MediaItemSummaryConfiguration : IEntityTypeConfiguration<MediaItemSummary>
     {
         public void Configure(EntityTypeBuilder<MediaItemSummary> builder) =>
-            builder.HasNoKey();
+            builder.HasNoKey().ToView(null);
     }
 }

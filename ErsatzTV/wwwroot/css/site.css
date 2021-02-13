@@ -4,9 +4,7 @@
     flex-wrap: wrap;
 }
 
-.media-card-container {
-    width: 152px;
-}
+.media-card-container { width: 152px; }
 
 .media-card {
     display: flex;
@@ -23,6 +21,4 @@
     width: 100%;
 }
 
-.media-card-poster-placeholder {
-    font-weight: bold;
-}
+.media-card-poster-placeholder { font-weight: bold; }

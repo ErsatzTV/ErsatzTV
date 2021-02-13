@@ -62,6 +62,7 @@ namespace ErsatzTV.Services
                                 RefreshMediaItemMetadata => "metadata",
                                 RefreshMediaItemStatistics => "statistics",
                                 RefreshMediaItemCollections => "collections",
+                                RefreshMediaItemPoster => "poster",
                                 _ => ""
                             };
 
