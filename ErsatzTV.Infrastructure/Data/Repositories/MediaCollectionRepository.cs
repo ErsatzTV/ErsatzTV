@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.AggregateModels;
@@ -68,7 +69,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 collection => collection switch
                 {
                     SimpleMediaCollection s => SimpleItems(s),
-                    TelevisionMediaCollection t => TelevisionItems(t)
+                    TelevisionMediaCollection t => TelevisionItems(t),
+                    _ => throw new NotSupportedException($"Unsupported collection type {collection.GetType().Name}")
                 }).Bind(x => x.Sequence());
 
         public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id) =>

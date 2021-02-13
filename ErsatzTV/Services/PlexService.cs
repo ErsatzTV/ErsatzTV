@@ -63,14 +63,15 @@ namespace ErsatzTV.Services
                         TryCompletePlexPinFlow pinRequest => CompletePinFlow(pinRequest, cancellationToken),
                         SynchronizePlexMediaSources sourcesRequest => SynchronizeSources(
                             sourcesRequest,
-                            cancellationToken)
+                            cancellationToken),
+                        _ => throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}")
                     };
 
                     await requestTask;
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to process poll for Plex auth token request");
+                    _logger.LogWarning(ex, "Failed to process plex background service request");
                 }
             }
         }

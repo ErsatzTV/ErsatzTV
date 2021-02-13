@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -88,7 +89,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     MediaCollectionId = item.MediaCollectionId,
                     PlayoutDuration = item.PlayoutDuration.GetValueOrDefault(),
                     OfflineTail = item.OfflineTail.GetValueOrDefault()
-                }
+                },
+                _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
             };
     }
 }
