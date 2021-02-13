@@ -631,6 +631,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                             b1.Property<int?>("SeasonNumber")
                                 .HasColumnType("INTEGER");
 
+                            b1.Property<string>("SortTitle")
+                                .HasColumnType("TEXT");
+
                             b1.Property<string>("Subtitle")
                                 .HasColumnType("TEXT");
 

@@ -12,6 +12,7 @@ namespace ErsatzTV.Core.Domain
         public string AudioCodec { get; set; }
         public MediaType MediaType { get; set; }
         public string Title { get; set; }
+        public string SortTitle { get; set; }
         public string Subtitle { get; set; }
         public string Description { get; set; }
         public int? SeasonNumber { get; set; }

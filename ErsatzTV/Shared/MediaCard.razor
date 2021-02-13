@@ -1,7 +1,7 @@
 ﻿<div class="media-card-container mx-3 pb-3">
     <MudPaper Class="media-card">
         <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
-            @Data.SortTitle.Substring(0, 1)
+            @Placeholder(Data.SortTitle)
         </MudText>
     </MudPaper>
     <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
@@ -16,5 +16,11 @@
 
     [Parameter]
     public IMediaCard Data { get; set; }
+
+    private string Placeholder(string sortTitle)
+    {
+        string first = sortTitle.Substring(0, 1).ToUpperInvariant();
+        return int.TryParse(first, out _) ? "#" : first;
+    }
 
 }

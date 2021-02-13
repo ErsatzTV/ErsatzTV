@@ -32,6 +32,7 @@ namespace ErsatzTV.Infrastructure.Data
         // support raw sql queries
         public DbSet<MediaCollectionSummary> MediaCollectionSummaries { get; set; }
         public DbSet<GenericIntegerId> GenericIntegerIds { get; set; }
+        public DbSet<MediaItemSummary> MediaItemSummaries { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.UseLoggerFactory(_loggerFactory);
