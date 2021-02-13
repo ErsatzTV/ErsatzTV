@@ -86,7 +86,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
                 error =>
                 {
                     _logger.LogWarning(
-                        "Unable to synchronize libraries from Plex server {PlexServer}: {Error}",
+                        "Unable to synchronize libraries from plex server {PlexServer}: {Error}",
                         connectionParameters.PlexMediaSource.Name,
                         error.Value);
 

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules
 {
@@ -40,7 +41,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         one.Index,
                         one.StartType,
                         one.StartTime,
-                        MediaCollections.Mapper.ProjectToViewModel(one.MediaCollection))
+                        MediaCollections.Mapper.ProjectToViewModel(one.MediaCollection)),
+                _ => throw new NotSupportedException(
+                    $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")
             };
     }
 }

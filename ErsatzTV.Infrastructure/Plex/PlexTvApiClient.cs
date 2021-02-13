@@ -105,7 +105,7 @@ namespace ErsatzTV.Infrastructure.Plex
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // ignored
             }
