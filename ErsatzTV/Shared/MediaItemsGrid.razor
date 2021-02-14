@@ -21,7 +21,7 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
     @foreach (AggregateMediaItemViewModel item in _data.DataPage)
     {
-        <MediaCard Data="@item"/>
+        <MediaCard Data="@item" DataRefreshed="@(() => RefreshData())"/>
     }
 </MudContainer>
 
