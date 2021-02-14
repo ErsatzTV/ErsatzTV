@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Channels;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
@@ -76,6 +77,11 @@ namespace ErsatzTV
             services.AddServerSideBlazor();
 
             services.AddMudServices();
+
+            Log.Logger.Information(
+                "ErsatzTV version {Version}",
+                Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                    ?.InformationalVersion ?? "unknown");
 
             Log.Logger.Warning("This is pre-alpha software and is likely to be unstable");
             Log.Logger.Warning(
