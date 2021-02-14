@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,6 +14,7 @@ namespace ErsatzTV.Core.Metadata
 {
     public class LocalMediaScanner : ILocalMediaScanner
     {
+        private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILocalPosterProvider _localPosterProvider;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
@@ -32,7 +32,8 @@ namespace ErsatzTV.Core.Metadata
             ILocalPosterProvider localPosterProvider,
             ISmartCollectionBuilder smartCollectionBuilder,
             IPlayoutBuilder playoutBuilder,
-            ILogger<LocalMediaScanner> logger)
+            ILogger<LocalMediaScanner> logger,
+            ILocalFileSystem localFileSystem)
         {
             _mediaItemRepository = mediaItemRepository;
             _playoutRepository = playoutRepository;
@@ -42,6 +43,7 @@ namespace ErsatzTV.Core.Metadata
             _smartCollectionBuilder = smartCollectionBuilder;
             _playoutBuilder = playoutBuilder;
             _logger = logger;
+            _localFileSystem = localFileSystem;
         }
 
         public async Task<Unit> ScanLocalMediaSource(
@@ -49,85 +51,37 @@ namespace ErsatzTV.Core.Metadata
             string ffprobePath,
             ScanningMode scanningMode)
         {
-            if (!Directory.Exists(localMediaSource.Folder))
+            if (!_localFileSystem.IsMediaSourceAccessible(localMediaSource))
             {
                 _logger.LogWarning(
-                    "Media source folder {Folder} does not exist; skipping scan",
+                    "Media source folder {Folder} does not exist or is inaccessible; skipping scan",
                     localMediaSource.Folder);
-                return Unit.Default;
+                return unit;
             }
 
             List<MediaItem> knownMediaItems = await _mediaItemRepository.GetAllByMediaSourceId(localMediaSource.Id);
             var modifiedPlayoutIds = new List<int>();
 
-            // remove files that no longer exist
-            // add new files
-            // refresh metadata for any files where it is missing
-            var knownExtensions = new List<string>
-            {
-                ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4", ".m4p", ".m4v",
-                ".avi", ".wmv", ".mov", ".mkv", ".ts"
-            };
-
-            Seq<string> allDirectories = Directory
-                .GetDirectories(localMediaSource.Folder, "*", SearchOption.AllDirectories)
-                .ToSeq().Add(localMediaSource.Folder);
-
-            // remove any directories with an .etvignore file locally, or in any parent directory
-            Seq<string> excluded = allDirectories.Filter(ShouldExcludeDirectory);
-            Seq<string> relevantDirectories = allDirectories
-                .Filter(d => !excluded.Any(d.StartsWith));
-
-            var allFiles = relevantDirectories
-                .Collect(d => Directory.GetFiles(d, "*", SearchOption.TopDirectoryOnly))
-                .Filter(file => knownExtensions.Contains(Path.GetExtension(file)))
-                .OrderBy(identity)
-                .ToSeq();
+            Seq<string> allFiles = _localFileSystem.FindRelevantVideos(localMediaSource);
 
             // check if the media item exists
             (Seq<string> newFiles, Seq<MediaItem> existingMediaItems) = allFiles.Map(
                     s => Optional(knownMediaItems.Find(i => i.Path == s)).ToEither(s))
                 .Partition();
 
-            // TODO: flag as missing? delete after some period of time?
-            var removedMediaItems = knownMediaItems.Filter(i => !allFiles.Contains(i.Path)).ToSeq();
-            modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(removedMediaItems));
-            foreach (MediaItem mediaItem in removedMediaItems)
-            {
-                _logger.LogDebug("Removing missing local media item {MediaItem}", mediaItem.Path);
-                await _mediaItemRepository.Delete(mediaItem.Id);
-            }
+            // remove media items that no longer exist
+            var missingMediaItems = knownMediaItems.Filter(i => !allFiles.Contains(i.Path)).ToSeq();
+            await RemoveMissingItems(missingMediaItems);
+            modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(missingMediaItems));
 
-            // if exists, check if the file was modified
-            // also, try to re-categorize incorrect media types by refreshing metadata
-            Seq<MediaItem> mediaItemsToScan = scanningMode == ScanningMode.RescanAll
+            Seq<MediaItem> staleMetadataMediaItems = scanningMode == ScanningMode.RescanAll
                 ? existingMediaItems
-                : existingMediaItems.Filter(
-                    mediaItem =>
-                    {
-                        DateTime lastWrite = File.GetLastWriteTimeUtc(mediaItem.Path);
-                        bool modified = lastWrite > mediaItem.LastWriteTime.IfNone(DateTime.MinValue);
-                        return modified || mediaItem.Metadata == null ||
-                               mediaItem.Metadata.MediaType != localMediaSource.MediaType;
-                    });
-
-            var modifiedMediaItems = new Seq<MediaItem>();
-            foreach (MediaItem mediaItem in mediaItemsToScan)
-            {
-                _logger.LogDebug("Refreshing metadata for media item {MediaItem}", mediaItem.Path);
-
-                if (await RefreshMetadata(mediaItem, ffprobePath))
-                {
-                    // only queue playout rebuilds for media items
-                    // where the duration or collections have changed
-                    modifiedMediaItems.Add(mediaItem);
-                }
-            }
-
+                : existingMediaItems.Filter(i => _localFileSystem.ShouldRefreshMetadata(localMediaSource, i));
+            Seq<MediaItem> modifiedMediaItems = await RefreshMetadataForItems(ffprobePath, staleMetadataMediaItems);
             modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(modifiedMediaItems));
 
             // if new, add and store mtime, refresh metadata
-            var addedMediaItems = new Seq<MediaItem>();
+            var addedMediaItems = new List<MediaItem>();
             foreach (string path in newFiles)
             {
                 _logger.LogDebug("Adding new media item {MediaItem}", path);
@@ -143,7 +97,12 @@ namespace ErsatzTV.Core.Metadata
                 addedMediaItems.Add(mediaItem);
             }
 
-            modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(addedMediaItems));
+            modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(addedMediaItems.ToSeq()));
+
+            Seq<MediaItem> stalePosterMediaItems = existingMediaItems
+                .Filter(_localFileSystem.ShouldRefreshPoster)
+                .Concat(addedMediaItems);
+            await RefreshPosterForItems(stalePosterMediaItems);
 
             foreach (int playoutId in modifiedPlayoutIds.Distinct())
             {
@@ -157,18 +116,68 @@ namespace ErsatzTV.Core.Metadata
                     Task.CompletedTask);
             }
 
-            return Unit.Default;
+            return unit;
+        }
+
+        private async Task<Seq<MediaItem>> RefreshMetadataForItems(
+            string ffprobePath,
+            Seq<MediaItem> staleMetadataMediaItems)
+        {
+            var modifiedMediaItems = new List<MediaItem>();
+            foreach (MediaItem mediaItem in staleMetadataMediaItems)
+            {
+                _logger.LogDebug("Refreshing metadata for media item {MediaItem}", mediaItem.Path);
+                if (await RefreshMetadata(mediaItem, ffprobePath))
+                {
+                    // only queue playout rebuilds for media items
+                    // where the duration or collections have changed
+                    modifiedMediaItems.Add(mediaItem);
+                }
+            }
+
+            return modifiedMediaItems.ToSeq();
+        }
+
+        private async Task RefreshPosterForItems(Seq<MediaItem> stalePosterMediaItems)
+        {
+            (Seq<MediaItem> movies, Seq<MediaItem> episodes) = stalePosterMediaItems
+                .Map(i => Optional(i).Filter(i2 => i2.Metadata?.MediaType == MediaType.TvShow).ToEither(i))
+                .Partition();
+
+            // there's a 1:1 movie:poster, so refresh all
+            foreach (MediaItem movie in movies)
+            {
+                _logger.LogDebug("Refreshing poster for media item {MediaItem}", movie.Path);
+                await _localPosterProvider.RefreshPoster(movie);
+            }
+
+            // we currently have 1 poster per series, so pick the first from each group
+            IEnumerable<MediaItem> episodesToRefresh = episodes.GroupBy(e => e.Metadata.Title)
+                .SelectMany(g => (Option<MediaItem>) g.FirstOrDefault());
+
+            foreach (MediaItem episode in episodesToRefresh)
+            {
+                _logger.LogDebug("Refreshing poster for media item {MediaItem}", episode.Path);
+                await _localPosterProvider.RefreshPoster(episode);
+            }
+        }
+
+        private async Task RemoveMissingItems(Seq<MediaItem> removedMediaItems)
+        {
+            // TODO: flag as missing? delete after some period of time?
+            foreach (MediaItem mediaItem in removedMediaItems)
+            {
+                _logger.LogDebug("Removing missing local media item {MediaItem}", mediaItem.Path);
+                await _mediaItemRepository.Delete(mediaItem.Id);
+            }
         }
 
         private async Task<bool> RefreshMetadata(MediaItem mediaItem, string ffprobePath)
         {
             bool durationChange = await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
             await _localMetadataProvider.RefreshMetadata(mediaItem);
-            await _localPosterProvider.RefreshPoster(mediaItem);
             bool collectionChange = await _smartCollectionBuilder.RefreshSmartCollections(mediaItem);
             return durationChange || collectionChange;
         }
-
-        private static bool ShouldExcludeDirectory(string path) => File.Exists(Path.Combine(path, ".etvignore"));
     }
 }
