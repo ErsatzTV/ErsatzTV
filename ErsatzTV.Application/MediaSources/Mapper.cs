@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 using static LanguageExt.Prelude;
 
@@ -10,7 +11,8 @@ namespace ErsatzTV.Application.MediaSources
             mediaSource switch
             {
                 LocalMediaSource lms => new LocalMediaSourceViewModel(lms.Id, lms.Name, lms.Folder),
-                PlexMediaSource pms => ProjectToViewModel(pms)
+                PlexMediaSource pms => ProjectToViewModel(pms),
+                _ => throw new NotSupportedException($"Unsupported media source {mediaSource.GetType().Name}")
             };
 
         internal static PlexMediaSourceViewModel ProjectToViewModel(PlexMediaSource plexMediaSource) =>

@@ -28,13 +28,15 @@
             <MudNavLink Href="/ffmpeg">FFmpeg</MudNavLink>
             <MudNavGroup Title="Media" Expanded="true">
                 <MudNavLink Href="/media/sources">Media Sources</MudNavLink>
-                <MudNavLink Href="/media/items">Media Items</MudNavLink>
+                <MudNavLink Href="/media/tv/items">TV Shows</MudNavLink>
+                <MudNavLink Href="/media/movies/items">Movies</MudNavLink>
+                <MudNavLink Href="/media/other/items">Other Items</MudNavLink>
                 <MudNavLink Href="/media/collections">Media Collections</MudNavLink>
             </MudNavGroup>
             <MudNavLink Href="/schedules">Schedules</MudNavLink>
             <MudNavLink Href="/playouts">Playouts</MudNavLink>
             <MudNavLink Href="/system/logs">Logs</MudNavLink>
-            <MudDivider Class="my-6" DividerType="DividerType.Middle" />
+            <MudDivider Class="my-6" DividerType="DividerType.Middle"/>
             <MudContainer Style="text-align: right" Class="mr-6">
                 <MudText Typo="Typo.body2">ErsatzTV Version</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Info">@InfoVersion</MudText>
@@ -42,7 +44,7 @@
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="pt-8">
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
             @Body
         </MudContainer>
     </MudMainContent>

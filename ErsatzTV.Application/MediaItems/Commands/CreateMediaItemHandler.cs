@@ -16,6 +16,7 @@ namespace ErsatzTV.Application.MediaItems.Commands
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly ILocalMetadataProvider _localMetadataProvider;
+        private readonly ILocalPosterProvider _localPosterProvider;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly IMediaItemRepository _mediaItemRepository;
         private readonly IMediaSourceRepository _mediaSourceRepository;
@@ -27,7 +28,8 @@ namespace ErsatzTV.Application.MediaItems.Commands
             IConfigElementRepository configElementRepository,
             ISmartCollectionBuilder smartCollectionBuilder,
             ILocalMetadataProvider localMetadataProvider,
-            ILocalStatisticsProvider localStatisticsProvider)
+            ILocalStatisticsProvider localStatisticsProvider,
+            ILocalPosterProvider localPosterProvider)
         {
             _mediaItemRepository = mediaItemRepository;
             _mediaSourceRepository = mediaSourceRepository;
@@ -35,6 +37,7 @@ namespace ErsatzTV.Application.MediaItems.Commands
             _smartCollectionBuilder = smartCollectionBuilder;
             _localMetadataProvider = localMetadataProvider;
             _localStatisticsProvider = localStatisticsProvider;
+            _localPosterProvider = localPosterProvider;
         }
 
         public Task<Either<BaseError, MediaItemViewModel>> Handle(
@@ -50,6 +53,7 @@ namespace ErsatzTV.Application.MediaItems.Commands
 
             await _localStatisticsProvider.RefreshStatistics(parameters.FFprobePath, parameters.MediaItem);
             await _localMetadataProvider.RefreshMetadata(parameters.MediaItem);
+            await _localPosterProvider.RefreshPoster(parameters.MediaItem);
             await _smartCollectionBuilder.RefreshSmartCollections(parameters.MediaItem);
 
             return ProjectToViewModel(parameters.MediaItem);

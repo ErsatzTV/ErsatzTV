@@ -16,6 +16,7 @@ namespace ErsatzTV.Core.Metadata
     public class LocalMediaScanner : ILocalMediaScanner
     {
         private readonly ILocalMetadataProvider _localMetadataProvider;
+        private readonly ILocalPosterProvider _localPosterProvider;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly ILogger<LocalMediaScanner> _logger;
         private readonly IMediaItemRepository _mediaItemRepository;
@@ -28,6 +29,7 @@ namespace ErsatzTV.Core.Metadata
             IPlayoutRepository playoutRepository,
             ILocalStatisticsProvider localStatisticsProvider,
             ILocalMetadataProvider localMetadataProvider,
+            ILocalPosterProvider localPosterProvider,
             ISmartCollectionBuilder smartCollectionBuilder,
             IPlayoutBuilder playoutBuilder,
             ILogger<LocalMediaScanner> logger)
@@ -36,6 +38,7 @@ namespace ErsatzTV.Core.Metadata
             _playoutRepository = playoutRepository;
             _localStatisticsProvider = localStatisticsProvider;
             _localMetadataProvider = localMetadataProvider;
+            _localPosterProvider = localPosterProvider;
             _smartCollectionBuilder = smartCollectionBuilder;
             _playoutBuilder = playoutBuilder;
             _logger = logger;
@@ -146,6 +149,7 @@ namespace ErsatzTV.Core.Metadata
         {
             await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
             await _localMetadataProvider.RefreshMetadata(mediaItem);
+            await _localPosterProvider.RefreshPoster(mediaItem);
             await _smartCollectionBuilder.RefreshSmartCollections(mediaItem);
         }
 
