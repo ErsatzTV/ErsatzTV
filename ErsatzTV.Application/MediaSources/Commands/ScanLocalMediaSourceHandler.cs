@@ -31,7 +31,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             Validate(request)
                 .MapT(
                     p => _localMediaScanner.ScanLocalMediaSource(p.LocalMediaSource, p.FFprobePath)
-                        .Map(_ => p.LocalMediaSource.Name))
+                        .Map(_ => p.LocalMediaSource.Folder))
                 .Bind(v => v.ToEitherAsync());
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(ScanLocalMediaSource request) =>

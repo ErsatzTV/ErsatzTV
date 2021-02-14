@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            builder.ApplyConfigurationsFromAssembly(typeof(LogContext).Assembly);
+            builder.Entity<LogEntry>().ToTable("Logs");
         }
     }
 }

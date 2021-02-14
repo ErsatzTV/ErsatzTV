@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ErsatzTV.Core.AggregateModels;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -40,11 +41,51 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
 
-        public Task<List<MediaItem>> GetAll(MediaType mediaType) =>
-            _dbContext.MediaItems
-                .Include(i => i.Source)
-                .Filter(i => i.Metadata.MediaType == mediaType)
-                .ToListAsync();
+        public Task<List<MediaItemSummary>> GetPageByType(MediaType mediaType, int pageNumber, int pageSize) =>
+            mediaType switch
+            {
+                MediaType.Movie => _dbContext.MediaItemSummaries.FromSqlRaw(
+                        @"SELECT
+    Metadata_Title AS Title,
+    Metadata_SortTitle AS SortTitle,
+    substr(Metadata_Aired, 1, 4) AS Subtitle,
+    Poster
+FROM MediaItems WHERE Metadata_MediaType=2
+ORDER BY Metadata_SortTitle
+LIMIT {0} OFFSET {1}",
+                        pageSize,
+                        (pageNumber - 1) * pageSize)
+                    .AsNoTracking()
+                    .ToListAsync(),
+                MediaType.TvShow => _dbContext.MediaItemSummaries.FromSqlRaw(
+                        @"SELECT
+    Metadata_Title AS Title,
+    Metadata_SortTitle AS SortTitle,
+    count(*) || ' Episodes' AS Subtitle,
+    min(Poster) AS Poster
+FROM MediaItems WHERE Metadata_MediaType=1
+GROUP BY Metadata_Title, Metadata_SortTitle
+ORDER BY Metadata_SortTitle
+LIMIT {0} OFFSET {1}",
+                        pageSize,
+                        (pageNumber - 1) * pageSize)
+                    .AsNoTracking()
+                    .ToListAsync(),
+                _ => Task.FromResult(new List<MediaItemSummary>())
+            };
+
+        public Task<int> GetCountByType(MediaType mediaType) =>
+            mediaType switch
+            {
+                MediaType.Movie => _dbContext.MediaItems
+                    .Filter(i => i.Metadata.MediaType == mediaType)
+                    .CountAsync(),
+                MediaType.TvShow => _dbContext.MediaItems
+                    .Filter(i => i.Metadata.MediaType == mediaType)
+                    .GroupBy(i => new { i.Metadata.Title, i.Metadata.SortTitle })
+                    .CountAsync(),
+                _ => Task.FromResult(0)
+            };
 
         public Task<List<MediaItem>> GetAllByMediaSourceId(int mediaSourceId) =>
             _dbContext.MediaItems

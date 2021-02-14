@@ -7,6 +7,6 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     public class GenericIntegerIdConfiguration : IEntityTypeConfiguration<GenericIntegerId>
     {
         public void Configure(EntityTypeBuilder<GenericIntegerId> builder) =>
-            builder.HasNoKey();
+            builder.HasNoKey().ToView(null);
     }
 }

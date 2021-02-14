@@ -1,4 +1,8 @@
 ﻿namespace ErsatzTV.Application.MediaItems
 {
-    public record AggregateMediaItemViewModel(string Source, string Title, int Count, string Duration);
+    public record AggregateMediaItemViewModel(
+        string Title,
+        string Subtitle,
+        string SortTitle,
+        string Poster);
 }
