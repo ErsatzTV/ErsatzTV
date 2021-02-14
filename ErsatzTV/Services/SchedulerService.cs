@@ -75,7 +75,7 @@ namespace ErsatzTV.Services
 
             foreach (int mediaSourceId in localMediaSourceIds)
             {
-                await _channel.WriteAsync(new ScanLocalMediaSource(mediaSourceId), cancellationToken);
+                await _channel.WriteAsync(new ScanLocalMediaSource(mediaSourceId, false), cancellationToken);
             }
         }
     }

@@ -6,6 +6,6 @@ namespace ErsatzTV.Core.Interfaces.Metadata
 {
     public interface ILocalMediaScanner
     {
-        Task<Unit> ScanLocalMediaSource(LocalMediaSource localMediaSource, string ffprobePath);
+        Task<Unit> ScanLocalMediaSource(LocalMediaSource localMediaSource, string ffprobePath, bool refreshAllMetadata);
     }
 }

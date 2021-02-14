@@ -3,6 +3,7 @@
 @using ErsatzTV.Application.MediaSources.Queries
 @inject IDialogService Dialog
 @inject IMediator Mediator
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
 
 <MudTable Hover="true" Items="_mediaSources">
     <ToolBarContent>
@@ -10,7 +11,7 @@
     </ToolBarContent>
     <ColGroup>
         <col/>
-        <col style="width: 60px;"/>
+        <col style="width: 120px;"/>
     </ColGroup>
     <HeaderContent>
         <MudTh>Folder</MudTh>
@@ -19,7 +20,14 @@
     <RowTemplate>
         <MudTd DataLabel="Folder">@context.Folder</MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteMediaSource(context))"></MudIconButton>
+            <div style="display: flex">
+                <MudTooltip Text="Refresh All Metadata">
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" Disabled="@_refreshing" OnClick="@(_ => RefreshAllMetadata(context))"></MudIconButton>
+                </MudTooltip>
+                <MudTooltip Text="Delete Media Source">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteMediaSource(context))"></MudIconButton>
+                </MudTooltip>
+            </div>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -29,6 +37,7 @@
 
 @code {
     private IList<LocalMediaSourceViewModel> _mediaSources;
+    private bool _refreshing = false;
 
     protected override async Task OnParametersSetAsync() => await LoadMediaSources();
 
@@ -55,6 +64,12 @@
             await Mediator.Send(new DeleteLocalMediaSource(mediaSource.Id));
             await LoadMediaSources();
         }
+    }
+
+    private async Task RefreshAllMetadata(LocalMediaSourceViewModel mediaSource)
+    {
+        _refreshing = true;
+        await Channel.WriteAsync(new ScanLocalMediaSource(mediaSource.Id, true));
     }
 
 }

@@ -84,7 +84,7 @@
                 },
                 Right: async vm =>
                 {
-                    await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id));
+                    await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id, false));
                     NavigationManager.NavigateTo("/media/sources");
                 });
         }

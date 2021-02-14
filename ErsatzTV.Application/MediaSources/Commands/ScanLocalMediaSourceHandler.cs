@@ -30,7 +30,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             Handle(ScanLocalMediaSource request, CancellationToken cancellationToken) =>
             Validate(request)
                 .MapT(
-                    p => _localMediaScanner.ScanLocalMediaSource(p.LocalMediaSource, p.FFprobePath)
+                    p => _localMediaScanner.ScanLocalMediaSource(p.LocalMediaSource, p.FFprobePath, request.RefreshAllMetadata)
                         .Map(_ => p.LocalMediaSource.Folder))
                 .Bind(v => v.ToEitherAsync());
 
