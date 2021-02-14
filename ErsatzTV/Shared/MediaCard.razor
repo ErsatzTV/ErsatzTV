@@ -1,0 +1,34 @@
+﻿@using ErsatzTV.Application.MediaItems
+<div class="media-card-container mx-3 pb-3">
+    <MudPaper Class="media-card">
+        @if (!string.IsNullOrWhiteSpace(Data.Poster))
+        {
+            <img src="@($"/posters/{Data.Poster}")" style="max-height: 220px"/>
+        }
+        else
+        {
+            <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
+                @Placeholder(Data.SortTitle)
+            </MudText>
+        }
+    </MudPaper>
+    <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
+        @Data.Title
+    </MudText>
+    <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
+        @Data.Subtitle
+    </MudText>
+</div>
+
+@code {
+
+    [Parameter]
+    public AggregateMediaItemViewModel Data { get; set; }
+
+    private string Placeholder(string sortTitle)
+    {
+        string first = sortTitle.Substring(0, 1).ToUpperInvariant();
+        return int.TryParse(first, out _) ? "#" : first;
+    }
+
+}

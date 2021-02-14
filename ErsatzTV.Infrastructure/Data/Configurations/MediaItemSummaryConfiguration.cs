@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace ErsatzTV.Infrastructure.Data.Configurations
 {
-    public class MediaCollectionSummaryConfiguration : IEntityTypeConfiguration<MediaCollectionSummary>
+    public class MediaItemSummaryConfiguration : IEntityTypeConfiguration<MediaItemSummary>
     {
-        public void Configure(EntityTypeBuilder<MediaCollectionSummary> builder) =>
+        public void Configure(EntityTypeBuilder<MediaItemSummary> builder) =>
             builder.HasNoKey().ToView(null);
     }
 }

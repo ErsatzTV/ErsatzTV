@@ -43,6 +43,10 @@ namespace ErsatzTV.Core.Metadata
             mediaItem.Metadata.MediaType = metadata.MediaType;
             mediaItem.Metadata.Title = metadata.Title;
             mediaItem.Metadata.Subtitle = metadata.Subtitle;
+            mediaItem.Metadata.SortTitle =
+                (metadata.Title ?? string.Empty).ToLowerInvariant().StartsWith("the ")
+                    ? metadata.Title?.Substring(4)
+                    : metadata.Title;
             mediaItem.Metadata.Description = metadata.Description;
             mediaItem.Metadata.EpisodeNumber = metadata.EpisodeNumber;
             mediaItem.Metadata.SeasonNumber = metadata.SeasonNumber;
