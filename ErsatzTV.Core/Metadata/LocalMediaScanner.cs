@@ -47,7 +47,7 @@ namespace ErsatzTV.Core.Metadata
         public async Task<Unit> ScanLocalMediaSource(
             LocalMediaSource localMediaSource,
             string ffprobePath,
-            bool refreshAllMetadata)
+            ScanningMode scanningMode)
         {
             if (!Directory.Exists(localMediaSource.Folder))
             {
@@ -100,7 +100,7 @@ namespace ErsatzTV.Core.Metadata
 
             // if exists, check if the file was modified
             // also, try to re-categorize incorrect media types by refreshing metadata
-            Seq<MediaItem> modifiedMediaItems = refreshAllMetadata
+            Seq<MediaItem> mediaItemsToScan = scanningMode == ScanningMode.RescanAll
                 ? existingMediaItems
                 : existingMediaItems.Filter(
                     mediaItem =>
@@ -110,12 +110,21 @@ namespace ErsatzTV.Core.Metadata
                         return modified || mediaItem.Metadata == null ||
                                mediaItem.Metadata.MediaType != localMediaSource.MediaType;
                     });
-            modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(modifiedMediaItems));
-            foreach (MediaItem mediaItem in modifiedMediaItems)
+
+            var modifiedMediaItems = new Seq<MediaItem>();
+            foreach (MediaItem mediaItem in mediaItemsToScan)
             {
                 _logger.LogDebug("Refreshing metadata for media item {MediaItem}", mediaItem.Path);
-                await RefreshMetadata(mediaItem, ffprobePath);
+
+                if (await RefreshMetadata(mediaItem, ffprobePath))
+                {
+                    // only queue playout rebuilds for media items
+                    // where the duration or collections have changed
+                    modifiedMediaItems.Add(mediaItem);
+                }
             }
+
+            modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(modifiedMediaItems));
 
             // if new, add and store mtime, refresh metadata
             var addedMediaItems = new Seq<MediaItem>();
@@ -151,12 +160,13 @@ namespace ErsatzTV.Core.Metadata
             return Unit.Default;
         }
 
-        private async Task RefreshMetadata(MediaItem mediaItem, string ffprobePath)
+        private async Task<bool> RefreshMetadata(MediaItem mediaItem, string ffprobePath)
         {
-            await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
+            bool durationChange = await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
             await _localMetadataProvider.RefreshMetadata(mediaItem);
             await _localPosterProvider.RefreshPoster(mediaItem);
-            await _smartCollectionBuilder.RefreshSmartCollections(mediaItem);
+            bool collectionChange = await _smartCollectionBuilder.RefreshSmartCollections(mediaItem);
+            return durationChange || collectionChange;
         }
 
         private static bool ShouldExcludeDirectory(string path) => File.Exists(Path.Combine(path, ".etvignore"));

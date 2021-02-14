@@ -5,6 +5,6 @@ namespace ErsatzTV.Core.Interfaces.Metadata
 {
     public interface ILocalStatisticsProvider
     {
-        Task RefreshStatistics(string ffprobePath, MediaItem mediaItem);
+        Task<bool> RefreshStatistics(string ffprobePath, MediaItem mediaItem);
     }
 }

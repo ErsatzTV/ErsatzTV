@@ -1,6 +1,7 @@
 ﻿@page "/media/sources/local/add"
 @using ErsatzTV.Application.MediaSources.Commands
 @using ErsatzTV.Application.MediaSources
+@using ErsatzTV.Core.Metadata
 @inject NavigationManager NavigationManager
 @inject ILogger<LocalMediaSourceEditor> Logger
 @inject ISnackbar Snackbar
@@ -87,7 +88,7 @@
                 {
                     if (Locker.LockMediaSource(vm.Id))
                     {
-                        await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id, false));
+                        await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id, ScanningMode.Default));
                         NavigationManager.NavigateTo("/media/sources");
                     }
                 });

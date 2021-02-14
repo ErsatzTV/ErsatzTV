@@ -45,7 +45,7 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task Update(SimpleMediaCollection collection) => throw new NotSupportedException();
 
-        public Task InsertOrIgnore(TelevisionMediaCollection collection) => throw new NotSupportedException();
+        public Task<bool> InsertOrIgnore(TelevisionMediaCollection collection) => throw new NotSupportedException();
 
         public Task<Unit> ReplaceItems(int collectionId, List<MediaItem> mediaItems) =>
             throw new NotSupportedException();

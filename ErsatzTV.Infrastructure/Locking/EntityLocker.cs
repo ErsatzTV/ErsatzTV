@@ -14,7 +14,7 @@ namespace ErsatzTV.Infrastructure.Locking
 
         public bool LockMediaSource(int mediaSourceId)
         {
-            if (_lockedMediaSources.TryAdd(mediaSourceId, 0))
+            if (!_lockedMediaSources.ContainsKey(mediaSourceId) && _lockedMediaSources.TryAdd(mediaSourceId, 0))
             {
                 OnMediaSourceChanged?.Invoke(this, EventArgs.Empty);
                 return true;

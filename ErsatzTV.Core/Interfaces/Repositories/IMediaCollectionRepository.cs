@@ -20,7 +20,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id);
         public Task<Option<List<MediaItem>>> GetTelevisionMediaCollectionItems(int id);
         public Task Update(SimpleMediaCollection collection);
-        public Task InsertOrIgnore(TelevisionMediaCollection collection);
+        public Task<bool> InsertOrIgnore(TelevisionMediaCollection collection);
         public Task<Unit> ReplaceItems(int collectionId, List<MediaItem> mediaItems);
         public Task Delete(int mediaCollectionId);
         public Task DeleteEmptyTelevisionCollections();

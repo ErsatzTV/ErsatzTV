@@ -42,7 +42,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             await _localMediaScanner.ScanLocalMediaSource(
                 parameters.LocalMediaSource,
                 parameters.FFprobePath,
-                request.RefreshAllMetadata);
+                request.ScanningMode);
 
             _entityLocker.UnlockMediaSource(parameters.LocalMediaSource.Id);
 

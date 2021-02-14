@@ -5,6 +5,6 @@ namespace ErsatzTV.Core.Interfaces.Metadata
 {
     public interface ISmartCollectionBuilder
     {
-        Task RefreshSmartCollections(MediaItem mediaItem);
+        Task<bool> RefreshSmartCollections(MediaItem mediaItem);
     }
 }
