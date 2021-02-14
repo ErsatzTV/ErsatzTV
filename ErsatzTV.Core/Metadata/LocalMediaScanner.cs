@@ -102,7 +102,8 @@ namespace ErsatzTV.Core.Metadata
                 {
                     DateTime lastWrite = File.GetLastWriteTimeUtc(mediaItem.Path);
                     bool modified = lastWrite > mediaItem.LastWriteTime.IfNone(DateTime.MinValue);
-                    return modified || mediaItem.Metadata == null || mediaItem.Metadata.MediaType != localMediaSource.MediaType;
+                    return modified || mediaItem.Metadata == null ||
+                           mediaItem.Metadata.MediaType != localMediaSource.MediaType;
                 });
             modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(modifiedMediaItems));
             foreach (MediaItem mediaItem in modifiedMediaItems)
