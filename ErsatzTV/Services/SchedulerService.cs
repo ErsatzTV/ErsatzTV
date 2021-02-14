@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,15 +17,18 @@ namespace ErsatzTV.Services
     public class SchedulerService : IHostedService
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+        private readonly IEntityLocker _entityLocker;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private Timer _timer;
 
         public SchedulerService(
             IServiceScopeFactory serviceScopeFactory,
-            ChannelWriter<IBackgroundServiceRequest> channel)
+            ChannelWriter<IBackgroundServiceRequest> channel,
+            IEntityLocker entityLocker)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _channel = channel;
+            _entityLocker = entityLocker;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -75,7 +79,10 @@ namespace ErsatzTV.Services
 
             foreach (int mediaSourceId in localMediaSourceIds)
             {
-                await _channel.WriteAsync(new ScanLocalMediaSource(mediaSourceId, false), cancellationToken);
+                if (_entityLocker.LockMediaSource(mediaSourceId))
+                {
+                    await _channel.WriteAsync(new ScanLocalMediaSource(mediaSourceId, false), cancellationToken);
+                }
             }
         }
     }

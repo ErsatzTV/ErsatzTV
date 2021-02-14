@@ -5,6 +5,7 @@
 @inject ILogger<LocalMediaSourceEditor> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
+@inject IEntityLocker Locker
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
 <div style="max-width: 400px;">
@@ -84,8 +85,11 @@
                 },
                 Right: async vm =>
                 {
-                    await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id, false));
-                    NavigationManager.NavigateTo("/media/sources");
+                    if (Locker.LockMediaSource(vm.Id))
+                    {
+                        await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id, false));
+                        NavigationManager.NavigateTo("/media/sources");
+                    }
                 });
         }
     }

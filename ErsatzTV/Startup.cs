@@ -8,6 +8,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -18,6 +19,7 @@ using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Images;
+using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
@@ -155,6 +157,7 @@ namespace ErsatzTV
             services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
             services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
             services.AddSingleton<IPlexServerApiClient, PlexServerApiClient>();
+            services.AddSingleton<IEntityLocker, EntityLocker>();
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
 
