@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -62,8 +63,14 @@ namespace ErsatzTV.Application.Playouts.Commands
 
         private async Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
             CreatePlayout createPlayout) =>
-            (await _programScheduleRepository.Get(createPlayout.ProgramScheduleId))
-            .ToValidation<BaseError>("ProgramSchedule does not exist.");
+            (await _programScheduleRepository.GetWithPlayouts(createPlayout.ProgramScheduleId))
+            .ToValidation<BaseError>("ProgramSchedule does not exist.")
+            .Bind(ProgramScheduleMustHaveItems);
+
+        private Validation<BaseError, ProgramSchedule> ProgramScheduleMustHaveItems(ProgramSchedule programSchedule) =>
+            Optional(programSchedule)
+                .Filter(ps => ps.Items.Any())
+                .ToValidation<BaseError>("Program schedule must have items");
 
         private Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(CreatePlayout createPlayout) =>
             Optional(createPlayout.ProgramSchedulePlayoutType)

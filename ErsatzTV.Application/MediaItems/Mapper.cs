@@ -14,7 +14,7 @@ namespace ErsatzTV.Application.MediaItems
         internal static MediaItemSearchResultViewModel ProjectToSearchViewModel(MediaItem mediaItem) =>
             new(
                 mediaItem.Id,
-                mediaItem.Source.Name,
+                GetSourceName(mediaItem.Source),
                 mediaItem.Metadata.MediaType.ToString(),
                 GetDisplayTitle(mediaItem),
                 GetDisplayDuration(mediaItem));
@@ -31,5 +31,12 @@ namespace ErsatzTV.Application.MediaItems
             string.Format(
                 mediaItem.Metadata.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
                 mediaItem.Metadata.Duration);
+
+        private static string GetSourceName(MediaSource source) =>
+            source switch
+            {
+                LocalMediaSource lms => lms.Folder,
+                _ => source.Name
+            };
     }
 }

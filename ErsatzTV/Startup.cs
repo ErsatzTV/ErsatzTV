@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Channels;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
@@ -7,6 +8,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -17,6 +19,7 @@ using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Images;
+using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
@@ -76,6 +79,11 @@ namespace ErsatzTV
             services.AddServerSideBlazor();
 
             services.AddMudServices();
+
+            Log.Logger.Information(
+                "ErsatzTV version {Version}",
+                Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                    ?.InformationalVersion ?? "unknown");
 
             Log.Logger.Warning("This is pre-alpha software and is likely to be unstable");
             Log.Logger.Warning(
@@ -149,6 +157,7 @@ namespace ErsatzTV
             services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
             services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
             services.AddSingleton<IPlexServerApiClient, PlexServerApiClient>();
+            services.AddSingleton<IEntityLocker, EntityLocker>();
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
 
@@ -170,6 +179,7 @@ namespace ErsatzTV
             services.AddScoped<ILocalMediaScanner, LocalMediaScanner>();
             services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
             services.AddScoped<IImageCache, ImageCache>();
+            services.AddScoped<ILocalFileSystem, LocalFileSystem>();
 
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();
