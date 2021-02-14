@@ -96,13 +96,13 @@ namespace ErsatzTV.Core.Metadata
             }
 
             // if exists, check if the file was modified
-            // also, try to re-categorize "other" by refreshing metadata
+            // also, try to re-categorize incorrect media types by refreshing metadata
             Seq<MediaItem> modifiedMediaItems = existingMediaItems.Filter(
                 mediaItem =>
                 {
                     DateTime lastWrite = File.GetLastWriteTimeUtc(mediaItem.Path);
                     bool modified = lastWrite > mediaItem.LastWriteTime.IfNone(DateTime.MinValue);
-                    return modified || mediaItem.Metadata == null || mediaItem.Metadata.MediaType == MediaType.Other;
+                    return modified || mediaItem.Metadata == null || mediaItem.Metadata.MediaType != localMediaSource.MediaType;
                 });
             modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(modifiedMediaItems));
             foreach (MediaItem mediaItem in modifiedMediaItems)
