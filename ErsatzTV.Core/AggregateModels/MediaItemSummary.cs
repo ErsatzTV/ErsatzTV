@@ -1,4 +1,4 @@
 ﻿namespace ErsatzTV.Core.AggregateModels
 {
-    public record MediaItemSummary(string Title, string SortTitle, string Subtitle, string Poster);
+    public record MediaItemSummary(int MediaItemId, string Title, string SortTitle, string Subtitle, string Poster);
 }

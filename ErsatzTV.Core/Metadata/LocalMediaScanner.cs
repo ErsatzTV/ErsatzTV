@@ -66,8 +66,19 @@ namespace ErsatzTV.Core.Metadata
                 ".avi", ".wmv", ".mov", ".mkv", ".ts"
             };
 
-            var allFiles = Directory.GetFiles(localMediaSource.Folder, "*", SearchOption.AllDirectories)
+            Seq<string> allDirectories = Directory
+                .GetDirectories(localMediaSource.Folder, "*", SearchOption.AllDirectories)
+                .ToSeq().Add(localMediaSource.Folder);
+
+            // remove any directories with an .etvignore file locally, or in any parent directory
+            Seq<string> excluded = allDirectories.Filter(ShouldExcludeDirectory);
+            Seq<string> relevantDirectories = allDirectories
+                .Filter(d => !excluded.Any(d.StartsWith));
+
+            var allFiles = relevantDirectories
+                .Collect(d => Directory.GetFiles(d, "*", SearchOption.TopDirectoryOnly))
                 .Filter(file => knownExtensions.Contains(Path.GetExtension(file)))
+                .OrderBy(identity)
                 .ToSeq();
 
             // check if the media item exists
@@ -85,13 +96,14 @@ namespace ErsatzTV.Core.Metadata
             }
 
             // if exists, check if the file was modified
-            // also, try to re-categorize "other" by refreshing metadata
+            // also, try to re-categorize incorrect media types by refreshing metadata
             Seq<MediaItem> modifiedMediaItems = existingMediaItems.Filter(
                 mediaItem =>
                 {
                     DateTime lastWrite = File.GetLastWriteTimeUtc(mediaItem.Path);
                     bool modified = lastWrite > mediaItem.LastWriteTime.IfNone(DateTime.MinValue);
-                    return modified || mediaItem.Metadata == null || mediaItem.Metadata.MediaType == MediaType.Other;
+                    return modified || mediaItem.Metadata == null ||
+                           mediaItem.Metadata.MediaType != localMediaSource.MediaType;
                 });
             modifiedPlayoutIds.AddRange(await _playoutRepository.GetPlayoutIdsForMediaItems(modifiedMediaItems));
             foreach (MediaItem mediaItem in modifiedMediaItems)
@@ -141,5 +153,7 @@ namespace ErsatzTV.Core.Metadata
             await _localPosterProvider.RefreshPoster(mediaItem);
             await _smartCollectionBuilder.RefreshSmartCollections(mediaItem);
         }
+
+        private static bool ShouldExcludeDirectory(string path) => File.Exists(Path.Combine(path, ".etvignore"));
     }
 }

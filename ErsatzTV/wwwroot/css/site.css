@@ -8,11 +8,15 @@
 
 .media-card {
     display: flex;
+    filter: brightness(100%);
     flex-direction: column;
     height: 220px;
     justify-content: center;
+    transition: all 0.2s ease;
     width: 152px;
 }
+
+.media-card:hover { filter: brightness(80%); }
 
 .media-card-title {
     overflow: hidden;
@@ -22,3 +26,12 @@
 }
 
 .media-card-poster-placeholder { font-weight: bold; }
+
+.media-card-menu {
+    bottom: 0;
+    display: none;
+    position: absolute;
+    right: 0;
+}
+
+.media-card:hover .media-card-menu { display: block; }

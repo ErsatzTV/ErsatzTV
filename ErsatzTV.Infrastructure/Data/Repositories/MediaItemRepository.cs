@@ -24,7 +24,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public Task<Option<MediaItem>> Get(int id) =>
-            _dbContext.MediaItems.SingleOrDefaultAsync(i => i.Id == id).Map(Optional);
+            _dbContext.MediaItems
+                .Include(i => i.Source)
+                .SingleOrDefaultAsync(i => i.Id == id)
+                .Map(Optional);
 
         public Task<List<MediaItem>> GetAll() => _dbContext.MediaItems.ToListAsync();
 
@@ -46,6 +49,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 MediaType.Movie => _dbContext.MediaItemSummaries.FromSqlRaw(
                         @"SELECT
+    Id AS MediaItemId,
     Metadata_Title AS Title,
     Metadata_SortTitle AS SortTitle,
     substr(Metadata_Aired, 1, 4) AS Subtitle,
@@ -59,10 +63,11 @@ LIMIT {0} OFFSET {1}",
                     .ToListAsync(),
                 MediaType.TvShow => _dbContext.MediaItemSummaries.FromSqlRaw(
                         @"SELECT
+    min(Id) AS MediaItemId,
     Metadata_Title AS Title,
     Metadata_SortTitle AS SortTitle,
     count(*) || ' Episodes' AS Subtitle,
-    min(Poster) AS Poster
+    max(Poster) AS Poster
 FROM MediaItems WHERE Metadata_MediaType=1
 GROUP BY Metadata_Title, Metadata_SortTitle
 ORDER BY Metadata_SortTitle
