@@ -1,16 +1,20 @@
 ﻿@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.MediaSources.Commands
 @using ErsatzTV.Application.MediaSources.Queries
+@using ErsatzTV.Core.Metadata
+@implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
+@inject IEntityLocker Locker
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudTable Hover="true" Items="_mediaSources">
+<MudTable Hover="true" Items="_mediaSources" Dense="true">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Local Media Sources</MudText>
     </ToolBarContent>
     <ColGroup>
         <col/>
-        <col style="width: 60px;"/>
+        <col style="width: 120px;"/>
     </ColGroup>
     <HeaderContent>
         <MudTh>Folder</MudTh>
@@ -19,7 +23,29 @@
     <RowTemplate>
         <MudTd DataLabel="Folder">@context.Folder</MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteMediaSource(context))"></MudIconButton>
+            <div style="align-items: center; display: flex;">
+                @if (Locker.IsMediaSourceLocked(context.Id))
+                {
+                    <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                    </div>
+                }
+                else
+                {
+                    <MudTooltip Text="Refresh All Metadata">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                       Disabled="@Locker.IsMediaSourceLocked(context.Id)"
+                                       OnClick="@(_ => RefreshAllMetadata(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                }
+                <MudTooltip Text="Delete Media Source">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Disabled="@Locker.IsMediaSourceLocked(context.Id)"
+                                   OnClick="@(_ => DeleteMediaSource(context))">
+                    </MudIconButton>
+                </MudTooltip>
+            </div>
         </MudTd>
     </RowTemplate>
 </MudTable>
@@ -29,6 +55,9 @@
 
 @code {
     private IList<LocalMediaSourceViewModel> _mediaSources;
+
+    protected override void OnInitialized() =>
+        Locker.OnMediaSourceChanged += LockChanged;
 
     protected override async Task OnParametersSetAsync() => await LoadMediaSources();
 
@@ -56,5 +85,19 @@
             await LoadMediaSources();
         }
     }
+
+    private async Task RefreshAllMetadata(LocalMediaSourceViewModel mediaSource)
+    {
+        if (Locker.LockMediaSource(mediaSource.Id))
+        {
+            await Channel.WriteAsync(new ScanLocalMediaSource(mediaSource.Id, ScanningMode.RescanAll));
+            StateHasChanged();
+        }
+    }
+
+    private void LockChanged(object sender, EventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    void IDisposable.Dispose() => Locker.OnMediaSourceChanged -= LockChanged;
 
 }

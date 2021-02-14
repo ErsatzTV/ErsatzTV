@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -13,6 +14,8 @@ namespace ErsatzTV.Core.Metadata
 {
     public class LocalPosterProvider : ILocalPosterProvider
     {
+        private static readonly string[] SupportedExtensions = { "jpg", "jpeg", "png", "gif", "tbn" };
+
         private readonly IImageCache _imageCache;
         private readonly ILogger<LocalPosterProvider> _logger;
         private readonly IMediaItemRepository _mediaItemRepository;
@@ -46,8 +49,8 @@ namespace ErsatzTV.Core.Metadata
             string folder = Path.GetDirectoryName(mediaItem.Path);
             if (folder != null)
             {
-                string[] possiblePaths =
-                    { "poster.jpg", Path.GetFileNameWithoutExtension(mediaItem.Path) + "-poster.jpg" };
+                IEnumerable<string> possiblePaths = SupportedExtensions.Collect(
+                    e => new[] { $"poster.{e}", Path.GetFileNameWithoutExtension(mediaItem.Path) + $"-poster.{e}" });
                 Option<string> maybePoster =
                     possiblePaths.Map(p => Path.Combine(folder, p)).FirstOrDefault(File.Exists);
                 return maybePoster;
@@ -61,7 +64,7 @@ namespace ErsatzTV.Core.Metadata
             string folder = Directory.GetParent(Path.GetDirectoryName(mediaItem.Path) ?? string.Empty)?.FullName;
             if (folder != null)
             {
-                string[] possiblePaths = { "poster.jpg" };
+                IEnumerable<string> possiblePaths = SupportedExtensions.Collect(e => new[] { $"poster.{e}" });
                 Option<string> maybePoster =
                     possiblePaths.Map(p => Path.Combine(folder, p)).FirstOrDefault(File.Exists);
                 return maybePoster;

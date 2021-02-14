@@ -97,10 +97,10 @@ LIMIT {0} OFFSET {1}",
                 .Filter(i => i.MediaSourceId == mediaSourceId)
                 .ToListAsync();
 
-        public async Task Update(MediaItem mediaItem)
+        public async Task<bool> Update(MediaItem mediaItem)
         {
             _dbContext.MediaItems.Update(mediaItem);
-            await _dbContext.SaveChangesAsync();
+            return await _dbContext.SaveChangesAsync() > 0;
         }
 
         public async Task Delete(int mediaItemId)

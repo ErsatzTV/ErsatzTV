@@ -85,15 +85,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return _dbContext.SaveChangesAsync();
         }
 
-        public async Task InsertOrIgnore(TelevisionMediaCollection collection)
+        public async Task<bool> InsertOrIgnore(TelevisionMediaCollection collection)
         {
             if (!_dbContext.TelevisionMediaCollections.Any(
                 existing => existing.ShowTitle == collection.ShowTitle &&
                             existing.SeasonNumber == collection.SeasonNumber))
             {
                 await _dbContext.TelevisionMediaCollections.AddAsync(collection);
-                await _dbContext.SaveChangesAsync();
+                return await _dbContext.SaveChangesAsync() > 0;
             }
+
+            // no change
+            return false;
         }
 
         public Task<Unit> ReplaceItems(int collectionId, List<MediaItem> mediaItems) =>

@@ -3,36 +3,51 @@ using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.MediaSources.Commands
 {
     public class ScanLocalMediaSourceHandler : IRequestHandler<ScanLocalMediaSource, Either<BaseError, string>>
     {
         private readonly IConfigElementRepository _configElementRepository;
+        private readonly IEntityLocker _entityLocker;
         private readonly ILocalMediaScanner _localMediaScanner;
         private readonly IMediaSourceRepository _mediaSourceRepository;
 
         public ScanLocalMediaSourceHandler(
             IMediaSourceRepository mediaSourceRepository,
             IConfigElementRepository configElementRepository,
-            ILocalMediaScanner localMediaScanner)
+            ILocalMediaScanner localMediaScanner,
+            IEntityLocker entityLocker)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _configElementRepository = configElementRepository;
             _localMediaScanner = localMediaScanner;
+            _entityLocker = entityLocker;
         }
 
         public Task<Either<BaseError, string>>
             Handle(ScanLocalMediaSource request, CancellationToken cancellationToken) =>
             Validate(request)
-                .MapT(
-                    p => _localMediaScanner.ScanLocalMediaSource(p.LocalMediaSource, p.FFprobePath)
-                        .Map(_ => p.LocalMediaSource.Folder))
+                .MapT(parameters => PerformScan(request, parameters).Map(_ => parameters.LocalMediaSource.Folder))
                 .Bind(v => v.ToEitherAsync());
+
+        private async Task<Unit> PerformScan(ScanLocalMediaSource request, RequestParameters parameters)
+        {
+            await _localMediaScanner.ScanLocalMediaSource(
+                parameters.LocalMediaSource,
+                parameters.FFprobePath,
+                request.ScanningMode);
+
+            _entityLocker.UnlockMediaSource(parameters.LocalMediaSource.Id);
+
+            return Unit.Default;
+        }
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(ScanLocalMediaSource request) =>
             (await LocalMediaSourceMustExist(request), await ValidateFFprobePath())

@@ -26,21 +26,22 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public async Task RefreshStatistics(string ffprobePath, MediaItem mediaItem)
+        public async Task<bool> RefreshStatistics(string ffprobePath, MediaItem mediaItem)
         {
             try
             {
                 FFprobe ffprobe = await GetProbeOutput(ffprobePath, mediaItem);
                 MediaMetadata metadata = ProjectToMediaMetadata(ffprobe);
-                await ApplyStatisticsUpdate(mediaItem, metadata);
+                return await ApplyStatisticsUpdate(mediaItem, metadata);
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to refresh statistics for media item at {Path}", mediaItem.Path);
+                return false;
             }
         }
 
-        private async Task ApplyStatisticsUpdate(
+        private async Task<bool> ApplyStatisticsUpdate(
             MediaItem mediaItem,
             MediaMetadata metadata)
         {
@@ -48,6 +49,8 @@ namespace ErsatzTV.Core.Metadata
             {
                 mediaItem.Metadata = new MediaMetadata();
             }
+
+            bool durationChange = mediaItem.Metadata.Duration != metadata.Duration;
 
             mediaItem.Metadata.Duration = metadata.Duration;
             mediaItem.Metadata.AudioCodec = metadata.AudioCodec;
@@ -58,7 +61,7 @@ namespace ErsatzTV.Core.Metadata
             mediaItem.Metadata.VideoCodec = metadata.VideoCodec;
             mediaItem.Metadata.VideoScanType = metadata.VideoScanType;
 
-            await _mediaItemRepository.Update(mediaItem);
+            return await _mediaItemRepository.Update(mediaItem) && durationChange;
         }
 
         private Task<FFprobe> GetProbeOutput(string ffprobePath, MediaItem mediaItem)

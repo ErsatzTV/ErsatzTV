@@ -16,12 +16,16 @@ namespace ErsatzTV.Core.Metadata
         public SmartCollectionBuilder(IMediaCollectionRepository mediaCollectionRepository) =>
             _mediaCollectionRepository = mediaCollectionRepository;
 
-        public async Task RefreshSmartCollections(MediaItem mediaItem)
+        public async Task<bool> RefreshSmartCollections(MediaItem mediaItem)
         {
+            var results = new List<bool>();
+
             foreach (TelevisionMediaCollection collection in GetTelevisionCollections(mediaItem))
             {
-                await _mediaCollectionRepository.InsertOrIgnore(collection);
+                results.Add(await _mediaCollectionRepository.InsertOrIgnore(collection));
             }
+
+            return results.Any(identity);
         }
 
         private IEnumerable<TelevisionMediaCollection> GetTelevisionCollections(MediaItem mediaItem)
