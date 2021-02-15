@@ -50,7 +50,7 @@ namespace ErsatzTV.Application.MediaItems.Commands
         private async Task<MediaItemViewModel> PersistMediaItem(RequestParameters parameters)
         {
             await _mediaItemRepository.Add(parameters.MediaItem);
-            
+
             await _localStatisticsProvider.RefreshStatistics(parameters.FFprobePath, parameters.MediaItem);
             // TODO: reimplement this
             // await _localMetadataProvider.RefreshMetadata(parameters.MediaItem);

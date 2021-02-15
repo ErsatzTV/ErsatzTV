@@ -582,7 +582,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 itemScanningPlans.Should().BeEquivalentTo(
                     new ActionPlan(episodeMediaItem.Path, ScanningAction.Statistics));
             }
-            
+
             [Test]
             public void Fallback_WithNewNfo_WithoutPoster(
                 [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
