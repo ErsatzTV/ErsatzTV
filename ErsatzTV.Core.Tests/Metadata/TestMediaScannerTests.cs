@@ -32,7 +32,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
                 new ItemScanningPlan(movieFileName, ScanningAction.FallbackMetadata));
         }
-        
+
         [Test]
         public void NewMovieFile_WithNfo_WithoutPoster(
             [Values("test (2021).nfo", "movie.nfo")]
@@ -56,7 +56,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
                 new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata));
         }
-        
+
         [Test]
         public void NewMovieFile_WithoutNfo_WithPoster(
             [Values("", "test (2021)-")]
@@ -84,7 +84,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 new ItemScanningPlan(movieFileName, ScanningAction.FallbackMetadata),
                 new ItemScanningPlan(posterFileName, ScanningAction.Poster));
         }
-        
+
         [Test]
         public void NewMovieFile_WithNfo_WithPoster(
             [Values("test (2021).nfo", "movie.nfo")]
@@ -112,6 +112,99 @@ namespace ErsatzTV.Core.Tests.Metadata
             source.LeftToSeq().Should().BeEquivalentTo(movieFileName);
             itemScanningPlans.Should().BeEquivalentTo(
                 new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
+                new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+        }
+
+        // TODO: mtime should affect this
+        [Test]
+        public void ExistingMovieFile_WithNewNfo_WithoutPoster(
+            [Values("test (2021).nfo", "movie.nfo")]
+            string nfoFile)
+        {
+            // new movie file without nfo and without poster should have statistics and fallback metadata
+            var movieMediaItem = new MediaItem
+            {
+                Metadata = new MediaMetadata { Source = MetadataSource.Fallback },
+                Path = "/movies/test (2021)/test (2021).mkv"
+            };
+
+            var nfoFileName = $"/movies/test (2021)/{nfoFile}";
+            string[] fileNames = { movieMediaItem.Path, nfoFileName };
+
+            Seq<LocalMediaItemScanningPlan> result = _scanner.DetermineActions(
+                MediaType.Movie,
+                Seq.create(movieMediaItem),
+                fileNames.ToSeq());
+
+            result.Count.Should().Be(1);
+            (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+            source.IsRight.Should().BeTrue();
+            source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
+            itemScanningPlans.Should()
+                .BeEquivalentTo(new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata));
+        }
+        
+        [Test]
+        public void ExistingMovieFile_WithoutNfo_WithNewPoster(
+            [Values("", "test (2021)-")]
+            string basePosterName,
+            [Values("jpg", "jpeg", "png", "gif", "tbn")]
+            string posterExtension)
+        {
+            // new movie file without nfo and without poster should have statistics and fallback metadata
+            var movieMediaItem = new MediaItem
+            {
+                Metadata = new MediaMetadata { Source = MetadataSource.Fallback },
+                Path = "/movies/test (2021)/test (2021).mkv"
+            };
+
+            var posterFileName = $"/movies/test (2021)/{basePosterName}poster.{posterExtension}";
+            string[] fileNames = { movieMediaItem.Path, posterFileName };
+
+            Seq<LocalMediaItemScanningPlan> result = _scanner.DetermineActions(
+                MediaType.Movie,
+                Seq.create(movieMediaItem),
+                fileNames.ToSeq());
+
+            result.Count.Should().Be(1);
+            (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+            source.IsRight.Should().BeTrue();
+            source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
+            itemScanningPlans.Should()
+                .BeEquivalentTo(new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+        }
+        
+        [Test]
+        public void ExistingMovieFile_WithNewNfo_WithNewPoster(
+            [Values("test (2021).nfo", "movie.nfo")]
+            string nfoFile,
+            [Values("", "test (2021)-")]
+            string basePosterName,
+            [Values("jpg", "jpeg", "png", "gif", "tbn")]
+            string posterExtension)
+        {
+            // new movie file without nfo and without poster should have statistics and fallback metadata
+            var movieMediaItem = new MediaItem
+            {
+                Metadata = new MediaMetadata { Source = MetadataSource.Fallback },
+                Path = "/movies/test (2021)/test (2021).mkv"
+            };
+
+            var nfoFileName = $"/movies/test (2021)/{nfoFile}";
+            var posterFileName = $"/movies/test (2021)/{basePosterName}poster.{posterExtension}";
+            string[] fileNames = { movieMediaItem.Path, nfoFileName, posterFileName };
+
+            Seq<LocalMediaItemScanningPlan> result = _scanner.DetermineActions(
+                MediaType.Movie,
+                Seq.create(movieMediaItem),
+                fileNames.ToSeq());
+
+            result.Count.Should().Be(1);
+            (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+            source.IsRight.Should().BeTrue();
+            source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
+            itemScanningPlans.Should().BeEquivalentTo(
                 new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
                 new ItemScanningPlan(posterFileName, ScanningAction.Poster));
         }

@@ -24,12 +24,12 @@ namespace ErsatzTV.Core.Metadata
             Seq<string> files)
         {
             var results = new IntermediateResults();
-            var videoFiles = files.Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)));
+            Seq<string> videoFiles = files.Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)));
 
             (Seq<string> newFiles, Seq<MediaItem> existingMediaItems) = videoFiles.Map(
                     s => mediaItems.Find(i => i.Path == s).ToEither(s))
                 .Partition();
-            
+
             // new files
             foreach (string file in newFiles)
             {
@@ -44,8 +44,26 @@ namespace ErsatzTV.Core.Metadata
                 maybePoster.IfSome(
                     posterFile => results.Add(file, new ItemScanningPlan(posterFile, ScanningAction.Poster)));
             }
-            
+
             // existing media items
+            foreach (MediaItem mediaItem in existingMediaItems)
+            {
+                if (mediaItem.Metadata == null || mediaItem.Metadata.Source == MetadataSource.Fallback)
+                {
+                    Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, mediaItem.Path);
+                    maybeNfoFile.IfSome(
+                        nfoFile => results.Add(
+                            mediaItem,
+                            new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata)));
+                }
+
+                if (string.IsNullOrWhiteSpace(mediaItem.Poster))
+                {
+                    Option<string> maybePoster = LocatePoster(mediaType, files, mediaItem.Path);
+                    maybePoster.IfSome(
+                        posterFile => results.Add(mediaItem, new ItemScanningPlan(posterFile, ScanningAction.Poster)));
+                }
+            }
 
             return results.Summarize();
         }
@@ -68,7 +86,7 @@ namespace ErsatzTV.Core.Metadata
         private static Option<string> LocatePoster(MediaType mediaType, Seq<string> files, string file)
         {
             string folder = Path.GetDirectoryName(file) ?? string.Empty;
-            
+
             switch (mediaType)
             {
                 case MediaType.Movie:
