@@ -81,6 +81,11 @@ namespace ErsatzTV.Core.Metadata
                     return Seq(movieAsNfo, movieNfo)
                         .Filter(s => files.Contains(s))
                         .HeadOrNone();
+                case MediaType.TvShow:
+                    string episodeAsNfo = Path.ChangeExtension(file, "nfo");
+                    return Optional(episodeAsNfo)
+                        .Filter(s => files.Contains(s))
+                        .HeadOrNone();
             }
 
             return None;
@@ -93,10 +98,16 @@ namespace ErsatzTV.Core.Metadata
             switch (mediaType)
             {
                 case MediaType.Movie:
-                    IEnumerable<string> possiblePosters = ImageFileExtensions.Collect(
+                    IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(
                             ext => new[] { $"poster.{ext}", Path.GetFileNameWithoutExtension(file) + $"-poster.{ext}" })
                         .Map(f => Path.Combine(folder, f));
-                    return possiblePosters.Filter(s => files.Contains(s)).HeadOrNone();
+                    return possibleMoviePosters.Filter(p => files.Contains(p)).HeadOrNone();
+                case MediaType.TvShow:
+                    string parentFolder = Directory.GetParent(folder)?.FullName ?? string.Empty;
+                    IEnumerable<string> possibleTvPosters = ImageFileExtensions
+                        .Collect(ext => new[] { $"poster.{ext}" })
+                        .Map(f => Path.Combine(parentFolder, f));
+                    return possibleTvPosters.Filter(p => files.Contains(p)).HeadOrNone();
             }
 
             return None;
