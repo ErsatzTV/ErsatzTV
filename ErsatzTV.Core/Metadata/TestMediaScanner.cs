@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -10,13 +11,10 @@ namespace ErsatzTV.Core.Metadata
 {
     public class TestMediaScanner
     {
-        // @formatter:off
-        private static readonly Seq<string> VideoFileExtensions = Seq(
-            ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
-            ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts");
-        // @formatter:on
-
         private static readonly Seq<string> ImageFileExtensions = Seq("jpg", "jpeg", "png", "gif", "tbn");
+        private readonly ILocalFileSystem _localFileSystem;
+
+        public TestMediaScanner(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
         public Seq<LocalMediaItemScanningPlan> DetermineActions(
             MediaType mediaType,
@@ -24,7 +22,8 @@ namespace ErsatzTV.Core.Metadata
             Seq<string> files)
         {
             var results = new IntermediateResults();
-            Seq<string> videoFiles = files.Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)));
+            Seq<string> videoFiles = files.Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
+                .Filter(f => !IsExtra(f));
 
             (Seq<string> newFiles, Seq<MediaItem> existingMediaItems) = videoFiles.Map(
                     s => mediaItems.Find(i => i.Path == s).ToEither(s))
@@ -49,26 +48,41 @@ namespace ErsatzTV.Core.Metadata
             // existing media items
             foreach (MediaItem mediaItem in existingMediaItems)
             {
-                if (mediaItem.Metadata == null || mediaItem.Metadata.Source == MetadataSource.Fallback)
-                {
-                    Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, mediaItem.Path);
-                    maybeNfoFile.IfSome(
-                        nfoFile =>
+                Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, mediaItem.Path);
+                maybeNfoFile.IfSome(
+                    nfoFile =>
+                    {
+                        if (mediaItem.Metadata == null || mediaItem.Metadata.Source == MetadataSource.Fallback ||
+                            (mediaItem.Metadata.LastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(nfoFile))
                         {
                             results.Add(mediaItem, new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata));
                             results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Collections));
-                        });
-                }
+                        }
+                    });
 
-                if (string.IsNullOrWhiteSpace(mediaItem.Poster))
-                {
-                    Option<string> maybePoster = LocatePoster(mediaType, files, mediaItem.Path);
-                    maybePoster.IfSome(
-                        posterFile => results.Add(mediaItem, new ItemScanningPlan(posterFile, ScanningAction.Poster)));
-                }
+                Option<string> maybePoster = LocatePoster(mediaType, files, mediaItem.Path);
+                maybePoster.IfSome(
+                    posterFile =>
+                    {
+                        if (string.IsNullOrWhiteSpace(mediaItem.Poster) ||
+                            (mediaItem.PosterLastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(posterFile))
+                        {
+                            results.Add(mediaItem, new ItemScanningPlan(posterFile, ScanningAction.Poster));
+                        }
+                    });
             }
 
             return results.Summarize();
+        }
+
+        private static bool IsExtra(string path)
+        {
+            string folder = Path.GetFileName(Path.GetDirectoryName(path) ?? string.Empty);
+            string file = Path.GetFileNameWithoutExtension(path);
+            return ExtraDirectories.Contains(folder, StringComparer.OrdinalIgnoreCase)
+                   || ExtraFiles.Any(f => file.EndsWith(f, StringComparison.OrdinalIgnoreCase));
         }
 
         private static Option<string> LocateNfoFile(MediaType mediaType, Seq<string> files, string file)
@@ -126,5 +140,19 @@ namespace ErsatzTV.Core.Metadata
                     .Select(g => new LocalMediaItemScanningPlan(g.Key, g.Select(g2 => g2.Item2).ToList()))
                     .ToSeq();
         }
+
+        // @formatter:off
+        private static readonly Seq<string> VideoFileExtensions = Seq(
+            ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
+            ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts");
+        
+        private static readonly Seq<string> ExtraDirectories = Seq(
+            "behind the scenes","deleted scenes","featurettes",
+            "interviews","scenes","shorts","trailers","other");
+        
+        private static readonly Seq<string> ExtraFiles = Seq(
+            "behindthescenes","deleted","featurette",
+            "interview","scene","short","trailer","other");
+        // @formatter:on
     }
 }

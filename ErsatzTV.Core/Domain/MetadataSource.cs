@@ -2,7 +2,7 @@
 {
     public enum MetadataSource
     {
-        Sidecar = 1,
-        Fallback = 2
+        Fallback = 0,
+        Sidecar = 1
     }
 }
