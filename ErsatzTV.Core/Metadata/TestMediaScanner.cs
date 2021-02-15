@@ -73,7 +73,13 @@ namespace ErsatzTV.Core.Metadata
                         }
                     });
             }
-
+            
+            // missing media items
+            foreach (MediaItem mediaItem in mediaItems.Where(i => !files.Contains(i.Path)))
+            {
+                results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Remove));
+            }
+            
             return results.Summarize();
         }
 

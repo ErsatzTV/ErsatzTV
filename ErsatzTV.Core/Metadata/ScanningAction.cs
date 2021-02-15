@@ -7,6 +7,7 @@
         SidecarMetadata = 2,
         FallbackMetadata = 3,
         Collections = 4,
-        Poster = 5
+        Poster = 5,
+        Remove = 6
     }
 }
