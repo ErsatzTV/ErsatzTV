@@ -30,7 +30,8 @@ namespace ErsatzTV.Core.Tests.Metadata
             source.LeftToSeq().Should().BeEquivalentTo(movieFileName);
             itemScanningPlans.Should().BeEquivalentTo(
                 new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
-                new ItemScanningPlan(movieFileName, ScanningAction.FallbackMetadata));
+                new ItemScanningPlan(movieFileName, ScanningAction.FallbackMetadata),
+                new ItemScanningPlan(movieFileName, ScanningAction.Collections));
         }
 
         [Test]
@@ -54,7 +55,8 @@ namespace ErsatzTV.Core.Tests.Metadata
             source.LeftToSeq().Should().BeEquivalentTo(movieFileName);
             itemScanningPlans.Should().BeEquivalentTo(
                 new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
-                new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata));
+                new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                new ItemScanningPlan(movieFileName, ScanningAction.Collections));
         }
 
         [Test]
@@ -82,7 +84,8 @@ namespace ErsatzTV.Core.Tests.Metadata
             itemScanningPlans.Should().BeEquivalentTo(
                 new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
                 new ItemScanningPlan(movieFileName, ScanningAction.FallbackMetadata),
-                new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+                new ItemScanningPlan(posterFileName, ScanningAction.Poster),
+                new ItemScanningPlan(movieFileName, ScanningAction.Collections));
         }
 
         [Test]
@@ -113,7 +116,8 @@ namespace ErsatzTV.Core.Tests.Metadata
             itemScanningPlans.Should().BeEquivalentTo(
                 new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
                 new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+                new ItemScanningPlan(posterFileName, ScanningAction.Poster),
+                new ItemScanningPlan(movieFileName, ScanningAction.Collections));
         }
 
         // TODO: mtime should affect this
@@ -141,10 +145,11 @@ namespace ErsatzTV.Core.Tests.Metadata
             (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
             source.IsRight.Should().BeTrue();
             source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
-            itemScanningPlans.Should()
-                .BeEquivalentTo(new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata));
+            itemScanningPlans.Should().BeEquivalentTo(
+                new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                new ItemScanningPlan(movieMediaItem.Path, ScanningAction.Collections));
         }
-        
+
         [Test]
         public void ExistingMovieFile_WithoutNfo_WithNewPoster(
             [Values("", "test (2021)-")]
@@ -174,7 +179,7 @@ namespace ErsatzTV.Core.Tests.Metadata
             itemScanningPlans.Should()
                 .BeEquivalentTo(new ItemScanningPlan(posterFileName, ScanningAction.Poster));
         }
-        
+
         [Test]
         public void ExistingMovieFile_WithNewNfo_WithNewPoster(
             [Values("test (2021).nfo", "movie.nfo")]
@@ -206,7 +211,8 @@ namespace ErsatzTV.Core.Tests.Metadata
             source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
             itemScanningPlans.Should().BeEquivalentTo(
                 new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+                new ItemScanningPlan(posterFileName, ScanningAction.Poster),
+                new ItemScanningPlan(movieMediaItem.Path, ScanningAction.Collections));
         }
     }
 }

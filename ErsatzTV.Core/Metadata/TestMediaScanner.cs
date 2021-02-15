@@ -34,6 +34,7 @@ namespace ErsatzTV.Core.Metadata
             foreach (string file in newFiles)
             {
                 results.Add(file, new ItemScanningPlan(file, ScanningAction.Statistics));
+                results.Add(file, new ItemScanningPlan(file, ScanningAction.Collections));
 
                 Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, file);
                 maybeNfoFile.BiIter(
@@ -52,9 +53,11 @@ namespace ErsatzTV.Core.Metadata
                 {
                     Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, mediaItem.Path);
                     maybeNfoFile.IfSome(
-                        nfoFile => results.Add(
-                            mediaItem,
-                            new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata)));
+                        nfoFile =>
+                        {
+                            results.Add(mediaItem, new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata));
+                            results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Collections));
+                        });
                 }
 
                 if (string.IsNullOrWhiteSpace(mediaItem.Poster))
