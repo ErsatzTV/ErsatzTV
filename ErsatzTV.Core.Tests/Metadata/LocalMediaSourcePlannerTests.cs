@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace ErsatzTV.Core.Tests.Metadata
 {
     [TestFixture]
-    public class TestMediaScannerTests
+    public class LocalMediaSourcePlannerTests
     {
         private static readonly List<string> VideoFileExtensions = new()
         {
@@ -25,13 +25,13 @@ namespace ErsatzTV.Core.Tests.Metadata
         private static IEnumerable<FakeFileSystemEntry> NewEntriesFor(params string[] fileNames) =>
             fileNames.Map(f => new FakeFileSystemEntry(f, DateTime.MaxValue));
 
-        private static TestMediaScanner ScannerForOldFiles(params string[] fileNames)
+        private static LocalMediaSourcePlanner ScannerForOldFiles(params string[] fileNames)
             => new(new FakeLocalFileSystem(OldEntriesFor(fileNames)));
 
-        private static TestMediaScanner ScannerForNewFiles(params string[] fileNames)
+        private static LocalMediaSourcePlanner ScannerForNewFiles(params string[] fileNames)
             => new(new FakeLocalFileSystem(NewEntriesFor(fileNames)));
 
-        private static TestMediaScanner ScannerFor(IEnumerable<FakeFileSystemEntry> entries)
+        private static LocalMediaSourcePlanner ScannerFor(IEnumerable<FakeFileSystemEntry> entries)
             => new(new FakeLocalFileSystem(entries));
 
         [TestFixture]
@@ -39,30 +39,31 @@ namespace ErsatzTV.Core.Tests.Metadata
         {
             [Test]
             public void WithoutNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var movieFileName = $"/movies/test (2021)/test (2021).{extension}";
                 string[] fileNames = { movieFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq<MediaItem>.Empty,
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsLeft.Should().BeTrue();
                 source.LeftToSeq().Should().BeEquivalentTo(movieFileName);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
-                    new ItemScanningPlan(movieFileName, ScanningAction.FallbackMetadata),
-                    new ItemScanningPlan(movieFileName, ScanningAction.Collections));
+                    new ActionPlan(movieFileName, ScanningAction.Add),
+                    new ActionPlan(movieFileName, ScanningAction.Statistics),
+                    new ActionPlan(movieFileName, ScanningAction.FallbackMetadata),
+                    new ActionPlan(movieFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void WithNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("test (2021).nfo", "movie.nfo")]
                 string nfoFile)
@@ -71,24 +72,25 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var nfoFileName = $"/movies/test (2021)/{nfoFile}";
                 string[] fileNames = { movieFileName, nfoFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq<MediaItem>.Empty,
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsLeft.Should().BeTrue();
                 source.LeftToSeq().Should().BeEquivalentTo(movieFileName);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(movieFileName, ScanningAction.Add),
+                    new ActionPlan(movieFileName, ScanningAction.Statistics),
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void WithoutNfo_WithPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("", "test (2021)-")]
                 string basePosterName,
@@ -100,25 +102,26 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 string[] fileNames = { movieFileName, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq<MediaItem>.Empty,
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsLeft.Should().BeTrue();
                 source.LeftToSeq().Should().BeEquivalentTo(movieFileName);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
-                    new ItemScanningPlan(movieFileName, ScanningAction.FallbackMetadata),
-                    new ItemScanningPlan(posterFileName, ScanningAction.Poster),
-                    new ItemScanningPlan(movieFileName, ScanningAction.Collections));
+                    new ActionPlan(movieFileName, ScanningAction.Add),
+                    new ActionPlan(movieFileName, ScanningAction.Statistics),
+                    new ActionPlan(movieFileName, ScanningAction.FallbackMetadata),
+                    new ActionPlan(posterFileName, ScanningAction.Poster),
+                    new ActionPlan(movieFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void WithNfo_WithPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("test (2021).nfo", "movie.nfo")]
                 string nfoFile,
@@ -133,20 +136,21 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 string[] fileNames = { movieFileName, nfoFileName, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq<MediaItem>.Empty,
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsLeft.Should().BeTrue();
                 source.LeftToSeq().Should().BeEquivalentTo(movieFileName);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(movieFileName, ScanningAction.Statistics),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(posterFileName, ScanningAction.Poster),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(movieFileName, ScanningAction.Add),
+                    new ActionPlan(movieFileName, ScanningAction.Statistics),
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(posterFileName, ScanningAction.Poster),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
         }
 
@@ -155,7 +159,7 @@ namespace ErsatzTV.Core.Tests.Metadata
         {
             [Test]
             public void Old_File_Should_Do_Nothing(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var movieMediaItem = new MediaItem
@@ -166,7 +170,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 string[] fileNames = { movieMediaItem.Path };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq.create(movieMediaItem),
                     fileNames.ToSeq());
@@ -176,7 +180,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             [Test]
             public void Updated_File_Should_Refresh_Statistics(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var movieMediaItem = new MediaItem
@@ -187,22 +191,22 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 string[] fileNames = { movieMediaItem.Path };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForNewFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForNewFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq.create(movieMediaItem),
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(movieMediaItem.Path, ScanningAction.Statistics));
+                    new ActionPlan(movieMediaItem.Path, ScanningAction.Statistics));
             }
 
             [Test]
             public void Fallback_WithNewNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("test (2021).nfo", "movie.nfo")]
                 string nfoFile)
@@ -216,23 +220,23 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var nfoFileName = $"/movies/test (2021)/{nfoFile}";
                 string[] fileNames = { movieMediaItem.Path, nfoFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq.create(movieMediaItem),
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void Sidecar_WithOldNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("test (2021).nfo", "movie.nfo")]
                 string nfoFile)
@@ -246,7 +250,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var nfoFileName = $"/movies/test (2021)/{nfoFile}";
                 string[] fileNames = { movieMediaItem.Path, nfoFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq.create(movieMediaItem),
                     fileNames.ToSeq());
@@ -256,7 +260,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             [Test]
             public void Sidecar_WithUpdatedNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("test (2021).nfo", "movie.nfo")]
                 string nfoFile)
@@ -270,7 +274,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var nfoFileName = $"/movies/test (2021)/{nfoFile}";
                 string[] fileNames = { movieMediaItem.Path, nfoFileName };
 
-                Seq<LocalMediaItemScanningPlan> result =
+                Seq<LocalMediaSourcePlan> result =
                     ScannerFor(OldEntriesFor(movieMediaItem.Path).Concat(NewEntriesFor(nfoFileName)))
                         .DetermineActions(
                             MediaType.Movie,
@@ -278,17 +282,17 @@ namespace ErsatzTV.Core.Tests.Metadata
                             fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void WithoutNfo_WithNewPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("", "test (2021)-")]
                 string basePosterName,
@@ -304,22 +308,22 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var posterFileName = $"/movies/test (2021)/{basePosterName}poster.{posterExtension}";
                 string[] fileNames = { movieMediaItem.Path, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq.create(movieMediaItem),
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
                 itemScanningPlans.Should()
-                    .BeEquivalentTo(new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+                    .BeEquivalentTo(new ActionPlan(posterFileName, ScanningAction.Poster));
             }
 
             [Test]
             public void WithoutNfo_WithOldPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("", "test (2021)-")]
                 string basePosterName,
@@ -337,7 +341,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var posterFileName = $"/movies/test (2021)/{basePosterName}poster.{posterExtension}";
                 string[] fileNames = { movieMediaItem.Path, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq.create(movieMediaItem),
                     fileNames.ToSeq());
@@ -347,7 +351,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             [Test]
             public void WithoutNfo_WithUpdatedPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("", "test (2021)-")]
                 string basePosterName,
@@ -365,7 +369,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var posterFileName = $"/movies/test (2021)/{basePosterName}poster.{posterExtension}";
                 string[] fileNames = { movieMediaItem.Path, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result =
+                Seq<LocalMediaSourcePlan> result =
                     ScannerFor(OldEntriesFor(movieMediaItem.Path).Concat(NewEntriesFor(posterFileName)))
                         .DetermineActions(
                             MediaType.Movie,
@@ -373,16 +377,16 @@ namespace ErsatzTV.Core.Tests.Metadata
                             fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
                 itemScanningPlans.Should()
-                    .BeEquivalentTo(new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+                    .BeEquivalentTo(new ActionPlan(posterFileName, ScanningAction.Poster));
             }
 
             [Test]
             public void WithNewNfo_WithNewPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("test (2021).nfo", "movie.nfo")]
                 string nfoFile,
@@ -401,19 +405,19 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var posterFileName = $"/movies/test (2021)/{basePosterName}poster.{posterExtension}";
                 string[] fileNames = { movieMediaItem.Path, nfoFileName, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.Movie,
                     Seq.create(movieMediaItem),
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(posterFileName, ScanningAction.Poster),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(posterFileName, ScanningAction.Poster),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
         }
 
@@ -422,54 +426,56 @@ namespace ErsatzTV.Core.Tests.Metadata
         {
             [Test]
             public void WithoutNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var episodeFileName = $"/tv/test (2021)/season 01/test (2021) - s01e03.{extension}";
                 string[] fileNames = { episodeFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq<MediaItem>.Empty,
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsLeft.Should().BeTrue();
                 source.LeftToSeq().Should().BeEquivalentTo(episodeFileName);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(episodeFileName, ScanningAction.Statistics),
-                    new ItemScanningPlan(episodeFileName, ScanningAction.FallbackMetadata),
-                    new ItemScanningPlan(episodeFileName, ScanningAction.Collections));
+                    new ActionPlan(episodeFileName, ScanningAction.Add),
+                    new ActionPlan(episodeFileName, ScanningAction.Statistics),
+                    new ActionPlan(episodeFileName, ScanningAction.FallbackMetadata),
+                    new ActionPlan(episodeFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void WithNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var episodeFileName = $"/tv/test (2021)/season 01/test (2021) - s01e03.{extension}";
                 var nfoFileName = "/tv/test (2021)/season 01/test (2021) - s01e03.nfo";
                 string[] fileNames = { episodeFileName, nfoFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq<MediaItem>.Empty,
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsLeft.Should().BeTrue();
                 source.LeftToSeq().Should().BeEquivalentTo(episodeFileName);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(episodeFileName, ScanningAction.Statistics),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(episodeFileName, ScanningAction.Add),
+                    new ActionPlan(episodeFileName, ScanningAction.Statistics),
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void WithoutNfo_WithPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("jpg", "jpeg", "png", "gif", "tbn")]
                 string posterExtension)
@@ -479,25 +485,26 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 string[] fileNames = { episodeFileName, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq<MediaItem>.Empty,
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsLeft.Should().BeTrue();
                 source.LeftToSeq().Should().BeEquivalentTo(episodeFileName);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(episodeFileName, ScanningAction.Statistics),
-                    new ItemScanningPlan(episodeFileName, ScanningAction.FallbackMetadata),
-                    new ItemScanningPlan(posterFileName, ScanningAction.Poster),
-                    new ItemScanningPlan(episodeFileName, ScanningAction.Collections));
+                    new ActionPlan(episodeFileName, ScanningAction.Add),
+                    new ActionPlan(episodeFileName, ScanningAction.Statistics),
+                    new ActionPlan(episodeFileName, ScanningAction.FallbackMetadata),
+                    new ActionPlan(posterFileName, ScanningAction.Poster),
+                    new ActionPlan(episodeFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void WithNfo_WithPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("jpg", "jpeg", "png", "gif", "tbn")]
                 string posterExtension)
@@ -508,20 +515,21 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 string[] fileNames = { episodeFileName, nfoFileName, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq<MediaItem>.Empty,
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsLeft.Should().BeTrue();
                 source.LeftToSeq().Should().BeEquivalentTo(episodeFileName);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(episodeFileName, ScanningAction.Statistics),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(posterFileName, ScanningAction.Poster),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(episodeFileName, ScanningAction.Add),
+                    new ActionPlan(episodeFileName, ScanningAction.Statistics),
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(posterFileName, ScanningAction.Poster),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
         }
 
@@ -530,7 +538,7 @@ namespace ErsatzTV.Core.Tests.Metadata
         {
             [Test]
             public void Old_File_Should_Do_Nothing(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var episodeMediaItem = new MediaItem
@@ -541,7 +549,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 string[] fileNames = { episodeMediaItem.Path };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq.create(episodeMediaItem),
                     fileNames.ToSeq());
@@ -551,7 +559,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             [Test]
             public void Updated_File_Should_Refresh_Statistics(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var episodeMediaItem = new MediaItem
@@ -562,22 +570,22 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 string[] fileNames = { episodeMediaItem.Path };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForNewFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForNewFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq.create(episodeMediaItem),
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(episodeMediaItem);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(episodeMediaItem.Path, ScanningAction.Statistics));
+                    new ActionPlan(episodeMediaItem.Path, ScanningAction.Statistics));
             }
             
             [Test]
             public void Fallback_WithNewNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var episodeMediaItem = new MediaItem
@@ -589,23 +597,23 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var nfoFileName = "/tv/test (2021)/season 01/test (2021) - s01e03.nfo";
                 string[] fileNames = { episodeMediaItem.Path, nfoFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq.create(episodeMediaItem),
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(episodeMediaItem);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void Sidecar_WithOldNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var episodeMediaItem = new MediaItem
@@ -617,7 +625,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var nfoFileName = "/tv/test (2021)/season 01/test (2021) - s01e03.nfo";
                 string[] fileNames = { episodeMediaItem.Path, nfoFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq.create(episodeMediaItem),
                     fileNames.ToSeq());
@@ -627,7 +635,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             [Test]
             public void Sidecar_WithUpdatedNfo_WithoutPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension)
             {
                 var episodeMediaItem = new MediaItem
@@ -639,7 +647,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var nfoFileName = "/tv/test (2021)/season 01/test (2021) - s01e03.nfo";
                 string[] fileNames = { episodeMediaItem.Path, nfoFileName };
 
-                Seq<LocalMediaItemScanningPlan> result =
+                Seq<LocalMediaSourcePlan> result =
                     ScannerFor(OldEntriesFor(episodeMediaItem.Path).Concat(NewEntriesFor(nfoFileName)))
                         .DetermineActions(
                             MediaType.TvShow,
@@ -647,17 +655,17 @@ namespace ErsatzTV.Core.Tests.Metadata
                             fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(episodeMediaItem);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
 
             [Test]
             public void WithoutNfo_WithNewPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("jpg", "jpeg", "png", "gif", "tbn")]
                 string posterExtension)
@@ -671,22 +679,22 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var posterFileName = $"/tv/test (2021)/poster.{posterExtension}";
                 string[] fileNames = { episodeMediaItem.Path, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq.create(episodeMediaItem),
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(episodeMediaItem);
                 itemScanningPlans.Should()
-                    .BeEquivalentTo(new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+                    .BeEquivalentTo(new ActionPlan(posterFileName, ScanningAction.Poster));
             }
 
             [Test]
             public void WithoutNfo_WithOldPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("jpg", "jpeg", "png", "gif", "tbn")]
                 string posterExtension)
@@ -702,7 +710,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var posterFileName = $"/tv/test (2021)/poster.{posterExtension}";
                 string[] fileNames = { episodeMediaItem.Path, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq.create(episodeMediaItem),
                     fileNames.ToSeq());
@@ -712,7 +720,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             [Test]
             public void WithoutNfo_WithUpdatedPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("jpg", "jpeg", "png", "gif", "tbn")]
                 string posterExtension)
@@ -728,7 +736,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var posterFileName = $"/tv/test (2021)/poster.{posterExtension}";
                 string[] fileNames = { episodeMediaItem.Path, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result =
+                Seq<LocalMediaSourcePlan> result =
                     ScannerFor(OldEntriesFor(episodeMediaItem.Path).Concat(NewEntriesFor(posterFileName)))
                         .DetermineActions(
                             MediaType.TvShow,
@@ -736,16 +744,16 @@ namespace ErsatzTV.Core.Tests.Metadata
                             fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(episodeMediaItem);
                 itemScanningPlans.Should()
-                    .BeEquivalentTo(new ItemScanningPlan(posterFileName, ScanningAction.Poster));
+                    .BeEquivalentTo(new ActionPlan(posterFileName, ScanningAction.Poster));
             }
 
             [Test]
             public void WithNewNfo_WithNewPoster(
-                [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+                [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
                 string extension,
                 [Values("jpg", "jpeg", "png", "gif", "tbn")]
                 string posterExtension)
@@ -760,19 +768,19 @@ namespace ErsatzTV.Core.Tests.Metadata
                 var posterFileName = $"/tv/test (2021)/poster.{posterExtension}";
                 string[] fileNames = { episodeMediaItem.Path, nfoFileName, posterFileName };
 
-                Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+                Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                     MediaType.TvShow,
                     Seq.create(episodeMediaItem),
                     fileNames.ToSeq());
 
                 result.Count.Should().Be(1);
-                (Either<string, MediaItem> source, List<ItemScanningPlan> itemScanningPlans) = result.Head();
+                (Either<string, MediaItem> source, List<ActionPlan> itemScanningPlans) = result.Head();
                 source.IsRight.Should().BeTrue();
                 source.RightToSeq().Should().BeEquivalentTo(episodeMediaItem);
                 itemScanningPlans.Should().BeEquivalentTo(
-                    new ItemScanningPlan(nfoFileName, ScanningAction.SidecarMetadata),
-                    new ItemScanningPlan(posterFileName, ScanningAction.Poster),
-                    new ItemScanningPlan(nfoFileName, ScanningAction.Collections));
+                    new ActionPlan(nfoFileName, ScanningAction.SidecarMetadata),
+                    new ActionPlan(posterFileName, ScanningAction.Poster),
+                    new ActionPlan(nfoFileName, ScanningAction.Collections));
             }
         }
 
@@ -790,12 +798,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 "/movies/test (2021)/Extras/test (2021)",
                 "/movies/test (2021)/Specials/test (2021)")]
             string baseFileName,
-            [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+            [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
             string extension)
         {
             string[] fileNames = { $"{baseFileName}.{extension}" };
 
-            Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+            Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                 MediaType.Movie,
                 Seq<MediaItem>.Empty,
                 fileNames.ToSeq());
@@ -815,12 +823,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 "/movies/test (2021)/test (2021)-trailer",
                 "/movies/test (2021)/test (2021)-other")]
             string baseFileName,
-            [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+            [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
             string extension)
         {
             string[] fileNames = { $"{baseFileName}.{extension}" };
 
-            Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+            Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                 MediaType.Movie,
                 Seq<MediaItem>.Empty,
                 fileNames.ToSeq());
@@ -830,7 +838,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
         [Test]
         public void Movies_Should_Remove_Missing_MediaItems(
-            [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+            [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
             string extension)
         {
             var movieMediaItem = new MediaItem
@@ -847,29 +855,29 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             string[] fileNames = { "anything" };
 
-            Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+            Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                 MediaType.Movie,
                 Seq.create(movieMediaItem, movieMediaItem2),
                 fileNames.ToSeq());
 
             result.Count.Should().Be(2);
 
-            (Either<string, MediaItem> source1, List<ItemScanningPlan> itemScanningPlans1) = result.Head();
+            (Either<string, MediaItem> source1, List<ActionPlan> itemScanningPlans1) = result.Head();
             source1.IsRight.Should().BeTrue();
             source1.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
             itemScanningPlans1.Should().BeEquivalentTo(
-                new ItemScanningPlan(movieMediaItem.Path, ScanningAction.Remove));
+                new ActionPlan(movieMediaItem.Path, ScanningAction.Remove));
 
-            (Either<string, MediaItem> source2, List<ItemScanningPlan> itemScanningPlans2) = result.Last();
+            (Either<string, MediaItem> source2, List<ActionPlan> itemScanningPlans2) = result.Last();
             source2.IsRight.Should().BeTrue();
             source2.RightToSeq().Should().BeEquivalentTo(movieMediaItem2);
             itemScanningPlans2.Should().BeEquivalentTo(
-                new ItemScanningPlan(movieMediaItem2.Path, ScanningAction.Remove));
+                new ActionPlan(movieMediaItem2.Path, ScanningAction.Remove));
         }
 
         [Test]
         public void Episodes_Should_Remove_Missing_MediaItems(
-            [ValueSource(typeof(TestMediaScannerTests), nameof(VideoFileExtensions))]
+            [ValueSource(typeof(LocalMediaSourcePlannerTests), nameof(VideoFileExtensions))]
             string extension)
         {
             var movieMediaItem = new MediaItem
@@ -886,24 +894,24 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             string[] fileNames = { "anything" };
 
-            Seq<LocalMediaItemScanningPlan> result = ScannerForOldFiles(fileNames).DetermineActions(
+            Seq<LocalMediaSourcePlan> result = ScannerForOldFiles(fileNames).DetermineActions(
                 MediaType.TvShow,
                 Seq.create(movieMediaItem, movieMediaItem2),
                 fileNames.ToSeq());
 
             result.Count.Should().Be(2);
 
-            (Either<string, MediaItem> source1, List<ItemScanningPlan> itemScanningPlans1) = result.Head();
+            (Either<string, MediaItem> source1, List<ActionPlan> itemScanningPlans1) = result.Head();
             source1.IsRight.Should().BeTrue();
             source1.RightToSeq().Should().BeEquivalentTo(movieMediaItem);
             itemScanningPlans1.Should().BeEquivalentTo(
-                new ItemScanningPlan(movieMediaItem.Path, ScanningAction.Remove));
+                new ActionPlan(movieMediaItem.Path, ScanningAction.Remove));
 
-            (Either<string, MediaItem> source2, List<ItemScanningPlan> itemScanningPlans2) = result.Last();
+            (Either<string, MediaItem> source2, List<ActionPlan> itemScanningPlans2) = result.Last();
             source2.IsRight.Should().BeTrue();
             source2.RightToSeq().Should().BeEquivalentTo(movieMediaItem2);
             itemScanningPlans2.Should().BeEquivalentTo(
-                new ItemScanningPlan(movieMediaItem2.Path, ScanningAction.Remove));
+                new ActionPlan(movieMediaItem2.Path, ScanningAction.Remove));
         }
 
         private class FakeLocalFileSystem : ILocalFileSystem

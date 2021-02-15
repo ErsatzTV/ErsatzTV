@@ -59,7 +59,7 @@ namespace ErsatzTV.Services
                         case RefreshMediaItem refreshMediaItem:
                             string type = refreshMediaItem switch
                             {
-                                RefreshMediaItemMetadata => "metadata",
+                                // RefreshMediaItemMetadata => "metadata",
                                 RefreshMediaItemStatistics => "statistics",
                                 RefreshMediaItemCollections => "collections",
                                 RefreshMediaItemPoster => "poster",

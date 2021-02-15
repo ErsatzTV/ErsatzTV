@@ -50,11 +50,12 @@ namespace ErsatzTV.Application.MediaItems.Commands
         private async Task<MediaItemViewModel> PersistMediaItem(RequestParameters parameters)
         {
             await _mediaItemRepository.Add(parameters.MediaItem);
-
+            
             await _localStatisticsProvider.RefreshStatistics(parameters.FFprobePath, parameters.MediaItem);
-            await _localMetadataProvider.RefreshMetadata(parameters.MediaItem);
-            await _localPosterProvider.RefreshPoster(parameters.MediaItem);
-            await _smartCollectionBuilder.RefreshSmartCollections(parameters.MediaItem);
+            // TODO: reimplement this
+            // await _localMetadataProvider.RefreshMetadata(parameters.MediaItem);
+            // await _localPosterProvider.RefreshPoster(parameters.MediaItem);
+            // await _smartCollectionBuilder.RefreshSmartCollections(parameters.MediaItem);
 
             return ProjectToViewModel(parameters.MediaItem);
         }

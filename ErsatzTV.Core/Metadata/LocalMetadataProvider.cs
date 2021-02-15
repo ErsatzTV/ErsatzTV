@@ -25,13 +25,14 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public async Task RefreshMetadata(MediaItem mediaItem)
+        public async Task RefreshSidecarMetadata(MediaItem mediaItem, string path)
         {
-            Option<MediaMetadata> maybeMetadata = await LoadMetadata(mediaItem);
-            MediaMetadata metadata =
-                maybeMetadata.IfNone(() => FallbackMetadataProvider.GetFallbackMetadata(mediaItem));
-            await ApplyMetadataUpdate(mediaItem, metadata);
+            Option<MediaMetadata> maybeMetadata = await LoadMetadata(mediaItem, path);
+            await maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(mediaItem, metadata));
         }
+
+        public Task RefreshFallbackMetadata(MediaItem mediaItem) =>
+            ApplyMetadataUpdate(mediaItem, FallbackMetadataProvider.GetFallbackMetadata(mediaItem));
 
         private async Task ApplyMetadataUpdate(MediaItem mediaItem, MediaMetadata metadata)
         {
@@ -41,6 +42,7 @@ namespace ErsatzTV.Core.Metadata
             }
 
             mediaItem.Metadata.Source = metadata.Source;
+            mediaItem.Metadata.LastWriteTime = metadata.LastWriteTime;
             mediaItem.Metadata.MediaType = metadata.MediaType;
             mediaItem.Metadata.Title = metadata.Title;
             mediaItem.Metadata.Subtitle = metadata.Subtitle;
@@ -57,9 +59,8 @@ namespace ErsatzTV.Core.Metadata
             await _mediaItemRepository.Update(mediaItem);
         }
 
-        private async Task<Option<MediaMetadata>> LoadMetadata(MediaItem mediaItem)
+        private async Task<Option<MediaMetadata>> LoadMetadata(MediaItem mediaItem, string nfoFileName)
         {
-            string nfoFileName = Path.ChangeExtension(mediaItem.Path, "nfo");
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
                 _logger.LogDebug("NFO file does not exist at {Path}", nfoFileName);
@@ -90,6 +91,7 @@ namespace ErsatzTV.Core.Metadata
                     nfo => new MediaMetadata
                     {
                         Source = MetadataSource.Sidecar,
+                        LastWriteTime = File.GetLastWriteTimeUtc(nfoFileName),
                         MediaType = MediaType.TvShow,
                         Title = nfo.ShowTitle,
                         Subtitle = nfo.Title,
@@ -117,6 +119,7 @@ namespace ErsatzTV.Core.Metadata
                     nfo => new MediaMetadata
                     {
                         Source = MetadataSource.Sidecar,
+                        LastWriteTime = File.GetLastWriteTimeUtc(nfoFileName),
                         MediaType = MediaType.Movie,
                         Title = nfo.Title,
                         Description = nfo.Outline,

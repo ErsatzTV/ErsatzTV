@@ -9,14 +9,15 @@ using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
 {
-    public class TestMediaScanner
+    // TODO: this needs a better name
+    public class LocalMediaSourcePlanner : ILocalMediaSourcePlanner
     {
         private static readonly Seq<string> ImageFileExtensions = Seq("jpg", "jpeg", "png", "gif", "tbn");
         private readonly ILocalFileSystem _localFileSystem;
 
-        public TestMediaScanner(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
+        public LocalMediaSourcePlanner(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
-        public Seq<LocalMediaItemScanningPlan> DetermineActions(
+        public Seq<LocalMediaSourcePlan> DetermineActions(
             MediaType mediaType,
             Seq<MediaItem> mediaItems,
             Seq<string> files)
@@ -32,24 +33,25 @@ namespace ErsatzTV.Core.Metadata
             // new files
             foreach (string file in newFiles)
             {
-                results.Add(file, new ItemScanningPlan(file, ScanningAction.Statistics));
+                results.Add(file, new ActionPlan(file, ScanningAction.Add));
+                results.Add(file, new ActionPlan(file, ScanningAction.Statistics));
 
                 Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, file);
                 maybeNfoFile.BiIter(
                     nfoFile =>
                     {
-                        results.Add(file, new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata));
-                        results.Add(file, new ItemScanningPlan(nfoFile, ScanningAction.Collections));
+                        results.Add(file, new ActionPlan(nfoFile, ScanningAction.SidecarMetadata));
+                        results.Add(file, new ActionPlan(nfoFile, ScanningAction.Collections));
                     },
                     () =>
                     {
-                        results.Add(file, new ItemScanningPlan(file, ScanningAction.FallbackMetadata));
-                        results.Add(file, new ItemScanningPlan(file, ScanningAction.Collections));
+                        results.Add(file, new ActionPlan(file, ScanningAction.FallbackMetadata));
+                        results.Add(file, new ActionPlan(file, ScanningAction.Collections));
                     });
 
                 Option<string> maybePoster = LocatePoster(mediaType, files, file);
                 maybePoster.IfSome(
-                    posterFile => results.Add(file, new ItemScanningPlan(posterFile, ScanningAction.Poster)));
+                    posterFile => results.Add(file, new ActionPlan(posterFile, ScanningAction.Poster)));
             }
 
             // existing media items
@@ -57,7 +59,7 @@ namespace ErsatzTV.Core.Metadata
             {
                 if ((mediaItem.LastWriteTime ?? DateTime.MinValue) < _localFileSystem.GetLastWriteTime(mediaItem.Path))
                 {
-                    results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Statistics));
+                    results.Add(mediaItem, new ActionPlan(mediaItem.Path, ScanningAction.Statistics));
                 }
 
                 Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, mediaItem.Path);
@@ -68,8 +70,8 @@ namespace ErsatzTV.Core.Metadata
                             (mediaItem.Metadata.LastWriteTime ?? DateTime.MinValue) <
                             _localFileSystem.GetLastWriteTime(nfoFile))
                         {
-                            results.Add(mediaItem, new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata));
-                            results.Add(mediaItem, new ItemScanningPlan(nfoFile, ScanningAction.Collections));
+                            results.Add(mediaItem, new ActionPlan(nfoFile, ScanningAction.SidecarMetadata));
+                            results.Add(mediaItem, new ActionPlan(nfoFile, ScanningAction.Collections));
                         }
                     });
 
@@ -81,7 +83,7 @@ namespace ErsatzTV.Core.Metadata
                             (mediaItem.PosterLastWriteTime ?? DateTime.MinValue) <
                             _localFileSystem.GetLastWriteTime(posterFile))
                         {
-                            results.Add(mediaItem, new ItemScanningPlan(posterFile, ScanningAction.Poster));
+                            results.Add(mediaItem, new ActionPlan(posterFile, ScanningAction.Poster));
                         }
                     });
             }
@@ -89,7 +91,7 @@ namespace ErsatzTV.Core.Metadata
             // missing media items
             foreach (MediaItem mediaItem in mediaItems.Where(i => !files.Contains(i.Path)))
             {
-                results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Remove));
+                results.Add(mediaItem, new ActionPlan(mediaItem.Path, ScanningAction.Remove));
             }
 
             return results.Summarize();
@@ -147,15 +149,15 @@ namespace ErsatzTV.Core.Metadata
 
         private class IntermediateResults
         {
-            private readonly List<Tuple<Either<string, MediaItem>, ItemScanningPlan>> _rawResults = new();
+            private readonly List<Tuple<Either<string, MediaItem>, ActionPlan>> _rawResults = new();
 
-            public void Add(Either<string, MediaItem> source, ItemScanningPlan plan) =>
+            public void Add(Either<string, MediaItem> source, ActionPlan plan) =>
                 _rawResults.Add(Tuple(source, plan));
 
-            public Seq<LocalMediaItemScanningPlan> Summarize() =>
+            public Seq<LocalMediaSourcePlan> Summarize() =>
                 _rawResults
                     .GroupBy(t => t.Item1)
-                    .Select(g => new LocalMediaItemScanningPlan(g.Key, g.Select(g2 => g2.Item2).ToList()))
+                    .Select(g => new LocalMediaSourcePlan(g.Key, g.Select(g2 => g2.Item2).ToList()))
                     .ToSeq();
         }
 

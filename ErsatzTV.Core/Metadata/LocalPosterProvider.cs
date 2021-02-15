@@ -73,7 +73,7 @@ namespace ErsatzTV.Core.Metadata
             return None;
         }
 
-        private async Task SavePosterToDisk(MediaItem mediaItem, string posterPath)
+        public async Task SavePosterToDisk(MediaItem mediaItem, string posterPath)
         {
             byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
             Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, 220, null);
