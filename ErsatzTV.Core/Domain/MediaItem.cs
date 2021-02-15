@@ -10,6 +10,7 @@ namespace ErsatzTV.Core.Domain
         public MediaSource Source { get; set; }
         public string Path { get; set; }
         public string Poster { get; set; }
+        public DateTime? PosterLastWriteTime { get; set; }
         public MediaMetadata Metadata { get; set; }
         public DateTime? LastWriteTime { get; set; }
         public IList<SimpleMediaCollection> SimpleMediaCollections { get; set; }

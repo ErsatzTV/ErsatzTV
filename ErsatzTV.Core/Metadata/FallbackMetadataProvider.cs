@@ -10,7 +10,7 @@ namespace ErsatzTV.Core.Metadata
         public static MediaMetadata GetFallbackMetadata(MediaItem mediaItem)
         {
             string fileName = Path.GetFileName(mediaItem.Path);
-            var metadata = new MediaMetadata { Title = fileName ?? mediaItem.Path };
+            var metadata = new MediaMetadata { Source = MetadataSource.Fallback, Title = fileName ?? mediaItem.Path };
 
             if (fileName != null)
             {
