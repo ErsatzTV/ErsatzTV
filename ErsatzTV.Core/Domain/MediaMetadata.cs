@@ -5,6 +5,7 @@ namespace ErsatzTV.Core.Domain
 {
     public record MediaMetadata : IDisplaySize
     {
+        public MetadataSource Source { get; set; }
         public TimeSpan Duration { get; set; }
         public string SampleAspectRatio { get; set; }
         public string DisplayAspectRatio { get; set; }

@@ -40,6 +40,7 @@ namespace ErsatzTV.Core.Metadata
                 mediaItem.Metadata = new MediaMetadata();
             }
 
+            mediaItem.Metadata.Source = metadata.Source;
             mediaItem.Metadata.MediaType = metadata.MediaType;
             mediaItem.Metadata.Title = metadata.Title;
             mediaItem.Metadata.Subtitle = metadata.Subtitle;
@@ -88,6 +89,7 @@ namespace ErsatzTV.Core.Metadata
                 return maybeNfo.Match<Option<MediaMetadata>>(
                     nfo => new MediaMetadata
                     {
+                        Source = MetadataSource.Sidecar,
                         MediaType = MediaType.TvShow,
                         Title = nfo.ShowTitle,
                         Subtitle = nfo.Title,
@@ -114,6 +116,7 @@ namespace ErsatzTV.Core.Metadata
                 return maybeNfo.Match<Option<MediaMetadata>>(
                     nfo => new MediaMetadata
                     {
+                        Source = MetadataSource.Sidecar,
                         MediaType = MediaType.Movie,
                         Title = nfo.Title,
                         Description = nfo.Outline,
