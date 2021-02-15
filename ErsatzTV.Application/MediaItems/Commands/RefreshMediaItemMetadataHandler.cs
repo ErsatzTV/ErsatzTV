@@ -46,7 +46,8 @@ namespace ErsatzTV.Application.MediaItems.Commands
                 .Filter(item => File.Exists(item.Path))
                 .ToValidation<BaseError>($"[Path] '{mediaItem.Path}' does not exist on the file system");
 
-        private Task<Unit> RefreshMetadata(MediaItem mediaItem) =>
-            _localMetadataProvider.RefreshMetadata(mediaItem).ToUnit();
+        private Task<Unit> RefreshMetadata(MediaItem mediaItem) => Task.CompletedTask.ToUnit();
+        // TODO: reimplement this
+        // _localMetadataProvider.RefreshMetadata(mediaItem).ToUnit();
     }
 }

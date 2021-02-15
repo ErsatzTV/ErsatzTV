@@ -180,6 +180,7 @@ namespace ErsatzTV
             services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
             services.AddScoped<IImageCache, ImageCache>();
             services.AddScoped<ILocalFileSystem, LocalFileSystem>();
+            services.AddScoped<ILocalMediaSourcePlanner, LocalMediaSourcePlanner>();
 
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();

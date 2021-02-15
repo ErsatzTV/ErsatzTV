@@ -5,6 +5,7 @@ namespace ErsatzTV.Core.Interfaces.Metadata
 {
     public interface ILocalMetadataProvider
     {
-        Task RefreshMetadata(MediaItem mediaItem);
+        Task RefreshSidecarMetadata(MediaItem mediaItem, string path);
+        Task RefreshFallbackMetadata(MediaItem mediaItem);
     }
 }
