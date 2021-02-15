@@ -11,7 +11,7 @@ namespace ErsatzTV.Core.Metadata
     public class LocalFileSystem : ILocalFileSystem
     {
         public DateTime GetLastWriteTime(string path) =>
-            File.GetLastWriteTimeUtc(path);
+            Try(File.GetLastWriteTimeUtc(path)).IfFail(() => DateTime.MinValue);
 
         public bool IsMediaSourceAccessible(LocalMediaSource localMediaSource) =>
             Directory.Exists(localMediaSource.Folder);

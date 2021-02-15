@@ -33,12 +33,19 @@ namespace ErsatzTV.Core.Metadata
             foreach (string file in newFiles)
             {
                 results.Add(file, new ItemScanningPlan(file, ScanningAction.Statistics));
-                results.Add(file, new ItemScanningPlan(file, ScanningAction.Collections));
 
                 Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, file);
                 maybeNfoFile.BiIter(
-                    nfoFile => results.Add(file, new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata)),
-                    () => results.Add(file, new ItemScanningPlan(file, ScanningAction.FallbackMetadata)));
+                    nfoFile =>
+                    {
+                        results.Add(file, new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata));
+                        results.Add(file, new ItemScanningPlan(nfoFile, ScanningAction.Collections));
+                    },
+                    () =>
+                    {
+                        results.Add(file, new ItemScanningPlan(file, ScanningAction.FallbackMetadata));
+                        results.Add(file, new ItemScanningPlan(file, ScanningAction.Collections));
+                    });
 
                 Option<string> maybePoster = LocatePoster(mediaType, files, file);
                 maybePoster.IfSome(
@@ -52,7 +59,7 @@ namespace ErsatzTV.Core.Metadata
                 {
                     results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Statistics));
                 }
-                
+
                 Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, mediaItem.Path);
                 maybeNfoFile.IfSome(
                     nfoFile =>
@@ -62,7 +69,7 @@ namespace ErsatzTV.Core.Metadata
                             _localFileSystem.GetLastWriteTime(nfoFile))
                         {
                             results.Add(mediaItem, new ItemScanningPlan(nfoFile, ScanningAction.SidecarMetadata));
-                            results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Collections));
+                            results.Add(mediaItem, new ItemScanningPlan(nfoFile, ScanningAction.Collections));
                         }
                     });
 
@@ -78,13 +85,13 @@ namespace ErsatzTV.Core.Metadata
                         }
                     });
             }
-            
+
             // missing media items
             foreach (MediaItem mediaItem in mediaItems.Where(i => !files.Contains(i.Path)))
             {
                 results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Remove));
             }
-            
+
             return results.Summarize();
         }
 
@@ -158,12 +165,13 @@ namespace ErsatzTV.Core.Metadata
             ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts");
         
         private static readonly Seq<string> ExtraDirectories = Seq(
-            "behind the scenes","deleted scenes","featurettes",
-            "interviews","scenes","shorts","trailers","other");
+            "behind the scenes", "deleted scenes", "featurettes",
+            "interviews", "scenes", "shorts", "trailers", "other",
+            "extras", "specials");
         
         private static readonly Seq<string> ExtraFiles = Seq(
-            "behindthescenes","deleted","featurette",
-            "interview","scene","short","trailer","other");
+            "behindthescenes", "deleted", "featurette",
+            "interview", "scene", "short", "trailer", "other");
         // @formatter:on
     }
 }
