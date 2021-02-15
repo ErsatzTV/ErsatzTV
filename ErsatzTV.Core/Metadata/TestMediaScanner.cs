@@ -48,6 +48,11 @@ namespace ErsatzTV.Core.Metadata
             // existing media items
             foreach (MediaItem mediaItem in existingMediaItems)
             {
+                if ((mediaItem.LastWriteTime ?? DateTime.MinValue) < _localFileSystem.GetLastWriteTime(mediaItem.Path))
+                {
+                    results.Add(mediaItem, new ItemScanningPlan(mediaItem.Path, ScanningAction.Statistics));
+                }
+                
                 Option<string> maybeNfoFile = LocateNfoFile(mediaType, files, mediaItem.Path);
                 maybeNfoFile.IfSome(
                     nfoFile =>

@@ -70,16 +70,18 @@ namespace ErsatzTV.Core.Metadata
                 knownMediaItems.ToSeq(),
                 FindAllFiles(localMediaSource));
 
-            foreach (var action in actions)
+            foreach (LocalMediaItemScanningPlan action in actions)
             {
-                foreach (var plan in action.ActionPlans)
+                foreach (ItemScanningPlan plan in action.ActionPlans)
                 {
+                    string sourcePath = action.Source.Match(
+                        Right: mediaItem => mediaItem.Path,
+                        Left: path => path);
+                    
                     _logger.LogDebug(
                         "Action Plan: {Source} / {File} => {Action}",
-                        action.Source.Match(
-                            Right: mediaItem => Path.GetFileName(mediaItem.Path),
-                            Left: Path.GetFileName),
-                        plan.TargetPath,
+                        Path.GetFileName(sourcePath),
+                        Path.GetRelativePath(Path.GetDirectoryName(sourcePath) ?? string.Empty, plan.TargetPath),
                         plan.TargetAction);
                 }
             }
