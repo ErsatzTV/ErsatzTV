@@ -46,10 +46,7 @@ namespace ErsatzTV.Core.Metadata
             mediaItem.Metadata.MediaType = metadata.MediaType;
             mediaItem.Metadata.Title = metadata.Title;
             mediaItem.Metadata.Subtitle = metadata.Subtitle;
-            mediaItem.Metadata.SortTitle =
-                (metadata.Title ?? string.Empty).ToLowerInvariant().StartsWith("the ")
-                    ? metadata.Title?.Substring(4)
-                    : metadata.Title;
+            mediaItem.Metadata.SortTitle = GetSortTitle(metadata.Title ?? string.Empty);
             mediaItem.Metadata.Description = metadata.Description;
             mediaItem.Metadata.EpisodeNumber = metadata.EpisodeNumber;
             mediaItem.Metadata.SeasonNumber = metadata.SeasonNumber;
@@ -57,6 +54,21 @@ namespace ErsatzTV.Core.Metadata
             mediaItem.Metadata.ContentRating = metadata.ContentRating;
 
             await _mediaItemRepository.Update(mediaItem);
+        }
+
+        private static string GetSortTitle(string title)
+        {
+            if (title.StartsWith("the ", StringComparison.OrdinalIgnoreCase))
+            {
+                return title.Substring(4);
+            }
+
+            if (title.StartsWith("Æ"))
+            {
+                return title.Replace("Æ", "E");
+            }
+
+            return title;
         }
 
         private async Task<Option<MediaMetadata>> LoadMetadata(MediaItem mediaItem, string nfoFileName)
