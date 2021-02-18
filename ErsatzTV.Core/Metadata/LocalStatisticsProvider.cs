@@ -31,8 +31,8 @@ namespace ErsatzTV.Core.Metadata
             try
             {
                 FFprobe ffprobe = await GetProbeOutput(ffprobePath, mediaItem);
-                MediaMetadata metadata = ProjectToMediaMetadata(ffprobe);
-                return await ApplyStatisticsUpdate(mediaItem, metadata);
+                MediaItemStatistics statistics = ProjectToMediaItemStatistics(ffprobe);
+                return await ApplyStatisticsUpdate(mediaItem, statistics);
             }
             catch (Exception ex)
             {
@@ -43,23 +43,23 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task<bool> ApplyStatisticsUpdate(
             MediaItem mediaItem,
-            MediaMetadata metadata)
+            MediaItemStatistics statistics)
         {
-            if (mediaItem.Metadata == null)
+            if (mediaItem.Statistics == null)
             {
-                mediaItem.Metadata = new MediaMetadata();
+                mediaItem.Statistics = new MediaItemStatistics();
             }
 
-            bool durationChange = mediaItem.Metadata.Duration != metadata.Duration;
+            bool durationChange = mediaItem.Statistics.Duration != statistics.Duration;
 
-            mediaItem.Metadata.Duration = metadata.Duration;
-            mediaItem.Metadata.AudioCodec = metadata.AudioCodec;
-            mediaItem.Metadata.SampleAspectRatio = metadata.SampleAspectRatio;
-            mediaItem.Metadata.DisplayAspectRatio = metadata.DisplayAspectRatio;
-            mediaItem.Metadata.Width = metadata.Width;
-            mediaItem.Metadata.Height = metadata.Height;
-            mediaItem.Metadata.VideoCodec = metadata.VideoCodec;
-            mediaItem.Metadata.VideoScanType = metadata.VideoScanType;
+            mediaItem.Statistics.Duration = statistics.Duration;
+            mediaItem.Statistics.AudioCodec = statistics.AudioCodec;
+            mediaItem.Statistics.SampleAspectRatio = statistics.SampleAspectRatio;
+            mediaItem.Statistics.DisplayAspectRatio = statistics.DisplayAspectRatio;
+            mediaItem.Statistics.Width = statistics.Width;
+            mediaItem.Statistics.Height = statistics.Height;
+            mediaItem.Statistics.VideoCodec = statistics.VideoCodec;
+            mediaItem.Statistics.VideoScanType = statistics.VideoScanType;
 
             return await _mediaItemRepository.Update(mediaItem) && durationChange;
         }
@@ -97,7 +97,7 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
-        private MediaMetadata ProjectToMediaMetadata(FFprobe probeOutput) =>
+        private MediaItemStatistics ProjectToMediaItemStatistics(FFprobe probeOutput) =>
             Optional(probeOutput)
                 .Filter(json => json?.format != null && json.streams != null)
                 .ToValidation<BaseError>("Unable to parse ffprobe output")
@@ -107,12 +107,12 @@ namespace ErsatzTV.Core.Metadata
                     {
                         var duration = TimeSpan.FromSeconds(double.Parse(json.format.duration));
 
-                        var metadata = new MediaMetadata { Duration = duration };
+                        var statistics = new MediaItemStatistics { Duration = duration };
 
                         FFprobeStream audioStream = json.streams.FirstOrDefault(s => s.codec_type == "audio");
                         if (audioStream != null)
                         {
-                            metadata = metadata with
+                            statistics = statistics with
                             {
                                 AudioCodec = audioStream.codec_name
                             };
@@ -121,7 +121,7 @@ namespace ErsatzTV.Core.Metadata
                         FFprobeStream videoStream = json.streams.FirstOrDefault(s => s.codec_type == "video");
                         if (videoStream != null)
                         {
-                            metadata = metadata with
+                            statistics = statistics with
                             {
                                 SampleAspectRatio = videoStream.sample_aspect_ratio,
                                 DisplayAspectRatio = videoStream.display_aspect_ratio,
@@ -132,9 +132,9 @@ namespace ErsatzTV.Core.Metadata
                             };
                         }
 
-                        return metadata;
+                        return statistics;
                     },
-                    _ => new MediaMetadata());
+                    _ => new MediaItemStatistics());
 
         private VideoScanType ScanTypeFromFieldOrder(string fieldOrder) =>
             fieldOrder?.ToLowerInvariant() switch

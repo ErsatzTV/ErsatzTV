@@ -16,6 +16,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         public Task<int> GetCountByType(MediaType mediaType);
         public Task<List<MediaItem>> GetAllByMediaSourceId(int mediaSourceId);
         public Task<bool> Update(MediaItem mediaItem);
-        public Task Delete(int mediaItemId);
+        public Task<Unit> Delete(int mediaItemId);
     }
 }

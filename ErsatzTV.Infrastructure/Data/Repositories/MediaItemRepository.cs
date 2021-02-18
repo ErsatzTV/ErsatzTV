@@ -33,14 +33,23 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<MediaItem>> Search(string searchString)
         {
-            IQueryable<MediaItem> data = from c in _dbContext.MediaItems.Include(c => c.Source) select c;
+            IQueryable<TelevisionEpisodeMediaItem> episodeData =
+                from c in _dbContext.TelevisionEpisodeMediaItems.Include(c => c.Source) select c;
 
             if (!string.IsNullOrEmpty(searchString))
             {
-                data = data.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
+                episodeData = episodeData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
             }
 
-            return data.ToListAsync();
+            IQueryable<MovieMediaItem> movieData =
+                from c in _dbContext.MovieMediaItems.Include(c => c.Source) select c;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                movieData = movieData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
+            }
+
+            return episodeData.OfType<MediaItem>().Concat(movieData.OfType<MediaItem>()).ToListAsync();
         }
 
 
@@ -49,13 +58,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 MediaType.Movie => _dbContext.MediaItemSummaries.FromSqlRaw(
                         @"SELECT
-    Id AS MediaItemId,
-    Metadata_Title AS Title,
-    Metadata_SortTitle AS SortTitle,
-    substr(Metadata_Aired, 1, 4) AS Subtitle,
-    Poster
-FROM MediaItems WHERE Metadata_MediaType=2
-ORDER BY Metadata_SortTitle
+    m.Id AS MediaItemId,
+    mm.Title AS Title,
+    mm.SortTitle AS SortTitle,
+    mm.Year AS Subtitle,
+    mi.Poster AS Poster
+FROM Movies m
+INNER JOIN MediaItems mi on m.Id = mi.Id
+INNER JOIN MovieMetadata mm on mm.MovieId = m.Id
+ORDER BY SortTitle
 LIMIT {0} OFFSET {1}",
                         pageSize,
                         (pageNumber - 1) * pageSize)
@@ -63,14 +74,15 @@ LIMIT {0} OFFSET {1}",
                     .ToListAsync(),
                 MediaType.TvShow => _dbContext.MediaItemSummaries.FromSqlRaw(
                         @"SELECT
-    min(Id) AS MediaItemId,
-    Metadata_Title AS Title,
-    Metadata_SortTitle AS SortTitle,
-    count(*) || ' Episodes' AS Subtitle,
-    max(Poster) AS Poster
-FROM MediaItems WHERE Metadata_MediaType=1
-GROUP BY Metadata_Title, Metadata_SortTitle
-ORDER BY Metadata_SortTitle
+    min(ts.Id) AS MediaItemId,
+    tsm.Title AS Title,
+    tsm.SortTitle AS SortTitle,
+    tsm.Year AS Subtitle,
+    max(ts.Poster) AS Poster
+FROM TelevisionShows ts
+INNER JOIN TelevisionShowMetadata tsm on tsm.TelevisionShowId = ts.Id
+GROUP BY tsm.Title, tsm.SortTitle, tsm.Year
+ORDER BY tsm.SortTitle
 LIMIT {0} OFFSET {1}",
                         pageSize,
                         (pageNumber - 1) * pageSize)
@@ -82,11 +94,9 @@ LIMIT {0} OFFSET {1}",
         public Task<int> GetCountByType(MediaType mediaType) =>
             mediaType switch
             {
-                MediaType.Movie => _dbContext.MediaItems
-                    .Filter(i => i.Metadata.MediaType == mediaType)
+                MediaType.Movie => _dbContext.MovieMediaItems
                     .CountAsync(),
-                MediaType.TvShow => _dbContext.MediaItems
-                    .Filter(i => i.Metadata.MediaType == mediaType)
+                MediaType.TvShow => _dbContext.TelevisionShows
                     .GroupBy(i => new { i.Metadata.Title, i.Metadata.SortTitle })
                     .CountAsync(),
                 _ => Task.FromResult(0)
@@ -103,11 +113,12 @@ LIMIT {0} OFFSET {1}",
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task Delete(int mediaItemId)
-        {
-            MediaItem mediaItem = await _dbContext.MediaItems.FindAsync(mediaItemId);
-            _dbContext.MediaItems.Remove(mediaItem);
-            await _dbContext.SaveChangesAsync();
-        }
+        public Task<Unit> Delete(int mediaItemId) =>
+            _dbContext.MediaItems.FindAsync(mediaItemId).AsTask().Bind(
+                mediaItem =>
+                {
+                    _dbContext.MediaItems.Remove(mediaItem);
+                    return _dbContext.SaveChangesAsync();
+                }).ToUnit();
     }
 }

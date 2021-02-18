@@ -62,12 +62,12 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
         private static List<MediaItem> Episodes(int count) =>
             Range(1, count).Map(
-                    i => new MediaItem
+                    i => (MediaItem) new TelevisionEpisodeMediaItem
                     {
                         Id = i,
-                        Metadata = new MediaMetadata
+                        Metadata = new TelevisionEpisodeMetadata
                         {
-                            MediaType = MediaType.TvShow, Aired = new DateTime(2020, 1, i)
+                            Aired = new DateTime(2020, 1, i)
                         }
                     })
                 .Reverse()

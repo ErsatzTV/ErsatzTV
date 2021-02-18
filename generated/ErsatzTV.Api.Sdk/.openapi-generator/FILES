@@ -11,13 +11,11 @@ src/ErsatzTV.Api.Sdk.Test/Model/AddProgramScheduleItemTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/ChannelViewModelTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/CreateChannelTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/CreateFFmpegProfileTests.cs
-src/ErsatzTV.Api.Sdk.Test/Model/CreateMediaItemTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/CreatePlayoutTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/CreateProgramScheduleTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/CreateSimpleMediaCollectionTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/DeleteChannelTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/DeleteFFmpegProfileTests.cs
-src/ErsatzTV.Api.Sdk.Test/Model/DeleteMediaItemTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/DeletePlayoutTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/DeleteProgramScheduleTests.cs
 src/ErsatzTV.Api.Sdk.Test/Model/FFmpegProfileViewModelTests.cs
@@ -71,13 +69,11 @@ src/ErsatzTV.Api.Sdk/Model/AddProgramScheduleItem.cs
 src/ErsatzTV.Api.Sdk/Model/ChannelViewModel.cs
 src/ErsatzTV.Api.Sdk/Model/CreateChannel.cs
 src/ErsatzTV.Api.Sdk/Model/CreateFFmpegProfile.cs
-src/ErsatzTV.Api.Sdk/Model/CreateMediaItem.cs
 src/ErsatzTV.Api.Sdk/Model/CreatePlayout.cs
 src/ErsatzTV.Api.Sdk/Model/CreateProgramSchedule.cs
 src/ErsatzTV.Api.Sdk/Model/CreateSimpleMediaCollection.cs
 src/ErsatzTV.Api.Sdk/Model/DeleteChannel.cs
 src/ErsatzTV.Api.Sdk/Model/DeleteFFmpegProfile.cs
-src/ErsatzTV.Api.Sdk/Model/DeleteMediaItem.cs
 src/ErsatzTV.Api.Sdk/Model/DeletePlayout.cs
 src/ErsatzTV.Api.Sdk/Model/DeleteProgramSchedule.cs
 src/ErsatzTV.Api.Sdk/Model/FFmpegProfileViewModel.cs

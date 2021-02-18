@@ -57,11 +57,26 @@ namespace ErsatzTV.Core.Iptv
                 {
                     string start = playoutItem.Start.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
                     string stop = playoutItem.Finish.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
-                    MediaMetadata metadata = Optional(playoutItem.MediaItem.Metadata).IfNone(
-                        new MediaMetadata
-                        {
-                            Title = Path.GetFileName(playoutItem.MediaItem.Path)
-                        });
+
+                    string title = playoutItem.MediaItem switch
+                    {
+                        MovieMediaItem m => m.Metadata?.Title ?? m.Path,
+                        TelevisionEpisodeMediaItem e => e.Metadata?.Title ?? e.Path,
+                        _ => "[unknown]"
+                    };
+
+                    string description = playoutItem.MediaItem switch
+                    {
+                        MovieMediaItem m => m.Metadata?.Plot,
+                        TelevisionEpisodeMediaItem e => e.Metadata?.Plot,
+                        _ => string.Empty
+                    };
+
+                    string contentRating = playoutItem.MediaItem switch
+                    {
+                        MovieMediaItem m => m.Metadata?.ContentRating,
+                        _ => string.Empty
+                    };
 
                     xml.WriteStartElement("programme");
                     xml.WriteAttributeString("start", start);
@@ -70,7 +85,7 @@ namespace ErsatzTV.Core.Iptv
 
                     xml.WriteStartElement("title");
                     xml.WriteAttributeString("lang", "en");
-                    xml.WriteString(metadata.Title);
+                    xml.WriteString(title);
                     xml.WriteEndElement(); // title
 
                     xml.WriteStartElement("previously-shown");
@@ -80,28 +95,35 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteAttributeString("lang", "en");
                     xml.WriteEndElement(); // sub-title
 
-                    int season = Optional(metadata.SeasonNumber).IfNone(0);
-                    int episode = Optional(metadata.EpisodeNumber).IfNone(0);
-                    if (season > 0 && episode > 0)
+                    if (playoutItem.MediaItem is TelevisionEpisodeMediaItem episode)
                     {
-                        xml.WriteStartElement("episode-num");
-                        xml.WriteAttributeString("system", "xmltv_ns");
-                        xml.WriteString($"{season - 1}.{episode - 1}.0/1");
-                        xml.WriteEndElement(); // episode-num
+                        int s = Optional(episode.Metadata?.Season).IfNone(0);
+                        int e = Optional(episode.Metadata?.Episode).IfNone(0);
+                        if (s > 0 && e > 0)
+                        {
+                            xml.WriteStartElement("episode-num");
+                            xml.WriteAttributeString("system", "xmltv_ns");
+                            xml.WriteString($"{s - 1}.{e - 1}.0/1");
+                            xml.WriteEndElement(); // episode-num
+                        }
                     }
 
                     // sb.AppendLine("<icon src=\"\"/>");
-                    xml.WriteStartElement("desc");
-                    xml.WriteAttributeString("lang", "en");
-                    xml.WriteString(metadata.Description);
-                    xml.WriteEndElement(); // desc
 
-                    if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
+                    if (!string.IsNullOrWhiteSpace(description))
+                    {
+                        xml.WriteStartElement("desc");
+                        xml.WriteAttributeString("lang", "en");
+                        xml.WriteString(description);
+                        xml.WriteEndElement(); // desc
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(contentRating))
                     {
                         xml.WriteStartElement("rating");
                         xml.WriteAttributeString("system", "MPAA");
                         xml.WriteStartElement("value");
-                        xml.WriteString(metadata.ContentRating);
+                        xml.WriteString(contentRating);
                         xml.WriteEndElement(); // value
                         xml.WriteEndElement(); // rating
                     }

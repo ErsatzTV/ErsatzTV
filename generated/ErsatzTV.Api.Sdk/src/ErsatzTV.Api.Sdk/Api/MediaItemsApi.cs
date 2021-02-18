@@ -30,24 +30,6 @@ namespace ErsatzTV.Api.Sdk.Api
         /// 
         /// </summary>
         /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="deleteMediaItem"></param>
-        /// <returns></returns>
-        void ApiMediaItemsDelete(DeleteMediaItem deleteMediaItem);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="deleteMediaItem"></param>
-        /// <returns>ApiResponse of Object(void)</returns>
-        ApiResponse<Object> ApiMediaItemsDeleteWithHttpInfo(DeleteMediaItem deleteMediaItem);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
         /// <returns>List&lt;MediaItemViewModel&gt;</returns>
         List<MediaItemViewModel> ApiMediaItemsGet();
 
@@ -78,24 +60,6 @@ namespace ErsatzTV.Api.Sdk.Api
         /// <param name="mediaItemId"></param>
         /// <returns>ApiResponse of MediaItemViewModel</returns>
         ApiResponse<MediaItemViewModel> ApiMediaItemsMediaItemIdGetWithHttpInfo(int mediaItemId);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="createMediaItem"></param>
-        /// <returns>MediaItemViewModel</returns>
-        MediaItemViewModel ApiMediaItemsPost(CreateMediaItem createMediaItem);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="createMediaItem"></param>
-        /// <returns>ApiResponse of MediaItemViewModel</returns>
-        ApiResponse<MediaItemViewModel> ApiMediaItemsPostWithHttpInfo(CreateMediaItem createMediaItem);
         #endregion Synchronous Operations
     }
 
@@ -105,29 +69,6 @@ namespace ErsatzTV.Api.Sdk.Api
     public interface IMediaItemsApiAsync : IApiAccessor
     {
         #region Asynchronous Operations
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="deleteMediaItem"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of void</returns>
-        System.Threading.Tasks.Task ApiMediaItemsDeleteAsync(DeleteMediaItem deleteMediaItem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="deleteMediaItem"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> ApiMediaItemsDeleteWithHttpInfoAsync(DeleteMediaItem deleteMediaItem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
         /// <summary>
         /// 
         /// </summary>
@@ -172,29 +113,6 @@ namespace ErsatzTV.Api.Sdk.Api
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (MediaItemViewModel)</returns>
         System.Threading.Tasks.Task<ApiResponse<MediaItemViewModel>> ApiMediaItemsMediaItemIdGetWithHttpInfoAsync(int mediaItemId, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="createMediaItem"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of MediaItemViewModel</returns>
-        System.Threading.Tasks.Task<MediaItemViewModel> ApiMediaItemsPostAsync(CreateMediaItem createMediaItem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="createMediaItem"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (MediaItemViewModel)</returns>
-        System.Threading.Tasks.Task<ApiResponse<MediaItemViewModel>> ApiMediaItemsPostWithHttpInfoAsync(CreateMediaItem createMediaItem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken));
         #endregion Asynchronous Operations
     }
 
@@ -313,127 +231,6 @@ namespace ErsatzTV.Api.Sdk.Api
                 return _exceptionFactory;
             }
             set { _exceptionFactory = value; }
-        }
-
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="deleteMediaItem"></param>
-        /// <returns></returns>
-        public void ApiMediaItemsDelete(DeleteMediaItem deleteMediaItem)
-        {
-            ApiMediaItemsDeleteWithHttpInfo(deleteMediaItem);
-        }
-
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="deleteMediaItem"></param>
-        /// <returns>ApiResponse of Object(void)</returns>
-        public ErsatzTV.Api.Sdk.Client.ApiResponse<Object> ApiMediaItemsDeleteWithHttpInfo(DeleteMediaItem deleteMediaItem)
-        {
-            // verify the required parameter 'deleteMediaItem' is set
-            if (deleteMediaItem == null)
-                throw new ErsatzTV.Api.Sdk.Client.ApiException(400, "Missing required parameter 'deleteMediaItem' when calling MediaItemsApi->ApiMediaItemsDelete");
-
-            ErsatzTV.Api.Sdk.Client.RequestOptions localVarRequestOptions = new ErsatzTV.Api.Sdk.Client.RequestOptions();
-
-            String[] _contentTypes = new String[] {
-                "application/json-patch+json",
-                "application/json",
-                "text/json",
-                "application/_*+json"
-            };
-
-            // to determine the Accept header
-            String[] _accepts = new String[] {
-                "application/json"
-            };
-
-            var localVarContentType = ErsatzTV.Api.Sdk.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = ErsatzTV.Api.Sdk.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.Data = deleteMediaItem;
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Delete<Object>("/api/media/items", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("ApiMediaItemsDelete", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="deleteMediaItem"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of void</returns>
-        public async System.Threading.Tasks.Task ApiMediaItemsDeleteAsync(DeleteMediaItem deleteMediaItem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
-        {
-            await ApiMediaItemsDeleteWithHttpInfoAsync(deleteMediaItem, cancellationToken).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="deleteMediaItem"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse</returns>
-        public async System.Threading.Tasks.Task<ErsatzTV.Api.Sdk.Client.ApiResponse<Object>> ApiMediaItemsDeleteWithHttpInfoAsync(DeleteMediaItem deleteMediaItem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
-        {
-            // verify the required parameter 'deleteMediaItem' is set
-            if (deleteMediaItem == null)
-                throw new ErsatzTV.Api.Sdk.Client.ApiException(400, "Missing required parameter 'deleteMediaItem' when calling MediaItemsApi->ApiMediaItemsDelete");
-
-
-            ErsatzTV.Api.Sdk.Client.RequestOptions localVarRequestOptions = new ErsatzTV.Api.Sdk.Client.RequestOptions();
-
-            String[] _contentTypes = new String[] {
-                "application/json-patch+json", 
-                "application/json", 
-                "text/json", 
-                "application/_*+json"
-            };
-
-            // to determine the Accept header
-            String[] _accepts = new String[] {
-                "application/json"
-            };
-
-
-            var localVarContentType = ErsatzTV.Api.Sdk.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = ErsatzTV.Api.Sdk.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.Data = deleteMediaItem;
-
-
-            // make the HTTP request
-
-            var localVarResponse = await this.AsynchronousClient.DeleteAsync<Object>("/api/media/items", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("ApiMediaItemsDelete", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
         }
 
         /// <summary>
@@ -638,129 +435,6 @@ namespace ErsatzTV.Api.Sdk.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("ApiMediaItemsMediaItemIdGet", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="createMediaItem"></param>
-        /// <returns>MediaItemViewModel</returns>
-        public MediaItemViewModel ApiMediaItemsPost(CreateMediaItem createMediaItem)
-        {
-            ErsatzTV.Api.Sdk.Client.ApiResponse<MediaItemViewModel> localVarResponse = ApiMediaItemsPostWithHttpInfo(createMediaItem);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="createMediaItem"></param>
-        /// <returns>ApiResponse of MediaItemViewModel</returns>
-        public ErsatzTV.Api.Sdk.Client.ApiResponse<MediaItemViewModel> ApiMediaItemsPostWithHttpInfo(CreateMediaItem createMediaItem)
-        {
-            // verify the required parameter 'createMediaItem' is set
-            if (createMediaItem == null)
-                throw new ErsatzTV.Api.Sdk.Client.ApiException(400, "Missing required parameter 'createMediaItem' when calling MediaItemsApi->ApiMediaItemsPost");
-
-            ErsatzTV.Api.Sdk.Client.RequestOptions localVarRequestOptions = new ErsatzTV.Api.Sdk.Client.RequestOptions();
-
-            String[] _contentTypes = new String[] {
-                "application/json-patch+json",
-                "application/json",
-                "text/json",
-                "application/_*+json"
-            };
-
-            // to determine the Accept header
-            String[] _accepts = new String[] {
-                "application/json"
-            };
-
-            var localVarContentType = ErsatzTV.Api.Sdk.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = ErsatzTV.Api.Sdk.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.Data = createMediaItem;
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Post<MediaItemViewModel>("/api/media/items", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("ApiMediaItemsPost", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="createMediaItem"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of MediaItemViewModel</returns>
-        public async System.Threading.Tasks.Task<MediaItemViewModel> ApiMediaItemsPostAsync(CreateMediaItem createMediaItem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
-        {
-            ErsatzTV.Api.Sdk.Client.ApiResponse<MediaItemViewModel> localVarResponse = await ApiMediaItemsPostWithHttpInfoAsync(createMediaItem, cancellationToken).ConfigureAwait(false);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <exception cref="ErsatzTV.Api.Sdk.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="createMediaItem"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (MediaItemViewModel)</returns>
-        public async System.Threading.Tasks.Task<ErsatzTV.Api.Sdk.Client.ApiResponse<MediaItemViewModel>> ApiMediaItemsPostWithHttpInfoAsync(CreateMediaItem createMediaItem, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
-        {
-            // verify the required parameter 'createMediaItem' is set
-            if (createMediaItem == null)
-                throw new ErsatzTV.Api.Sdk.Client.ApiException(400, "Missing required parameter 'createMediaItem' when calling MediaItemsApi->ApiMediaItemsPost");
-
-
-            ErsatzTV.Api.Sdk.Client.RequestOptions localVarRequestOptions = new ErsatzTV.Api.Sdk.Client.RequestOptions();
-
-            String[] _contentTypes = new String[] {
-                "application/json-patch+json", 
-                "application/json", 
-                "text/json", 
-                "application/_*+json"
-            };
-
-            // to determine the Accept header
-            String[] _accepts = new String[] {
-                "application/json"
-            };
-
-
-            var localVarContentType = ErsatzTV.Api.Sdk.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = ErsatzTV.Api.Sdk.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.Data = createMediaItem;
-
-
-            // make the HTTP request
-
-            var localVarResponse = await this.AsynchronousClient.PostAsync<MediaItemViewModel>("/api/media/items", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("ApiMediaItemsPost", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

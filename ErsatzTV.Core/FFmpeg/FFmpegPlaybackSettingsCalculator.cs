@@ -66,24 +66,24 @@ namespace ErsatzTV.Core.FFmpeg
                     result.Deinterlace = false;
                     break;
                 case StreamingMode.TransportStream:
-                    if (NeedToScale(ffmpegProfile, playoutItem.MediaItem.Metadata))
+                    if (NeedToScale(ffmpegProfile, playoutItem.MediaItem.Statistics))
                     {
-                        IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, playoutItem.MediaItem.Metadata);
-                        if (!scaledSize.IsSameSizeAs(playoutItem.MediaItem.Metadata))
+                        IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, playoutItem.MediaItem.Statistics);
+                        if (!scaledSize.IsSameSizeAs(playoutItem.MediaItem.Statistics))
                         {
                             result.ScaledSize = Some(
-                                CalculateScaledSize(ffmpegProfile, playoutItem.MediaItem.Metadata));
+                                CalculateScaledSize(ffmpegProfile, playoutItem.MediaItem.Statistics));
                         }
                     }
 
-                    IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(playoutItem.MediaItem.Metadata);
+                    IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(playoutItem.MediaItem.Statistics);
                     if (!sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
                     {
                         result.PadToDesiredResolution = true;
                     }
 
                     if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
-                        NeedToNormalizeVideoCodec(ffmpegProfile, playoutItem.MediaItem.Metadata))
+                        NeedToNormalizeVideoCodec(ffmpegProfile, playoutItem.MediaItem.Statistics))
                     {
                         result.VideoCodec = ffmpegProfile.VideoCodec;
                         result.VideoBitrate = ffmpegProfile.VideoBitrate;
@@ -94,7 +94,7 @@ namespace ErsatzTV.Core.FFmpeg
                         result.VideoCodec = "copy";
                     }
 
-                    if (NeedToNormalizeAudioCodec(ffmpegProfile, playoutItem.MediaItem.Metadata))
+                    if (NeedToNormalizeAudioCodec(ffmpegProfile, playoutItem.MediaItem.Statistics))
                     {
                         result.AudioCodec = ffmpegProfile.AudioCodec;
                         result.AudioBitrate = ffmpegProfile.AudioBitrate;
@@ -104,7 +104,7 @@ namespace ErsatzTV.Core.FFmpeg
                         {
                             result.AudioChannels = ffmpegProfile.AudioChannels;
                             result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
-                            result.AudioDuration = playoutItem.MediaItem.Metadata.Duration;
+                            result.AudioDuration = playoutItem.MediaItem.Statistics.Duration;
                         }
                     }
                     else
@@ -112,7 +112,7 @@ namespace ErsatzTV.Core.FFmpeg
                         result.AudioCodec = "copy";
                     }
 
-                    if (playoutItem.MediaItem.Metadata.VideoScanType == VideoScanType.Interlaced)
+                    if (playoutItem.MediaItem.Statistics.VideoScanType == VideoScanType.Interlaced)
                     {
                         result.Deinterlace = true;
                     }
@@ -132,16 +132,16 @@ namespace ErsatzTV.Core.FFmpeg
                 AudioCodec = ffmpegProfile.AudioCodec
             };
 
-        private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaMetadata mediaMetadata) =>
+        private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaItemStatistics statistics) =>
             ffmpegProfile.NormalizeResolution &&
-            IsIncorrectSize(ffmpegProfile.Resolution, mediaMetadata) ||
-            IsTooLarge(ffmpegProfile.Resolution, mediaMetadata) ||
-            IsOddSize(mediaMetadata);
+            IsIncorrectSize(ffmpegProfile.Resolution, statistics) ||
+            IsTooLarge(ffmpegProfile.Resolution, statistics) ||
+            IsOddSize(statistics);
 
-        private static bool IsIncorrectSize(IDisplaySize desiredResolution, MediaMetadata mediaMetadata) =>
-            IsAnamorphic(mediaMetadata) ||
-            mediaMetadata.Width != desiredResolution.Width ||
-            mediaMetadata.Height != desiredResolution.Height;
+        private static bool IsIncorrectSize(IDisplaySize desiredResolution, MediaItemStatistics statistics) =>
+            IsAnamorphic(statistics) ||
+            statistics.Width != desiredResolution.Width ||
+            statistics.Height != desiredResolution.Height;
 
         private static bool IsTooLarge(IDisplaySize desiredResolution, IDisplaySize mediaSize) =>
             mediaSize.Height > desiredResolution.Height ||
@@ -150,17 +150,17 @@ namespace ErsatzTV.Core.FFmpeg
         private static bool IsOddSize(IDisplaySize displaySize) =>
             displaySize.Height % 2 == 1 || displaySize.Width % 2 == 1;
 
-        private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaMetadata mediaMetadata) =>
-            ffmpegProfile.NormalizeVideoCodec && ffmpegProfile.VideoCodec != mediaMetadata.VideoCodec;
+        private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaItemStatistics statistics) =>
+            ffmpegProfile.NormalizeVideoCodec && ffmpegProfile.VideoCodec != statistics.VideoCodec;
 
-        private static bool NeedToNormalizeAudioCodec(FFmpegProfile ffmpegProfile, MediaMetadata mediaMetadata) =>
-            ffmpegProfile.NormalizeAudioCodec && ffmpegProfile.AudioCodec != mediaMetadata.AudioCodec;
+        private static bool NeedToNormalizeAudioCodec(FFmpegProfile ffmpegProfile, MediaItemStatistics statistics) =>
+            ffmpegProfile.NormalizeAudioCodec && ffmpegProfile.AudioCodec != statistics.AudioCodec;
 
-        private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaMetadata mediaMetadata)
+        private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaItemStatistics statistics)
         {
-            IDisplaySize sarSize = SARSize(mediaMetadata);
-            int p = mediaMetadata.Width * sarSize.Width;
-            int q = mediaMetadata.Height * sarSize.Height;
+            IDisplaySize sarSize = SARSize(statistics);
+            int p = statistics.Width * sarSize.Width;
+            int q = statistics.Height * sarSize.Height;
             int g = Gcd(q, p);
             p = p / g;
             q = q / g;
@@ -194,29 +194,29 @@ namespace ErsatzTV.Core.FFmpeg
             return a | b;
         }
 
-        private static bool IsAnamorphic(MediaMetadata mediaMetadata)
+        private static bool IsAnamorphic(MediaItemStatistics statistics)
         {
-            if (mediaMetadata.SampleAspectRatio == "1:1")
+            if (statistics.SampleAspectRatio == "1:1")
             {
                 return false;
             }
 
-            if (mediaMetadata.SampleAspectRatio != "0:1")
+            if (statistics.SampleAspectRatio != "0:1")
             {
                 return true;
             }
 
-            if (mediaMetadata.DisplayAspectRatio == "0:1")
+            if (statistics.DisplayAspectRatio == "0:1")
             {
                 return false;
             }
 
-            return mediaMetadata.DisplayAspectRatio != $"{mediaMetadata.Width}:{mediaMetadata.Height}";
+            return statistics.DisplayAspectRatio != $"{statistics.Width}:{statistics.Height}";
         }
 
-        private static IDisplaySize SARSize(MediaMetadata mediaMetadata)
+        private static IDisplaySize SARSize(MediaItemStatistics statistics)
         {
-            string[] split = mediaMetadata.SampleAspectRatio.Split(":");
+            string[] split = statistics.SampleAspectRatio.Split(":");
             return new DisplaySize(int.Parse(split[0]), int.Parse(split[1]));
         }
     }

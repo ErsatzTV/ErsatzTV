@@ -52,10 +52,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync();
         }
 
+        // TODO: does this actually work?
         public Task<List<PlayoutItem>> GetPlayoutItems(int playoutId) =>
             _dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
-                .ThenInclude(mi => mi.Metadata)
+                .ThenInclude(m => (m as MovieMediaItem).Metadata)
+                .Include(i => i.MediaItem)
+                .ThenInclude(m => (m as TelevisionEpisodeMediaItem).Metadata)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
 

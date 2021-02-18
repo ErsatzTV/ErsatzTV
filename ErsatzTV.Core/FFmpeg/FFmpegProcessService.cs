@@ -76,7 +76,7 @@ namespace ErsatzTV.Core.FFmpeg
             return builder.WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel)
                 .WithFormat("mpegts")
-                .WithDuration(item.Start + item.MediaItem.Metadata.Duration - now)
+                .WithDuration(item.Start + item.MediaItem.Statistics.Duration - now)
                 .WithPipe()
                 .Build();
         }

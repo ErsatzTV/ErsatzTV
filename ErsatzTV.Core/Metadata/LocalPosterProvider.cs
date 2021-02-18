@@ -32,16 +32,33 @@ namespace ErsatzTV.Core.Metadata
 
         public async Task RefreshPoster(MediaItem mediaItem)
         {
-            Option<string> maybePosterPath = mediaItem.Metadata.MediaType switch
+            Option<string> maybePosterPath = mediaItem switch
             {
-                MediaType.Movie => RefreshMoviePoster(mediaItem),
-                MediaType.TvShow => RefreshTelevisionPoster(mediaItem),
+                MovieMediaItem m => RefreshMoviePoster(m),
+                TelevisionEpisodeMediaItem e => RefreshTelevisionPoster(e),
                 _ => None
             };
 
             await maybePosterPath.Match(
                 path => SavePosterToDisk(mediaItem, path),
                 Task.CompletedTask);
+        }
+
+        public async Task SavePosterToDisk(MediaItem mediaItem, string posterPath)
+        {
+            byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
+            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, 220, null);
+            await maybeHash.Match(
+                hash =>
+                {
+                    mediaItem.Poster = hash;
+                    return _mediaItemRepository.Update(mediaItem);
+                },
+                error =>
+                {
+                    _logger.LogWarning("Unable to save poster to disk from {Path}: {Error}", posterPath, error.Value);
+                    return Task.CompletedTask;
+                });
         }
 
         private static Option<string> RefreshMoviePoster(MediaItem mediaItem)
@@ -71,23 +88,6 @@ namespace ErsatzTV.Core.Metadata
             }
 
             return None;
-        }
-
-        public async Task SavePosterToDisk(MediaItem mediaItem, string posterPath)
-        {
-            byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
-            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, 220, null);
-            await maybeHash.Match(
-                hash =>
-                {
-                    mediaItem.Poster = hash;
-                    return _mediaItemRepository.Update(mediaItem);
-                },
-                error =>
-                {
-                    _logger.LogWarning("Unable to save poster to disk from {Path}: {Error}", posterPath, error.Value);
-                    return Task.CompletedTask;
-                });
         }
     }
 }

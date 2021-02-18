@@ -16,7 +16,7 @@ namespace ErsatzTV.Core.Metadata
         public SmartCollectionBuilder(IMediaCollectionRepository mediaCollectionRepository) =>
             _mediaCollectionRepository = mediaCollectionRepository;
 
-        public async Task<bool> RefreshSmartCollections(MediaItem mediaItem)
+        public async Task<bool> RefreshSmartCollections(TelevisionEpisodeMediaItem mediaItem)
         {
             var results = new List<bool>();
 
@@ -28,11 +28,9 @@ namespace ErsatzTV.Core.Metadata
             return results.Any(identity);
         }
 
-        private IEnumerable<TelevisionMediaCollection> GetTelevisionCollections(MediaItem mediaItem)
+        private IEnumerable<TelevisionMediaCollection> GetTelevisionCollections(TelevisionEpisodeMediaItem mediaItem)
         {
-            IList<MediaItem> televisionMediaItems = new[] { mediaItem }
-                .Where(c => c.Metadata.MediaType == MediaType.TvShow)
-                .ToList();
+            var televisionMediaItems = new List<TelevisionEpisodeMediaItem> { mediaItem };
 
             IEnumerable<TelevisionMediaCollection> televisionShowCollections = televisionMediaItems
                 .Map(c => c.Metadata.Title)
@@ -45,11 +43,11 @@ namespace ErsatzTV.Core.Metadata
                     });
 
             IEnumerable<TelevisionMediaCollection> televisionShowSeasonCollections = televisionMediaItems
-                .Map(c => new { c.Metadata.Title, c.Metadata.SeasonNumber }).Distinct()
+                .Map(c => new { c.Metadata.Title, c.Metadata.Season }).Distinct()
                 .Map(
                     ts =>
                     {
-                        return Optional(ts.SeasonNumber).Map(
+                        return Optional(ts.Season).Map(
                             sn => new TelevisionMediaCollection
                             {
                                 Name = $"{ts.Title} - Season {sn:00}",

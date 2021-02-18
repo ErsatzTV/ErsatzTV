@@ -55,11 +55,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE mc.Name LIKE {0}
                 GROUP BY mc.Id, mc.Name
                 UNION ALL
-                SELECT mc.Id, mc.Name, Count(mi.Id) AS ItemCount, false AS IsSimple
+                SELECT mc.Id, mc.Name, Count(tem.Id) AS ItemCount, false AS IsSimple
                 FROM MediaCollections mc
                     INNER JOIN TelevisionMediaCollections tmc ON tmc.Id = mc.Id
-                    LEFT OUTER JOIN MediaItems mi ON (tmc.SeasonNumber IS NULL OR mi.Metadata_SeasonNumber = tmc.SeasonNumber)
-                                                         AND mi.Metadata_Title = tmc.ShowTitle
+                    LEFT OUTER JOIN TelevisionEpisodeMetadata tem ON (tmc.SeasonNumber IS NULL OR tem.Season = tmc.SeasonNumber)
+                                                         AND tem.Title = tmc.ShowTitle
                 WHERE mc.Name LIKE {0}
                 GROUP BY mc.Id, mc.Name",
                 $"%{searchString}%").ToListAsync();
@@ -145,10 +145,13 @@ WHERE NOT EXISTS
             return collection.Items.ToList();
         }
 
+        // TODO: reimplement this
         private Task<List<MediaItem>> TelevisionItems(TelevisionMediaCollection collection) =>
-            _dbContext.MediaItems
-                .Filter(c => c.Metadata.Title == collection.ShowTitle)
-                .Filter(c => collection.SeasonNumber == null || c.Metadata.SeasonNumber == collection.SeasonNumber)
-                .ToListAsync();
+            new List<MediaItem>().AsTask();
+
+        // _dbContext.MediaItems
+        //     .Filter(c => c.Metadata.Title == collection.ShowTitle)
+        //     .Filter(c => collection.SeasonNumber == null || c.Metadata.SeasonNumber == collection.SeasonNumber)
+        //     .ToListAsync();
     }
 }

@@ -22,6 +22,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .HasColumnType("INTEGER");
+
+                    b.ToView("No table or view exists for GenericIntegerId");
                 });
 
             modelBuilder.Entity(
@@ -39,6 +41,8 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
+
+                    b.ToView("No table or view exists for MediaCollectionSummary");
                 });
 
             modelBuilder.Entity(
@@ -59,6 +63,8 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .HasColumnType("TEXT");
+
+                    b.ToView("No table or view exists for MediaItemSummary");
                 });
 
             modelBuilder.Entity(
@@ -254,6 +260,55 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("MediaSources");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.MovieMetadata",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ContentRating")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastWriteTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MovieId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Outline")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Plot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("Premiered")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SortTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Tagline")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MovieId")
+                        .IsUnique();
+
+                    b.ToTable("MovieMetadata");
                 });
 
             modelBuilder.Entity(
@@ -458,6 +513,143 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionEpisodeMetadata",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("Aired")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Episode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastWriteTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Plot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Season")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("SortTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TelevisionEpisodeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TelevisionEpisodeId")
+                        .IsUnique();
+
+                    b.ToTable("TelevisionEpisodeMetadata");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionSeason",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Path")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Poster")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PosterLastWriteTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TelevisionShowId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TelevisionShowId");
+
+                    b.ToTable("TelevisionSeasons");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionShow",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MediaSourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Path")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Poster")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("PosterLastWriteTime")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MediaSourceId");
+
+                    b.ToTable("TelevisionShows");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionShowMetadata",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastWriteTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Plot")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SortTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TelevisionShowId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TelevisionShowId")
+                        .IsUnique();
+
+                    b.ToTable("TelevisionShowMetadata");
+                });
+
+            modelBuilder.Entity(
                 "MediaItemSimpleMediaCollection",
                 b =>
                 {
@@ -499,6 +691,32 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("TelevisionMediaCollections");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.MovieMediaItem",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.MediaItem");
+
+                    b.Property<int>("MetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.ToTable("Movies");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionEpisodeMediaItem",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.MediaItem");
+
+                    b.Property<int>("SeasonId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasIndex("SeasonId");
+
+                    b.ToTable("TelevisionEpisodes");
                 });
 
             modelBuilder.Entity(
@@ -613,23 +831,14 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .IsRequired();
 
                     b.OwnsOne(
-                        "ErsatzTV.Core.Domain.MediaMetadata",
-                        "Metadata",
+                        "ErsatzTV.Core.Domain.MediaItemStatistics",
+                        "Statistics",
                         b1 =>
                         {
                             b1.Property<int>("MediaItemId")
                                 .HasColumnType("INTEGER");
 
-                            b1.Property<DateTime?>("Aired")
-                                .HasColumnType("TEXT");
-
                             b1.Property<string>("AudioCodec")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("ContentRating")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Description")
                                 .HasColumnType("TEXT");
 
                             b1.Property<string>("DisplayAspectRatio")
@@ -638,34 +847,13 @@ namespace ErsatzTV.Infrastructure.Migrations
                             b1.Property<TimeSpan>("Duration")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<int?>("EpisodeNumber")
-                                .HasColumnType("INTEGER");
-
                             b1.Property<int>("Height")
                                 .HasColumnType("INTEGER");
 
                             b1.Property<DateTime?>("LastWriteTime")
                                 .HasColumnType("TEXT");
 
-                            b1.Property<int>("MediaType")
-                                .HasColumnType("INTEGER");
-
                             b1.Property<string>("SampleAspectRatio")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<int?>("SeasonNumber")
-                                .HasColumnType("INTEGER");
-
-                            b1.Property<string>("SortTitle")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<int>("Source")
-                                .HasColumnType("INTEGER");
-
-                            b1.Property<string>("Subtitle")
-                                .HasColumnType("TEXT");
-
-                            b1.Property<string>("Title")
                                 .HasColumnType("TEXT");
 
                             b1.Property<string>("VideoCodec")
@@ -685,9 +873,22 @@ namespace ErsatzTV.Infrastructure.Migrations
                                 .HasForeignKey("MediaItemId");
                         });
 
-                    b.Navigation("Metadata");
-
                     b.Navigation("Source");
+
+                    b.Navigation("Statistics");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.MovieMetadata",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MovieMediaItem", "Movie")
+                        .WithOne("Metadata")
+                        .HasForeignKey("ErsatzTV.Core.Domain.MovieMetadata", "MovieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Movie");
                 });
 
             modelBuilder.Entity(
@@ -871,6 +1072,58 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionEpisodeMetadata",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.TelevisionEpisodeMediaItem", "TelevisionEpisode")
+                        .WithOne("Metadata")
+                        .HasForeignKey("ErsatzTV.Core.Domain.TelevisionEpisodeMetadata", "TelevisionEpisodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TelevisionEpisode");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionSeason",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.TelevisionShow", "TelevisionShow")
+                        .WithMany("Seasons")
+                        .HasForeignKey("TelevisionShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TelevisionShow");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionShow",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaSource", "Source")
+                        .WithMany()
+                        .HasForeignKey("MediaSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Source");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionShowMetadata",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.TelevisionShow", "TelevisionShow")
+                        .WithOne("Metadata")
+                        .HasForeignKey("ErsatzTV.Core.Domain.TelevisionShowMetadata", "TelevisionShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TelevisionShow");
+                });
+
+            modelBuilder.Entity(
                 "MediaItemSimpleMediaCollection",
                 b =>
                 {
@@ -907,6 +1160,36 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasForeignKey("ErsatzTV.Core.Domain.TelevisionMediaCollection", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.MovieMediaItem",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.MovieMediaItem", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionEpisodeMediaItem",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.TelevisionEpisodeMediaItem", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.TelevisionSeason", "Season")
+                        .WithMany("Episodes")
+                        .HasForeignKey("SeasonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Season");
                 });
 
             modelBuilder.Entity(
@@ -994,6 +1277,21 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Navigation("Playouts");
                 });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TelevisionSeason", b => { b.Navigation("Episodes"); });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.TelevisionShow",
+                b =>
+                {
+                    b.Navigation("Metadata");
+
+                    b.Navigation("Seasons");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.MovieMediaItem", b => { b.Navigation("Metadata"); });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TelevisionEpisodeMediaItem", b => { b.Navigation("Metadata"); });
 
             modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.PlexMediaSource",

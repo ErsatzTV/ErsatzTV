@@ -1,5 +1,4 @@
 ﻿@using ErsatzTV.Application.MediaItems
-@using ErsatzTV.Application.MediaItems.Commands
 @using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 
@@ -11,7 +10,6 @@
                 @Placeholder(Data.SortTitle)
             </MudText>
         }
-        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="@(() => RefreshMetadata())" Class="media-card-menu"></MudIconButton>
     </MudPaper>
     <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
         @Data.Title
@@ -38,14 +36,5 @@
     private string PosterForItem() => string.IsNullOrWhiteSpace(Data.Poster)
         ? "position: relative"
         : $"position: relative; background-image: url(/posters/{Data.Poster}); background-size: cover";
-
-    private async Task RefreshMetadata()
-    {
-    // TODO: how should we refresh an entire television show?
-        await Mediator.Send(new RefreshMediaItemMetadata(Data.MediaItemId));
-        await Mediator.Send(new RefreshMediaItemCollections(Data.MediaItemId));
-        await Mediator.Send(new RefreshMediaItemPoster(Data.MediaItemId));
-        await DataRefreshed.InvokeAsync();
-    }
 
 }

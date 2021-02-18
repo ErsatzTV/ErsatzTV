@@ -171,16 +171,22 @@ namespace ErsatzTV
             services.AddScoped<IProgramScheduleRepository, ProgramScheduleRepository>();
             services.AddScoped<IPlayoutRepository, PlayoutRepository>();
             services.AddScoped<ILogRepository, LogRepository>();
+            services.AddScoped<ITelevisionRepository, TelevisionRepository>();
+            services.AddScoped<IMovieRepository, MovieRepository>();
             services.AddScoped<IFFmpegLocator, FFmpegLocator>();
             services.AddScoped<ISmartCollectionBuilder, SmartCollectionBuilder>();
             services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
             services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
             services.AddScoped<ILocalPosterProvider, LocalPosterProvider>();
-            services.AddScoped<ILocalMediaScanner, LocalMediaScanner>();
+            // services.AddScoped<ILocalMediaScanner, LocalMediaScanner>();
             services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
             services.AddScoped<IImageCache, ImageCache>();
             services.AddScoped<ILocalFileSystem, LocalFileSystem>();
-            services.AddScoped<ILocalMediaSourcePlanner, LocalMediaSourcePlanner>();
+            // services.AddScoped<ILocalMediaSourcePlanner, LocalMediaSourcePlanner>();
+            // services.AddScoped<ILocalMediaSourceMovieScanner, LocalMediaSourceMovieScanner>();
+            // services.AddScoped<ILocalMediaSourceTelevisionScanner, LocalMediaSourceTelevisionScanner>();
+            services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
+            services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
 
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();

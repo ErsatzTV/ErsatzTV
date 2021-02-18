@@ -604,10 +604,11 @@ namespace ErsatzTV.Core.Tests.Scheduling
             };
 
         private static MediaItem TestMovie(int id, TimeSpan duration, DateTime aired) =>
-            new()
+            new MovieMediaItem
             {
                 Id = id,
-                Metadata = new MediaMetadata { Duration = duration, MediaType = MediaType.Movie, Aired = aired }
+                Metadata = new MovieMetadata { Premiered = aired },
+                Statistics = new MediaItemStatistics { Duration = duration }
             };
 
         private TestData TestDataFloodForItems(List<MediaItem> mediaItems, PlaybackOrder playbackOrder)
