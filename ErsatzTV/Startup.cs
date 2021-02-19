@@ -176,15 +176,12 @@ namespace ErsatzTV
             services.AddScoped<IFFmpegLocator, FFmpegLocator>();
             services.AddScoped<ISmartCollectionBuilder, SmartCollectionBuilder>();
             services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
+            services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
             services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
             services.AddScoped<ILocalPosterProvider, LocalPosterProvider>();
-            // services.AddScoped<ILocalMediaScanner, LocalMediaScanner>();
             services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
             services.AddScoped<IImageCache, ImageCache>();
             services.AddScoped<ILocalFileSystem, LocalFileSystem>();
-            // services.AddScoped<ILocalMediaSourcePlanner, LocalMediaSourcePlanner>();
-            // services.AddScoped<ILocalMediaSourceMovieScanner, LocalMediaSourceMovieScanner>();
-            // services.AddScoped<ILocalMediaSourceTelevisionScanner, LocalMediaSourceTelevisionScanner>();
             services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
             services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
 

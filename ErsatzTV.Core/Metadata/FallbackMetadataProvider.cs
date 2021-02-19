@@ -2,16 +2,17 @@
 using System.IO;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 
 namespace ErsatzTV.Core.Metadata
 {
-    public static class FallbackMetadataProvider
+    public class FallbackMetadataProvider : IFallbackMetadataProvider
     {
-        public static TelevisionShowMetadata GetFallbackMetadata(TelevisionShow televisionShow)
+        public TelevisionShowMetadata GetFallbackMetadataForShow(string showFolder)
         {
-            string fileName = Path.GetFileName(televisionShow.Path);
+            string fileName = Path.GetFileName(showFolder);
             var metadata = new TelevisionShowMetadata
-                { Source = MetadataSource.Fallback, Title = fileName ?? televisionShow.Path };
+                { Source = MetadataSource.Fallback, Title = fileName ?? showFolder };
             return GetTelevisionShowMetadata(fileName, metadata);
         }
 

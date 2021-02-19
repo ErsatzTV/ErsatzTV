@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -50,34 +49,65 @@ namespace ErsatzTV.Core.Metadata
 
             var allShowFolders = _localFileSystem.ListSubdirectories(localMediaSource.Folder)
                 .Filter(ShouldIncludeFolder)
+                .OrderBy(identity)
                 .ToList();
 
             foreach (string showFolder in allShowFolders)
             {
-                Either<BaseError, TelevisionShow> maybeShow = await _televisionRepository
-                    .GetOrAddShow(localMediaSource.Id, showFolder)
-                    .BindT(UpdateMetadata)
-                    .BindT(UpdatePoster);
+                // TODO: check all sources for latest metadata?
+                Either<BaseError, TelevisionShow> maybeShow =
+                    await FindOrCreateShow(localMediaSource.Id, showFolder)
+                        .BindT(show => UpdateMetadataForShow(show, showFolder))
+                        .BindT(show => UpdatePosterForShow(show, showFolder));
 
                 await maybeShow.Match(
-                    show => ScanSeasons(localMediaSource, ffprobePath, show),
+                    show => ScanSeasons(localMediaSource, ffprobePath, show, showFolder),
                     _ => Task.FromResult(Unit.Default));
             }
 
-            List<TelevisionShow> removedShows =
-                await _televisionRepository.FindRemovedShows(localMediaSource, allShowFolders);
-            foreach (TelevisionShow show in removedShows)
-            {
-                _logger.LogDebug("Removing missing show at {Folder}", show.Path);
-                await _televisionRepository.Delete(show);
-            }
+            await _televisionRepository.DeleteMissingSources(localMediaSource.Id, allShowFolders);
+            await _televisionRepository.DeleteEmptyShows();
 
             return Unit.Default;
         }
 
-        private async Task<Unit> ScanSeasons(LocalMediaSource localMediaSource, string ffprobePath, TelevisionShow show)
+        private async Task<Either<BaseError, TelevisionShow>> FindOrCreateShow(
+            int localMediaSourceId,
+            string showFolder)
         {
-            foreach (string seasonFolder in _localFileSystem.ListSubdirectories(show.Path).Filter(ShouldIncludeFolder))
+            Option<TelevisionShow> maybeShowByPath =
+                await _televisionRepository.GetShowByPath(localMediaSourceId, showFolder);
+            return await maybeShowByPath.Match(
+                show => Right<BaseError, TelevisionShow>(show).AsTask(),
+                async () =>
+                {
+                    TelevisionShowMetadata metadata = await _localMetadataProvider.GetMetadataForShow(showFolder);
+                    Option<TelevisionShow> maybeShow = await _televisionRepository.GetShowByMetadata(metadata);
+                    return await maybeShow.Match(
+                        async show =>
+                        {
+                            show.Sources.Add(
+                                new LocalTelevisionShowSource
+                                {
+                                    MediaSourceId = localMediaSourceId,
+                                    Path = showFolder,
+                                    TelevisionShow = show
+                                });
+                            await _televisionRepository.Update(show);
+                            return Right<BaseError, TelevisionShow>(show);
+                        },
+                        async () => await _televisionRepository.AddShow(localMediaSourceId, showFolder, metadata));
+                });
+        }
+
+        private async Task<Unit> ScanSeasons(
+            LocalMediaSource localMediaSource,
+            string ffprobePath,
+            TelevisionShow show,
+            string showPath)
+        {
+            foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showPath).Filter(ShouldIncludeFolder)
+                .OrderBy(identity))
             {
                 Option<int> maybeSeasonNumber = SeasonNumberForFolder(seasonFolder);
                 await maybeSeasonNumber.IfSomeAsync(
@@ -102,7 +132,7 @@ namespace ErsatzTV.Core.Metadata
             TelevisionSeason season)
         {
             foreach (string file in _localFileSystem.ListFiles(season.Path)
-                .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f))))
+                .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f))).OrderBy(identity))
             {
                 // TODO: figure out how to rebuild playlists
                 Either<BaseError, TelevisionEpisodeMediaItem> maybeEpisode = await _televisionRepository
@@ -118,11 +148,13 @@ namespace ErsatzTV.Core.Metadata
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, TelevisionShow>> UpdateMetadata(TelevisionShow show)
+        private async Task<Either<BaseError, TelevisionShow>> UpdateMetadataForShow(
+            TelevisionShow show,
+            string showFolder)
         {
             try
             {
-                await LocateNfoFile(show).Match(
+                await LocateNfoFileForShow(showFolder).Match(
                     async nfoFile =>
                     {
                         if (show.Metadata == null || show.Metadata.Source == MetadataSource.Fallback ||
@@ -136,8 +168,8 @@ namespace ErsatzTV.Core.Metadata
                     {
                         if (show.Metadata == null)
                         {
-                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", show.Path);
-                            await _localMetadataProvider.RefreshFallbackMetadata(show);
+                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", showFolder);
+                            await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder);
                         }
                     });
 
@@ -181,18 +213,34 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, TelevisionShow>> UpdatePoster(TelevisionShow show)
+        private async Task<Either<BaseError, TelevisionShow>> UpdatePosterForShow(
+            TelevisionShow show,
+            string showFolder)
         {
             try
             {
-                await LocatePoster(show).IfSomeAsync(
+                await LocatePosterForShow(showFolder).IfSomeAsync(
                     async posterFile =>
                     {
                         if (string.IsNullOrWhiteSpace(show.Poster) ||
                             show.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(show, posterFile, _televisionRepository.Update, 440);
+                            Either<BaseError, string> maybePoster = await SavePosterToDisk(posterFile, 440);
+                            await maybePoster.Match(
+                                poster =>
+                                {
+                                    show.Poster = poster;
+                                    return _televisionRepository.Update(show);
+                                },
+                                error =>
+                                {
+                                    _logger.LogWarning(
+                                        "Unable to save poster to disk from {Path}: {Error}",
+                                        posterFile,
+                                        error.Value);
+                                    return Task.CompletedTask;
+                                });
                         }
                     });
 
@@ -251,18 +299,18 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private Option<string> LocateNfoFile(TelevisionShow show) =>
-            Optional(Path.Combine(show.Path, "tvshow.nfo"))
+        private Option<string> LocateNfoFileForShow(string showFolder) =>
+            Optional(Path.Combine(showFolder, "tvshow.nfo"))
                 .Filter(s => _localFileSystem.FileExists(s));
 
         private Option<string> LocateNfoFile(TelevisionEpisodeMediaItem episode) =>
             Optional(Path.ChangeExtension(episode.Path, "nfo"))
                 .Filter(s => _localFileSystem.FileExists(s));
 
-        private Option<string> LocatePoster(TelevisionShow show) =>
+        private Option<string> LocatePosterForShow(string showFolder) =>
             ImageFileExtensions
                 .Map(ext => $"poster.{ext}")
-                .Map(f => Path.Combine(show.Path, f))
+                .Map(f => Path.Combine(showFolder, f))
                 .Filter(s => _localFileSystem.FileExists(s))
                 .HeadOrNone();
 

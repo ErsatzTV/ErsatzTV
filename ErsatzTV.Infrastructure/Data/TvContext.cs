@@ -31,6 +31,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
         public DbSet<Resolution> Resolutions { get; set; }
         public DbSet<TelevisionShow> TelevisionShows { get; set; }
+        public DbSet<LocalTelevisionShowSource> LocalTelevisionShowSources { get; set; }
         public DbSet<TelevisionShowMetadata> TelevisionShowMetadata { get; set; }
         public DbSet<TelevisionSeason> TelevisionSeasons { get; set; }
 

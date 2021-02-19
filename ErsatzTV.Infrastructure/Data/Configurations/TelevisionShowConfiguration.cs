@@ -17,6 +17,11 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 
             builder.HasMany(show => show.Seasons)
                 .WithOne(season => season.TelevisionShow);
+
+            builder.HasMany(show => show.Sources)
+                .WithOne(source => source.TelevisionShow)
+                .HasForeignKey(source => source.TelevisionShowId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

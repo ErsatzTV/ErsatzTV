@@ -7,7 +7,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface ITelevisionRepository
     {
-        Task<List<TelevisionShow>> GetAllByMediaSourceId(int mediaSourceId);
         Task<bool> Update(TelevisionShow show);
         Task<bool> Update(TelevisionSeason season);
         Task<bool> Update(TelevisionEpisodeMediaItem episode);
@@ -16,7 +15,13 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<TelevisionShow>> GetPagedShows(int pageNumber, int pageSize);
         Task<int> GetSeasonCount(int televisionShowId);
         Task<List<TelevisionSeason>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize);
-        Task<Either<BaseError, TelevisionShow>> GetOrAddShow(int mediaSourceId, string path);
+        Task<Option<TelevisionShow>> GetShowByPath(int mediaSourceId, string path);
+        Task<Option<TelevisionShow>> GetShowByMetadata(TelevisionShowMetadata metadata);
+
+        Task<Either<BaseError, TelevisionShow>> AddShow(
+            int localMediaSourceId,
+            string showFolder,
+            TelevisionShowMetadata metadata);
 
         Task<Either<BaseError, TelevisionSeason>> GetOrAddSeason(
             TelevisionShow show,
@@ -28,7 +33,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
             int mediaSourceId,
             string path);
 
-        Task<List<TelevisionShow>> FindRemovedShows(LocalMediaSource localMediaSource, List<string> allShowFolders);
-        Task<Unit> Delete(TelevisionShow show);
+        Task<Unit> DeleteMissingSources(int localMediaSourceId, List<string> allFolders);
+        Task<Unit> DeleteEmptyShows();
     }
 }

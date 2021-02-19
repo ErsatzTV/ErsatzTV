@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20210218214650_Statistics")]
-    partial class Statistics
+    [Migration("20210219165123_TelevisionExpansion")]
+    partial class TelevisionExpansion
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -553,12 +553,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("MediaSourceId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Path")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Poster")
                         .HasColumnType("TEXT");
 
@@ -566,8 +560,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MediaSourceId");
 
                     b.ToTable("TelevisionShows");
                 });
@@ -605,6 +597,28 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("TelevisionShowMetadata");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TelevisionShowSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TelevisionShowId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TelevisionShowId");
+
+                    b.ToTable("TelevisionShowSource");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("TelevisionShowSource");
                 });
 
             modelBuilder.Entity("MediaItemSimpleMediaCollection", b =>
@@ -728,6 +742,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasBaseType("ErsatzTV.Core.Domain.ProgramScheduleItem");
 
                     b.ToTable("ProgramScheduleOneItems");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.LocalTelevisionShowSource", b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.TelevisionShowSource");
+
+                    b.Property<int>("MediaSourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Path")
+                        .HasColumnType("TEXT");
+
+                    b.HasIndex("MediaSourceId");
+
+                    b.HasDiscriminator().HasValue("LocalTelevisionShowSource");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Channel", b =>
@@ -994,22 +1023,22 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("TelevisionShow");
                 });
 
-            modelBuilder.Entity("ErsatzTV.Core.Domain.TelevisionShow", b =>
-                {
-                    b.HasOne("ErsatzTV.Core.Domain.MediaSource", "Source")
-                        .WithMany()
-                        .HasForeignKey("MediaSourceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Source");
-                });
-
             modelBuilder.Entity("ErsatzTV.Core.Domain.TelevisionShowMetadata", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.TelevisionShow", "TelevisionShow")
                         .WithOne("Metadata")
                         .HasForeignKey("ErsatzTV.Core.Domain.TelevisionShowMetadata", "TelevisionShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TelevisionShow");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TelevisionShowSource", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.TelevisionShow", "TelevisionShow")
+                        .WithMany("Sources")
+                        .HasForeignKey("TelevisionShowId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1129,6 +1158,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.LocalTelevisionShowSource", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.LocalMediaSource", "MediaSource")
+                        .WithMany()
+                        .HasForeignKey("MediaSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MediaSource");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Channel", b =>
                 {
                     b.Navigation("Playouts");
@@ -1158,6 +1198,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Metadata");
 
                     b.Navigation("Seasons");
+
+                    b.Navigation("Sources");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MovieMediaItem", b =>

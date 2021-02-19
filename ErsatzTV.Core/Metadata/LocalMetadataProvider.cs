@@ -16,6 +16,8 @@ namespace ErsatzTV.Core.Metadata
         private static readonly XmlSerializer MovieSerializer = new(typeof(MovieNfo));
         private static readonly XmlSerializer EpisodeSerializer = new(typeof(TvShowEpisodeNfo));
         private static readonly XmlSerializer TvShowSerializer = new(typeof(TvShowNfo));
+        private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+        private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<LocalMetadataProvider> _logger;
 
         private readonly IMediaItemRepository _mediaItemRepository;
@@ -24,11 +26,30 @@ namespace ErsatzTV.Core.Metadata
         public LocalMetadataProvider(
             IMediaItemRepository mediaItemRepository,
             ITelevisionRepository televisionRepository,
+            IFallbackMetadataProvider fallbackMetadataProvider,
+            ILocalFileSystem localFileSystem,
             ILogger<LocalMetadataProvider> logger)
         {
             _mediaItemRepository = mediaItemRepository;
             _televisionRepository = televisionRepository;
+            _fallbackMetadataProvider = fallbackMetadataProvider;
+            _localFileSystem = localFileSystem;
             _logger = logger;
+        }
+
+        public Task<TelevisionShowMetadata> GetMetadataForShow(string showFolder)
+        {
+            string nfoFileName = Path.Combine(showFolder, "tvshow.nfo");
+            return Optional(_localFileSystem.FileExists(nfoFileName))
+                .Filter(identity).AsTask()
+                .Bind(_ => LoadTelevisionShowMetadata(nfoFileName))
+                .IfNoneAsync(() => _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder).AsTask())
+                .Map(
+                    m =>
+                    {
+                        m.SortTitle = GetSortTitle(m.Title);
+                        return m;
+                    });
         }
 
         public Task<Unit> RefreshSidecarMetadata(MediaItem mediaItem, string path) =>
@@ -41,8 +62,8 @@ namespace ErsatzTV.Core.Metadata
                 _ => Task.FromResult(Unit.Default)
             };
 
-        public Task<Unit> RefreshSidecarMetadata(TelevisionShow televisionShow, string path) =>
-            LoadMetadata(televisionShow, path).Bind(
+        public Task<Unit> RefreshSidecarMetadata(TelevisionShow televisionShow, string showFolder) =>
+            LoadMetadata(televisionShow, showFolder).Bind(
                 maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(televisionShow, metadata)));
 
         public Task<Unit> RefreshFallbackMetadata(MediaItem mediaItem) =>
@@ -54,8 +75,9 @@ namespace ErsatzTV.Core.Metadata
                 _ => Task.FromResult(Unit.Default)
             };
 
-        public Task<Unit> RefreshFallbackMetadata(TelevisionShow televisionShow) =>
-            ApplyMetadataUpdate(televisionShow, FallbackMetadataProvider.GetFallbackMetadata(televisionShow)).ToUnit();
+        public Task<Unit> RefreshFallbackMetadata(TelevisionShow televisionShow, string showFolder) =>
+            ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder))
+                .ToUnit();
 
         private async Task ApplyMetadataUpdate(TelevisionEpisodeMediaItem mediaItem, TelevisionEpisodeMetadata metadata)
         {
@@ -157,12 +179,6 @@ namespace ErsatzTV.Core.Metadata
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
                 _logger.LogDebug("NFO file does not exist at {Path}", nfoFileName);
-                return None;
-            }
-
-            if (!(televisionShow.Source is LocalMediaSource))
-            {
-                _logger.LogDebug("Media source {Name} is not a local media source", televisionShow.Source.Name);
                 return None;
             }
 

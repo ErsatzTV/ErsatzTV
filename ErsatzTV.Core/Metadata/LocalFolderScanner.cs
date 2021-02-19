@@ -98,5 +98,9 @@ namespace ErsatzTV.Core.Metadata
                     return Task.CompletedTask;
                 });
         }
+
+        protected Task<Either<BaseError, string>> SavePosterToDisk(string posterPath, int height = 220) =>
+            File.ReadAllBytesAsync(posterPath)
+                .Bind(bytes => _imageCache.ResizeAndSaveImage(bytes, height, null));
     }
 }

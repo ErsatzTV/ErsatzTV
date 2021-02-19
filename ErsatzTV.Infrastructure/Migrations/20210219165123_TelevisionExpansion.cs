@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
-    public partial class Statistics : Migration
+    public partial class TelevisionExpansion : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -117,21 +117,10 @@ namespace ErsatzTV.Infrastructure.Migrations
                 {
                     Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    MediaSourceId = table.Column<int>("INTEGER", nullable: false),
-                    Path = table.Column<string>("TEXT", nullable: true),
                     Poster = table.Column<string>("TEXT", nullable: true),
                     PosterLastWriteTime = table.Column<DateTime>("TEXT", nullable: true)
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TelevisionShows", x => x.Id);
-                    table.ForeignKey(
-                        "FK_TelevisionShows_MediaSources_MediaSourceId",
-                        x => x.MediaSourceId,
-                        "MediaSources",
-                        "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                constraints: table => { table.PrimaryKey("PK_TelevisionShows", x => x.Id); });
 
             migrationBuilder.CreateTable(
                 "MovieMetadata",
@@ -204,6 +193,34 @@ namespace ErsatzTV.Infrastructure.Migrations
                     table.PrimaryKey("PK_TelevisionShowMetadata", x => x.Id);
                     table.ForeignKey(
                         "FK_TelevisionShowMetadata_TelevisionShows_TelevisionShowId",
+                        x => x.TelevisionShowId,
+                        "TelevisionShows",
+                        "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                "TelevisionShowSource",
+                table => new
+                {
+                    Id = table.Column<int>("INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    TelevisionShowId = table.Column<int>("INTEGER", nullable: false),
+                    Discriminator = table.Column<string>("TEXT", nullable: false),
+                    MediaSourceId = table.Column<int>("INTEGER", nullable: true),
+                    Path = table.Column<string>("TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TelevisionShowSource", x => x.Id);
+                    table.ForeignKey(
+                        "FK_TelevisionShowSource_LocalMediaSources_MediaSourceId",
+                        x => x.MediaSourceId,
+                        "LocalMediaSources",
+                        "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        "FK_TelevisionShowSource_TelevisionShows_TelevisionShowId",
                         x => x.TelevisionShowId,
                         "TelevisionShows",
                         "Id",
@@ -291,9 +308,14 @@ namespace ErsatzTV.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                "IX_TelevisionShows_MediaSourceId",
-                "TelevisionShows",
+                "IX_TelevisionShowSource_MediaSourceId",
+                "TelevisionShowSource",
                 "MediaSourceId");
+
+            migrationBuilder.CreateIndex(
+                "IX_TelevisionShowSource_TelevisionShowId",
+                "TelevisionShowSource",
+                "TelevisionShowId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -306,6 +328,9 @@ namespace ErsatzTV.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 "TelevisionShowMetadata");
+
+            migrationBuilder.DropTable(
+                "TelevisionShowSource");
 
             migrationBuilder.DropTable(
                 "Movies");
