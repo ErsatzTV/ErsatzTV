@@ -11,10 +11,10 @@
         </MudIconButton>
         <MudText Style="flex-grow: 1"
                  Align="Align.Center">
-            @Math.Min((_pageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, _pageNumber * PageSize) of @_data.Count
+            @Math.Min((_pageNumber - 1) * _pageSize + 1, _data.Count)-@Math.Min(_data.Count, _pageNumber * _pageSize) of @_data.Count
         </MudText>
         <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
-                       OnClick="@(() => NextPage())" Disabled="@(_pageNumber * PageSize >= _data.Count)">
+                       OnClick="@(() => NextPage())" Disabled="@(_pageNumber * _pageSize >= _data.Count)">
         </MudIconButton>
     </MudPaper>
 </MudContainer>
@@ -27,7 +27,7 @@
 </MudContainer>
 
 @code {
-    private int PageSize => 100;
+    private int _pageSize => 100;
     private int _pageNumber = 1;
 
     private TelevisionShowCardResultsViewModel _data;
@@ -35,7 +35,7 @@
     protected override Task OnParametersSetAsync() => RefreshData();
 
     private async Task RefreshData() =>
-        _data = await Mediator.Send(new GetTelevisionShowCards(_pageNumber, PageSize));
+        _data = await Mediator.Send(new GetTelevisionShowCards(_pageNumber, _pageSize));
 
     private async Task PrevPage()
     {

@@ -182,7 +182,7 @@ namespace ErsatzTV.Core.Metadata
                             show.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(show, posterFile, _televisionRepository.Update);
+                            await SavePosterToDisk(show, posterFile, _televisionRepository.Update, 440);
                         }
                     });
 

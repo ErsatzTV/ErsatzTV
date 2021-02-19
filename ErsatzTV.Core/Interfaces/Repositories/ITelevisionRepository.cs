@@ -7,11 +7,11 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface ITelevisionRepository
     {
-        public Task<Unit> Add(TelevisionShow show);
         public Task<List<TelevisionShow>> GetAllByMediaSourceId(int mediaSourceId);
         public Task<bool> Update(TelevisionShow show);
         public Task<bool> Update(TelevisionSeason season);
         public Task<bool> Update(TelevisionEpisodeMediaItem episode);
+        public Task<Option<TelevisionShow>> GetShow(int televisionShowId);
         public Task<int> GetShowCount();
         public Task<List<TelevisionShow>> GetPagedShows(int pageNumber, int pageSize);
         public Task<int> GetSeasonCount(int televisionShowId);

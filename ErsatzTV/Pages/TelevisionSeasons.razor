@@ -1,9 +1,28 @@
 ﻿@page "/media/tv/shows/{ShowId:int}"
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
+@using ErsatzTV.Application.Television
+@using ErsatzTV.Application.Television.Queries
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+<MudContainer MaxWidth="MaxWidth.Large">
+<MudCard Class="mb-6">
+    <div style="display: flex; flex-direction: row;">
+        <MudPaper Style="flex-shrink: 0;">
+            <MudCardMedia Image="@($"/posters/{_show.Poster}")" Style="height: 440px; width: 304px;"/>
+        </MudPaper>
+        <MudCardContent>
+            <div style="display:flex; flex-direction: column;">
+                <MudText Typo="Typo.h3">@_show.Title</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_show.Year</MudText>
+                <MudText>@_show.Plot</MudText>
+            </div>
+        </MudCardContent>
+    </div>
+</MudCard>
+</MudContainer>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
     @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
     {
         <MediaCard Data="@card" Link="@($"/media/tv/shows/{ShowId}/seasons/{card.TelevisionSeasonId}")" DataRefreshed="@(() => RefreshData())"/>
@@ -15,14 +34,21 @@
     [Parameter]
     public int ShowId { get; set; }
 
-    private int PageSize => 100;
+    private TelevisionShowViewModel _show;
+
+    private int _pageSize => 100;
     private int _pageNumber = 1;
 
     private TelevisionSeasonCardResultsViewModel _data;
 
     protected override Task OnParametersSetAsync() => RefreshData();
 
-    private async Task RefreshData() =>
-        _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, PageSize));
+    private async Task RefreshData()
+    {
+        await Mediator.Send(new GetTelevisionShowById(ShowId))
+            .IfSomeAsync(vm => _show = vm);
+        
+        _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize));
+    }
 
 }

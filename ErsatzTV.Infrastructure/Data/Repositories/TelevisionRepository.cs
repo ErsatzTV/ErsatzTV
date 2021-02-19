@@ -17,11 +17,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public TelevisionRepository(TvContext dbContext) => _dbContext = dbContext;
 
-        public Task<Unit> Add(TelevisionShow show) =>
-            _dbContext.TelevisionShows.AddAsync(show).AsTask()
-                .Bind(_ => _dbContext.SaveChangesAsync())
-                .ToUnit();
-
         public Task<List<TelevisionShow>> GetAllByMediaSourceId(int mediaSourceId) =>
             _dbContext.TelevisionShows
                 .Include(s => s.Metadata)
@@ -46,6 +41,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.TelevisionEpisodeMediaItems.Update(episode);
             return await _dbContext.SaveChangesAsync() > 0;
         }
+
+        public Task<Option<TelevisionShow>> GetShow(int televisionShowId) =>
+            _dbContext.TelevisionShows
+                .AsNoTracking()
+                .Filter(s => s.Id == televisionShowId)
+                .Include(s => s.Metadata)
+                .SingleOrDefaultAsync()
+                .Map(Optional);
 
         // TODO: test with split folders (same show in different sources)
         public Task<int> GetShowCount() =>

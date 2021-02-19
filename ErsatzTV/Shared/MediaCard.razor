@@ -4,33 +4,30 @@
 @inject IMediator Mediator
 
 <div class="media-card-container mx-3 pb-3">
-    <div>
-        @if (!string.IsNullOrWhiteSpace(Link))
-        {
-            <MudPaper>
-                <MudButton Link="@Link" Class="media-card" Style="@PosterForItem()">
-                    @if (string.IsNullOrWhiteSpace(Data.Poster))
-                    {
-                        <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
-                            @Placeholder(Data.SortTitle)
-                        </MudText>
-                    }
-                </MudButton>
-            </MudPaper>
-        }
-        else
-        {
-            <MudPaper Class="media-card" Style="@PosterForItem()">
+    @if (!string.IsNullOrWhiteSpace(Link))
+    {
+        <MudPaper>
+            <MudButton Link="@Link" Class="media-card" Style="@PosterForItem()">
                 @if (string.IsNullOrWhiteSpace(Data.Poster))
                 {
                     <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
                         @Placeholder(Data.SortTitle)
                     </MudText>
                 }
-            </MudPaper>
-        }
-        <div style="background: rgba(0, 0, 0, 0.5)"></div>
-    </div>
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Class="media-card" Style="@PosterForItem()">
+            @if (string.IsNullOrWhiteSpace(Data.Poster))
+            {
+                <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
+                    @Placeholder(Data.SortTitle)
+                </MudText>
+            }
+        </MudPaper>
+    }
     <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
         @Data.Title
     </MudText>

@@ -77,10 +77,10 @@ namespace ErsatzTV.Core.Metadata
             }
         }
         
-        protected async Task SavePosterToDisk<T>(T show, string posterPath, Func<T, Task<bool>> update) where T : IHasAPoster
+        protected async Task SavePosterToDisk<T>(T show, string posterPath, Func<T, Task<bool>> update, int height = 220) where T : IHasAPoster
         {
             byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
-            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, 220, null);
+            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, height, null);
             await maybeHash.Match(
                 hash =>
                 {
