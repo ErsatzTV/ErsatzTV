@@ -7,14 +7,16 @@
     <div>
         @if (!string.IsNullOrWhiteSpace(Link))
         {
-            <MudButton Link="@Link" Class="media-card" Style="@PosterForItem()">
-                @if (string.IsNullOrWhiteSpace(Data.Poster))
-                {
-                    <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
-                        @Placeholder(Data.SortTitle)
-                    </MudText>
-                }
-            </MudButton>
+            <MudPaper>
+                <MudButton Link="@Link" Class="media-card" Style="@PosterForItem()">
+                    @if (string.IsNullOrWhiteSpace(Data.Poster))
+                    {
+                        <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
+                            @Placeholder(Data.SortTitle)
+                        </MudText>
+                    }
+                </MudButton>
+            </MudPaper>
         }
         else
         {
