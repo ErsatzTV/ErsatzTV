@@ -7,9 +7,9 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IMovieRepository
     {
-        public Task<Either<BaseError, MovieMediaItem>> GetOrAdd(int mediaSourceId, string path);
-        public Task<bool> Update(MovieMediaItem movie);
-        public Task<int> GetMovieCount();
-        public Task<List<MovieMediaItem>> GetPagedMovies(int pageNumber, int pageSize);
+        Task<Either<BaseError, MovieMediaItem>> GetOrAdd(int mediaSourceId, string path);
+        Task<bool> Update(MovieMediaItem movie);
+        Task<int> GetMovieCount();
+        Task<List<MovieMediaItem>> GetPagedMovies(int pageNumber, int pageSize);
     }
 }

@@ -6,10 +6,10 @@ namespace ErsatzTV.Core.Interfaces.Metadata
 {
     public interface ILocalFileSystem
     {
-        public DateTime GetLastWriteTime(string path);
-        public bool IsMediaSourceAccessible(LocalMediaSource localMediaSource);
-        public IEnumerable<string> ListSubdirectories(string folder);
-        public IEnumerable<string> ListFiles(string folder);
-        public bool FileExists(string path);
+        DateTime GetLastWriteTime(string path);
+        bool IsMediaSourceAccessible(LocalMediaSource localMediaSource);
+        IEnumerable<string> ListSubdirectories(string folder);
+        IEnumerable<string> ListFiles(string folder);
+        bool FileExists(string path);
     }
 }

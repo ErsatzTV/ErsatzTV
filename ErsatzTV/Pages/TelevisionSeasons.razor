@@ -1,25 +1,25 @@
 ﻿@page "/media/tv/shows/{ShowId:int}"
-@using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Television.Queries
+@using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.MediaCards.Queries
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.Large">
-<MudCard Class="mb-6">
-    <div style="display: flex; flex-direction: row;">
-        <MudPaper Style="flex-shrink: 0;">
-            <MudCardMedia Image="@($"/posters/{_show.Poster}")" Style="height: 440px; width: 304px;"/>
-        </MudPaper>
-        <MudCardContent>
-            <div style="display:flex; flex-direction: column;">
-                <MudText Typo="Typo.h3">@_show.Title</MudText>
-                <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_show.Year</MudText>
-                <MudText>@_show.Plot</MudText>
-            </div>
-        </MudCardContent>
-    </div>
-</MudCard>
+    <MudCard Class="mb-6">
+        <div style="display: flex; flex-direction: row;">
+            <MudPaper Style="flex-shrink: 0;">
+                <MudCardMedia Image="@($"/posters/{_show.Poster}")" Style="height: 440px; width: 304px;"/>
+            </MudPaper>
+            <MudCardContent>
+                <div style="display: flex; flex-direction: column;">
+                    <MudText Typo="Typo.h3">@_show.Title</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_show.Year</MudText>
+                    <MudText>@_show.Plot</MudText>
+                </div>
+            </MudCardContent>
+        </div>
+    </MudCard>
 </MudContainer>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
@@ -37,7 +37,7 @@
     private TelevisionShowViewModel _show;
 
     private int _pageSize => 100;
-    private int _pageNumber = 1;
+    private readonly int _pageNumber = 1;
 
     private TelevisionSeasonCardResultsViewModel _data;
 
@@ -47,7 +47,7 @@
     {
         await Mediator.Send(new GetTelevisionShowById(ShowId))
             .IfSomeAsync(vm => _show = vm);
-        
+
         _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize));
     }
 

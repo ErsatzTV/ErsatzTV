@@ -1,6 +1,5 @@
-﻿@using ErsatzTV.Application.MediaItems
+﻿@using ErsatzTV.Application.MediaCards
 @using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.MediaCards
 @inject IMediator Mediator
 
 <div class="media-card-container mx-3 pb-3">
@@ -40,7 +39,7 @@
 
     [Parameter]
     public MediaCardViewModel Data { get; set; }
-    
+
     [Parameter]
     public string Link { get; set; }
 

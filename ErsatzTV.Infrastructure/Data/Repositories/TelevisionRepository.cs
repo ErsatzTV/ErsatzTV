@@ -120,6 +120,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 () => AddEpisode(season, mediaSourceId, path));
         }
 
+        public Task<List<TelevisionShow>> FindRemovedShows(
+            LocalMediaSource localMediaSource,
+            List<string> allShowFolders) =>
+            _dbContext.TelevisionShows
+                .Filter(s => s.MediaSourceId == localMediaSource.Id)
+                .Filter(s => !allShowFolders.Contains(s.Path))
+                .ToListAsync();
+
+        public Task<Unit> Delete(TelevisionShow show) =>
+            _dbContext.TelevisionShows.Remove(show).AsTask()
+                .Bind(_ => _dbContext.SaveChangesAsync())
+                .ToUnit();
+
         private async Task<Either<BaseError, TelevisionShow>> AddShow(int mediaSourceId, string path)
         {
             try

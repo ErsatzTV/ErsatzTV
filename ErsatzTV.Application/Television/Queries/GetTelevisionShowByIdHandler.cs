@@ -11,10 +11,8 @@ namespace ErsatzTV.Application.Television.Queries
     {
         private readonly ITelevisionRepository _televisionRepository;
 
-        public GetTelevisionShowByIdHandler(ITelevisionRepository televisionRepository)
-        {
+        public GetTelevisionShowByIdHandler(ITelevisionRepository televisionRepository) =>
             _televisionRepository = televisionRepository;
-        }
 
         public Task<Option<TelevisionShowViewModel>> Handle(
             GetTelevisionShowById request,

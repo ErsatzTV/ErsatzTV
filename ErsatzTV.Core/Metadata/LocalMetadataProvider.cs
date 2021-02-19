@@ -261,14 +261,14 @@ namespace ErsatzTV.Core.Metadata
 
             return null;
         }
-        
+
         private static string GetSortTitle(string title)
         {
             if (string.IsNullOrWhiteSpace(title))
             {
                 return title;
             }
-            
+
             if (title.StartsWith("the ", StringComparison.OrdinalIgnoreCase))
             {
                 return title.Substring(4);

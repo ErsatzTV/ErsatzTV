@@ -6,10 +6,10 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IConfigElementRepository
     {
-        public Task<ConfigElement> Add(ConfigElement configElement);
-        public Task<Option<ConfigElement>> Get(ConfigElementKey key);
-        public Task<Option<T>> GetValue<T>(ConfigElementKey key);
-        public Task Update(ConfigElement configElement);
-        public Task Delete(ConfigElement configElement);
+        Task<ConfigElement> Add(ConfigElement configElement);
+        Task<Option<ConfigElement>> Get(ConfigElementKey key);
+        Task<Option<T>> GetValue<T>(ConfigElementKey key);
+        Task Update(ConfigElement configElement);
+        Task Delete(ConfigElement configElement);
     }
 }

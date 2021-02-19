@@ -14,10 +14,7 @@ namespace ErsatzTV.Application.MediaCards.Queries
     {
         private readonly IMovieRepository _movieRepository;
 
-        public GetMovieCardsHandler(IMovieRepository movieRepository)
-        {
-            _movieRepository = movieRepository;
-        }
+        public GetMovieCardsHandler(IMovieRepository movieRepository) => _movieRepository = movieRepository;
 
         public async Task<MovieCardResultsViewModel> Handle(
             GetMovieCards request,

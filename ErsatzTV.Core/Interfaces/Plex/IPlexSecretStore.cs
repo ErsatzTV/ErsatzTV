@@ -7,11 +7,11 @@ namespace ErsatzTV.Core.Interfaces.Plex
 {
     public interface IPlexSecretStore
     {
-        public Task<string> GetClientIdentifier();
-        public Task<List<PlexUserAuthToken>> GetUserAuthTokens();
-        public Task<Unit> UpsertUserAuthToken(PlexUserAuthToken userAuthToken);
-        public Task<List<PlexServerAuthToken>> GetServerAuthTokens();
-        public Task<Option<PlexServerAuthToken>> GetServerAuthToken(string clientIdentifier);
-        public Task<Unit> UpsertServerAuthToken(PlexServerAuthToken serverAuthToken);
+        Task<string> GetClientIdentifier();
+        Task<List<PlexUserAuthToken>> GetUserAuthTokens();
+        Task<Unit> UpsertUserAuthToken(PlexUserAuthToken userAuthToken);
+        Task<List<PlexServerAuthToken>> GetServerAuthTokens();
+        Task<Option<PlexServerAuthToken>> GetServerAuthToken(string clientIdentifier);
+        Task<Unit> UpsertServerAuthToken(PlexServerAuthToken serverAuthToken);
     }
 }

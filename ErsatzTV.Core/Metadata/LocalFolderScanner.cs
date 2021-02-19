@@ -40,9 +40,10 @@ namespace ErsatzTV.Core.Metadata
             .Map(s => $"{Path.DirectorySeparatorChar}{s}{Path.DirectorySeparatorChar}")
             .ToList();
 
+        private readonly IImageCache _imageCache;
+
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
-        private readonly IImageCache _imageCache;
         private readonly ILogger _logger;
 
         protected LocalFolderScanner(
@@ -76,8 +77,12 @@ namespace ErsatzTV.Core.Metadata
                 return BaseError.New(ex.Message);
             }
         }
-        
-        protected async Task SavePosterToDisk<T>(T show, string posterPath, Func<T, Task<bool>> update, int height = 220) where T : IHasAPoster
+
+        protected async Task SavePosterToDisk<T>(
+            T show,
+            string posterPath,
+            Func<T, Task<bool>> update,
+            int height = 220) where T : IHasAPoster
         {
             byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
             Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, height, null);

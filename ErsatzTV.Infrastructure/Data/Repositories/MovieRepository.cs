@@ -33,7 +33,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.MovieMediaItems.Update(movie);
             return await _dbContext.SaveChangesAsync() > 0;
         }
-        
+
         public Task<int> GetMovieCount() =>
             _dbContext.MovieMediaItems
                 .AsNoTracking()

@@ -6,6 +6,6 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
 {
     public interface IFFmpegLocator
     {
-        public Task<Option<string>> ValidatePath(string executableBase, ConfigElementKey key);
+        Task<Option<string>> ValidatePath(string executableBase, ConfigElementKey key);
     }
 }

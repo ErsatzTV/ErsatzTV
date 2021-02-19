@@ -7,7 +7,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IResolutionRepository
     {
-        public Task<Option<Resolution>> Get(int id);
-        public Task<List<Resolution>> GetAll();
+        Task<Option<Resolution>> Get(int id);
+        Task<List<Resolution>> GetAll();
     }
 }

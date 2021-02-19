@@ -2,7 +2,7 @@
 {
     public interface IDisplaySize
     {
-        public int Width { get; }
-        public int Height { get; }
+        int Width { get; }
+        int Height { get; }
     }
 }

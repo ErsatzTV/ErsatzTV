@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,7 +15,6 @@ namespace ErsatzTV.Core.Metadata
 {
     public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
     {
-        private readonly IImageCache _imageCache;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<TelevisionFolderScanner> _logger;
@@ -35,7 +35,6 @@ namespace ErsatzTV.Core.Metadata
             _localFileSystem = localFileSystem;
             _televisionRepository = televisionRepository;
             _localMetadataProvider = localMetadataProvider;
-            _imageCache = imageCache;
             _logger = logger;
         }
 
@@ -49,8 +48,11 @@ namespace ErsatzTV.Core.Metadata
                 return Unit.Default;
             }
 
-            foreach (string showFolder in _localFileSystem.ListSubdirectories(localMediaSource.Folder)
-                .Filter(ShouldIncludeFolder))
+            var allShowFolders = _localFileSystem.ListSubdirectories(localMediaSource.Folder)
+                .Filter(ShouldIncludeFolder)
+                .ToList();
+
+            foreach (string showFolder in allShowFolders)
             {
                 Either<BaseError, TelevisionShow> maybeShow = await _televisionRepository
                     .GetOrAddShow(localMediaSource.Id, showFolder)
@@ -60,6 +62,14 @@ namespace ErsatzTV.Core.Metadata
                 await maybeShow.Match(
                     show => ScanSeasons(localMediaSource, ffprobePath, show),
                     _ => Task.FromResult(Unit.Default));
+            }
+
+            List<TelevisionShow> removedShows =
+                await _televisionRepository.FindRemovedShows(localMediaSource, allShowFolders);
+            foreach (TelevisionShow show in removedShows)
+            {
+                _logger.LogDebug("Removing missing show at {Folder}", show.Path);
+                await _televisionRepository.Delete(show);
             }
 
             return Unit.Default;
@@ -193,7 +203,7 @@ namespace ErsatzTV.Core.Metadata
                 return BaseError.New(ex.Message);
             }
         }
-        
+
         private async Task<Either<BaseError, TelevisionSeason>> UpdatePoster(TelevisionSeason season)
         {
             try

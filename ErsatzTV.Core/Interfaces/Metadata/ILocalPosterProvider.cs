@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Interfaces.Metadata
 {
     public interface ILocalPosterProvider
     {
-        public Task RefreshPoster(MediaItem mediaItem);
-        public Task SavePosterToDisk(MediaItem mediaItem, string posterPath);
+        Task RefreshPoster(MediaItem mediaItem);
+        Task SavePosterToDisk(MediaItem mediaItem, string posterPath);
     }
 }
