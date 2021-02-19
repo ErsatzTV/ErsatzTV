@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -14,7 +15,6 @@ namespace ErsatzTV.Core.Metadata
     {
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
-        private readonly ILocalPosterProvider _localPosterProvider;
         private readonly ILogger<MovieFolderScanner> _logger;
         private readonly IMovieRepository _movieRepository;
 
@@ -23,14 +23,13 @@ namespace ErsatzTV.Core.Metadata
             IMovieRepository movieRepository,
             ILocalStatisticsProvider localStatisticsProvider,
             ILocalMetadataProvider localMetadataProvider,
-            ILocalPosterProvider localPosterProvider,
+            IImageCache imageCache,
             ILogger<MovieFolderScanner> logger)
-            : base(localFileSystem, localStatisticsProvider, logger)
+            : base(localFileSystem, localStatisticsProvider, imageCache, logger)
         {
             _localFileSystem = localFileSystem;
             _movieRepository = movieRepository;
             _localMetadataProvider = localMetadataProvider;
-            _localPosterProvider = localPosterProvider;
             _logger = logger;
         }
 
@@ -106,7 +105,7 @@ namespace ErsatzTV.Core.Metadata
                             movie.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await _localPosterProvider.SavePosterToDisk(movie, posterFile);
+                            await SavePosterToDisk(movie, posterFile, _movieRepository.Update);
                         }
                     });
 

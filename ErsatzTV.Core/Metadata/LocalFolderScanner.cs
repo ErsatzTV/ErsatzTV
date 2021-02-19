@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Domain;
+using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -40,15 +42,18 @@ namespace ErsatzTV.Core.Metadata
 
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
+        private readonly IImageCache _imageCache;
         private readonly ILogger _logger;
 
         protected LocalFolderScanner(
             ILocalFileSystem localFileSystem,
             ILocalStatisticsProvider localStatisticsProvider,
+            IImageCache imageCache,
             ILogger logger)
         {
             _localFileSystem = localFileSystem;
             _localStatisticsProvider = localStatisticsProvider;
+            _imageCache = imageCache;
             _logger = logger;
         }
 
@@ -70,6 +75,23 @@ namespace ErsatzTV.Core.Metadata
             {
                 return BaseError.New(ex.Message);
             }
+        }
+        
+        protected async Task SavePosterToDisk<T>(T show, string posterPath, Func<T, Task<bool>> update) where T : IHasAPoster
+        {
+            byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
+            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, 220, null);
+            await maybeHash.Match(
+                hash =>
+                {
+                    show.Poster = hash;
+                    return update(show);
+                },
+                error =>
+                {
+                    _logger.LogWarning("Unable to save poster to disk from {Path}: {Error}", posterPath, error.Value);
+                    return Task.CompletedTask;
+                });
         }
     }
 }

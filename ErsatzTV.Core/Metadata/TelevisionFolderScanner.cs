@@ -26,7 +26,11 @@ namespace ErsatzTV.Core.Metadata
             ILocalStatisticsProvider localStatisticsProvider,
             ILocalMetadataProvider localMetadataProvider,
             IImageCache imageCache,
-            ILogger<TelevisionFolderScanner> logger) : base(localFileSystem, localStatisticsProvider, logger)
+            ILogger<TelevisionFolderScanner> logger) : base(
+            localFileSystem,
+            localStatisticsProvider,
+            imageCache,
+            logger)
         {
             _localFileSystem = localFileSystem;
             _televisionRepository = televisionRepository;
@@ -177,7 +181,7 @@ namespace ErsatzTV.Core.Metadata
                             show.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(show, posterFile);
+                            await SavePosterToDisk(show, posterFile, _televisionRepository.Update);
                         }
                     });
 
@@ -201,7 +205,7 @@ namespace ErsatzTV.Core.Metadata
                             episode.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Thumbnail", posterFile);
-                            await SavePosterToDisk(episode, posterFile);
+                            await SavePosterToDisk(episode, posterFile, _televisionRepository.Update);
                         }
                     });
 
@@ -236,42 +240,6 @@ namespace ErsatzTV.Core.Metadata
                 .Map(f => Path.Combine(folder, f))
                 .Filter(f => _localFileSystem.FileExists(f))
                 .HeadOrNone();
-        }
-
-        // TODO: refactor this to work with both scanners, everything that needs a poster
-        // also, return either<baseerror, unit> ???
-        private async Task SavePosterToDisk(TelevisionShow show, string posterPath)
-        {
-            byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
-            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, 220, null);
-            await maybeHash.Match(
-                hash =>
-                {
-                    show.Poster = hash;
-                    return _televisionRepository.Update(show);
-                },
-                error =>
-                {
-                    _logger.LogWarning("Unable to save poster to disk from {Path}: {Error}", posterPath, error.Value);
-                    return Task.CompletedTask;
-                });
-        }
-
-        private async Task SavePosterToDisk(TelevisionEpisodeMediaItem episode, string posterPath)
-        {
-            byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
-            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, 220, null);
-            await maybeHash.Match(
-                hash =>
-                {
-                    episode.Poster = hash;
-                    return _televisionRepository.Update(episode);
-                },
-                error =>
-                {
-                    _logger.LogWarning("Unable to save poster to disk from {Path}: {Error}", posterPath, error.Value);
-                    return Task.CompletedTask;
-                });
         }
 
         private bool ShouldIncludeFolder(string folder) =>

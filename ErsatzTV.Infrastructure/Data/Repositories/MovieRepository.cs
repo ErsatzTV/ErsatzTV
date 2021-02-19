@@ -26,6 +26,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 async () => await AddMovie(mediaSourceId, path));
         }
 
+        public async Task<bool> Update(MovieMediaItem movie)
+        {
+            _dbContext.MovieMediaItems.Update(movie);
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
+
         private async Task<Either<BaseError, MovieMediaItem>> AddMovie(int mediaSourceId, string path)
         {
             try
