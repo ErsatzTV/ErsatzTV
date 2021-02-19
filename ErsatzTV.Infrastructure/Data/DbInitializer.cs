@@ -55,14 +55,6 @@ namespace ErsatzTV.Infrastructure.Data
             context.Channels.Add(defaultChannel);
             context.SaveChanges();
 
-            // TODO: clean this up
-            // var mediaSource = new LocalMediaSource
-            // {
-            //     Name = "Default"
-            // };
-            // context.MediaSources.Add(mediaSource);
-            // context.SaveChanges();
-
             // TODO: create looping static image that mentions configuring via web
             return Unit.Default;
         }
