@@ -12,10 +12,15 @@
                 <MudCardMedia Image="@($"/posters/{_show.Poster}")" Style="height: 440px; width: 304px;"/>
             </MudPaper>
             <MudCardContent>
-                <div style="display: flex; flex-direction: column;">
+                <div style="display: flex; flex-direction: column; height: 100%">
                     <MudText Typo="Typo.h3">@_show.Title</MudText>
                     <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_show.Year</MudText>
-                    <MudText>@_show.Plot</MudText>
+                    <MudText Style="flex-grow: 1">@_show.Plot</MudText>
+                    <div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="true">
+                            Add To Schedule
+                        </MudButton>
+                    </div>
                 </div>
             </MudCardContent>
         </div>
