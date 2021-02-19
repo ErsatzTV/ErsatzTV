@@ -1,8 +1,8 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.AggregateModels;
 using MediatR;
 
 namespace ErsatzTV.Application.MediaItems.Queries
 {
     public record GetAggregateMediaItems
-        (MediaType MediaType, int PageNumber, int PageSize) : IRequest<AggregateMediaItemResults>;
+        (AggregateMediaItemType ItemType, int PageNumber, int PageSize) : IRequest<AggregateMediaItemResults>;
 }

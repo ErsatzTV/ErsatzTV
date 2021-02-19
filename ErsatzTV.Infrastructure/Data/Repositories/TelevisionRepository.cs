@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -34,11 +35,49 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
+        public async Task<bool> Update(TelevisionSeason season)
+        {
+            _dbContext.TelevisionSeasons.Update(season);
+            return await _dbContext.SaveChangesAsync() > 0;
+        }
+
         public async Task<bool> Update(TelevisionEpisodeMediaItem episode)
         {
             _dbContext.TelevisionEpisodeMediaItems.Update(episode);
             return await _dbContext.SaveChangesAsync() > 0;
         }
+
+        // TODO: test with split folders (same show in different sources)
+        public Task<int> GetShowCount() =>
+            _dbContext.TelevisionShows
+                .AsNoTracking()
+                // .GroupBy(s => new { s.Metadata.Title, s.Metadata.Year })
+                .CountAsync();
+
+        // TODO: test with split folders (same show in different sources)
+        public Task<List<TelevisionShow>> GetPagedShows(int pageNumber, int pageSize) =>
+            _dbContext.TelevisionShows
+                .Include(s => s.Metadata)
+                .OrderBy(s => s.Metadata.SortTitle)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
+
+        public Task<int> GetSeasonCount(int televisionShowId) =>
+            _dbContext.TelevisionSeasons
+                .AsNoTracking()
+                .Where(s => s.TelevisionShowId == televisionShowId)
+                .CountAsync();
+
+        public Task<List<TelevisionSeason>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize) =>
+            _dbContext.TelevisionSeasons
+                .Where(s => s.TelevisionShowId == televisionShowId)
+                .OrderBy(s => s.Number)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
 
         public async Task<Either<BaseError, TelevisionShow>> GetOrAddShow(int mediaSourceId, string path)
         {

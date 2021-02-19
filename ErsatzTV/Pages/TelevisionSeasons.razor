@@ -1,0 +1,28 @@
+﻿@page "/media/tv/shows/{ShowId:int}"
+@using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.MediaCards.Queries
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+    @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
+    {
+        <MediaCard Data="@card" Link="@($"/media/tv/shows/{ShowId}/seasons/{card.TelevisionSeasonId}")" DataRefreshed="@(() => RefreshData())"/>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int ShowId { get; set; }
+
+    private int PageSize => 100;
+    private int _pageNumber = 1;
+
+    private TelevisionSeasonCardResultsViewModel _data;
+
+    protected override Task OnParametersSetAsync() => RefreshData();
+
+    private async Task RefreshData() =>
+        _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, PageSize));
+
+}

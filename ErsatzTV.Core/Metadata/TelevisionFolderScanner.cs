@@ -74,7 +74,8 @@ namespace ErsatzTV.Core.Metadata
                     async seasonNumber =>
                     {
                         Either<BaseError, TelevisionSeason> maybeSeason = await _televisionRepository
-                            .GetOrAddSeason(show, seasonFolder, seasonNumber);
+                            .GetOrAddSeason(show, seasonFolder, seasonNumber)
+                            .BindT(UpdatePoster);
 
                         await maybeSeason.Match(
                             season => ScanEpisodes(localMediaSource, ffprobePath, season),
@@ -192,6 +193,29 @@ namespace ErsatzTV.Core.Metadata
                 return BaseError.New(ex.Message);
             }
         }
+        
+        private async Task<Either<BaseError, TelevisionSeason>> UpdatePoster(TelevisionSeason season)
+        {
+            try
+            {
+                await LocatePoster(season).IfSomeAsync(
+                    async posterFile =>
+                    {
+                        if (string.IsNullOrWhiteSpace(season.Poster) ||
+                            season.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
+                        {
+                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
+                            await SavePosterToDisk(season, posterFile, _televisionRepository.Update);
+                        }
+                    });
+
+                return season;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
 
         private async Task<Either<BaseError, TelevisionEpisodeMediaItem>> UpdateThumbnail(
             TelevisionEpisodeMediaItem episode)
@@ -227,10 +251,19 @@ namespace ErsatzTV.Core.Metadata
 
         private Option<string> LocatePoster(TelevisionShow show) =>
             ImageFileExtensions
-                .Collect(ext => new[] { $"poster.{ext}" })
+                .Map(ext => $"poster.{ext}")
                 .Map(f => Path.Combine(show.Path, f))
                 .Filter(s => _localFileSystem.FileExists(s))
                 .HeadOrNone();
+
+        private Option<string> LocatePoster(TelevisionSeason season)
+        {
+            string folder = Path.GetDirectoryName(season.Path) ?? string.Empty;
+            return ImageFileExtensions
+                .Map(ext => Path.Combine(folder, $"season{season.Number:00}-poster.{ext}"))
+                .Filter(s => _localFileSystem.FileExists(s))
+                .HeadOrNone();
+        }
 
         private Option<string> LocateThumbnail(TelevisionEpisodeMediaItem episode)
         {

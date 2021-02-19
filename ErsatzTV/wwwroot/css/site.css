@@ -16,7 +16,7 @@
     width: 152px;
 }
 
-.media-card:hover { filter: brightness(80%); }
+.media-card:hover { filter: brightness(75%); }
 
 .media-card-title {
     overflow: hidden;

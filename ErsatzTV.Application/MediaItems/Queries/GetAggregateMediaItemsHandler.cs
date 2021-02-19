@@ -20,24 +20,25 @@ namespace ErsatzTV.Application.MediaItems.Queries
             GetAggregateMediaItems request,
             CancellationToken cancellationToken)
         {
-            int count = await _mediaItemRepository.GetCountByType(request.MediaType);
-
-            IEnumerable<MediaItemSummary> allItems = await _mediaItemRepository.GetPageByType(
-                request.MediaType,
-                request.PageNumber,
-                request.PageSize);
-
-            var results = allItems
-                .Map(
-                    s => new AggregateMediaItemViewModel(
-                        s.MediaItemId,
-                        s.Title,
-                        s.Subtitle,
-                        s.SortTitle,
-                        s.Poster))
-                .ToList();
-
-            return new AggregateMediaItemResults(count, results);
+            return new AggregateMediaItemResults(0, new List<AggregateMediaItemViewModel>());
+            // int count = await _mediaItemRepository.GetCountByType(request.ItemType);
+            //
+            // IEnumerable<MediaItemSummary> allItems = await _mediaItemRepository.GetPageByType(
+            //     request.ItemType,
+            //     request.PageNumber,
+            //     request.PageSize);
+            //
+            // var results = allItems
+            //     .Map(
+            //         s => new AggregateMediaItemViewModel(
+            //             s.MediaItemId,
+            //             s.Title,
+            //             s.Subtitle,
+            //             s.SortTitle,
+            //             s.Poster))
+            //     .ToList();
+            //
+            // return new AggregateMediaItemResults(count, results);
         }
     }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -31,6 +33,20 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.MovieMediaItems.Update(movie);
             return await _dbContext.SaveChangesAsync() > 0;
         }
+        
+        public Task<int> GetMovieCount() =>
+            _dbContext.MovieMediaItems
+                .AsNoTracking()
+                .CountAsync();
+
+        public Task<List<MovieMediaItem>> GetPagedMovies(int pageNumber, int pageSize) =>
+            _dbContext.MovieMediaItems
+                .Include(s => s.Metadata)
+                .OrderBy(s => s.Metadata.SortTitle)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
 
         private async Task<Either<BaseError, MovieMediaItem>> AddMovie(int mediaSourceId, string path)
         {
