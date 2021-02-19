@@ -1,4 +1,5 @@
 ﻿@page "/media/tv/shows/{ShowId:int}"
+@using static LanguageExt.Prelude
 @using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Television.Queries
 @using ErsatzTV.Application.MediaCards
@@ -30,7 +31,7 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
     @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
     {
-        <MediaCard Data="@card" Link="@($"/media/tv/shows/{ShowId}/seasons/{card.TelevisionSeasonId}")" DataRefreshed="@(() => RefreshData())"/>
+        <MediaCard Data="@card" CustomPlaceholder="@SeasonPlaceholder" Link="@($"/media/tv/shows/{ShowId}/seasons/{card.TelevisionSeasonId}")" DataRefreshed="@(() => RefreshData())"/>
     }
 </MudContainer>
 
@@ -55,5 +56,9 @@
 
         _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize));
     }
+
+    private string SeasonPlaceholder(string sortTitle) =>
+        Optional(_data.Cards.SingleOrDefault(d => d.SortTitle == sortTitle))
+            .Match(vm => vm.Placeholder, () => sortTitle.Substring(0, 1).ToUpperInvariant());
 
 }

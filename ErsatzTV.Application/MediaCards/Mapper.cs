@@ -18,7 +18,8 @@ namespace ErsatzTV.Application.MediaCards
                 GetSeasonName(televisionSeason.Number),
                 string.Empty,
                 GetSeasonName(televisionSeason.Number),
-                televisionSeason.Poster);
+                televisionSeason.Poster,
+                televisionSeason.Number == 0 ? "S" : televisionSeason.Number.ToString());
 
         internal static MovieCardViewModel ProjectToViewModel(MovieMediaItem movie) =>
             new(
