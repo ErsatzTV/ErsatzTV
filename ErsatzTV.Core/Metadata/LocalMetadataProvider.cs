@@ -67,10 +67,7 @@ namespace ErsatzTV.Core.Metadata
             mediaItem.Metadata.Source = metadata.Source;
             mediaItem.Metadata.LastWriteTime = metadata.LastWriteTime;
             mediaItem.Metadata.Title = metadata.Title;
-            mediaItem.Metadata.SortTitle =
-                (metadata.Title ?? string.Empty).ToLowerInvariant().StartsWith("the ")
-                    ? metadata.Title?.Substring(4)
-                    : metadata.Title;
+            mediaItem.Metadata.SortTitle = GetSortTitle(metadata.Title);
             mediaItem.Metadata.Season = metadata.Season;
             mediaItem.Metadata.Episode = metadata.Episode;
             mediaItem.Metadata.Plot = metadata.Plot;
@@ -89,10 +86,7 @@ namespace ErsatzTV.Core.Metadata
             mediaItem.Metadata.Source = metadata.Source;
             mediaItem.Metadata.LastWriteTime = metadata.LastWriteTime;
             mediaItem.Metadata.Title = metadata.Title;
-            mediaItem.Metadata.SortTitle =
-                (metadata.Title ?? string.Empty).ToLowerInvariant().StartsWith("the ")
-                    ? metadata.Title?.Substring(4)
-                    : metadata.Title;
+            mediaItem.Metadata.SortTitle = GetSortTitle(metadata.Title);
             mediaItem.Metadata.Year = metadata.Year;
             mediaItem.Metadata.Premiered = metadata.Premiered;
             mediaItem.Metadata.Plot = metadata.Plot;
@@ -115,10 +109,7 @@ namespace ErsatzTV.Core.Metadata
             televisionShow.Metadata.Title = metadata.Title;
             televisionShow.Metadata.Plot = metadata.Plot;
             televisionShow.Metadata.Year = metadata.Year;
-            televisionShow.Metadata.SortTitle =
-                (metadata.Title ?? string.Empty).ToLowerInvariant().StartsWith("the ")
-                    ? metadata.Title?.Substring(4)
-                    : metadata.Title;
+            televisionShow.Metadata.SortTitle = GetSortTitle(metadata.Title);
 
             await _televisionRepository.Update(televisionShow);
         }
@@ -269,6 +260,26 @@ namespace ErsatzTV.Core.Metadata
             }
 
             return null;
+        }
+        
+        private static string GetSortTitle(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                return title;
+            }
+            
+            if (title.StartsWith("the ", StringComparison.OrdinalIgnoreCase))
+            {
+                return title.Substring(4);
+            }
+
+            if (title.StartsWith("Æ"))
+            {
+                return title.Replace("Æ", "E");
+            }
+
+            return title;
         }
 
         [XmlRoot("movie")]
