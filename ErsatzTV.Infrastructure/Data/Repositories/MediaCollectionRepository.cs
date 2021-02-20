@@ -108,7 +108,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return result.Distinct().ToList();
         }
 
-        private async Task<List<MediaItem>> GetTelevisionShowItems(SimpleMediaCollection collection)
+        private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionShowItems(SimpleMediaCollection collection)
         {
             // TODO: would be nice to get the media items in one go, but ef...
             List<int> showItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
@@ -122,13 +122,14 @@ where s.SimpleMediaCollectionsId = {0}",
                 .Select(i => i.Id)
                 .ToListAsync();
 
-            return await _dbContext.MediaItems
+            return await _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()
+                .Include(e => e.Metadata)
                 .Where(mi => showItemIds.Contains(mi.Id))
                 .ToListAsync();
         }
 
-        private async Task<List<MediaItem>> GetTelevisionSeasonItems(SimpleMediaCollection collection)
+        private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionSeasonItems(SimpleMediaCollection collection)
         {
             // TODO: would be nice to get the media items in one go, but ef...
             List<int> seasonItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
@@ -141,13 +142,14 @@ where s.SimpleMediaCollectionsId = {0}",
                 .Select(i => i.Id)
                 .ToListAsync();
 
-            return await _dbContext.MediaItems
+            return await _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()
+                .Include(e => e.Metadata)
                 .Where(mi => seasonItemIds.Contains(mi.Id))
                 .ToListAsync();
         }
 
-        private async Task<List<MediaItem>> GetTelevisionEpisodeItems(SimpleMediaCollection collection)
+        private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionEpisodeItems(SimpleMediaCollection collection)
         {
             // TODO: would be nice to get the media items in one go, but ef...
             List<int> episodeItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
@@ -158,8 +160,9 @@ where s.SimpleMediaCollectionsId = {0}",
                 .Select(i => i.Id)
                 .ToListAsync();
 
-            return await _dbContext.MediaItems
+            return await _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()
+                .Include(e => e.Metadata)
                 .Where(mi => episodeItemIds.Contains(mi.Id))
                 .ToListAsync();
         }
