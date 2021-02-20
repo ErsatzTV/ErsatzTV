@@ -1,4 +1,4 @@
-﻿@page "/media/tv/shows/{ShowId:int}"
+﻿@page "/media/tv/seasons/{SeasonId:int}"
 @using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Television.Queries
 @using ErsatzTV.Application.MediaCards
@@ -14,13 +14,13 @@
     <MudCard Class="mb-6">
         <div style="display: flex; flex-direction: row;">
             <MudPaper Style="flex-shrink: 0;">
-                <MudCardMedia Image="@($"/posters/{_show.Poster}")" Style="height: 440px; width: 304px;"/>
+                <MudCardMedia Image="@($"/posters/{_season.Poster}")" Style="height: 440px; width: 304px;"/>
             </MudPaper>
             <MudCardContent>
                 <div style="display: flex; flex-direction: column; height: 100%">
-                    <MudText Typo="Typo.h3">@_show.Title</MudText>
-                    <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_show.Year</MudText>
-                    <MudText Style="flex-grow: 1">@_show.Plot</MudText>
+                    <MudText Typo="Typo.h3">@_season.Title</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_season.Year</MudText>
+                    <MudText Style="flex-grow: 1">@_season.Plot</MudText>
                     <div>
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
@@ -36,25 +36,28 @@
 </MudContainer>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
-    @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
+    @foreach (TelevisionEpisodeCardViewModel card in _data.Cards)
     {
-        <MediaCard Data="@card" Placeholder="@card.Placeholder"
-                   Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
-                   DataRefreshed="@(() => RefreshData())"/>
+        <MediaCard Data="@card"
+                   Placeholder="@card.Placeholder"
+                   Link="@($"/media/tv/episodes/{card.EpisodeId}")"
+                   DataRefreshed="@(() => RefreshData())"
+                   ContainerClass="media-card-episode-container mx-2"
+                   CardClass="media-card-episode"/>
     }
 </MudContainer>
 
 @code {
 
     [Parameter]
-    public int ShowId { get; set; }
+    public int SeasonId { get; set; }
 
-    private TelevisionShowViewModel _show;
+    private TelevisionSeasonViewModel _season;
 
     private int _pageSize => 100;
     private readonly int _pageNumber = 1;
 
-    private TelevisionSeasonCardResultsViewModel _data;
+    private TelevisionEpisodeCardResultsViewModel _data;
 
     private List<BreadcrumbItem> _breadcrumbs;
 
@@ -62,28 +65,29 @@
 
     private async Task RefreshData()
     {
-        await Mediator.Send(new GetTelevisionShowById(ShowId))
-            .IfSomeAsync(vm => _show = vm);
+        await Mediator.Send(new GetTelevisionSeasonById(SeasonId))
+            .IfSomeAsync(vm => _season = vm);
 
-        _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize));
+        _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize));
 
         _breadcrumbs = new List<BreadcrumbItem>
         {
             new("TV Shows", "/media/tv/shows"),
-            new($"{_show.Title} ({_show.Year})", null, true)
+            new($"{_season.Title} ({_season.Year})", $"/media/tv/shows/{_season.ShowId}"),
+            new(_season.Plot, null, true)
         };
     }
 
     private async Task AddToCollection()
     {
-        var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
+        var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Plot}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await Mediator.Send(new AddTelevisionShowToSimpleMediaCollection(collection.Id, ShowId));
+            await Mediator.Send(new AddTelevisionSeasonToSimpleMediaCollection(collection.Id, SeasonId));
             NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }

@@ -15,7 +15,9 @@ namespace ErsatzTV.Application.MediaCards
 
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(TelevisionSeason televisionSeason) =>
             new(
+                televisionSeason.TelevisionShow.Metadata.Title,
                 televisionSeason.Id,
+                televisionSeason.Number,
                 GetSeasonName(televisionSeason.Number),
                 string.Empty,
                 GetSeasonName(televisionSeason.Number),
@@ -25,10 +27,12 @@ namespace ErsatzTV.Application.MediaCards
         internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
             TelevisionEpisodeMediaItem televisionEpisode) =>
             new(
+                televisionEpisode.Id,
                 televisionEpisode.Metadata.Title,
-                string.Empty,
-                televisionEpisode.Metadata.SortTitle,
-                televisionEpisode.Poster);
+                $"Episode {televisionEpisode.Metadata.Episode}",
+                televisionEpisode.Metadata.Episode.ToString(),
+                televisionEpisode.Poster,
+                televisionEpisode.Metadata.Episode.ToString());
 
         internal static MovieCardViewModel ProjectToViewModel(MovieMediaItem movie) =>
             new(

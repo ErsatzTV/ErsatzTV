@@ -158,7 +158,8 @@ namespace ErsatzTV.Core.Metadata
                     async nfoFile =>
                     {
                         if (show.Metadata == null || show.Metadata.Source == MetadataSource.Fallback ||
-                            show.Metadata.LastWriteTime < _localFileSystem.GetLastWriteTime(nfoFile))
+                            (show.Metadata.LastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(nfoFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
                             await _localMetadataProvider.RefreshSidecarMetadata(show, nfoFile);
@@ -190,7 +191,8 @@ namespace ErsatzTV.Core.Metadata
                     async nfoFile =>
                     {
                         if (episode.Metadata == null || episode.Metadata.Source == MetadataSource.Fallback ||
-                            episode.Metadata.LastWriteTime < _localFileSystem.GetLastWriteTime(nfoFile))
+                            (episode.Metadata.LastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(nfoFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
                             await _localMetadataProvider.RefreshSidecarMetadata(episode, nfoFile);
@@ -223,7 +225,8 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         if (string.IsNullOrWhiteSpace(show.Poster) ||
-                            show.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
+                            (show.PosterLastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
                             Either<BaseError, string> maybePoster = await SavePosterToDisk(posterFile, 440);
@@ -231,6 +234,7 @@ namespace ErsatzTV.Core.Metadata
                                 poster =>
                                 {
                                     show.Poster = poster;
+                                    show.PosterLastWriteTime = _localFileSystem.GetLastWriteTime(posterFile);
                                     return _televisionRepository.Update(show);
                                 },
                                 error =>
@@ -260,10 +264,11 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         if (string.IsNullOrWhiteSpace(season.Poster) ||
-                            season.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
+                            (season.PosterLastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(season, posterFile, _televisionRepository.Update);
+                            await SavePosterToDisk(season, posterFile, _televisionRepository.Update, 440);
                         }
                     });
 
@@ -284,7 +289,8 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         if (string.IsNullOrWhiteSpace(episode.Poster) ||
-                            episode.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
+                            (episode.PosterLastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Thumbnail", posterFile);
                             await SavePosterToDisk(episode, posterFile, _televisionRepository.Update);

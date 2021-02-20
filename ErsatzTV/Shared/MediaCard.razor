@@ -2,15 +2,15 @@
 @using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 
-<div class="media-card-container mx-3 pb-3">
+<div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")">
     @if (!string.IsNullOrWhiteSpace(Link))
     {
         <MudPaper>
-            <MudButton Link="@Link" Class="media-card" Style="@PosterForItem()">
+            <MudButton Link="@Link" Class="@($"media-card {CardClass}")" Style="@PosterForItem()">
                 @if (string.IsNullOrWhiteSpace(Data.Poster))
                 {
                     <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
-                        @Placeholder(Data.SortTitle)
+                        @GetPlaceholder(Data.SortTitle)
                     </MudText>
                 }
             </MudButton>
@@ -18,20 +18,20 @@
     }
     else
     {
-        <MudPaper Class="media-card" Style="@PosterForItem()">
+        <MudPaper Class="@($"media-card {CardClass}")" Style="@PosterForItem()">
             @if (string.IsNullOrWhiteSpace(Data.Poster))
             {
                 <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
-                    @Placeholder(Data.SortTitle)
+                    @GetPlaceholder(Data.SortTitle)
                 </MudText>
             }
         </MudPaper>
     }
     <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
-        @Data.Title
+        @(Title ?? Data.Title)
     </MudText>
     <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
-        @Data.Subtitle
+        @(Subtitle ?? Data.Subtitle)
     </MudText>
 </div>
 
@@ -47,13 +47,25 @@
     public EventCallback<Unit> DataRefreshed { get; set; }
 
     [Parameter]
-    public Func<string, string> CustomPlaceholder { get; set; }
+    public string Placeholder { get; set; }
 
-    private string Placeholder(string sortTitle)
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Subtitle { get; set; }
+
+    [Parameter]
+    public string ContainerClass { get; set; }
+
+    [Parameter]
+    public string CardClass { get; set; }
+
+    private string GetPlaceholder(string sortTitle)
     {
-        if (CustomPlaceholder != null)
+        if (Placeholder != null)
         {
-            return CustomPlaceholder(sortTitle);
+            return Placeholder;
         }
 
         string first = sortTitle.Substring(0, 1).ToUpperInvariant();

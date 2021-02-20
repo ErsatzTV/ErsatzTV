@@ -220,7 +220,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         Source = MetadataSource.Sidecar,
                         LastWriteTime = File.GetLastWriteTimeUtc(nfoFileName),
-                        Title = nfo.ShowTitle,
+                        Title = nfo.Title,
                         Aired = GetAired(nfo.Aired),
                         Episode = nfo.Episode,
                         Season = nfo.Season,

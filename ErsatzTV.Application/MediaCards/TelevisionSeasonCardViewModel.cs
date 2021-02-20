@@ -2,7 +2,9 @@
 {
     public record TelevisionSeasonCardViewModel
     (
+        string ShowTitle,
         int TelevisionSeasonId,
+        int TelevisionSeasonNumber,
         string Title,
         string Subtitle,
         string SortTitle,

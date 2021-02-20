@@ -6,6 +6,8 @@
 
 .media-card-container { width: 152px; }
 
+.media-card-episode-container { width: 291px; }
+
 .media-card {
     display: flex;
     filter: brightness(100%);
@@ -15,6 +17,18 @@
     transition: all 0.2s ease;
     width: 152px;
 }
+
+.media-card {
+    display: flex;
+    filter: brightness(100%);
+    flex-direction: column;
+    height: 220px;
+    justify-content: center;
+    transition: all 0.2s ease;
+    width: 152px;
+}
+
+.media-card-episode { width: 291px; }
 
 .media-card:hover { filter: brightness(75%); }
 

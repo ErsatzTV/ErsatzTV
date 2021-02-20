@@ -51,6 +51,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(s => s.TelevisionShows)
                 .ThenInclude(s => s.Metadata)
                 .Include(s => s.TelevisionSeasons)
+                .ThenInclude(s => s.TelevisionShow)
+                .ThenInclude(s => s.Metadata)
                 .Include(s => s.TelevisionEpisodes)
                 .ThenInclude(s => s.Metadata)
                 .SingleOrDefaultAsync(c => c.Id == id)

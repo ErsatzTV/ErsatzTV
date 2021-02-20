@@ -37,6 +37,21 @@
     </MudContainer>
 }
 
+@if (_data.SeasonCards.Any())
+{
+    <MudText GutterBottom="true" Typo="Typo.h4">Television Seasons</MudText>
+
+    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards)
+        {
+            <MediaCard Data="@card"
+                       Link="@($"/media/tv/Seasons/{card.TelevisionSeasonId}")"
+                       Title="@card.ShowTitle"
+                       Subtitle="@card.Title"/>
+        }
+    </MudContainer>
+}
+
 @* <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid"> *@
 @*     @foreach (var card in _data.Cards) *@
 @*     { *@

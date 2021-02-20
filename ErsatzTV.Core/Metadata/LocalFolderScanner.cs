@@ -90,6 +90,7 @@ namespace ErsatzTV.Core.Metadata
                 hash =>
                 {
                     show.Poster = hash;
+                    show.PosterLastWriteTime = _localFileSystem.GetLastWriteTime(posterPath);
                     return update(show);
                 },
                 error =>

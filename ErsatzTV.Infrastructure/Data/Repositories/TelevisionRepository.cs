@@ -46,7 +46,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<int> GetShowCount() =>
             _dbContext.TelevisionShows
                 .AsNoTracking()
-                .GroupBy(s => new { s.Metadata.Title, s.Metadata.Year })
                 .CountAsync();
 
         public Task<List<TelevisionShow>> GetPagedShows(int pageNumber, int pageSize) =>
@@ -58,42 +57,49 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
-        public async Task<int> GetSeasonCount(int televisionShowId)
-        {
-            Option<TelevisionShowMetadata> metadata = await _dbContext.TelevisionShowMetadata
+        public Task<Option<TelevisionSeason>> GetSeason(int televisionSeasonId) =>
+            _dbContext.TelevisionSeasons
                 .AsNoTracking()
-                .Where(m => m.TelevisionShowId == televisionShowId)
-                .SingleOrDefaultAsync()
+                .Include(s => s.TelevisionShow)
+                .ThenInclude(s => s.Metadata)
+                .SingleOrDefaultAsync(s => s.Id == televisionSeasonId)
                 .Map(Optional);
 
-            return await metadata.Match(
-                m => _dbContext.TelevisionShows
-                    .AsNoTracking()
-                    .Where(s => s.Metadata.Title == m.Title && s.Metadata.Year == m.Year)
-                    .SelectMany(s => s.Seasons)
-                    .CountAsync(),
-                Task.FromResult(0));
-        }
-
-        public async Task<List<TelevisionSeason>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize)
-        {
-            Option<TelevisionShowMetadata> metadata = await _dbContext.TelevisionShowMetadata
+        public Task<int> GetSeasonCount(int televisionShowId) =>
+            _dbContext.TelevisionSeasons
                 .AsNoTracking()
-                .Where(m => m.TelevisionShowId == televisionShowId)
-                .SingleOrDefaultAsync()
-                .Map(Optional);
+                .Where(s => s.TelevisionShowId == televisionShowId)
+                .CountAsync();
 
-            return await metadata.Match(
-                m => _dbContext.TelevisionShows
-                    .AsNoTracking()
-                    .Where(s => s.Metadata.Title == m.Title && s.Metadata.Year == m.Year)
-                    .SelectMany(s => s.Seasons)
-                    .OrderBy(s => s.Number)
-                    .Skip((pageNumber - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToListAsync(),
-                Task.FromResult(new List<TelevisionSeason>()));
-        }
+        public Task<List<TelevisionSeason>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize) =>
+            _dbContext.TelevisionSeasons
+                .AsNoTracking()
+                .Where(s => s.TelevisionShowId == televisionShowId)
+                .Include(s => s.TelevisionShow)
+                .ThenInclude(s => s.Metadata)
+                .OrderBy(s => s.Number)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+        public Task<int> GetEpisodeCount(int televisionSeasonId) =>
+            _dbContext.TelevisionEpisodeMediaItems
+                .AsNoTracking()
+                .Where(e => e.SeasonId == televisionSeasonId)
+                .CountAsync();
+
+        public Task<List<TelevisionEpisodeMediaItem>> GetPagedEpisodes(
+            int televisionSeasonId,
+            int pageNumber,
+            int pageSize) =>
+            _dbContext.TelevisionEpisodeMediaItems
+                .AsNoTracking()
+                .Include(e => e.Metadata)
+                .Where(e => e.SeasonId == televisionSeasonId)
+                .OrderBy(s => s.Metadata.Episode)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
         public async Task<Option<TelevisionShow>> GetShowByPath(int mediaSourceId, string path)
         {
