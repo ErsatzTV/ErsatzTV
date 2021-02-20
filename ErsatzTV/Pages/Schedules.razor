@@ -5,44 +5,46 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudTable Hover="true" Items="_schedules" Dense="true" SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Schedules</MudText>
-    </ToolBarContent>
-    <ColGroup>
-        <col/>
-        <col/>
-        <col/>
-        <col style="width: 60px;"/>
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Id</MudTh>
-        <MudTh>Name</MudTh>
-        <MudTh>Media Collection Playback Order</MudTh>
-        <MudTh/>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Id">@context.Id</MudTd>
-        <MudTd DataLabel="Name">@context.Name</MudTd>
-        <MudTd DataLabel="Name">@context.MediaCollectionPlaybackOrder</MudTd>
-        <MudTd>
-            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/schedules/{context.Id}")">
-                    Edit Properties
-                </MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/schedules/{context.Id}/items")">
-                    Edit Schedule Items
-                </MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteSchedule(context))">
-                    Delete
-                </MudMenuItem>
-            </MudMenu>
-        </MudTd>
-    </RowTemplate>
-</MudTable>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/schedules/add" Class="mt-4">
-    Add Schedule
-</MudButton>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudTable Hover="true" Items="_schedules" Dense="true" SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Schedules</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col/>
+            <col style="width: 60px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Id</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Media Collection Playback Order</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Name">@context.MediaCollectionPlaybackOrder</MudTd>
+            <MudTd>
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Direction="Direction.Left" OffsetX="true">
+                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/schedules/{context.Id}")">
+                        Edit Properties
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/schedules/{context.Id}/items")">
+                        Edit Schedule Items
+                    </MudMenuItem>
+                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteSchedule(context))">
+                        Delete
+                    </MudMenuItem>
+                </MudMenu>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/schedules/add" Class="mt-4">
+        Add Schedule
+    </MudButton>
+</MudContainer>
 
 @if (_selectedScheduleItems != null)
 {
