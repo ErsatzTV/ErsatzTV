@@ -34,7 +34,7 @@
     [Parameter]
     public string DetailHighlight { get; set; }
 
-    private string FormatText() => $"Are you sure you want to remove the {EntityType} {EntityName} from this collection?";
+    private string FormatText() => $"Do you really want to remove the {EntityType} {EntityName} from this collection?";
 
     private void Submit() => MudDialog.Close(DialogResult.Ok(true));
 

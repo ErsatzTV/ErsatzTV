@@ -7,6 +7,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 using Map = LanguageExt.Map;
@@ -56,6 +57,16 @@ namespace ErsatzTV.Core.Scheduling
                 playout.Id,
                 playout.Channel.Number,
                 playout.Channel.Name);
+
+            Option<string> emptyCollection = collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key.Name);
+            if (emptyCollection.IsSome)
+            {
+                _logger.LogError(
+                    "Unable to rebuild playout; collection {Name} has no items!",
+                    emptyCollection.ValueUnsafe());
+
+                return playout;
+            }
 
             playout.Items ??= new List<PlayoutItem>();
             playout.ProgramScheduleAnchors ??= new List<PlayoutProgramScheduleAnchor>();
