@@ -5,16 +5,27 @@
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")">
     @if (!string.IsNullOrWhiteSpace(Link))
     {
-        <MudPaper>
-            <MudButton Link="@Link" Class="@($"media-card {CardClass}")" Style="@PosterForItem()">
+        <div style="position: relative">
+            <MudPaper Class="@($"media-card {CardClass}")" Style="@PosterForItem()">
                 @if (string.IsNullOrWhiteSpace(Data.Poster))
                 {
                     <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
                         @GetPlaceholder(Data.SortTitle)
                     </MudText>
                 }
-            </MudButton>
-        </MudPaper>
+            </MudPaper>
+            <div class="media-card-overlay" style="">
+                <MudButton Link="@Link" Style="height: 100%; width: 100%">
+                </MudButton>
+                @if (DeleteClicked.HasDelegate)
+                {
+                    <MudIconButton Color="Color.Tertiary"
+                                   Icon="@Icons.Material.Filled.Delete"
+                                   Style="bottom: 0; position: absolute; right: 0;"
+                                   OnClick="@(() => DeleteClicked.InvokeAsync(Data))"/>
+                }
+            </div>
+        </div>
     }
     else
     {
@@ -60,6 +71,9 @@
 
     [Parameter]
     public string CardClass { get; set; }
+
+    [Parameter]
+    public EventCallback<MediaCardViewModel> DeleteClicked { get; set; }
 
     private string GetPlaceholder(string sortTitle)
     {
