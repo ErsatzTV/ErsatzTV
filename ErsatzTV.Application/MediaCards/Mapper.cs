@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.MediaCards
@@ -28,6 +29,7 @@ namespace ErsatzTV.Application.MediaCards
             TelevisionEpisodeMediaItem televisionEpisode) =>
             new(
                 televisionEpisode.Id,
+                televisionEpisode.Metadata.Aired ?? DateTime.MinValue,
                 televisionEpisode.Season.TelevisionShow.Metadata.Title,
                 televisionEpisode.Metadata.Title,
                 $"Episode {televisionEpisode.Metadata.Episode}",
@@ -38,9 +40,9 @@ namespace ErsatzTV.Application.MediaCards
         internal static MovieCardViewModel ProjectToViewModel(MovieMediaItem movie) =>
             new(
                 movie.Id,
-                movie.Metadata.Title,
-                movie.Metadata.Year.ToString(),
-                movie.Metadata.SortTitle,
+                movie.Metadata?.Title,
+                movie.Metadata?.Year?.ToString(),
+                movie.Metadata?.SortTitle,
                 movie.Poster);
 
         internal static SimpleMediaCollectionCardResultsViewModel

@@ -75,7 +75,7 @@
                     Snackbar.Add(error.Value, Severity.Error);
                     Logger.LogError("Error saving simple media collection: {Error}", error.Value);
                 },
-                () => NavigationManager.NavigateTo($"/media/collections/{Id}"));
+                () => NavigationManager.NavigateTo(_model.Id > 0 ? $"/media/collections/{_model.Id}" : "/media/collections"));
         }
     }
 

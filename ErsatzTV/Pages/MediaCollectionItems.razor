@@ -64,7 +64,7 @@
     <MudText GutterBottom="true" Typo="Typo.h4">Television Episodes</MudText>
 
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards)
+        @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
         {
             <MediaCard Data="@card"
                        Link="@($"/media/tv/episodes/{card.EpisodeId}")"
