@@ -17,6 +17,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public MovieRepository(TvContext dbContext) => _dbContext = dbContext;
 
+        public Task<Option<MovieMediaItem>> GetMovie(int movieId) =>
+            _dbContext.MovieMediaItems
+                .Include(m => m.Metadata)
+                .SingleOrDefaultAsync(m => m.Id == movieId)
+                .Map(Optional);
+
         public async Task<Either<BaseError, MovieMediaItem>> GetOrAdd(int mediaSourceId, string path)
         {
             Option<MovieMediaItem> maybeExisting = await _dbContext.MovieMediaItems

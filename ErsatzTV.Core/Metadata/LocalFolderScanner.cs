@@ -64,7 +64,8 @@ namespace ErsatzTV.Core.Metadata
             try
             {
                 if (mediaItem.Statistics is null ||
-                    mediaItem.LastWriteTime < _localFileSystem.GetLastWriteTime(mediaItem.Path))
+                    (mediaItem.Statistics.LastWriteTime ?? DateTime.MinValue) <
+                    _localFileSystem.GetLastWriteTime(mediaItem.Path))
                 {
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", mediaItem.Path);
                     await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);

@@ -71,7 +71,8 @@ namespace ErsatzTV.Core.Metadata
                     async nfoFile =>
                     {
                         if (movie.Metadata == null || movie.Metadata.Source == MetadataSource.Fallback ||
-                            movie.Metadata.LastWriteTime < _localFileSystem.GetLastWriteTime(nfoFile))
+                            (movie.Metadata.LastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(nfoFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
                             await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile);
@@ -102,10 +103,11 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         if (string.IsNullOrWhiteSpace(movie.Poster) ||
-                            movie.PosterLastWriteTime < _localFileSystem.GetLastWriteTime(posterFile))
+                            (movie.PosterLastWriteTime ?? DateTime.MinValue) <
+                            _localFileSystem.GetLastWriteTime(posterFile))
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(movie, posterFile, _movieRepository.Update);
+                            await SavePosterToDisk(movie, posterFile, _movieRepository.Update, 440);
                         }
                     });
 

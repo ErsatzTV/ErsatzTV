@@ -198,6 +198,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             Option<TelevisionEpisodeMediaItem> maybeExisting = await _dbContext.TelevisionEpisodeMediaItems
                 .Include(i => i.Metadata)
+                .Include(i => i.Statistics)
                 .SingleOrDefaultAsync(i => i.Path == path);
 
             return await maybeExisting.Match(

@@ -22,7 +22,9 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
     @foreach (MovieCardViewModel card in _data.Cards)
     {
-        <MediaCard Data="@card" DataRefreshed="@(() => RefreshData())"/>
+        <MediaCard Data="@card"
+                   DataRefreshed="@(() => RefreshData())"
+                   Link="@($"/media/movies/{card.MovieId}")"/>
     }
 </MudContainer>
 

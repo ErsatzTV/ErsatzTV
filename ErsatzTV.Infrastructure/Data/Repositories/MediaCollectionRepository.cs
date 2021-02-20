@@ -34,7 +34,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id) =>
             _dbContext.SimpleMediaCollections
                 .Include(s => s.Movies)
-                .ThenInclude(i => i.Source)
+                .ThenInclude(m => m.Source)
                 .Include(s => s.TelevisionShows)
                 .ThenInclude(s => s.Metadata)
                 .Include(s => s.TelevisionSeasons)
@@ -48,6 +48,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .AsNoTracking()
                 .Include(s => s.Movies)
                 .ThenInclude(i => i.Source)
+                .Include(s => s.Movies)
+                .ThenInclude(m => m.Metadata)
                 .Include(s => s.TelevisionShows)
                 .ThenInclude(s => s.Metadata)
                 .Include(s => s.TelevisionSeasons)

@@ -7,6 +7,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IMovieRepository
     {
+        Task<Option<MovieMediaItem>> GetMovie(int movieId);
         Task<Either<BaseError, MovieMediaItem>> GetOrAdd(int mediaSourceId, string path);
         Task<bool> Update(MovieMediaItem movie);
         Task<int> GetMovieCount();

@@ -15,14 +15,17 @@ namespace ErsatzTV.Core.Metadata
 {
     public class LocalStatisticsProvider : ILocalStatisticsProvider
     {
+        private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<LocalStatisticsProvider> _logger;
         private readonly IMediaItemRepository _mediaItemRepository;
 
         public LocalStatisticsProvider(
             IMediaItemRepository mediaItemRepository,
+            ILocalFileSystem localFileSystem,
             ILogger<LocalStatisticsProvider> logger)
         {
             _mediaItemRepository = mediaItemRepository;
+            _localFileSystem = localFileSystem;
             _logger = logger;
         }
 
@@ -52,6 +55,7 @@ namespace ErsatzTV.Core.Metadata
 
             bool durationChange = mediaItem.Statistics.Duration != statistics.Duration;
 
+            mediaItem.Statistics.LastWriteTime = _localFileSystem.GetLastWriteTime(mediaItem.Path);
             mediaItem.Statistics.Duration = statistics.Duration;
             mediaItem.Statistics.AudioCodec = statistics.AudioCodec;
             mediaItem.Statistics.SampleAspectRatio = statistics.SampleAspectRatio;
