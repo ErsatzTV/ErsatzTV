@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Linq;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.MediaCards
 {
@@ -21,6 +22,14 @@ namespace ErsatzTV.Application.MediaCards
                 televisionSeason.Poster,
                 televisionSeason.Number == 0 ? "S" : televisionSeason.Number.ToString());
 
+        internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
+            TelevisionEpisodeMediaItem televisionEpisode) =>
+            new(
+                televisionEpisode.Metadata.Title,
+                string.Empty,
+                televisionEpisode.Metadata.SortTitle,
+                televisionEpisode.Poster);
+
         internal static MovieCardViewModel ProjectToViewModel(MovieMediaItem movie) =>
             new(
                 movie.Id,
@@ -28,6 +37,15 @@ namespace ErsatzTV.Application.MediaCards
                 movie.Metadata.Year.ToString(),
                 movie.Metadata.SortTitle,
                 movie.Poster);
+
+        internal static SimpleMediaCollectionCardResultsViewModel
+            ProjectToViewModel(SimpleMediaCollection collection) =>
+            new(
+                collection.Name,
+                collection.Movies.Map(ProjectToViewModel).ToList(),
+                collection.TelevisionShows.Map(ProjectToViewModel).ToList(),
+                collection.TelevisionSeasons.Map(ProjectToViewModel).ToList(),
+                collection.TelevisionEpisodes.Map(ProjectToViewModel).ToList());
 
         private static string GetSeasonName(int number) =>
             number == 0 ? "Specials" : $"Season {number}";

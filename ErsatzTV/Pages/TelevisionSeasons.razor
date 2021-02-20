@@ -4,7 +4,11 @@
 @using ErsatzTV.Application.Television.Queries
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
 @inject IMediator Mediator
+@inject IDialogService Dialog
+@inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <MudCard Class="mb-6">
@@ -18,9 +22,15 @@
                     <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_show.Year</MudText>
                     <MudText Style="flex-grow: 1">@_show.Plot</MudText>
                     <div>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="true">
-                            Add To Schedule
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="@AddToCollection">
+                            Add To Collection
                         </MudButton>
+                        @* <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" Disabled="true"> *@
+                        @*     Add To Schedule *@
+                        @* </MudButton> *@
                     </div>
                 </div>
             </MudCardContent>
@@ -60,5 +70,19 @@
     private string SeasonPlaceholder(string sortTitle) =>
         Optional(_data.Cards.SingleOrDefault(d => d.SortTitle == sortTitle))
             .Match(vm => vm.Placeholder, () => sortTitle.Substring(0, 1).ToUpperInvariant());
+
+    private async Task AddToCollection()
+    {
+        var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", _show.Title } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+        {
+            await Mediator.Send(new AddTelevisionShowToSimpleMediaCollection(collection.Id, ShowId));
+            NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
+        }
+    }
 
 }

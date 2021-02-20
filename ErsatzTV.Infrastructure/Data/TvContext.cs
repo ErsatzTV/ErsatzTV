@@ -23,7 +23,6 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<TelevisionEpisodeMediaItem> TelevisionEpisodeMediaItems { get; set; }
         public DbSet<MediaCollection> MediaCollections { get; set; }
         public DbSet<SimpleMediaCollection> SimpleMediaCollections { get; set; }
-        public DbSet<TelevisionMediaCollection> TelevisionMediaCollections { get; set; }
         public DbSet<ProgramSchedule> ProgramSchedules { get; set; }
         public DbSet<Playout> Playouts { get; set; }
         public DbSet<PlayoutItem> PlayoutItems { get; set; }

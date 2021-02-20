@@ -1,0 +1,66 @@
+﻿@page "/media/collections/{Id:int}"
+@using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.MediaCards.Queries
+@inject NavigationManager NavigationManager
+@inject IMediator Mediator
+@inject ILogger<MediaCollectionItems> Logger
+@inject ISnackbar Snackbar
+
+<div class="mb-6" style="display: flex; flex-direction: row;">
+    <MudText GutterBottom="true" Typo="Typo.h2">@_data.Name</MudText>
+    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                   Link="@($"/media/collections/{Id}/edit")"
+                   Style="margin-bottom: auto; margin-top: auto;"/>
+</div>
+
+@if (_data.MovieCards.Any())
+{
+    <MudText GutterBottom="true" Typo="Typo.h4">Movies</MudText>
+
+    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        @foreach (MovieCardViewModel card in _data.MovieCards)
+        {
+            <MediaCard Data="@card" Link="@($"/media/movies/{card.MovieId}")"/>
+        }
+    </MudContainer>
+}
+
+@if (_data.ShowCards.Any())
+{
+    <MudText GutterBottom="true" Typo="Typo.h4">Television Shows</MudText>
+
+    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        @foreach (TelevisionShowCardViewModel card in _data.ShowCards)
+        {
+            <MediaCard Data="@card" Link="@($"/media/tv/shows/{card.TelevisionShowId}")"/>
+        }
+    </MudContainer>
+}
+
+@* <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid"> *@
+@*     @foreach (var card in _data.Cards) *@
+@*     { *@
+@*         <MediaCard Data="@card" CustomPlaceholder="@SeasonPlaceholder" Link="@($"/media/tv/shows/{ShowId}/seasons/{card.TelevisionSeasonId}")" DataRefreshed="@(() => RefreshData())"/> *@
+@*     } *@
+@* </MudContainer> *@
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private SimpleMediaCollectionCardResultsViewModel _data;
+
+    protected override async Task OnParametersSetAsync() => await RefreshData();
+
+    private async Task RefreshData()
+    {
+        Either<BaseError, SimpleMediaCollectionCardResultsViewModel> maybeResult =
+            await Mediator.Send(new GetSimpleMediaCollectionCards(Id));
+
+        maybeResult.Match(
+            result => _data = result,
+            error => NavigationManager.NavigateTo("404"));
+    }
+
+}

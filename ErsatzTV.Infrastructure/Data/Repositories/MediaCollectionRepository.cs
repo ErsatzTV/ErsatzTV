@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ErsatzTV.Core.AggregateModels;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -28,17 +27,34 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.MediaCollections.SingleOrDefaultAsync(c => c.Id == id).Map(Optional);
 
         public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollection(int id) =>
-            Get(id).Map(c => c.OfType<SimpleMediaCollection>().HeadOrNone());
-
-        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id) =>
             _dbContext.SimpleMediaCollections
-                .Include(s => s.Items)
-                .ThenInclude(i => i.Source)
                 .SingleOrDefaultAsync(c => c.Id == id)
                 .Map(Optional);
 
-        public Task<Option<TelevisionMediaCollection>> GetTelevisionMediaCollection(int id) =>
-            Get(id).Map(c => c.OfType<TelevisionMediaCollection>().HeadOrNone());
+        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id) =>
+            _dbContext.SimpleMediaCollections
+                .Include(s => s.Movies)
+                .ThenInclude(i => i.Source)
+                .Include(s => s.TelevisionShows)
+                .ThenInclude(s => s.Metadata)
+                .Include(s => s.TelevisionSeasons)
+                .Include(s => s.TelevisionEpisodes)
+                .ThenInclude(s => s.Metadata)
+                .SingleOrDefaultAsync(c => c.Id == id)
+                .Map(Optional);
+
+        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItemsUntracked(int id) =>
+            _dbContext.SimpleMediaCollections
+                .AsNoTracking()
+                .Include(s => s.Movies)
+                .ThenInclude(i => i.Source)
+                .Include(s => s.TelevisionShows)
+                .ThenInclude(s => s.Metadata)
+                .Include(s => s.TelevisionSeasons)
+                .Include(s => s.TelevisionEpisodes)
+                .ThenInclude(s => s.Metadata)
+                .SingleOrDefaultAsync(c => c.Id == id)
+                .Map(Optional);
 
         public Task<List<SimpleMediaCollection>> GetSimpleMediaCollections() =>
             _dbContext.SimpleMediaCollections.ToListAsync();
@@ -46,74 +62,22 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<MediaCollection>> GetAll() =>
             _dbContext.MediaCollections.ToListAsync();
 
-        public Task<List<MediaCollectionSummary>> GetSummaries(string searchString) =>
-            _dbContext.MediaCollectionSummaries.FromSqlRaw(
-                @"SELECT mc.Id, mc.Name, Count(mismc.ItemsId) AS ItemCount, true AS IsSimple
-                FROM MediaCollections mc
-                    INNER JOIN SimpleMediaCollections smc ON smc.Id = mc.Id
-                    LEFT OUTER JOIN MediaItemSimpleMediaCollection mismc ON mismc.SimpleMediaCollectionsId = mc.Id
-                WHERE mc.Name LIKE {0}
-                GROUP BY mc.Id, mc.Name
-                UNION ALL
-                SELECT mc.Id, mc.Name, Count(tem.Id) AS ItemCount, false AS IsSimple
-                FROM MediaCollections mc
-                    INNER JOIN TelevisionMediaCollections tmc ON tmc.Id = mc.Id
-                    LEFT OUTER JOIN TelevisionEpisodeMetadata tem ON (tmc.SeasonNumber IS NULL OR tem.Season = tmc.SeasonNumber)
-                                                         AND tem.Title = tmc.ShowTitle
-                WHERE mc.Name LIKE {0}
-                GROUP BY mc.Id, mc.Name",
-                $"%{searchString}%").ToListAsync();
-
         public Task<Option<List<MediaItem>>> GetItems(int id) =>
             Get(id).MapT(
                 collection => collection switch
                 {
                     SimpleMediaCollection s => SimpleItems(s),
-                    TelevisionMediaCollection t => TelevisionItems(t),
                     _ => throw new NotSupportedException($"Unsupported collection type {collection.GetType().Name}")
                 }).Bind(x => x.Sequence());
 
         public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id) =>
             GetSimpleMediaCollection(id).MapT(SimpleItems).Bind(x => x.Sequence());
 
-        public Task<Option<List<MediaItem>>> GetTelevisionMediaCollectionItems(int id) =>
-            GetTelevisionMediaCollection(id).MapT(TelevisionItems).Bind(x => x.Sequence());
-
         public Task Update(SimpleMediaCollection collection)
         {
             _dbContext.SimpleMediaCollections.Update(collection);
             return _dbContext.SaveChangesAsync();
         }
-
-        public async Task<bool> InsertOrIgnore(TelevisionMediaCollection collection)
-        {
-            if (!_dbContext.TelevisionMediaCollections.Any(
-                existing => existing.ShowTitle == collection.ShowTitle &&
-                            existing.SeasonNumber == collection.SeasonNumber))
-            {
-                await _dbContext.TelevisionMediaCollections.AddAsync(collection);
-                return await _dbContext.SaveChangesAsync() > 0;
-            }
-
-            // no change
-            return false;
-        }
-
-        public Task<Unit> ReplaceItems(int collectionId, List<MediaItem> mediaItems) =>
-            GetSimpleMediaCollection(collectionId).IfSomeAsync(
-                async c =>
-                {
-                    await SimpleItems(c);
-
-                    c.Items.Clear();
-                    foreach (MediaItem mediaItem in mediaItems)
-                    {
-                        c.Items.Add(mediaItem);
-                    }
-
-                    _dbContext.SimpleMediaCollections.Update(c);
-                    await _dbContext.SaveChangesAsync();
-                });
 
         public async Task Delete(int mediaCollectionId)
         {
@@ -122,36 +86,74 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteEmptyTelevisionCollections()
-        {
-            List<int> ids = await _dbContext.GenericIntegerIds.FromSqlRaw(
-                    @"SELECT mc.Id FROM MediaCollections mc
-INNER JOIN TelevisionMediaCollections t on mc.Id = t.Id
-WHERE NOT EXISTS
-(SELECT 1 FROM MediaItems mi WHERE t.ShowTitle = mi.Metadata_Title AND (t.SeasonNumber IS NULL OR t.SeasonNumber = mi.Metadata_SeasonNumber))")
-                .Map(i => i.Id)
-                .ToListAsync();
-
-            List<MediaCollection> toDelete =
-                await _dbContext.MediaCollections.Where(mc => ids.Contains(mc.Id)).ToListAsync();
-            _dbContext.MediaCollections.RemoveRange(toDelete);
-
-            await _dbContext.SaveChangesAsync();
-        }
-
         private async Task<List<MediaItem>> SimpleItems(SimpleMediaCollection collection)
         {
-            await _dbContext.Entry(collection).Collection(c => c.Items).LoadAsync();
-            return collection.Items.ToList();
+            var result = new List<MediaItem>();
+
+            await _dbContext.Entry(collection).Collection(c => c.Movies).LoadAsync();
+            result.AddRange(collection.Movies);
+
+            result.AddRange(await GetTelevisionShowItems(collection));
+            result.AddRange(await GetTelevisionSeasonItems(collection));
+            result.AddRange(await GetTelevisionEpisodeItems(collection));
+
+            return result.Distinct().ToList();
         }
 
-        // TODO: reimplement this
-        private Task<List<MediaItem>> TelevisionItems(TelevisionMediaCollection collection) =>
-            new List<MediaItem>().AsTask();
+        private async Task<List<MediaItem>> GetTelevisionShowItems(SimpleMediaCollection collection)
+        {
+            // TODO: would be nice to get the media items in one go, but ef...
+            List<int> showItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
+                    @"select tmi.Id
+from TelevisionEpisodes tmi
+inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
+inner join TelevisionShows ts on ts.Id = tsn.TelevisionShowId
+inner join SimpleMediaCollectionShows s on s.TelevisionShowsId = ts.Id
+where s.SimpleMediaCollectionsId = {0}",
+                    collection.Id)
+                .Select(i => i.Id)
+                .ToListAsync();
 
-        // _dbContext.MediaItems
-        //     .Filter(c => c.Metadata.Title == collection.ShowTitle)
-        //     .Filter(c => collection.SeasonNumber == null || c.Metadata.SeasonNumber == collection.SeasonNumber)
-        //     .ToListAsync();
+            return await _dbContext.MediaItems
+                .AsNoTracking()
+                .Where(mi => showItemIds.Contains(mi.Id))
+                .ToListAsync();
+        }
+
+        private async Task<List<MediaItem>> GetTelevisionSeasonItems(SimpleMediaCollection collection)
+        {
+            // TODO: would be nice to get the media items in one go, but ef...
+            List<int> seasonItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
+                    @"select tmi.Id
+from TelevisionEpisodes tmi
+inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
+inner join SimpleMediaCollectionSeasons s on s.TelevisionSeasonsId = tsn.Id
+where s.SimpleMediaCollectionsId = {0}",
+                    collection.Id)
+                .Select(i => i.Id)
+                .ToListAsync();
+
+            return await _dbContext.MediaItems
+                .AsNoTracking()
+                .Where(mi => seasonItemIds.Contains(mi.Id))
+                .ToListAsync();
+        }
+
+        private async Task<List<MediaItem>> GetTelevisionEpisodeItems(SimpleMediaCollection collection)
+        {
+            // TODO: would be nice to get the media items in one go, but ef...
+            List<int> episodeItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
+                    @"select s.TelevisionEpisodesId as Id
+from SimpleMediaCollectionEpisodes s
+where s.SimpleMediaCollectionsId = {0}",
+                    collection.Id)
+                .Select(i => i.Id)
+                .ToListAsync();
+
+            return await _dbContext.MediaItems
+                .AsNoTracking()
+                .Where(mi => episodeItemIds.Contains(mi.Id))
+                .ToListAsync();
+        }
     }
 }

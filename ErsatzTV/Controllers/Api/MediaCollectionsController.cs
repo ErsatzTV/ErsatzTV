@@ -44,14 +44,5 @@ namespace ErsatzTV.Controllers.Api
         [ProducesResponseType(404)]
         public Task<IActionResult> GetItems(int id) =>
             _mediator.Send(new GetSimpleMediaCollectionItems(id)).ToActionResult();
-
-        [HttpPut("{id}/items")]
-        [ProducesResponseType(typeof(IEnumerable<MediaItemViewModel>), 200)]
-        [ProducesResponseType(404)]
-        public Task<IActionResult> PutItems(
-            int id,
-            [Required] [FromBody]
-            List<int> mediaItemIds) =>
-            _mediator.Send(new ReplaceSimpleMediaCollectionItems(id, mediaItemIds)).ToActionResult();
     }
 }

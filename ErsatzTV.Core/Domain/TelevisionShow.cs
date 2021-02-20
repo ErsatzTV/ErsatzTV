@@ -11,5 +11,6 @@ namespace ErsatzTV.Core.Domain
         public List<TelevisionSeason> Seasons { get; set; }
         public string Poster { get; set; }
         public DateTime? PosterLastWriteTime { get; set; }
+        public List<SimpleMediaCollection> SimpleMediaCollections { get; set; }
     }
 }

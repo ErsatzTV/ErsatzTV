@@ -45,7 +45,7 @@
 
     [Parameter]
     public EventCallback<Unit> DataRefreshed { get; set; }
-    
+
     [Parameter]
     public Func<string, string> CustomPlaceholder { get; set; }
 
@@ -55,7 +55,7 @@
         {
             return CustomPlaceholder(sortTitle);
         }
-        
+
         string first = sortTitle.Substring(0, 1).ToUpperInvariant();
         return int.TryParse(first, out _) ? "#" : first;
     }
