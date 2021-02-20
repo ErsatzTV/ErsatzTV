@@ -13,15 +13,18 @@
     <MudBreadcrumbs Items="_breadcrumbs" Class="mb-6"></MudBreadcrumbs>
     <MudCard Class="mb-6">
         <div style="display: flex; flex-direction: row;">
-            <MudPaper Style="flex-shrink: 0;">
-                <MudCardMedia Image="@($"/posters/{_season.Poster}")" Style="height: 440px; width: 304px;"/>
-            </MudPaper>
-            <MudCardContent>
+            @if (!string.IsNullOrWhiteSpace(_season.Poster))
+            {
+                <MudPaper Style="flex-shrink: 0;">
+                    <MudCardMedia Image="@($"/posters/{_season.Poster}")" Style="height: 440px; width: 304px;"/>
+                </MudPaper>
+            }
+            <MudCardContent Class="mx-3 my-3">
                 <div style="display: flex; flex-direction: column; height: 100%">
                     <MudText Typo="Typo.h3">@_season.Title</MudText>
                     <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_season.Year</MudText>
                     <MudText Style="flex-grow: 1">@_season.Plot</MudText>
-                    <div>
+                    <div class="mt-6">
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
                                    StartIcon="@Icons.Material.Filled.Add"

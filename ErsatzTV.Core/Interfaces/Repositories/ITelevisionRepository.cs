@@ -16,6 +16,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<TelevisionSeason>> GetSeason(int televisionSeasonId);
         Task<int> GetSeasonCount(int televisionShowId);
         Task<List<TelevisionSeason>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize);
+        Task<Option<TelevisionEpisodeMediaItem>> GetEpisode(int televisionEpisodeId);
         Task<int> GetEpisodeCount(int televisionSeasonId);
         Task<List<TelevisionEpisodeMediaItem>> GetPagedEpisodes(int televisionSeasonId, int pageNumber, int pageSize);
         Task<Option<TelevisionShow>> GetShowByPath(int mediaSourceId, string path);

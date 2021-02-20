@@ -13,10 +13,13 @@
     <MudBreadcrumbs Items="_breadcrumbs" Class="mb-6"></MudBreadcrumbs>
     <MudCard Class="mb-6">
         <div style="display: flex; flex-direction: row;">
-            <MudPaper Style="flex-shrink: 0;">
-                <MudCardMedia Image="@($"/posters/{_show.Poster}")" Style="height: 440px; width: 304px;"/>
-            </MudPaper>
-            <MudCardContent>
+            @if (!string.IsNullOrWhiteSpace(_show.Poster))
+            {
+                <MudPaper Style="flex-shrink: 0;">
+                    <MudCardMedia Image="@($"/posters/{_show.Poster}")" Style="height: 440px; width: 304px;"/>
+                </MudPaper>
+            }
+            <MudCardContent Class="mx-3 my-3">
                 <div style="display: flex; flex-direction: column; height: 100%">
                     <MudText Typo="Typo.h3">@_show.Title</MudText>
                     <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_show.Year</MudText>

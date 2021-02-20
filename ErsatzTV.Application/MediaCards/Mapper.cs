@@ -28,6 +28,7 @@ namespace ErsatzTV.Application.MediaCards
             TelevisionEpisodeMediaItem televisionEpisode) =>
             new(
                 televisionEpisode.Id,
+                televisionEpisode.Season.TelevisionShow.Metadata.Title,
                 televisionEpisode.Metadata.Title,
                 $"Episode {televisionEpisode.Metadata.Episode}",
                 televisionEpisode.Metadata.Episode.ToString(),

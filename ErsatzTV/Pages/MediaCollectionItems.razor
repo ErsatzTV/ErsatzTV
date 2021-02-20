@@ -45,19 +45,29 @@
         @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards)
         {
             <MediaCard Data="@card"
-                       Link="@($"/media/tv/Seasons/{card.TelevisionSeasonId}")"
+                       Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
                        Title="@card.ShowTitle"
                        Subtitle="@card.Title"/>
         }
     </MudContainer>
 }
 
-@* <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid"> *@
-@*     @foreach (var card in _data.Cards) *@
-@*     { *@
-@*         <MediaCard Data="@card" CustomPlaceholder="@SeasonPlaceholder" Link="@($"/media/tv/shows/{ShowId}/seasons/{card.TelevisionSeasonId}")" DataRefreshed="@(() => RefreshData())"/> *@
-@*     } *@
-@* </MudContainer> *@
+@if (_data.EpisodeCards.Any())
+{
+    <MudText GutterBottom="true" Typo="Typo.h4">Television Episodes</MudText>
+
+    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards)
+        {
+            <MediaCard Data="@card"
+                       Link="@($"/media/tv/episodes/{card.EpisodeId}")"
+                       Title="@card.ShowTitle"
+                       Subtitle="@card.Title"
+                       ContainerClass="media-card-episode-container mx-2"
+                       CardClass="media-card-episode"/>
+        }
+    </MudContainer>
+}
 
 @code {
 

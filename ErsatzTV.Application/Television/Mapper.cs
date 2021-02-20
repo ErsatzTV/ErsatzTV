@@ -12,7 +12,16 @@ namespace ErsatzTV.Application.Television
                 season.TelevisionShowId,
                 season.TelevisionShow.Metadata.Title,
                 season.TelevisionShow.Metadata.Year?.ToString(),
-                $"Season {season.Number}",
+                season.Number == 0 ? "Specials" : $"Season {season.Number}",
                 season.Poster);
+
+        internal static TelevisionEpisodeViewModel ProjectToViewModel(TelevisionEpisodeMediaItem episode) =>
+            new(
+                episode.Season.TelevisionShowId,
+                episode.SeasonId,
+                episode.Metadata.Episode,
+                episode.Metadata.Title,
+                episode.Metadata.Plot,
+                episode.Poster);
     }
 }

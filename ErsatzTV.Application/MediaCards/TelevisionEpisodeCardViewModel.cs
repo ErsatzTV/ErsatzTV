@@ -3,6 +3,7 @@
     public record TelevisionEpisodeCardViewModel
     (
         int EpisodeId,
+        string ShowTitle,
         string Title,
         string Subtitle,
         string SortTitle,

@@ -82,6 +82,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
+        public Task<Option<TelevisionEpisodeMediaItem>> GetEpisode(int televisionEpisodeId) =>
+            _dbContext.TelevisionEpisodeMediaItems
+                .AsNoTracking()
+                .Include(s => s.Season)
+                .Include(s => s.Metadata)
+                .SingleOrDefaultAsync(s => s.Id == televisionEpisodeId)
+                .Map(Optional);
+
         public Task<int> GetEpisodeCount(int televisionSeasonId) =>
             _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()
@@ -95,6 +103,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()
                 .Include(e => e.Metadata)
+                .Include(e => e.Season)
+                .ThenInclude(s => s.TelevisionShow)
+                .ThenInclude(s => s.Metadata)
                 .Where(e => e.SeasonId == televisionSeasonId)
                 .OrderBy(s => s.Metadata.Episode)
                 .Skip((pageNumber - 1) * pageSize)
