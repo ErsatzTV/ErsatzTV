@@ -15,13 +15,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public MediaItemRepository(TvContext dbContext) => _dbContext = dbContext;
 
-        public async Task<int> Add(MediaItem mediaItem)
-        {
-            await _dbContext.MediaItems.AddAsync(mediaItem);
-            await _dbContext.SaveChangesAsync();
-            return mediaItem.Id;
-        }
-
         public Task<Option<MediaItem>> Get(int id) =>
             _dbContext.MediaItems
                 .Include(i => i.Source)
@@ -51,23 +44,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return episodeData.OfType<MediaItem>().Concat(movieData.OfType<MediaItem>()).ToListAsync();
         }
 
-        public Task<List<MediaItem>> GetAllByMediaSourceId(int mediaSourceId) =>
-            _dbContext.MediaItems
-                .Filter(i => i.MediaSourceId == mediaSourceId)
-                .ToListAsync();
-
         public async Task<bool> Update(MediaItem mediaItem)
         {
             _dbContext.MediaItems.Update(mediaItem);
             return await _dbContext.SaveChangesAsync() > 0;
         }
-
-        public Task<Unit> Delete(int mediaItemId) =>
-            _dbContext.MediaItems.FindAsync(mediaItemId).AsTask().Bind(
-                mediaItem =>
-                {
-                    _dbContext.MediaItems.Remove(mediaItem);
-                    return _dbContext.SaveChangesAsync();
-                }).ToUnit();
     }
 }
