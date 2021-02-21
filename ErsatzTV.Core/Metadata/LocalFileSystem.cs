@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using static LanguageExt.Prelude;
@@ -22,5 +23,6 @@ namespace ErsatzTV.Core.Metadata
             Try(Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)).IfFail(new List<string>());
 
         public bool FileExists(string path) => File.Exists(path);
+        public Task<byte[]> ReadAllBytes(string path) => File.ReadAllBytesAsync(path);
     }
 }

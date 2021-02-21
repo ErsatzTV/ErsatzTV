@@ -14,24 +14,24 @@ namespace ErsatzTV.Core.Metadata
 {
     public abstract class LocalFolderScanner
     {
-        protected static readonly List<string> VideoFileExtensions = new()
+        public static readonly List<string> VideoFileExtensions = new()
         {
             ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
             ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts"
         };
 
-        protected static readonly List<string> ImageFileExtensions = new()
+        public static readonly List<string> ImageFileExtensions = new()
         {
             "jpg", "jpeg", "png", "gif", "tbn"
         };
 
-        protected static readonly List<string> ExtraFiles = new()
+        public static readonly List<string> ExtraFiles = new()
         {
             "behindthescenes", "deleted", "featurette",
             "interview", "scene", "short", "trailer", "other"
         };
 
-        protected static readonly List<string> ExtraDirectories = new List<string>
+        public static readonly List<string> ExtraDirectories = new List<string>
             {
                 "behind the scenes", "deleted scenes", "featurettes",
                 "interviews", "scenes", "shorts", "trailers", "other",
@@ -85,7 +85,7 @@ namespace ErsatzTV.Core.Metadata
             Func<T, Task<bool>> update,
             int height = 220) where T : IHasAPoster
         {
-            byte[] originalBytes = await File.ReadAllBytesAsync(posterPath);
+            byte[] originalBytes = await _localFileSystem.ReadAllBytes(posterPath);
             Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, height, null);
             await maybeHash.Match(
                 hash =>
@@ -102,7 +102,7 @@ namespace ErsatzTV.Core.Metadata
         }
 
         protected Task<Either<BaseError, string>> SavePosterToDisk(string posterPath, int height = 220) =>
-            File.ReadAllBytesAsync(posterPath)
+            _localFileSystem.ReadAllBytes(posterPath)
                 .Bind(bytes => _imageCache.ResizeAndSaveImage(bytes, height, null));
     }
 }
