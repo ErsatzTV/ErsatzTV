@@ -45,6 +45,7 @@ namespace ErsatzTV.Core.Scheduling
         {
             var collectionKeys = playout.ProgramSchedule.Items
                 .Map(CollectionKeyForItem)
+                .Distinct()
                 .ToList();
 
             IEnumerable<Tuple<CollectionKey, List<MediaItem>>> tuples = await collectionKeys.Map(

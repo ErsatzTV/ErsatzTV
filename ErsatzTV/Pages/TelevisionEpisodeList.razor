@@ -5,6 +5,8 @@
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Application.ProgramSchedules.Commands
 @inject IMediator Mediator
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
@@ -30,6 +32,13 @@
                                    StartIcon="@Icons.Material.Filled.Add"
                                    OnClick="@AddToCollection">
                             Add To Collection
+                        </MudButton>
+                        <MudButton Class="ml-3"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Schedule"
+                                   OnClick="@AddToSchedule">
+                            Add To Schedule
                         </MudButton>
                     </div>
                 </div>
@@ -92,6 +101,21 @@
         {
             await Mediator.Send(new AddTelevisionSeasonToSimpleMediaCollection(collection.Id, SeasonId));
             NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
+        }
+    }
+    
+    
+    private async Task AddToSchedule()
+    {
+        var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Plot}" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<AddToScheduleDialog>("Add To Schedule", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
+        {
+            await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, SeasonId, null, null, null));
+            NavigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }
 
