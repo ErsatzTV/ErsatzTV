@@ -61,7 +61,14 @@ namespace ErsatzTV.ViewModels
         public TelevisionShowViewModel TelevisionShow { get; set; }
         public TelevisionSeasonViewModel TelevisionSeason { get; set; }
 
-        public string CollectionName { get; set; }
+        public string CollectionName => CollectionType switch
+        {
+            ProgramScheduleItemCollectionType.Collection => MediaCollection?.Name,
+            ProgramScheduleItemCollectionType.TelevisionShow => $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
+            ProgramScheduleItemCollectionType.TelevisionSeason =>
+                $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",
+            _ => string.Empty
+        };
 
         public int? MultipleCount
         {

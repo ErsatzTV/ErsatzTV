@@ -20,11 +20,15 @@
         <col/>
         <col/>
         <col style="width: 60px;"/>
+        <col style="width: 60px;"/>
+        <col style="width: 60px;"/>
     </ColGroup>
     <HeaderContent>
         <MudTh>Start Time</MudTh>
         <MudTh>Media Collection</MudTh>
         <MudTh>Playout Mode</MudTh>
+        <MudTh/>
+        <MudTh/>
         <MudTh/>
     </HeaderContent>
     <RowTemplate>
@@ -48,7 +52,21 @@
             </MudText>
         </MudTd>
         <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => RemoveScheduleItem(context))"></MudIconButton>
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                           OnClick="@(_ => MoveItemUp(context))"
+                           Disabled="@(_schedule.Items.All(x => x.Index >= context.Index))">
+            </MudIconButton>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                           OnClick="@(_ => MoveItemDown(context))"
+                           Disabled="@(_schedule.Items.All(x => x.Index <= context.Index))">
+            </MudIconButton>
+        </MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                           OnClick="@(_ => RemoveScheduleItem(context))">
+            </MudIconButton>
         </MudTd>
     </RowTemplate>
     <PagerContent>
@@ -170,8 +188,7 @@
             CollectionType = item.CollectionType,
             MediaCollection = item.MediaCollection,
             TelevisionShow = item.TelevisionShow,
-            TelevisionSeason = item.TelevisionSeason,
-            CollectionName = item.Name
+            TelevisionSeason = item.TelevisionSeason
         };
 
         switch (item)
@@ -206,6 +223,24 @@
     {
         _selectedItem = null;
         _schedule.Items.Remove(item);
+    }
+
+    private void MoveItemUp(ProgramScheduleItemEditViewModel item)
+    {
+    // swap with lower index
+        ProgramScheduleItemEditViewModel toSwap = _schedule.Items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
+        int temp = toSwap.Index;
+        toSwap.Index = item.Index;
+        item.Index = temp;
+    }
+
+    private void MoveItemDown(ProgramScheduleItemEditViewModel item)
+    {
+    // swap with higher index
+        ProgramScheduleItemEditViewModel toSwap = _schedule.Items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
+        int temp = toSwap.Index;
+        toSwap.Index = item.Index;
+        item.Index = temp;
     }
 
     private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
