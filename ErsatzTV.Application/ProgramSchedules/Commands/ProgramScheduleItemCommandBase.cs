@@ -53,6 +53,40 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             return programSchedule;
         }
 
+        protected Validation<BaseError, ProgramSchedule> CollectionTypeMustBeValid(
+            IProgramScheduleItemRequest item,
+            ProgramSchedule programSchedule)
+        {
+            switch (item.CollectionType)
+            {
+                case ProgramScheduleItemCollectionType.Collection:
+                    if (item.MediaCollectionId is null)
+                    {
+                        return BaseError.New("[MediaCollection] is required for collection type 'Collection'");
+                    }
+
+                    break;
+                case ProgramScheduleItemCollectionType.TelevisionShow:
+                    if (item.TelevisionShowId is null)
+                    {
+                        return BaseError.New("[TelevisionShow] is required for collection type 'TelevisionShow'");
+                    }
+
+                    break;
+                case ProgramScheduleItemCollectionType.TelevisionSeason:
+                    if (item.TelevisionSeasonId is null)
+                    {
+                        return BaseError.New("[TelevisionSeason] is required for collection type 'TelevisionSeason'");
+                    }
+
+                    break;
+                default:
+                    return BaseError.New("[CollectionType] is invalid");
+            }
+
+            return programSchedule;
+        }
+
         protected ProgramScheduleItem BuildItem(
             ProgramSchedule programSchedule,
             int index,
@@ -64,21 +98,30 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
                     StartTime = item.StartTime,
-                    MediaCollectionId = item.MediaCollectionId
+                    CollectionType = item.CollectionType,
+                    MediaCollectionId = item.MediaCollectionId,
+                    TelevisionShowId = item.TelevisionShowId,
+                    TelevisionSeasonId = item.TelevisionSeasonId
                 },
                 PlayoutMode.One => new ProgramScheduleItemOne
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
                     StartTime = item.StartTime,
-                    MediaCollectionId = item.MediaCollectionId
+                    CollectionType = item.CollectionType,
+                    MediaCollectionId = item.MediaCollectionId,
+                    TelevisionShowId = item.TelevisionShowId,
+                    TelevisionSeasonId = item.TelevisionSeasonId
                 },
                 PlayoutMode.Multiple => new ProgramScheduleItemMultiple
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
                     StartTime = item.StartTime,
+                    CollectionType = item.CollectionType,
                     MediaCollectionId = item.MediaCollectionId,
+                    TelevisionShowId = item.TelevisionShowId,
+                    TelevisionSeasonId = item.TelevisionSeasonId,
                     Count = item.MultipleCount.GetValueOrDefault()
                 },
                 PlayoutMode.Duration => new ProgramScheduleItemDuration
@@ -86,7 +129,10 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
                     StartTime = item.StartTime,
+                    CollectionType = item.CollectionType,
                     MediaCollectionId = item.MediaCollectionId,
+                    TelevisionShowId = item.TelevisionShowId,
+                    TelevisionSeasonId = item.TelevisionSeasonId,
                     PlayoutDuration = item.PlayoutDuration.GetValueOrDefault(),
                     OfflineTail = item.OfflineTail.GetValueOrDefault()
                 },

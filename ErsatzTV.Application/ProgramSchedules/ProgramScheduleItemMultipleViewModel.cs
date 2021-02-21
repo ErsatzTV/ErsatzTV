@@ -1,5 +1,6 @@
 ﻿using System;
 using ErsatzTV.Application.MediaCollections;
+using ErsatzTV.Application.Television;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules
@@ -11,14 +12,20 @@ namespace ErsatzTV.Application.ProgramSchedules
             int index,
             StartType startType,
             TimeSpan? startTime,
+            ProgramScheduleItemCollectionType collectionType,
             MediaCollectionViewModel mediaCollection,
+            TelevisionShowViewModel televisionShow,
+            TelevisionSeasonViewModel televisionSeason,
             int count) : base(
             id,
             index,
             startType,
             startTime,
             PlayoutMode.Multiple,
-            mediaCollection) =>
+            collectionType,
+            mediaCollection,
+            televisionShow,
+            televisionSeason) =>
             Count = count;
 
         public int Count { get; }

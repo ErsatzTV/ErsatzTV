@@ -309,7 +309,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
-            var builder = new PlayoutBuilder(fakeRepository, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -388,7 +389,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
-            var builder = new PlayoutBuilder(fakeRepository, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(7);
@@ -473,7 +475,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
-            var builder = new PlayoutBuilder(fakeRepository, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -562,7 +565,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
-            var builder = new PlayoutBuilder(fakeRepository, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -620,7 +624,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             };
 
             var collectionRepo = new FakeMediaCollectionRepository(Map((mediaCollection.Id, mediaItems)));
-            var builder = new PlayoutBuilder(collectionRepo, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(collectionRepo, televisionRepo, _logger);
 
             var items = new List<ProgramScheduleItem> { Flood(mediaCollection) };
 

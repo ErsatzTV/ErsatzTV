@@ -29,14 +29,15 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             _mediaCollectionRepository.Add(c).Map(ProjectToViewModel);
 
         private Task<Validation<BaseError, SimpleMediaCollection>> Validate(CreateSimpleMediaCollection request) =>
-            ValidateName(request).MapT(name => new SimpleMediaCollection
-            {
-                Name = name,
-                Movies = new List<MovieMediaItem>(),
-                TelevisionShows = new List<TelevisionShow>(),
-                TelevisionEpisodes = new List<TelevisionEpisodeMediaItem>(),
-                TelevisionSeasons = new List<TelevisionSeason>()
-            });
+            ValidateName(request).MapT(
+                name => new SimpleMediaCollection
+                {
+                    Name = name,
+                    Movies = new List<MovieMediaItem>(),
+                    TelevisionShows = new List<TelevisionShow>(),
+                    TelevisionEpisodes = new List<TelevisionEpisodeMediaItem>(),
+                    TelevisionSeasons = new List<TelevisionSeason>()
+                });
 
         private async Task<Validation<BaseError, string>> ValidateName(CreateSimpleMediaCollection createCollection)
         {

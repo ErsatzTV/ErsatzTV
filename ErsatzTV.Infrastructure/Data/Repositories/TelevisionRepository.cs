@@ -35,6 +35,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
+        public Task<List<TelevisionShow>> GetAllShows() =>
+            _dbContext.TelevisionShows
+                .AsNoTracking()
+                .Include(s => s.Metadata)
+                .ToListAsync();
+
         public Task<Option<TelevisionShow>> GetShow(int televisionShowId) =>
             _dbContext.TelevisionShows
                 .AsNoTracking()
@@ -55,6 +61,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(s => s.Metadata == null ? string.Empty : s.Metadata.SortTitle)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .ToListAsync();
+
+        public Task<List<TelevisionSeason>> GetAllSeasons() =>
+            _dbContext.TelevisionSeasons
+                .AsNoTracking()
+                .Include(s => s.TelevisionShow)
+                .ThenInclude(s => s.Metadata)
                 .ToListAsync();
 
         public Task<Option<TelevisionSeason>> GetSeason(int televisionSeasonId) =>
@@ -230,10 +243,44 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     })
                 .ToUnit();
 
-        public Task<Unit> Delete(TelevisionShow show) =>
-            _dbContext.TelevisionShows.Remove(show).AsTask()
-                .Bind(_ => _dbContext.SaveChangesAsync())
-                .ToUnit();
+        public async Task<List<TelevisionEpisodeMediaItem>> GetShowItems(int televisionShowId)
+        {
+            // TODO: would be nice to get the media items in one go, but ef...
+            List<int> showItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
+                    @"select tmi.Id
+from TelevisionEpisodes tmi
+inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
+inner join TelevisionShows ts on ts.Id = tsn.TelevisionShowId
+where ts.Id = {0}",
+                    televisionShowId)
+                .Select(i => i.Id)
+                .ToListAsync();
+
+            return await _dbContext.TelevisionEpisodeMediaItems
+                .AsNoTracking()
+                .Include(e => e.Metadata)
+                .Where(mi => showItemIds.Contains(mi.Id))
+                .ToListAsync();
+        }
+
+        public async Task<List<TelevisionEpisodeMediaItem>> GetSeasonItems(int televisionSeasonId)
+        {
+            // TODO: would be nice to get the media items in one go, but ef...
+            List<int> seasonItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
+                    @"select tmi.Id
+from TelevisionEpisodes tmi
+inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
+where tsn.Id = {0}",
+                    televisionSeasonId)
+                .Select(i => i.Id)
+                .ToListAsync();
+
+            return await _dbContext.TelevisionEpisodeMediaItems
+                .AsNoTracking()
+                .Include(e => e.Metadata)
+                .Where(mi => seasonItemIds.Contains(mi.Id))
+                .ToListAsync();
+        }
 
         private async Task<Either<BaseError, TelevisionSeason>> AddSeason(
             TelevisionShow show,

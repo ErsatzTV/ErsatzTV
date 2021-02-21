@@ -61,7 +61,7 @@
             <MudTd DataLabel="Start Time">
                 @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
             </MudTd>
-            <MudTd DataLabel="Media Collection">@context.MediaCollection.Name</MudTd>
+            <MudTd DataLabel="Media Collection">@context.Name</MudTd>
             <MudTd DataLabel="Media Collection">@context.PlayoutMode</MudTd>
         </RowTemplate>
         <PagerContent>

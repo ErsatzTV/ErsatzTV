@@ -35,6 +35,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(p => p.ProgramSchedule)
                 .ThenInclude(ps => ps.Items)
                 .ThenInclude(psi => psi.MediaCollection)
+                .Include(p => p.ProgramSchedule)
+                .ThenInclude(ps => ps.Items)
+                .ThenInclude(psi => psi.TelevisionShow)
                 .OrderBy(p => p.Id) // https://github.com/dotnet/efcore/issues/22579#issuecomment-694772289
                 .SingleOrDefaultAsync(p => p.Id == id);
 
@@ -52,7 +55,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync();
         }
 
-        // TODO: does this actually work?
         public Task<List<PlayoutItem>> GetPlayoutItems(int playoutId) =>
             _dbContext.PlayoutItems
                 .Include(i => i.MediaItem)

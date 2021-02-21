@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ErsatzTV.Core.AggregateModels;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -70,55 +69,5 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     _dbContext.MediaItems.Remove(mediaItem);
                     return _dbContext.SaveChangesAsync();
                 }).ToUnit();
-
-
-        public Task<List<MediaItemSummary>> GetPageByType(MediaType mediaType, int pageNumber, int pageSize) =>
-            mediaType switch
-            {
-                MediaType.Movie => _dbContext.MediaItemSummaries.FromSqlRaw(
-                        @"SELECT
-    m.Id AS MediaItemId,
-    mm.Title AS Title,
-    mm.SortTitle AS SortTitle,
-    mm.Year AS Subtitle,
-    mi.Poster AS Poster
-FROM Movies m
-INNER JOIN MediaItems mi on m.Id = mi.Id
-INNER JOIN MovieMetadata mm on mm.MovieId = m.Id
-ORDER BY SortTitle
-LIMIT {0} OFFSET {1}",
-                        pageSize,
-                        (pageNumber - 1) * pageSize)
-                    .AsNoTracking()
-                    .ToListAsync(),
-                MediaType.TvShow => _dbContext.MediaItemSummaries.FromSqlRaw(
-                        @"SELECT
-    min(ts.Id) AS MediaItemId,
-    tsm.Title AS Title,
-    tsm.SortTitle AS SortTitle,
-    tsm.Year AS Subtitle,
-    max(ts.Poster) AS Poster
-FROM TelevisionShows ts
-INNER JOIN TelevisionShowMetadata tsm on tsm.TelevisionShowId = ts.Id
-GROUP BY tsm.Title, tsm.SortTitle, tsm.Year
-ORDER BY tsm.SortTitle
-LIMIT {0} OFFSET {1}",
-                        pageSize,
-                        (pageNumber - 1) * pageSize)
-                    .AsNoTracking()
-                    .ToListAsync(),
-                _ => Task.FromResult(new List<MediaItemSummary>())
-            };
-
-        public Task<int> GetCountByType(MediaType mediaType) =>
-            mediaType switch
-            {
-                MediaType.Movie => _dbContext.MovieMediaItems
-                    .CountAsync(),
-                MediaType.TvShow => _dbContext.TelevisionShows
-                    .GroupBy(i => new { i.Metadata.Title, i.Metadata.SortTitle })
-                    .CountAsync(),
-                _ => Task.FromResult(0)
-            };
     }
 }
