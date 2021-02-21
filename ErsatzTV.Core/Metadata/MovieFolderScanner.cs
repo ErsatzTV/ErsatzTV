@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
@@ -46,7 +47,10 @@ namespace ErsatzTV.Core.Metadata
             foreach (string movieFolder in _localFileSystem.ListSubdirectories(localMediaSource.Folder))
             {
                 foreach (string file in _localFileSystem.ListFiles(movieFolder)
-                    .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f))))
+                    .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
+                    .Filter(
+                        f => !ExtraFiles.Any(
+                            e => Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase))))
                 {
                     // TODO: figure out how to rebuild playlists
                     Either<BaseError, MovieMediaItem> maybeMovie = await _movieRepository

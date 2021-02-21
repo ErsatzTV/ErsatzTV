@@ -81,11 +81,7 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task ApplyMetadataUpdate(TelevisionEpisodeMediaItem mediaItem, TelevisionEpisodeMetadata metadata)
         {
-            if (mediaItem.Metadata == null)
-            {
-                mediaItem.Metadata = new TelevisionEpisodeMetadata { TelevisionEpisodeId = mediaItem.Id };
-            }
-
+            mediaItem.Metadata ??= new TelevisionEpisodeMetadata { TelevisionEpisodeId = mediaItem.Id };
             mediaItem.Metadata.Source = metadata.Source;
             mediaItem.Metadata.LastWriteTime = metadata.LastWriteTime;
             mediaItem.Metadata.Title = metadata.Title;
@@ -100,11 +96,7 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task ApplyMetadataUpdate(MovieMediaItem mediaItem, MovieMetadata metadata)
         {
-            if (mediaItem.Metadata == null)
-            {
-                mediaItem.Metadata = new MovieMetadata();
-            }
-
+            mediaItem.Metadata ??= new MovieMetadata();
             mediaItem.Metadata.Source = metadata.Source;
             mediaItem.Metadata.LastWriteTime = metadata.LastWriteTime;
             mediaItem.Metadata.Title = metadata.Title;
@@ -121,11 +113,7 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task ApplyMetadataUpdate(TelevisionShow televisionShow, TelevisionShowMetadata metadata)
         {
-            if (televisionShow.Metadata == null)
-            {
-                televisionShow.Metadata = new TelevisionShowMetadata();
-            }
-
+            televisionShow.Metadata ??= new TelevisionShowMetadata();
             televisionShow.Metadata.Source = metadata.Source;
             televisionShow.Metadata.LastWriteTime = metadata.LastWriteTime;
             televisionShow.Metadata.Title = metadata.Title;
