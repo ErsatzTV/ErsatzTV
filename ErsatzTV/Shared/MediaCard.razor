@@ -82,7 +82,7 @@
             return Placeholder;
         }
 
-        string first = sortTitle.Substring(0, 1).ToUpperInvariant();
+        string first = sortTitle?.Substring(0, 1).ToUpperInvariant() ?? string.Empty;
         return int.TryParse(first, out _) ? "#" : first;
     }
 

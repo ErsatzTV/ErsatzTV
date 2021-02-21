@@ -408,7 +408,8 @@ namespace ErsatzTV.Core.Scheduling
                 {
                     CollectionType = item.CollectionType,
                     Id = item.TelevisionSeasonId.Value
-                }
+                },
+                _ => throw new ArgumentOutOfRangeException(nameof(item))
             };
 
         private class CollectionKey : Record<CollectionKey>
