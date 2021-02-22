@@ -60,11 +60,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<int> CountMediaItems(int id) =>
             _dbContext.MediaItems.CountAsync(i => i.MediaSourceId == id);
 
-        public async Task Update(PlexMediaSource plexMediaSource)
-        {
-            _dbContext.PlexMediaSources.Update(plexMediaSource);
-            await _dbContext.SaveChangesAsync();
-        }
+        public Task Update(LocalMediaSource localMediaSource) =>
+            _dbContext.LocalMediaSources.Update(localMediaSource)
+                .AsTask()
+                .Bind(_ => _dbContext.SaveChangesAsync());
+
+        public Task Update(PlexMediaSource plexMediaSource) =>
+            _dbContext.PlexMediaSources.Update(plexMediaSource)
+                .AsTask()
+                .Bind(_ => _dbContext.SaveChangesAsync());
 
         public async Task Delete(int id)
         {
