@@ -1,7 +1,6 @@
 ﻿@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.MediaSources.Commands
 @using ErsatzTV.Application.MediaSources.Queries
-@using ErsatzTV.Core.Metadata
 @implements IDisposable
 @inject IDialogService Dialog
 @inject IMediator Mediator
@@ -90,7 +89,7 @@
     {
         if (Locker.LockMediaSource(mediaSource.Id))
         {
-            await Channel.WriteAsync(new ScanLocalMediaSource(mediaSource.Id, ScanningMode.RescanAll));
+            await Channel.WriteAsync(new ScanLocalMediaSource(mediaSource.Id));
             StateHasChanged();
         }
     }

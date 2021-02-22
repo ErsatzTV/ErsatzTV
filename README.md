@@ -9,28 +9,28 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - Use local media files and optional sidecar [NFO metadata](https://kodi.wiki/view/NFO_files); no need for a full media server
 - IPTV server and HDHomeRun emulation support a wide range of client applications
 - Channel-specific streaming mode (MPEG-TS or HLS) and transcoding settings
-- Automatic creation of television media collections
+- Collection-based scheduling, with collections containing television shows, seasons, episodes and movies
 - Powerful scheduling options such as chronological collection playback throughout the day or over multiple days
-- OpenAPI spec for easy scripting from other languages (available while running at `/swagger/v1/swagger.json`)
-- Command line project for easy shell scripting
 
 ## In Development
 
 - [Plex](https://www.plex.tv/) media, metadata and collections
-- Published Docker image
   
 ## Planned Features
 
 - [Jellyfin](https://jellyfin.org/) media, metadata and collections 
-- Meta collections to logically group other collections
 - Run as a Windows service
 - Spots to fill unscheduled gaps
 
 ## Preview
 
-### ErsatzTV UI
+### Television Show
 
-![ErsatzTV UI](docs/ersatztv-ui-channels.png)
+![Television Show](docs/television-show.png)
+
+### Media Collection
+
+![Media Collection](docs/media-collection.png)
 
 ### Plex Live TV
 

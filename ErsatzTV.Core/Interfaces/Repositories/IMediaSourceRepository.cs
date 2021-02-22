@@ -7,14 +7,14 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IMediaSourceRepository
     {
-        public Task<LocalMediaSource> Add(LocalMediaSource localMediaSource);
-        public Task<PlexMediaSource> Add(PlexMediaSource plexMediaSource);
-        public Task<List<MediaSource>> GetAll();
-        public Task<List<PlexMediaSource>> GetAllPlex();
-        public Task<Option<MediaSource>> Get(int id);
-        public Task<Option<PlexMediaSource>> GetPlex(int id);
-        public Task<int> CountMediaItems(int id);
-        public Task Update(PlexMediaSource plexMediaSource);
-        public Task Delete(int id);
+        Task<LocalMediaSource> Add(LocalMediaSource localMediaSource);
+        Task<PlexMediaSource> Add(PlexMediaSource plexMediaSource);
+        Task<List<MediaSource>> GetAll();
+        Task<List<PlexMediaSource>> GetAllPlex();
+        Task<Option<MediaSource>> Get(int id);
+        Task<Option<PlexMediaSource>> GetPlex(int id);
+        Task<int> CountMediaItems(int id);
+        Task Update(PlexMediaSource plexMediaSource);
+        Task Delete(int id);
     }
 }

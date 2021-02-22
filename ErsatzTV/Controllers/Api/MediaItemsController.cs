@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using ErsatzTV.Application.MediaItems;
-using ErsatzTV.Application.MediaItems.Commands;
 using ErsatzTV.Application.MediaItems.Queries;
 using ErsatzTV.Extensions;
 using MediatR;
@@ -19,14 +17,6 @@ namespace ErsatzTV.Controllers.Api
 
         public MediaItemsController(IMediator mediator) => _mediator = mediator;
 
-        [HttpPost]
-        [ProducesResponseType(typeof(MediaItemViewModel), 200)]
-        [ProducesResponseType(400)]
-        public Task<IActionResult> Add(
-            [Required] [FromBody]
-            CreateMediaItem createMediaItem) =>
-            _mediator.Send(createMediaItem).ToActionResult();
-
         [HttpGet("{mediaItemId}")]
         [ProducesResponseType(typeof(MediaItemViewModel), 200)]
         [ProducesResponseType(404)]
@@ -37,13 +27,5 @@ namespace ErsatzTV.Controllers.Api
         [ProducesResponseType(typeof(IEnumerable<MediaItemViewModel>), 200)]
         public Task<IActionResult> GetAll() =>
             _mediator.Send(new GetAllMediaItems()).ToActionResult();
-
-        [HttpDelete]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(400)]
-        public Task<IActionResult> Delete(
-            [Required] [FromBody]
-            DeleteMediaItem deleteMediaItem) =>
-            _mediator.Send(deleteMediaItem).ToActionResult();
     }
 }

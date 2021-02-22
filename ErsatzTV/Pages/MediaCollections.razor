@@ -2,107 +2,50 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
+@using ErsatzTV.Application.MediaCards
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudTable @ref="_table" Hover="true" ServerData="@(new Func<TableState, Task<TableData<MediaCollectionSummaryViewModel>>>(ServerReload))">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">Media Collections</MudText>
-        <MudToolBarSpacer/>
-        <MudTextField T="string" ValueChanged="@OnSearch" Placeholder="Search" Adornment="Adornment.Start"
-                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0">
-        </MudTextField>
-    </ToolBarContent>
-    <ColGroup>
-        <col/>
-        <col/>
-        <col style="width: 60px;"/>
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Name</MudTh>
-        <MudTh>Media Items</MudTh>
-        <MudTh/>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Name">
-            @if (context.IsSimple)
-            {
-                @context.Name
-            }
-            else
-            {
-                <MudText Typo="Typo.body2" Color="Color.Primary">@context.Name</MudText>
-            }
-        </MudTd>
-        <MudTd DataLabel="Media Items">@context.ItemCount</MudTd>
-        <MudTd>
-            @if (context.IsSimple)
-            {
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/media/collections/{context.Id}")">
-                        Edit Properties
-                    </MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/media/collections/{context.Id}/items")">
-                        Edit Media Items
-                    </MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteMediaCollectionAsync(context))">
-                        Delete
-                    </MudMenuItem>
-                </MudMenu>
-            }
-        </MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager/>
-    </PagerContent>
-</MudTable>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
-    Add Media Collection
-</MudButton>
+<MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+    @foreach (MediaCollectionViewModel card in _data)
+    {
+        <MediaCard Data="@card"
+                   Link="@($"/media/collections/{card.Id}")"
+                   ContainerClass="media-card-episode-container mr-4"
+                   CardClass="media-card-episode"
+                   DeleteClicked="@DeleteMediaCollection"/>
+    }
+</MudContainer>
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
+        Add Media Collection
+    </MudButton>
+</MudContainer>
 
 @code {
-    private IEnumerable<MediaCollectionSummaryViewModel> _pagedData;
-    private MudTable<MediaCollectionSummaryViewModel> _table;
+    private List<MediaCollectionViewModel> _data;
 
-    private int _totalItems;
-    private string _searchString;
+    protected override Task OnParametersSetAsync() => RefreshData();
 
-    private async Task DeleteMediaCollectionAsync(MediaCollectionSummaryViewModel mediaCollection)
+    private async Task RefreshData() =>
+        _data = await Mediator.Send(new GetAllMediaCollections());
+
+    private async Task DeleteMediaCollection(MediaCardViewModel vm)
     {
-        if (mediaCollection.IsSimple)
+        if (vm is MediaCollectionViewModel collection)
         {
-            var parameters = new DialogParameters { { "EntityType", "media collection" }, { "EntityName", mediaCollection.Name } };
+            var parameters = new DialogParameters { { "EntityType", "media collection" }, { "EntityName", collection.Name } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
             IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Media Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Cancelled)
             {
-                await Mediator.Send(new DeleteSimpleMediaCollection(mediaCollection.Id));
-                await _table.ReloadServerData();
+                await Mediator.Send(new DeleteSimpleMediaCollection(collection.Id));
+                await RefreshData();
             }
         }
-    }
-
-    private async Task<TableData<MediaCollectionSummaryViewModel>> ServerReload(TableState state)
-    {
-        List<MediaCollectionSummaryViewModel> aggregateData =
-            await Mediator.Send(new GetMediaCollectionSummaries(_searchString));
-
-        _totalItems = aggregateData.Count;
-
-        _pagedData = aggregateData
-            .Skip(_totalItems <= state.PageSize ? 0 : state.Page * state.PageSize)
-            .Take(state.PageSize)
-            .OrderBy(c => c.Name);
-
-        return new TableData<MediaCollectionSummaryViewModel> { TotalItems = _totalItems, Items = _pagedData };
-    }
-
-    private async Task OnSearch(string text)
-    {
-        _searchString = text;
-        await _table.ReloadServerData();
     }
 
 }

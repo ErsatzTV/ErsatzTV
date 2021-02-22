@@ -57,7 +57,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     await _dbContext.Entry(programSchedule).Collection(s => s.Items).LoadAsync();
                     await _dbContext.Entry(programSchedule).Collection(s => s.Items).Query()
-                        .Include(i => i.MediaCollection).LoadAsync();
+                        .Include(i => i.MediaCollection)
+                        .Include(i => i.TelevisionShow)
+                        .ThenInclude(s => s.Metadata)
+                        .Include(i => i.TelevisionSeason)
+                        .ThenInclude(s => s.TelevisionShow)
+                        .ThenInclude(s => s.Metadata)
+                        .LoadAsync();
                     return programSchedule.Items;
                 }).Sequence();
         }

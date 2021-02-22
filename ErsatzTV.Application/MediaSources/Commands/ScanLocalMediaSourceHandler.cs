@@ -16,33 +16,41 @@ namespace ErsatzTV.Application.MediaSources.Commands
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly IEntityLocker _entityLocker;
-        private readonly ILocalMediaScanner _localMediaScanner;
         private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly IMovieFolderScanner _movieFolderScanner;
+        private readonly ITelevisionFolderScanner _televisionFolderScanner;
 
         public ScanLocalMediaSourceHandler(
             IMediaSourceRepository mediaSourceRepository,
             IConfigElementRepository configElementRepository,
-            ILocalMediaScanner localMediaScanner,
+            IMovieFolderScanner movieFolderScanner,
+            ITelevisionFolderScanner televisionFolderScanner,
             IEntityLocker entityLocker)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _configElementRepository = configElementRepository;
-            _localMediaScanner = localMediaScanner;
+            _movieFolderScanner = movieFolderScanner;
+            _televisionFolderScanner = televisionFolderScanner;
             _entityLocker = entityLocker;
         }
 
         public Task<Either<BaseError, string>>
             Handle(ScanLocalMediaSource request, CancellationToken cancellationToken) =>
             Validate(request)
-                .MapT(parameters => PerformScan(request, parameters).Map(_ => parameters.LocalMediaSource.Folder))
+                .MapT(parameters => PerformScan(parameters).Map(_ => parameters.LocalMediaSource.Folder))
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<Unit> PerformScan(ScanLocalMediaSource request, RequestParameters parameters)
+        private async Task<Unit> PerformScan(RequestParameters parameters)
         {
-            await _localMediaScanner.ScanLocalMediaSource(
-                parameters.LocalMediaSource,
-                parameters.FFprobePath,
-                request.ScanningMode);
+            switch (parameters.LocalMediaSource.MediaType)
+            {
+                case MediaType.Movie:
+                    await _movieFolderScanner.ScanFolder(parameters.LocalMediaSource, parameters.FFprobePath);
+                    break;
+                case MediaType.TvShow:
+                    await _televisionFolderScanner.ScanFolder(parameters.LocalMediaSource, parameters.FFprobePath);
+                    break;
+            }
 
             _entityLocker.UnlockMediaSource(parameters.LocalMediaSource.Id);
 

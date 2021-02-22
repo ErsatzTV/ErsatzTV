@@ -6,11 +6,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 {
     public class PlayoutProgramScheduleAnchorConfiguration : IEntityTypeConfiguration<PlayoutProgramScheduleAnchor>
     {
-        public void Configure(EntityTypeBuilder<PlayoutProgramScheduleAnchor> builder)
-        {
-            builder.HasKey(a => new { a.PlayoutId, a.ProgramScheduleId, ContentGroupId = a.MediaCollectionId });
-
-            builder.OwnsOne(a => a.EnumeratorState);
-        }
+        public void Configure(EntityTypeBuilder<PlayoutProgramScheduleAnchor> builder) =>
+            builder.OwnsOne(a => a.EnumeratorState)
+                .WithOwner();
     }
 }

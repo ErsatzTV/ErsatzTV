@@ -35,6 +35,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(p => p.ProgramSchedule)
                 .ThenInclude(ps => ps.Items)
                 .ThenInclude(psi => psi.MediaCollection)
+                .Include(p => p.ProgramSchedule)
+                .ThenInclude(ps => ps.Items)
+                .ThenInclude(psi => psi.TelevisionShow)
                 .OrderBy(p => p.Id) // https://github.com/dotnet/efcore/issues/22579#issuecomment-694772289
                 .SingleOrDefaultAsync(p => p.Id == id);
 
@@ -55,7 +58,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<PlayoutItem>> GetPlayoutItems(int playoutId) =>
             _dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
-                .ThenInclude(mi => mi.Metadata)
+                .ThenInclude(m => (m as MovieMediaItem).Metadata)
+                .Include(i => i.MediaItem)
+                .ThenInclude(m => (m as TelevisionEpisodeMediaItem).Metadata)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
 

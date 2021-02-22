@@ -6,9 +6,11 @@
 
 .media-card-container { width: 152px; }
 
+.media-card-episode-container { width: 392px; }
+
 .media-card {
     display: flex;
-    filter: brightness(100%);
+    /*filter: brightness(100%);*/
     flex-direction: column;
     height: 220px;
     justify-content: center;
@@ -16,7 +18,9 @@
     width: 152px;
 }
 
-.media-card:hover { filter: brightness(80%); }
+.media-card-episode { width: 392px; }
+
+.media-card:hover { /*filter: brightness(75%);*/ }
 
 .media-card-title {
     overflow: hidden;
@@ -35,3 +39,17 @@
 }
 
 .media-card:hover .media-card-menu { display: block; }
+
+.media-card-overlay {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    bottom: 0;
+    left: 0;
+    opacity: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+    transition: opacity 0.2s;
+}
+
+.media-card-overlay:hover { opacity: 1; }

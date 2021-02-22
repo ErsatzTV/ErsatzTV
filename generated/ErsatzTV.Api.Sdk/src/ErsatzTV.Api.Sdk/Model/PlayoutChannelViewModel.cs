@@ -35,10 +35,12 @@ namespace ErsatzTV.Api.Sdk.Model
         /// Initializes a new instance of the <see cref="PlayoutChannelViewModel" /> class.
         /// </summary>
         /// <param name="id">id.</param>
+        /// <param name="number">number.</param>
         /// <param name="name">name.</param>
-        public PlayoutChannelViewModel(int id = default(int), string name = default(string))
+        public PlayoutChannelViewModel(int id = default(int), int number = default(int), string name = default(string))
         {
             this.Id = id;
+            this.Number = number;
             this.Name = name;
         }
 
@@ -47,6 +49,12 @@ namespace ErsatzTV.Api.Sdk.Model
         /// </summary>
         [DataMember(Name = "id", EmitDefaultValue = false)]
         public int Id { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Number
+        /// </summary>
+        [DataMember(Name = "number", EmitDefaultValue = false)]
+        public int Number { get; set; }
 
         /// <summary>
         /// Gets or Sets Name
@@ -63,6 +71,7 @@ namespace ErsatzTV.Api.Sdk.Model
             var sb = new StringBuilder();
             sb.Append("class PlayoutChannelViewModel {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
+            sb.Append("  Number: ").Append(Number).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -103,6 +112,10 @@ namespace ErsatzTV.Api.Sdk.Model
                     this.Id.Equals(input.Id)
                 ) && 
                 (
+                    this.Number == input.Number ||
+                    this.Number.Equals(input.Number)
+                ) && 
+                (
                     this.Name == input.Name ||
                     (this.Name != null &&
                     this.Name.Equals(input.Name))
@@ -119,6 +132,7 @@ namespace ErsatzTV.Api.Sdk.Model
             {
                 int hashCode = 41;
                 hashCode = hashCode * 59 + this.Id.GetHashCode();
+                hashCode = hashCode * 59 + this.Number.GetHashCode();
                 if (this.Name != null)
                     hashCode = hashCode * 59 + this.Name.GetHashCode();
                 return hashCode;

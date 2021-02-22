@@ -19,15 +19,20 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<LocalMediaSource> LocalMediaSources { get; set; }
         public DbSet<PlexMediaSource> PlexMediaSources { get; set; }
         public DbSet<MediaItem> MediaItems { get; set; }
+        public DbSet<MovieMediaItem> MovieMediaItems { get; set; }
+        public DbSet<TelevisionEpisodeMediaItem> TelevisionEpisodeMediaItems { get; set; }
         public DbSet<MediaCollection> MediaCollections { get; set; }
         public DbSet<SimpleMediaCollection> SimpleMediaCollections { get; set; }
-        public DbSet<TelevisionMediaCollection> TelevisionMediaCollections { get; set; }
         public DbSet<ProgramSchedule> ProgramSchedules { get; set; }
         public DbSet<Playout> Playouts { get; set; }
         public DbSet<PlayoutItem> PlayoutItems { get; set; }
         public DbSet<PlayoutProgramScheduleAnchor> PlayoutProgramScheduleItemAnchors { get; set; }
         public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
         public DbSet<Resolution> Resolutions { get; set; }
+        public DbSet<TelevisionShow> TelevisionShows { get; set; }
+        public DbSet<LocalTelevisionShowSource> LocalTelevisionShowSources { get; set; }
+        public DbSet<TelevisionShowMetadata> TelevisionShowMetadata { get; set; }
+        public DbSet<TelevisionSeason> TelevisionSeasons { get; set; }
 
         // support raw sql queries
         public DbSet<MediaCollectionSummary> MediaCollectionSummaries { get; set; }

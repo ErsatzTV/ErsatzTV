@@ -1,4 +1,4 @@
-﻿@page "/media/collections/{Id:int}"
+﻿@page "/media/collections/{Id:int}/edit"
 @page "/media/collections/add"
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
@@ -75,7 +75,7 @@
                     Snackbar.Add(error.Value, Severity.Error);
                     Logger.LogError("Error saving simple media collection: {Error}", error.Value);
                 },
-                () => NavigationManager.NavigateTo("/media/collections"));
+                () => NavigationManager.NavigateTo(_model.Id > 0 ? $"/media/collections/{_model.Id}" : "/media/collections"));
         }
     }
 

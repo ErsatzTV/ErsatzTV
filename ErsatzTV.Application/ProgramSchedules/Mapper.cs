@@ -17,7 +17,16 @@ namespace ErsatzTV.Application.ProgramSchedules
                         duration.Index,
                         duration.StartType,
                         duration.StartTime,
-                        MediaCollections.Mapper.ProjectToViewModel(duration.MediaCollection),
+                        duration.CollectionType,
+                        duration.MediaCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(duration.MediaCollection)
+                            : null,
+                        duration.TelevisionShow != null
+                            ? Television.Mapper.ProjectToViewModel(duration.TelevisionShow)
+                            : null,
+                        duration.TelevisionSeason != null
+                            ? Television.Mapper.ProjectToViewModel(duration.TelevisionSeason)
+                            : null,
                         duration.PlayoutDuration,
                         duration.OfflineTail),
                 ProgramScheduleItemFlood flood =>
@@ -26,14 +35,32 @@ namespace ErsatzTV.Application.ProgramSchedules
                         flood.Index,
                         flood.StartType,
                         flood.StartTime,
-                        MediaCollections.Mapper.ProjectToViewModel(flood.MediaCollection)),
+                        flood.CollectionType,
+                        flood.MediaCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(flood.MediaCollection)
+                            : null,
+                        flood.TelevisionShow != null
+                            ? Television.Mapper.ProjectToViewModel(flood.TelevisionShow)
+                            : null,
+                        flood.TelevisionSeason != null
+                            ? Television.Mapper.ProjectToViewModel(flood.TelevisionSeason)
+                            : null),
                 ProgramScheduleItemMultiple multiple =>
                     new ProgramScheduleItemMultipleViewModel(
                         multiple.Id,
                         multiple.Index,
                         multiple.StartType,
                         multiple.StartTime,
-                        MediaCollections.Mapper.ProjectToViewModel(multiple.MediaCollection),
+                        multiple.CollectionType,
+                        multiple.MediaCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(multiple.MediaCollection)
+                            : null,
+                        multiple.TelevisionShow != null
+                            ? Television.Mapper.ProjectToViewModel(multiple.TelevisionShow)
+                            : null,
+                        multiple.TelevisionSeason != null
+                            ? Television.Mapper.ProjectToViewModel(multiple.TelevisionSeason)
+                            : null,
                         multiple.Count),
                 ProgramScheduleItemOne one =>
                     new ProgramScheduleItemOneViewModel(
@@ -41,7 +68,14 @@ namespace ErsatzTV.Application.ProgramSchedules
                         one.Index,
                         one.StartType,
                         one.StartTime,
-                        MediaCollections.Mapper.ProjectToViewModel(one.MediaCollection)),
+                        one.CollectionType,
+                        one.MediaCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(one.MediaCollection)
+                            : null,
+                        one.TelevisionShow != null ? Television.Mapper.ProjectToViewModel(one.TelevisionShow) : null,
+                        one.TelevisionSeason != null
+                            ? Television.Mapper.ProjectToViewModel(one.TelevisionSeason)
+                            : null),
                 _ => throw new NotSupportedException(
                     $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")
             };

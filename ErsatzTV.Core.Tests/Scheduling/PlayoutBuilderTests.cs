@@ -40,7 +40,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task InitialFlood_Should_StartAtMidnight()
         {
-            var mediaItems = new List<MediaItem>
+            var mediaItems = new List<MovieMediaItem>
             {
                 TestMovie(1, TimeSpan.FromHours(6), DateTime.Today)
             };
@@ -59,7 +59,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task InitialFlood_Should_StartAtMidnight_With_LateStart()
         {
-            var mediaItems = new List<MediaItem>
+            var mediaItems = new List<MovieMediaItem>
             {
                 TestMovie(1, TimeSpan.FromHours(6), DateTime.Today)
             };
@@ -79,7 +79,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ChronologicalContent_Should_CreateChronologicalItems()
         {
-            var mediaItems = new List<MediaItem>
+            var mediaItems = new List<MovieMediaItem>
             {
                 TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                 TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -105,7 +105,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ChronologicalFlood_Should_AnchorAndMaintainExistingPlayout()
         {
-            var mediaItems = new List<MediaItem>
+            var mediaItems = new List<MovieMediaItem>
             {
                 TestMovie(1, TimeSpan.FromHours(6), DateTime.Today),
                 TestMovie(2, TimeSpan.FromHours(6), DateTime.Today.AddHours(1))
@@ -142,7 +142,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ChronologicalFlood_Should_AnchorAndReturnNewPlayoutItems()
         {
-            var mediaItems = new List<MediaItem>
+            var mediaItems = new List<MovieMediaItem>
             {
                 TestMovie(1, TimeSpan.FromHours(6), DateTime.Today),
                 TestMovie(2, TimeSpan.FromHours(6), DateTime.Today.AddHours(1))
@@ -180,7 +180,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ShuffleFloodRebuild_Should_IgnoreAnchors()
         {
-            var mediaItems = new List<MediaItem>
+            var mediaItems = new List<MovieMediaItem>
             {
                 TestMovie(1, TimeSpan.FromHours(1), DateTime.Today),
                 TestMovie(2, TimeSpan.FromHours(1), DateTime.Today.AddHours(1)),
@@ -223,7 +223,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ShuffleFlood_Should_MaintainRandomSeed()
         {
-            var mediaItems = new List<MediaItem>
+            var mediaItems = new List<MovieMediaItem>
             {
                 TestMovie(1, TimeSpan.FromHours(1), DateTime.Today),
                 TestMovie(2, TimeSpan.FromHours(1), DateTime.Today.AddHours(1)),
@@ -259,7 +259,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 1,
                 Name = "Flood Items",
-                Items = new List<MediaItem>
+                Movies = new List<MovieMediaItem>
                 {
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -270,7 +270,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 2,
                 Name = "Fixed Items",
-                Items = new List<MediaItem>
+                Movies = new List<MovieMediaItem>
                 {
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1))
                 }
@@ -278,8 +278,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             var fakeRepository = new FakeMediaCollectionRepository(
                 Map(
-                    (floodCollection.Id, floodCollection.Items.ToList()),
-                    (fixedCollection.Id, fixedCollection.Items.ToList())));
+                    (floodCollection.Id, floodCollection.Movies.ToList()),
+                    (fixedCollection.Id, fixedCollection.Movies.ToList())));
 
             var items = new List<ProgramScheduleItem>
             {
@@ -309,7 +309,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
-            var builder = new PlayoutBuilder(fakeRepository, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -336,7 +337,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 1,
                 Name = "Flood Items",
-                Items = new List<MediaItem>
+                Movies = new List<MovieMediaItem>
                 {
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -347,7 +348,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 2,
                 Name = "Fixed Items",
-                Items = new List<MediaItem>
+                Movies = new List<MovieMediaItem>
                 {
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
@@ -356,8 +357,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             var fakeRepository = new FakeMediaCollectionRepository(
                 Map(
-                    (floodCollection.Id, floodCollection.Items.ToList()),
-                    (fixedCollection.Id, fixedCollection.Items.ToList())));
+                    (floodCollection.Id, floodCollection.Movies.ToList()),
+                    (fixedCollection.Id, fixedCollection.Movies.ToList())));
 
             var items = new List<ProgramScheduleItem>
             {
@@ -388,7 +389,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
-            var builder = new PlayoutBuilder(fakeRepository, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(7);
@@ -420,7 +422,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 1,
                 Name = "Flood Items",
-                Items = new List<MediaItem>
+                Movies = new List<MovieMediaItem>
                 {
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -431,7 +433,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 2,
                 Name = "Fixed Items",
-                Items = new List<MediaItem>
+                Movies = new List<MovieMediaItem>
                 {
                     TestMovie(3, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1.5), new DateTime(2020, 1, 2))
@@ -440,8 +442,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             var fakeRepository = new FakeMediaCollectionRepository(
                 Map(
-                    (floodCollection.Id, floodCollection.Items.ToList()),
-                    (fixedCollection.Id, fixedCollection.Items.ToList())));
+                    (floodCollection.Id, floodCollection.Movies.ToList()),
+                    (fixedCollection.Id, fixedCollection.Movies.ToList())));
 
             var items = new List<ProgramScheduleItem>
             {
@@ -473,7 +475,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
-            var builder = new PlayoutBuilder(fakeRepository, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -508,7 +511,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 1,
                 Name = "Multiple Items",
-                Items = new List<MediaItem>
+                Movies = new List<MovieMediaItem>
                 {
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -519,7 +522,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 2,
                 Name = "Dynamic Items",
-                Items = new List<MediaItem>
+                Movies = new List<MovieMediaItem>
                 {
                     TestMovie(3, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1.5), new DateTime(2020, 1, 2))
@@ -528,8 +531,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             var fakeRepository = new FakeMediaCollectionRepository(
                 Map(
-                    (multipleCollection.Id, multipleCollection.Items.ToList()),
-                    (dynamicCollection.Id, dynamicCollection.Items.ToList())));
+                    (multipleCollection.Id, multipleCollection.Movies.ToList()),
+                    (dynamicCollection.Id, dynamicCollection.Movies.ToList())));
 
             var items = new List<ProgramScheduleItem>
             {
@@ -562,7 +565,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
-            var builder = new PlayoutBuilder(fakeRepository, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -603,23 +607,25 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 StartTime = null
             };
 
-        private static MediaItem TestMovie(int id, TimeSpan duration, DateTime aired) =>
+        private static MovieMediaItem TestMovie(int id, TimeSpan duration, DateTime aired) =>
             new()
             {
                 Id = id,
-                Metadata = new MediaMetadata { Duration = duration, MediaType = MediaType.Movie, Aired = aired }
+                Metadata = new MovieMetadata { Premiered = aired },
+                Statistics = new MediaItemStatistics { Duration = duration }
             };
 
-        private TestData TestDataFloodForItems(List<MediaItem> mediaItems, PlaybackOrder playbackOrder)
+        private TestData TestDataFloodForItems(List<MovieMediaItem> mediaItems, PlaybackOrder playbackOrder)
         {
             var mediaCollection = new SimpleMediaCollection
             {
                 Id = 1,
-                Items = mediaItems
+                Movies = mediaItems
             };
 
             var collectionRepo = new FakeMediaCollectionRepository(Map((mediaCollection.Id, mediaItems)));
-            var builder = new PlayoutBuilder(collectionRepo, _logger);
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(collectionRepo, televisionRepo, _logger);
 
             var items = new List<ProgramScheduleItem> { Flood(mediaCollection) };
 
