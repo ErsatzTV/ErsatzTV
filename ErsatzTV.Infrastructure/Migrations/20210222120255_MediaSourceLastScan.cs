@@ -5,20 +5,16 @@ namespace ErsatzTV.Infrastructure.Migrations
 {
     public partial class MediaSourceLastScan : Migration
     {
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
+        protected override void Up(MigrationBuilder migrationBuilder) =>
             migrationBuilder.AddColumn<DateTimeOffset>(
-                name: "LastScan",
-                table: "MediaSources",
-                type: "TEXT",
+                "LastScan",
+                "MediaSources",
+                "TEXT",
                 nullable: true);
-        }
 
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
+        protected override void Down(MigrationBuilder migrationBuilder) =>
             migrationBuilder.DropColumn(
-                name: "LastScan",
-                table: "MediaSources");
-        }
+                "LastScan",
+                "MediaSources");
     }
 }

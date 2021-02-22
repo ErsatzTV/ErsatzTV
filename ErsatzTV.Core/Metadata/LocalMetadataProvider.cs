@@ -197,7 +197,9 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Option<TelevisionEpisodeMetadata>> LoadEpisodeMetadata(TelevisionEpisodeMediaItem mediaItem, string nfoFileName)
+        private async Task<Option<TelevisionEpisodeMetadata>> LoadEpisodeMetadata(
+            TelevisionEpisodeMediaItem mediaItem,
+            string nfoFileName)
         {
             try
             {
