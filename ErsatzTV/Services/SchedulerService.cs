@@ -7,7 +7,6 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core.Interfaces.Locking;
-using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -83,7 +82,7 @@ namespace ErsatzTV.Services
                 if (_entityLocker.LockMediaSource(mediaSourceId))
                 {
                     await _channel.WriteAsync(
-                        new ScanLocalMediaSource(mediaSourceId, ScanningMode.Default),
+                        new ScanLocalMediaSource(mediaSourceId),
                         cancellationToken);
                 }
             }

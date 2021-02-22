@@ -7,12 +7,12 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IChannelRepository
     {
-        public Task<Channel> Add(Channel channel);
-        public Task<Option<Channel>> Get(int id);
-        public Task<Option<Channel>> GetByNumber(int number);
-        public Task<List<Channel>> GetAll();
-        public Task<List<Channel>> GetAllForGuide();
-        public Task Update(Channel channel);
-        public Task Delete(int channelId);
+        Task<Channel> Add(Channel channel);
+        Task<Option<Channel>> Get(int id);
+        Task<Option<Channel>> GetByNumber(int number);
+        Task<List<Channel>> GetAll();
+        Task<List<Channel>> GetAllForGuide();
+        Task Update(Channel channel);
+        Task Delete(int channelId);
     }
 }

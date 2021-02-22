@@ -1,0 +1,58 @@
+﻿@using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Application.ProgramSchedules.Queries
+@inject IMediator Mediator
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="mb-6">
+            <MudHighlighter Class="mud-primary-text"
+                            Style="background-color: transparent; font-weight: bold"
+                            Text="@FormatText()"
+                            HighlightedText="@EntityName"/>
+        </MudContainer>
+        <MudSelect Label="Schedule" @bind-Value="_selectedSchedule" For="@(() => _selectedSchedule)" Class="mb-6 mx-4">
+            @foreach (ProgramScheduleViewModel schedule in _schedules)
+            {
+                <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
+            }
+        </MudSelect>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(_selectedSchedule == null)" OnClick="Submit">
+            Add To Schedule
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string EntityType { get; set; }
+
+    [Parameter]
+    public string EntityName { get; set; }
+
+    [Parameter]
+    public string DetailText { get; set; }
+
+    [Parameter]
+    public string DetailHighlight { get; set; }
+
+    private List<ProgramScheduleViewModel> _schedules;
+
+    private ProgramScheduleViewModel _selectedSchedule;
+
+    protected override async Task OnParametersSetAsync() =>
+        _schedules = await Mediator.Send(new GetAllProgramSchedules());
+
+    private string FormatText() => $"Select the schedule to add the {EntityType} {EntityName}";
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(_selectedSchedule));
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

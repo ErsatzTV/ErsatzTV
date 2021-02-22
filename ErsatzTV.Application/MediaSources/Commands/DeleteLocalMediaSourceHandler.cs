@@ -12,16 +12,10 @@ namespace ErsatzTV.Application.MediaSources.Commands
     public class
         DeleteLocalMediaSourceHandler : IRequestHandler<DeleteLocalMediaSource, Either<BaseError, Task>>
     {
-        private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly IMediaSourceRepository _mediaSourceRepository;
 
-        public DeleteLocalMediaSourceHandler(
-            IMediaSourceRepository mediaSourceRepository,
-            IMediaCollectionRepository mediaCollectionRepository)
-        {
+        public DeleteLocalMediaSourceHandler(IMediaSourceRepository mediaSourceRepository) =>
             _mediaSourceRepository = mediaSourceRepository;
-            _mediaCollectionRepository = mediaCollectionRepository;
-        }
 
         public async Task<Either<BaseError, Task>> Handle(
             DeleteLocalMediaSource request,
@@ -30,14 +24,8 @@ namespace ErsatzTV.Application.MediaSources.Commands
             .Map(DoDeletion)
             .ToEither<Task>();
 
-        private async Task DoDeletion(LocalMediaSource mediaSource)
-        {
+        private async Task DoDeletion(LocalMediaSource mediaSource) =>
             await _mediaSourceRepository.Delete(mediaSource.Id);
-            if (mediaSource.MediaType == MediaType.TvShow)
-            {
-                await _mediaCollectionRepository.DeleteEmptyTelevisionCollections();
-            }
-        }
 
         private async Task<Validation<BaseError, LocalMediaSource>> MediaSourceMustExist(
             DeleteLocalMediaSource deleteMediaSource) =>

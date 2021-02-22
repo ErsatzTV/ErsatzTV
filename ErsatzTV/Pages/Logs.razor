@@ -3,23 +3,25 @@
 @using ErsatzTV.Application.Logs.Queries
 @inject IMediator Mediator
 
-<MudTable FixedHeader="true" Dense="true" Items="_logEntries">
-    <HeaderContent>
-        <MudTh>Timestamp</MudTh>
-        <MudTh>Level</MudTh>
-        <MudTh>Message</MudTh>
-        <MudTh>Properties</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
-        <MudTd DataLabel="Level">@context.Level</MudTd>
-        <MudTd DataLabel="Message">@context.RenderedMessage</MudTd>
-        <MudTd DataLabel="Message">@context.Properties</MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager/>
-    </PagerContent>
-</MudTable>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudTable FixedHeader="true" Dense="true" Items="_logEntries">
+        <HeaderContent>
+            <MudTh>Timestamp</MudTh>
+            <MudTh>Level</MudTh>
+            <MudTh>Message</MudTh>
+            <MudTh>Properties</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
+            <MudTd DataLabel="Level">@context.Level</MudTd>
+            <MudTd DataLabel="Message">@context.RenderedMessage</MudTd>
+            <MudTd DataLabel="Message">@context.Properties</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
+</MudContainer>
 
 @code {
     private List<LogEntryViewModel> _logEntries;

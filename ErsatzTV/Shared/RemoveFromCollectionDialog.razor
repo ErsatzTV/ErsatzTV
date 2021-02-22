@@ -1,0 +1,43 @@
+﻿@inject IMediator Mediator
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer Class="mb-6">
+            <MudHighlighter Class="mud-primary-text"
+                            Style="background-color: transparent; font-weight: bold"
+                            Text="@FormatText()"
+                            HighlightedText="@EntityName"/>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">
+            Remove From Collection
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string EntityType { get; set; }
+
+    [Parameter]
+    public string EntityName { get; set; }
+
+    [Parameter]
+    public string DetailText { get; set; }
+
+    [Parameter]
+    public string DetailHighlight { get; set; }
+
+    private string FormatText() => $"Do you really want to remove the {EntityType} {EntityName} from this collection?";
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

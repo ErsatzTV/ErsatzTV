@@ -1,7 +1,6 @@
 ﻿@page "/media/sources/local/add"
 @using ErsatzTV.Application.MediaSources.Commands
 @using ErsatzTV.Application.MediaSources
-@using ErsatzTV.Core.Metadata
 @inject NavigationManager NavigationManager
 @inject ILogger<LocalMediaSourceEditor> Logger
 @inject ISnackbar Snackbar
@@ -17,7 +16,7 @@
         <MudCard>
             <MudCardContent>
                 <MudSelect Class="mt-3" Label="Media Type" @bind-Value="_model.MediaType" For="@(() => _model.MediaType)">
-                    @foreach (MediaType mediaType in Enum.GetValues<MediaType>())
+                    @foreach (MediaType mediaType in new[] { MediaType.TvShow, MediaType.Movie })
                     {
                         <MudSelectItem Value="@mediaType">@mediaType</MudSelectItem>
                     }
@@ -88,7 +87,7 @@
                 {
                     if (Locker.LockMediaSource(vm.Id))
                     {
-                        await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id, ScanningMode.Default));
+                        await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id));
                         NavigationManager.NavigateTo("/media/sources");
                     }
                 });

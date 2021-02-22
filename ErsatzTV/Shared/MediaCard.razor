@@ -1,51 +1,93 @@
-﻿@using ErsatzTV.Application.MediaItems
-@using ErsatzTV.Application.MediaItems.Commands
+﻿@using ErsatzTV.Application.MediaCards
 @using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 
-<div class="media-card-container mx-3 pb-3">
-    <MudPaper Class="media-card" Style="@PosterForItem()">
-        @if (string.IsNullOrWhiteSpace(Data.Poster))
-        {
-            <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
-                @Placeholder(Data.SortTitle)
-            </MudText>
-        }
-        <MudIconButton Icon="@Icons.Material.Filled.Refresh" Color="Color.Primary" OnClick="@(() => RefreshMetadata())" Class="media-card-menu"></MudIconButton>
-    </MudPaper>
+<div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")">
+    @if (!string.IsNullOrWhiteSpace(Link))
+    {
+        <div style="position: relative">
+            <MudPaper Class="@($"media-card {CardClass}")" Style="@PosterForItem()">
+                @if (string.IsNullOrWhiteSpace(Data.Poster))
+                {
+                    <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
+                        @GetPlaceholder(Data.SortTitle)
+                    </MudText>
+                }
+            </MudPaper>
+            <div class="media-card-overlay" style="">
+                <MudButton Link="@Link" Style="height: 100%; width: 100%">
+                </MudButton>
+                @if (DeleteClicked.HasDelegate)
+                {
+                    <MudIconButton Color="Color.Tertiary"
+                                   Icon="@Icons.Material.Filled.Delete"
+                                   Style="bottom: 0; position: absolute; right: 0;"
+                                   OnClick="@(() => DeleteClicked.InvokeAsync(Data))"/>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <MudPaper Class="@($"media-card {CardClass}")" Style="@PosterForItem()">
+            @if (string.IsNullOrWhiteSpace(Data.Poster))
+            {
+                <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
+                    @GetPlaceholder(Data.SortTitle)
+                </MudText>
+            }
+        </MudPaper>
+    }
     <MudText Align="Align.Center" Class="media-card-title" UserAttributes="@(new Dictionary<string, object> { { "title", Data.Title } })">
-        @Data.Title
+        @(Title ?? Data.Title)
     </MudText>
     <MudText Typo="Typo.body2" Align="Align.Center" Class="mud-text-secondary">
-        @Data.Subtitle
+        @(Subtitle ?? Data.Subtitle)
     </MudText>
 </div>
 
 @code {
 
     [Parameter]
-    public AggregateMediaItemViewModel Data { get; set; }
+    public MediaCardViewModel Data { get; set; }
+
+    [Parameter]
+    public string Link { get; set; }
 
     [Parameter]
     public EventCallback<Unit> DataRefreshed { get; set; }
 
-    private string Placeholder(string sortTitle)
+    [Parameter]
+    public string Placeholder { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public string Subtitle { get; set; }
+
+    [Parameter]
+    public string ContainerClass { get; set; }
+
+    [Parameter]
+    public string CardClass { get; set; }
+
+    [Parameter]
+    public EventCallback<MediaCardViewModel> DeleteClicked { get; set; }
+
+    private string GetPlaceholder(string sortTitle)
     {
-        string first = sortTitle.Substring(0, 1).ToUpperInvariant();
+        if (Placeholder != null)
+        {
+            return Placeholder;
+        }
+
+        string first = sortTitle?.Substring(0, 1).ToUpperInvariant() ?? string.Empty;
         return int.TryParse(first, out _) ? "#" : first;
     }
 
     private string PosterForItem() => string.IsNullOrWhiteSpace(Data.Poster)
         ? "position: relative"
         : $"position: relative; background-image: url(/posters/{Data.Poster}); background-size: cover";
-
-    private async Task RefreshMetadata()
-    {
-    // TODO: how should we refresh an entire television show?
-        await Mediator.Send(new RefreshMediaItemMetadata(Data.MediaItemId));
-        await Mediator.Send(new RefreshMediaItemCollections(Data.MediaItemId));
-        await Mediator.Send(new RefreshMediaItemPoster(Data.MediaItemId));
-        await DataRefreshed.InvokeAsync();
-    }
 
 }

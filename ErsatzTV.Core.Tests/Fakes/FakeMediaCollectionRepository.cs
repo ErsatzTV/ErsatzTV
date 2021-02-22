@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using ErsatzTV.Core.AggregateModels;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -11,9 +11,9 @@ namespace ErsatzTV.Core.Tests.Fakes
 {
     public class FakeMediaCollectionRepository : IMediaCollectionRepository
     {
-        private readonly Map<int, List<MediaItem>> _data;
+        private readonly Map<int, List<MovieMediaItem>> _data;
 
-        public FakeMediaCollectionRepository(Map<int, List<MediaItem>> data) => _data = data;
+        public FakeMediaCollectionRepository(Map<int, List<MovieMediaItem>> data) => _data = data;
 
         public Task<SimpleMediaCollection> Add(SimpleMediaCollection collection) => throw new NotSupportedException();
 
@@ -25,32 +25,20 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id) =>
             throw new NotSupportedException();
 
-        public Task<Option<TelevisionMediaCollection>> GetTelevisionMediaCollection(int id) =>
+        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItemsUntracked(int id) =>
             throw new NotSupportedException();
 
         public Task<List<SimpleMediaCollection>> GetSimpleMediaCollections() => throw new NotSupportedException();
 
         public Task<List<MediaCollection>> GetAll() => throw new NotSupportedException();
 
-        public Task<List<MediaCollectionSummary>> GetSummaries(string searchString) =>
-            throw new NotSupportedException();
-
-        public Task<Option<List<MediaItem>>> GetItems(int id) => Some(_data[id]).AsTask();
+        public Task<Option<List<MediaItem>>> GetItems(int id) => Some(_data[id].OfType<MediaItem>().ToList()).AsTask();
 
         public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id) =>
             throw new NotSupportedException();
 
-        public Task<Option<List<MediaItem>>> GetTelevisionMediaCollectionItems(int id) =>
-            throw new NotSupportedException();
-
         public Task Update(SimpleMediaCollection collection) => throw new NotSupportedException();
 
-        public Task<bool> InsertOrIgnore(TelevisionMediaCollection collection) => throw new NotSupportedException();
-
-        public Task<Unit> ReplaceItems(int collectionId, List<MediaItem> mediaItems) =>
-            throw new NotSupportedException();
-
         public Task Delete(int mediaCollectionId) => throw new NotSupportedException();
-        public Task DeleteEmptyTelevisionCollections() => throw new NotSupportedException();
     }
 }

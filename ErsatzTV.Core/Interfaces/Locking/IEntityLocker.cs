@@ -4,9 +4,9 @@ namespace ErsatzTV.Core.Interfaces.Locking
 {
     public interface IEntityLocker
     {
-        public event EventHandler OnMediaSourceChanged;
-        public bool LockMediaSource(int mediaSourceId);
-        public bool UnlockMediaSource(int mediaSourceId);
-        public bool IsMediaSourceLocked(int mediaSourceId);
+        event EventHandler OnMediaSourceChanged;
+        bool LockMediaSource(int mediaSourceId);
+        bool UnlockMediaSource(int mediaSourceId);
+        bool IsMediaSourceLocked(int mediaSourceId);
     }
 }

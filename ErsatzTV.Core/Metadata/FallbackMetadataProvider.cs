@@ -2,35 +2,58 @@
 using System.IO;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 
 namespace ErsatzTV.Core.Metadata
 {
-    public static class FallbackMetadataProvider
+    public class FallbackMetadataProvider : IFallbackMetadataProvider
     {
-        public static MediaMetadata GetFallbackMetadata(MediaItem mediaItem)
+        public TelevisionShowMetadata GetFallbackMetadataForShow(string showFolder)
+        {
+            string fileName = Path.GetFileName(showFolder);
+            var metadata = new TelevisionShowMetadata
+                { Source = MetadataSource.Fallback, Title = fileName ?? showFolder };
+            return GetTelevisionShowMetadata(fileName, metadata);
+        }
+
+        public static TelevisionEpisodeMetadata GetFallbackMetadata(TelevisionEpisodeMediaItem mediaItem)
         {
             string fileName = Path.GetFileName(mediaItem.Path);
-            var metadata = new MediaMetadata { Source = MetadataSource.Fallback, Title = fileName ?? mediaItem.Path };
+            var metadata = new TelevisionEpisodeMetadata
+                { Source = MetadataSource.Fallback, Title = fileName ?? mediaItem.Path };
 
             if (fileName != null)
             {
-                if (!(mediaItem.Source is LocalMediaSource localMediaSource))
+                if (!(mediaItem.Source is LocalMediaSource))
                 {
                     return metadata;
                 }
 
-                return localMediaSource.MediaType switch
-                {
-                    MediaType.TvShow => GetTvShowMetadata(fileName, metadata),
-                    MediaType.Movie => GetMovieMetadata(fileName, metadata),
-                    _ => metadata
-                };
+                return GetEpisodeMetadata(fileName, metadata);
             }
 
             return metadata;
         }
 
-        private static MediaMetadata GetTvShowMetadata(string fileName, MediaMetadata metadata)
+        public static MovieMetadata GetFallbackMetadata(MovieMediaItem mediaItem)
+        {
+            string fileName = Path.GetFileName(mediaItem.Path);
+            var metadata = new MovieMetadata { Source = MetadataSource.Fallback, Title = fileName ?? mediaItem.Path };
+
+            if (fileName != null)
+            {
+                if (!(mediaItem.Source is LocalMediaSource))
+                {
+                    return metadata;
+                }
+
+                return GetMovieMetadata(fileName, metadata);
+            }
+
+            return metadata;
+        }
+
+        private static TelevisionEpisodeMetadata GetEpisodeMetadata(string fileName, TelevisionEpisodeMetadata metadata)
         {
             try
             {
@@ -38,10 +61,9 @@ namespace ErsatzTV.Core.Metadata
                 Match match = Regex.Match(fileName, PATTERN);
                 if (match.Success)
                 {
-                    metadata.MediaType = MediaType.TvShow;
                     metadata.Title = match.Groups[1].Value;
-                    metadata.SeasonNumber = int.Parse(match.Groups[2].Value);
-                    metadata.EpisodeNumber = int.Parse(match.Groups[3].Value);
+                    metadata.Season = int.Parse(match.Groups[2].Value);
+                    metadata.Episode = int.Parse(match.Groups[3].Value);
                 }
             }
             catch (Exception)
@@ -52,7 +74,7 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        private static MediaMetadata GetMovieMetadata(string fileName, MediaMetadata metadata)
+        private static MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)
         {
             try
             {
@@ -60,9 +82,30 @@ namespace ErsatzTV.Core.Metadata
                 Match match = Regex.Match(fileName, PATTERN);
                 if (match.Success)
                 {
-                    metadata.MediaType = MediaType.Movie;
                     metadata.Title = match.Groups[1].Value;
-                    metadata.Aired = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
+                    metadata.Year = int.Parse(match.Groups[2].Value);
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            return metadata;
+        }
+
+        private static TelevisionShowMetadata GetTelevisionShowMetadata(
+            string fileName,
+            TelevisionShowMetadata metadata)
+        {
+            try
+            {
+                const string PATTERN = @"^(.*?)[\s.]+?[.\(](\d{4})[.\)].*$";
+                Match match = Regex.Match(fileName, PATTERN);
+                if (match.Success)
+                {
+                    metadata.Title = match.Groups[1].Value;
+                    metadata.Year = int.Parse(match.Groups[2].Value);
                 }
             }
             catch (Exception)

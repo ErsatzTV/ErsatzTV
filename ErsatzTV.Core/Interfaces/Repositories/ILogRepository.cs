@@ -6,6 +6,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface ILogRepository
     {
-        public Task<List<LogEntry>> GetRecentLogEntries();
+        Task<List<LogEntry>> GetRecentLogEntries();
     }
 }

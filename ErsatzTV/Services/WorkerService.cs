@@ -3,7 +3,6 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application;
-using ErsatzTV.Application.MediaItems.Commands;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
@@ -54,28 +53,6 @@ namespace ErsatzTV.Services
                                 error => _logger.LogWarning(
                                     "Unable to build playout {PlayoutId}: {Error}",
                                     buildPlayout.PlayoutId,
-                                    error.Value));
-                            break;
-                        case RefreshMediaItem refreshMediaItem:
-                            string type = refreshMediaItem switch
-                            {
-                                // RefreshMediaItemMetadata => "metadata",
-                                RefreshMediaItemStatistics => "statistics",
-                                RefreshMediaItemCollections => "collections",
-                                RefreshMediaItemPoster => "poster",
-                                _ => ""
-                            };
-
-                            // TODO: different request types for different media source types?
-                            Either<BaseError, Unit> refreshMediaItemResult =
-                                await mediator.Send(refreshMediaItem, cancellationToken);
-                            refreshMediaItemResult.Match(
-                                _ => _logger.LogDebug(
-                                    $"Refreshed {type} for media item {{MediaItemId}}",
-                                    refreshMediaItem.MediaItemId),
-                                error => _logger.LogWarning(
-                                    $"Unable to refresh {type} for media item {{MediaItemId}}: {{Error}}",
-                                    refreshMediaItem.MediaItemId,
                                     error.Value));
                             break;
                         case ScanLocalMediaSource scanLocalMediaSource:

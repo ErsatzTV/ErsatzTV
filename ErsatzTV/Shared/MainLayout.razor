@@ -28,9 +28,8 @@
             <MudNavLink Href="/ffmpeg">FFmpeg</MudNavLink>
             <MudNavGroup Title="Media" Expanded="true">
                 <MudNavLink Href="/media/sources">Media Sources</MudNavLink>
-                <MudNavLink Href="/media/tv/items">TV Shows</MudNavLink>
-                <MudNavLink Href="/media/movies/items">Movies</MudNavLink>
-                <MudNavLink Href="/media/other/items">Other Items</MudNavLink>
+                <MudNavLink Href="/media/tv/shows">TV Shows</MudNavLink>
+                <MudNavLink Href="/media/movies">Movies</MudNavLink>
                 <MudNavLink Href="/media/collections">Media Collections</MudNavLink>
             </MudNavGroup>
             <MudNavLink Href="/schedules">Schedules</MudNavLink>
@@ -68,7 +67,8 @@
                 Palette = new Palette
                 {
                     DrawerBackground = current.Palette.Background,
-                    Background = current.Palette.BackgroundGrey
+                    Background = current.Palette.BackgroundGrey,
+                    Tertiary = Colors.Shades.White
                 }
             };
         }

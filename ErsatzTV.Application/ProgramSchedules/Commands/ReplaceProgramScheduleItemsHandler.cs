@@ -55,12 +55,19 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
 
         private Task<Validation<BaseError, ProgramSchedule>> Validate(ReplaceProgramScheduleItems request) =>
             ProgramScheduleMustExist(request.ProgramScheduleId)
-                .BindT(programSchedule => PlayoutModesMustBeValid(request, programSchedule));
+                .BindT(programSchedule => PlayoutModesMustBeValid(request, programSchedule))
+                .BindT(programSchedule => CollectionTypesMustBeValid(request, programSchedule));
 
         private Validation<BaseError, ProgramSchedule> PlayoutModesMustBeValid(
             ReplaceProgramScheduleItems request,
             ProgramSchedule programSchedule) =>
             request.Items.Map(item => PlayoutModeMustBeValid(item, programSchedule)).Sequence()
+                .Map(_ => programSchedule);
+
+        private Validation<BaseError, ProgramSchedule> CollectionTypesMustBeValid(
+            ReplaceProgramScheduleItems request,
+            ProgramSchedule programSchedule) =>
+            request.Items.Map(item => CollectionTypeMustBeValid(item, programSchedule)).Sequence()
                 .Map(_ => programSchedule);
     }
 }
