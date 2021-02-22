@@ -138,7 +138,7 @@ namespace ErsatzTV.Core.Metadata
                 return None;
             }
 
-            return await LoadMovieMetadata(nfoFileName);
+            return await LoadMovieMetadata(mediaItem, nfoFileName);
         }
 
         private async Task<Option<TelevisionEpisodeMetadata>> LoadMetadata(
@@ -157,7 +157,7 @@ namespace ErsatzTV.Core.Metadata
                 return None;
             }
 
-            return await LoadEpisodeMetadata(nfoFileName);
+            return await LoadEpisodeMetadata(mediaItem, nfoFileName);
         }
 
         private async Task<Option<TelevisionShowMetadata>> LoadMetadata(
@@ -197,7 +197,7 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Option<TelevisionEpisodeMetadata>> LoadEpisodeMetadata(string nfoFileName)
+        private async Task<Option<TelevisionEpisodeMetadata>> LoadEpisodeMetadata(TelevisionEpisodeMediaItem mediaItem, string nfoFileName)
         {
             try
             {
@@ -219,11 +219,11 @@ namespace ErsatzTV.Core.Metadata
             catch (Exception ex)
             {
                 _logger.LogDebug(ex, "Failed to read TV episode nfo metadata from {Path}", nfoFileName);
-                return None;
+                return FallbackMetadataProvider.GetFallbackMetadata(mediaItem);
             }
         }
 
-        private async Task<Option<MovieMetadata>> LoadMovieMetadata(string nfoFileName)
+        private async Task<Option<MovieMetadata>> LoadMovieMetadata(MovieMediaItem mediaItem, string nfoFileName)
         {
             try
             {
@@ -247,7 +247,7 @@ namespace ErsatzTV.Core.Metadata
             catch (Exception ex)
             {
                 _logger.LogDebug(ex, "Failed to read Movie nfo metadata from {Path}", nfoFileName);
-                return None;
+                return FallbackMetadataProvider.GetFallbackMetadata(mediaItem);
             }
         }
 

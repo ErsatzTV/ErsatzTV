@@ -9,14 +9,14 @@ namespace ErsatzTV.Application.MediaCards
         internal static TelevisionShowCardViewModel ProjectToViewModel(TelevisionShow televisionShow) =>
             new(
                 televisionShow.Id,
-                televisionShow.Metadata.Title,
-                televisionShow.Metadata.Year.ToString(),
-                televisionShow.Metadata.SortTitle,
+                televisionShow.Metadata?.Title,
+                televisionShow.Metadata?.Year.ToString(),
+                televisionShow.Metadata?.SortTitle,
                 televisionShow.Poster);
 
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(TelevisionSeason televisionSeason) =>
             new(
-                televisionSeason.TelevisionShow.Metadata.Title,
+                televisionSeason.TelevisionShow.Metadata?.Title,
                 televisionSeason.Id,
                 televisionSeason.Number,
                 GetSeasonName(televisionSeason.Number),
@@ -29,13 +29,13 @@ namespace ErsatzTV.Application.MediaCards
             TelevisionEpisodeMediaItem televisionEpisode) =>
             new(
                 televisionEpisode.Id,
-                televisionEpisode.Metadata.Aired ?? DateTime.MinValue,
+                televisionEpisode.Metadata?.Aired ?? DateTime.MinValue,
                 televisionEpisode.Season.TelevisionShow.Metadata.Title,
-                televisionEpisode.Metadata.Title,
-                $"Episode {televisionEpisode.Metadata.Episode}",
-                televisionEpisode.Metadata.Episode.ToString(),
+                televisionEpisode.Metadata?.Title,
+                $"Episode {televisionEpisode.Metadata?.Episode}",
+                televisionEpisode.Metadata?.Episode.ToString(),
                 televisionEpisode.Poster,
-                televisionEpisode.Metadata.Episode.ToString());
+                televisionEpisode.Metadata?.Episode.ToString());
 
         internal static MovieCardViewModel ProjectToViewModel(MovieMediaItem movie) =>
             new(
