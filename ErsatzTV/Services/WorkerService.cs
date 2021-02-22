@@ -6,7 +6,6 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Errors;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,29 +55,18 @@ namespace ErsatzTV.Services
                                     buildPlayout.PlayoutId,
                                     error.Value));
                             break;
-                        case ScanLocalMediaSource scanLocalMediaSource:
-                            Either<Seq<BaseError>, string> scanResult = await mediator.Send(
+                        case IScanLocalMediaSource scanLocalMediaSource:
+                            Either<BaseError, string> scanResult = await mediator.Send(
                                 scanLocalMediaSource,
                                 cancellationToken);
                             scanResult.BiIter(
                                 name => _logger.LogDebug(
                                     "Done scanning local media source {MediaSource}",
                                     name),
-                                errors =>
-                                {
-                                    BaseError error = errors.Head;
-                                    if (error is MediaSourceRecentlyScanned recentlyScanned)
-                                    {
-                                        _logger.LogInformation(recentlyScanned.Value);
-                                    }
-                                    else
-                                    {
-                                        _logger.LogWarning(
-                                            "Unable to scan local media source {MediaSourceId}: {Error}",
-                                            scanLocalMediaSource.MediaSourceId,
-                                            error.Value);
-                                    }
-                                });
+                                error => _logger.LogWarning(
+                                    "Unable to scan local media source {MediaSourceId}: {Error}",
+                                    scanLocalMediaSource.MediaSourceId,
+                                    error.Value));
                             break;
                     }
                 }

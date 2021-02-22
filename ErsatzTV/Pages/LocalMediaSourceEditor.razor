@@ -87,7 +87,7 @@
                 {
                     if (Locker.LockMediaSource(vm.Id))
                     {
-                        await Channel.WriteAsync(new ScanLocalMediaSource(vm.Id));
+                        await Channel.WriteAsync(new ForceScanLocalMediaSource(vm.Id));
                         NavigationManager.NavigateTo("/media/sources");
                     }
                 });
