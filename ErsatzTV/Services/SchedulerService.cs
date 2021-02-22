@@ -82,7 +82,7 @@ namespace ErsatzTV.Services
                 if (_entityLocker.LockMediaSource(mediaSourceId))
                 {
                     await _channel.WriteAsync(
-                        new ScanLocalMediaSource(mediaSourceId),
+                        new ScanLocalMediaSourceIfNeeded(mediaSourceId),
                         cancellationToken);
                 }
             }

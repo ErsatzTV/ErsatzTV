@@ -55,7 +55,7 @@ namespace ErsatzTV.Services
                                     buildPlayout.PlayoutId,
                                     error.Value));
                             break;
-                        case ScanLocalMediaSource scanLocalMediaSource:
+                        case IScanLocalMediaSource scanLocalMediaSource:
                             Either<BaseError, string> scanResult = await mediator.Send(
                                 scanLocalMediaSource,
                                 cancellationToken);

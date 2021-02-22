@@ -14,6 +14,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<MediaSource>> Get(int id);
         Task<Option<PlexMediaSource>> GetPlex(int id);
         Task<int> CountMediaItems(int id);
+        Task Update(LocalMediaSource localMediaSource);
         Task Update(PlexMediaSource plexMediaSource);
         Task Delete(int id);
     }

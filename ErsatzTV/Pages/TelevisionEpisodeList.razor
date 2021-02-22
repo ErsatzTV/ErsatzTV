@@ -103,8 +103,8 @@
             NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }
-    
-    
+
+
     private async Task AddToSchedule()
     {
         var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Plot}" } };

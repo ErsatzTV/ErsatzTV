@@ -34,7 +34,7 @@
                     <MudTooltip Text="Scan Media Source">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                        Disabled="@Locker.IsMediaSourceLocked(context.Id)"
-                                       OnClick="@(_ => RefreshAllMetadata(context))">
+                                       OnClick="@(_ => ScanMediaSource(context))">
                         </MudIconButton>
                     </MudTooltip>
                 }
@@ -85,11 +85,11 @@
         }
     }
 
-    private async Task RefreshAllMetadata(LocalMediaSourceViewModel mediaSource)
+    private async Task ScanMediaSource(LocalMediaSourceViewModel mediaSource)
     {
         if (Locker.LockMediaSource(mediaSource.Id))
         {
-            await Channel.WriteAsync(new ScanLocalMediaSource(mediaSource.Id));
+            await Channel.WriteAsync(new ForceScanLocalMediaSource(mediaSource.Id));
             StateHasChanged();
         }
     }
