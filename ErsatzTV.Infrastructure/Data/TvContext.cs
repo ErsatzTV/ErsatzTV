@@ -1,5 +1,4 @@
-﻿using ErsatzTV.Core.AggregateModels;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -34,21 +33,12 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<TelevisionShowMetadata> TelevisionShowMetadata { get; set; }
         public DbSet<TelevisionSeason> TelevisionSeasons { get; set; }
 
-        // support raw sql queries
-        public DbSet<MediaCollectionSummary> MediaCollectionSummaries { get; set; }
-        public DbSet<GenericIntegerId> GenericIntegerIds { get; set; }
-        public DbSet<MediaItemSummary> MediaItemSummaries { get; set; }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.UseLoggerFactory(_loggerFactory);
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-            builder.Ignore<MediaCollectionSummary>();
-            builder.Ignore<GenericIntegerId>();
-            builder.Ignore<MediaItemSummary>();
 
             builder.ApplyConfigurationsFromAssembly(typeof(TvContext).Assembly);
         }
