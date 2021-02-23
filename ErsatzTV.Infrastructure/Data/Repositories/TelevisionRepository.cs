@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -14,8 +16,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     public class TelevisionRepository : ITelevisionRepository
     {
         private readonly TvContext _dbContext;
+        private readonly IDbConnection _dbConnection;
 
-        public TelevisionRepository(TvContext dbContext) => _dbContext = dbContext;
+        public TelevisionRepository(TvContext dbContext, IDbConnection dbConnection)
+        {
+            _dbContext = dbContext;
+            _dbConnection = dbConnection;
+        }
 
         public async Task<bool> Update(TelevisionShow show)
         {
@@ -245,16 +252,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<TelevisionEpisodeMediaItem>> GetShowItems(int televisionShowId)
         {
-            // TODO: would be nice to get the media items in one go, but ef...
-            List<int> showItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
-                    @"select tmi.Id
+            var parameters = new { ShowId = televisionShowId };
+            IEnumerable<int> showItemIds = await _dbConnection.QueryAsync<int>(
+                @"select tmi.Id
 from TelevisionEpisodes tmi
 inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
 inner join TelevisionShows ts on ts.Id = tsn.TelevisionShowId
-where ts.Id = {0}",
-                    televisionShowId)
-                .Select(i => i.Id)
-                .ToListAsync();
+where ts.Id = @ShowId",
+                parameters);
 
             return await _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()
@@ -265,15 +270,13 @@ where ts.Id = {0}",
 
         public async Task<List<TelevisionEpisodeMediaItem>> GetSeasonItems(int televisionSeasonId)
         {
-            // TODO: would be nice to get the media items in one go, but ef...
-            List<int> seasonItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
-                    @"select tmi.Id
+            var parameters = new { SeasonId = televisionSeasonId };
+            IEnumerable<int> seasonItemIds = await _dbConnection.QueryAsync<int>(
+                @"select tmi.Id
 from TelevisionEpisodes tmi
 inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
-where tsn.Id = {0}",
-                    televisionSeasonId)
-                .Select(i => i.Id)
-                .ToListAsync();
+where tsn.Id = @SeasonId",
+                parameters);
 
             return await _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()

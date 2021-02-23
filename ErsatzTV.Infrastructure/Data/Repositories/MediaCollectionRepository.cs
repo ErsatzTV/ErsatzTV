@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -13,8 +15,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     public class MediaCollectionRepository : IMediaCollectionRepository
     {
         private readonly TvContext _dbContext;
+        private readonly IDbConnection _dbConnection;
 
-        public MediaCollectionRepository(TvContext dbContext) => _dbContext = dbContext;
+        public MediaCollectionRepository(TvContext dbContext, IDbConnection dbConnection)
+        {
+            _dbContext = dbContext;
+            _dbConnection = dbConnection;
+        }
 
         public async Task<SimpleMediaCollection> Add(SimpleMediaCollection collection)
         {
@@ -110,17 +117,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionShowItems(SimpleMediaCollection collection)
         {
-            // TODO: would be nice to get the media items in one go, but ef...
-            List<int> showItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
-                    @"select tmi.Id
+            var parameters = new { CollectionId = collection.Id };
+            IEnumerable<int> showItemIds = await _dbConnection.QueryAsync<int>(
+                @"select tmi.Id
 from TelevisionEpisodes tmi
 inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
 inner join TelevisionShows ts on ts.Id = tsn.TelevisionShowId
 inner join SimpleMediaCollectionShows s on s.TelevisionShowsId = ts.Id
-where s.SimpleMediaCollectionsId = {0}",
-                    collection.Id)
-                .Select(i => i.Id)
-                .ToListAsync();
+where s.SimpleMediaCollectionsId = @CollectionId",
+                parameters);
 
             return await _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()
@@ -131,16 +136,14 @@ where s.SimpleMediaCollectionsId = {0}",
 
         private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionSeasonItems(SimpleMediaCollection collection)
         {
-            // TODO: would be nice to get the media items in one go, but ef...
-            List<int> seasonItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
-                    @"select tmi.Id
+            var parameters = new { CollectionId = collection.Id };
+            IEnumerable<int> seasonItemIds = await _dbConnection.QueryAsync<int>(
+                @"select tmi.Id
 from TelevisionEpisodes tmi
 inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
 inner join SimpleMediaCollectionSeasons s on s.TelevisionSeasonsId = tsn.Id
-where s.SimpleMediaCollectionsId = {0}",
-                    collection.Id)
-                .Select(i => i.Id)
-                .ToListAsync();
+where s.SimpleMediaCollectionsId = @CollectionId",
+                parameters);
 
             return await _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()
@@ -151,14 +154,12 @@ where s.SimpleMediaCollectionsId = {0}",
 
         private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionEpisodeItems(SimpleMediaCollection collection)
         {
-            // TODO: would be nice to get the media items in one go, but ef...
-            List<int> episodeItemIds = await _dbContext.GenericIntegerIds.FromSqlRaw(
+            var parameters = new { CollectionId = collection.Id };
+            IEnumerable<int> episodeItemIds = await _dbConnection.QueryAsync<int>(
                     @"select s.TelevisionEpisodesId as Id
 from SimpleMediaCollectionEpisodes s
-where s.SimpleMediaCollectionsId = {0}",
-                    collection.Id)
-                .Select(i => i.Id)
-                .ToListAsync();
+where s.SimpleMediaCollectionsId = @CollectionId",
+                    parameters);
 
             return await _dbContext.TelevisionEpisodeMediaItems
                 .AsNoTracking()

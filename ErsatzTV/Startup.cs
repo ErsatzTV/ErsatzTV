@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Threading.Channels;
@@ -27,6 +28,7 @@ using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -109,18 +111,21 @@ namespace ErsatzTV
             // string xmltvPath = Path.Combine(appDataFolder, "xmltv.xml");
             // Log.Logger.Information("XMLTV is at {XmltvPath}", xmltvPath);
 
+            var connectionString = $"Data Source={FileSystemLayout.DatabasePath}";
+            
             services.AddDbContext<TvContext>(
                 options => options.UseSqlite(
-                    $"Data Source={FileSystemLayout.DatabasePath}",
+                    connectionString,
                     o =>
                     {
                         o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                         o.MigrationsAssembly("ErsatzTV.Infrastructure");
                     }));
 
-            services.AddDbContext<LogContext>(
-                options => options.UseSqlite($"Data Source={FileSystemLayout.LogDatabasePath}"));
+            services.AddDbContext<LogContext>(options => options.UseSqlite(connectionString));
 
+            services.AddTransient<IDbConnection>(_ => new SqliteConnection(connectionString));
+            
             services.AddMediatR(typeof(GetAllChannels).Assembly);
 
             services.AddRefitClient<IPlexTvApi>()
