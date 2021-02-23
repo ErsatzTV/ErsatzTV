@@ -3,6 +3,7 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Threading.Channels;
+using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
 using ErsatzTV.Core;
@@ -125,7 +126,10 @@ namespace ErsatzTV
             services.AddDbContext<LogContext>(options => options.UseSqlite(connectionString));
 
             services.AddTransient<IDbConnection>(_ => new SqliteConnection(connectionString));
-            
+            SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
+            SqlMapper.AddTypeHandler(new GuidHandler());
+            SqlMapper.AddTypeHandler(new TimeSpanHandler());
+
             services.AddMediatR(typeof(GetAllChannels).Assembly);
 
             services.AddRefitClient<IPlexTvApi>()

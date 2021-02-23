@@ -15,8 +15,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 {
     public class TelevisionRepository : ITelevisionRepository
     {
-        private readonly TvContext _dbContext;
         private readonly IDbConnection _dbConnection;
+        private readonly TvContext _dbContext;
 
         public TelevisionRepository(TvContext dbContext, IDbConnection dbConnection)
         {
@@ -253,36 +253,52 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public async Task<List<TelevisionEpisodeMediaItem>> GetShowItems(int televisionShowId)
         {
             var parameters = new { ShowId = televisionShowId };
-            IEnumerable<int> showItemIds = await _dbConnection.QueryAsync<int>(
-                @"select tmi.Id
+            return await _dbConnection
+                .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
+                    TelevisionEpisodeMediaItem>(
+                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
+mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
+mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
+tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
 from TelevisionEpisodes tmi
+inner join MediaItems mi on tmi.Id = mi.Id
+inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
 inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
 inner join TelevisionShows ts on ts.Id = tsn.TelevisionShowId
 where ts.Id = @ShowId",
-                parameters);
-
-            return await _dbContext.TelevisionEpisodeMediaItems
-                .AsNoTracking()
-                .Include(e => e.Metadata)
-                .Where(mi => showItemIds.Contains(mi.Id))
-                .ToListAsync();
+                    (episode, statistics, metadata) =>
+                    {
+                        episode.Statistics = statistics;
+                        episode.Metadata = metadata;
+                        return episode;
+                    },
+                    parameters,
+                    splitOn: "AudioCodec,TelevisionEpisodeId").Map(result => result.ToList());
         }
 
         public async Task<List<TelevisionEpisodeMediaItem>> GetSeasonItems(int televisionSeasonId)
         {
             var parameters = new { SeasonId = televisionSeasonId };
-            IEnumerable<int> seasonItemIds = await _dbConnection.QueryAsync<int>(
-                @"select tmi.Id
+            return await _dbConnection
+                .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
+                    TelevisionEpisodeMediaItem>(
+                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
+mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
+mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
+tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
 from TelevisionEpisodes tmi
+inner join MediaItems mi on tmi.Id = mi.Id
+inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
 inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
 where tsn.Id = @SeasonId",
-                parameters);
-
-            return await _dbContext.TelevisionEpisodeMediaItems
-                .AsNoTracking()
-                .Include(e => e.Metadata)
-                .Where(mi => seasonItemIds.Contains(mi.Id))
-                .ToListAsync();
+                    (episode, statistics, metadata) =>
+                    {
+                        episode.Statistics = statistics;
+                        episode.Metadata = metadata;
+                        return episode;
+                    },
+                    parameters,
+                    splitOn: "AudioCodec,TelevisionEpisodeId").Map(result => result.ToList());
         }
 
         private async Task<Either<BaseError, TelevisionSeason>> AddSeason(
