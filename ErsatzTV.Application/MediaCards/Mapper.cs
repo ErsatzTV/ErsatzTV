@@ -38,7 +38,7 @@ namespace ErsatzTV.Application.MediaCards
                 televisionEpisode.Poster,
                 televisionEpisode.Metadata?.Episode.ToString());
 
-        internal static MovieCardViewModel ProjectToViewModel(NewMovieMetadata movieMetadata) =>
+        internal static MovieCardViewModel ProjectToViewModel(MovieMetadata movieMetadata) =>
             new(
                 movieMetadata.MovieId,
                 movieMetadata.Title,

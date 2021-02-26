@@ -36,10 +36,10 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        public static NewMovieMetadata GetFallbackMetadata(Movie movie)
+        public static MovieMetadata GetFallbackMetadata(Movie movie)
         {
             string fileName = Path.GetFileName(movie.Path);
-            var metadata = new NewMovieMetadata { MetadataKind = MetadataKind.Fallback, Title = fileName ?? movie.Path };
+            var metadata = new MovieMetadata { MetadataKind = MetadataKind.Fallback, Title = fileName ?? movie.Path };
 
             if (fileName != null)
             {
@@ -76,7 +76,7 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        private static NewMovieMetadata GetMovieMetadata(string fileName, NewMovieMetadata metadata)
+        private static MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)
         {
             try
             {

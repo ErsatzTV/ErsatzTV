@@ -611,7 +611,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             new()
             {
                 Id = id,
-                MovieMetadata = new List<NewMovieMetadata> { new() { ReleaseDate = aired } },
+                MovieMetadata = new List<MovieMetadata> { new() { ReleaseDate = aired } },
                 Statistics = new MediaItemStatistics { Duration = duration }
             };
 

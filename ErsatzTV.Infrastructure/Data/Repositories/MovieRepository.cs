@@ -66,7 +66,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<int> GetMovieCount() =>
             _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT(DISTINCT MovieId) FROM NewMovieMetadata");
 
-        public Task<List<NewMovieMetadata>> GetPagedMovies(int pageNumber, int pageSize) =>
+        public Task<List<MovieMetadata>> GetPagedMovies(int pageNumber, int pageSize) =>
             _dbContext.MovieMetadata.FromSqlRaw(@"SELECT * FROM NewMovieMetadata WHERE Id IN
             (SELECT Id FROM NewMovieMetadata GROUP BY MovieId, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
             ORDER BY SortTitle

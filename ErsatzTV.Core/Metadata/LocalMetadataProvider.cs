@@ -95,9 +95,9 @@ namespace ErsatzTV.Core.Metadata
             await _televisionRepository.Update(mediaItem);
         }
 
-        private async Task ApplyMetadataUpdate(Movie movie, NewMovieMetadata metadata)
+        private async Task ApplyMetadataUpdate(Movie movie, MovieMetadata metadata)
         {
-            movie.MovieMetadata = new List<NewMovieMetadata> { metadata };
+            movie.MovieMetadata = new List<MovieMetadata> { metadata };
             await _mediaItemRepository.Update(movie);
         }
 
@@ -114,7 +114,7 @@ namespace ErsatzTV.Core.Metadata
             await _televisionRepository.Update(televisionShow);
         }
 
-        private async Task<Option<NewMovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
+        private async Task<Option<MovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
         {
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
@@ -215,14 +215,14 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Option<NewMovieMetadata>> LoadMovieMetadata(Movie mediaItem, string nfoFileName)
+        private async Task<Option<MovieMetadata>> LoadMovieMetadata(Movie mediaItem, string nfoFileName)
         {
             try
             {
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<MovieNfo> maybeNfo = MovieSerializer.Deserialize(fileStream) as MovieNfo;
-                return maybeNfo.Match<Option<NewMovieMetadata>>(
-                    nfo => new NewMovieMetadata
+                return maybeNfo.Match<Option<MovieMetadata>>(
+                    nfo => new MovieMetadata
                     {
                         MetadataKind = MetadataKind.Sidecar,
                         DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),

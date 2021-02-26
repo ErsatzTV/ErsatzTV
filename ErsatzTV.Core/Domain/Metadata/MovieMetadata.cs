@@ -1,6 +1,6 @@
 ﻿namespace ErsatzTV.Core.Domain
 {
-    public class NewMovieMetadata : Metadata
+    public class MovieMetadata : Metadata
     {
         public string Outline { get; set; }
         public string Plot { get; set; }

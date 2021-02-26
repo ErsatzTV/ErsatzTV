@@ -123,7 +123,7 @@ namespace ErsatzTV.Infrastructure.Plex
             PlexPartResponse part = media.Part.Head();
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
-            var metadata = new NewMovieMetadata
+            var metadata = new MovieMetadata
             {
                 Title = response.Title,
                 Plot = response.Summary,
@@ -139,7 +139,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Poster = response.Thumb,
                 LastWriteTime = lastWriteTime,
                 PosterLastWriteTime = lastWriteTime,
-                MovieMetadata = new List<NewMovieMetadata> { metadata },
+                MovieMetadata = new List<MovieMetadata> { metadata },
                 Statistics = new MediaItemStatistics
                 {
                     Duration = TimeSpan.FromMilliseconds(media.Duration),
