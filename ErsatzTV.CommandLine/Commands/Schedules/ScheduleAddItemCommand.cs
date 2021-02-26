@@ -97,7 +97,7 @@ namespace ErsatzTV.CommandLine.Commands.Schedules
                 () =>
                 {
                     _logger.LogError(
-                        "Unable to locate media collection {MediaCollection}",
+                        "Unable to locate collection {Collection}",
                         CollectionName);
                     return Task.CompletedTask;
                 });

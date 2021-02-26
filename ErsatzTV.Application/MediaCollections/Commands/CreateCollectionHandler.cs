@@ -46,7 +46,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
 
             var result2 = Optional(createCollection.Name)
                 .Filter(name => !allNames.Contains(name))
-                .ToValidation<BaseError>("Media collection name must be unique");
+                .ToValidation<BaseError>("Collection name must be unique");
 
             return (result1, result2).Apply((_, _) => createCollection.Name);
         }

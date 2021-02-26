@@ -19,7 +19,7 @@
 
 <MudContainer MaxWidth="MaxWidth.False">
     <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
-        Add Media Collection
+        Add Collection
     </MudButton>
 </MudContainer>
 
@@ -35,10 +35,10 @@
     {
         if (vm is MediaCollectionViewModel collection)
         {
-            var parameters = new DialogParameters { { "EntityType", "media collection" }, { "EntityName", collection.Name } };
+            var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Media Collection", parameters, options);
+            IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Cancelled)
             {

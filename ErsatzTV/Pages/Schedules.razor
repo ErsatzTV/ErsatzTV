@@ -19,7 +19,7 @@
         <HeaderContent>
             <MudTh>Id</MudTh>
             <MudTh>Name</MudTh>
-            <MudTh>Media Collection Playback Order</MudTh>
+            <MudTh>Collection Playback Order</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
@@ -54,15 +54,15 @@
         </ToolBarContent>
         <HeaderContent>
             <MudTh>Start Time</MudTh>
-            <MudTh>Media Collection</MudTh>
+            <MudTh>Collection</MudTh>
             <MudTh>Playout Mode</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Start Time">
                 @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
             </MudTd>
-            <MudTd DataLabel="Media Collection">@context.Name</MudTd>
-            <MudTd DataLabel="Media Collection">@context.PlayoutMode</MudTd>
+            <MudTd DataLabel="Collection">@context.Name</MudTd>
+            <MudTd DataLabel="Playout Mode">@context.PlayoutMode</MudTd>
         </RowTemplate>
         <PagerContent>
             <MudTablePager/>

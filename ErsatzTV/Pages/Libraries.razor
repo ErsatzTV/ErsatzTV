@@ -1,0 +1,82 @@
+﻿@page "/media/libraries"
+@using ErsatzTV.Application.Libraries
+@using ErsatzTV.Application.Libraries.Queries
+@implements IDisposable
+@inject IMediator Mediator
+@inject IEntityLocker Locker
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudTable Hover="true" Items="_libraries" Dense="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Libraries</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col/>
+            <col style="width: 120px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Library Kind</MudTh>
+            <MudTh>Name</MudTh>
+            <MudTh>Media Kind</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Library Kind">Local</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Media Kind">@context.MediaKind</MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    @if (Locker.IsLibraryLocked(context.Id))
+                    {
+                        <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
+                            <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudTooltip Text="Scan Library">
+                            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                           Disabled="@Locker.IsLibraryLocked(context.Id)"
+                                           OnClick="@(_ => ScanLibrary(context))">
+                            </MudIconButton>
+                        </MudTooltip>
+                    }
+                    @if (context is LocalLibraryViewModel)
+                    {
+                        <MudTooltip Text="Edit Library">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Disabled="@Locker.IsLibraryLocked(context.Id)"
+                                           Link="@($"/media/libraries/local/{context.Id}")">
+                            </MudIconButton>
+                        </MudTooltip>
+                    }
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private IList<LocalLibraryViewModel> _libraries;
+    
+    protected override void OnInitialized() =>
+        Locker.OnLibraryChanged += LockChanged;
+
+    protected override async Task OnParametersSetAsync() => await LoadLibraries();
+
+    private async Task LoadLibraries() =>
+        _libraries = await Mediator.Send(new GetLocalLibraries());
+
+    private Task ScanLibrary(LocalLibraryViewModel library)
+    {
+        return Task.CompletedTask;
+    }
+
+    private void LockChanged(object sender, EventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    void IDisposable.Dispose() => Locker.OnLibraryChanged -= LockChanged;
+
+}

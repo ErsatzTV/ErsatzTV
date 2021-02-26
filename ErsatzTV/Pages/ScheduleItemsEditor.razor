@@ -25,7 +25,7 @@
     </ColGroup>
     <HeaderContent>
         <MudTh>Start Time</MudTh>
-        <MudTh>Media Collection</MudTh>
+        <MudTh>Collection</MudTh>
         <MudTh>Playout Mode</MudTh>
         <MudTh/>
         <MudTh/>
@@ -104,7 +104,7 @@
                     {
                         <MudAutocomplete Class="mt-3"
                                          T="MediaCollectionViewModel"
-                                         Label="Media Collection"
+                                         Label="Collection"
                                          @bind-value="_selectedItem.Collection"
                                          SearchFunc="@SearchMediaCollections"
                                          ToStringFunc="@(c => c?.Name)"/>

@@ -1,0 +1,48 @@
+﻿@page "/media/libraries/local/{Id:int}"
+@using ErsatzTV.Application.Libraries
+@using ErsatzTV.Application.Libraries.Queries
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudTable Hover="true" Items="_libraryPaths" Dense="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Library Paths</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col style="width: 60px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Path</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Path">@context.Path</MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Delete Library Path">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(() => DeleteLibraryPath(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private IList<LocalLibraryPathViewModel> _libraryPaths;
+
+    protected override async Task OnParametersSetAsync() => await LoadLibraryPaths();
+
+    private async Task LoadLibraryPaths() =>
+        _libraryPaths = await Mediator.Send(new GetLocalLibraryPaths(Id));
+
+    private Task DeleteLibraryPath(LocalLibraryPathViewModel libraryPath) => Task.CompletedTask;
+
+}
