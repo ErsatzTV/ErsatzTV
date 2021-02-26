@@ -55,15 +55,15 @@ namespace ErsatzTV.Core.Scheduling
                     {
                         case ProgramScheduleItemCollectionType.Collection:
                             Option<List<MediaItem>> maybeItems =
-                                await _mediaCollectionRepository.GetItems(collectionKey.Id);
+                                await _mediaCollectionRepository.GetItems(collectionKey.CollectionId ?? 0);
                             return Tuple(collectionKey, maybeItems.IfNone(new List<MediaItem>()));
                         case ProgramScheduleItemCollectionType.TelevisionShow:
                             List<Episode> showItems =
-                                await _televisionRepository.GetShowItems(collectionKey.Id);
+                                await _televisionRepository.GetShowItems(collectionKey.MediaItemId ?? 0);
                             return Tuple(collectionKey, showItems.Cast<MediaItem>().ToList());
                         case ProgramScheduleItemCollectionType.TelevisionSeason:
                             List<Episode> seasonItems =
-                                await _televisionRepository.GetSeasonItems(collectionKey.Id);
+                                await _televisionRepository.GetSeasonItems(collectionKey.MediaItemId ?? 0);
                             return Tuple(collectionKey, seasonItems.Cast<MediaItem>().ToList());
                         default:
                             return Tuple(collectionKey, new List<MediaItem>());
@@ -325,7 +325,9 @@ namespace ErsatzTV.Core.Scheduling
             {
                 Option<PlayoutProgramScheduleAnchor> maybeExisting = playout.ProgramScheduleAnchors
                     .FirstOrDefault(
-                        a => a.CollectionType == collectionKey.CollectionType && a.NewCollectionId == collectionKey.Id);
+                        a => a.CollectionType == collectionKey.CollectionType
+                             && a.NewCollectionId == collectionKey.CollectionId
+                             && a.MediaItemId == collectionKey.MediaItemId);
 
                 var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State)
                     .ToDictionary(mcs => mcs.Key, mcs => mcs.Head());
@@ -343,7 +345,8 @@ namespace ErsatzTV.Core.Scheduling
                         ProgramSchedule = playout.ProgramSchedule,
                         ProgramScheduleId = playout.ProgramScheduleId,
                         CollectionType = collectionKey.CollectionType,
-                        NewCollectionId = collectionKey.Id,
+                        NewCollectionId = collectionKey.CollectionId,
+                        MediaItemId = collectionKey.MediaItemId,
                         EnumeratorState = maybeEnumeratorState[collectionKey]
                     });
 
@@ -360,9 +363,10 @@ namespace ErsatzTV.Core.Scheduling
         {
             Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
                 .FirstOrDefault(
-                    a => a.ProgramScheduleId == playout.ProgramScheduleId && a.CollectionType ==
-                                                                          collectionKey.CollectionType
-                                                                          && a.NewCollectionId == collectionKey.Id);
+                    a => a.ProgramScheduleId == playout.ProgramScheduleId
+                         && a.CollectionType == collectionKey.CollectionType
+                         && a.NewCollectionId == collectionKey.CollectionId
+                         && a.MediaItemId == collectionKey.MediaItemId);
 
             CollectionEnumeratorState state = maybeAnchor.Match(
                 anchor => anchor.EnumeratorState,
@@ -400,17 +404,17 @@ namespace ErsatzTV.Core.Scheduling
                 ProgramScheduleItemCollectionType.Collection => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.CollectionId.Value
+                    CollectionId = item.CollectionId
                 },
                 ProgramScheduleItemCollectionType.TelevisionShow => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.MediaItemId.Value
+                    MediaItemId = item.MediaItemId
                 },
                 ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.MediaItemId.Value
+                    MediaItemId = item.MediaItemId
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(item))
             };
@@ -418,7 +422,8 @@ namespace ErsatzTV.Core.Scheduling
         private class CollectionKey : Record<CollectionKey>
         {
             public ProgramScheduleItemCollectionType CollectionType { get; set; }
-            public int Id { get; set; }
+            public int? CollectionId { get; set; }
+            public int? MediaItemId { get; set; }
         }
     }
 }

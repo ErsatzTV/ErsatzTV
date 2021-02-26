@@ -32,6 +32,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(p => p.Channel)
                 .Include(p => p.Items)
                 .Include(p => p.ProgramScheduleAnchors)
+                .ThenInclude(a => a.MediaItem)
                 .Include(p => p.ProgramSchedule)
                 .ThenInclude(ps => ps.Items)
                 .ThenInclude(psi => psi.Collection)

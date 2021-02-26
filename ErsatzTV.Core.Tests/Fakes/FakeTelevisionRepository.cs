@@ -24,7 +24,7 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
             throw new NotSupportedException();
 
-        public Task<List<Episode>> GetShowItems(int televisionShowId) => throw new NotSupportedException();
+        public Task<List<Episode>> GetShowItems(int showId) => throw new NotSupportedException();
 
         public Task<List<Season>> GetAllSeasons() => throw new NotSupportedException();
 
@@ -35,7 +35,7 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize) =>
             throw new NotSupportedException();
 
-        public Task<List<Episode>> GetSeasonItems(int televisionSeasonId) => throw new NotSupportedException();
+        public Task<List<Episode>> GetSeasonItems(int seasonId) => throw new NotSupportedException();
 
         public Task<Option<Episode>> GetEpisode(int televisionEpisodeId) => throw new NotSupportedException();
 

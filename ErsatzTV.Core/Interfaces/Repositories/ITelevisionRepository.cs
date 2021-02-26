@@ -14,12 +14,12 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<Show>> GetShow(int televisionShowId);
         Task<int> GetShowCount();
         Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize);
-        Task<List<Episode>> GetShowItems(int televisionShowId);
+        Task<List<Episode>> GetShowItems(int showId);
         Task<List<Season>> GetAllSeasons();
         Task<Option<Season>> GetSeason(int televisionSeasonId);
         Task<int> GetSeasonCount(int televisionShowId);
         Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize);
-        Task<List<Episode>> GetSeasonItems(int televisionSeasonId);
+        Task<List<Episode>> GetSeasonItems(int seasonId);
         Task<Option<Episode>> GetEpisode(int televisionEpisodeId);
         Task<int> GetEpisodeCount(int televisionSeasonId);
         Task<List<EpisodeMetadata>> GetPagedEpisodes(int televisionSeasonId, int pageNumber, int pageSize);

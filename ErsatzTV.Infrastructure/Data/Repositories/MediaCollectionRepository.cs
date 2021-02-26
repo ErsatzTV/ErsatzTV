@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -78,7 +77,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.Collections.ToListAsync();
 
         public Task<Option<List<MediaItem>>> GetItems(int id) =>
-            Get(id).MapT(c => c.MediaItems);
+            Get(id).MapT(GetItemsForCollection).Bind(x => x.Sequence());
 
         public Task Update(Collection collection)
         {
@@ -93,82 +92,75 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-//         private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionShowItems(SimpleMediaCollection collection)
-//         {
-//             var parameters = new { CollectionId = collection.Id };
-//             return await _dbConnection
-//                 .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
-//                     TelevisionEpisodeMediaItem>(
-//                     @"select tmi.Id, tmi.SeasonId, mi.LibraryPathId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
-// mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
-// mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
-// tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-// from TelevisionEpisode tmi
-// inner join MediaItem mi on tmi.Id = mi.Id
-// inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-// inner join TelevisionSeason tsn on tsn.Id = tmi.SeasonId
-// inner join TelevisionShow ts on ts.Id = tsn.TelevisionShowId
-// inner join SimpleMediaCollectionShow s on s.TelevisionShowsId = ts.Id
-// where s.SimpleMediaCollectionsId = @CollectionId",
-//                     (episode, statistics, metadata) =>
-//                     {
-//                         episode.Statistics = statistics;
-//                         episode.Metadata = metadata;
-//                         return episode;
-//                     },
-//                     parameters,
-//                     splitOn: "AudioCodec,TelevisionEpisodeId").Map(result => result.ToList());
-//         }
-//
-//         private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionSeasonItems(SimpleMediaCollection collection)
-//         {
-//             var parameters = new { CollectionId = collection.Id };
-//             return await _dbConnection
-//                 .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
-//                     TelevisionEpisodeMediaItem>(
-//                     @"select tmi.Id, tmi.SeasonId, mi.LibraryPathId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
-// mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
-// mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
-// tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-// from TelevisionEpisode tmi
-// inner join MediaItem mi on tmi.Id = mi.Id
-// inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-// inner join TelevisionSeason tsn on tsn.Id = tmi.SeasonId
-// inner join SimpleMediaCollectionSeason s on s.TelevisionSeasonsId = tsn.Id
-// where s.SimpleMediaCollectionsId = @CollectionId",
-//                     (episode, statistics, metadata) =>
-//                     {
-//                         episode.Statistics = statistics;
-//                         episode.Metadata = metadata;
-//                         return episode;
-//                     },
-//                     parameters,
-//                     splitOn: "AudioCodec,TelevisionEpisodeId").Map(result => result.ToList());
-//         }
-//
-//         private async Task<List<TelevisionEpisodeMediaItem>> GetTelevisionEpisodeItems(SimpleMediaCollection collection)
-//         {
-//             var parameters = new { CollectionId = collection.Id };
-//             return await _dbConnection
-//                 .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
-//                     TelevisionEpisodeMediaItem>(
-//                     @"select tmi.Id, tmi.SeasonId, mi.LibraryPathId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
-// mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
-// mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
-// tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-// from TelevisionEpisode tmi
-// inner join MediaItem mi on tmi.Id = mi.Id
-// inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-// inner join SimpleMediaCollectionEpisode s on s.TelevisionEpisodesId = tmi.Id
-// where s.SimpleMediaCollectionsId = @CollectionId",
-//                     (episode, statistics, metadata) =>
-//                     {
-//                         episode.Statistics = statistics;
-//                         episode.Metadata = metadata;
-//                         return episode;
-//                     },
-//                     parameters,
-//                     splitOn: "AudioCodec,TelevisionEpisodeId").Map(result => result.ToList());
-//         }
+        private async Task<List<MediaItem>> GetItemsForCollection(Collection collection)
+        {
+            var result = new List<MediaItem>();
+
+            result.AddRange(await GetMovieItems(collection));
+            result.AddRange(await GetShowItems(collection));
+            result.AddRange(await GetSeasonItems(collection));
+            result.AddRange(await GetEpisodeItems(collection));
+
+            return result.Distinct().ToList();
+        }
+
+        private async Task<List<Movie>> GetMovieItems(Collection collection)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM CollectionItem ci
+            INNER JOIN Movie m ON m.Id = ci.MediaItemId
+            WHERE ci.CollectionId = @CollectionId",
+                new { CollectionId = collection.Id });
+
+            return await _dbContext.Movies
+                .Include(m => m.MovieMetadata)
+                .Filter(m => ids.Contains(m.Id))
+                .ToListAsync();
+        }
+
+        private async Task<List<Episode>> GetShowItems(Collection collection)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT Episode.Id FROM CollectionItem ci
+            INNER JOIN Show ON Show.Id = ci.MediaItemId
+            INNER JOIN Season ON Season.ShowId = Show.Id
+            INNER JOIN Episode ON Episode.SeasonId = Season.Id
+            WHERE ci.CollectionId = @CollectionId",
+                new { CollectionId = collection.Id });
+
+            return await _dbContext.Episodes
+                .Include(e => e.EpisodeMetadata)
+                .Filter(e => ids.Contains(e.Id))
+                .ToListAsync();
+        }
+
+        private async Task<List<Episode>> GetSeasonItems(Collection collection)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT Episode.Id FROM CollectionItem ci
+            INNER JOIN Season ON Season.Id = ci.MediaItemId
+            INNER JOIN Episode ON Episode.SeasonId = Season.Id
+            WHERE ci.CollectionId = @CollectionId",
+                new { CollectionId = collection.Id });
+
+            return await _dbContext.Episodes
+                .Include(e => e.EpisodeMetadata)
+                .Filter(e => ids.Contains(e.Id))
+                .ToListAsync();
+        }
+
+        private async Task<List<Episode>> GetEpisodeItems(Collection collection)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT Episode.Id FROM CollectionItem ci
+            INNER JOIN Episode ON Episode.Id = ci.MediaItemId
+            WHERE ci.CollectionId = @CollectionId",
+                new { CollectionId = collection.Id });
+
+            return await _dbContext.Episodes
+                .Include(e => e.EpisodeMetadata)
+                .Filter(e => ids.Contains(e.Id))
+                .ToListAsync();
+        }
     }
 }
