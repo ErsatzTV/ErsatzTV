@@ -138,7 +138,7 @@ namespace ErsatzTV.Core.Metadata
                 await LocateNfoFileForShow(showFolder).Match(
                     async nfoFile =>
                     {
-                        bool shouldUpdate = show.ShowMetadata.HeadOrNone().Match(
+                        bool shouldUpdate = Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
                                  m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
                             true);
@@ -151,7 +151,7 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (!show.ShowMetadata.Any())
+                        if (!Optional(show.ShowMetadata).Flatten().Any())
                         {
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", showFolder);
                             await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder);
@@ -174,7 +174,7 @@ namespace ErsatzTV.Core.Metadata
                 await LocateNfoFile(episode).Match(
                     async nfoFile =>
                     {
-                        bool shouldUpdate = episode.EpisodeMetadata.HeadOrNone().Match(
+                        bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
                                  m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
                             true);
@@ -187,7 +187,7 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (!episode.EpisodeMetadata.Any())
+                        if (!Optional(episode.EpisodeMetadata).Flatten().Any())
                         {
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", episode.Path);
                             await _localMetadataProvider.RefreshFallbackMetadata(episode);

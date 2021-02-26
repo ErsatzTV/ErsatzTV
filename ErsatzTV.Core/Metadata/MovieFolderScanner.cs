@@ -96,7 +96,8 @@ namespace ErsatzTV.Core.Metadata
                 await LocateNfoFile(movie).Match(
                     async nfoFile =>
                     {
-                        bool shouldUpdate = movie.MovieMetadata.HeadOrNone().Match(
+                        
+                        bool shouldUpdate = Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
                                  m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
                             true);
@@ -109,7 +110,7 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (!movie.MovieMetadata.Any())
+                        if (!Optional(movie.MovieMetadata).Flatten().Any())
                         {
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", movie.Path);
                             await _localMetadataProvider.RefreshFallbackMetadata(movie);
