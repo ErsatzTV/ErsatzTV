@@ -4,11 +4,16 @@ namespace ErsatzTV.Infrastructure.Plex.Models
 {
     public class PlexMediaContainerResponse<T>
     {
-        public PlexMediaContainerContent<T> MediaContainer { get; set; }
+        public T MediaContainer { get; set; }
     }
 
-    public class PlexMediaContainerContent<T>
+    public class PlexMediaContainerDirectoryContent<T>
     {
         public List<T> Directory { get; set; }
+    }
+
+    public class PlexMediaContainerMetadataContent<T>
+    {
+        public List<T> Metadata { get; set; }
     }
 }

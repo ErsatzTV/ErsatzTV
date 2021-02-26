@@ -11,9 +11,9 @@ namespace ErsatzTV.Core.Tests.Fakes
 {
     public class FakeMediaCollectionRepository : IMediaCollectionRepository
     {
-        private readonly Map<int, List<MovieMediaItem>> _data;
+        private readonly Map<int, List<Movie>> _data;
 
-        public FakeMediaCollectionRepository(Map<int, List<MovieMediaItem>> data) => _data = data;
+        public FakeMediaCollectionRepository(Map<int, List<Movie>> data) => _data = data;
 
         public Task<SimpleMediaCollection> Add(SimpleMediaCollection collection) => throw new NotSupportedException();
 

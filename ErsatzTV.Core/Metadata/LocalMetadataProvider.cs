@@ -57,7 +57,7 @@ namespace ErsatzTV.Core.Metadata
             {
                 TelevisionEpisodeMediaItem e => LoadMetadata(e, path)
                     .Bind(maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(e, metadata))),
-                MovieMediaItem m => LoadMetadata(m, path)
+                Movie m => LoadMetadata(m, path)
                     .Bind(maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(m, metadata))),
                 _ => Task.FromResult(Unit.Default)
             };
@@ -71,7 +71,7 @@ namespace ErsatzTV.Core.Metadata
             {
                 TelevisionEpisodeMediaItem e => ApplyMetadataUpdate(e, FallbackMetadataProvider.GetFallbackMetadata(e))
                     .ToUnit(),
-                MovieMediaItem m => ApplyMetadataUpdate(m, FallbackMetadataProvider.GetFallbackMetadata(m)).ToUnit(),
+                Movie m => ApplyMetadataUpdate(m, FallbackMetadataProvider.GetFallbackMetadata(m)).ToUnit(),
                 _ => Task.FromResult(Unit.Default)
             };
 
@@ -94,7 +94,7 @@ namespace ErsatzTV.Core.Metadata
             await _televisionRepository.Update(mediaItem);
         }
 
-        private async Task ApplyMetadataUpdate(MovieMediaItem mediaItem, MovieMetadata metadata)
+        private async Task ApplyMetadataUpdate(Movie mediaItem, MovieMetadata metadata)
         {
             mediaItem.Metadata ??= new MovieMetadata();
             mediaItem.Metadata.Source = metadata.Source;
@@ -124,7 +124,7 @@ namespace ErsatzTV.Core.Metadata
             await _televisionRepository.Update(televisionShow);
         }
 
-        private async Task<Option<MovieMetadata>> LoadMetadata(MovieMediaItem mediaItem, string nfoFileName)
+        private async Task<Option<MovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
         {
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
@@ -132,11 +132,11 @@ namespace ErsatzTV.Core.Metadata
                 return None;
             }
 
-            if (!(mediaItem.Source is LocalMediaSource))
-            {
-                _logger.LogDebug("Media source {Name} is not a local media source", mediaItem.Source.Name);
-                return None;
-            }
+            // if (!(mediaItem.Source is LocalMediaSource))
+            // {
+            //     _logger.LogDebug("Media source {Name} is not a local media source", mediaItem.Source.Name);
+            //     return None;
+            // }
 
             return await LoadMovieMetadata(mediaItem, nfoFileName);
         }
@@ -151,11 +151,11 @@ namespace ErsatzTV.Core.Metadata
                 return None;
             }
 
-            if (!(mediaItem.Source is LocalMediaSource))
-            {
-                _logger.LogDebug("Media source {Name} is not a local media source", mediaItem.Source.Name);
-                return None;
-            }
+            // if (!(mediaItem.Source is LocalMediaSource))
+            // {
+            //     _logger.LogDebug("Media source {Name} is not a local media source", mediaItem.Source.Name);
+            //     return None;
+            // }
 
             return await LoadEpisodeMetadata(mediaItem, nfoFileName);
         }
@@ -225,7 +225,7 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Option<MovieMetadata>> LoadMovieMetadata(MovieMediaItem mediaItem, string nfoFileName)
+        private async Task<Option<MovieMetadata>> LoadMovieMetadata(Movie mediaItem, string nfoFileName)
         {
             try
             {

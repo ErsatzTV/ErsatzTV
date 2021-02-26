@@ -41,7 +41,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id) =>
             _dbContext.SimpleMediaCollections
                 .Include(s => s.Movies)
-                .ThenInclude(m => m.Source)
+                .ThenInclude(m => m.LibraryPath)
                 .Include(s => s.TelevisionShows)
                 .ThenInclude(s => s.Metadata)
                 .Include(s => s.TelevisionSeasons)
@@ -54,7 +54,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.SimpleMediaCollections
                 .AsNoTracking()
                 .Include(s => s.Movies)
-                .ThenInclude(i => i.Source)
+                .ThenInclude(i => i.LibraryPath)
                 .Include(s => s.Movies)
                 .ThenInclude(m => m.Metadata)
                 .Include(s => s.TelevisionShows)
@@ -121,16 +121,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await _dbConnection
                 .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
                     TelevisionEpisodeMediaItem>(
-                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
+                    @"select tmi.Id, tmi.SeasonId, mi.LibraryPathId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
 mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
 mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
 tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-from TelevisionEpisodes tmi
-inner join MediaItems mi on tmi.Id = mi.Id
+from TelevisionEpisode tmi
+inner join MediaItem mi on tmi.Id = mi.Id
 inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
-inner join TelevisionShows ts on ts.Id = tsn.TelevisionShowId
-inner join SimpleMediaCollectionShows s on s.TelevisionShowsId = ts.Id
+inner join TelevisionSeason tsn on tsn.Id = tmi.SeasonId
+inner join TelevisionShow ts on ts.Id = tsn.TelevisionShowId
+inner join SimpleMediaCollectionShow s on s.TelevisionShowsId = ts.Id
 where s.SimpleMediaCollectionsId = @CollectionId",
                     (episode, statistics, metadata) =>
                     {
@@ -148,15 +148,15 @@ where s.SimpleMediaCollectionsId = @CollectionId",
             return await _dbConnection
                 .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
                     TelevisionEpisodeMediaItem>(
-                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
+                    @"select tmi.Id, tmi.SeasonId, mi.LibraryPathId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
 mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
 mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
 tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-from TelevisionEpisodes tmi
-inner join MediaItems mi on tmi.Id = mi.Id
+from TelevisionEpisode tmi
+inner join MediaItem mi on tmi.Id = mi.Id
 inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
-inner join SimpleMediaCollectionSeasons s on s.TelevisionSeasonsId = tsn.Id
+inner join TelevisionSeason tsn on tsn.Id = tmi.SeasonId
+inner join SimpleMediaCollectionSeason s on s.TelevisionSeasonsId = tsn.Id
 where s.SimpleMediaCollectionsId = @CollectionId",
                     (episode, statistics, metadata) =>
                     {
@@ -174,14 +174,14 @@ where s.SimpleMediaCollectionsId = @CollectionId",
             return await _dbConnection
                 .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
                     TelevisionEpisodeMediaItem>(
-                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
+                    @"select tmi.Id, tmi.SeasonId, mi.LibraryPathId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
 mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
 mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
 tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-from TelevisionEpisodes tmi
-inner join MediaItems mi on tmi.Id = mi.Id
+from TelevisionEpisode tmi
+inner join MediaItem mi on tmi.Id = mi.Id
 inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-inner join SimpleMediaCollectionEpisodes s on s.TelevisionEpisodesId = tmi.Id
+inner join SimpleMediaCollectionEpisode s on s.TelevisionEpisodesId = tmi.Id
 where s.SimpleMediaCollectionsId = @CollectionId",
                     (episode, statistics, metadata) =>
                     {

@@ -132,6 +132,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
+        // TODO: lookup by library path id, not media source id
         public async Task<Option<TelevisionShow>> GetShowByPath(int mediaSourceId, string path)
         {
             Option<int> maybeShowId = await _dbContext.LocalTelevisionShowSources
@@ -211,9 +212,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 () => AddSeason(show, path, seasonNumber));
         }
 
+        // TODO: don't use mediaSourceId, use library path id
         public async Task<Either<BaseError, TelevisionEpisodeMediaItem>> GetOrAddEpisode(
             TelevisionSeason season,
-            int mediaSourceId,
+            LibraryPath libraryPath,
             string path)
         {
             Option<TelevisionEpisodeMediaItem> maybeExisting = await _dbContext.TelevisionEpisodeMediaItems
@@ -223,7 +225,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 episode => Right<BaseError, TelevisionEpisodeMediaItem>(episode).AsTask(),
-                () => AddEpisode(season, mediaSourceId, path));
+                () => AddEpisode(season, libraryPath.Id, path));
         }
 
         public Task<Unit> DeleteMissingSources(int localMediaSourceId, List<string> allFolders) =>
@@ -256,15 +258,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await _dbConnection
                 .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
                     TelevisionEpisodeMediaItem>(
-                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
+                    @"select tmi.Id, tmi.SeasonId, mi.LibraryPathId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
 mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
 mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
 tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-from TelevisionEpisodes tmi
-inner join MediaItems mi on tmi.Id = mi.Id
+from TelevisionEpisode tmi
+inner join MediaItem mi on tmi.Id = mi.Id
 inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
-inner join TelevisionShows ts on ts.Id = tsn.TelevisionShowId
+inner join TelevisionSeason tsn on tsn.Id = tmi.SeasonId
+inner join TelevisionShow ts on ts.Id = tsn.TelevisionShowId
 where ts.Id = @ShowId",
                     (episode, statistics, metadata) =>
                     {
@@ -282,14 +284,14 @@ where ts.Id = @ShowId",
             return await _dbConnection
                 .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
                     TelevisionEpisodeMediaItem>(
-                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
+                    @"select tmi.Id, tmi.SeasonId, mi.LibraryPathId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
 mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
 mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
 tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-from TelevisionEpisodes tmi
-inner join MediaItems mi on tmi.Id = mi.Id
+from TelevisionEpisode tmi
+inner join MediaItem mi on tmi.Id = mi.Id
 inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
+inner join TelevisionSeason tsn on tsn.Id = tmi.SeasonId
 where tsn.Id = @SeasonId",
                     (episode, statistics, metadata) =>
                     {
@@ -332,7 +334,7 @@ where tsn.Id = @SeasonId",
             {
                 var episode = new TelevisionEpisodeMediaItem
                 {
-                    MediaSourceId = mediaSourceId,
+                    LibraryPathId = mediaSourceId,
                     SeasonId = season.Id,
                     Path = path
                 };

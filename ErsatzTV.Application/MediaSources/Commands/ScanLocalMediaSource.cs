@@ -4,18 +4,18 @@ using MediatR;
 
 namespace ErsatzTV.Application.MediaSources.Commands
 {
-    public interface IScanLocalMediaSource : IRequest<Either<BaseError, string>>, IBackgroundServiceRequest
+    public interface IScanLocalLibrary : IRequest<Either<BaseError, string>>, IBackgroundServiceRequest
     {
-        int MediaSourceId { get; }
+        int LibraryId { get; }
         bool ForceScan { get; }
     }
 
-    public record ScanLocalMediaSourceIfNeeded(int MediaSourceId) : IScanLocalMediaSource
+    public record ScanLocalLibraryIfNeeded(int LibraryId) : IScanLocalLibrary
     {
         public bool ForceScan => false;
     }
 
-    public record ForceScanLocalMediaSource(int MediaSourceId) : IScanLocalMediaSource
+    public record ForceScanLocalLibrary(int LibraryId) : IScanLocalLibrary
     {
         public bool ForceScan => true;
     }

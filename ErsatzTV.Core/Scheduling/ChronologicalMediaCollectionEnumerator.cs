@@ -43,14 +43,14 @@ namespace ErsatzTV.Core.Scheduling
                 DateTime date1 = x switch
                 {
                     TelevisionEpisodeMediaItem e => e.Metadata?.Aired ?? DateTime.MaxValue,
-                    MovieMediaItem m => m.Metadata?.Premiered ?? DateTime.MaxValue,
+                    Movie m => m.Metadata?.Premiered ?? DateTime.MaxValue,
                     _ => DateTime.MaxValue
                 };
 
                 DateTime date2 = y switch
                 {
                     TelevisionEpisodeMediaItem e => e.Metadata?.Aired ?? DateTime.MaxValue,
-                    MovieMediaItem m => m.Metadata?.Premiered ?? DateTime.MaxValue,
+                    Movie m => m.Metadata?.Premiered ?? DateTime.MaxValue,
                     _ => DateTime.MaxValue
                 };
 

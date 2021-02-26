@@ -8,6 +8,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Playout> builder)
         {
+            builder.ToTable("Playout");
+
             builder.HasMany(p => p.Items)
                 .WithOne(pi => pi.Playout)
                 .HasForeignKey(pi => pi.PlayoutId)

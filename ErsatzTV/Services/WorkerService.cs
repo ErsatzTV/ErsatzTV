@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
+using ErsatzTV.Application.Plex.Commands;
 using ErsatzTV.Core;
 using LanguageExt;
 using MediatR;
@@ -55,17 +56,30 @@ namespace ErsatzTV.Services
                                     buildPlayout.PlayoutId,
                                     error.Value));
                             break;
-                        case IScanLocalMediaSource scanLocalMediaSource:
+                        case IScanLocalLibrary scanLocalLibrary:
                             Either<BaseError, string> scanResult = await mediator.Send(
-                                scanLocalMediaSource,
+                                scanLocalLibrary,
                                 cancellationToken);
                             scanResult.BiIter(
                                 name => _logger.LogDebug(
-                                    "Done scanning local media source {MediaSource}",
+                                    "Done scanning local library {Library}",
                                     name),
                                 error => _logger.LogWarning(
-                                    "Unable to scan local media source {MediaSourceId}: {Error}",
-                                    scanLocalMediaSource.MediaSourceId,
+                                    "Unable to scan local library {LibraryId}: {Error}",
+                                    scanLocalLibrary.LibraryId,
+                                    error.Value));
+                            break;
+                        case ISynchronizePlexLibraryById synchronizePlexLibraryById:
+                            Either<BaseError, string> result = await mediator.Send(
+                                synchronizePlexLibraryById,
+                                cancellationToken);
+                            result.BiIter(
+                                name => _logger.LogDebug(
+                                    "Done synchronizing plex library {Name}",
+                                    name),
+                                error => _logger.LogWarning(
+                                    "Unable to synchronize plex library {LibraryId}: {Error}",
+                                    synchronizePlexLibraryById.PlexLibraryId,
                                     error.Value));
                             break;
                     }

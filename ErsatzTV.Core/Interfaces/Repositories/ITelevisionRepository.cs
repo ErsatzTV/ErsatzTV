@@ -38,7 +38,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 
         Task<Either<BaseError, TelevisionEpisodeMediaItem>> GetOrAddEpisode(
             TelevisionSeason season,
-            int mediaSourceId,
+            LibraryPath libraryPath,
             string path);
 
         Task<Unit> DeleteMissingSources(int localMediaSourceId, List<string> allFolders);

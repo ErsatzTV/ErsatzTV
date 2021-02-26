@@ -8,6 +8,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ProgramSchedule> builder)
         {
+            builder.ToTable("ProgramSchedule");
+
             builder.HasIndex(ps => ps.Name)
                 .IsUnique();
 

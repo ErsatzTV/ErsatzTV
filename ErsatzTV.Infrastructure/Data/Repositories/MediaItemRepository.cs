@@ -17,7 +17,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<Option<MediaItem>> Get(int id) =>
             _dbContext.MediaItems
-                .Include(i => i.Source)
+                .Include(i => i.LibraryPath)
                 .SingleOrDefaultAsync(i => i.Id == id)
                 .Map(Optional);
 
@@ -26,15 +26,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<MediaItem>> Search(string searchString)
         {
             IQueryable<TelevisionEpisodeMediaItem> episodeData =
-                from c in _dbContext.TelevisionEpisodeMediaItems.Include(c => c.Source) select c;
+                from c in _dbContext.TelevisionEpisodeMediaItems.Include(c => c.LibraryPath) select c;
 
             if (!string.IsNullOrEmpty(searchString))
             {
                 episodeData = episodeData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
             }
 
-            IQueryable<MovieMediaItem> movieData =
-                from c in _dbContext.MovieMediaItems.Include(c => c.Source) select c;
+            IQueryable<Movie> movieData =
+                from c in _dbContext.Movies.Include(c => c.LibraryPath) select c;
 
             if (!string.IsNullOrEmpty(searchString))
             {

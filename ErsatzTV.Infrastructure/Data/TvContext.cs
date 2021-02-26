@@ -17,8 +17,14 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<MediaSource> MediaSources { get; set; }
         public DbSet<LocalMediaSource> LocalMediaSources { get; set; }
         public DbSet<PlexMediaSource> PlexMediaSources { get; set; }
+        public DbSet<Library> Libraries { get; set; }
+        public DbSet<PlexLibrary> PlexLibraries { get; set; }
         public DbSet<MediaItem> MediaItems { get; set; }
-        public DbSet<MovieMediaItem> MovieMediaItems { get; set; }
+        public DbSet<Movie> Movies { get; set; }
+        public DbSet<Show> Shows { get; set; }
+        public DbSet<Season> Seasons { get; set; }
+        public DbSet<Episode> Episodes { get; set; }
+        public DbSet<PlexMovie> PlexMovieMediaItems { get; set; }
         public DbSet<TelevisionEpisodeMediaItem> TelevisionEpisodeMediaItems { get; set; }
         public DbSet<MediaCollection> MediaCollections { get; set; }
         public DbSet<SimpleMediaCollection> SimpleMediaCollections { get; set; }

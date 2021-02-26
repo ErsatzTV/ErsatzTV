@@ -6,7 +6,7 @@ namespace ErsatzTV.Core.Domain
     {
         public int Id { get; set; }
         public int MovieId { get; set; }
-        public MovieMediaItem Movie { get; set; }
+        public Movie Movie { get; set; }
         public int? Year { get; set; }
         public DateTime? Premiered { get; set; }
         public string Plot { get; set; }

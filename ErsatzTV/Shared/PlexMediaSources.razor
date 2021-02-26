@@ -1,6 +1,6 @@
-﻿@using ErsatzTV.Application.MediaSources
-@using ErsatzTV.Application.MediaSources.Commands
-@using ErsatzTV.Application.MediaSources.Queries
+﻿@using ErsatzTV.Application.Plex
+@using ErsatzTV.Application.Plex.Commands
+@using ErsatzTV.Application.Plex.Queries
 @inject IDialogService Dialog
 @inject IMediator Mediator
 @inject ISnackbar Snackbar
@@ -25,7 +25,7 @@
         <MudTd DataLabel="Name">@context.Name</MudTd>
         <MudTd DataLabel="Address">@context.Address</MudTd>
         <MudTd>
-            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert" Direction="Direction.Left" OffsetX="true">
                 <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/media/sources/plex/{context.Id}/libraries")">
                     Edit Libraries
                 </MudMenuItem>

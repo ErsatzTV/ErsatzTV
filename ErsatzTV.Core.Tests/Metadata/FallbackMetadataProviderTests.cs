@@ -39,7 +39,7 @@ namespace ErsatzTV.Core.Tests.Metadata
         {
             TelevisionEpisodeMetadata metadata = FallbackMetadataProvider.GetFallbackMetadata(
                 new TelevisionEpisodeMediaItem
-                    { Path = path, Source = new LocalMediaSource { MediaType = MediaType.TvShow } });
+                    { Path = path, LibraryPath = new LibraryPath() });
 
             metadata.Title.Should().Be(title);
             metadata.Season.Should().Be(season);

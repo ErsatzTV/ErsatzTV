@@ -49,14 +49,14 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             _mediaCollectionRepository.GetSimpleMediaCollectionWithItems(updateSimpleMediaCollection.MediaCollectionId)
                 .Map(v => v.ToValidation<BaseError>("SimpleMediaCollection does not exist."));
 
-        private Task<Validation<BaseError, MovieMediaItem>> ValidateMovies(
+        private Task<Validation<BaseError, Movie>> ValidateMovies(
             AddMovieToSimpleMediaCollection request) =>
             LoadMovie(request)
                 .Map(v => v.ToValidation<BaseError>("MovieMediaItem does not exist"));
 
-        private Task<Option<MovieMediaItem>> LoadMovie(AddMovieToSimpleMediaCollection request) =>
+        private Task<Option<Movie>> LoadMovie(AddMovieToSimpleMediaCollection request) =>
             _movieRepository.GetMovie(request.MovieId);
 
-        private record RequestParameters(SimpleMediaCollection Collection, MovieMediaItem MovieToAdd);
+        private record RequestParameters(SimpleMediaCollection Collection, Movie MovieToAdd);
     }
 }

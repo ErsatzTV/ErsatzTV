@@ -13,8 +13,8 @@ namespace ErsatzTV.Core.Metadata
         public DateTime GetLastWriteTime(string path) =>
             Try(File.GetLastWriteTimeUtc(path)).IfFail(() => DateTime.MinValue);
 
-        public bool IsMediaSourceAccessible(LocalMediaSource localMediaSource) =>
-            Directory.Exists(localMediaSource.Folder);
+        public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
+            Directory.Exists(libraryPath.Path);
 
         public IEnumerable<string> ListSubdirectories(string folder) =>
             Try(Directory.EnumerateDirectories(folder)).IfFail(new List<string>());

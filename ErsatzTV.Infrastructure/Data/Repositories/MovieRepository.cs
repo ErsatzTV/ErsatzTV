@@ -17,36 +17,52 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public MovieRepository(TvContext dbContext) => _dbContext = dbContext;
 
-        public Task<Option<MovieMediaItem>> GetMovie(int movieId) =>
-            _dbContext.MovieMediaItems
+        public Task<Option<Movie>> GetMovie(int movieId) =>
+            _dbContext.Movies
                 .Include(m => m.Metadata)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
 
-        public async Task<Either<BaseError, MovieMediaItem>> GetOrAdd(int mediaSourceId, string path)
+        // TODO: fix this - need to add to library path, not media source
+        public async Task<Either<BaseError, Movie>> GetOrAdd(LibraryPath libraryPath, string path)
         {
-            Option<MovieMediaItem> maybeExisting = await _dbContext.MovieMediaItems
+            Option<Movie> maybeExisting = await _dbContext.Movies
                 .Include(i => i.Metadata)
+                .Include(i => i.LibraryPath)
                 .SingleOrDefaultAsync(i => i.Path == path);
 
             return await maybeExisting.Match(
-                mediaItem => Right<BaseError, MovieMediaItem>(mediaItem).AsTask(),
-                async () => await AddMovie(mediaSourceId, path));
+                mediaItem => Right<BaseError, Movie>(mediaItem).AsTask(),
+                async () => await AddMovie(libraryPath.Id, path));
         }
 
-        public async Task<bool> Update(MovieMediaItem movie)
+        public async Task<Either<BaseError, PlexMovie>> GetOrAdd(
+            PlexLibrary library,
+            PlexMovie item)
         {
-            _dbContext.MovieMediaItems.Update(movie);
+            Option<PlexMovie> maybeExisting = await _dbContext.PlexMovieMediaItems
+                .Include(i => i.Metadata)
+                .Include(i => i.Part)
+                .SingleOrDefaultAsync(i => i.Key == item.Key);
+
+            return await maybeExisting.Match(
+                plexMovie => Right<BaseError, PlexMovie>(plexMovie).AsTask(),
+                async () => await AddPlexMovie(library, item));
+        }
+
+        public async Task<bool> Update(Movie movie)
+        {
+            _dbContext.Movies.Update(movie);
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
         public Task<int> GetMovieCount() =>
-            _dbContext.MovieMediaItems
+            _dbContext.Movies
                 .AsNoTracking()
                 .CountAsync();
 
-        public Task<List<MovieMediaItem>> GetPagedMovies(int pageNumber, int pageSize) =>
-            _dbContext.MovieMediaItems
+        public Task<List<Movie>> GetPagedMovies(int pageNumber, int pageSize) =>
+            _dbContext.Movies
                 .Include(s => s.Metadata)
                 .OrderBy(s => s.Metadata.SortTitle)
                 .Skip((pageNumber - 1) * pageSize)
@@ -54,14 +70,35 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .AsNoTracking()
                 .ToListAsync();
 
-        private async Task<Either<BaseError, MovieMediaItem>> AddMovie(int mediaSourceId, string path)
+        private async Task<Either<BaseError, Movie>> AddMovie(int libraryPathId, string path)
         {
             try
             {
-                var movie = new MovieMediaItem { MediaSourceId = mediaSourceId, Path = path };
-                await _dbContext.MovieMediaItems.AddAsync(movie);
+                var movie = new Movie { LibraryPathId = libraryPathId, Path = path };
+                await _dbContext.Movies.AddAsync(movie);
                 await _dbContext.SaveChangesAsync();
+                await _dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
                 return movie;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        private async Task<Either<BaseError, PlexMovie>> AddPlexMovie(
+            PlexLibrary library,
+            PlexMovie item)
+        {
+            try
+            {
+                // TODO: this should be library path id
+                item.LibraryPathId = library.Paths.Head().Id;
+
+                await _dbContext.PlexMovieMediaItems.AddAsync(item);
+                await _dbContext.SaveChangesAsync();
+                await _dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
+                return item;
             }
             catch (Exception ex)
             {

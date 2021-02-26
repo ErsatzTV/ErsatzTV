@@ -7,6 +7,6 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     public class ProgramScheduleItemDurationConfiguration : IEntityTypeConfiguration<ProgramScheduleItemDuration>
     {
         public void Configure(EntityTypeBuilder<ProgramScheduleItemDuration> builder) =>
-            builder.ToTable("ProgramScheduleDurationItems");
+            builder.ToTable("ProgramScheduleDurationItem");
     }
 }

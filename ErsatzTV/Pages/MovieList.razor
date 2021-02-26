@@ -1,20 +1,22 @@
 ﻿@page "/media/movies"
+@page "/media/movies/page/{PageNumber:int}"
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
 @inject IMediator Mediator
+@inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
     <MudPaper Style="align-items: center; display: flex; justify-content: center;">
         <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
-                       OnClick="@(() => PrevPage())"
-                       Disabled="@(_pageNumber <= 1)">
+                       OnClick="@PrevPage"
+                       Disabled="@(PageNumber <= 1)">
         </MudIconButton>
         <MudText Style="flex-grow: 1"
                  Align="Align.Center">
-            @Math.Min((_pageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, _pageNumber * PageSize) of @_data.Count
+            @Math.Min((PageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, PageNumber * PageSize) of @_data.Count
         </MudText>
         <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
-                       OnClick="@(() => NextPage())" Disabled="@(_pageNumber * PageSize >= _data.Count)">
+                       OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= _data.Count)">
         </MudIconButton>
     </MudPaper>
 </MudContainer>
@@ -22,33 +24,33 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
     @foreach (MovieCardViewModel card in _data.Cards.Where(d => !string.IsNullOrWhiteSpace(d.Title)))
     {
-        <MediaCard Data="@card"
-                   DataRefreshed="@(() => RefreshData())"
-                   Link="@($"/media/movies/{card.MovieId}")"/>
+        <MediaCard Data="@card" Link="@($"/media/movies/{card.MovieId}")"/>
     }
 </MudContainer>
 
 @code {
-    private int PageSize => 100;
-    private int _pageNumber = 1;
+    private static int PageSize => 100;
+
+    [Parameter]
+    public int PageNumber { get; set; }
 
     private MovieCardResultsViewModel _data;
 
-    protected override Task OnParametersSetAsync() => RefreshData();
+    protected override Task OnParametersSetAsync()
+    {
+        if (PageNumber == 0)
+        {
+            PageNumber = 1;
+        }
+
+        return RefreshData();
+    }
 
     private async Task RefreshData() =>
-        _data = await Mediator.Send(new GetMovieCards(_pageNumber, PageSize));
+        _data = await Mediator.Send(new GetMovieCards(PageNumber, PageSize));
 
-    private async Task PrevPage()
-    {
-        _pageNumber -= 1;
-        await RefreshData();
-    }
+    private void PrevPage() => NavigationManager.NavigateTo($"/media/movies/page/{PageNumber - 1}");
 
-    private async Task NextPage()
-    {
-        _pageNumber += 1;
-        await RefreshData();
-    }
+    private void NextPage() => NavigationManager.NavigateTo($"/media/movies/page/{PageNumber + 1}");
 
 }

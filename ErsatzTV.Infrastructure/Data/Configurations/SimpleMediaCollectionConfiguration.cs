@@ -8,23 +8,23 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<SimpleMediaCollection> builder)
         {
-            builder.ToTable("SimpleMediaCollections");
+            builder.ToTable("SimpleMediaCollection");
 
             builder.HasMany(c => c.Movies)
                 .WithMany(m => m.SimpleMediaCollections)
-                .UsingEntity(join => join.ToTable("SimpleMediaCollectionMovies"));
+                .UsingEntity(join => join.ToTable("SimpleMediaCollectionMovie"));
 
             builder.HasMany(c => c.TelevisionShows)
                 .WithMany(s => s.SimpleMediaCollections)
-                .UsingEntity(join => join.ToTable("SimpleMediaCollectionShows"));
+                .UsingEntity(join => join.ToTable("SimpleMediaCollectionShow"));
 
             builder.HasMany(c => c.TelevisionSeasons)
                 .WithMany(s => s.SimpleMediaCollections)
-                .UsingEntity(join => join.ToTable("SimpleMediaCollectionSeasons"));
+                .UsingEntity(join => join.ToTable("SimpleMediaCollectionSeason"));
 
             builder.HasMany(c => c.TelevisionEpisodes)
                 .WithMany(e => e.SimpleMediaCollections)
-                .UsingEntity(join => join.ToTable("SimpleMediaCollectionEpisodes"));
+                .UsingEntity(join => join.ToTable("SimpleMediaCollectionEpisode"));
         }
     }
 }

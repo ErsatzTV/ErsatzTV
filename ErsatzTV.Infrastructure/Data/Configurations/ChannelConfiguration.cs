@@ -8,6 +8,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<Channel> builder)
         {
+            builder.ToTable("Channel");
+
             builder.HasIndex(c => c.Number)
                 .IsUnique();
 

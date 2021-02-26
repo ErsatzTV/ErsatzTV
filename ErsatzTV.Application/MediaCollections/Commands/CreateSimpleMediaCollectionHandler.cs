@@ -33,7 +33,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 name => new SimpleMediaCollection
                 {
                     Name = name,
-                    Movies = new List<MovieMediaItem>(),
+                    Movies = new List<Movie>(),
                     TelevisionShows = new List<TelevisionShow>(),
                     TelevisionEpisodes = new List<TelevisionEpisodeMediaItem>(),
                     TelevisionSeasons = new List<TelevisionSeason>()

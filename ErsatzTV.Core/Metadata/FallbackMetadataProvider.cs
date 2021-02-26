@@ -24,10 +24,11 @@ namespace ErsatzTV.Core.Metadata
 
             if (fileName != null)
             {
-                if (!(mediaItem.Source is LocalMediaSource))
-                {
-                    return metadata;
-                }
+                // TODO: ensure local?
+                // if (!(mediaItem.LibraryPath is LocalMediaSource))
+                // {
+                //     return metadata;
+                // }
 
                 return GetEpisodeMetadata(fileName, metadata);
             }
@@ -35,17 +36,18 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        public static MovieMetadata GetFallbackMetadata(MovieMediaItem mediaItem)
+        public static MovieMetadata GetFallbackMetadata(Movie mediaItem)
         {
             string fileName = Path.GetFileName(mediaItem.Path);
             var metadata = new MovieMetadata { Source = MetadataSource.Fallback, Title = fileName ?? mediaItem.Path };
 
             if (fileName != null)
             {
-                if (!(mediaItem.Source is LocalMediaSource))
-                {
-                    return metadata;
-                }
+                // TODO: ensure local?
+                // if (!(mediaItem.Source is LocalMediaSource))
+                // {
+                //     return metadata;
+                // }
 
                 return GetMovieMetadata(fileName, metadata);
             }

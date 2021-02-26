@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -37,17 +38,14 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public async Task<Unit> ScanFolder(LocalMediaSource localMediaSource, string ffprobePath)
+        public async Task<Either<BaseError, Unit>> ScanFolder(LibraryPath libraryPath, string ffprobePath)
         {
-            if (!_localFileSystem.IsMediaSourceAccessible(localMediaSource))
+            if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
             {
-                _logger.LogWarning(
-                    "Media source is not accessible or missing; skipping scan of {Folder}",
-                    localMediaSource.Folder);
-                return Unit.Default;
+                return new MediaSourceInaccessible();
             }
 
-            var allShowFolders = _localFileSystem.ListSubdirectories(localMediaSource.Folder)
+            var allShowFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
                 .Filter(ShouldIncludeFolder)
                 .OrderBy(identity)
                 .ToList();
@@ -56,27 +54,28 @@ namespace ErsatzTV.Core.Metadata
             {
                 // TODO: check all sources for latest metadata?
                 Either<BaseError, TelevisionShow> maybeShow =
-                    await FindOrCreateShow(localMediaSource.Id, showFolder)
+                    await FindOrCreateShow(libraryPath.Id, showFolder)
                         .BindT(show => UpdateMetadataForShow(show, showFolder))
                         .BindT(show => UpdatePosterForShow(show, showFolder));
 
                 await maybeShow.Match(
-                    show => ScanSeasons(localMediaSource, ffprobePath, show, showFolder),
+                    show => ScanSeasons(libraryPath, ffprobePath, show, showFolder),
                     _ => Task.FromResult(Unit.Default));
             }
 
-            await _televisionRepository.DeleteMissingSources(localMediaSource.Id, allShowFolders);
+            // TODO: remove this?
+            // await _televisionRepository.DeleteMissingSources(libraryPath.Id, allShowFolders);
             await _televisionRepository.DeleteEmptyShows();
 
             return Unit.Default;
         }
 
         private async Task<Either<BaseError, TelevisionShow>> FindOrCreateShow(
-            int localMediaSourceId,
+            int libraryPathId,
             string showFolder)
         {
             Option<TelevisionShow> maybeShowByPath =
-                await _televisionRepository.GetShowByPath(localMediaSourceId, showFolder);
+                await _televisionRepository.GetShowByPath(libraryPathId, showFolder);
             return await maybeShowByPath.Match(
                 show => Right<BaseError, TelevisionShow>(show).AsTask(),
                 async () =>
@@ -89,19 +88,19 @@ namespace ErsatzTV.Core.Metadata
                             show.Sources.Add(
                                 new LocalTelevisionShowSource
                                 {
-                                    MediaSourceId = localMediaSourceId,
+                                    MediaSourceId = libraryPathId,
                                     Path = showFolder,
                                     TelevisionShow = show
                                 });
                             await _televisionRepository.Update(show);
                             return Right<BaseError, TelevisionShow>(show);
                         },
-                        async () => await _televisionRepository.AddShow(localMediaSourceId, showFolder, metadata));
+                        async () => await _televisionRepository.AddShow(libraryPathId, showFolder, metadata));
                 });
         }
 
         private async Task<Unit> ScanSeasons(
-            LocalMediaSource localMediaSource,
+            LibraryPath libraryPath,
             string ffprobePath,
             TelevisionShow show,
             string showPath)
@@ -118,7 +117,7 @@ namespace ErsatzTV.Core.Metadata
                             .BindT(UpdatePoster);
 
                         await maybeSeason.Match(
-                            season => ScanEpisodes(localMediaSource, ffprobePath, season),
+                            season => ScanEpisodes(libraryPath, ffprobePath, season),
                             _ => Task.FromResult(Unit.Default));
                     });
             }
@@ -127,7 +126,7 @@ namespace ErsatzTV.Core.Metadata
         }
 
         private async Task<Unit> ScanEpisodes(
-            LocalMediaSource localMediaSource,
+            LibraryPath libraryPath,
             string ffprobePath,
             TelevisionSeason season)
         {
@@ -136,7 +135,7 @@ namespace ErsatzTV.Core.Metadata
             {
                 // TODO: figure out how to rebuild playlists
                 Either<BaseError, TelevisionEpisodeMediaItem> maybeEpisode = await _televisionRepository
-                    .GetOrAddEpisode(season, localMediaSource.Id, file)
+                    .GetOrAddEpisode(season, libraryPath, file)
                     .BindT(episode => UpdateStatistics(episode, ffprobePath).MapT(_ => episode))
                     .BindT(UpdateMetadata)
                     .BindT(UpdateThumbnail);

@@ -1,16 +1,25 @@
 ﻿@page "/media/sources"
+@page "/media/sources/{PanelIndex:int}"
+@inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudTabs Elevation="1">
-        <MudTabPanel Text="Local">
+    <MudTabs @ref="_tabs" Elevation="1">
+        <MudTabPanel Text="Local" OnClick="@(() => NavigationManager.NavigateTo("/media/sources/0"))">
             <LocalMediaSources></LocalMediaSources>
         </MudTabPanel>
-        @* <MudTabPanel Text="Plex"> *@
-        @*     <PlexMediaSources></PlexMediaSources> *@
-        @* </MudTabPanel> *@
+        <MudTabPanel Text="Plex" OnClick="@(() => NavigationManager.NavigateTo("/media/sources/1"))">
+            <PlexMediaSources></PlexMediaSources>
+        </MudTabPanel>
     </MudTabs>
 </MudContainer>
 
 @code {
+
+    [Parameter]
+    public int PanelIndex { get; set; }
+
+    private MudTabs _tabs;
+
+    protected override void OnAfterRender(bool firstRender) => _tabs.ActivatePanel(PanelIndex);
 
 }

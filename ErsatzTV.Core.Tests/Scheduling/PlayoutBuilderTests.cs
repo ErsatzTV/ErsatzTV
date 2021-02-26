@@ -40,7 +40,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task InitialFlood_Should_StartAtMidnight()
         {
-            var mediaItems = new List<MovieMediaItem>
+            var mediaItems = new List<Movie>
             {
                 TestMovie(1, TimeSpan.FromHours(6), DateTime.Today)
             };
@@ -59,7 +59,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task InitialFlood_Should_StartAtMidnight_With_LateStart()
         {
-            var mediaItems = new List<MovieMediaItem>
+            var mediaItems = new List<Movie>
             {
                 TestMovie(1, TimeSpan.FromHours(6), DateTime.Today)
             };
@@ -79,7 +79,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ChronologicalContent_Should_CreateChronologicalItems()
         {
-            var mediaItems = new List<MovieMediaItem>
+            var mediaItems = new List<Movie>
             {
                 TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                 TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -105,7 +105,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ChronologicalFlood_Should_AnchorAndMaintainExistingPlayout()
         {
-            var mediaItems = new List<MovieMediaItem>
+            var mediaItems = new List<Movie>
             {
                 TestMovie(1, TimeSpan.FromHours(6), DateTime.Today),
                 TestMovie(2, TimeSpan.FromHours(6), DateTime.Today.AddHours(1))
@@ -142,7 +142,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ChronologicalFlood_Should_AnchorAndReturnNewPlayoutItems()
         {
-            var mediaItems = new List<MovieMediaItem>
+            var mediaItems = new List<Movie>
             {
                 TestMovie(1, TimeSpan.FromHours(6), DateTime.Today),
                 TestMovie(2, TimeSpan.FromHours(6), DateTime.Today.AddHours(1))
@@ -180,7 +180,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ShuffleFloodRebuild_Should_IgnoreAnchors()
         {
-            var mediaItems = new List<MovieMediaItem>
+            var mediaItems = new List<Movie>
             {
                 TestMovie(1, TimeSpan.FromHours(1), DateTime.Today),
                 TestMovie(2, TimeSpan.FromHours(1), DateTime.Today.AddHours(1)),
@@ -223,7 +223,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [Test]
         public async Task ShuffleFlood_Should_MaintainRandomSeed()
         {
-            var mediaItems = new List<MovieMediaItem>
+            var mediaItems = new List<Movie>
             {
                 TestMovie(1, TimeSpan.FromHours(1), DateTime.Today),
                 TestMovie(2, TimeSpan.FromHours(1), DateTime.Today.AddHours(1)),
@@ -259,7 +259,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 1,
                 Name = "Flood Items",
-                Movies = new List<MovieMediaItem>
+                Movies = new List<Movie>
                 {
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -270,7 +270,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 2,
                 Name = "Fixed Items",
-                Movies = new List<MovieMediaItem>
+                Movies = new List<Movie>
                 {
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1))
                 }
@@ -337,7 +337,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 1,
                 Name = "Flood Items",
-                Movies = new List<MovieMediaItem>
+                Movies = new List<Movie>
                 {
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -348,7 +348,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 2,
                 Name = "Fixed Items",
-                Movies = new List<MovieMediaItem>
+                Movies = new List<Movie>
                 {
                     TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
@@ -422,7 +422,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 1,
                 Name = "Flood Items",
-                Movies = new List<MovieMediaItem>
+                Movies = new List<Movie>
                 {
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -433,7 +433,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 2,
                 Name = "Fixed Items",
-                Movies = new List<MovieMediaItem>
+                Movies = new List<Movie>
                 {
                     TestMovie(3, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1.5), new DateTime(2020, 1, 2))
@@ -511,7 +511,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 1,
                 Name = "Multiple Items",
-                Movies = new List<MovieMediaItem>
+                Movies = new List<Movie>
                 {
                     TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
                     TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
@@ -522,7 +522,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 Id = 2,
                 Name = "Dynamic Items",
-                Movies = new List<MovieMediaItem>
+                Movies = new List<Movie>
                 {
                     TestMovie(3, TimeSpan.FromHours(0.75), new DateTime(2020, 1, 1)),
                     TestMovie(4, TimeSpan.FromHours(1.5), new DateTime(2020, 1, 2))
@@ -607,7 +607,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 StartTime = null
             };
 
-        private static MovieMediaItem TestMovie(int id, TimeSpan duration, DateTime aired) =>
+        private static Movie TestMovie(int id, TimeSpan duration, DateTime aired) =>
             new()
             {
                 Id = id,
@@ -615,7 +615,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Statistics = new MediaItemStatistics { Duration = duration }
             };
 
-        private TestData TestDataFloodForItems(List<MovieMediaItem> mediaItems, PlaybackOrder playbackOrder)
+        private TestData TestDataFloodForItems(List<Movie> mediaItems, PlaybackOrder playbackOrder)
         {
             var mediaCollection = new SimpleMediaCollection
             {

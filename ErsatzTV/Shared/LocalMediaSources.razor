@@ -23,7 +23,7 @@
         <MudTd DataLabel="Folder">@context.Folder</MudTd>
         <MudTd>
             <div style="align-items: center; display: flex;">
-                @if (Locker.IsMediaSourceLocked(context.Id))
+                @if (Locker.IsLibraryLocked(context.Id))
                 {
                     <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
                         <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
@@ -33,14 +33,14 @@
                 {
                     <MudTooltip Text="Scan Media Source">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       Disabled="@Locker.IsMediaSourceLocked(context.Id)"
+                                       Disabled="@Locker.IsLibraryLocked(context.Id)"
                                        OnClick="@(_ => ScanMediaSource(context))">
                         </MudIconButton>
                     </MudTooltip>
                 }
                 <MudTooltip Text="Delete Media Source">
                     <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                   Disabled="@Locker.IsMediaSourceLocked(context.Id)"
+                                   Disabled="@Locker.IsLibraryLocked(context.Id)"
                                    OnClick="@(_ => DeleteMediaSource(context))">
                     </MudIconButton>
                 </MudTooltip>
@@ -48,15 +48,15 @@
         </MudTd>
     </RowTemplate>
 </MudTable>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/sources/local/add" Class="mt-4">
-    Add Local Media Source
-</MudButton>
+@* <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/sources/local/add" Class="mt-4"> *@
+@*     Add Local Media Source *@
+@* </MudButton> *@
 
 @code {
     private IList<LocalMediaSourceViewModel> _mediaSources;
 
     protected override void OnInitialized() =>
-        Locker.OnMediaSourceChanged += LockChanged;
+        Locker.OnLibraryChanged += LockChanged;
 
     protected override async Task OnParametersSetAsync() => await LoadMediaSources();
 
@@ -87,9 +87,9 @@
 
     private async Task ScanMediaSource(LocalMediaSourceViewModel mediaSource)
     {
-        if (Locker.LockMediaSource(mediaSource.Id))
+        if (Locker.LockLibrary(mediaSource.Id))
         {
-            await Channel.WriteAsync(new ForceScanLocalMediaSource(mediaSource.Id));
+            await Channel.WriteAsync(new ForceScanLocalLibrary(mediaSource.Id));
             StateHasChanged();
         }
     }
@@ -97,6 +97,6 @@
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
 
-    void IDisposable.Dispose() => Locker.OnMediaSourceChanged -= LockChanged;
+    void IDisposable.Dispose() => Locker.OnLibraryChanged -= LockChanged;
 
 }

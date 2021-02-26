@@ -67,7 +67,7 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<Either<BaseError, TelevisionEpisodeMediaItem>> GetOrAddEpisode(
             TelevisionSeason season,
-            int mediaSourceId,
+            LibraryPath libraryPath,
             string path) => throw new NotSupportedException();
 
         public Task<Unit> DeleteMissingSources(int localMediaSourceId, List<string> allFolders) =>

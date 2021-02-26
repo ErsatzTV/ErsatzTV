@@ -6,7 +6,11 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 {
     public class MediaCollectionConfiguration : IEntityTypeConfiguration<MediaCollection>
     {
-        public void Configure(EntityTypeBuilder<MediaCollection> builder) =>
+        public void Configure(EntityTypeBuilder<MediaCollection> builder)
+        {
+            builder.ToTable("MediaCollection");
+
             builder.HasIndex(c => c.Name).IsUnique();
+        }
     }
 }

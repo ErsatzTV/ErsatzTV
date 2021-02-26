@@ -8,7 +8,7 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<TelevisionSeason> builder)
         {
-            builder.ToTable("TelevisionSeasons");
+            builder.ToTable("TelevisionSeason");
 
             builder.HasMany(season => season.Episodes)
                 .WithOne(episode => episode.Season)

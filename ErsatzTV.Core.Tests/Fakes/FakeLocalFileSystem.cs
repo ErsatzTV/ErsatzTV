@@ -41,8 +41,8 @@ namespace ErsatzTV.Core.Tests.Fakes
                 .Map(f => f.LastWriteTime)
                 .IfNone(DateTime.MinValue);
 
-        public bool IsMediaSourceAccessible(LocalMediaSource localMediaSource) =>
-            _files.Any(f => f.Path.StartsWith(localMediaSource.Folder));
+        public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
+            _files.Any(f => f.Path.StartsWith(libraryPath.Path + Path.DirectorySeparatorChar));
 
         public IEnumerable<string> ListSubdirectories(string folder) =>
             _folders.Map(f => f.Path).Filter(f => f.StartsWith(folder) && Directory.GetParent(f)?.FullName == folder);

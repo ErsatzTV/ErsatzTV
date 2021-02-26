@@ -8,7 +8,7 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<TelevisionShow> builder)
         {
-            builder.ToTable("TelevisionShows");
+            builder.ToTable("TelevisionShow");
 
             builder.HasOne(show => show.Metadata)
                 .WithOne(metadata => metadata.TelevisionShow)
