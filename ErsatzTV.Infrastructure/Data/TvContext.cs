@@ -21,6 +21,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<PlexLibrary> PlexLibraries { get; set; }
         public DbSet<MediaItem> MediaItems { get; set; }
         public DbSet<Movie> Movies { get; set; }
+        public DbSet<NewMovieMetadata> MovieMetadata { get; set; }
         public DbSet<Show> Shows { get; set; }
         public DbSet<Season> Seasons { get; set; }
         public DbSet<Episode> Episodes { get; set; }

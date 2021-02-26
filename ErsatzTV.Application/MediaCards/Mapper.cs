@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ErsatzTV.Core.Domain;
 
@@ -37,19 +38,20 @@ namespace ErsatzTV.Application.MediaCards
                 televisionEpisode.Poster,
                 televisionEpisode.Metadata?.Episode.ToString());
 
-        internal static MovieCardViewModel ProjectToViewModel(Movie movie) =>
+        internal static MovieCardViewModel ProjectToViewModel(NewMovieMetadata movieMetadata) =>
             new(
-                movie.Id,
-                movie.Metadata?.Title,
-                movie.Metadata?.Year?.ToString(),
-                movie.Metadata?.SortTitle,
-                movie.Poster);
+                movieMetadata.MovieId,
+                movieMetadata.Title,
+                movieMetadata.ReleaseDate?.Year.ToString(),
+                movieMetadata.SortTitle,
+                null); // TODO: artwork
 
         internal static SimpleMediaCollectionCardResultsViewModel
             ProjectToViewModel(SimpleMediaCollection collection) =>
             new(
                 collection.Name,
-                collection.Movies.Map(ProjectToViewModel).ToList(),
+                // TODO: fix this
+                new List<MovieCardViewModel>(), // collection.Movies.Map(ProjectToViewModel).ToList(),
                 collection.TelevisionShows.Map(ProjectToViewModel).ToList(),
                 collection.TelevisionSeasons.Map(ProjectToViewModel).ToList(),
                 collection.TelevisionEpisodes.Map(ProjectToViewModel).ToList());

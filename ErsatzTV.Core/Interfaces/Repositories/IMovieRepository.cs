@@ -12,6 +12,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Either<BaseError, PlexMovie>> GetOrAdd(PlexLibrary library, PlexMovie item);
         Task<bool> Update(Movie movie);
         Task<int> GetMovieCount();
-        Task<List<Movie>> GetPagedMovies(int pageNumber, int pageSize);
+        Task<List<NewMovieMetadata>> GetPagedMovies(int pageNumber, int pageSize);
     }
 }

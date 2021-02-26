@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -14,8 +16,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     public class MovieRepository : IMovieRepository
     {
         private readonly TvContext _dbContext;
+        private readonly IDbConnection _dbConnection;
 
-        public MovieRepository(TvContext dbContext) => _dbContext = dbContext;
+        public MovieRepository(TvContext dbContext, IDbConnection dbConnection)
+        {
+            _dbContext = dbContext;
+            _dbConnection = dbConnection;
+        }
 
         public Task<Option<Movie>> GetMovie(int movieId) =>
             _dbContext.Movies
@@ -57,17 +64,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public Task<int> GetMovieCount() =>
-            _dbContext.Movies
-                .AsNoTracking()
-                .CountAsync();
+            _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT(DISTINCT MovieId) FROM NewMovieMetadata");
 
-        public Task<List<Movie>> GetPagedMovies(int pageNumber, int pageSize) =>
-            _dbContext.Movies
-                .Include(s => s.MovieMetadata)
-                .OrderBy(s => s.MovieMetadata.FirstOrDefault().SortTitle)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .AsNoTracking()
+        public Task<List<NewMovieMetadata>> GetPagedMovies(int pageNumber, int pageSize) =>
+            _dbContext.MovieMetadata.FromSqlRaw(@"SELECT * FROM NewMovieMetadata WHERE Id IN
+            (SELECT Id FROM NewMovieMetadata GROUP BY MovieId, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
+            ORDER BY SortTitle
+            LIMIT {0} OFFSET {1}", pageSize, (pageNumber - 1) * pageSize)
                 .ToListAsync();
 
         private async Task<Either<BaseError, Movie>> AddMovie(int libraryPathId, string path)
