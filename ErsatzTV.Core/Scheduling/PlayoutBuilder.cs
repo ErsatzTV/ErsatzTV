@@ -388,7 +388,9 @@ namespace ErsatzTV.Core.Scheduling
                 TelevisionEpisodeMediaItem e => e.Metadata != null
                     ? $"{e.Metadata.Title} - s{e.Metadata.Season:00}e{e.Metadata.Episode:00}"
                     : Path.GetFileName(e.Path),
-                Movie m => m.Metadata?.Title ?? Path.GetFileName(m.Path),
+                Movie m => m.MovieMetadata.HeadOrNone().Match(
+                    mm => mm.Title,
+                    () => Path.GetFileName(m.Path)),
                 _ => string.Empty
             };
 

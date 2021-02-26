@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -94,21 +95,10 @@ namespace ErsatzTV.Core.Metadata
             await _televisionRepository.Update(mediaItem);
         }
 
-        private async Task ApplyMetadataUpdate(Movie mediaItem, MovieMetadata metadata)
+        private async Task ApplyMetadataUpdate(Movie movie, NewMovieMetadata metadata)
         {
-            mediaItem.Metadata ??= new MovieMetadata();
-            mediaItem.Metadata.Source = metadata.Source;
-            mediaItem.Metadata.LastWriteTime = metadata.LastWriteTime;
-            mediaItem.Metadata.Title = metadata.Title;
-            mediaItem.Metadata.SortTitle = GetSortTitle(metadata.Title);
-            mediaItem.Metadata.Year = metadata.Year;
-            mediaItem.Metadata.Premiered = metadata.Premiered;
-            mediaItem.Metadata.Plot = metadata.Plot;
-            mediaItem.Metadata.Outline = metadata.Outline;
-            mediaItem.Metadata.Tagline = metadata.Tagline;
-            mediaItem.Metadata.ContentRating = metadata.ContentRating;
-
-            await _mediaItemRepository.Update(mediaItem);
+            movie.MovieMetadata = new List<NewMovieMetadata> { metadata };
+            await _mediaItemRepository.Update(movie);
         }
 
         private async Task ApplyMetadataUpdate(TelevisionShow televisionShow, TelevisionShowMetadata metadata)
@@ -124,7 +114,7 @@ namespace ErsatzTV.Core.Metadata
             await _televisionRepository.Update(televisionShow);
         }
 
-        private async Task<Option<MovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
+        private async Task<Option<NewMovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
         {
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
@@ -225,24 +215,22 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Option<MovieMetadata>> LoadMovieMetadata(Movie mediaItem, string nfoFileName)
+        private async Task<Option<NewMovieMetadata>> LoadMovieMetadata(Movie mediaItem, string nfoFileName)
         {
             try
             {
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<MovieNfo> maybeNfo = MovieSerializer.Deserialize(fileStream) as MovieNfo;
-                return maybeNfo.Match<Option<MovieMetadata>>(
-                    nfo => new MovieMetadata
+                return maybeNfo.Match<Option<NewMovieMetadata>>(
+                    nfo => new NewMovieMetadata
                     {
-                        Source = MetadataSource.Sidecar,
-                        LastWriteTime = File.GetLastWriteTimeUtc(nfoFileName),
+                        MetadataKind = MetadataKind.Sidecar,
+                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                         Title = nfo.Title,
-                        Year = nfo.Year,
-                        Premiered = nfo.Premiered,
+                        ReleaseDate = nfo.Premiered,
                         Plot = nfo.Plot,
                         Outline = nfo.Outline,
                         Tagline = nfo.Tagline,
-                        ContentRating = nfo.ContentRating
                     },
                     None);
             }

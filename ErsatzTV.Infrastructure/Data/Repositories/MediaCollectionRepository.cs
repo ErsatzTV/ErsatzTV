@@ -56,7 +56,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(s => s.Movies)
                 .ThenInclude(i => i.LibraryPath)
                 .Include(s => s.Movies)
-                .ThenInclude(m => m.Metadata)
+                .ThenInclude(m => m.MovieMetadata)
                 .Include(s => s.TelevisionShows)
                 .ThenInclude(s => s.Metadata)
                 .Include(s => s.TelevisionSeasons)

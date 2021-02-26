@@ -26,7 +26,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<Option<Movie>> GetMovie(int movieId) =>
             _dbContext.Movies
-                .Include(m => m.Metadata)
+                .Include(m => m.MovieMetadata)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
 
@@ -34,7 +34,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public async Task<Either<BaseError, Movie>> GetOrAdd(LibraryPath libraryPath, string path)
         {
             Option<Movie> maybeExisting = await _dbContext.Movies
-                .Include(i => i.Metadata)
+                .Include(i => i.MovieMetadata)
                 .Include(i => i.LibraryPath)
                 .SingleOrDefaultAsync(i => i.Path == path);
 
@@ -48,7 +48,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             PlexMovie item)
         {
             Option<PlexMovie> maybeExisting = await _dbContext.PlexMovieMediaItems
-                .Include(i => i.Metadata)
+                .Include(i => i.MovieMetadata)
                 .Include(i => i.Part)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 

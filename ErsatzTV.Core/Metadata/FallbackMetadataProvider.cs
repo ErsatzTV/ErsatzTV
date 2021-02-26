@@ -36,10 +36,10 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        public static MovieMetadata GetFallbackMetadata(Movie mediaItem)
+        public static NewMovieMetadata GetFallbackMetadata(Movie movie)
         {
-            string fileName = Path.GetFileName(mediaItem.Path);
-            var metadata = new MovieMetadata { Source = MetadataSource.Fallback, Title = fileName ?? mediaItem.Path };
+            string fileName = Path.GetFileName(movie.Path);
+            var metadata = new NewMovieMetadata { MetadataKind = MetadataKind.Fallback, Title = fileName ?? movie.Path };
 
             if (fileName != null)
             {
@@ -76,7 +76,7 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        private static MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)
+        private static NewMovieMetadata GetMovieMetadata(string fileName, NewMovieMetadata metadata)
         {
             try
             {
@@ -85,7 +85,7 @@ namespace ErsatzTV.Core.Metadata
                 if (match.Success)
                 {
                     metadata.Title = match.Groups[1].Value;
-                    metadata.Year = int.Parse(match.Groups[2].Value);
+                    metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
                 }
             }
             catch (Exception)

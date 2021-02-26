@@ -42,7 +42,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(c => c.Playouts)
                 .ThenInclude(p => p.Items)
                 .ThenInclude(i => i.MediaItem)
-                .ThenInclude(i => (i as Movie).Metadata)
+                .ThenInclude(i => (i as Movie).MovieMetadata)
                 .ToListAsync();
 
         public async Task Update(Channel channel)

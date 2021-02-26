@@ -96,9 +96,12 @@ namespace ErsatzTV.Core.Metadata
                 await LocateNfoFile(movie).Match(
                     async nfoFile =>
                     {
-                        if (movie.Metadata == null || movie.Metadata.Source == MetadataSource.Fallback ||
-                            (movie.Metadata.LastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(nfoFile))
+                        bool shouldUpdate = movie.MovieMetadata.HeadOrNone().Match(
+                            m => m.MetadataKind == MetadataKind.Fallback ||
+                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                            true);
+
+                        if (shouldUpdate)
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
                             await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile);
@@ -106,7 +109,7 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (movie.Metadata == null)
+                        if (!movie.MovieMetadata.Any())
                         {
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", movie.Path);
                             await _localMetadataProvider.RefreshFallbackMetadata(movie);

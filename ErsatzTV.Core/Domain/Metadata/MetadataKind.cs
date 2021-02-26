@@ -3,6 +3,7 @@
     public enum MetadataKind
     {
         Fallback = 0,
-        Sidecar = 1
+        Sidecar = 1,
+        External
     }
 }

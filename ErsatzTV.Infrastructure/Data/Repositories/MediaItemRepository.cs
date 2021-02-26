@@ -36,10 +36,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             IQueryable<Movie> movieData =
                 from c in _dbContext.Movies.Include(c => c.LibraryPath) select c;
 
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                movieData = movieData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
-            }
+            // TODO: fix this when we need to search
+            // if (!string.IsNullOrEmpty(searchString))
+            // {
+            //     movieData = movieData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
+            // }
 
             return episodeData.OfType<MediaItem>().Concat(movieData.OfType<MediaItem>()).ToListAsync();
         }

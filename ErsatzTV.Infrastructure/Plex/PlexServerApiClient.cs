@@ -123,20 +123,23 @@ namespace ErsatzTV.Infrastructure.Plex
             PlexPartResponse part = media.Part.Head();
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
+            var metadata = new NewMovieMetadata
+            {
+                Title = response.Title,
+                Plot = response.Summary,
+                ReleaseDate = new DateTime(response.Year, 1, 1), // TODO: actual release date?
+                Tagline = response.Tagline,
+                DateAdded = DateTime.UtcNow, // TODO: actual date added?
+                DateUpdated = lastWriteTime
+            };
+
             var movie = new PlexMovie
             {
                 Key = response.Key,
                 Poster = response.Thumb,
                 LastWriteTime = lastWriteTime,
                 PosterLastWriteTime = lastWriteTime,
-                Metadata = new MovieMetadata
-                {
-                    Title = response.Title,
-                    Plot = response.Summary,
-                    Year = response.Year,
-                    Tagline = response.Tagline,
-                    LastWriteTime = lastWriteTime
-                },
+                MovieMetadata = new List<NewMovieMetadata> { metadata },
                 Statistics = new MediaItemStatistics
                 {
                     Duration = TimeSpan.FromMilliseconds(media.Duration),
