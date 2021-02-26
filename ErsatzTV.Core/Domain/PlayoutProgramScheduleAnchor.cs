@@ -8,9 +8,7 @@
         public int ProgramScheduleId { get; set; }
         public ProgramSchedule ProgramSchedule { get; set; }
         public ProgramScheduleItemCollectionType CollectionType { get; set; }
-
-        // TODO: rename this
-        public int? NewCollectionId { get; set; }
+        public int? CollectionId { get; set; }
         public Collection Collection { get; set; }
         public int? MediaItemId { get; set; }
         public MediaItem MediaItem { get; set; }

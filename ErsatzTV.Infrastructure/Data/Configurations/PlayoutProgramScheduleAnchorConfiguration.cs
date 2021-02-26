@@ -13,10 +13,9 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
             builder.OwnsOne(a => a.EnumeratorState)
                 .WithOwner();
 
-            // TODO: fix this foreign key
             builder.HasOne(i => i.Collection)
                 .WithMany()
-                .HasForeignKey(i => i.NewCollectionId)
+                .HasForeignKey(i => i.CollectionId)
                 .IsRequired(false);
 
             builder.HasOne(i => i.MediaItem)
