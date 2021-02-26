@@ -8,7 +8,7 @@ namespace ErsatzTV.Core.Domain
         public int Id { get; set; }
         public string Name { get; set; }
         public LibraryMediaKind MediaKind { get; set; }
-        public DateTimeOffset? LastScan { get; set; }
+        public DateTime? LastScan { get; set; }
 
         public int MediaSourceId { get; set; }
         public MediaSource MediaSource { get; set; }

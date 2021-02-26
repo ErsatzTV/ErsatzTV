@@ -55,7 +55,7 @@ namespace ErsatzTV.Application.Plex.Commands
 
         private async Task<Unit> Synchronize(RequestParameters parameters)
         {
-            DateTimeOffset lastScan = parameters.Library.LastScan ?? DateTime.MinValue;
+            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
             if (parameters.ForceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
             {
                 switch (parameters.Library.MediaKind)
@@ -72,7 +72,7 @@ namespace ErsatzTV.Application.Plex.Commands
                         break;
                 }
 
-                parameters.Library.LastScan = DateTimeOffset.Now;
+                parameters.Library.LastScan = DateTime.UtcNow;
                 await _mediaSourceRepository.Update(parameters.Library);
             }
             else

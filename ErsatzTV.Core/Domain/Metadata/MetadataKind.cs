@@ -2,7 +2,7 @@
 {
     public enum MetadataKind
     {
-        Fallback,
-        Sidecar
+        Fallback = 0,
+        Sidecar = 1
     }
 }

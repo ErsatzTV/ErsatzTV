@@ -148,8 +148,8 @@ namespace ErsatzTV.Core.Scheduling
                         var playoutItem = new PlayoutItem
                         {
                             MediaItemId = mediaItem.Id,
-                            Start = itemStartTime,
-                            Finish = itemStartTime + mediaItem.Statistics.Duration
+                            Start = itemStartTime.UtcDateTime,
+                            Finish = itemStartTime.UtcDateTime + mediaItem.Statistics.Duration
                         };
 
                         currentTime = itemStartTime + mediaItem.Statistics.Duration;
@@ -250,7 +250,7 @@ namespace ErsatzTV.Core.Scheduling
             {
                 NextScheduleItem = nextScheduleItem,
                 NextScheduleItemId = nextScheduleItem.Id,
-                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime)
+                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime).UtcDateTime
             };
 
             // build program schedule anchors
@@ -306,7 +306,7 @@ namespace ErsatzTV.Core.Scheduling
                     }
 
                     TimeSpan startTime = item.StartTime.GetValueOrDefault();
-                    DateTime result = start.Date + startTime;
+                    DateTimeOffset result = start.Date + startTime;
                     // need to wrap to the next day if appropriate
                     return start.TimeOfDay > startTime ? result.AddDays(1) : result;
                 case StartType.Dynamic:

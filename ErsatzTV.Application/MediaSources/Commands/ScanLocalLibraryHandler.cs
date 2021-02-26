@@ -58,7 +58,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
         {
             (LocalLibrary localLibrary, string ffprobePath, bool forceScan) = parameters;
 
-            DateTimeOffset lastScan = localLibrary.LastScan ?? DateTime.MinValue;
+            var lastScan = new DateTimeOffset(localLibrary.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
             if (forceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
             {
                 foreach (LibraryPath libraryPath in localLibrary.Paths)
@@ -74,7 +74,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
                     }
                 }
 
-                localLibrary.LastScan = DateTimeOffset.Now;
+                localLibrary.LastScan = DateTime.UtcNow;
                 await _libraryRepository.UpdateLastScan(localLibrary);
             }
             else

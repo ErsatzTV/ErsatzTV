@@ -52,8 +52,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result = await builder.BuildPlayoutItems(playout, start, finish);
 
             result.Items.Count.Should().Be(1);
-            result.Items.Head().Start.TimeOfDay.Should().Be(TimeSpan.Zero);
-            result.Items.Head().Finish.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+            result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
         }
 
         [Test]
@@ -71,9 +71,9 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result = await builder.BuildPlayoutItems(playout, start, finish);
 
             result.Items.Count.Should().Be(2);
-            result.Items[0].Start.TimeOfDay.Should().Be(TimeSpan.Zero);
-            result.Items[1].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
-            result.Items[1].Finish.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+            result.Items[1].FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
         }
 
         [Test]
@@ -92,13 +92,13 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result = await builder.BuildPlayoutItems(playout, start, finish);
 
             result.Items.Count.Should().Be(4);
-            result.Items[0].Start.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items[0].MediaItemId.Should().Be(1);
-            result.Items[1].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
             result.Items[1].MediaItemId.Should().Be(2);
-            result.Items[2].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
             result.Items[2].MediaItemId.Should().Be(1);
-            result.Items[3].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
             result.Items[3].MediaItemId.Should().Be(2);
         }
 
@@ -120,7 +120,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             result.Items.Count.Should().Be(1);
             result.Items.Head().MediaItemId.Should().Be(1);
 
-            result.Anchor.NextStart.Should().Be(DateTime.Today.AddHours(6));
+            result.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(6));
 
             result.ProgramScheduleAnchors.Count.Should().Be(1);
             result.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(1);
@@ -131,10 +131,10 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result2 = await builder.BuildPlayoutItems(playout, start2, finish2);
 
             result2.Items.Count.Should().Be(2);
-            result2.Items.Last().Start.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+            result2.Items.Last().StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
             result2.Items.Last().MediaItemId.Should().Be(2);
 
-            result2.Anchor.NextStart.Should().Be(DateTime.Today.AddHours(12));
+            result2.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(12));
             result2.ProgramScheduleAnchors.Count.Should().Be(1);
             result2.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
         }
@@ -157,7 +157,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             result.Items.Count.Should().Be(1);
             result.Items.Head().MediaItemId.Should().Be(1);
 
-            result.Anchor.NextStart.Should().Be(DateTime.Today.AddHours(6));
+            result.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(6));
             result.ProgramScheduleAnchors.Count.Should().Be(1);
             result.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(1);
 
@@ -167,12 +167,12 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result2 = await builder.BuildPlayoutItems(playout, start2, finish2);
 
             result2.Items.Count.Should().Be(3);
-            result2.Items[1].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+            result2.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
             result2.Items[1].MediaItemId.Should().Be(2);
-            result2.Items[2].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
+            result2.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
             result2.Items[2].MediaItemId.Should().Be(1);
 
-            result2.Anchor.NextStart.Should().Be(DateTime.Today.AddHours(18));
+            result2.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(18));
             result2.ProgramScheduleAnchors.Count.Should().Be(1);
             result2.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(1);
         }
@@ -197,7 +197,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result = await builder.BuildPlayoutItems(playout, start, finish);
 
             result.Items.Count.Should().Be(6);
-            result.Anchor.NextStart.Should().Be(DateTime.Today.AddHours(6));
+            result.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(6));
 
             result.ProgramScheduleAnchors.Count.Should().Be(1);
             result.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
@@ -210,7 +210,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result2 = await builder.BuildPlayoutItems(playout, start2, finish2, true);
 
             result2.Items.Count.Should().Be(6);
-            result2.Anchor.NextStart.Should().Be(DateTime.Today.AddHours(6));
+            result2.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(6));
 
             result2.ProgramScheduleAnchors.Count.Should().Be(1);
             result2.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
@@ -318,15 +318,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result = await builder.BuildPlayoutItems(playout, start, finish);
 
             result.Items.Count.Should().Be(5);
-            result.Items[0].Start.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items[0].MediaItemId.Should().Be(1);
-            result.Items[1].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
             result.Items[1].MediaItemId.Should().Be(2);
-            result.Items[2].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
             result.Items[2].MediaItemId.Should().Be(1);
-            result.Items[3].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
             result.Items[3].MediaItemId.Should().Be(3);
-            result.Items[4].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
+            result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
             result.Items[4].MediaItemId.Should().Be(2);
         }
 
@@ -399,19 +399,19 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             result.Items.Count.Should().Be(6);
 
-            result.Items[0].Start.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items[0].MediaItemId.Should().Be(1);
-            result.Items[1].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
             result.Items[1].MediaItemId.Should().Be(2);
-            result.Items[2].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
             result.Items[2].MediaItemId.Should().Be(1);
 
-            result.Items[3].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
             result.Items[3].MediaItemId.Should().Be(3);
-            result.Items[4].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
+            result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
             result.Items[4].MediaItemId.Should().Be(4);
 
-            result.Items[5].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+            result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
             result.Items[5].MediaItemId.Should().Be(2);
         }
 
@@ -485,22 +485,22 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             result.Items.Count.Should().Be(7);
 
-            result.Items[0].Start.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items[0].MediaItemId.Should().Be(1);
-            result.Items[1].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
             result.Items[1].MediaItemId.Should().Be(2);
 
-            result.Items[2].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
             result.Items[2].MediaItemId.Should().Be(3);
 
-            result.Items[3].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2.75));
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2.75));
             result.Items[3].MediaItemId.Should().Be(1);
-            result.Items[4].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(3.75));
+            result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3.75));
             result.Items[4].MediaItemId.Should().Be(2);
 
-            result.Items[5].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(4.75));
+            result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4.75));
             result.Items[5].MediaItemId.Should().Be(1);
-            result.Items[6].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(5.75));
+            result.Items[6].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5.75));
             result.Items[6].MediaItemId.Should().Be(2);
         }
 
@@ -575,20 +575,20 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             result.Items.Count.Should().Be(6);
 
-            result.Items[0].Start.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
             result.Items[0].MediaItemId.Should().Be(1);
-            result.Items[1].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
             result.Items[1].MediaItemId.Should().Be(2);
 
-            result.Items[2].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
             result.Items[2].MediaItemId.Should().Be(3);
 
-            result.Items[3].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(2.75));
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2.75));
             result.Items[3].MediaItemId.Should().Be(1);
-            result.Items[4].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(3.75));
+            result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3.75));
             result.Items[4].MediaItemId.Should().Be(2);
 
-            result.Items[5].Start.TimeOfDay.Should().Be(TimeSpan.FromHours(4.75));
+            result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4.75));
             result.Items[5].MediaItemId.Should().Be(4);
         }
 

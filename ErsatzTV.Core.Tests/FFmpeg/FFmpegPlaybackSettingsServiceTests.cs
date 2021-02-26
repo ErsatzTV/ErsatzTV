@@ -119,7 +119,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
                 FFmpegProfile ffmpegProfile = TestProfile();
                 PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.Start = now;
+                playoutItem.Start = now.UtcDateTime;
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
@@ -138,7 +138,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
                 FFmpegProfile ffmpegProfile = TestProfile();
                 PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.Start = now;
+                playoutItem.Start = now.UtcDateTime;
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,

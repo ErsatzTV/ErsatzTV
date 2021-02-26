@@ -72,6 +72,9 @@ namespace ErsatzTV.Services
 
         private async Task ScanLocalMediaSources(CancellationToken cancellationToken)
         {
+            // TODO: enable scanning again
+            return;
+
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 

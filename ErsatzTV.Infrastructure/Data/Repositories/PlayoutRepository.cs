@@ -44,7 +44,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public async Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now)
         {
             var p1 = new SqliteParameter("channelId", channelId);
-            var p2 = new SqliteParameter("now", now);
+            var p2 = new SqliteParameter("now", now.UtcDateTime);
             return await _dbContext.PlayoutItems
                 .FromSqlRaw(
                     "select i.* from playoutitems i inner join playouts p on i.playoutid = p.id where p.channelid = @channelId and i.start <= @now and i.finish > @now",

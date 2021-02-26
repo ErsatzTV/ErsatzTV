@@ -63,8 +63,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<Movie>> GetPagedMovies(int pageNumber, int pageSize) =>
             _dbContext.Movies
-                .Include(s => s.Metadata)
-                .OrderBy(s => s.Metadata.SortTitle)
+                .Include(s => s.MovieMetadata)
+                .OrderBy(s => s.MovieMetadata.FirstOrDefault().SortTitle)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .AsNoTracking()

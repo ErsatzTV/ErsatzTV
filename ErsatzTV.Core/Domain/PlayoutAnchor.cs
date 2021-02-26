@@ -8,6 +8,8 @@ namespace ErsatzTV.Core.Domain
 
         public ProgramScheduleItem NextScheduleItem { get; set; }
 
-        public DateTimeOffset NextStart { get; set; }
+        public DateTime NextStart { get; set; }
+
+        public DateTimeOffset NextStartOffset => new DateTimeOffset(NextStart, TimeSpan.Zero).ToLocalTime();
     }
 }
