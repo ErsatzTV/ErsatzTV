@@ -96,7 +96,6 @@ namespace ErsatzTV.Core.Metadata
                 await LocateNfoFile(movie).Match(
                     async nfoFile =>
                     {
-                        
                         bool shouldUpdate = Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
                                  m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),

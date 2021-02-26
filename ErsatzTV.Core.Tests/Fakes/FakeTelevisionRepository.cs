@@ -44,8 +44,6 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize) =>
             throw new NotSupportedException();
 
-        public Task<Option<Show>> GetShowByPath(int mediaSourceId, string path) => throw new NotSupportedException();
-
         public Task<Option<Show>> GetShowByMetadata(ShowMetadata metadata) => throw new NotSupportedException();
 
         public Task<Either<BaseError, Show>>
@@ -58,9 +56,11 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path) =>
             throw new NotSupportedException();
 
+        public Task<Unit> DeleteEmptyShows() => throw new NotSupportedException();
+
+        public Task<Option<Show>> GetShowByPath(int mediaSourceId, string path) => throw new NotSupportedException();
+
         public Task<Unit> DeleteMissingSources(int localMediaSourceId, List<string> allFolders) =>
             throw new NotSupportedException();
-
-        public Task<Unit> DeleteEmptyShows() => throw new NotSupportedException();
     }
 }

@@ -60,7 +60,7 @@
 
 @code {
     private IList<LocalLibraryViewModel> _libraries;
-    
+
     protected override void OnInitialized() =>
         Locker.OnLibraryChanged += LockChanged;
 
@@ -69,10 +69,7 @@
     private async Task LoadLibraries() =>
         _libraries = await Mediator.Send(new GetLocalLibraries());
 
-    private Task ScanLibrary(LocalLibraryViewModel library)
-    {
-        return Task.CompletedTask;
-    }
+    private Task ScanLibrary(LocalLibraryViewModel library) => Task.CompletedTask;
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);

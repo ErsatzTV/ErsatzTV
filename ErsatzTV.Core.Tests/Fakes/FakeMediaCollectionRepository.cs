@@ -26,10 +26,10 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<Collection>> GetAll() => throw new NotSupportedException();
 
         public Task<Option<List<MediaItem>>> GetItems(int id) => Some(_data[id].ToList()).AsTask();
-        public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id) => throw new NotSupportedException();
 
         public Task Update(Collection collection) => throw new NotSupportedException();
 
         public Task Delete(int collectionId) => throw new NotSupportedException();
+        public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id) => throw new NotSupportedException();
     }
 }

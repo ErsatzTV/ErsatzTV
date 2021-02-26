@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -23,8 +22,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<MediaItem>> GetAll() => _dbContext.MediaItems.ToListAsync();
 
-        public Task<List<MediaItem>> Search(string searchString)
-        {
+        public Task<List<MediaItem>> Search(string searchString) =>
             // TODO: fix this when we need to search
             // IQueryable<TelevisionEpisodeMediaItem> episodeData =
             //     from c in _dbContext.TelevisionEpisodeMediaItems.Include(c => c.LibraryPath) select c;
@@ -43,8 +41,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             // // }
             //
             // return episodeData.OfType<MediaItem>().Concat(movieData.OfType<MediaItem>()).ToListAsync();
-            return new List<MediaItem>().AsTask();
-        }
+            new List<MediaItem>().AsTask();
 
         public async Task<bool> Update(MediaItem mediaItem)
         {
