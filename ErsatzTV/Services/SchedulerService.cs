@@ -72,9 +72,6 @@ namespace ErsatzTV.Services
 
         private async Task ScanLocalMediaSources(CancellationToken cancellationToken)
         {
-            // TODO: enable scanning again
-            return;
-
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
@@ -93,20 +90,20 @@ namespace ErsatzTV.Services
                 }
             }
 
-            List<PlexLibrary> plexLibraries = await dbContext.PlexLibraries
-                .Filter(l => l.ShouldSyncItems)
-                .ToListAsync(cancellationToken);
-
-            foreach (PlexLibrary library in plexLibraries)
-            {
-                // TODO: this locking won't work...
-                // if (_entityLocker.LockMediaSource(library.PlexMediaSourceId))
-                // {
-                // await _channel.WriteAsync(
-                //     new SynchronizePlexLibraryByIdIfNeeded(library.PlexMediaSourceId, library.Id),
-                //     cancellationToken);
-                // }
-            }
+            // List<PlexLibrary> plexLibraries = await dbContext.PlexLibraries
+            //     .Filter(l => l.ShouldSyncItems)
+            //     .ToListAsync(cancellationToken);
+            //
+            // foreach (PlexLibrary library in plexLibraries)
+            // {
+            //     // TODO: this locking won't work...
+            //     // if (_entityLocker.LockMediaSource(library.PlexMediaSourceId))
+            //     // {
+            //     // await _channel.WriteAsync(
+            //     //     new SynchronizePlexLibraryByIdIfNeeded(library.PlexMediaSourceId, library.Id),
+            //     //     cancellationToken);
+            //     // }
+            // }
         }
     }
 }

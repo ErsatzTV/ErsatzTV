@@ -82,7 +82,7 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task ApplyMetadataUpdate(Episode episode, EpisodeMetadata metadata)
         {
-            episode.EpisodeMetadata.HeadOrNone().Match(
+            Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {
                     existing.Outline = metadata.Outline;
@@ -96,14 +96,18 @@ namespace ErsatzTV.Core.Metadata
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
                 },
-                () => episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata });
+                () =>
+                {
+                    metadata.SortTitle ??= GetSortTitle(metadata.Title);
+                    episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata };
+                });
 
             await _televisionRepository.Update(episode);
         }
 
         private async Task ApplyMetadataUpdate(Movie movie, MovieMetadata metadata)
         {
-            movie.MovieMetadata.HeadOrNone().Match(
+            Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {
                     existing.Outline = metadata.Outline;
@@ -117,14 +121,18 @@ namespace ErsatzTV.Core.Metadata
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
                 },
-                () => movie.MovieMetadata = new List<MovieMetadata> { metadata });
+                () =>
+                {
+                    metadata.SortTitle ??= GetSortTitle(metadata.Title);
+                    movie.MovieMetadata = new List<MovieMetadata> { metadata };
+                });
 
             await _mediaItemRepository.Update(movie);
         }
 
         private async Task ApplyMetadataUpdate(Show show, ShowMetadata metadata)
         {
-            show.ShowMetadata.HeadOrNone().Match(
+            Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {
                     existing.Outline = metadata.Outline;
@@ -138,7 +146,11 @@ namespace ErsatzTV.Core.Metadata
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
                 },
-                () => show.ShowMetadata = new List<ShowMetadata> { metadata });
+                () =>
+                {
+                    metadata.SortTitle ??= GetSortTitle(metadata.Title);
+                    show.ShowMetadata = new List<ShowMetadata> { metadata };
+                });
 
             await _televisionRepository.Update(show);
         }

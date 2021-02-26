@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Movies
 {
@@ -6,13 +7,12 @@ namespace ErsatzTV.Application.Movies
     {
         internal static MovieViewModel ProjectToViewModel(Movie movie)
         {
-            string title = movie.MovieMetadata.HeadOrNone().Map(m => m.Title).IfNone(string.Empty);
-            string year = movie.MovieMetadata.HeadOrNone()
-                .Map(m => m.ReleaseDate?.Year.ToString())
-                .IfNone(string.Empty);
-            string plot = movie.MovieMetadata.HeadOrNone().Map(m => m.Plot).IfNone(string.Empty);
-
-            return new MovieViewModel(title, year, plot, movie.Poster);
+            MovieMetadata metadata = Optional(movie.MovieMetadata).Flatten().Head();
+            return new MovieViewModel(
+                metadata.Title,
+                metadata.ReleaseDate?.Year.ToString(),
+                metadata.Plot,
+                movie.Poster);
         }
     }
 }
