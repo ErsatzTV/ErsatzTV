@@ -8,216 +8,216 @@ namespace ErsatzTV.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "SeasonNumber",
-                table: "Season",
-                type: "INTEGER",
+                "SeasonNumber",
+                "Season",
+                "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.AddColumn<int>(
-                name: "EpisodeNumber",
-                table: "Episode",
-                type: "INTEGER",
+                "EpisodeNumber",
+                "Episode",
+                "INTEGER",
                 nullable: false,
                 defaultValue: 0);
 
             migrationBuilder.CreateTable(
-                name: "EpisodeMetadata",
-                columns: table => new
+                "EpisodeMetadata",
+                table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Outline = table.Column<string>(type: "TEXT", nullable: true),
-                    Plot = table.Column<string>(type: "TEXT", nullable: true),
-                    Tagline = table.Column<string>(type: "TEXT", nullable: true),
-                    EpisodeId = table.Column<int>(type: "INTEGER", nullable: false),
-                    MetadataKind = table.Column<int>(type: "INTEGER", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", nullable: true),
-                    OriginalTitle = table.Column<string>(type: "TEXT", nullable: true),
-                    SortTitle = table.Column<string>(type: "TEXT", nullable: true),
-                    ReleaseDate = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    DateAdded = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    DateUpdated = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Outline = table.Column<string>("TEXT", nullable: true),
+                    Plot = table.Column<string>("TEXT", nullable: true),
+                    Tagline = table.Column<string>("TEXT", nullable: true),
+                    EpisodeId = table.Column<int>("INTEGER", nullable: false),
+                    MetadataKind = table.Column<int>("INTEGER", nullable: false),
+                    Title = table.Column<string>("TEXT", nullable: true),
+                    OriginalTitle = table.Column<string>("TEXT", nullable: true),
+                    SortTitle = table.Column<string>("TEXT", nullable: true),
+                    ReleaseDate = table.Column<DateTimeOffset>("TEXT", nullable: true),
+                    DateAdded = table.Column<DateTimeOffset>("TEXT", nullable: false),
+                    DateUpdated = table.Column<DateTimeOffset>("TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EpisodeMetadata", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EpisodeMetadata_Episode_EpisodeId",
-                        column: x => x.EpisodeId,
-                        principalTable: "Episode",
-                        principalColumn: "Id",
+                        "FK_EpisodeMetadata_Episode_EpisodeId",
+                        x => x.EpisodeId,
+                        "Episode",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "MediaVersion",
-                columns: table => new
+                "MediaVersion",
+                table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    Duration = table.Column<TimeSpan>(type: "TEXT", nullable: false),
-                    SampleAspectRatio = table.Column<string>(type: "TEXT", nullable: true),
-                    DisplayAspectRatio = table.Column<string>(type: "TEXT", nullable: true),
-                    VideoCodec = table.Column<string>(type: "TEXT", nullable: true),
-                    AudioCodec = table.Column<string>(type: "TEXT", nullable: true),
-                    IsInterlaced = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Width = table.Column<int>(type: "INTEGER", nullable: false),
-                    Height = table.Column<int>(type: "INTEGER", nullable: false),
-                    EpisodeId = table.Column<int>(type: "INTEGER", nullable: true),
-                    MovieId = table.Column<int>(type: "INTEGER", nullable: true)
+                    Name = table.Column<string>("TEXT", nullable: true),
+                    Duration = table.Column<TimeSpan>("TEXT", nullable: false),
+                    SampleAspectRatio = table.Column<string>("TEXT", nullable: true),
+                    DisplayAspectRatio = table.Column<string>("TEXT", nullable: true),
+                    VideoCodec = table.Column<string>("TEXT", nullable: true),
+                    AudioCodec = table.Column<string>("TEXT", nullable: true),
+                    IsInterlaced = table.Column<bool>("INTEGER", nullable: false),
+                    Width = table.Column<int>("INTEGER", nullable: false),
+                    Height = table.Column<int>("INTEGER", nullable: false),
+                    EpisodeId = table.Column<int>("INTEGER", nullable: true),
+                    MovieId = table.Column<int>("INTEGER", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MediaVersion", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MediaVersion_Episode_EpisodeId",
-                        column: x => x.EpisodeId,
-                        principalTable: "Episode",
-                        principalColumn: "Id",
+                        "FK_MediaVersion_Episode_EpisodeId",
+                        x => x.EpisodeId,
+                        "Episode",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_MediaVersion_Movie_MovieId",
-                        column: x => x.MovieId,
-                        principalTable: "Movie",
-                        principalColumn: "Id",
+                        "FK_MediaVersion_Movie_MovieId",
+                        x => x.MovieId,
+                        "Movie",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "NewMovieMetadata",
-                columns: table => new
+                "NewMovieMetadata",
+                table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Outline = table.Column<string>(type: "TEXT", nullable: true),
-                    Plot = table.Column<string>(type: "TEXT", nullable: true),
-                    Tagline = table.Column<string>(type: "TEXT", nullable: true),
-                    MovieId = table.Column<int>(type: "INTEGER", nullable: false),
-                    MetadataKind = table.Column<int>(type: "INTEGER", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", nullable: true),
-                    OriginalTitle = table.Column<string>(type: "TEXT", nullable: true),
-                    SortTitle = table.Column<string>(type: "TEXT", nullable: true),
-                    ReleaseDate = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    DateAdded = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    DateUpdated = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Outline = table.Column<string>("TEXT", nullable: true),
+                    Plot = table.Column<string>("TEXT", nullable: true),
+                    Tagline = table.Column<string>("TEXT", nullable: true),
+                    MovieId = table.Column<int>("INTEGER", nullable: false),
+                    MetadataKind = table.Column<int>("INTEGER", nullable: false),
+                    Title = table.Column<string>("TEXT", nullable: true),
+                    OriginalTitle = table.Column<string>("TEXT", nullable: true),
+                    SortTitle = table.Column<string>("TEXT", nullable: true),
+                    ReleaseDate = table.Column<DateTimeOffset>("TEXT", nullable: true),
+                    DateAdded = table.Column<DateTimeOffset>("TEXT", nullable: false),
+                    DateUpdated = table.Column<DateTimeOffset>("TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_NewMovieMetadata", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_NewMovieMetadata_Movie_MovieId",
-                        column: x => x.MovieId,
-                        principalTable: "Movie",
-                        principalColumn: "Id",
+                        "FK_NewMovieMetadata_Movie_MovieId",
+                        x => x.MovieId,
+                        "Movie",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "ShowMetadata",
-                columns: table => new
+                "ShowMetadata",
+                table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Outline = table.Column<string>(type: "TEXT", nullable: true),
-                    Plot = table.Column<string>(type: "TEXT", nullable: true),
-                    Tagline = table.Column<string>(type: "TEXT", nullable: true),
-                    ShowId = table.Column<int>(type: "INTEGER", nullable: false),
-                    MetadataKind = table.Column<int>(type: "INTEGER", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", nullable: true),
-                    OriginalTitle = table.Column<string>(type: "TEXT", nullable: true),
-                    SortTitle = table.Column<string>(type: "TEXT", nullable: true),
-                    ReleaseDate = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    DateAdded = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
-                    DateUpdated = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
+                    Outline = table.Column<string>("TEXT", nullable: true),
+                    Plot = table.Column<string>("TEXT", nullable: true),
+                    Tagline = table.Column<string>("TEXT", nullable: true),
+                    ShowId = table.Column<int>("INTEGER", nullable: false),
+                    MetadataKind = table.Column<int>("INTEGER", nullable: false),
+                    Title = table.Column<string>("TEXT", nullable: true),
+                    OriginalTitle = table.Column<string>("TEXT", nullable: true),
+                    SortTitle = table.Column<string>("TEXT", nullable: true),
+                    ReleaseDate = table.Column<DateTimeOffset>("TEXT", nullable: true),
+                    DateAdded = table.Column<DateTimeOffset>("TEXT", nullable: false),
+                    DateUpdated = table.Column<DateTimeOffset>("TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ShowMetadata", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ShowMetadata_Show_ShowId",
-                        column: x => x.ShowId,
-                        principalTable: "Show",
-                        principalColumn: "Id",
+                        "FK_ShowMetadata_Show_ShowId",
+                        x => x.ShowId,
+                        "Show",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "MediaFile",
-                columns: table => new
+                "MediaFile",
+                table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Path = table.Column<string>(type: "TEXT", nullable: true),
-                    MediaVersionId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Path = table.Column<string>("TEXT", nullable: true),
+                    MediaVersionId = table.Column<int>("INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MediaFile", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MediaFile_MediaVersion_MediaVersionId",
-                        column: x => x.MediaVersionId,
-                        principalTable: "MediaVersion",
-                        principalColumn: "Id",
+                        "FK_MediaFile_MediaVersion_MediaVersionId",
+                        x => x.MediaVersionId,
+                        "MediaVersion",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_EpisodeMetadata_EpisodeId",
-                table: "EpisodeMetadata",
-                column: "EpisodeId");
+                "IX_EpisodeMetadata_EpisodeId",
+                "EpisodeMetadata",
+                "EpisodeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MediaFile_MediaVersionId",
-                table: "MediaFile",
-                column: "MediaVersionId");
+                "IX_MediaFile_MediaVersionId",
+                "MediaFile",
+                "MediaVersionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MediaVersion_EpisodeId",
-                table: "MediaVersion",
-                column: "EpisodeId");
+                "IX_MediaVersion_EpisodeId",
+                "MediaVersion",
+                "EpisodeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_MediaVersion_MovieId",
-                table: "MediaVersion",
-                column: "MovieId");
+                "IX_MediaVersion_MovieId",
+                "MediaVersion",
+                "MovieId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_NewMovieMetadata_MovieId",
-                table: "NewMovieMetadata",
-                column: "MovieId");
+                "IX_NewMovieMetadata_MovieId",
+                "NewMovieMetadata",
+                "MovieId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ShowMetadata_ShowId",
-                table: "ShowMetadata",
-                column: "ShowId");
+                "IX_ShowMetadata_ShowId",
+                "ShowMetadata",
+                "ShowId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "EpisodeMetadata");
+                "EpisodeMetadata");
 
             migrationBuilder.DropTable(
-                name: "MediaFile");
+                "MediaFile");
 
             migrationBuilder.DropTable(
-                name: "NewMovieMetadata");
+                "NewMovieMetadata");
 
             migrationBuilder.DropTable(
-                name: "ShowMetadata");
+                "ShowMetadata");
 
             migrationBuilder.DropTable(
-                name: "MediaVersion");
+                "MediaVersion");
 
             migrationBuilder.DropColumn(
-                name: "SeasonNumber",
-                table: "Season");
+                "SeasonNumber",
+                "Season");
 
             migrationBuilder.DropColumn(
-                name: "EpisodeNumber",
-                table: "Episode");
+                "EpisodeNumber",
+                "Episode");
         }
     }
 }

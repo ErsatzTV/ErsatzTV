@@ -14,7 +14,7 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .WithOne(s => s.Show)
                 .HasForeignKey(s => s.ShowId)
                 .OnDelete(DeleteBehavior.Cascade);
-            
+
             builder.HasMany(s => s.ShowMetadata)
                 .WithOne(s => s.Show)
                 .HasForeignKey(s => s.ShowId)

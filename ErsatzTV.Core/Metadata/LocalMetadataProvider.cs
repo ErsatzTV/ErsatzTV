@@ -97,7 +97,22 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task ApplyMetadataUpdate(Movie movie, MovieMetadata metadata)
         {
-            movie.MovieMetadata = new List<MovieMetadata> { metadata };
+            movie.MovieMetadata.HeadOrNone().Match(
+                existing =>
+                {
+                    existing.Outline = metadata.Outline;
+                    existing.Plot = metadata.Plot;
+                    existing.Tagline = metadata.Tagline;
+                    existing.Title = metadata.Title;
+                    existing.DateAdded = metadata.DateAdded;
+                    existing.DateUpdated = metadata.DateUpdated;
+                    existing.MetadataKind = metadata.MetadataKind;
+                    existing.OriginalTitle = metadata.OriginalTitle;
+                    existing.ReleaseDate = metadata.ReleaseDate;
+                    existing.SortTitle = metadata.SortTitle;
+                },
+                () => movie.MovieMetadata = new List<MovieMetadata> { metadata });
+
             await _mediaItemRepository.Update(movie);
         }
 
@@ -230,7 +245,7 @@ namespace ErsatzTV.Core.Metadata
                         ReleaseDate = nfo.Premiered,
                         Plot = nfo.Plot,
                         Outline = nfo.Outline,
-                        Tagline = nfo.Tagline,
+                        Tagline = nfo.Tagline
                     },
                     None);
             }

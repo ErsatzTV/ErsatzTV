@@ -6,7 +6,9 @@ namespace ErsatzTV.Core.Domain
     {
         public int Id { get; set; }
         public int TelevisionShowId { get; set; }
+
         public TelevisionShow TelevisionShow { get; set; }
+
         // public int ShowId { get; set; }
         // public Show Show { get; set; }
         public MetadataSource Source { get; set; }

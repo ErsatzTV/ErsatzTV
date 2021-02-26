@@ -4,7 +4,7 @@
     {
         public string Outline { get; set; }
         public string Plot { get; set; }
-        public string Tagline { get; set; }   
+        public string Tagline { get; set; }
         public int MovieId { get; set; }
         public Movie Movie { get; set; }
     }

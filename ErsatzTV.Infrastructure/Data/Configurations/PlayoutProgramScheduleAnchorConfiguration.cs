@@ -12,7 +12,7 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 
             builder.OwnsOne(a => a.EnumeratorState)
                 .WithOwner();
-            
+
             // TODO: fix this foreign key
             builder.HasOne(i => i.Collection)
                 .WithMany()

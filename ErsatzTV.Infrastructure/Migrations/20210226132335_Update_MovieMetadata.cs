@@ -8,7 +8,7 @@ namespace ErsatzTV.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             var now = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.FFFFFFF");
-            
+
             migrationBuilder.Sql(
                 @$"INSERT INTO NewMovieMetadata (Outline, Plot, Tagline, MovieId, MetadataKind, Title, OriginalTitle, SortTitle, ReleaseDate, DateAdded, DateUpdated)
 SELECT mm.Outline, mm.Plot, mm.Tagline, m.Id, mm.Source, mm.Title, null, mm.SortTitle, mm.Premiered, '{now}', mm.LastWriteTime

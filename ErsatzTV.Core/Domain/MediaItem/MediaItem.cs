@@ -12,10 +12,7 @@ namespace ErsatzTV.Core.Domain
 
         public int LibraryPathId { get; set; }
         public LibraryPath LibraryPath { get; set; }
-        public string Path { get; set; }
-        public string Poster { get; set; }
-        public DateTime? PosterLastWriteTime { get; set; }
-        
+
         // temporary fields to help migrations...
         public int TelevisionShowId { get; set; }
         public int TelevisionSeasonId { get; set; }
@@ -23,5 +20,8 @@ namespace ErsatzTV.Core.Domain
 
         public List<Collection> Collections { get; set; }
         public List<CollectionItem> CollectionItems { get; set; }
+        public string Path { get; set; }
+        public string Poster { get; set; }
+        public DateTime? PosterLastWriteTime { get; set; }
     }
 }

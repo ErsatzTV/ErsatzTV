@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using ErsatzTV.Core;
@@ -15,8 +14,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 {
     public class MovieRepository : IMovieRepository
     {
-        private readonly TvContext _dbContext;
         private readonly IDbConnection _dbConnection;
+        private readonly TvContext _dbContext;
 
         public MovieRepository(TvContext dbContext, IDbConnection dbConnection)
         {
@@ -67,10 +66,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT(DISTINCT MovieId) FROM NewMovieMetadata");
 
         public Task<List<MovieMetadata>> GetPagedMovies(int pageNumber, int pageSize) =>
-            _dbContext.MovieMetadata.FromSqlRaw(@"SELECT * FROM NewMovieMetadata WHERE Id IN
+            _dbContext.MovieMetadata.FromSqlRaw(
+                    @"SELECT * FROM NewMovieMetadata WHERE Id IN
             (SELECT Id FROM NewMovieMetadata GROUP BY MovieId, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
             ORDER BY SortTitle
-            LIMIT {0} OFFSET {1}", pageSize, (pageNumber - 1) * pageSize)
+            LIMIT {0} OFFSET {1}",
+                    pageSize,
+                    (pageNumber - 1) * pageSize)
                 .ToListAsync();
 
         private async Task<Either<BaseError, Movie>> AddMovie(int libraryPathId, string path)

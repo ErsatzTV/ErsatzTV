@@ -143,71 +143,80 @@ namespace ErsatzTV.Infrastructure.Migrations
                 "IX_Season_ShowId",
                 "Season",
                 "ShowId");
-            
+
             // create show media items
-            migrationBuilder.Sql(@"INSERT INTO MediaItem (TelevisionShowId, LibraryPathId)
+            migrationBuilder.Sql(
+                @"INSERT INTO MediaItem (TelevisionShowId, LibraryPathId)
                     SELECT distinct ts.Id, mi.LibraryPathId
                     FROM TelevisionShow ts
                     INNER JOIN TelevisionSeason tsn ON tsn.TelevisionShowId = ts.Id
                     INNER JOIN TelevisionEpisode te ON te.SeasonId = tsn.Id
                     INNER JOIN MediaItem mi on mi.Id = te.Id");
-                    
+
             // create shows
             migrationBuilder.Sql(@"INSERT INTO Show (Id) SELECT Id FROM MediaItem WHERE TelevisionShowId > 0");
-                    
+
             // create season media items
-            migrationBuilder.Sql(@"INSERT INTO MediaItem (TelevisionSeasonId, LibraryPathId)
+            migrationBuilder.Sql(
+                @"INSERT INTO MediaItem (TelevisionSeasonId, LibraryPathId)
                     SELECT distinct tsn.Id, mi.LibraryPathId
                     FROM TelevisionSeason tsn
                     INNER JOIN TelevisionEpisode te ON te.SeasonId = tsn.Id
                     INNER JOIN MediaItem mi on mi.Id = te.Id");
-                    
+
             // create seasons
-            migrationBuilder.Sql(@"INSERT INTO Season (Id, ShowId)
+            migrationBuilder.Sql(
+                @"INSERT INTO Season (Id, ShowId)
                     SELECT mi.Id, mi2.Id
                     FROM MediaItem mi
                     INNER JOIN TelevisionSeason tsn ON tsn.Id = mi.TelevisionSeasonId
-                    INNER JOIN MediaItem mi2 ON mi2.TelevisionShowId = tsn.TelevisionShowId AND mi.LibraryPathId = mi2.LibraryPathId"); 
-                    
+                    INNER JOIN MediaItem mi2 ON mi2.TelevisionShowId = tsn.TelevisionShowId AND mi.LibraryPathId = mi2.LibraryPathId");
+
             // mark episode media items
-            migrationBuilder.Sql(@"UPDATE MediaItem SET TelevisionEpisodeId = Id
+            migrationBuilder.Sql(
+                @"UPDATE MediaItem SET TelevisionEpisodeId = Id
                     WHERE Id IN (SELECT Id FROM TelevisionEpisode)");
-                    
+
             // create episodes
-            migrationBuilder.Sql(@"INSERT INTO Episode (Id, SeasonId)
+            migrationBuilder.Sql(
+                @"INSERT INTO Episode (Id, SeasonId)
                     SELECT mi.Id, mi2.Id
                     FROM MediaItem mi
                     INNER JOIN TelevisionEpisode te on mi.Id = te.Id
                     INNER JOIN MediaItem mi2 ON mi2.TelevisionSeasonId = te.SeasonId AND mi.LibraryPathId = mi2.LibraryPathId");
-                    
+
             // collections
             migrationBuilder.Sql(@"INSERT INTO Collection (Name) SELECT Name FROM MediaCollection");
- 
+
             // collection movies
-            migrationBuilder.Sql(@"INSERT INTO CollectionItem (CollectionId, MediaItemId)
+            migrationBuilder.Sql(
+                @"INSERT INTO CollectionItem (CollectionId, MediaItemId)
             SELECT c.Id, smcm.MoviesId
             FROM Collection c
             INNER JOIN MediaCollection mc on mc.Name = c.Name
             INNER JOIN SimpleMediaCollectionMovie smcm ON smcm.SimpleMediaCollectionsId = mc.Id");
-            
+
             // collection shows
-            migrationBuilder.Sql(@"INSERT INTO CollectionItem (CollectionId, MediaItemId)
+            migrationBuilder.Sql(
+                @"INSERT INTO CollectionItem (CollectionId, MediaItemId)
             SELECT c.Id, mi.Id
             FROM Collection c
             INNER JOIN MediaCollection mc on mc.Name = c.Name
             INNER JOIN SimpleMediaCollectionShow smcs ON smcs.SimpleMediaCollectionsId = mc.Id
             INNER JOIN MediaItem mi ON mi.TelevisionShowId = smcs.TelevisionShowsId");
-            
+
             // collection seasons
-            migrationBuilder.Sql(@"INSERT INTO CollectionItem (CollectionId, MediaItemId)
+            migrationBuilder.Sql(
+                @"INSERT INTO CollectionItem (CollectionId, MediaItemId)
             SELECT c.Id, mi.Id
             FROM Collection c
             INNER JOIN MediaCollection mc on mc.Name = c.Name
             INNER JOIN SimpleMediaCollectionSeason smcs ON smcs.SimpleMediaCollectionsId = mc.Id
             INNER JOIN MediaItem mi ON mi.TelevisionSeasonId = smcs.TelevisionSeasonsId");
-            
+
             // collection episodes
-            migrationBuilder.Sql(@"INSERT INTO CollectionItem (CollectionId, MediaItemId)
+            migrationBuilder.Sql(
+                @"INSERT INTO CollectionItem (CollectionId, MediaItemId)
             SELECT c.Id, mi.Id
             FROM Collection c
             INNER JOIN MediaCollection mc on mc.Name = c.Name

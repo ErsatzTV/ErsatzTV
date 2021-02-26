@@ -11,6 +11,6 @@ namespace ErsatzTV.Core.Domain
         public string SortTitle { get; set; }
         public DateTime? ReleaseDate { get; set; }
         public DateTime DateAdded { get; set; }
-        public DateTime DateUpdated { get; set; }        
+        public DateTime DateUpdated { get; set; }
     }
 }
