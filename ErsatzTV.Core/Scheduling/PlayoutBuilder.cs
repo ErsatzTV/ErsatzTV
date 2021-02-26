@@ -325,7 +325,7 @@ namespace ErsatzTV.Core.Scheduling
             {
                 Option<PlayoutProgramScheduleAnchor> maybeExisting = playout.ProgramScheduleAnchors
                     .FirstOrDefault(
-                        a => a.CollectionType == collectionKey.CollectionType && a.CollectionId == collectionKey.Id);
+                        a => a.CollectionType == collectionKey.CollectionType && a.NewCollectionId == collectionKey.Id);
 
                 var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State)
                     .ToDictionary(mcs => mcs.Key, mcs => mcs.Head());
@@ -343,7 +343,7 @@ namespace ErsatzTV.Core.Scheduling
                         ProgramSchedule = playout.ProgramSchedule,
                         ProgramScheduleId = playout.ProgramScheduleId,
                         CollectionType = collectionKey.CollectionType,
-                        CollectionId = collectionKey.Id,
+                        NewCollectionId = collectionKey.Id,
                         EnumeratorState = maybeEnumeratorState[collectionKey]
                     });
 
@@ -362,7 +362,7 @@ namespace ErsatzTV.Core.Scheduling
                 .FirstOrDefault(
                     a => a.ProgramScheduleId == playout.ProgramScheduleId && a.CollectionType ==
                                                                           collectionKey.CollectionType
-                                                                          && a.CollectionId == collectionKey.Id);
+                                                                          && a.NewCollectionId == collectionKey.Id);
 
             CollectionEnumeratorState state = maybeAnchor.Match(
                 anchor => anchor.EnumeratorState,
