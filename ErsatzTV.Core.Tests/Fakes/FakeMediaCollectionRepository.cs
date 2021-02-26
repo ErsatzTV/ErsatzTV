@@ -11,34 +11,25 @@ namespace ErsatzTV.Core.Tests.Fakes
 {
     public class FakeMediaCollectionRepository : IMediaCollectionRepository
     {
-        private readonly Map<int, List<Movie>> _data;
+        private readonly Map<int, List<MediaItem>> _data;
 
-        public FakeMediaCollectionRepository(Map<int, List<Movie>> data) => _data = data;
+        public FakeMediaCollectionRepository(Map<int, List<MediaItem>> data) => _data = data;
 
-        public Task<SimpleMediaCollection> Add(SimpleMediaCollection collection) => throw new NotSupportedException();
+        public Task<Collection> Add(Collection collection) => throw new NotSupportedException();
 
-        public Task<Option<MediaCollection>> Get(int id) => throw new NotSupportedException();
+        public Task<Option<Collection>> Get(int id) => throw new NotSupportedException();
 
-        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollection(int id) =>
-            throw new NotSupportedException();
+        public Task<Option<Collection>> GetCollectionWithItems(int id) => throw new NotSupportedException();
 
-        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItems(int id) =>
-            throw new NotSupportedException();
+        public Task<Option<Collection>> GetCollectionWithItemsUntracked(int id) => throw new NotSupportedException();
 
-        public Task<Option<SimpleMediaCollection>> GetSimpleMediaCollectionWithItemsUntracked(int id) =>
-            throw new NotSupportedException();
+        public Task<List<Collection>> GetAll() => throw new NotSupportedException();
 
-        public Task<List<SimpleMediaCollection>> GetSimpleMediaCollections() => throw new NotSupportedException();
+        public Task<Option<List<MediaItem>>> GetItems(int id) => Some(_data[id].ToList()).AsTask();
+        public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id) => throw new NotSupportedException();
 
-        public Task<List<MediaCollection>> GetAll() => throw new NotSupportedException();
+        public Task Update(Collection collection) => throw new NotSupportedException();
 
-        public Task<Option<List<MediaItem>>> GetItems(int id) => Some(_data[id].OfType<MediaItem>().ToList()).AsTask();
-
-        public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id) =>
-            throw new NotSupportedException();
-
-        public Task Update(SimpleMediaCollection collection) => throw new NotSupportedException();
-
-        public Task Delete(int mediaCollectionId) => throw new NotSupportedException();
+        public Task Delete(int collectionId) => throw new NotSupportedException();
     }
 }

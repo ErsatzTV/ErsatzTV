@@ -8,19 +8,19 @@ namespace ErsatzTV.Core.Metadata
 {
     public class FallbackMetadataProvider : IFallbackMetadataProvider
     {
-        public TelevisionShowMetadata GetFallbackMetadataForShow(string showFolder)
+        public ShowMetadata GetFallbackMetadataForShow(string showFolder)
         {
             string fileName = Path.GetFileName(showFolder);
-            var metadata = new TelevisionShowMetadata
-                { Source = MetadataSource.Fallback, Title = fileName ?? showFolder };
+            var metadata = new ShowMetadata
+                { MetadataKind = MetadataKind.Fallback, Title = fileName ?? showFolder };
             return GetTelevisionShowMetadata(fileName, metadata);
         }
 
-        public static TelevisionEpisodeMetadata GetFallbackMetadata(TelevisionEpisodeMediaItem mediaItem)
+        public static EpisodeMetadata GetFallbackMetadata(Episode episode)
         {
-            string fileName = Path.GetFileName(mediaItem.Path);
-            var metadata = new TelevisionEpisodeMetadata
-                { Source = MetadataSource.Fallback, Title = fileName ?? mediaItem.Path };
+            string fileName = Path.GetFileName(episode.Path);
+            var metadata = new EpisodeMetadata
+                { MetadataKind = MetadataKind.Fallback, Title = fileName ?? episode.Path };
 
             if (fileName != null)
             {
@@ -55,7 +55,7 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        private static TelevisionEpisodeMetadata GetEpisodeMetadata(string fileName, TelevisionEpisodeMetadata metadata)
+        private static EpisodeMetadata GetEpisodeMetadata(string fileName, EpisodeMetadata metadata)
         {
             try
             {
@@ -64,8 +64,9 @@ namespace ErsatzTV.Core.Metadata
                 if (match.Success)
                 {
                     metadata.Title = match.Groups[1].Value;
-                    metadata.Season = int.Parse(match.Groups[2].Value);
-                    metadata.Episode = int.Parse(match.Groups[3].Value);
+                    // TODO: set episode number?
+                    // metadata.Season = int.Parse(match.Groups[2].Value);
+                    // metadata.Episode = int.Parse(match.Groups[3].Value);
                 }
             }
             catch (Exception)
@@ -96,9 +97,9 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        private static TelevisionShowMetadata GetTelevisionShowMetadata(
+        private static ShowMetadata GetTelevisionShowMetadata(
             string fileName,
-            TelevisionShowMetadata metadata)
+            ShowMetadata metadata)
         {
             try
             {
@@ -107,7 +108,7 @@ namespace ErsatzTV.Core.Metadata
                 if (match.Success)
                 {
                     metadata.Title = match.Groups[1].Value;
-                    metadata.Year = int.Parse(match.Groups[2].Value);
+                    metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
                 }
             }
             catch (Exception)

@@ -12,13 +12,13 @@ namespace ErsatzTV.Application.ProgramSchedules
         TimeSpan? StartTime,
         PlayoutMode PlayoutMode,
         ProgramScheduleItemCollectionType CollectionType,
-        MediaCollectionViewModel MediaCollection,
+        MediaCollectionViewModel Collection,
         TelevisionShowViewModel TelevisionShow,
         TelevisionSeasonViewModel TelevisionSeason)
     {
         public string Name => CollectionType switch
         {
-            ProgramScheduleItemCollectionType.Collection => MediaCollection?.Name,
+            ProgramScheduleItemCollectionType.Collection => Collection?.Name,
             ProgramScheduleItemCollectionType.TelevisionShow => $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
             ProgramScheduleItemCollectionType.TelevisionSeason =>
                 $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",

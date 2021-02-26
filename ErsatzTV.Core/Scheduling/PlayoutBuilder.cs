@@ -58,11 +58,11 @@ namespace ErsatzTV.Core.Scheduling
                                 await _mediaCollectionRepository.GetItems(collectionKey.Id);
                             return Tuple(collectionKey, maybeItems.IfNone(new List<MediaItem>()));
                         case ProgramScheduleItemCollectionType.TelevisionShow:
-                            List<TelevisionEpisodeMediaItem> showItems =
+                            List<Episode> showItems =
                                 await _televisionRepository.GetShowItems(collectionKey.Id);
                             return Tuple(collectionKey, showItems.Cast<MediaItem>().ToList());
                         case ProgramScheduleItemCollectionType.TelevisionSeason:
-                            List<TelevisionEpisodeMediaItem> seasonItems =
+                            List<Episode> seasonItems =
                                 await _televisionRepository.GetSeasonItems(collectionKey.Id);
                             return Tuple(collectionKey, seasonItems.Cast<MediaItem>().ToList());
                         default:
@@ -364,9 +364,9 @@ namespace ErsatzTV.Core.Scheduling
                                                                           collectionKey.CollectionType
                                                                           && a.CollectionId == collectionKey.Id);
 
-            MediaCollectionEnumeratorState state = maybeAnchor.Match(
+            CollectionEnumeratorState state = maybeAnchor.Match(
                 anchor => anchor.EnumeratorState,
-                () => new MediaCollectionEnumeratorState { Seed = Random.Next(), Index = 0 });
+                () => new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 });
 
             switch (playout.ProgramSchedule.MediaCollectionPlaybackOrder)
             {
@@ -385,11 +385,11 @@ namespace ErsatzTV.Core.Scheduling
         private static string DisplayTitle(MediaItem mediaItem) =>
             mediaItem switch
             {
-                TelevisionEpisodeMediaItem e => e.Metadata != null
-                    ? $"{e.Metadata.Title} - s{e.Metadata.Season:00}e{e.Metadata.Episode:00}"
+                Episode e => e.EpisodeMetadata.Any() && e.Season != null
+                    ? $"{e.EpisodeMetadata.Head().Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}"
                     : Path.GetFileName(e.Path),
                 Movie m => m.MovieMetadata.HeadOrNone().Match(
-                    mm => mm.Title,
+                    mm => mm.Title ?? string.Empty,
                     () => Path.GetFileName(m.Path)),
                 _ => string.Empty
             };
@@ -400,17 +400,17 @@ namespace ErsatzTV.Core.Scheduling
                 ProgramScheduleItemCollectionType.Collection => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.MediaCollectionId.Value
+                    Id = item.CollectionId.Value
                 },
                 ProgramScheduleItemCollectionType.TelevisionShow => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.TelevisionShowId.Value
+                    Id = item.MediaItemId.Value
                 },
                 ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.TelevisionSeasonId.Value
+                    Id = item.MediaItemId.Value
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(item))
             };

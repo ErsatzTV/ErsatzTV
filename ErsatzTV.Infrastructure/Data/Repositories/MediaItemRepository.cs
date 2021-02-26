@@ -25,24 +25,25 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<MediaItem>> Search(string searchString)
         {
-            IQueryable<TelevisionEpisodeMediaItem> episodeData =
-                from c in _dbContext.TelevisionEpisodeMediaItems.Include(c => c.LibraryPath) select c;
-
-            if (!string.IsNullOrEmpty(searchString))
-            {
-                episodeData = episodeData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
-            }
-
-            IQueryable<Movie> movieData =
-                from c in _dbContext.Movies.Include(c => c.LibraryPath) select c;
-
             // TODO: fix this when we need to search
+            // IQueryable<TelevisionEpisodeMediaItem> episodeData =
+            //     from c in _dbContext.TelevisionEpisodeMediaItems.Include(c => c.LibraryPath) select c;
+            //
             // if (!string.IsNullOrEmpty(searchString))
             // {
-            //     movieData = movieData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
+            //     episodeData = episodeData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
             // }
-
-            return episodeData.OfType<MediaItem>().Concat(movieData.OfType<MediaItem>()).ToListAsync();
+            //
+            // IQueryable<Movie> movieData =
+            //     from c in _dbContext.Movies.Include(c => c.LibraryPath) select c;
+            //
+            // // if (!string.IsNullOrEmpty(searchString))
+            // // {
+            // //     movieData = movieData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
+            // // }
+            //
+            // return episodeData.OfType<MediaItem>().Concat(movieData.OfType<MediaItem>()).ToListAsync();
+            return new List<MediaItem>().AsTask();
         }
 
         public async Task<bool> Update(MediaItem mediaItem)

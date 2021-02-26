@@ -14,18 +14,18 @@ namespace ErsatzTV.Core.Scheduling
 
         public ChronologicalMediaCollectionEnumerator(
             IEnumerable<MediaItem> mediaItems,
-            MediaCollectionEnumeratorState state)
+            CollectionEnumeratorState state)
         {
             _sortedMediaItems = mediaItems.OrderBy(identity, new ChronologicalComparer()).ToList();
 
-            State = new MediaCollectionEnumeratorState { Seed = state.Seed };
+            State = new CollectionEnumeratorState { Seed = state.Seed };
             while (State.Index < state.Index)
             {
                 MoveNext();
             }
         }
 
-        public MediaCollectionEnumeratorState State { get; }
+        public CollectionEnumeratorState State { get; }
 
         public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
 
@@ -42,7 +42,9 @@ namespace ErsatzTV.Core.Scheduling
 
                 DateTime date1 = x switch
                 {
-                    TelevisionEpisodeMediaItem e => e.Metadata?.Aired ?? DateTime.MaxValue,
+                    Episode e => e.EpisodeMetadata.HeadOrNone().Match(
+                        em => em.ReleaseDate ?? DateTime.MaxValue,
+                        () => DateTime.MaxValue),
                     Movie m => m.MovieMetadata.HeadOrNone().Match(
                         mm => mm.ReleaseDate ?? DateTime.MaxValue,
                         () => DateTime.MaxValue),
@@ -51,7 +53,9 @@ namespace ErsatzTV.Core.Scheduling
 
                 DateTime date2 = y switch
                 {
-                    TelevisionEpisodeMediaItem e => e.Metadata?.Aired ?? DateTime.MaxValue,
+                    Episode e => e.EpisodeMetadata.HeadOrNone().Match(
+                        em => em.ReleaseDate ?? DateTime.MaxValue,
+                        () => DateTime.MaxValue),
                     Movie m => m.MovieMetadata.HeadOrNone().Match(
                         mm => mm.ReleaseDate ?? DateTime.MaxValue,
                         () => DateTime.MaxValue),
@@ -65,13 +69,13 @@ namespace ErsatzTV.Core.Scheduling
 
                 int season1 = x switch
                 {
-                    TelevisionEpisodeMediaItem e => e.Metadata?.Season ?? int.MaxValue,
+                    Episode e => e.Season?.SeasonNumber ?? int.MaxValue,
                     _ => int.MaxValue
                 };
 
                 int season2 = y switch
                 {
-                    TelevisionEpisodeMediaItem e => e.Metadata?.Season ?? int.MaxValue,
+                    Episode e => e.Season?.SeasonNumber ?? int.MaxValue,
                     _ => int.MaxValue
                 };
 
@@ -82,13 +86,13 @@ namespace ErsatzTV.Core.Scheduling
 
                 int episode1 = x switch
                 {
-                    TelevisionEpisodeMediaItem e => e.Metadata?.Episode ?? int.MaxValue,
+                    Episode e => e.EpisodeNumber,
                     _ => int.MaxValue
                 };
 
                 int episode2 = y switch
                 {
-                    TelevisionEpisodeMediaItem e => e.Metadata?.Episode ?? int.MaxValue,
+                    Episode e => e.EpisodeNumber,
                     _ => int.MaxValue
                 };
 

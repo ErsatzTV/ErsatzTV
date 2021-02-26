@@ -105,7 +105,7 @@
                         <MudAutocomplete Class="mt-3"
                                          T="MediaCollectionViewModel"
                                          Label="Media Collection"
-                                         @bind-value="_selectedItem.MediaCollection"
+                                         @bind-value="_selectedItem.Collection"
                                          SearchFunc="@SearchMediaCollections"
                                          ToStringFunc="@(c => c?.Name)"/>
                     }
@@ -160,7 +160,7 @@
 
     private async Task LoadScheduleItems()
     {
-        _mediaCollections = await Mediator.Send(new GetAllMediaCollections());
+        _mediaCollections = await Mediator.Send(new GetAllCollections());
         _televisionShows = await Mediator.Send(new GetAllTelevisionShows());
         _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons());
 
@@ -186,7 +186,7 @@
             StartTime = item.StartTime,
             PlayoutMode = item.PlayoutMode,
             CollectionType = item.CollectionType,
-            MediaCollection = item.MediaCollection,
+            Collection = item.Collection,
             TelevisionShow = item.TelevisionShow,
             TelevisionSeason = item.TelevisionSeason
         };
@@ -254,28 +254,28 @@
 
     private async Task SaveChanges()
     {
-        var items = _schedule.Items.Map(item => new ReplaceProgramScheduleItem(
-            item.Index,
-            item.StartType,
-            item.StartTime,
-            item.PlayoutMode,
-            item.CollectionType,
-            item.MediaCollection?.Id,
-            item.TelevisionShow?.Id,
-            item.TelevisionSeason?.Id,
-            item.MultipleCount,
-            item.PlayoutDuration,
-            item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null)).ToList();
-
-        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
-
-        errorMessages.HeadOrNone().Match(
-            error =>
-            {
-                Snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
-                Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
-            },
-            () => NavigationManager.NavigateTo("/schedules"));
+        // TODO: fix this
+        // var items = _schedule.Items.Map(item => new ReplaceProgramScheduleItem(
+        //     item.Index,
+        //     item.StartType,
+        //     item.StartTime,
+        //     item.PlayoutMode,
+        //     item.CollectionType,
+        //     item.Collection?.Id,
+        //     item.MediaItem?.Id,
+        //     item.MultipleCount,
+        //     item.PlayoutDuration,
+        //     item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null)).ToList();
+        //
+        // Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
+        //
+        // errorMessages.HeadOrNone().Match(
+        //     error =>
+        //     {
+        //         Snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
+        //         Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
+        //     },
+        //     () => NavigationManager.NavigateTo("/schedules"));
     }
 
 }

@@ -13,7 +13,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             StartType startType,
             TimeSpan? startTime,
             ProgramScheduleItemCollectionType collectionType,
-            MediaCollectionViewModel mediaCollection,
+            MediaCollectionViewModel collection,
             TelevisionShowViewModel televisionShow,
             TelevisionSeasonViewModel televisionSeason) : base(
             id,
@@ -22,7 +22,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             startTime,
             PlayoutMode.One,
             collectionType,
-            mediaCollection,
+            collection,
             televisionShow,
             televisionSeason)
         {

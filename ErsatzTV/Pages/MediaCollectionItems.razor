@@ -82,14 +82,14 @@
     [Parameter]
     public int Id { get; set; }
 
-    private SimpleMediaCollectionCardResultsViewModel _data;
+    private CollectionCardResultsViewModel _data;
 
     protected override async Task OnParametersSetAsync() => await RefreshData();
 
     private async Task RefreshData()
     {
-        Either<BaseError, SimpleMediaCollectionCardResultsViewModel> maybeResult =
-            await Mediator.Send(new GetSimpleMediaCollectionCards(Id));
+        Either<BaseError, CollectionCardResultsViewModel> maybeResult =
+            await Mediator.Send(new GetCollectionCards(Id));
 
         maybeResult.Match(
             result => _data = result,
@@ -100,9 +100,9 @@
     {
         if (vm is MovieCardViewModel movie)
         {
-            var request = new RemoveItemsFromSimpleMediaCollection(Id)
+            var request = new RemoveItemsFromCollection(Id)
             {
-                MovieIds = new List<int> { movie.MovieId }
+                MediaItemIds = new List<int> { movie.MovieId }
             };
 
             await RemoveItemsWithConfirmation("movie", $"{movie.Title} ({movie.Subtitle})", request);
@@ -113,9 +113,9 @@
     {
         if (vm is TelevisionShowCardViewModel show)
         {
-            var request = new RemoveItemsFromSimpleMediaCollection(Id)
+            var request = new RemoveItemsFromCollection(Id)
             {
-                TelevisionShowIds = new List<int> { show.TelevisionShowId }
+                MediaItemIds = new List<int> { show.TelevisionShowId }
             };
 
             await RemoveItemsWithConfirmation("show", $"{show.Title} ({show.Subtitle})", request);
@@ -126,9 +126,9 @@
     {
         if (vm is TelevisionSeasonCardViewModel season)
         {
-            var request = new RemoveItemsFromSimpleMediaCollection(Id)
+            var request = new RemoveItemsFromCollection(Id)
             {
-                TelevisionSeasonIds = new List<int> { season.TelevisionSeasonId }
+                MediaItemIds = new List<int> { season.TelevisionSeasonId }
             };
 
             await RemoveItemsWithConfirmation("season", $"{season.ShowTitle} - {season.Title}", request);
@@ -139,9 +139,9 @@
     {
         if (vm is TelevisionEpisodeCardViewModel episode)
         {
-            var request = new RemoveItemsFromSimpleMediaCollection(Id)
+            var request = new RemoveItemsFromCollection(Id)
             {
-                TelevisionEpisodeIds = new List<int> { episode.EpisodeId }
+                MediaItemIds = new List<int> { episode.EpisodeId }
             };
 
             await RemoveItemsWithConfirmation("episode", $"{episode.ShowTitle} - {episode.Title}", request);
@@ -151,7 +151,7 @@
     private async Task RemoveItemsWithConfirmation(
         string entityType,
         string entityName,
-        RemoveItemsFromSimpleMediaCollection request)
+        RemoveItemsFromCollection request)
     {
         var parameters = new DialogParameters { { "EntityType", entityType }, { "EntityName", entityName } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };

@@ -4,6 +4,6 @@ namespace ErsatzTV.Core.Interfaces.Metadata
 {
     public interface IFallbackMetadataProvider
     {
-        TelevisionShowMetadata GetFallbackMetadataForShow(string showFolder);
+        ShowMetadata GetFallbackMetadataForShow(string showFolder);
     }
 }

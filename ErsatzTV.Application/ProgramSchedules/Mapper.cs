@@ -18,14 +18,14 @@ namespace ErsatzTV.Application.ProgramSchedules
                         duration.StartType,
                         duration.StartTime,
                         duration.CollectionType,
-                        duration.MediaCollection != null
-                            ? MediaCollections.Mapper.ProjectToViewModel(duration.MediaCollection)
+                        duration.Collection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(duration.Collection)
                             : null,
-                        duration.TelevisionShow != null
-                            ? Television.Mapper.ProjectToViewModel(duration.TelevisionShow)
+                        duration.MediaItem is Show show
+                            ? Television.Mapper.ProjectToViewModel(show)
                             : null,
-                        duration.TelevisionSeason != null
-                            ? Television.Mapper.ProjectToViewModel(duration.TelevisionSeason)
+                        duration.MediaItem is Season season
+                            ? Television.Mapper.ProjectToViewModel(season)
                             : null,
                         duration.PlayoutDuration,
                         duration.OfflineTail),
@@ -36,14 +36,14 @@ namespace ErsatzTV.Application.ProgramSchedules
                         flood.StartType,
                         flood.StartTime,
                         flood.CollectionType,
-                        flood.MediaCollection != null
-                            ? MediaCollections.Mapper.ProjectToViewModel(flood.MediaCollection)
+                        flood.Collection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(flood.Collection)
                             : null,
-                        flood.TelevisionShow != null
-                            ? Television.Mapper.ProjectToViewModel(flood.TelevisionShow)
+                        flood.MediaItem is Show show
+                            ? Television.Mapper.ProjectToViewModel(show)
                             : null,
-                        flood.TelevisionSeason != null
-                            ? Television.Mapper.ProjectToViewModel(flood.TelevisionSeason)
+                        flood.MediaItem is Season season
+                            ? Television.Mapper.ProjectToViewModel(season)
                             : null),
                 ProgramScheduleItemMultiple multiple =>
                     new ProgramScheduleItemMultipleViewModel(
@@ -52,14 +52,14 @@ namespace ErsatzTV.Application.ProgramSchedules
                         multiple.StartType,
                         multiple.StartTime,
                         multiple.CollectionType,
-                        multiple.MediaCollection != null
-                            ? MediaCollections.Mapper.ProjectToViewModel(multiple.MediaCollection)
+                        multiple.Collection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(multiple.Collection)
                             : null,
-                        multiple.TelevisionShow != null
-                            ? Television.Mapper.ProjectToViewModel(multiple.TelevisionShow)
+                        multiple.MediaItem is Show show
+                            ? Television.Mapper.ProjectToViewModel(show)
                             : null,
-                        multiple.TelevisionSeason != null
-                            ? Television.Mapper.ProjectToViewModel(multiple.TelevisionSeason)
+                        multiple.MediaItem is Season season
+                            ? Television.Mapper.ProjectToViewModel(season)
                             : null,
                         multiple.Count),
                 ProgramScheduleItemOne one =>
@@ -69,12 +69,14 @@ namespace ErsatzTV.Application.ProgramSchedules
                         one.StartType,
                         one.StartTime,
                         one.CollectionType,
-                        one.MediaCollection != null
-                            ? MediaCollections.Mapper.ProjectToViewModel(one.MediaCollection)
+                        one.Collection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(one.Collection)
                             : null,
-                        one.TelevisionShow != null ? Television.Mapper.ProjectToViewModel(one.TelevisionShow) : null,
-                        one.TelevisionSeason != null
-                            ? Television.Mapper.ProjectToViewModel(one.TelevisionSeason)
+                        one.MediaItem is Show show
+                            ? Television.Mapper.ProjectToViewModel(show)
+                            : null,
+                        one.MediaItem is Season season
+                            ? Television.Mapper.ProjectToViewModel(season)
                             : null),
                 _ => throw new NotSupportedException(
                     $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")

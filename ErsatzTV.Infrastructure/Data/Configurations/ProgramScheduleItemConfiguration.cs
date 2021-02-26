@@ -10,21 +10,6 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
         {
             builder.ToTable("ProgramScheduleItem");
 
-            builder.HasOne(i => i.MediaCollection)
-                .WithMany()
-                .HasForeignKey(i => i.MediaCollectionId)
-                .IsRequired(false);
-
-            builder.HasOne(i => i.TelevisionShow)
-                .WithMany()
-                .HasForeignKey(i => i.TelevisionShowId)
-                .IsRequired(false);
-
-            builder.HasOne(i => i.TelevisionSeason)
-                .WithMany()
-                .HasForeignKey(i => i.TelevisionSeasonId)
-                .IsRequired(false);
-
             builder.HasOne(i => i.Collection)
                 .WithMany()
                 .HasForeignKey(i => i.CollectionId)

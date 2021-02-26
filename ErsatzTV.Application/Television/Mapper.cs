@@ -4,25 +4,30 @@ namespace ErsatzTV.Application.Television
 {
     internal static class Mapper
     {
-        internal static TelevisionShowViewModel ProjectToViewModel(TelevisionShow show) =>
-            new(show.Id, show.Metadata.Title, show.Metadata.Year?.ToString(), show.Metadata.Plot, show.Poster);
+        internal static TelevisionShowViewModel ProjectToViewModel(Show show) =>
+            new(
+                show.Id,
+                show.ShowMetadata.HeadOrNone().Map(m => m.Title).IfNone(string.Empty),
+                show.ShowMetadata.HeadOrNone().Map(m => m.ReleaseDate?.Year.ToString()).IfNone(string.Empty),
+                show.ShowMetadata.HeadOrNone().Map(m => m.Plot).IfNone(string.Empty),
+                null); // TODO: artwork
 
-        internal static TelevisionSeasonViewModel ProjectToViewModel(TelevisionSeason season) =>
+        internal static TelevisionSeasonViewModel ProjectToViewModel(Season season) =>
             new(
                 season.Id,
-                season.TelevisionShowId,
-                season.TelevisionShow.Metadata.Title,
-                season.TelevisionShow.Metadata.Year?.ToString(),
-                season.Number == 0 ? "Specials" : $"Season {season.Number}",
-                season.Poster);
+                season.ShowId,
+                season.Show.ShowMetadata.HeadOrNone().Map(m => m.Title).IfNone(string.Empty),
+                season.Show.ShowMetadata.HeadOrNone().Map(m => m.ReleaseDate?.Year.ToString()).IfNone(string.Empty),
+                season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}",
+                null); // TODO: artwork
 
-        internal static TelevisionEpisodeViewModel ProjectToViewModel(TelevisionEpisodeMediaItem episode) =>
+        internal static TelevisionEpisodeViewModel ProjectToViewModel(Episode episode) =>
             new(
-                episode.Season.TelevisionShowId,
+                episode.Season.ShowId,
                 episode.SeasonId,
-                episode.Metadata.Episode,
-                episode.Metadata.Title,
-                episode.Metadata.Plot,
-                episode.Poster);
+                episode.EpisodeNumber,
+                episode.EpisodeMetadata.HeadOrNone().Map(m => m.Title).IfNone(string.Empty),
+                episode.EpisodeMetadata.HeadOrNone().Map(m => m.Plot).IfNone(string.Empty),
+                null); // TODO: artwork
     }
 }

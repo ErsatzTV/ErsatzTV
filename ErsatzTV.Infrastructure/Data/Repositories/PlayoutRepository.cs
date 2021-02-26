@@ -34,10 +34,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(p => p.ProgramScheduleAnchors)
                 .Include(p => p.ProgramSchedule)
                 .ThenInclude(ps => ps.Items)
-                .ThenInclude(psi => psi.MediaCollection)
+                .ThenInclude(psi => psi.Collection)
                 .Include(p => p.ProgramSchedule)
                 .ThenInclude(ps => ps.Items)
-                .ThenInclude(psi => psi.TelevisionShow)
+                .ThenInclude(psi => psi.MediaItem)
                 .OrderBy(p => p.Id) // https://github.com/dotnet/efcore/issues/22579#issuecomment-694772289
                 .SingleOrDefaultAsync(p => p.Id == id);
 
@@ -60,7 +60,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MediaItem)
                 .ThenInclude(m => (m as Movie).MovieMetadata)
                 .Include(i => i.MediaItem)
-                .ThenInclude(m => (m as TelevisionEpisodeMediaItem).Metadata)
+                .ThenInclude(m => (m as Episode).EpisodeMetadata)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
 

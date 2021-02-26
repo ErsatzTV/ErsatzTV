@@ -38,7 +38,7 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public Task<TelevisionShowMetadata> GetMetadataForShow(string showFolder)
+        public Task<ShowMetadata> GetMetadataForShow(string showFolder)
         {
             string nfoFileName = Path.Combine(showFolder, "tvshow.nfo");
             return Optional(_localFileSystem.FileExists(nfoFileName))
@@ -56,43 +56,49 @@ namespace ErsatzTV.Core.Metadata
         public Task<Unit> RefreshSidecarMetadata(MediaItem mediaItem, string path) =>
             mediaItem switch
             {
-                TelevisionEpisodeMediaItem e => LoadMetadata(e, path)
+                Episode e => LoadMetadata(e, path)
                     .Bind(maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(e, metadata))),
                 Movie m => LoadMetadata(m, path)
                     .Bind(maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(m, metadata))),
                 _ => Task.FromResult(Unit.Default)
             };
 
-        public Task<Unit> RefreshSidecarMetadata(TelevisionShow televisionShow, string showFolder) =>
+        public Task<Unit> RefreshSidecarMetadata(Show televisionShow, string showFolder) =>
             LoadMetadata(televisionShow, showFolder).Bind(
                 maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(televisionShow, metadata)));
 
         public Task<Unit> RefreshFallbackMetadata(MediaItem mediaItem) =>
             mediaItem switch
             {
-                TelevisionEpisodeMediaItem e => ApplyMetadataUpdate(e, FallbackMetadataProvider.GetFallbackMetadata(e))
+                Episode e => ApplyMetadataUpdate(e, FallbackMetadataProvider.GetFallbackMetadata(e))
                     .ToUnit(),
                 Movie m => ApplyMetadataUpdate(m, FallbackMetadataProvider.GetFallbackMetadata(m)).ToUnit(),
                 _ => Task.FromResult(Unit.Default)
             };
 
-        public Task<Unit> RefreshFallbackMetadata(TelevisionShow televisionShow, string showFolder) =>
+        public Task<Unit> RefreshFallbackMetadata(Show televisionShow, string showFolder) =>
             ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder))
                 .ToUnit();
 
-        private async Task ApplyMetadataUpdate(TelevisionEpisodeMediaItem mediaItem, TelevisionEpisodeMetadata metadata)
+        private async Task ApplyMetadataUpdate(Episode episode, EpisodeMetadata metadata)
         {
-            mediaItem.Metadata ??= new TelevisionEpisodeMetadata { TelevisionEpisodeId = mediaItem.Id };
-            mediaItem.Metadata.Source = metadata.Source;
-            mediaItem.Metadata.LastWriteTime = metadata.LastWriteTime;
-            mediaItem.Metadata.Title = metadata.Title;
-            mediaItem.Metadata.SortTitle = GetSortTitle(metadata.Title);
-            mediaItem.Metadata.Season = metadata.Season;
-            mediaItem.Metadata.Episode = metadata.Episode;
-            mediaItem.Metadata.Plot = metadata.Plot;
-            mediaItem.Metadata.Aired = metadata.Aired;
+            episode.EpisodeMetadata.HeadOrNone().Match(
+                existing =>
+                {
+                    existing.Outline = metadata.Outline;
+                    existing.Plot = metadata.Plot;
+                    existing.Tagline = metadata.Tagline;
+                    existing.Title = metadata.Title;
+                    existing.DateAdded = metadata.DateAdded;
+                    existing.DateUpdated = metadata.DateUpdated;
+                    existing.MetadataKind = metadata.MetadataKind;
+                    existing.OriginalTitle = metadata.OriginalTitle;
+                    existing.ReleaseDate = metadata.ReleaseDate;
+                    existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
+                },
+                () => episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata });
 
-            await _televisionRepository.Update(mediaItem);
+            await _televisionRepository.Update(episode);
         }
 
         private async Task ApplyMetadataUpdate(Movie movie, MovieMetadata metadata)
@@ -109,24 +115,32 @@ namespace ErsatzTV.Core.Metadata
                     existing.MetadataKind = metadata.MetadataKind;
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
-                    existing.SortTitle = metadata.SortTitle;
+                    existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
                 },
                 () => movie.MovieMetadata = new List<MovieMetadata> { metadata });
 
             await _mediaItemRepository.Update(movie);
         }
 
-        private async Task ApplyMetadataUpdate(TelevisionShow televisionShow, TelevisionShowMetadata metadata)
+        private async Task ApplyMetadataUpdate(Show show, ShowMetadata metadata)
         {
-            televisionShow.Metadata ??= new TelevisionShowMetadata();
-            televisionShow.Metadata.Source = metadata.Source;
-            televisionShow.Metadata.LastWriteTime = metadata.LastWriteTime;
-            televisionShow.Metadata.Title = metadata.Title;
-            televisionShow.Metadata.Plot = metadata.Plot;
-            televisionShow.Metadata.Year = metadata.Year;
-            televisionShow.Metadata.SortTitle = GetSortTitle(metadata.Title);
+            show.ShowMetadata.HeadOrNone().Match(
+                existing =>
+                {
+                    existing.Outline = metadata.Outline;
+                    existing.Plot = metadata.Plot;
+                    existing.Tagline = metadata.Tagline;
+                    existing.Title = metadata.Title;
+                    existing.DateAdded = metadata.DateAdded;
+                    existing.DateUpdated = metadata.DateUpdated;
+                    existing.MetadataKind = metadata.MetadataKind;
+                    existing.OriginalTitle = metadata.OriginalTitle;
+                    existing.ReleaseDate = metadata.ReleaseDate;
+                    existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
+                },
+                () => show.ShowMetadata = new List<ShowMetadata> { metadata });
 
-            await _televisionRepository.Update(televisionShow);
+            await _televisionRepository.Update(show);
         }
 
         private async Task<Option<MovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
@@ -146,9 +160,7 @@ namespace ErsatzTV.Core.Metadata
             return await LoadMovieMetadata(mediaItem, nfoFileName);
         }
 
-        private async Task<Option<TelevisionEpisodeMetadata>> LoadMetadata(
-            TelevisionEpisodeMediaItem mediaItem,
-            string nfoFileName)
+        private async Task<Option<EpisodeMetadata>> LoadMetadata(Episode mediaItem, string nfoFileName)
         {
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
@@ -165,8 +177,8 @@ namespace ErsatzTV.Core.Metadata
             return await LoadEpisodeMetadata(mediaItem, nfoFileName);
         }
 
-        private async Task<Option<TelevisionShowMetadata>> LoadMetadata(
-            TelevisionShow televisionShow,
+        private async Task<Option<ShowMetadata>> LoadMetadata(
+            Show televisionShow,
             string nfoFileName)
         {
             if (nfoFileName == null || !File.Exists(nfoFileName))
@@ -178,20 +190,20 @@ namespace ErsatzTV.Core.Metadata
             return await LoadTelevisionShowMetadata(nfoFileName);
         }
 
-        private async Task<Option<TelevisionShowMetadata>> LoadTelevisionShowMetadata(string nfoFileName)
+        private async Task<Option<ShowMetadata>> LoadTelevisionShowMetadata(string nfoFileName)
         {
             try
             {
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<TvShowNfo> maybeNfo = TvShowSerializer.Deserialize(fileStream) as TvShowNfo;
-                return maybeNfo.Match<Option<TelevisionShowMetadata>>(
-                    nfo => new TelevisionShowMetadata
+                return maybeNfo.Match<Option<ShowMetadata>>(
+                    nfo => new ShowMetadata
                     {
-                        Source = MetadataSource.Sidecar,
-                        LastWriteTime = File.GetLastWriteTimeUtc(nfoFileName),
+                        MetadataKind = MetadataKind.Sidecar,
+                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                         Title = nfo.Title,
                         Plot = nfo.Plot,
-                        Year = nfo.Year
+                        ReleaseDate = new DateTime(nfo.Year, 1, 1)
                     },
                     None);
             }
@@ -202,23 +214,24 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Option<TelevisionEpisodeMetadata>> LoadEpisodeMetadata(
-            TelevisionEpisodeMediaItem mediaItem,
+        private async Task<Option<EpisodeMetadata>> LoadEpisodeMetadata(
+            Episode mediaItem,
             string nfoFileName)
         {
             try
             {
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<TvShowEpisodeNfo> maybeNfo = EpisodeSerializer.Deserialize(fileStream) as TvShowEpisodeNfo;
-                return maybeNfo.Match<Option<TelevisionEpisodeMetadata>>(
-                    nfo => new TelevisionEpisodeMetadata
+                return maybeNfo.Match<Option<EpisodeMetadata>>(
+                    nfo => new EpisodeMetadata
                     {
-                        Source = MetadataSource.Sidecar,
-                        LastWriteTime = File.GetLastWriteTimeUtc(nfoFileName),
+                        MetadataKind = MetadataKind.Sidecar,
+                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                         Title = nfo.Title,
-                        Aired = GetAired(nfo.Aired),
-                        Episode = nfo.Episode,
-                        Season = nfo.Season,
+                        ReleaseDate = GetAired(nfo.Aired),
+                        // Episode = nfo.Episode,
+                        // Season = nfo.Season,
+                        // TODO: save episode number somewhere?
                         Plot = nfo.Plot
                     },
                     None);

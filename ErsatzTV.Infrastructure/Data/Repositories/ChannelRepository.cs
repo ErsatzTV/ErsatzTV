@@ -38,7 +38,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(c => c.Playouts)
                 .ThenInclude(p => p.Items)
                 .ThenInclude(i => i.MediaItem)
-                .ThenInclude(i => (i as TelevisionEpisodeMediaItem).Metadata)
+                .ThenInclude(i => (i as Episode).EpisodeMetadata)
                 .Include(c => c.Playouts)
                 .ThenInclude(p => p.Items)
                 .ThenInclude(i => i.MediaItem)

@@ -74,7 +74,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await Mediator.Send(new AddTelevisionEpisodeToSimpleMediaCollection(collection.Id, EpisodeId));
+            await Mediator.Send(new AddEpisodeToCollection(collection.Id, EpisodeId));
             NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }

@@ -24,9 +24,9 @@ namespace ErsatzTV.Application.Playouts
         private static string GetDisplayTitle(MediaItem mediaItem) =>
             mediaItem switch
             {
-                TelevisionEpisodeMediaItem e => e.Metadata != null
-                    ? $"{e.Metadata.Title} - s{e.Metadata.Season:00}e{e.Metadata.Episode:00}"
-                    : Path.GetFileName(e.Path),
+                Episode e => e.EpisodeMetadata.HeadOrNone()
+                    .Map(em => $"{em.Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}")
+                    .IfNone(Path.GetFileName(e.Path)),
                 Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone(Path.GetFileName(m.Path)),
                 _ => string.Empty
             };

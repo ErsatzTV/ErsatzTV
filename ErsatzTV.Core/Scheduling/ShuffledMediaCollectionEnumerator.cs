@@ -15,20 +15,20 @@ namespace ErsatzTV.Core.Scheduling
         private IList<MediaItem> _shuffled;
 
 
-        public ShuffledMediaCollectionEnumerator(IList<MediaItem> mediaItems, MediaCollectionEnumeratorState state)
+        public ShuffledMediaCollectionEnumerator(IList<MediaItem> mediaItems, CollectionEnumeratorState state)
         {
             _mediaItems = mediaItems;
             _random = new Random(state.Seed);
             _shuffled = Shuffle(_mediaItems, _random);
 
-            State = new MediaCollectionEnumeratorState { Seed = state.Seed };
+            State = new CollectionEnumeratorState { Seed = state.Seed };
             while (State.Index < state.Index)
             {
                 MoveNext();
             }
         }
 
-        public MediaCollectionEnumeratorState State { get; }
+        public CollectionEnumeratorState State { get; }
 
         public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItems.Count] : None;
 

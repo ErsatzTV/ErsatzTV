@@ -37,7 +37,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             _dbContext.ProgramSchedules.Update(programSchedule);
             await _dbContext.SaveChangesAsync();
-            await _dbContext.Entry(programSchedule).Collection(s => s.Items).Query().Include(i => i.MediaCollection)
+            await _dbContext.Entry(programSchedule).Collection(s => s.Items).Query().Include(i => i.Collection)
                 .LoadAsync();
             await _dbContext.Entry(programSchedule).Collection(s => s.Playouts).LoadAsync();
         }
@@ -57,12 +57,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     await _dbContext.Entry(programSchedule).Collection(s => s.Items).LoadAsync();
                     await _dbContext.Entry(programSchedule).Collection(s => s.Items).Query()
-                        .Include(i => i.MediaCollection)
-                        .Include(i => i.TelevisionShow)
-                        .ThenInclude(s => s.Metadata)
-                        .Include(i => i.TelevisionSeason)
-                        .ThenInclude(s => s.TelevisionShow)
-                        .ThenInclude(s => s.Metadata)
+                        .Include(i => i.Collection)
+                        .Include(i => i.MediaItem)
+                        .ThenInclude(i => (i as Movie).MovieMetadata)
+                        .Include(i => i.MediaItem)
+                        .ThenInclude(i => (i as Episode).EpisodeMetadata)
+                        .Include(i => i.MediaItem)
+                        .ThenInclude(i => (i as Show).ShowMetadata)
                         .LoadAsync();
                     return programSchedule.Items;
                 }).Sequence();

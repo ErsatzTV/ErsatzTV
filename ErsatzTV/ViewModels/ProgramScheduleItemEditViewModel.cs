@@ -42,28 +42,28 @@ namespace ErsatzTV.ViewModels
                         TelevisionSeason = null;
                         break;
                     case ProgramScheduleItemCollectionType.TelevisionShow:
-                        MediaCollection = null;
+                        Collection = null;
                         TelevisionSeason = null;
                         break;
                     case ProgramScheduleItemCollectionType.TelevisionSeason:
-                        MediaCollection = null;
+                        Collection = null;
                         TelevisionShow = null;
                         break;
                 }
 
-                OnPropertyChanged(nameof(MediaCollection));
+                OnPropertyChanged(nameof(Collection));
                 OnPropertyChanged(nameof(TelevisionShow));
                 OnPropertyChanged(nameof(TelevisionSeason));
             }
         }
 
-        public MediaCollectionViewModel MediaCollection { get; set; }
+        public MediaCollectionViewModel Collection { get; set; }
         public TelevisionShowViewModel TelevisionShow { get; set; }
         public TelevisionSeasonViewModel TelevisionSeason { get; set; }
 
         public string CollectionName => CollectionType switch
         {
-            ProgramScheduleItemCollectionType.Collection => MediaCollection?.Name,
+            ProgramScheduleItemCollectionType.Collection => Collection?.Name,
             ProgramScheduleItemCollectionType.TelevisionShow => $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
             ProgramScheduleItemCollectionType.TelevisionSeason =>
                 $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",

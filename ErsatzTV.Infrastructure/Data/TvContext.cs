@@ -23,22 +23,17 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<Movie> Movies { get; set; }
         public DbSet<MovieMetadata> MovieMetadata { get; set; }
         public DbSet<Show> Shows { get; set; }
+        public DbSet<ShowMetadata> ShowMetadata { get; set; }
         public DbSet<Season> Seasons { get; set; }
         public DbSet<Episode> Episodes { get; set; }
         public DbSet<PlexMovie> PlexMovieMediaItems { get; set; }
-        public DbSet<TelevisionEpisodeMediaItem> TelevisionEpisodeMediaItems { get; set; }
-        public DbSet<MediaCollection> MediaCollections { get; set; }
-        public DbSet<SimpleMediaCollection> SimpleMediaCollections { get; set; }
+        public DbSet<Collection> Collections { get; set; }
         public DbSet<ProgramSchedule> ProgramSchedules { get; set; }
         public DbSet<Playout> Playouts { get; set; }
         public DbSet<PlayoutItem> PlayoutItems { get; set; }
         public DbSet<PlayoutProgramScheduleAnchor> PlayoutProgramScheduleItemAnchors { get; set; }
         public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
         public DbSet<Resolution> Resolutions { get; set; }
-        public DbSet<TelevisionShow> TelevisionShows { get; set; }
-        public DbSet<LocalTelevisionShowSource> LocalTelevisionShowSources { get; set; }
-        public DbSet<TelevisionShowMetadata> TelevisionShowMetadata { get; set; }
-        public DbSet<TelevisionSeason> TelevisionSeasons { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.UseLoggerFactory(_loggerFactory);

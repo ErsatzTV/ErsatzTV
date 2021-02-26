@@ -18,6 +18,6 @@
         public Collection Collection { get; set; }
         public int? MediaItemId { get; set; }
         public MediaItem MediaItem { get; set; }
-        public MediaCollectionEnumeratorState EnumeratorState { get; set; }
+        public CollectionEnumeratorState EnumeratorState { get; set; }
     }
 }

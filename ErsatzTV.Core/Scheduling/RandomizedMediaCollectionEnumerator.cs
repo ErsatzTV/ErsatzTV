@@ -14,12 +14,12 @@ namespace ErsatzTV.Core.Scheduling
         private readonly Random _random;
         private int _index;
 
-        public RandomizedMediaCollectionEnumerator(IList<MediaItem> mediaItems, MediaCollectionEnumeratorState state)
+        public RandomizedMediaCollectionEnumerator(IList<MediaItem> mediaItems, CollectionEnumeratorState state)
         {
             _mediaItems = mediaItems;
             _random = new Random(state.Seed);
 
-            State = new MediaCollectionEnumeratorState { Seed = state.Seed };
+            State = new CollectionEnumeratorState { Seed = state.Seed };
             // we want to move at least once so we start with a random item and not the first
             // because _index defaults to 0
             while (State.Index <= state.Index)
@@ -28,7 +28,7 @@ namespace ErsatzTV.Core.Scheduling
             }
         }
 
-        public MediaCollectionEnumeratorState State { get; }
+        public CollectionEnumeratorState State { get; }
 
         public Option<MediaItem> Current => _mediaItems.Any() ? _mediaItems[_index] : None;
 
