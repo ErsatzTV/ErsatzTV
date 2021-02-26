@@ -1,9 +1,11 @@
 ﻿@page "/media/libraries"
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.Libraries.Queries
+@using ErsatzTV.Application.MediaSources.Commands
 @implements IDisposable
 @inject IMediator Mediator
 @inject IEntityLocker Locker
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
     <MudTable Hover="true" Items="_libraries" Dense="true">
@@ -69,7 +71,14 @@
     private async Task LoadLibraries() =>
         _libraries = await Mediator.Send(new GetLocalLibraries());
 
-    private Task ScanLibrary(LocalLibraryViewModel library) => Task.CompletedTask;
+    private async Task ScanLibrary(LocalLibraryViewModel library)
+    {
+        if (Locker.LockLibrary(library.Id))
+        {
+            await Channel.WriteAsync(new ForceScanLocalLibrary(library.Id));
+            StateHasChanged();
+        }
+    }
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
