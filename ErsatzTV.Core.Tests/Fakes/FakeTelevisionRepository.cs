@@ -41,7 +41,7 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<int> GetEpisodeCount(int televisionSeasonId) => throw new NotSupportedException();
 
-        public Task<List<EpisodeMetadata>> GetPagedEpisodes(int televisionSeasonId, int pageNumber, int pageSize) =>
+        public Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize) =>
             throw new NotSupportedException();
 
         public Task<Option<Show>> GetShowByPath(int mediaSourceId, string path) => throw new NotSupportedException();

@@ -22,7 +22,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<Episode>> GetSeasonItems(int seasonId);
         Task<Option<Episode>> GetEpisode(int televisionEpisodeId);
         Task<int> GetEpisodeCount(int televisionSeasonId);
-        Task<List<EpisodeMetadata>> GetPagedEpisodes(int televisionSeasonId, int pageNumber, int pageSize);
+        Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize);
         Task<Option<Show>> GetShowByMetadata(ShowMetadata metadata);
 
         Task<Either<BaseError, Show>> AddShow(
