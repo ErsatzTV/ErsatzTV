@@ -1,6 +1,8 @@
 ﻿@page "/media/libraries/local/{Id:int}"
 @using ErsatzTV.Application.Libraries
+@using ErsatzTV.Application.Libraries.Commands
 @using ErsatzTV.Application.Libraries.Queries
+@inject IDialogService Dialog
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
@@ -43,6 +45,26 @@
     private async Task LoadLibraryPaths() =>
         _libraryPaths = await Mediator.Send(new GetLocalLibraryPaths(Id));
 
-    private Task DeleteLibraryPath(LocalLibraryPathViewModel libraryPath) => Task.CompletedTask;
+    private async Task DeleteLibraryPath(LocalLibraryPathViewModel libraryPath)
+    {
+        int count = await Mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id));
+
+        var parameters = new DialogParameters
+        {
+            { "EntityType", "library path" },
+            { "EntityName", libraryPath.Path },
+            { "DetailText", $"This library path contains {count} media items." },
+            { "DetailHighlight", count.ToString() }
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Library Path", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(new DeleteLocalLibraryPath(libraryPath.Id));
+            await LoadLibraryPaths();
+        }
+    }
 
 }
