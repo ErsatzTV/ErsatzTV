@@ -1,6 +1,6 @@
 ﻿using System;
 using ErsatzTV.Application.MediaCollections;
-using ErsatzTV.Application.Television;
+using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules
@@ -13,15 +13,15 @@ namespace ErsatzTV.Application.ProgramSchedules
         PlayoutMode PlayoutMode,
         ProgramScheduleItemCollectionType CollectionType,
         MediaCollectionViewModel Collection,
-        TelevisionShowViewModel TelevisionShow,
-        TelevisionSeasonViewModel TelevisionSeason)
+        NamedMediaItemViewModel MediaItem)
     {
         public string Name => CollectionType switch
         {
             ProgramScheduleItemCollectionType.Collection => Collection?.Name,
-            ProgramScheduleItemCollectionType.TelevisionShow => $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
-            ProgramScheduleItemCollectionType.TelevisionSeason =>
-                $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",
+            ProgramScheduleItemCollectionType
+                .TelevisionShow => MediaItem?.Name, // $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
+            ProgramScheduleItemCollectionType
+                .TelevisionSeason => MediaItem?.Name, // $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",
             _ => string.Empty
         };
     }

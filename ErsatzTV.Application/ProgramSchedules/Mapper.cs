@@ -21,12 +21,12 @@ namespace ErsatzTV.Application.ProgramSchedules
                         duration.Collection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(duration.Collection)
                             : null,
-                        duration.MediaItem is Show show
-                            ? Television.Mapper.ProjectToViewModel(show)
-                            : null,
-                        duration.MediaItem is Season season
-                            ? Television.Mapper.ProjectToViewModel(season)
-                            : null,
+                        duration.MediaItem switch
+                        {
+                            Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                            Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                            _ => null
+                        },
                         duration.PlayoutDuration,
                         duration.OfflineTail),
                 ProgramScheduleItemFlood flood =>
@@ -39,12 +39,12 @@ namespace ErsatzTV.Application.ProgramSchedules
                         flood.Collection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(flood.Collection)
                             : null,
-                        flood.MediaItem is Show show
-                            ? Television.Mapper.ProjectToViewModel(show)
-                            : null,
-                        flood.MediaItem is Season season
-                            ? Television.Mapper.ProjectToViewModel(season)
-                            : null),
+                        flood.MediaItem switch
+                        {
+                            Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                            Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                            _ => null
+                        }),
                 ProgramScheduleItemMultiple multiple =>
                     new ProgramScheduleItemMultipleViewModel(
                         multiple.Id,
@@ -55,12 +55,12 @@ namespace ErsatzTV.Application.ProgramSchedules
                         multiple.Collection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(multiple.Collection)
                             : null,
-                        multiple.MediaItem is Show show
-                            ? Television.Mapper.ProjectToViewModel(show)
-                            : null,
-                        multiple.MediaItem is Season season
-                            ? Television.Mapper.ProjectToViewModel(season)
-                            : null,
+                        multiple.MediaItem switch
+                        {
+                            Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                            Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                            _ => null
+                        },
                         multiple.Count),
                 ProgramScheduleItemOne one =>
                     new ProgramScheduleItemOneViewModel(
@@ -72,12 +72,12 @@ namespace ErsatzTV.Application.ProgramSchedules
                         one.Collection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(one.Collection)
                             : null,
-                        one.MediaItem is Show show
-                            ? Television.Mapper.ProjectToViewModel(show)
-                            : null,
-                        one.MediaItem is Season season
-                            ? Television.Mapper.ProjectToViewModel(season)
-                            : null),
+                        one.MediaItem switch
+                        {
+                            Show show => MediaItems.Mapper.ProjectToViewModel(show),
+                            Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                            _ => null
+                        }),
                 _ => throw new NotSupportedException(
                     $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")
             };

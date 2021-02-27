@@ -1,9 +1,10 @@
 ﻿@page "/schedules/{Id:int}/items"
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Queries
+@using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.ProgramSchedules
+@using ErsatzTV.Application.ProgramSchedules.Commands
 @using ErsatzTV.Application.ProgramSchedules.Queries
-@using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Television.Queries
 @inject NavigationManager NavigationManager
 @inject ILogger<ScheduleItemsEditor> Logger
@@ -111,20 +112,20 @@
                     @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
                     {
                         <MudAutocomplete Class="mt-3"
-                                         T="TelevisionShowViewModel"
+                                         T="NamedMediaItemViewModel"
                                          Label="Television Show"
-                                         @bind-value="_selectedItem.TelevisionShow"
+                                         @bind-value="_selectedItem.MediaItem"
                                          SearchFunc="@SearchTelevisionShows"
-                                         ToStringFunc="@(s => s == null ? null : $"{s.Title} ({s.Year})")"/>
+                                         ToStringFunc="@(s => s?.Name)"/>
                     }
                     @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
                     {
                         <MudAutocomplete Class="mt-3"
-                                         T="TelevisionSeasonViewModel"
+                                         T="NamedMediaItemViewModel"
                                          Label="Television Season"
-                                         @bind-value="_selectedItem.TelevisionSeason"
+                                         @bind-value="_selectedItem.MediaItem"
                                          SearchFunc="@SearchTelevisionSeasons"
-                                         ToStringFunc="@(s => s == null ? null : $"{s.Title} ({s.Year}) - {s.Plot}")"/>
+                                         ToStringFunc="@(s => s?.Name)"/>
                     }
                     <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
                         @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
@@ -150,8 +151,8 @@
 
     private ProgramScheduleItemsEditViewModel _schedule;
     private List<MediaCollectionViewModel> _mediaCollections;
-    private List<TelevisionShowViewModel> _televisionShows;
-    private List<TelevisionSeasonViewModel> _televisionSeasons;
+    private List<NamedMediaItemViewModel> _televisionShows;
+    private List<NamedMediaItemViewModel> _televisionSeasons;
 
     private ProgramScheduleItemEditViewModel _selectedItem;
 
@@ -186,8 +187,7 @@
             PlayoutMode = item.PlayoutMode,
             CollectionType = item.CollectionType,
             Collection = item.Collection,
-            TelevisionShow = item.TelevisionShow,
-            TelevisionSeason = item.TelevisionSeason
+            MediaItem = item.MediaItem
         };
 
         switch (item)
@@ -245,36 +245,35 @@
     private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
         _mediaCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
-    private Task<IEnumerable<TelevisionShowViewModel>> SearchTelevisionShows(string value) =>
-        _televisionShows.Filter(s => s.Title.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+    private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value) =>
+        _televisionShows.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
-    private Task<IEnumerable<TelevisionSeasonViewModel>> SearchTelevisionSeasons(string value) =>
-        _televisionSeasons.Filter(s => s.Title.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+    private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value) =>
+        _televisionSeasons.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
     private async Task SaveChanges()
     {
-    // TODO: fix this
-    // var items = _schedule.Items.Map(item => new ReplaceProgramScheduleItem(
-    //     item.Index,
-    //     item.StartType,
-    //     item.StartTime,
-    //     item.PlayoutMode,
-    //     item.CollectionType,
-    //     item.Collection?.Id,
-    //     item.MediaItem?.Id,
-    //     item.MultipleCount,
-    //     item.PlayoutDuration,
-    //     item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null)).ToList();
-    //
-    // Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
-    //
-    // errorMessages.HeadOrNone().Match(
-    //     error =>
-    //     {
-    //         Snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
-    //         Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
-    //     },
-    //     () => NavigationManager.NavigateTo("/schedules"));
+        var items = _schedule.Items.Map(item => new ReplaceProgramScheduleItem(
+            item.Index,
+            item.StartType,
+            item.StartTime,
+            item.PlayoutMode,
+            item.CollectionType,
+            item.Collection?.Id,
+            item.MediaItem?.MediaItemId,
+            item.MultipleCount,
+            item.PlayoutDuration,
+            item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null)).ToList();
+
+        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
+
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/schedules"));
     }
 
 }

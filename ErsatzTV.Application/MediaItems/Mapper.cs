@@ -52,7 +52,7 @@ namespace ErsatzTV.Application.MediaItems
                 mediaItem.Statistics.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
                 mediaItem.Statistics.Duration);
 
-        // TODO: fix this
+        // TODO: fix this when search is reimplemented
         private static string GetLibraryName(MediaItem item) =>
             "Library Name";
 
@@ -61,5 +61,17 @@ namespace ErsatzTV.Application.MediaItems
         //     LocalMediaSource lms => "Local Media Source",
         //     _ => "unknown source"
         // };
+
+        public static NamedMediaItemViewModel ProjectToViewModel(Show show) =>
+            new(show.Id, show.ShowMetadata.HeadOrNone().Map(sm => $"{sm?.Title} ({sm?.Year})").IfNone("???"));
+
+        public static NamedMediaItemViewModel ProjectToViewModel(Season season) =>
+            new(season.Id, $"{ShowTitle(season)} ({SeasonDescription(season)})");
+
+        private static string ShowTitle(Season season) =>
+            season.Show.ShowMetadata.HeadOrNone().Map(sm => sm.Title).IfNone("???");
+
+        private static string SeasonDescription(Season season) =>
+            season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}";
     }
 }

@@ -8,8 +8,7 @@ namespace ErsatzTV.Application.MediaSources
         internal static MediaSourceViewModel ProjectToViewModel(MediaSource mediaSource) =>
             mediaSource switch
             {
-                // TODO: address this...
-                LocalMediaSource lms => new LocalMediaSourceViewModel(lms.Id, "LMS Name", "LMS Folder"),
+                LocalMediaSource lms => new LocalMediaSourceViewModel(lms.Id),
                 PlexMediaSource pms => Plex.Mapper.ProjectToViewModel(pms),
                 _ => throw new NotSupportedException($"Unsupported media source {mediaSource.GetType().Name}")
             };

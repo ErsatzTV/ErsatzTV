@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ErsatzTV.Annotations;
 using ErsatzTV.Application.MediaCollections;
-using ErsatzTV.Application.Television;
+using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels
@@ -33,40 +33,27 @@ namespace ErsatzTV.ViewModels
             get => _collectionType;
             set
             {
-                _collectionType = value;
-
-                switch (CollectionType)
+                if (_collectionType != value)
                 {
-                    case ProgramScheduleItemCollectionType.Collection:
-                        TelevisionShow = null;
-                        TelevisionSeason = null;
-                        break;
-                    case ProgramScheduleItemCollectionType.TelevisionShow:
-                        Collection = null;
-                        TelevisionSeason = null;
-                        break;
-                    case ProgramScheduleItemCollectionType.TelevisionSeason:
-                        Collection = null;
-                        TelevisionShow = null;
-                        break;
-                }
+                    _collectionType = value;
 
-                OnPropertyChanged(nameof(Collection));
-                OnPropertyChanged(nameof(TelevisionShow));
-                OnPropertyChanged(nameof(TelevisionSeason));
+                    Collection = null;
+                    MediaItem = null;
+
+                    OnPropertyChanged(nameof(Collection));
+                    OnPropertyChanged(nameof(MediaItem));
+                }
             }
         }
 
         public MediaCollectionViewModel Collection { get; set; }
-        public TelevisionShowViewModel TelevisionShow { get; set; }
-        public TelevisionSeasonViewModel TelevisionSeason { get; set; }
+        public NamedMediaItemViewModel MediaItem { get; set; }
 
         public string CollectionName => CollectionType switch
         {
             ProgramScheduleItemCollectionType.Collection => Collection?.Name,
-            ProgramScheduleItemCollectionType.TelevisionShow => $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
-            ProgramScheduleItemCollectionType.TelevisionSeason =>
-                $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",
+            ProgramScheduleItemCollectionType.TelevisionShow => MediaItem?.Name,
+            ProgramScheduleItemCollectionType.TelevisionSeason => MediaItem?.Name,
             _ => string.Empty
         };
 
