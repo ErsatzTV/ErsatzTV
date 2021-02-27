@@ -17,11 +17,21 @@ namespace ErsatzTV.Controllers
 
         public PostersController(IMediator mediator) => _mediator = mediator;
 
-        [HttpGet("/posters/{fileName}")]
-        public async Task<IActionResult> GetImage(string fileName)
+        [HttpGet("/artwork/posters/{fileName}")]
+        public async Task<IActionResult> GetPoster(string fileName)
         {
             Either<BaseError, ImageViewModel> imageContents =
                 await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Poster, 440));
+            return imageContents.Match<IActionResult>(
+                Left: _ => new NotFoundResult(),
+                Right: r => new FileContentResult(r.Contents, r.MimeType));
+        }
+        
+        [HttpGet("/artwork/thumbnails/{fileName}")]
+        public async Task<IActionResult> GetThumbnail(string fileName)
+        {
+            Either<BaseError, ImageViewModel> imageContents =
+                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Thumbnail, 220));
             return imageContents.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));

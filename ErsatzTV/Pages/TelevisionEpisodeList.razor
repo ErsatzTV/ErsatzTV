@@ -18,7 +18,7 @@
             @if (!string.IsNullOrWhiteSpace(_season.Poster))
             {
                 <MudPaper Style="flex-shrink: 0;">
-                    <MudCardMedia Image="@($"/posters/{_season.Poster}")" Style="height: 440px; width: 304px;"/>
+                    <MudCardMedia Image="@($"/artwork/posters/{_season.Poster}")" Style="height: 440px; width: 304px;"/>
                 </MudPaper>
             }
             <MudCardContent Class="mx-3 my-3">
@@ -55,7 +55,8 @@
                    Link="@($"/media/tv/episodes/{card.EpisodeId}")"
                    DataRefreshed="@(() => RefreshData())"
                    ContainerClass="media-card-episode-container mx-2"
-                   CardClass="media-card-episode"/>
+                   CardClass="media-card-episode"
+                   ArtworkKind="@ArtworkKind.Thumbnail"/>
     }
 </MudContainer>
 

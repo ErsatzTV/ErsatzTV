@@ -14,7 +14,7 @@
             @if (!string.IsNullOrWhiteSpace(_episode.Poster))
             {
                 <MudPaper style="display: flex; flex-direction: column">
-                    <MudCardMedia Image="@($"/posters/{_episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                    <MudCardMedia Image="@($"/artwork/thumbnails/{_episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
                 </MudPaper>
             }
             <MudCardContent Class="ml-3">

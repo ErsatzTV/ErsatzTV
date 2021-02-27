@@ -44,10 +44,11 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize) =>
             throw new NotSupportedException();
 
-        public Task<Option<Show>> GetShowByMetadata(ShowMetadata metadata) => throw new NotSupportedException();
+        public Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata) =>
+            throw new NotSupportedException();
 
         public Task<Either<BaseError, Show>>
-            AddShow(int localMediaSourceId, string showFolder, ShowMetadata metadata) =>
+            AddShow(int libraryPathId, string showFolder, ShowMetadata metadata) =>
             throw new NotSupportedException();
 
         public Task<Either<BaseError, Season>> GetOrAddSeason(Show show, string path, int seasonNumber) =>

@@ -38,19 +38,22 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public Task<ShowMetadata> GetMetadataForShow(string showFolder)
+        public async Task<ShowMetadata> GetMetadataForShow(string showFolder)
         {
             string nfoFileName = Path.Combine(showFolder, "tvshow.nfo");
-            return Optional(_localFileSystem.FileExists(nfoFileName))
-                .Filter(identity).AsTask()
-                .Bind(_ => LoadTelevisionShowMetadata(nfoFileName))
-                .IfNoneAsync(() => _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder).AsTask())
-                .Map(
-                    m =>
-                    {
-                        m.SortTitle = GetSortTitle(m.Title);
-                        return m;
-                    });
+            Option<ShowMetadata> maybeMetadata = None;
+            if (_localFileSystem.FileExists(nfoFileName))
+            {
+                maybeMetadata = await LoadTelevisionShowMetadata(nfoFileName);
+            }
+
+            return maybeMetadata.IfNone(
+                () =>
+                {
+                    ShowMetadata metadata = _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder);
+                    metadata.SortTitle = GetSortTitle(metadata.Title);
+                    return metadata;
+                });
         }
 
         public Task<Unit> RefreshSidecarMetadata(MediaItem mediaItem, string path) =>

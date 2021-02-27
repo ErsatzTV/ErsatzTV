@@ -17,19 +17,27 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     {
         private readonly IDbConnection _dbConnection;
         private readonly TvContext _dbContext;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public MovieRepository(TvContext dbContext, IDbConnection dbConnection)
+        public MovieRepository(
+            TvContext dbContext,
+            IDbContextFactory<TvContext> dbContextFactory,
+            IDbConnection dbConnection)
         {
             _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
             _dbConnection = dbConnection;
         }
 
-        public Task<Option<Movie>> GetMovie(int movieId) =>
-            _dbContext.Movies
+        public async Task<Option<Movie>> GetMovie(int movieId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Movies
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Artwork)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
+        }
 
         public async Task<Either<BaseError, Movie>> GetOrAdd(LibraryPath libraryPath, string path)
         {
