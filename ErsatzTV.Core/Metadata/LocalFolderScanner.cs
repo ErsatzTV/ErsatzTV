@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Domain;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
@@ -14,6 +15,8 @@ namespace ErsatzTV.Core.Metadata
 {
     public abstract class LocalFolderScanner
     {
+        private static readonly SHA1CryptoServiceProvider Crypto;
+
         public static readonly List<string> VideoFileExtensions = new()
         {
             ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
@@ -45,6 +48,8 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly ILogger _logger;
+
+        static LocalFolderScanner() => Crypto = new SHA1CryptoServiceProvider();
 
         protected LocalFolderScanner(
             ILocalFileSystem localFileSystem,
@@ -79,30 +84,63 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        protected async Task SavePosterToDisk<T>(
-            T show,
-            string posterPath,
-            Func<T, Task<bool>> update,
-            int height = 220) where T : IHasAPoster
+        protected bool RefreshArtwork(string artworkFile, Domain.Metadata metadata, ArtworkKind artworkKind)
         {
-            byte[] originalBytes = await _localFileSystem.ReadAllBytes(posterPath);
-            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, height, null);
-            await maybeHash.Match(
-                hash =>
-                {
-                    show.Poster = hash;
-                    show.PosterLastWriteTime = _localFileSystem.GetLastWriteTime(posterPath);
-                    return update(show);
-                },
-                error =>
-                {
-                    _logger.LogWarning("Unable to save poster to disk from {Path}: {Error}", posterPath, error.Value);
-                    return Task.CompletedTask;
-                });
+            DateTime lastWriteTime = _localFileSystem.GetLastWriteTime(artworkFile);
+
+            Option<Artwork> maybePoster =
+                metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind);
+
+            bool shouldRefresh = maybePoster.Match(
+                artwork => artwork.DateUpdated < lastWriteTime,
+                true);
+
+            if (shouldRefresh)
+            {
+                _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
+                string cacheName = CopyArtworkToCache(artworkFile, artworkKind);
+
+                maybePoster.Match(
+                    artwork =>
+                    {
+                        artwork.Path = cacheName;
+                        artwork.DateUpdated = lastWriteTime;
+                    },
+                    () =>
+                    {
+                        var artwork = new Artwork
+                        {
+                            Path = cacheName,
+                            DateAdded = DateTime.UtcNow,
+                            DateUpdated = lastWriteTime,
+                            ArtworkKind = artworkKind
+                        };
+
+                        metadata.Artwork.Add(artwork);
+                    });
+
+                return true;
+            }
+
+            return false;
         }
 
-        protected Task<Either<BaseError, string>> SavePosterToDisk(string posterPath, int height = 220) =>
-            _localFileSystem.ReadAllBytes(posterPath)
-                .Bind(bytes => _imageCache.ResizeAndSaveImage(bytes, height, null));
+        private string CopyArtworkToCache(string path, ArtworkKind artworkKind)
+        {
+            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
+            byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
+            string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
+            string subfolder = hex.Substring(0, 2);
+            string baseFolder = artworkKind switch
+            {
+                ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
+                ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
+                _ => FileSystemLayout.ImageCacheFolder
+            };
+            string target = Path.Combine(baseFolder, hex);
+            _localFileSystem.CopyFile(path, target);
+
+            return hex;
+        }
     }
 }

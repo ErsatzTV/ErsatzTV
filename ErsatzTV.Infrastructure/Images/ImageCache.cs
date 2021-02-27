@@ -17,6 +17,27 @@ namespace ErsatzTV.Infrastructure.Images
 
         static ImageCache() => Crypto = new SHA1CryptoServiceProvider();
 
+        public async Task<Either<BaseError, byte[]>> ResizeImage(byte[] imageBuffer, int height)
+        {
+            await using var inStream = new MemoryStream(imageBuffer);
+            using var image = await Image.LoadAsync(inStream);
+
+            Size size = new Size { Height = height };
+
+            image.Mutate(
+                i => i.Resize(
+                    new ResizeOptions
+                    {
+                        Mode = ResizeMode.Max,
+                        Size = size
+                    }));
+
+            await using var outStream = new MemoryStream();
+            await image.SaveAsync(outStream, new JpegEncoder { Quality = 90 });
+
+            return outStream.ToArray();
+        }
+        
         public async Task<Either<BaseError, string>> ResizeAndSaveImage(byte[] imageBuffer, int? height, int? width)
         {
             await using var inStream = new MemoryStream(imageBuffer);

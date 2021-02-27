@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using ErsatzTV.Core.Interfaces.Domain;
 
 namespace ErsatzTV.Core.Domain
 {
-    public class MediaItem : IHasAPoster
+    public class MediaItem
     {
         public int Id { get; set; }
         public MediaItemStatistics Statistics { get; set; }
@@ -21,7 +20,5 @@ namespace ErsatzTV.Core.Domain
         public List<Collection> Collections { get; set; }
         public List<CollectionItem> CollectionItems { get; set; }
         public string Path { get; set; }
-        public string Poster { get; set; }
-        public DateTime? PosterLastWriteTime { get; set; }
     }
 }

@@ -6,6 +6,13 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 {
     public class ShowMetadataConfiguration : IEntityTypeConfiguration<ShowMetadata>
     {
-        public void Configure(EntityTypeBuilder<ShowMetadata> builder) => builder.ToTable("ShowMetadata");
+        public void Configure(EntityTypeBuilder<ShowMetadata> builder)
+        {
+            builder.ToTable("ShowMetadata");
+
+            builder.HasMany(sm => sm.Artwork)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Cascade);
+        }
     }
 }

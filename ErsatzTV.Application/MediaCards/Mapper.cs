@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using ErsatzTV.Core.Domain;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCards
 {
@@ -12,7 +13,7 @@ namespace ErsatzTV.Application.MediaCards
                 showMetadata.Title,
                 showMetadata.ReleaseDate?.Year.ToString(),
                 showMetadata.SortTitle,
-                null); // TODO: artwork
+                GetPoster(showMetadata));
 
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(Season season) =>
             new(
@@ -22,7 +23,7 @@ namespace ErsatzTV.Application.MediaCards
                 GetSeasonName(season.SeasonNumber),
                 string.Empty,
                 GetSeasonName(season.SeasonNumber),
-                season.Poster,
+                season.SeasonMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString());
 
         internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
@@ -34,7 +35,7 @@ namespace ErsatzTV.Application.MediaCards
                 episodeMetadata.Title,
                 $"Episode {episodeMetadata.Episode.EpisodeNumber}",
                 episodeMetadata.Episode.EpisodeNumber.ToString(),
-                null, // TODO: artwork
+                GetThumbnail(episodeMetadata),
                 episodeMetadata.Episode.EpisodeNumber.ToString());
 
         internal static MovieCardViewModel ProjectToViewModel(MovieMetadata movieMetadata) =>
@@ -43,7 +44,7 @@ namespace ErsatzTV.Application.MediaCards
                 movieMetadata.Title,
                 movieMetadata.ReleaseDate?.Year.ToString(),
                 movieMetadata.SortTitle,
-                null); // TODO: artwork
+                GetPoster(movieMetadata));
 
         internal static CollectionCardResultsViewModel
             ProjectToViewModel(Collection collection) =>
@@ -57,5 +58,13 @@ namespace ErsatzTV.Application.MediaCards
 
         private static string GetSeasonName(int number) =>
             number == 0 ? "Specials" : $"Season {number}";
+
+        private static string GetPoster(Metadata metadata) =>
+            Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
+                .Match(a => a.Path, string.Empty);
+
+        private static string GetThumbnail(Metadata metadata) =>
+            Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail))
+                .Match(a => a.Path, string.Empty);
     }
 }

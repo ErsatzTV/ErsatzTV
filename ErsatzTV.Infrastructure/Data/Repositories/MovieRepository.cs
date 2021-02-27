@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using ErsatzTV.Core;
@@ -26,14 +27,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<Movie>> GetMovie(int movieId) =>
             _dbContext.Movies
                 .Include(m => m.MovieMetadata)
+                .ThenInclude(m => m.Artwork)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
 
-        // TODO: fix this - need to add to library path, not media source
         public async Task<Either<BaseError, Movie>> GetOrAdd(LibraryPath libraryPath, string path)
         {
             Option<Movie> maybeExisting = await _dbContext.Movies
                 .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.LibraryPath)
                 .SingleOrDefaultAsync(i => i.Path == path);
 
@@ -73,6 +75,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             LIMIT {0} OFFSET {1}",
                     pageSize,
                     (pageNumber - 1) * pageSize)
+                .Include(mm => mm.Artwork)
+                .OrderBy(mm => mm.SortTitle)
                 .ToListAsync();
 
         private async Task<Either<BaseError, Movie>> AddMovie(int libraryPathId, string path)

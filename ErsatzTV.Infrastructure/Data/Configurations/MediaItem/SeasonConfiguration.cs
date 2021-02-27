@@ -14,6 +14,11 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .WithOne(e => e.Season)
                 .HasForeignKey(e => e.SeasonId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(s => s.SeasonMetadata)
+                .WithOne(s => s.Season)
+                .HasForeignKey(s => s.SeasonId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

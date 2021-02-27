@@ -9,5 +9,6 @@ namespace ErsatzTV.Core.Domain
         public Show Show { get; set; }
 
         public List<Episode> Episodes { get; set; }
+        public List<SeasonMetadata> SeasonMetadata { get; set; }
     }
 }

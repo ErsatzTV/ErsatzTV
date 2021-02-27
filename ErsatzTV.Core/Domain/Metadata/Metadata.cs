@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ErsatzTV.Core.Domain
 {
@@ -12,5 +13,6 @@ namespace ErsatzTV.Core.Domain
         public DateTime? ReleaseDate { get; set; }
         public DateTime DateAdded { get; set; }
         public DateTime DateUpdated { get; set; }
+        public List<Artwork> Artwork { get; set; }
     }
 }

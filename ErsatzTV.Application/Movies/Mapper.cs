@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Linq;
+using ErsatzTV.Core.Domain;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Movies
@@ -12,7 +13,8 @@ namespace ErsatzTV.Application.Movies
                 metadata.Title,
                 metadata.ReleaseDate?.Year.ToString(),
                 metadata.Plot,
-                movie.Poster);
+                Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
+                    .Match(a => a.Path, string.Empty));
         }
     }
 }

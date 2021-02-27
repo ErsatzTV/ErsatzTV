@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
+using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
@@ -24,5 +25,18 @@ namespace ErsatzTV.Core.Metadata
 
         public bool FileExists(string path) => File.Exists(path);
         public Task<byte[]> ReadAllBytes(string path) => File.ReadAllBytesAsync(path);
+
+        public Unit CopyFile(string source, string destination)
+        {
+            var directory = Path.GetDirectoryName(destination);
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            File.Copy(source, destination, true);
+
+            return Unit.Default;
+        }
     }
 }

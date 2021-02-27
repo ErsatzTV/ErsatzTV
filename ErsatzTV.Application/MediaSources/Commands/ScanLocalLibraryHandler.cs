@@ -66,11 +66,10 @@ namespace ErsatzTV.Application.MediaSources.Commands
                     switch (localLibrary.MediaKind)
                     {
                         case LibraryMediaKind.Movies:
-                            // await _movieFolderScanner.ScanFolder(libraryPath, ffprobePath);
+                            await _movieFolderScanner.ScanFolder(libraryPath, ffprobePath);
                             break;
                         case LibraryMediaKind.Shows:
-                            // TODO: re-enable this
-                            // await _televisionFolderScanner.ScanFolder(libraryPath, ffprobePath);
+                            await _televisionFolderScanner.ScanFolder(libraryPath, ffprobePath);
                             break;
                     }
                 }

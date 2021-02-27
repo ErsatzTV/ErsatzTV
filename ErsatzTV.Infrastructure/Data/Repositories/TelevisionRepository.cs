@@ -66,6 +66,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             // TODO: fix split shows
             _dbContext.ShowMetadata
                 .AsNoTracking()
+                .Include(sm => sm.Artwork)
                 .OrderBy(sm => sm.SortTitle)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -96,6 +97,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.Seasons
                 .AsNoTracking()
                 .Where(s => s.ShowId == televisionShowId)
+                .Include(s => s.SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .Include(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
                 .OrderBy(s => s.SeasonNumber)
@@ -121,6 +124,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.EpisodeMetadata
                 .AsNoTracking()
                 .Filter(em => em.Episode.SeasonId == seasonId)
+                .Include(em => em.Artwork)
                 .Include(em => em.Episode)
                 .ThenInclude(e => e.Season)
                 .ThenInclude(s => s.Show)
@@ -143,6 +147,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     return _dbContext.Shows
                         .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Artwork)
                         .Filter(s => s.Id == id)
                         .SingleOrDefaultAsync()
                         .Map(Optional);

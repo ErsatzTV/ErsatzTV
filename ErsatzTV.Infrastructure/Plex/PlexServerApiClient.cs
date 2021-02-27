@@ -132,13 +132,13 @@ namespace ErsatzTV.Infrastructure.Plex
                 DateAdded = DateTime.UtcNow, // TODO: actual date added?
                 DateUpdated = lastWriteTime
             };
+            
+            // TODO: artwork
 
             var movie = new PlexMovie
             {
                 Key = response.Key,
-                Poster = response.Thumb,
                 LastWriteTime = lastWriteTime,
-                PosterLastWriteTime = lastWriteTime,
                 MovieMetadata = new List<MovieMetadata> { metadata },
                 Statistics = new MediaItemStatistics
                 {

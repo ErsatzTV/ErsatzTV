@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿using System.Collections.Generic;
+
+namespace ErsatzTV.Core.Domain
 {
     public class EpisodeMetadata : Metadata
     {

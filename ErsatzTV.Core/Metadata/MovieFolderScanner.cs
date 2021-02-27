@@ -131,12 +131,10 @@ namespace ErsatzTV.Core.Metadata
                 await LocatePoster(movie).IfSomeAsync(
                     async posterFile =>
                     {
-                        if (string.IsNullOrWhiteSpace(movie.Poster) ||
-                            (movie.PosterLastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(posterFile))
+                        MovieMetadata metadata = movie.MovieMetadata.Head();
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
                         {
-                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(movie, posterFile, _movieRepository.Update, 440);
+                            await _movieRepository.Update(movie);
                         }
                     });
 

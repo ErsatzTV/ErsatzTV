@@ -54,6 +54,9 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
 
+        public Unit CopyFile(string source, string destination) =>
+            Unit.Default;
+
         private static List<DirectoryInfo> Split(DirectoryInfo path)
         {
             var result = new List<DirectoryInfo>();

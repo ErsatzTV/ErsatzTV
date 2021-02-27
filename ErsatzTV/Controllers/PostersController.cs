@@ -2,6 +2,7 @@
 using ErsatzTV.Application.Images;
 using ErsatzTV.Application.Images.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using LanguageExt;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +20,8 @@ namespace ErsatzTV.Controllers
         [HttpGet("/posters/{fileName}")]
         public async Task<IActionResult> GetImage(string fileName)
         {
-            Either<BaseError, ImageViewModel> imageContents = await _mediator.Send(new GetImageContents(fileName));
+            Either<BaseError, ImageViewModel> imageContents =
+                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Poster, 440));
             return imageContents.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -211,27 +212,10 @@ namespace ErsatzTV.Core.Metadata
                 await LocatePosterForShow(showFolder).IfSomeAsync(
                     async posterFile =>
                     {
-                        if (string.IsNullOrWhiteSpace(show.Poster) ||
-                            (show.PosterLastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(posterFile))
+                        ShowMetadata metadata = show.ShowMetadata.Head();
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
                         {
-                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            Either<BaseError, string> maybePoster = await SavePosterToDisk(posterFile, 440);
-                            await maybePoster.Match(
-                                poster =>
-                                {
-                                    show.Poster = poster;
-                                    show.PosterLastWriteTime = _localFileSystem.GetLastWriteTime(posterFile);
-                                    return _televisionRepository.Update(show);
-                                },
-                                error =>
-                                {
-                                    _logger.LogWarning(
-                                        "Unable to save poster to disk from {Path}: {Error}",
-                                        posterFile,
-                                        error.Value);
-                                    return Task.CompletedTask;
-                                });
+                            await _televisionRepository.Update(show);
                         }
                     });
 
@@ -250,12 +234,17 @@ namespace ErsatzTV.Core.Metadata
                 await LocatePoster(season).IfSomeAsync(
                     async posterFile =>
                     {
-                        if (string.IsNullOrWhiteSpace(season.Poster) ||
-                            (season.PosterLastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(posterFile))
+                        season.SeasonMetadata ??= new List<SeasonMetadata>();
+                        if (!season.SeasonMetadata.Any())
                         {
-                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(season, posterFile, _televisionRepository.Update, 440);
+                            season.SeasonMetadata.Add(new SeasonMetadata { SeasonId = season.Id });
+                        }
+
+                        SeasonMetadata metadata = season.SeasonMetadata.Head();
+
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
+                        {
+                            await _televisionRepository.Update(season);
                         }
                     });
 
@@ -267,20 +256,17 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, Episode>> UpdateThumbnail(
-            Episode episode)
+        private async Task<Either<BaseError, Episode>> UpdateThumbnail(Episode episode)
         {
             try
             {
                 await LocateThumbnail(episode).IfSomeAsync(
                     async posterFile =>
                     {
-                        if (string.IsNullOrWhiteSpace(episode.Poster) ||
-                            (episode.PosterLastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(posterFile))
+                        EpisodeMetadata metadata = episode.EpisodeMetadata.Head();
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail))
                         {
-                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Thumbnail", posterFile);
-                            await SavePosterToDisk(episode, posterFile, _televisionRepository.Update);
+                            await _televisionRepository.Update(episode);
                         }
                     });
 
