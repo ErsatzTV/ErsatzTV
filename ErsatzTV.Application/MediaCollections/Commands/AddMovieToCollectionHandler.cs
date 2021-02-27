@@ -7,9 +7,7 @@ using LanguageExt;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public class
-        AddMovieToCollectionHandler : MediatR.IRequestHandler<AddMovieToCollection,
-            Either<BaseError, Unit>>
+    public class AddMovieToCollectionHandler : MediatR.IRequestHandler<AddMovieToCollection, Either<BaseError, Unit>>
     {
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly IMovieRepository _movieRepository;
@@ -26,37 +24,27 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             AddMovieToCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
-                .MapT(ApplyAddMoviesRequest)
+                .MapT(_ => ApplyAddMoviesRequest(request))
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<Unit> ApplyAddMoviesRequest(RequestParameters parameters)
-        {
-            parameters.Collection.MediaItems.Add(parameters.MovieToAdd);
-            await _mediaCollectionRepository.Update(parameters.Collection);
+        private Task<Unit> ApplyAddMoviesRequest(AddMovieToCollection request) =>
+            _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.MovieId);
 
-            return Unit.Default;
-        }
+        private async Task<Validation<BaseError, Unit>> Validate(AddMovieToCollection request) =>
+            (await CollectionMustExist(request), await ValidateMovies(request))
+            .Apply((_, _) => Unit.Default);
 
-        private async Task<Validation<BaseError, RequestParameters>>
-            Validate(AddMovieToCollection request) =>
-            (await SimpleMediaCollectionMustExist(request), await ValidateMovies(request))
-            .Apply(
-                (collectionToUpdate, movieToAdd) =>
-                    new RequestParameters(collectionToUpdate, movieToAdd));
-
-        private Task<Validation<BaseError, Collection>> SimpleMediaCollectionMustExist(
-            AddMovieToCollection updateCollection) =>
-            _mediaCollectionRepository.GetCollectionWithItems(updateCollection.CollectionId)
+        private Task<Validation<BaseError, Unit>> CollectionMustExist(AddMovieToCollection request) =>
+            _mediaCollectionRepository.GetCollectionWithItems(request.CollectionId)
+                .MapT(_ => Unit.Default)
                 .Map(v => v.ToValidation<BaseError>("Collection does not exist."));
 
-        private Task<Validation<BaseError, Movie>> ValidateMovies(
-            AddMovieToCollection request) =>
+        private Task<Validation<BaseError, Unit>> ValidateMovies(AddMovieToCollection request) =>
             LoadMovie(request)
+                .MapT(_ => Unit.Default)
                 .Map(v => v.ToValidation<BaseError>("Movie does not exist"));
 
         private Task<Option<Movie>> LoadMovie(AddMovieToCollection request) =>
             _movieRepository.GetMovie(request.MovieId);
-
-        private record RequestParameters(Collection Collection, Movie MovieToAdd);
     }
 }

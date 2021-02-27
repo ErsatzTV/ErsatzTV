@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -25,40 +24,27 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             AddShowToCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
-                .MapT(ApplyAddTelevisionShowRequest)
+                .MapT(_ => ApplyAddTelevisionShowRequest(request))
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<Unit> ApplyAddTelevisionShowRequest(RequestParameters parameters)
-        {
-            if (parameters.Collection.MediaItems.All(s => s.Id != parameters.ShowToAdd.Id))
-            {
-                parameters.Collection.MediaItems.Add(parameters.ShowToAdd);
-                await _mediaCollectionRepository.Update(parameters.Collection);
-            }
+        private Task<Unit> ApplyAddTelevisionShowRequest(AddShowToCollection request)
+            => _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.ShowId);
 
-            return Unit.Default;
-        }
+        private async Task<Validation<BaseError, Unit>> Validate(AddShowToCollection request) =>
+            (await CollectionMustExist(request), await ValidateShow(request))
+            .Apply((_, _) => Unit.Default);
 
-        private async Task<Validation<BaseError, RequestParameters>>
-            Validate(AddShowToCollection request) =>
-            (await SimpleMediaCollectionMustExist(request), await ValidateShow(request))
-            .Apply(
-                (collectionToUpdate, show) =>
-                    new RequestParameters(collectionToUpdate, show));
-
-        private Task<Validation<BaseError, Collection>> SimpleMediaCollectionMustExist(
-            AddShowToCollection updateCollection) =>
-            _mediaCollectionRepository.GetCollectionWithItems(updateCollection.CollectionId)
+        private Task<Validation<BaseError, Unit>> CollectionMustExist(AddShowToCollection request) =>
+            _mediaCollectionRepository.GetCollectionWithItems(request.CollectionId)
+                .MapT(_ => Unit.Default)
                 .Map(v => v.ToValidation<BaseError>("Collection does not exist."));
 
-        private Task<Validation<BaseError, Show>> ValidateShow(
-            AddShowToCollection request) =>
+        private Task<Validation<BaseError, Unit>> ValidateShow(AddShowToCollection request) =>
             LoadTelevisionShow(request)
+                .MapT(_ => Unit.Default)
                 .Map(v => v.ToValidation<BaseError>("Show does not exist"));
 
         private Task<Option<Show>> LoadTelevisionShow(AddShowToCollection request) =>
             _televisionRepository.GetShow(request.ShowId);
-
-        private record RequestParameters(Collection Collection, Show ShowToAdd);
     }
 }

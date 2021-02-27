@@ -16,6 +16,7 @@ namespace ErsatzTV.Core.Tests.Fakes
         public FakeMediaCollectionRepository(Map<int, List<MediaItem>> data) => _data = data;
 
         public Task<Collection> Add(Collection collection) => throw new NotSupportedException();
+        public Task<Unit> AddMediaItem(int collectionId, int mediaItemId) => throw new NotSupportedException();
 
         public Task<Option<Collection>> Get(int id) => throw new NotSupportedException();
 

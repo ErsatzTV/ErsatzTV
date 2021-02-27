@@ -29,6 +29,37 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return collection;
         }
 
+
+        public async Task<Unit> AddMediaItem(int collectionId, int mediaItemId)
+        {
+            Option<Collection> maybeCollection = await _dbContext.Collections
+                .Include(c => c.MediaItems)
+                .OrderBy(c => c.Id)
+                .SingleOrDefaultAsync(c => c.Id == collectionId)
+                .Map(Optional);
+
+            await maybeCollection.IfSomeAsync(
+                async collection =>
+                {
+                    if (collection.MediaItems.All(i => i.Id != mediaItemId))
+                    {
+                        Option<MediaItem> maybeMediaItem = await _dbContext.MediaItems
+                            .OrderBy(i => i.Id)
+                            .SingleOrDefaultAsync(i => i.Id == mediaItemId)
+                            .Map(Optional);
+
+                        await maybeMediaItem.IfSomeAsync(
+                            async mediaItem =>
+                            {
+                                collection.MediaItems.Add(mediaItem);
+                                await _dbContext.SaveChangesAsync();
+                            });
+                    }
+                });
+
+            return Unit.Default;
+        }
+
         public Task<Option<Collection>> Get(int id) =>
             _dbContext.Collections
                 .OrderBy(c => c.Id)

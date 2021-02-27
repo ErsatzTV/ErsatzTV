@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -8,9 +7,7 @@ using LanguageExt;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public class
-        AddSeasonToCollectionHandler : MediatR.IRequestHandler<AddSeasonToCollection,
-            Either<BaseError, Unit>>
+    public class AddSeasonToCollectionHandler : MediatR.IRequestHandler<AddSeasonToCollection, Either<BaseError, Unit>>
     {
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
@@ -27,41 +24,28 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             AddSeasonToCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
-                .MapT(ApplyAddTelevisionSeasonRequest)
+                .MapT(_ => ApplyAddTelevisionSeasonRequest(request))
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<Unit> ApplyAddTelevisionSeasonRequest(RequestParameters parameters)
-        {
-            if (parameters.Collection.MediaItems.All(s => s.Id != parameters.SeasonToAdd.Id))
-            {
-                parameters.Collection.MediaItems.Add(parameters.SeasonToAdd);
-                await _mediaCollectionRepository.Update(parameters.Collection);
-            }
+        private async Task<Unit> ApplyAddTelevisionSeasonRequest(AddSeasonToCollection request) =>
+            await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.SeasonId);
 
-            return Unit.Default;
-        }
+        private async Task<Validation<BaseError, Unit>> Validate(AddSeasonToCollection request) =>
+            (await CollectionMustExist(request), await ValidateSeason(request))
+            .Apply((_, _) => Unit.Default);
 
-        private async Task<Validation<BaseError, RequestParameters>>
-            Validate(AddSeasonToCollection request) =>
-            (await SimpleMediaCollectionMustExist(request), await ValidateSeason(request))
-            .Apply(
-                (collectionToUpdate, season) =>
-                    new RequestParameters(collectionToUpdate, season));
-
-        private Task<Validation<BaseError, Collection>> SimpleMediaCollectionMustExist(
-            AddSeasonToCollection updateCollection) =>
-            _mediaCollectionRepository.GetCollectionWithItems(updateCollection.CollectionId)
+        private Task<Validation<BaseError, Unit>> CollectionMustExist(AddSeasonToCollection request) =>
+            _mediaCollectionRepository.GetCollectionWithItems(request.CollectionId)
+                .MapT(_ => Unit.Default)
                 .Map(v => v.ToValidation<BaseError>("Collection does not exist."));
 
-        private Task<Validation<BaseError, Season>> ValidateSeason(
-            AddSeasonToCollection request) =>
+        private Task<Validation<BaseError, Unit>> ValidateSeason(AddSeasonToCollection request) =>
             LoadTelevisionSeason(request)
+                .MapT(_ => Unit.Default)
                 .Map(v => v.ToValidation<BaseError>("Season does not exist"));
 
         private Task<Option<Season>> LoadTelevisionSeason(
             AddSeasonToCollection request) =>
             _televisionRepository.GetSeason(request.SeasonId);
-
-        private record RequestParameters(Collection Collection, Season SeasonToAdd);
     }
 }
