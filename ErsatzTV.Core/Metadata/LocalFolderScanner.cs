@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
 {
@@ -91,7 +91,7 @@ namespace ErsatzTV.Core.Metadata
             metadata.Artwork ??= new List<Artwork>();
 
             Option<Artwork> maybePoster =
-                metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind);
+                Optional(metadata.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == artworkKind);
 
             bool shouldRefresh = maybePoster.Match(
                 artwork => artwork.DateUpdated < lastWriteTime,
@@ -100,7 +100,7 @@ namespace ErsatzTV.Core.Metadata
             if (shouldRefresh)
             {
                 _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
-                string cacheName = CopyArtworkToCache(artworkFile, artworkKind);
+                string cacheName = _imageCache.CopyArtworkToCache(artworkFile, artworkKind);
 
                 maybePoster.Match(
                     artwork =>
@@ -125,24 +125,6 @@ namespace ErsatzTV.Core.Metadata
             }
 
             return false;
-        }
-
-        private string CopyArtworkToCache(string path, ArtworkKind artworkKind)
-        {
-            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
-            byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
-            string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
-            string subfolder = hex.Substring(0, 2);
-            string baseFolder = artworkKind switch
-            {
-                ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
-                ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
-                _ => FileSystemLayout.ImageCacheFolder
-            };
-            string target = Path.Combine(baseFolder, hex);
-            _localFileSystem.CopyFile(path, target);
-
-            return hex;
         }
     }
 }

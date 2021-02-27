@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
 {
@@ -16,12 +17,12 @@ namespace ErsatzTV.Core.Metadata
             return GetTelevisionShowMetadata(fileName, metadata);
         }
 
-        public static EpisodeMetadata GetFallbackMetadata(Episode episode)
+        public static Tuple<EpisodeMetadata, int> GetFallbackMetadata(Episode episode)
         {
             string fileName = Path.GetFileName(episode.Path);
             var metadata = new EpisodeMetadata
                 { MetadataKind = MetadataKind.Fallback, Title = fileName ?? episode.Path };
-            return fileName != null ? GetEpisodeMetadata(fileName, metadata) : metadata;
+            return fileName != null ? GetEpisodeMetadata(fileName, metadata) : Tuple(metadata, 0);
         }
 
         public static MovieMetadata GetFallbackMetadata(Movie movie)
@@ -32,7 +33,7 @@ namespace ErsatzTV.Core.Metadata
             return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
         }
 
-        private static EpisodeMetadata GetEpisodeMetadata(string fileName, EpisodeMetadata metadata)
+        private static Tuple<EpisodeMetadata, int> GetEpisodeMetadata(string fileName, EpisodeMetadata metadata)
         {
             try
             {
@@ -41,9 +42,7 @@ namespace ErsatzTV.Core.Metadata
                 if (match.Success)
                 {
                     metadata.Title = match.Groups[1].Value;
-                    // TODO: set episode number?
-                    // metadata.Season = int.Parse(match.Groups[2].Value);
-                    // metadata.Episode = int.Parse(match.Groups[3].Value);
+                    return Tuple(metadata, int.Parse(match.Groups[3].Value));
                 }
             }
             catch (Exception)
@@ -51,7 +50,7 @@ namespace ErsatzTV.Core.Metadata
                 // ignored
             }
 
-            return metadata;
+            return Tuple(metadata, 0);
         }
 
         private static MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)

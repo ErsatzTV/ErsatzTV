@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -42,11 +43,19 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository = new Mock<IMovieRepository>();
                 _movieRepository.Setup(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()))
                     .Returns(
-                        (LibraryPath _, string path) =>
-                            Right<BaseError, Movie>(new Movie { Path = path }).AsTask());
+                        (LibraryPath _, string path) => Right<BaseError, Movie>(new Movie { Path = path }).AsTask());
 
                 _localStatisticsProvider = new Mock<ILocalStatisticsProvider>();
                 _localMetadataProvider = new Mock<ILocalMetadataProvider>();
+
+                // fallback metadata adds metadata to a movie, so we need to replicate that here
+                _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<MediaItem>()))
+                    .Returns(
+                        (MediaItem mediaItem) =>
+                        {
+                            ((Movie) mediaItem).MovieMetadata = new List<MovieMetadata> { new() };
+                            return Unit.Default.AsTask();
+                        });
 
                 _imageCache = new Mock<IImageCache>();
                 _imageCache.Setup(
@@ -186,7 +195,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 MovieFolderScanner service = GetService(
                     new FakeFileEntry(moviePath),
-                    new FakeFileEntry(posterPath)
+                    new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now }
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
@@ -206,7 +215,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     Times.Once);
 
                 _imageCache.Verify(
-                    x => x.ResizeAndSaveImage(FakeLocalFileSystem.TestBytes, It.IsAny<int?>(), It.IsAny<int?>()),
+                    x => x.CopyArtworkToCache(posterPath, ArtworkKind.Poster),
                     Times.Once);
             }
 
@@ -227,7 +236,7 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 MovieFolderScanner service = GetService(
                     new FakeFileEntry(moviePath),
-                    new FakeFileEntry(posterPath)
+                    new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now }
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
@@ -247,7 +256,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     Times.Once);
 
                 _imageCache.Verify(
-                    x => x.ResizeAndSaveImage(FakeLocalFileSystem.TestBytes, It.IsAny<int?>(), It.IsAny<int?>()),
+                    x => x.CopyArtworkToCache(posterPath, ArtworkKind.Poster),
                     Times.Once);
             }
 
@@ -354,9 +363,6 @@ namespace ErsatzTV.Core.Tests.Metadata
             }
 
             private MovieFolderScanner GetService(params FakeFileEntry[] files) =>
-                // var mockImageCache = new Mock<IImageCache>();
-                // mockImageCache.Setup(i => i.ResizeAndSaveImage(It.IsAny<byte[]>(), It.IsAny<int?>(), It.IsAny<int?>()))
-                //     .Returns(Right<BaseError, string>("image").AsTask());
                 new(
                     new FakeLocalFileSystem(new List<FakeFileEntry>(files)),
                     _movieRepository.Object,

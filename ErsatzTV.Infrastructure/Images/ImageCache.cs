@@ -1,9 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -14,8 +17,11 @@ namespace ErsatzTV.Infrastructure.Images
     public class ImageCache : IImageCache
     {
         private static readonly SHA1CryptoServiceProvider Crypto;
+        private readonly ILocalFileSystem _localFileSystem;
 
         static ImageCache() => Crypto = new SHA1CryptoServiceProvider();
+
+        public ImageCache(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
         public async Task<Either<BaseError, byte[]>> ResizeImage(byte[] imageBuffer, int height)
         {
@@ -80,6 +86,24 @@ namespace ErsatzTV.Infrastructure.Images
             {
                 return BaseError.New(ex.Message);
             }
+        }
+
+        public string CopyArtworkToCache(string path, ArtworkKind artworkKind)
+        {
+            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
+            byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
+            string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
+            string subfolder = hex.Substring(0, 2);
+            string baseFolder = artworkKind switch
+            {
+                ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
+                ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
+                _ => FileSystemLayout.ImageCacheFolder
+            };
+            string target = Path.Combine(baseFolder, hex);
+            _localFileSystem.CopyFile(path, target);
+
+            return hex;
         }
     }
 }

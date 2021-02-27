@@ -83,8 +83,10 @@ namespace ErsatzTV.Core.Metadata
             ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder))
                 .ToUnit();
 
-        private async Task ApplyMetadataUpdate(Episode episode, EpisodeMetadata metadata)
+        private async Task ApplyMetadataUpdate(Episode episode, Tuple<EpisodeMetadata, int> metadataEpisodeNumber)
         {
+            (EpisodeMetadata metadata, int episodeNumber) = metadataEpisodeNumber;
+            episode.EpisodeNumber = episodeNumber;
             Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {
@@ -169,16 +171,10 @@ namespace ErsatzTV.Core.Metadata
                 return None;
             }
 
-            // if (!(mediaItem.Source is LocalMediaSource))
-            // {
-            //     _logger.LogDebug("Media source {Name} is not a local media source", mediaItem.Source.Name);
-            //     return None;
-            // }
-
             return await LoadMovieMetadata(mediaItem, nfoFileName);
         }
 
-        private async Task<Option<EpisodeMetadata>> LoadMetadata(Episode mediaItem, string nfoFileName)
+        private async Task<Option<Tuple<EpisodeMetadata, int>>> LoadMetadata(Episode mediaItem, string nfoFileName)
         {
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
@@ -186,18 +182,10 @@ namespace ErsatzTV.Core.Metadata
                 return None;
             }
 
-            // if (!(mediaItem.Source is LocalMediaSource))
-            // {
-            //     _logger.LogDebug("Media source {Name} is not a local media source", mediaItem.Source.Name);
-            //     return None;
-            // }
-
             return await LoadEpisodeMetadata(mediaItem, nfoFileName);
         }
 
-        private async Task<Option<ShowMetadata>> LoadMetadata(
-            Show televisionShow,
-            string nfoFileName)
+        private async Task<Option<ShowMetadata>> LoadMetadata(Show televisionShow, string nfoFileName)
         {
             if (nfoFileName == null || !File.Exists(nfoFileName))
             {
@@ -235,32 +223,31 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Option<EpisodeMetadata>> LoadEpisodeMetadata(
-            Episode mediaItem,
-            string nfoFileName)
+        private async Task<Option<Tuple<EpisodeMetadata, int>>> LoadEpisodeMetadata(Episode episode, string nfoFileName)
         {
             try
             {
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<TvShowEpisodeNfo> maybeNfo = EpisodeSerializer.Deserialize(fileStream) as TvShowEpisodeNfo;
-                return maybeNfo.Match<Option<EpisodeMetadata>>(
-                    nfo => new EpisodeMetadata
+                return maybeNfo.Match<Option<Tuple<EpisodeMetadata, int>>>(
+                    nfo =>
                     {
-                        MetadataKind = MetadataKind.Sidecar,
-                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
-                        Title = nfo.Title,
-                        ReleaseDate = GetAired(nfo.Aired),
-                        // Episode = nfo.Episode,
-                        // Season = nfo.Season,
-                        // TODO: save episode number somewhere?
-                        Plot = nfo.Plot
+                        var metadata = new EpisodeMetadata
+                        {
+                            MetadataKind = MetadataKind.Sidecar,
+                            DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
+                            Title = nfo.Title,
+                            ReleaseDate = GetAired(nfo.Aired),
+                            Plot = nfo.Plot
+                        };
+                        return Tuple(metadata, nfo.Episode);
                     },
                     None);
             }
             catch (Exception ex)
             {
                 _logger.LogDebug(ex, "Failed to read TV episode nfo metadata from {Path}", nfoFileName);
-                return FallbackMetadataProvider.GetFallbackMetadata(mediaItem);
+                return FallbackMetadataProvider.GetFallbackMetadata(episode);
             }
         }
 
