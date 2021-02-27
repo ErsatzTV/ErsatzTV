@@ -25,7 +25,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public Task<Option<Playout>> Get(int id) =>
-            _dbContext.Playouts.SingleOrDefaultAsync(p => p.Id == id).Map(Optional);
+            _dbContext.Playouts
+                .OrderBy(p => p.Id)
+                .SingleOrDefaultAsync(p => p.Id == id)
+                .Map(Optional);
 
         public async Task<Option<Playout>> GetFull(int id) =>
             await _dbContext.Playouts

@@ -48,12 +48,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(s => s.ShowMetadata)
                 .ToListAsync();
 
-        public Task<Option<Show>> GetShow(int televisionShowId) =>
+        public Task<Option<Show>> GetShow(int showId) =>
             _dbContext.Shows
                 .AsNoTracking()
-                .Filter(s => s.Id == televisionShowId)
+                .Filter(s => s.Id == showId)
                 .Include(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
+                .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
 
@@ -82,21 +83,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(s => s.ShowMetadata)
                 .ToListAsync();
 
-        public Task<Option<Season>> GetSeason(int televisionSeasonId) =>
+        public Task<Option<Season>> GetSeason(int seasonId) =>
             _dbContext.Seasons
                 .AsNoTracking()
                 .Include(s => s.SeasonMetadata)
                 .ThenInclude(sm => sm.Artwork)
                 .Include(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
-                .SingleOrDefaultAsync(s => s.Id == televisionSeasonId)
+                .OrderBy(s => s.Id)
+                .SingleOrDefaultAsync(s => s.Id == seasonId)
                 .Map(Optional);
 
-        public Task<int> GetSeasonCount(int televisionShowId) =>
+        public Task<int> GetSeasonCount(int showId) =>
             _dbContext.Seasons
                 .AsNoTracking()
-                .Where(s => s.ShowId == televisionShowId)
-                .CountAsync();
+                .CountAsync(s => s.ShowId == showId);
 
         public async Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize)
         {
@@ -121,20 +122,20 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public Task<Option<Episode>> GetEpisode(int televisionEpisodeId) =>
+        public Task<Option<Episode>> GetEpisode(int episodeId) =>
             _dbContext.Episodes
                 .AsNoTracking()
                 .Include(e => e.Season)
                 .Include(e => e.EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
-                .SingleOrDefaultAsync(s => s.Id == televisionEpisodeId)
+                .OrderBy(s => s.Id)
+                .SingleOrDefaultAsync(s => s.Id == episodeId)
                 .Map(Optional);
 
-        public Task<int> GetEpisodeCount(int televisionSeasonId) =>
+        public Task<int> GetEpisodeCount(int seasonId) =>
             _dbContext.Episodes
                 .AsNoTracking()
-                .Where(e => e.SeasonId == televisionSeasonId)
-                .CountAsync();
+                .CountAsync(e => e.SeasonId == seasonId);
 
         public Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize) =>
             _dbContext.EpisodeMetadata
@@ -212,6 +213,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
                 .Include(i => i.Statistics)
+                .OrderBy(i => i.Path)
                 .SingleOrDefaultAsync(i => i.Path == path);
 
             return await maybeExisting.Match(

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories
 {
@@ -20,8 +22,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return configElement;
         }
 
-        public async Task<Option<ConfigElement>> Get(ConfigElementKey key) =>
-            await _dbContext.ConfigElements.SingleOrDefaultAsync(ce => ce.Key == key.Key);
+        public Task<Option<ConfigElement>> Get(ConfigElementKey key) =>
+            _dbContext.ConfigElements
+                .OrderBy(ce => ce.Key)
+                .SingleOrDefaultAsync(ce => ce.Key == key.Key)
+                .Map(Optional);
 
         public Task<Option<T>> GetValue<T>(ConfigElementKey key) =>
             Get(key).MapT(ce => (T) Convert.ChangeType(ce.Value, typeof(T)));

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -22,12 +23,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public Task<Option<Channel>> Get(int id) =>
-            _dbContext.Channels.SingleOrDefaultAsync(c => c.Id == id).Map(Optional);
+            _dbContext.Channels
+                .OrderBy(c => c.Id)
+                .SingleOrDefaultAsync(c => c.Id == id)
+                .Map(Optional);
 
         public Task<Option<Channel>> GetByNumber(int number) =>
             _dbContext.Channels
                 .Include(c => c.FFmpegProfile)
                 .ThenInclude(p => p.Resolution)
+                .OrderBy(c => c.Number)
                 .SingleOrDefaultAsync(c => c.Number == number)
                 .Map(Optional);
 

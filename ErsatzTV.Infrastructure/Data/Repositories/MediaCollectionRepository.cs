@@ -30,7 +30,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public Task<Option<Collection>> Get(int id) =>
-            _dbContext.Collections.SingleOrDefaultAsync(c => c.Id == id).Map(Optional);
+            _dbContext.Collections
+                .OrderBy(c => c.Id)
+                .SingleOrDefaultAsync(c => c.Id == id)
+                .Map(Optional);
 
         public Task<Option<Collection>> GetCollectionWithItems(int id) =>
             _dbContext.Collections
@@ -49,6 +52,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(i => (i as Episode).Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
+                .OrderBy(c => c.Id)
                 .SingleOrDefaultAsync(c => c.Id == id)
                 .Map(Optional);
 
@@ -59,17 +63,24 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(i => i.LibraryPath)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Show).ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(c => c.MediaItems)
+                .ThenInclude(i => (i as Season).SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Season).Show)
                 .ThenInclude(s => s.ShowMetadata)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Episode).EpisodeMetadata)
+                .ThenInclude(em => em.Artwork)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Episode).Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
+                .OrderBy(c => c.Id)
                 .SingleOrDefaultAsync(c => c.Id == id)
                 .Map(Optional);
 

@@ -35,6 +35,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await dbContext.Movies
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Artwork)
+                .OrderBy(m => m.Id)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
         }
@@ -45,6 +46,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.LibraryPath)
+                .OrderBy(i => i.Path)
                 .SingleOrDefaultAsync(i => i.Path == path);
 
             return await maybeExisting.Match(
@@ -59,6 +61,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<PlexMovie> maybeExisting = await _dbContext.PlexMovieMediaItems
                 .Include(i => i.MovieMetadata)
                 .Include(i => i.Part)
+                .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
             return await maybeExisting.Match(

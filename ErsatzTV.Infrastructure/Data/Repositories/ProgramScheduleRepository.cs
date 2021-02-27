@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -22,12 +23,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public Task<Option<ProgramSchedule>> Get(int id) =>
-            _dbContext.ProgramSchedules.SingleOrDefaultAsync(s => s.Id == id).Map(Optional);
+            _dbContext.ProgramSchedules
+                .OrderBy(s => s.Id)
+                .SingleOrDefaultAsync(s => s.Id == id)
+                .Map(Optional);
 
         public async Task<Option<ProgramSchedule>> GetWithPlayouts(int id) =>
             await _dbContext.ProgramSchedules
                 .Include(ps => ps.Items)
                 .Include(ps => ps.Playouts)
+                .OrderBy(ps => ps.Id)
                 .SingleOrDefaultAsync(ps => ps.Id == id);
 
         public Task<List<ProgramSchedule>> GetAll() =>

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -17,6 +18,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<MediaItem>> Get(int id) =>
             _dbContext.MediaItems
                 .Include(i => i.LibraryPath)
+                .OrderBy(i => i.Id)
                 .SingleOrDefaultAsync(i => i.Id == id)
                 .Map(Optional);
 
