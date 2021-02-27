@@ -53,7 +53,6 @@ namespace ErsatzTV.Core.Metadata
 
             foreach (string showFolder in allShowFolders)
             {
-                // TODO: check all sources for latest metadata?
                 Either<BaseError, Show> maybeShow =
                     await FindOrCreateShow(libraryPath.Id, showFolder)
                         .BindT(show => UpdateMetadataForShow(show, showFolder))
@@ -64,8 +63,6 @@ namespace ErsatzTV.Core.Metadata
                     _ => Task.FromResult(Unit.Default));
             }
 
-            // TODO: remove this?
-            // await _televisionRepository.DeleteMissingSources(libraryPath.Id, allShowFolders);
             await _televisionRepository.DeleteEmptyShows();
 
             return Unit.Default;

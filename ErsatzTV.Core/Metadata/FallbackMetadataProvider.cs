@@ -21,19 +21,7 @@ namespace ErsatzTV.Core.Metadata
             string fileName = Path.GetFileName(episode.Path);
             var metadata = new EpisodeMetadata
                 { MetadataKind = MetadataKind.Fallback, Title = fileName ?? episode.Path };
-
-            if (fileName != null)
-            {
-                // TODO: ensure local?
-                // if (!(mediaItem.LibraryPath is LocalMediaSource))
-                // {
-                //     return metadata;
-                // }
-
-                return GetEpisodeMetadata(fileName, metadata);
-            }
-
-            return metadata;
+            return fileName != null ? GetEpisodeMetadata(fileName, metadata) : metadata;
         }
 
         public static MovieMetadata GetFallbackMetadata(Movie movie)
@@ -41,18 +29,7 @@ namespace ErsatzTV.Core.Metadata
             string fileName = Path.GetFileName(movie.Path);
             var metadata = new MovieMetadata { MetadataKind = MetadataKind.Fallback, Title = fileName ?? movie.Path };
 
-            if (fileName != null)
-            {
-                // TODO: ensure local?
-                // if (!(mediaItem.Source is LocalMediaSource))
-                // {
-                //     return metadata;
-                // }
-
-                return GetMovieMetadata(fileName, metadata);
-            }
-
-            return metadata;
+            return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
         }
 
         private static EpisodeMetadata GetEpisodeMetadata(string fileName, EpisodeMetadata metadata)

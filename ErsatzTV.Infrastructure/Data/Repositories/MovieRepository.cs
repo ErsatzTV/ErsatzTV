@@ -112,7 +112,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             try
             {
-                // TODO: this should be library path id
                 item.LibraryPathId = library.Paths.Head().Id;
 
                 await _dbContext.PlexMovieMediaItems.AddAsync(item);
