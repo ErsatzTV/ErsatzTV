@@ -11,7 +11,7 @@ namespace ErsatzTV.Application.MediaCards
             new(
                 showMetadata.ShowId,
                 showMetadata.Title,
-                showMetadata.ReleaseDate?.Year.ToString(),
+                showMetadata.Year?.ToString(),
                 showMetadata.SortTitle,
                 GetPoster(showMetadata));
 
@@ -42,7 +42,7 @@ namespace ErsatzTV.Application.MediaCards
             new(
                 movieMetadata.MovieId,
                 movieMetadata.Title,
-                movieMetadata.ReleaseDate?.Year.ToString(),
+                movieMetadata.Year?.ToString(),
                 movieMetadata.SortTitle,
                 GetPoster(movieMetadata));
 

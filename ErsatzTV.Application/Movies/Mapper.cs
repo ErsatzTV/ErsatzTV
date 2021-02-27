@@ -11,7 +11,7 @@ namespace ErsatzTV.Application.Movies
             MovieMetadata metadata = Optional(movie.MovieMetadata).Flatten().Head();
             return new MovieViewModel(
                 metadata.Title,
-                metadata.ReleaseDate?.Year.ToString(),
+                metadata.Year?.ToString(),
                 metadata.Plot,
                 Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
                     .Match(a => a.Path, string.Empty));

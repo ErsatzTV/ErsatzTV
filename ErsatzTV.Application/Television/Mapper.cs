@@ -10,7 +10,7 @@ namespace ErsatzTV.Application.Television
             new(
                 show.Id,
                 show.ShowMetadata.HeadOrNone().Map(m => m.Title).IfNone(string.Empty),
-                show.ShowMetadata.HeadOrNone().Map(m => m.ReleaseDate?.Year.ToString()).IfNone(string.Empty),
+                show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString()).IfNone(string.Empty),
                 show.ShowMetadata.HeadOrNone().Map(m => m.Plot).IfNone(string.Empty),
                 show.ShowMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty));
 
@@ -19,7 +19,7 @@ namespace ErsatzTV.Application.Television
                 season.Id,
                 season.ShowId,
                 season.Show.ShowMetadata.HeadOrNone().Map(m => m.Title).IfNone(string.Empty),
-                season.Show.ShowMetadata.HeadOrNone().Map(m => m.ReleaseDate?.Year.ToString()).IfNone(string.Empty),
+                season.Show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString()).IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}",
                 season.SeasonMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty));
 

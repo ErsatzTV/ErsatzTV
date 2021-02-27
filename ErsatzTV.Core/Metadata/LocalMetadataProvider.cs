@@ -97,6 +97,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.MetadataKind = metadata.MetadataKind;
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
+                    existing.Year = metadata.Year;
                     existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
                 },
                 () =>
@@ -122,6 +123,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.MetadataKind = metadata.MetadataKind;
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
+                    existing.Year = metadata.Year;
                     existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
                 },
                 () =>
@@ -147,6 +149,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.MetadataKind = metadata.MetadataKind;
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
+                    existing.Year = metadata.Year;
                     existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
                 },
                 () =>
@@ -218,7 +221,10 @@ namespace ErsatzTV.Core.Metadata
                         DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                         Title = nfo.Title,
                         Plot = nfo.Plot,
-                        ReleaseDate = new DateTime(nfo.Year, 1, 1)
+                        Outline = nfo.Outline,
+                        Tagline = nfo.Tagline,
+                        Year = nfo.Year,
+                        ReleaseDate = GetAired(nfo.Premiered) ?? new DateTime(nfo.Year, 1, 1)
                     },
                     None);
             }
@@ -270,6 +276,7 @@ namespace ErsatzTV.Core.Metadata
                         MetadataKind = MetadataKind.Sidecar,
                         DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                         Title = nfo.Title,
+                        Year = nfo.Year,
                         ReleaseDate = nfo.Premiered,
                         Plot = nfo.Plot,
                         Outline = nfo.Outline,
@@ -355,6 +362,15 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("plot")]
             public string Plot { get; set; }
+
+            [XmlElement("outline")]
+            public string Outline { get; set; }
+
+            [XmlElement("tagline")]
+            public string Tagline { get; set; }
+
+            [XmlElement("premiered")]
+            public string Premiered { get; set; }
         }
 
         [XmlRoot("episodedetails")]

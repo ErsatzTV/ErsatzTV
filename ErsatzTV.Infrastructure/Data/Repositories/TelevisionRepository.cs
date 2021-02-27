@@ -60,13 +60,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<int> GetShowCount() =>
             _dbContext.ShowMetadata
                 .AsNoTracking()
-                .GroupBy(sm => new { sm.Title, sm.ReleaseDate })
+                .GroupBy(sm => new { sm.Title, sm.Year })
                 .CountAsync();
 
         public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
             _dbContext.ShowMetadata.FromSqlRaw(
                     @"SELECT * FROM ShowMetadata WHERE Id IN
-            (SELECT MIN(Id) FROM ShowMetadata GROUP BY Title, ReleaseDate, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
+            (SELECT MIN(Id) FROM ShowMetadata GROUP BY Title, Year, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
             ORDER BY SortTitle
             LIMIT {0} OFFSET {1}",
                     pageSize,
@@ -104,7 +104,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     @"SELECT m1.ShowId
                 FROM ShowMetadata m1
                 LEFT OUTER JOIN ShowMetadata m2 ON m2.ShowId = @ShowId
-                WHERE m1.Title = m2.Title AND m1.ReleaseDate = m2.ReleaseDate",
+                WHERE m1.Title = m2.Title AND m1.Year = m2.Year",
                     new { ShowId = televisionShowId })
                 .Map(results => results.ToList());
             
@@ -153,7 +153,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public async Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata)
         {
             Option<int> maybeId = await _dbContext.ShowMetadata
-                .Where(s => s.Title == metadata.Title && s.ReleaseDate == metadata.ReleaseDate)
+                .Where(s => s.Title == metadata.Title && s.Year == metadata.Year)
                 .Where(s => s.Show.LibraryPathId == libraryPathId)
                 .SingleOrDefaultAsync()
                 .Map(Optional)

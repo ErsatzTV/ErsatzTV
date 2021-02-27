@@ -128,6 +128,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Title = response.Title,
                 Plot = response.Summary,
                 ReleaseDate = new DateTime(response.Year, 1, 1), // TODO: actual release date?
+                Year = response.Year,
                 Tagline = response.Tagline,
                 DateAdded = DateTime.UtcNow, // TODO: actual date added?
                 DateUpdated = lastWriteTime

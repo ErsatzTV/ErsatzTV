@@ -86,6 +86,7 @@ namespace ErsatzTV.Core.Metadata
                 if (match.Success)
                 {
                     metadata.Title = match.Groups[1].Value;
+                    metadata.Year = int.Parse(match.Groups[2].Value);
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
                 }
             }
@@ -108,6 +109,7 @@ namespace ErsatzTV.Core.Metadata
                 if (match.Success)
                 {
                     metadata.Title = match.Groups[1].Value;
+                    metadata.Year = int.Parse(match.Groups[2].Value);
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
                 }
             }
