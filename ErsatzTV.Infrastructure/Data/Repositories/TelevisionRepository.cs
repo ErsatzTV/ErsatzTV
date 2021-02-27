@@ -150,7 +150,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
-                .OrderBy(em => em.SortTitle)
+                .OrderBy(em => em.Episode.EpisodeNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
