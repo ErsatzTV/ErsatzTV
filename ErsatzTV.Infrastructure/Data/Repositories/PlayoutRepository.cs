@@ -62,9 +62,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<PlayoutItem>> GetPlayoutItems(int playoutId) =>
             _dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
-                .ThenInclude(m => (m as Movie).MovieMetadata)
+                .ThenInclude(mi => (mi as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaItem)
-                .ThenInclude(m => (m as Episode).EpisodeMetadata)
+                .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
+                .ThenInclude(em => em.Artwork)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
 

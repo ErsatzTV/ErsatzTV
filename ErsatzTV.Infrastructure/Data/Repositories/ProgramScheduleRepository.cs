@@ -65,10 +65,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .Include(i => i.Collection)
                         .Include(i => i.MediaItem)
                         .ThenInclude(i => (i as Movie).MovieMetadata)
+                        .ThenInclude(mm => mm.Artwork)
                         .Include(i => i.MediaItem)
-                        .ThenInclude(i => (i as Episode).EpisodeMetadata)
+                        .ThenInclude(i => (i as Season).SeasonMetadata)
+                        .ThenInclude(sm => sm.Artwork)
+                        .Include(i => i.MediaItem)
+                        .ThenInclude(i => (i as Season).Show)
+                        .ThenInclude(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Artwork)
                         .Include(i => i.MediaItem)
                         .ThenInclude(i => (i as Show).ShowMetadata)
+                        .ThenInclude(sm => sm.Artwork)
                         .LoadAsync();
                     return programSchedule.Items;
                 }).Sequence();

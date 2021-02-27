@@ -46,6 +46,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.Shows
                 .AsNoTracking()
                 .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .ToListAsync();
 
         public Task<Option<Show>> GetShow(int showId) =>
@@ -79,8 +80,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<Season>> GetAllSeasons() =>
             _dbContext.Seasons
                 .AsNoTracking()
+                .Include(s => s.SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .Include(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .ToListAsync();
 
         public Task<Option<Season>> GetSeason(int seasonId) =>
