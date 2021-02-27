@@ -1,0 +1,86 @@
+﻿@page "/media/libraries/local/{Id:int}/add"
+@using ErsatzTV.Application.Libraries
+@using ErsatzTV.Application.Libraries.Commands
+@using ErsatzTV.Application.Libraries.Queries
+@using ErsatzTV.Application.MediaSources.Commands
+@inject NavigationManager NavigationManager
+@inject ILogger<LocalLibraryPathEditor> Logger
+@inject ISnackbar Snackbar
+@inject IMediator Mediator
+@inject IEntityLocker Locker
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" Class="mb-4">@_library.Name - Add Local Library Path</MudText>
+    <div style="max-width: 400px;">
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField T="string" Label="Media Kind" Disabled="true" Value="@(Enum.GetName(typeof(LibraryMediaKind), _library.MediaKind))"/>
+                    @* TODO: replace this with a folder picker *@
+                    <MudTextField Label="Path" @bind-Value="_model.Path" For="@(() => _model.Path)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+                        Add Local Library Path
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private readonly LocalLibraryPathEditViewModel _model = new();
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
+
+    private LocalLibraryViewModel _library;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Option<LocalLibraryViewModel> maybeLibrary = await Mediator.Send(new GetLocalLibraryById(Id));
+        maybeLibrary.Match(
+            library => _library = library,
+            () => NavigationManager.NavigateTo("404"));
+    }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            var command = new CreateLocalLibraryPath(_library.Id, _model.Path);
+            Either<BaseError, LocalLibraryPathViewModel> result = await Mediator.Send(command);
+            await result.Match(
+                Left: error =>
+                {
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Unexpected error saving local library path: {Error}", error.Value);
+                    return Task.CompletedTask;
+                },
+                Right: async vm =>
+                {
+                    if (Locker.LockLibrary(_library.Id))
+                    {
+                        await Channel.WriteAsync(new ForceScanLocalLibrary(_library.Id));
+                        NavigationManager.NavigateTo("/media/libraries");
+                    }
+                });
+        }
+    }
+
+
+
+}

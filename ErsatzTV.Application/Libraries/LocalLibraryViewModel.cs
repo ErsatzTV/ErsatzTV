@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Application.Libraries
+﻿using ErsatzTV.Core.Domain;
+
+namespace ErsatzTV.Application.Libraries
 {
-    public record LocalLibraryViewModel(int Id, string Name, string MediaKind);
+    public record LocalLibraryViewModel(int Id, string Name, LibraryMediaKind MediaKind);
 }

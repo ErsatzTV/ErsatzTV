@@ -22,11 +22,28 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
+        public async Task<LibraryPath> Add(LibraryPath libraryPath)
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            await context.LibraryPaths.AddAsync(libraryPath);
+            await context.SaveChangesAsync();
+            return libraryPath;
+        }
+
         public Task<Option<Library>> Get(int libraryId)
         {
             using TvContext context = _dbContextFactory.CreateDbContext();
             return context.Libraries
                 .Include(l => l.Paths)
+                .OrderBy(l => l.Id)
+                .SingleOrDefaultAsync(l => l.Id == libraryId)
+                .Map(Optional);
+        }
+
+        public Task<Option<LocalLibrary>> GetLocal(int libraryId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.LocalLibraries
                 .OrderBy(l => l.Id)
                 .SingleOrDefaultAsync(l => l.Id == libraryId)
                 .Map(Optional);
