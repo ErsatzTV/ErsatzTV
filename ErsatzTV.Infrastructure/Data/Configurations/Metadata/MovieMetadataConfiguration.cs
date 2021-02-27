@@ -9,7 +9,7 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<MovieMetadata> builder)
         {
             builder.ToTable("MovieMetadata");
-            
+
             builder.HasMany(mm => mm.Artwork)
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);

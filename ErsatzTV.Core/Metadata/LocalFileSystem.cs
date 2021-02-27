@@ -28,7 +28,7 @@ namespace ErsatzTV.Core.Metadata
 
         public Unit CopyFile(string source, string destination)
         {
-            var directory = Path.GetDirectoryName(destination);
+            string? directory = Path.GetDirectoryName(destination);
             if (!Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);

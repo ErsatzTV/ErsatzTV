@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

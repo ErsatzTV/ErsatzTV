@@ -89,7 +89,7 @@ namespace ErsatzTV.Core.Metadata
             DateTime lastWriteTime = _localFileSystem.GetLastWriteTime(artworkFile);
 
             metadata.Artwork ??= new List<Artwork>();
-            
+
             Option<Artwork> maybePoster =
                 metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind);
 

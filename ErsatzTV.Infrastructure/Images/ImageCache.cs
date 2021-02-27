@@ -22,7 +22,7 @@ namespace ErsatzTV.Infrastructure.Images
             await using var inStream = new MemoryStream(imageBuffer);
             using var image = await Image.LoadAsync(inStream);
 
-            Size size = new Size { Height = height };
+            var size = new Size { Height = height };
 
             image.Mutate(
                 i => i.Resize(
@@ -37,7 +37,7 @@ namespace ErsatzTV.Infrastructure.Images
 
             return outStream.ToArray();
         }
-        
+
         public async Task<Either<BaseError, string>> ResizeAndSaveImage(byte[] imageBuffer, int? height, int? width)
         {
             await using var inStream = new MemoryStream(imageBuffer);

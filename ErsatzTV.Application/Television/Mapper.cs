@@ -31,11 +31,11 @@ namespace ErsatzTV.Application.Television
                 episode.EpisodeMetadata.HeadOrNone().Map(m => m.Title).IfNone(string.Empty),
                 episode.EpisodeMetadata.HeadOrNone().Map(m => m.Plot).IfNone(string.Empty),
                 episode.EpisodeMetadata.HeadOrNone().Map(GetThumbnail).IfNone(string.Empty));
-        
+
         private static string GetPoster(Metadata metadata) =>
             Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
                 .Match(a => a.Path, string.Empty);
-        
+
         private static string GetThumbnail(Metadata metadata) =>
             Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail))
                 .Match(a => a.Path, string.Empty);

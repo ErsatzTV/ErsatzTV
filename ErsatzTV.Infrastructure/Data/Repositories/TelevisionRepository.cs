@@ -108,7 +108,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE m1.Title = m2.Title AND m1.Year = m2.Year",
                     new { ShowId = televisionShowId })
                 .Map(results => results.ToList());
-            
+
             return await _dbContext.Seasons
                 .AsNoTracking()
                 .Where(s => showIds.Contains(s.ShowId))
@@ -207,7 +207,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 () => AddSeason(show, path, seasonNumber));
         }
 
-        public async Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path)
+        public async Task<Either<BaseError, Episode>> GetOrAddEpisode(
+            Season season,
+            LibraryPath libraryPath,
+            string path)
         {
             Option<Episode> maybeExisting = await _dbContext.Episodes
                 .Include(i => i.EpisodeMetadata)

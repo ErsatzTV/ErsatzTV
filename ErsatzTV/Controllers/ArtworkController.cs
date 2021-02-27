@@ -26,7 +26,7 @@ namespace ErsatzTV.Controllers
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));
         }
-        
+
         [HttpGet("/artwork/thumbnails/{fileName}")]
         public async Task<IActionResult> GetThumbnail(string fileName)
         {
