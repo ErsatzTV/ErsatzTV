@@ -11,6 +11,9 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
             builder.ToTable("MediaItem");
 
             builder.OwnsOne(c => c.Statistics).WithOwner();
+
+            builder.HasIndex(i => i.Path)
+                .IsUnique();
         }
     }
 }
