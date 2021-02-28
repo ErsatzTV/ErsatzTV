@@ -55,8 +55,8 @@ namespace ErsatzTV.Core.Iptv
             {
                 foreach (PlayoutItem playoutItem in channel.Playouts.Collect(p => p.Items).OrderBy(i => i.Start))
                 {
-                    string start = playoutItem.Start.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
-                    string stop = playoutItem.Finish.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                    string start = playoutItem.StartOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                    string stop = playoutItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
 
                     string title = playoutItem.MediaItem switch
                     {

@@ -42,7 +42,7 @@ namespace ErsatzTV.Core.Iptv
                 };
 
                 sb.AppendLine(
-                    $"#EXTINF:0 tvg-id=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"ErsatzTV\", {channel.Name}");
+                    $"#EXTINF:0 tvg-id=\"{channel.Number}\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"ErsatzTV\", {channel.Name}");
                 sb.AppendLine($"{_scheme}://{_host}/iptv/channel/{channel.Number}.{format}");
             }
 
