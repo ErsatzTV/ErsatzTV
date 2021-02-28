@@ -140,7 +140,8 @@ namespace ErsatzTV
             SqlMapper.AddTypeHandler(new GuidHandler());
             SqlMapper.AddTypeHandler(new TimeSpanHandler());
 
-            services.AddDbContext<LogContext>(options => options.UseSqlite(connectionString));
+            services.AddDbContext<LogContext>(
+                options => options.UseSqlite($"Data Source={FileSystemLayout.LogDatabasePath}"));
 
             services.AddMediatR(typeof(GetAllChannels).Assembly);
 
