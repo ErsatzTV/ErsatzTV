@@ -24,6 +24,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<Option<Channel>> Get(int id) =>
             _dbContext.Channels
+                .Include(c => c.Artwork)
                 .OrderBy(c => c.Id)
                 .SingleOrDefaultAsync(c => c.Id == id)
                 .Map(Optional);
@@ -36,7 +37,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync(c => c.Number == number)
                 .Map(Optional);
 
-        public Task<List<Channel>> GetAll() => _dbContext.Channels.ToListAsync();
+        public Task<List<Channel>> GetAll() =>
+            _dbContext.Channels
+                .Include(c => c.Artwork)
+                .ToListAsync();
 
         public Task<List<Channel>> GetAllForGuide() =>
             _dbContext.Channels

@@ -58,9 +58,6 @@ namespace ErsatzTV.Core.Tests.Metadata
                         });
 
                 _imageCache = new Mock<IImageCache>();
-                _imageCache.Setup(
-                        x => x.ResizeAndSaveImage(FakeLocalFileSystem.TestBytes, It.IsAny<int?>(), It.IsAny<int?>()))
-                    .Returns(Right<BaseError, string>("poster").AsTask());
             }
 
             private Mock<IMovieRepository> _movieRepository;

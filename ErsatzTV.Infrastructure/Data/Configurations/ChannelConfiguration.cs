@@ -17,6 +17,10 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .WithOne(p => p.Channel)
                 .HasForeignKey(p => p.ChannelId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(c => c.Artwork)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

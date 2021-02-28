@@ -37,7 +37,7 @@
             <MudTd DataLabel="Logo">
                 @if (!string.IsNullOrWhiteSpace(context.Logo))
                 {
-                    <MudElement HtmlTag="img" src="@($"iptv/images/{context.Logo}")" Style="max-height: 50px"/>
+                    <MudElement HtmlTag="img" src="@($"iptv/logos/{context.Logo}")" Style="max-height: 50px"/>
                 }
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>

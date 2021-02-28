@@ -44,42 +44,28 @@ namespace ErsatzTV.Infrastructure.Images
             return outStream.ToArray();
         }
 
-        public async Task<Either<BaseError, string>> ResizeAndSaveImage(byte[] imageBuffer, int? height, int? width)
-        {
-            await using var inStream = new MemoryStream(imageBuffer);
-            using var image = await Image.LoadAsync(inStream);
-
-            Size size = height.HasValue ? new Size { Height = height.Value } : new Size { Width = width.Value };
-
-            image.Mutate(
-                i => i.Resize(
-                    new ResizeOptions
-                    {
-                        Mode = ResizeMode.Max,
-                        Size = size
-                    }));
-
-            await using var outStream = new MemoryStream();
-            await image.SaveAsync(outStream, new JpegEncoder { Quality = 90 });
-
-            return await SaveImage(outStream.ToArray());
-        }
-
-        public async Task<Either<BaseError, string>> SaveImage(byte[] imageBuffer)
+        public async Task<Either<BaseError, string>> SaveArtworkToCache(byte[] imageBuffer, ArtworkKind artworkKind)
         {
             try
             {
                 byte[] hash = Crypto.ComputeHash(imageBuffer);
                 string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
-
-                string fileName = Path.Combine(FileSystemLayout.ImageCacheFolder, hex);
-
-                if (!Directory.Exists(FileSystemLayout.ImageCacheFolder))
+                string subfolder = hex.Substring(0, 2);
+                string baseFolder = artworkKind switch
                 {
-                    Directory.CreateDirectory(FileSystemLayout.ImageCacheFolder);
+                    ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
+                    ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
+                    ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
+                    _ => FileSystemLayout.ImageCacheFolder
+                };
+                string target = Path.Combine(baseFolder, hex);
+
+                if (!Directory.Exists(baseFolder))
+                {
+                    Directory.CreateDirectory(baseFolder);
                 }
 
-                await File.WriteAllBytesAsync(fileName, imageBuffer);
+                await File.WriteAllBytesAsync(target, imageBuffer);
                 return hex;
             }
             catch (Exception ex)
@@ -98,6 +84,7 @@ namespace ErsatzTV.Infrastructure.Images
             {
                 ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
                 ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
+                ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
                 _ => FileSystemLayout.ImageCacheFolder
             };
             string target = Path.Combine(baseFolder, hex);

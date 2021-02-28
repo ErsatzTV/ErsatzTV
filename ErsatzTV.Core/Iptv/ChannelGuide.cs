@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using ErsatzTV.Core.Domain;
+using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Iptv
@@ -41,11 +42,13 @@ namespace ErsatzTV.Core.Iptv
                 xml.WriteEndElement(); // display-name
 
                 xml.WriteStartElement("icon");
-                xml.WriteAttributeString(
-                    "src",
-                    !string.IsNullOrWhiteSpace(channel.Logo)
-                        ? $"{_scheme}://{_host}/iptv/images/{channel.Logo}"
-                        : $"{_scheme}://{_host}/images/ersatztv-500.png");
+                string logo = Optional(channel.Artwork).Flatten()
+                    .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                    .HeadOrNone()
+                    .Match(
+                        artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}",
+                        () => $"{_scheme}://{_host}/images/ersatztv-500.png");
+                xml.WriteAttributeString("src", logo);
                 xml.WriteEndElement(); // icon
 
                 xml.WriteEndElement(); // channel
