@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
@@ -68,6 +69,7 @@ namespace ErsatzTV.Extensions
                     .Map(a => a.Path)
                     .ToList();
 
+                ILocalFileSystem localFileSystem = provider.GetRequiredService<ILocalFileSystem>();
                 foreach (string logo in logos)
                 {
                     string legacyPath = Path.Combine(FileSystemLayout.LegacyImageCacheFolder, logo);
@@ -75,7 +77,7 @@ namespace ErsatzTV.Extensions
                     {
                         string subfolder = logo.Substring(0, 2);
                         string newPath = Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder, logo);
-                        File.Copy(legacyPath, newPath, true);
+                        localFileSystem.CopyFile(legacyPath, newPath);
                     }
                 }
 
