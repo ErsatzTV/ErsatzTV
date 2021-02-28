@@ -47,16 +47,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now)
         {
-            var p1 = new SqliteParameter("channelId", channelId);
-            var p2 = new SqliteParameter("now", now.UtcDateTime);
             return await _dbContext.PlayoutItems
-                .FromSqlRaw(
-                    @"SELECT i.* FROM PlayoutItem i
-                    INNER JOIN Playout p ON i.PlayoutId = p.id
-                    WHERE p.ChannelId = @channelId AND i.Start <= @now AND i.Finish > @now",
-                    p1,
-                    p2)
+                .Where(pi => pi.Playout.ChannelId == channelId)
+                .Where(pi => pi.Start <= now.UtcDateTime && pi.Finish > now.UtcDateTime)
                 .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Movie).MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .AsNoTracking()
                 .SingleOrDefaultAsync();
         }
