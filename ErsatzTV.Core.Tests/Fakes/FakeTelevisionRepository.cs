@@ -51,7 +51,7 @@ namespace ErsatzTV.Core.Tests.Fakes
             AddShow(int libraryPathId, string showFolder, ShowMetadata metadata) =>
             throw new NotSupportedException();
 
-        public Task<Either<BaseError, Season>> GetOrAddSeason(Show show, string path, int seasonNumber) =>
+        public Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber) =>
             throw new NotSupportedException();
 
         public Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path) =>

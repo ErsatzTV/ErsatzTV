@@ -181,6 +181,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             try
             {
+                metadata.DateAdded = DateTime.UtcNow;
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
@@ -199,7 +200,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        public async Task<Either<BaseError, Season>> GetOrAddSeason(Show show, string path, int seasonNumber)
+        public async Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber)
         {
             Option<Season> maybeExisting = await _dbContext.Seasons
                 .Include(s => s.SeasonMetadata)
@@ -208,7 +209,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 season => Right<BaseError, Season>(season).AsTask(),
-                () => AddSeason(show, path, seasonNumber));
+                () => AddSeason(show, libraryPathId, seasonNumber));
         }
 
         public async Task<Either<BaseError, Episode>> GetOrAddEpisode(
@@ -266,12 +267,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(e => e.SeasonId == seasonId)
                 .ToListAsync();
 
-        private async Task<Either<BaseError, Season>> AddSeason(Show show, string path, int seasonNumber)
+        private async Task<Either<BaseError, Season>> AddSeason(Show show, int libraryPathId, int seasonNumber)
         {
             try
             {
                 var season = new Season
                 {
+                    LibraryPathId = libraryPathId,
                     ShowId = show.Id,
                     SeasonNumber = seasonNumber,
                     Episodes = new List<Episode>(),

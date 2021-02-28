@@ -93,7 +93,7 @@ namespace ErsatzTV.Core.Metadata
                     async seasonNumber =>
                     {
                         Either<BaseError, Season> maybeSeason = await _televisionRepository
-                            .GetOrAddSeason(show, seasonFolder, seasonNumber)
+                            .GetOrAddSeason(show, libraryPath.Id, seasonNumber)
                             .BindT(season => UpdatePoster(season, seasonFolder));
 
                         await maybeSeason.Match(
