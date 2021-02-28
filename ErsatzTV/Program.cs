@@ -34,6 +34,7 @@ namespace ErsatzTV
                 await CreateHostBuilder(args)
                     .Build()
                     .SeedDatabase()
+                    .CleanCacheFolder()
                     .RunAsync();
                 return 0;
             }
