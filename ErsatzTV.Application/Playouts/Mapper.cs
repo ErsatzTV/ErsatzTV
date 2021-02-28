@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Playouts
 {
@@ -38,7 +39,8 @@ namespace ErsatzTV.Application.Playouts
             MediaVersion version = mediaItem switch
             {
                 Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head()
+                Episode e => e.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
             };
 
             return string.Format(

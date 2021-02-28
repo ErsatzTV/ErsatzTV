@@ -71,7 +71,8 @@ namespace ErsatzTV.Core.Metadata
                 MediaVersion version = mediaItem switch
                 {
                     Movie m => m.MediaVersions.Head(),
-                    Episode e => e.MediaVersions.Head()
+                    Episode e => e.MediaVersions.Head(),
+                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                 };
 
                 string path = version.MediaFiles.Head().Path;

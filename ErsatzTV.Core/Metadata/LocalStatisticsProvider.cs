@@ -36,7 +36,8 @@ namespace ErsatzTV.Core.Metadata
                 string filePath = mediaItem switch
                 {
                     Movie m => m.MediaVersions.Head().MediaFiles.Head().Path,
-                    Episode e => e.MediaVersions.Head().MediaFiles.Head().Path
+                    Episode e => e.MediaVersions.Head().MediaFiles.Head().Path,
+                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                 };
 
                 FFprobe ffprobe = await GetProbeOutput(ffprobePath, filePath);
@@ -55,7 +56,8 @@ namespace ErsatzTV.Core.Metadata
             MediaVersion mediaItemVersion = mediaItem switch
             {
                 Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head()
+                Episode e => e.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
             };
 
             bool durationChange = mediaItemVersion.Duration != version.Duration;

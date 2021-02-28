@@ -5,6 +5,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Plex
 {
@@ -67,10 +68,10 @@ namespace ErsatzTV.Core.Plex
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, PlexMovie>> UpdateIfNeeded(PlexMovie plexMovie) =>
+        private Task<Either<BaseError, PlexMovie>> UpdateIfNeeded(PlexMovie plexMovie) =>
             // .BindT(movie => UpdateStatistics(movie, ffprobePath).MapT(_ => movie))
             //     .BindT(UpdateMetadata)
             //     .BindT(UpdatePoster);
-            plexMovie;
+            Right<BaseError, PlexMovie>(plexMovie).AsTask();
     }
 }

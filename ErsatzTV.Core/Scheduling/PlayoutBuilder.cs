@@ -147,7 +147,8 @@ namespace ErsatzTV.Core.Scheduling
                         MediaVersion version = mediaItem switch
                         {
                             Movie m => m.MediaVersions.Head(),
-                            Episode e => e.MediaVersions.Head()
+                            Episode e => e.MediaVersions.Head(),
+                            _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                         };
 
                         var playoutItem = new PlayoutItem
@@ -195,7 +196,8 @@ namespace ErsatzTV.Core.Scheduling
                                         MediaVersion peekVersion = peekMediaItem switch
                                         {
                                             Movie m => m.MediaVersions.Head(),
-                                            Episode e => e.MediaVersions.Head()
+                                            Episode e => e.MediaVersions.Head(),
+                                            _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                                         };
 
                                         ProgramScheduleItem peekScheduleItem =
@@ -227,7 +229,8 @@ namespace ErsatzTV.Core.Scheduling
                                         MediaVersion peekVersion = peekMediaItem switch
                                         {
                                             Movie m => m.MediaVersions.Head(),
-                                            Episode e => e.MediaVersions.Head()
+                                            Episode e => e.MediaVersions.Head(),
+                                            _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                                         };
 
                                         // remember when we need to finish this duration item

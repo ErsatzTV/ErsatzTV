@@ -21,7 +21,8 @@ namespace ErsatzTV.Core.FFmpeg
             MediaVersion version = item.MediaItem switch
             {
                 Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head()
+                Episode e => e.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(item))
             };
 
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(

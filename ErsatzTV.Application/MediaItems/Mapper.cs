@@ -48,7 +48,8 @@ namespace ErsatzTV.Application.MediaItems
             MediaVersion version = mediaItem switch
             {
                 Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head()
+                Episode e => e.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
             };
 
             return string.Format(
@@ -59,12 +60,6 @@ namespace ErsatzTV.Application.MediaItems
         // TODO: fix this when search is reimplemented
         private static string GetLibraryName(MediaItem item) =>
             "Library Name";
-
-        // source switch
-        // {
-        //     LocalMediaSource lms => "Local Media Source",
-        //     _ => "unknown source"
-        // };
 
         public static NamedMediaItemViewModel ProjectToViewModel(Show show) =>
             new(show.Id, show.ShowMetadata.HeadOrNone().Map(sm => $"{sm?.Title} ({sm?.Year})").IfNone("???"));
