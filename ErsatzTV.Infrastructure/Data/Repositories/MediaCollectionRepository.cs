@@ -174,6 +174,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await _dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
+                .Include(e => e.Season)
                 .Filter(e => ids.Contains(e.Id))
                 .ToListAsync();
         }
@@ -190,6 +191,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await _dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
+                .Include(e => e.Season)
                 .Filter(e => ids.Contains(e.Id))
                 .ToListAsync();
         }
@@ -205,6 +207,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await _dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
+                .Include(e => e.Season)
                 .Filter(e => ids.Contains(e.Id))
                 .ToListAsync();
         }
