@@ -218,7 +218,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                _logger.LogDebug(ex, "Failed to read TV show nfo metadata from {Path}", nfoFileName);
+                _logger.LogInformation(ex, "Failed to read TV show nfo metadata from {Path}", nfoFileName);
                 return None;
             }
         }
@@ -246,7 +246,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                _logger.LogDebug(ex, "Failed to read TV episode nfo metadata from {Path}", nfoFileName);
+                _logger.LogInformation(ex, "Failed to read TV episode nfo metadata from {Path}", nfoFileName);
                 return FallbackMetadataProvider.GetFallbackMetadata(episode);
             }
         }
@@ -273,7 +273,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                _logger.LogDebug(ex, "Failed to read Movie nfo metadata from {Path}", nfoFileName);
+                _logger.LogInformation(ex, "Failed to read Movie nfo metadata from {Path}", nfoFileName);
                 return FallbackMetadataProvider.GetFallbackMetadata(mediaItem);
             }
         }
