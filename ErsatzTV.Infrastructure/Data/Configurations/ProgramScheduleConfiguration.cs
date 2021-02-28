@@ -20,7 +20,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 
             builder.HasMany(ps => ps.Playouts)
                 .WithOne(p => p.ProgramSchedule)
-                .HasForeignKey(p => p.ProgramScheduleId);
+                .HasForeignKey(p => p.ProgramScheduleId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

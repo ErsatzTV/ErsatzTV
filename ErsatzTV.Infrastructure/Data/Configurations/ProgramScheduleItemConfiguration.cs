@@ -13,11 +13,13 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
             builder.HasOne(i => i.Collection)
                 .WithMany()
                 .HasForeignKey(i => i.CollectionId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
 
             builder.HasOne(i => i.MediaItem)
                 .WithMany()
                 .HasForeignKey(i => i.MediaItemId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
         }
     }

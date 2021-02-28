@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 
@@ -45,9 +44,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(p => p.Id) // https://github.com/dotnet/efcore/issues/22579#issuecomment-694772289
                 .SingleOrDefaultAsync(p => p.Id == id);
 
-        public async Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now)
-        {
-            return await _dbContext.PlayoutItems
+        public async Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now) =>
+            await _dbContext.PlayoutItems
                 .Where(pi => pi.Playout.ChannelId == channelId)
                 .Where(pi => pi.Start <= now.UtcDateTime && pi.Finish > now.UtcDateTime)
                 .Include(i => i.MediaItem)
@@ -58,7 +56,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.MediaFiles)
                 .AsNoTracking()
                 .SingleOrDefaultAsync();
-        }
 
         public Task<List<PlayoutItem>> GetPlayoutItems(int playoutId) =>
             _dbContext.PlayoutItems

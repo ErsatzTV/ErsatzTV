@@ -15,10 +15,12 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .UsingEntity<CollectionItem>(
                     j => j.HasOne(ci => ci.MediaItem)
                         .WithMany(mi => mi.CollectionItems)
-                        .HasForeignKey(ci => ci.MediaItemId),
+                        .HasForeignKey(ci => ci.MediaItemId)
+                        .OnDelete(DeleteBehavior.Cascade),
                     j => j.HasOne(ci => ci.Collection)
                         .WithMany(c => c.CollectionItems)
-                        .HasForeignKey(ci => ci.CollectionId),
+                        .HasForeignKey(ci => ci.CollectionId)
+                        .OnDelete(DeleteBehavior.Cascade),
                     j => j.HasKey(ci => new { ci.CollectionId, ci.MediaItemId }));
         }
     }
