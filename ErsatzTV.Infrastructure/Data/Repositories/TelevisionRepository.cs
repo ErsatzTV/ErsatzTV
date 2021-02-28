@@ -219,9 +219,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<Episode> maybeExisting = await _dbContext.Episodes
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
-                .Include(i => i.Statistics)
-                .OrderBy(i => i.Path)
-                .SingleOrDefaultAsync(i => i.Path == path);
+                .Include(i => i.MediaVersions)
+                .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
+                .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
             return await maybeExisting.Match(
                 episode => Right<BaseError, Episode>(episode).AsTask(),
@@ -268,7 +268,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 var season = new Season
                 {
                     ShowId = show.Id,
-                    Path = path,
                     SeasonNumber = seasonNumber,
                     Episodes = new List<Episode>(),
                     SeasonMetadata = new List<SeasonMetadata>()
@@ -291,8 +290,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     LibraryPathId = libraryPathId,
                     SeasonId = season.Id,
-                    Path = path,
-                    EpisodeMetadata = new List<EpisodeMetadata>()
+                    EpisodeMetadata = new List<EpisodeMetadata>(),
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = path }
+                            }
+                        }
+                    }
                 };
                 await _dbContext.Episodes.AddAsync(episode);
                 await _dbContext.SaveChangesAsync();

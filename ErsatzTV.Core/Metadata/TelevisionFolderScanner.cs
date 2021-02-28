@@ -188,7 +188,8 @@ namespace ErsatzTV.Core.Metadata
                     {
                         if (!Optional(episode.EpisodeMetadata).Flatten().Any())
                         {
-                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", episode.Path);
+                            string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
                             await _localMetadataProvider.RefreshFallbackMetadata(episode);
                         }
                     });
@@ -280,9 +281,12 @@ namespace ErsatzTV.Core.Metadata
             Optional(Path.Combine(showFolder, "tvshow.nfo"))
                 .Filter(s => _localFileSystem.FileExists(s));
 
-        private Option<string> LocateNfoFile(Episode episode) =>
-            Optional(Path.ChangeExtension(episode.Path, "nfo"))
+        private Option<string> LocateNfoFile(Episode episode)
+        {
+            string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+            return Optional(Path.ChangeExtension(path, "nfo"))
                 .Filter(s => _localFileSystem.FileExists(s));
+        }
 
         private Option<string> LocatePosterForShow(string showFolder) =>
             ImageFileExtensions
@@ -302,9 +306,10 @@ namespace ErsatzTV.Core.Metadata
 
         private Option<string> LocateThumbnail(Episode episode)
         {
-            string folder = Path.GetDirectoryName(episode.Path) ?? string.Empty;
+            string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+            string folder = Path.GetDirectoryName(path) ?? string.Empty;
             return ImageFileExtensions
-                .Map(ext => Path.GetFileNameWithoutExtension(episode.Path) + $"-thumb.{ext}")
+                .Map(ext => Path.GetFileNameWithoutExtension(path) + $"-thumb.{ext}")
                 .Map(f => Path.Combine(folder, f))
                 .Filter(f => _localFileSystem.FileExists(f))
                 .HeadOrNone();

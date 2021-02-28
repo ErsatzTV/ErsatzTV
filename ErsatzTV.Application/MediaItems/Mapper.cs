@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.MediaItems
@@ -7,10 +6,7 @@ namespace ErsatzTV.Application.MediaItems
     internal static class Mapper
     {
         internal static MediaItemViewModel ProjectToViewModel(MediaItem mediaItem) =>
-            new(
-                mediaItem.Id,
-                mediaItem.LibraryPathId,
-                mediaItem.Path);
+            new(mediaItem.Id, mediaItem.LibraryPathId);
 
         internal static MediaItemSearchResultViewModel ProjectToSearchViewModel(MediaItem mediaItem) =>
             mediaItem switch
@@ -42,15 +38,23 @@ namespace ErsatzTV.Application.MediaItems
             {
                 Episode e => e.EpisodeMetadata.HeadOrNone()
                     .Map(em => $"{em.Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}")
-                    .IfNone(Path.GetFileName(e.Path)),
-                Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone(Path.GetFileName(m.Path)),
+                    .IfNone("[unknown episode]"),
+                Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]"),
                 _ => string.Empty
             };
 
-        private static string GetDisplayDuration(MediaItem mediaItem) =>
-            string.Format(
-                mediaItem.Statistics.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
-                mediaItem.Statistics.Duration);
+        private static string GetDisplayDuration(MediaItem mediaItem)
+        {
+            MediaVersion version = mediaItem switch
+            {
+                Movie m => m.MediaVersions.Head(),
+                Episode e => e.MediaVersions.Head()
+            };
+
+            return string.Format(
+                version.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
+                version.Duration);
+        }
 
         // TODO: fix this when search is reimplemented
         private static string GetLibraryName(MediaItem item) =>

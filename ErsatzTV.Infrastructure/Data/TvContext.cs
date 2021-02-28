@@ -22,6 +22,8 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<LibraryPath> LibraryPaths { get; set; }
         public DbSet<PlexLibrary> PlexLibraries { get; set; }
         public DbSet<MediaItem> MediaItems { get; set; }
+        public DbSet<MediaVersion> MediaVersions { get; set; }
+        public DbSet<MediaFile> MediaFiles { get; set; }
         public DbSet<Movie> Movies { get; set; }
         public DbSet<MovieMetadata> MovieMetadata { get; set; }
         public DbSet<Show> Shows { get; set; }

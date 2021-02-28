@@ -111,7 +111,8 @@ namespace ErsatzTV.Core.Metadata
                     {
                         if (!Optional(movie.MovieMetadata).Flatten().Any())
                         {
-                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", movie.Path);
+                            string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
                             await _localMetadataProvider.RefreshFallbackMetadata(movie);
                         }
                     });
@@ -148,8 +149,9 @@ namespace ErsatzTV.Core.Metadata
 
         private Option<string> LocateNfoFile(Movie movie)
         {
-            string movieAsNfo = Path.ChangeExtension(movie.Path, "nfo");
-            string movieNfo = Path.Combine(Path.GetDirectoryName(movie.Path) ?? string.Empty, "movie.nfo");
+            string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+            string movieAsNfo = Path.ChangeExtension(path, "nfo");
+            string movieNfo = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, "movie.nfo");
             return Seq.create(movieAsNfo, movieNfo)
                 .Filter(s => _localFileSystem.FileExists(s))
                 .HeadOrNone();
@@ -157,9 +159,10 @@ namespace ErsatzTV.Core.Metadata
 
         private Option<string> LocatePoster(Movie movie)
         {
-            string folder = Path.GetDirectoryName(movie.Path) ?? string.Empty;
+            string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+            string folder = Path.GetDirectoryName(path) ?? string.Empty;
             IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(
-                    ext => new[] { $"poster.{ext}", Path.GetFileNameWithoutExtension(movie.Path) + $"-poster.{ext}" })
+                    ext => new[] { $"poster.{ext}", Path.GetFileNameWithoutExtension(path) + $"-poster.{ext}" })
                 .Map(f => Path.Combine(folder, f));
             Option<string> result = possibleMoviePosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
             return result;

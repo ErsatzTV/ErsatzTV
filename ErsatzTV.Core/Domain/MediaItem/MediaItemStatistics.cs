@@ -11,7 +11,7 @@ namespace ErsatzTV.Core.Domain
         public string DisplayAspectRatio { get; set; }
         public string VideoCodec { get; set; }
         public string AudioCodec { get; set; }
-        public VideoScanType VideoScanType { get; set; }
+        public VideoScanKind VideoScanType { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
     }

@@ -6,7 +6,8 @@ namespace ErsatzTV.Core.Domain
     public class MediaItem
     {
         public int Id { get; set; }
-        public MediaItemStatistics Statistics { get; set; }
+
+        // public MediaItemStatistics Statistics { get; set; }
         public DateTime? LastWriteTime { get; set; }
 
         public int LibraryPathId { get; set; }
@@ -18,7 +19,8 @@ namespace ErsatzTV.Core.Domain
         public int TelevisionEpisodeId { get; set; }
 
         public List<Collection> Collections { get; set; }
+
         public List<CollectionItem> CollectionItems { get; set; }
-        public string Path { get; set; }
+        // public string Path { get; set; }
     }
 }

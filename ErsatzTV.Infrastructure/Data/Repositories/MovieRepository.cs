@@ -46,8 +46,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.LibraryPath)
-                .OrderBy(i => i.Path)
-                .SingleOrDefaultAsync(i => i.Path == path);
+                .Include(i => i.MediaVersions)
+                .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
+                .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
             return await maybeExisting.Match(
                 mediaItem => Right<BaseError, Movie>(mediaItem).AsTask(),
@@ -94,7 +95,20 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             try
             {
-                var movie = new Movie { LibraryPathId = libraryPathId, Path = path };
+                var movie = new Movie
+                {
+                    LibraryPathId = libraryPathId,
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = path }
+                            }
+                        }
+                    }
+                };
                 await _dbContext.Movies.AddAsync(movie);
                 await _dbContext.SaveChangesAsync();
                 await _dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();

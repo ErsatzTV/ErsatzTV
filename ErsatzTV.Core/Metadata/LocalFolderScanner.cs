@@ -68,11 +68,17 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                if (mediaItem.Statistics is null ||
-                    (mediaItem.Statistics.LastWriteTime ?? DateTime.MinValue) <
-                    _localFileSystem.GetLastWriteTime(mediaItem.Path))
+                MediaVersion version = mediaItem switch
                 {
-                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", mediaItem.Path);
+                    Movie m => m.MediaVersions.Head(),
+                    Episode e => e.MediaVersions.Head()
+                };
+
+                string path = version.MediaFiles.Head().Path;
+
+                if (version.DateUpdated < _localFileSystem.GetLastWriteTime(path))
+                {
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", path);
                     await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
                 }
 

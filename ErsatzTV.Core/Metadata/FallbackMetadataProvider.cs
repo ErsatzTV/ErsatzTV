@@ -19,16 +19,18 @@ namespace ErsatzTV.Core.Metadata
 
         public static Tuple<EpisodeMetadata, int> GetFallbackMetadata(Episode episode)
         {
-            string fileName = Path.GetFileName(episode.Path);
+            string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+            string fileName = Path.GetFileName(path);
             var metadata = new EpisodeMetadata
-                { MetadataKind = MetadataKind.Fallback, Title = fileName ?? episode.Path };
+                { MetadataKind = MetadataKind.Fallback, Title = fileName ?? path };
             return fileName != null ? GetEpisodeMetadata(fileName, metadata) : Tuple(metadata, 0);
         }
 
         public static MovieMetadata GetFallbackMetadata(Movie movie)
         {
-            string fileName = Path.GetFileName(movie.Path);
-            var metadata = new MovieMetadata { MetadataKind = MetadataKind.Fallback, Title = fileName ?? movie.Path };
+            string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+            string fileName = Path.GetFileName(path);
+            var metadata = new MovieMetadata { MetadataKind = MetadataKind.Fallback, Title = fileName ?? path };
 
             return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
         }

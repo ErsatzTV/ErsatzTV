@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
 using FluentAssertions;
@@ -39,7 +40,20 @@ namespace ErsatzTV.Core.Tests.Metadata
         public void GetFallbackMetadata_ShouldHandleVariousFormats(string path, string title, int season, int episode)
         {
             (EpisodeMetadata metadata, int episodeNumber) = FallbackMetadataProvider.GetFallbackMetadata(
-                new Episode { Path = path, LibraryPath = new LibraryPath() });
+                new Episode
+                {
+                    LibraryPath = new LibraryPath(),
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = path }
+                            }
+                        }
+                    }
+                });
 
             metadata.Title.Should().Be(title);
             // TODO: how can we test season number? do we need to?

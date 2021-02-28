@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -145,14 +144,20 @@ namespace ErsatzTV.Core.Scheduling
                             DisplayTitle(mediaItem),
                             itemStartTime);
 
+                        MediaVersion version = mediaItem switch
+                        {
+                            Movie m => m.MediaVersions.Head(),
+                            Episode e => e.MediaVersions.Head()
+                        };
+
                         var playoutItem = new PlayoutItem
                         {
                             MediaItemId = mediaItem.Id,
                             Start = itemStartTime.UtcDateTime,
-                            Finish = itemStartTime.UtcDateTime + mediaItem.Statistics.Duration
+                            Finish = itemStartTime.UtcDateTime + version.Duration
                         };
 
-                        currentTime = itemStartTime + mediaItem.Statistics.Duration;
+                        currentTime = itemStartTime + version.Duration;
                         enumerator.MoveNext();
 
                         playout.Items.Add(playoutItem);
@@ -187,6 +192,12 @@ namespace ErsatzTV.Core.Scheduling
                                 enumerator.Current.Do(
                                     peekMediaItem =>
                                     {
+                                        MediaVersion peekVersion = peekMediaItem switch
+                                        {
+                                            Movie m => m.MediaVersions.Head(),
+                                            Episode e => e.MediaVersions.Head()
+                                        };
+
                                         ProgramScheduleItem peekScheduleItem =
                                             sortedScheduleItems[(index + 1) % sortedScheduleItems.Count];
                                         DateTimeOffset peekScheduleItemStart =
@@ -198,7 +209,7 @@ namespace ErsatzTV.Core.Scheduling
                                         // is after, we need to move on to the next schedule item
                                         // eventually, spots probably have to fit in this gap
                                         bool willNotFinishInTime = currentTime <= peekScheduleItemStart &&
-                                                                   currentTime + peekMediaItem.Statistics.Duration >
+                                                                   currentTime + peekVersion.Duration >
                                                                    peekScheduleItemStart;
                                         if (willNotFinishInTime)
                                         {
@@ -213,6 +224,12 @@ namespace ErsatzTV.Core.Scheduling
                                 enumerator.Current.Do(
                                     peekMediaItem =>
                                     {
+                                        MediaVersion peekVersion = peekMediaItem switch
+                                        {
+                                            Movie m => m.MediaVersions.Head(),
+                                            Episode e => e.MediaVersions.Head()
+                                        };
+
                                         // remember when we need to finish this duration item
                                         if (durationFinish.IsNone)
                                         {
@@ -221,7 +238,7 @@ namespace ErsatzTV.Core.Scheduling
 
                                         bool willNotFinishInTime =
                                             currentTime <= durationFinish.IfNone(DateTime.MinValue) &&
-                                            currentTime + peekMediaItem.Statistics.Duration >
+                                            currentTime + peekVersion.Duration >
                                             durationFinish.IfNone(DateTime.MinValue);
                                         if (willNotFinishInTime)
                                         {
@@ -391,10 +408,10 @@ namespace ErsatzTV.Core.Scheduling
             {
                 Episode e => e.EpisodeMetadata.Any() && e.Season != null
                     ? $"{e.EpisodeMetadata.Head().Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}"
-                    : Path.GetFileName(e.Path),
+                    : "[unknown episode]",
                 Movie m => m.MovieMetadata.HeadOrNone().Match(
                     mm => mm.Title ?? string.Empty,
-                    () => Path.GetFileName(m.Path)),
+                    () => "[unknown movie]"),
                 _ => string.Empty
             };
 

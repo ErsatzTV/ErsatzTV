@@ -141,16 +141,17 @@ namespace ErsatzTV.Infrastructure.Plex
                 Key = response.Key,
                 LastWriteTime = lastWriteTime,
                 MovieMetadata = new List<MovieMetadata> { metadata },
-                Statistics = new MediaItemStatistics
-                {
-                    Duration = TimeSpan.FromMilliseconds(media.Duration),
-                    Width = media.Width,
-                    Height = media.Height,
-                    // TODO: aspect ratio
-                    AudioCodec = media.AudioCodec,
-                    VideoCodec = media.VideoCodec,
-                    LastWriteTime = lastWriteTime
-                },
+                // TODO: versions
+                // Statistics = new MediaItemStatistics
+                // {
+                //     Duration = TimeSpan.FromMilliseconds(media.Duration),
+                //     Width = media.Width,
+                //     Height = media.Height,
+                //     // TODO: aspect ratio
+                //     AudioCodec = media.AudioCodec,
+                //     VideoCodec = media.VideoCodec,
+                //     LastWriteTime = lastWriteTime
+                // },
                 // TODO: multi-part movies?
                 Part = new PlexMediaItemPart
                 {

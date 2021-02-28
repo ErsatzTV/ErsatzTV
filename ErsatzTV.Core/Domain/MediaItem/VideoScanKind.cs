@@ -1,6 +1,6 @@
 ﻿namespace ErsatzTV.Core.Domain
 {
-    public enum VideoScanType
+    public enum VideoScanKind
     {
         Unknown = 0,
         Progressive = 1,

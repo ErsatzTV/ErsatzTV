@@ -15,15 +15,6 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             public CalculateSettings() => _calculator = new FFmpegPlaybackSettingsCalculator();
 
-            private static PlayoutItem EmptyPlayoutItem() =>
-                new()
-                {
-                    MediaItem = new MediaItem
-                    {
-                        Statistics = new MediaItemStatistics()
-                    }
-                };
-
             [Test]
             public void Should_UseSpecifiedThreadCount_ForTransportStream()
             {
@@ -32,7 +23,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    EmptyPlayoutItem(),
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ThreadCount.Should().Be(7);
@@ -46,7 +38,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
-                    EmptyPlayoutItem(),
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ThreadCount.Should().Be(7);
@@ -60,7 +53,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    EmptyPlayoutItem(),
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 string[] expected = { "+genpts", "+discardcorrupt", "+igndts" };
@@ -76,7 +70,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
-                    EmptyPlayoutItem(),
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 string[] expected = { "+genpts", "+discardcorrupt", "+igndts" };
@@ -92,7 +87,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    EmptyPlayoutItem(),
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.RealtimeOutput.Should().BeTrue();
@@ -106,7 +102,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
-                    EmptyPlayoutItem(),
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.RealtimeOutput.Should().BeTrue();
@@ -118,13 +115,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 DateTimeOffset now = DateTimeOffset.Now;
 
                 FFmpegProfile ffmpegProfile = TestProfile();
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.Start = now.UtcDateTime;
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    new MediaVersion(),
+                    now,
                     now.AddMinutes(5));
 
                 actual.StreamSeek.IsSome.Should().BeTrue();
@@ -137,13 +133,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 DateTimeOffset now = DateTimeOffset.Now;
 
                 FFmpegProfile ffmpegProfile = TestProfile();
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.Start = now.UtcDateTime;
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
-                    playoutItem,
+                    new MediaVersion(),
+                    now,
                     now.AddMinutes(5));
 
                 actual.StreamSeek.IsSome.Should().BeTrue();
@@ -154,12 +149,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             public void ShouldNot_SetScaledSize_When_NotNormalizingResolution_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with { NormalizeResolution = false };
-                PlayoutItem playoutItem = EmptyPlayoutItem();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -174,15 +169,14 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1920;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
+                // not anamorphic
+                var version = new MediaVersion { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -197,15 +191,14 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1918;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
+                // not anamorphic
+                var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -220,15 +213,14 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1920;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
+                // not anamorphic
+                var version = new MediaVersion { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -244,15 +236,14 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1918;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
+                // not anamorphic
+                var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -268,15 +259,14 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1918;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
+                // not anamorphic
+                var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -294,15 +284,14 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoCodec = "testCodec"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1918;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
+                // not anamorphic
+                var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -322,16 +311,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoCodec = "testCodec"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1920;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
-                playoutItem.MediaItem.Statistics.VideoCodec = "mpeg2video";
+                // not anamorphic
+                var version = new MediaVersion
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -351,16 +339,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoCodec = "testCodec"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1920;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
-                playoutItem.MediaItem.Statistics.VideoCodec = "mpeg2video";
+                // not anamorphic
+                var version = new MediaVersion
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -379,16 +366,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoCodec = "libx264"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1920;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
-                playoutItem.MediaItem.Statistics.VideoCodec = "libx264";
+                // not anamorphic
+                var version = new MediaVersion
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "libx264" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -408,16 +394,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoCodec = "libx264"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1920;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
-                playoutItem.MediaItem.Statistics.VideoCodec = "mpeg2video";
+                // not anamorphic
+                var version = new MediaVersion
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -436,15 +421,14 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoBitrate = 2525
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1918;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
+                // not anamorphic
+                var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -463,16 +447,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoBitrate = 2525
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1920;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
-                playoutItem.MediaItem.Statistics.VideoCodec = "mpeg2video";
+                // not anamorphic
+                var version = new MediaVersion
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -491,15 +474,14 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoBufferSize = 2525
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1918;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
+                // not anamorphic
+                var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -519,16 +501,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     VideoBufferSize = 2525
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.Width = 1920;
-                playoutItem.MediaItem.Statistics.Height = 1080;
-                playoutItem.MediaItem.Statistics.SampleAspectRatio = "1:1"; // not anamorphic
-                playoutItem.MediaItem.Statistics.VideoCodec = "mpeg2video";
+                // not anamorphic
+                var version = new MediaVersion
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
@@ -545,13 +526,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioCodec = "aac"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "aac";
+                var version = new MediaVersion { AudioCodec = "aac" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioCodec.Should().Be("copy");
@@ -566,13 +547,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioCodec = "aac"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioCodec.Should().Be("copy");
@@ -587,13 +568,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioCodec = "aac"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioCodec.Should().Be("aac");
@@ -608,13 +589,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioCodec = "aac"
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioCodec.Should().Be("copy");
@@ -629,13 +610,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioBitrate = 2424
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioBitrate.IfNone(0).Should().Be(2424);
@@ -650,13 +631,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioBufferSize = 2424
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioBufferSize.IfNone(0).Should().Be(2424);
@@ -673,13 +654,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioChannels = 6
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioChannels.IsNone.Should().BeTrue();
@@ -696,13 +677,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioSampleRate = 48
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioSampleRate.IsNone.Should().BeTrue();
@@ -718,13 +699,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioChannels = 6
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioChannels.IfNone(0).Should().Be(6);
@@ -740,13 +721,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioSampleRate = 48
                 };
 
-                PlayoutItem playoutItem = EmptyPlayoutItem();
-                playoutItem.MediaItem.Statistics.AudioCodec = "ac3";
+                var version = new MediaVersion { AudioCodec = "ac3" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
-                    playoutItem,
+                    version,
+                    DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioSampleRate.IfNone(0).Should().Be(48);
