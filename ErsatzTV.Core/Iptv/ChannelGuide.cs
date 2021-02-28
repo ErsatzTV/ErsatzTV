@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using ErsatzTV.Core.Domain;
-using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Iptv
