@@ -92,7 +92,7 @@
                 Snackbar.Add($"Unexpected error saving plex libraries: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving plex libraries: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/media/sources/1"));
+            () => NavigationManager.NavigateTo("/media/plex"));
     }
 
 }

@@ -135,12 +135,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task DisablePlexLibrarySync(IEnumerable<int> libraryIds) =>
             _dbConnection.ExecuteAsync(
-                "UPDATE PlexMediaSourceLibraries SET ShouldSyncItems = 0 WHERE Id in @ids",
+                "UPDATE PlexLibrary SET ShouldSyncItems = 0 WHERE Id in @ids",
                 new { ids = libraryIds });
 
         public Task EnablePlexLibrarySync(IEnumerable<int> libraryIds) =>
             _dbConnection.ExecuteAsync(
-                "UPDATE PlexMediaSourceLibraries SET ShouldSyncItems = 1 WHERE Id in @ids",
+                "UPDATE PlexLibrary SET ShouldSyncItems = 1 WHERE Id in @ids",
                 new { ids = libraryIds });
     }
 }

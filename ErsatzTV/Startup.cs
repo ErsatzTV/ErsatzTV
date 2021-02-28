@@ -207,7 +207,7 @@ namespace ErsatzTV
             services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
             services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
 
-            // services.AddHostedService<PlexService>();
+            services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();
             services.AddHostedService<WorkerService>();
             services.AddHostedService<SchedulerService>();
