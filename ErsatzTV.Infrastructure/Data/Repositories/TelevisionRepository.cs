@@ -220,6 +220,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
                 .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
@@ -251,6 +252,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await _dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
+                .Include(e => e.MediaVersions)
+                .Include(e => e.Season)
                 .Filter(e => ids.Contains(e.Id))
                 .ToListAsync();
         }
@@ -258,6 +261,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<Episode>> GetSeasonItems(int seasonId) =>
             _dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
+                .Include(e => e.MediaVersions)
+                .Include(e => e.Season)
                 .Filter(e => e.SeasonId == seasonId)
                 .ToListAsync();
 

@@ -139,7 +139,7 @@ namespace ErsatzTV.Infrastructure.Plex
             var movie = new PlexMovie
             {
                 Key = response.Key,
-                LastWriteTime = lastWriteTime,
+                // DateUpdated = lastWriteTime,
                 MovieMetadata = new List<MovieMetadata> { metadata },
                 // TODO: versions
                 // Statistics = new MediaItemStatistics

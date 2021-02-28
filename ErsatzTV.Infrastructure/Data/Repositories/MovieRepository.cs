@@ -47,6 +47,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.LibraryPath)
                 .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
@@ -55,9 +56,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 async () => await AddMovie(libraryPath.Id, path));
         }
 
-        public async Task<Either<BaseError, PlexMovie>> GetOrAdd(
-            PlexLibrary library,
-            PlexMovie item)
+        public async Task<Either<BaseError, PlexMovie>> GetOrAdd(PlexLibrary library, PlexMovie item)
         {
             Option<PlexMovie> maybeExisting = await _dbContext.PlexMovieMediaItems
                 .Include(i => i.MovieMetadata)
