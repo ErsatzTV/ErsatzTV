@@ -6,5 +6,6 @@
         public string Title { get; set; }
         public string Type { get; set; }
         public int Hidden { get; set; }
+        public string Uuid { get; set; }
     }
 }

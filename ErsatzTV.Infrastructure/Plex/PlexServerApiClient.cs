@@ -62,14 +62,16 @@ namespace ErsatzTV.Infrastructure.Plex
                     Key = response.Key,
                     Name = response.Title,
                     MediaKind = LibraryMediaKind.Shows,
-                    ShouldSyncItems = false
+                    ShouldSyncItems = false,
+                    Paths = new List<LibraryPath> { new() { Path = $"plex://{response.Uuid}" } }
                 },
                 "movie" => new PlexLibrary
                 {
                     Key = response.Key,
                     Name = response.Title,
                     MediaKind = LibraryMediaKind.Movies,
-                    ShouldSyncItems = false
+                    ShouldSyncItems = false,
+                    Paths = new List<LibraryPath> { new() { Path = $"plex://{response.Uuid}" } }
                 },
                 // TODO: "artist" for music libraries
                 _ => None
@@ -127,40 +129,40 @@ namespace ErsatzTV.Infrastructure.Plex
             {
                 Title = response.Title,
                 Plot = response.Summary,
-                ReleaseDate = new DateTime(response.Year, 1, 1), // TODO: actual release date?
+                ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt),
                 Year = response.Year,
                 Tagline = response.Tagline,
-                DateAdded = DateTime.UtcNow, // TODO: actual date added?
+                DateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime,
                 DateUpdated = lastWriteTime
             };
 
             // TODO: artwork
 
+            var version = new MediaVersion
+            {
+                Name = "Main",
+                Duration = TimeSpan.FromMilliseconds(media.Duration),
+                Width = media.Width,
+                Height = media.Height,
+                AudioCodec = media.AudioCodec,
+                VideoCodec = media.VideoCodec,
+                // TODO: aspect ratio
+                MediaFiles = new List<MediaFile>
+                {
+                    new PlexMediaFile
+                    {
+                        PlexId = part.Id,
+                        Key = part.Key,
+                        Path = part.File
+                    }
+                }
+            };
+
             var movie = new PlexMovie
             {
                 Key = response.Key,
-                // DateUpdated = lastWriteTime,
                 MovieMetadata = new List<MovieMetadata> { metadata },
-                // TODO: versions
-                // Statistics = new MediaItemStatistics
-                // {
-                //     Duration = TimeSpan.FromMilliseconds(media.Duration),
-                //     Width = media.Width,
-                //     Height = media.Height,
-                //     // TODO: aspect ratio
-                //     AudioCodec = media.AudioCodec,
-                //     VideoCodec = media.VideoCodec,
-                //     LastWriteTime = lastWriteTime
-                // },
-                // TODO: multi-part movies?
-                Part = new PlexMediaItemPart
-                {
-                    PlexId = part.Id,
-                    Key = part.Key,
-                    File = part.File,
-                    Duration = part.Duration,
-                    Size = part.Size
-                }
+                MediaVersions = new List<MediaVersion> { version }
             };
 
             return movie;

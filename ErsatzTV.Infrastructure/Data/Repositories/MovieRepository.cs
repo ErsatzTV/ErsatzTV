@@ -58,9 +58,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Either<BaseError, PlexMovie>> GetOrAdd(PlexLibrary library, PlexMovie item)
         {
-            Option<PlexMovie> maybeExisting = await _dbContext.PlexMovieMediaItems
+            Option<PlexMovie> maybeExisting = await _dbContext.PlexMovies
                 .Include(i => i.MovieMetadata)
-                .Include(i => i.Part)
+                .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -119,15 +120,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        private async Task<Either<BaseError, PlexMovie>> AddPlexMovie(
-            PlexLibrary library,
-            PlexMovie item)
+        private async Task<Either<BaseError, PlexMovie>> AddPlexMovie(PlexLibrary library, PlexMovie item)
         {
             try
             {
                 item.LibraryPathId = library.Paths.Head().Id;
 
-                await _dbContext.PlexMovieMediaItems.AddAsync(item);
+                await _dbContext.PlexMovies.AddAsync(item);
                 await _dbContext.SaveChangesAsync();
                 await _dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
                 return item;

@@ -72,6 +72,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             using TvContext context = _dbContextFactory.CreateDbContext();
             return context.PlexLibraries
+                .Include(l => l.Paths)
                 .OrderBy(l => l.Id) // https://github.com/dotnet/efcore/issues/22579
                 .SingleOrDefaultAsync(l => l.Id == plexLibraryId)
                 .Map(Optional);
@@ -94,6 +95,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(p => p.Libraries)
                 .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
                 .SingleOrDefaultAsync(p => p.Id == id)
+                .Map(Optional);
+        }
+
+        public Task<Option<PlexMediaSource>> GetPlexByLibraryId(int plexLibraryId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.PlexMediaSources
+                .Include(p => p.Connections)
+                .Include(p => p.Libraries)
+                .Where(p => p.Libraries.Any(l => l.Id == plexLibraryId))
+                .SingleOrDefaultAsync()
                 .Map(Optional);
         }
 
