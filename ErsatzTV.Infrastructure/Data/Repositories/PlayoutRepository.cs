@@ -51,7 +51,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             var p2 = new SqliteParameter("now", now.UtcDateTime);
             return await _dbContext.PlayoutItems
                 .FromSqlRaw(
-                    "select i.* from playoutitems i inner join playouts p on i.playoutid = p.id where p.channelid = @channelId and i.start <= @now and i.finish > @now",
+                    @"SELECT i.* FROM PlayoutItem i
+                    INNER JOIN Playout p ON i.PlayoutId = p.id
+                    WHERE p.ChannelId = @channelId AND i.Start <= @now AND i.Finish > @now",
                     p1,
                     p2)
                 .Include(i => i.MediaItem)
@@ -67,26 +69,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).Season)
+                .ThenInclude(s => s.SeasonMetadata)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
-
-        public Task<List<int>> GetPlayoutIdsForMediaItems(Seq<MediaItem> mediaItems)
-        {
-            var ids = string.Join(", ", mediaItems.Map(mi => mi.Id));
-            return _dbContext.Playouts.FromSqlRaw(
-                @"SELECT DISTINCT p.* FROM Playouts p
-INNER JOIN ProgramScheduleItems psi on psi.ProgramScheduleId = p.ProgramScheduleId
-INNER JOIN SimpleMediaCollections smc on smc.Id = psi.MediaCollectionId
-INNER JOIN MediaItemSimpleMediaCollection mismc on mismc.SimpleMediaCollectionsId = smc.Id
-WHERE mismc.ItemsId in ({0})
-UNION
-SELECT DISTINCT p.* FROM Playouts p
-INNER JOIN ProgramScheduleItems psi on psi.ProgramScheduleId = p.ProgramScheduleId
-INNER JOIN TelevisionMediaCollections tmc on tmc.Id = psi.MediaCollectionId
-INNER JOIN MediaItems mi on mi.Metadata_Title = tmc.ShowTitle and (tmc.SeasonNumber is null or tmc.SeasonNumber = mi.Metadata_SeasonNumber)
-WHERE mi.Id in ({0})",
-                ids).Select(p => p.Id).ToListAsync();
-        }
 
         public Task<List<Playout>> GetAll() =>
             _dbContext.Playouts

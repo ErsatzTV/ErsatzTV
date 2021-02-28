@@ -13,7 +13,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<Playout>> GetFull(int id);
         Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now);
         Task<List<PlayoutItem>> GetPlayoutItems(int playoutId);
-        Task<List<int>> GetPlayoutIdsForMediaItems(Seq<MediaItem> mediaItems);
         Task<List<Playout>> GetAll();
         Task Update(Playout playout);
         Task Delete(int playoutId);
