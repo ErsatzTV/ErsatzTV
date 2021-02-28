@@ -16,9 +16,7 @@ namespace ErsatzTV.Application.MediaCards.Queries
 
         public GetMovieCardsHandler(IMovieRepository movieRepository) => _movieRepository = movieRepository;
 
-        public async Task<MovieCardResultsViewModel> Handle(
-            GetMovieCards request,
-            CancellationToken cancellationToken)
+        public async Task<MovieCardResultsViewModel> Handle(GetMovieCards request, CancellationToken cancellationToken)
         {
             int count = await _movieRepository.GetMovieCount();
 

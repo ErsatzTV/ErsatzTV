@@ -46,7 +46,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
                 return await service.GetLibrarySectionContents(library.Key, token.AuthToken)
                     .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
-                    .Map(list => list.Map(ProjectToMovie).ToList());
+                    .Map(list => list.Map(metadata => ProjectToMovie(metadata, library.MediaSourceId)).ToList());
             }
             catch (Exception ex)
             {
@@ -119,10 +119,11 @@ namespace ErsatzTV.Infrastructure.Plex
                 Media = response.Media.Map(Project).ToList()
             };
 
-        private static PlexMovie ProjectToMovie(PlexMetadataResponse response)
+        private static PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
         {
             PlexMediaResponse media = response.Media.Head();
             PlexPartResponse part = media.Part.Head();
+            DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
             var metadata = new MovieMetadata
@@ -132,11 +133,24 @@ namespace ErsatzTV.Infrastructure.Plex
                 ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt),
                 Year = response.Year,
                 Tagline = response.Tagline,
-                DateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime,
+                DateAdded = dateAdded,
                 DateUpdated = lastWriteTime
             };
 
-            // TODO: artwork
+            if (!string.IsNullOrWhiteSpace(response.Thumb))
+            {
+                var path = $"plex/{mediaSourceId}{response.Thumb}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Poster,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
 
             var version = new MediaVersion
             {

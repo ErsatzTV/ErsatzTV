@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using ErsatzTV.Application.Images;
 using ErsatzTV.Application.Images.Queries;
+using ErsatzTV.Application.Plex.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using LanguageExt;
@@ -22,6 +23,16 @@ namespace ErsatzTV.Controllers
         {
             Either<BaseError, ImageViewModel> imageContents =
                 await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Poster, 440));
+            return imageContents.Match<IActionResult>(
+                Left: _ => new NotFoundResult(),
+                Right: r => new FileContentResult(r.Contents, r.MimeType));
+        }
+
+        [HttpGet("/artwork/posters/plex/{plexMediaSourceId}/{*path}")]
+        public async Task<IActionResult> GetPlexPoster(int plexMediaSourceId, string path)
+        {
+            Either<BaseError, ImageViewModel> imageContents =
+                await _mediator.Send(new GetPlexImage(plexMediaSourceId, path));
             return imageContents.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));
