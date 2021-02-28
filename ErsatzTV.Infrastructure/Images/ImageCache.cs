@@ -1,9 +1,12 @@
 ﻿using System;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
@@ -14,15 +17,18 @@ namespace ErsatzTV.Infrastructure.Images
     public class ImageCache : IImageCache
     {
         private static readonly SHA1CryptoServiceProvider Crypto;
+        private readonly ILocalFileSystem _localFileSystem;
 
         static ImageCache() => Crypto = new SHA1CryptoServiceProvider();
 
-        public async Task<Either<BaseError, string>> ResizeAndSaveImage(byte[] imageBuffer, int? height, int? width)
+        public ImageCache(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
+
+        public async Task<Either<BaseError, byte[]>> ResizeImage(byte[] imageBuffer, int height)
         {
             await using var inStream = new MemoryStream(imageBuffer);
             using var image = await Image.LoadAsync(inStream);
 
-            Size size = height.HasValue ? new Size { Height = height.Value } : new Size { Width = width.Value };
+            var size = new Size { Height = height };
 
             image.Mutate(
                 i => i.Resize(
@@ -35,30 +41,56 @@ namespace ErsatzTV.Infrastructure.Images
             await using var outStream = new MemoryStream();
             await image.SaveAsync(outStream, new JpegEncoder { Quality = 90 });
 
-            return await SaveImage(outStream.ToArray());
+            return outStream.ToArray();
         }
 
-        public async Task<Either<BaseError, string>> SaveImage(byte[] imageBuffer)
+        public async Task<Either<BaseError, string>> SaveArtworkToCache(byte[] imageBuffer, ArtworkKind artworkKind)
         {
             try
             {
                 byte[] hash = Crypto.ComputeHash(imageBuffer);
                 string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
-
-                string fileName = Path.Combine(FileSystemLayout.ImageCacheFolder, hex);
-
-                if (!Directory.Exists(FileSystemLayout.ImageCacheFolder))
+                string subfolder = hex.Substring(0, 2);
+                string baseFolder = artworkKind switch
                 {
-                    Directory.CreateDirectory(FileSystemLayout.ImageCacheFolder);
+                    ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
+                    ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
+                    ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
+                    _ => FileSystemLayout.LegacyImageCacheFolder
+                };
+                string target = Path.Combine(baseFolder, hex);
+
+                if (!Directory.Exists(baseFolder))
+                {
+                    Directory.CreateDirectory(baseFolder);
                 }
 
-                await File.WriteAllBytesAsync(fileName, imageBuffer);
+                await File.WriteAllBytesAsync(target, imageBuffer);
                 return hex;
             }
             catch (Exception ex)
             {
                 return BaseError.New(ex.Message);
             }
+        }
+
+        public string CopyArtworkToCache(string path, ArtworkKind artworkKind)
+        {
+            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
+            byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
+            string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
+            string subfolder = hex.Substring(0, 2);
+            string baseFolder = artworkKind switch
+            {
+                ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
+                ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
+                ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
+                _ => FileSystemLayout.LegacyImageCacheFolder
+            };
+            string target = Path.Combine(baseFolder, hex);
+            _localFileSystem.CopyFile(path, target);
+
+            return hex;
         }
     }
 }

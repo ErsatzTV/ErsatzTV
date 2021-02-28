@@ -33,42 +33,49 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                FFprobe ffprobe = await GetProbeOutput(ffprobePath, mediaItem);
-                MediaItemStatistics statistics = ProjectToMediaItemStatistics(ffprobe);
-                return await ApplyStatisticsUpdate(mediaItem, statistics);
+                string filePath = mediaItem switch
+                {
+                    Movie m => m.MediaVersions.Head().MediaFiles.Head().Path,
+                    Episode e => e.MediaVersions.Head().MediaFiles.Head().Path,
+                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
+                };
+
+                FFprobe ffprobe = await GetProbeOutput(ffprobePath, filePath);
+                MediaVersion version = ProjectToMediaVersion(ffprobe);
+                return await ApplyVersionUpdate(mediaItem, version, filePath);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to refresh statistics for media item at {Path}", mediaItem.Path);
+                _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
                 return false;
             }
         }
 
-        private async Task<bool> ApplyStatisticsUpdate(
-            MediaItem mediaItem,
-            MediaItemStatistics statistics)
+        private async Task<bool> ApplyVersionUpdate(MediaItem mediaItem, MediaVersion version, string filePath)
         {
-            if (mediaItem.Statistics == null)
+            MediaVersion mediaItemVersion = mediaItem switch
             {
-                mediaItem.Statistics = new MediaItemStatistics();
-            }
+                Movie m => m.MediaVersions.Head(),
+                Episode e => e.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
+            };
 
-            bool durationChange = mediaItem.Statistics.Duration != statistics.Duration;
+            bool durationChange = mediaItemVersion.Duration != version.Duration;
 
-            mediaItem.Statistics.LastWriteTime = _localFileSystem.GetLastWriteTime(mediaItem.Path);
-            mediaItem.Statistics.Duration = statistics.Duration;
-            mediaItem.Statistics.AudioCodec = statistics.AudioCodec;
-            mediaItem.Statistics.SampleAspectRatio = statistics.SampleAspectRatio;
-            mediaItem.Statistics.DisplayAspectRatio = statistics.DisplayAspectRatio;
-            mediaItem.Statistics.Width = statistics.Width;
-            mediaItem.Statistics.Height = statistics.Height;
-            mediaItem.Statistics.VideoCodec = statistics.VideoCodec;
-            mediaItem.Statistics.VideoScanType = statistics.VideoScanType;
+            mediaItemVersion.DateUpdated = _localFileSystem.GetLastWriteTime(filePath);
+            mediaItemVersion.Duration = version.Duration;
+            mediaItemVersion.AudioCodec = version.AudioCodec;
+            mediaItemVersion.SampleAspectRatio = version.SampleAspectRatio;
+            mediaItemVersion.DisplayAspectRatio = version.DisplayAspectRatio;
+            mediaItemVersion.Width = version.Width;
+            mediaItemVersion.Height = version.Height;
+            mediaItemVersion.VideoCodec = version.VideoCodec;
+            mediaItemVersion.VideoScanKind = version.VideoScanKind;
 
             return await _mediaItemRepository.Update(mediaItem) && durationChange;
         }
 
-        private Task<FFprobe> GetProbeOutput(string ffprobePath, MediaItem mediaItem)
+        private Task<FFprobe> GetProbeOutput(string ffprobePath, string filePath)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -85,7 +92,7 @@ namespace ErsatzTV.Core.Metadata
             startInfo.ArgumentList.Add("-show_format");
             startInfo.ArgumentList.Add("-show_streams");
             startInfo.ArgumentList.Add("-i");
-            startInfo.ArgumentList.Add(mediaItem.Path);
+            startInfo.ArgumentList.Add(filePath);
 
             var probe = new Process
             {
@@ -101,7 +108,7 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
-        private MediaItemStatistics ProjectToMediaItemStatistics(FFprobe probeOutput) =>
+        private MediaVersion ProjectToMediaVersion(FFprobe probeOutput) =>
             Optional(probeOutput)
                 .Filter(json => json?.format != null && json.streams != null)
                 .ToValidation<BaseError>("Unable to parse ffprobe output")
@@ -111,41 +118,35 @@ namespace ErsatzTV.Core.Metadata
                     {
                         var duration = TimeSpan.FromSeconds(double.Parse(json.format.duration));
 
-                        var statistics = new MediaItemStatistics { Duration = duration };
+                        var version = new MediaVersion { Name = "Main", Duration = duration };
 
                         FFprobeStream audioStream = json.streams.FirstOrDefault(s => s.codec_type == "audio");
                         if (audioStream != null)
                         {
-                            statistics = statistics with
-                            {
-                                AudioCodec = audioStream.codec_name
-                            };
+                            version.AudioCodec = audioStream.codec_name;
                         }
 
                         FFprobeStream videoStream = json.streams.FirstOrDefault(s => s.codec_type == "video");
                         if (videoStream != null)
                         {
-                            statistics = statistics with
-                            {
-                                SampleAspectRatio = videoStream.sample_aspect_ratio,
-                                DisplayAspectRatio = videoStream.display_aspect_ratio,
-                                Width = videoStream.width,
-                                Height = videoStream.height,
-                                VideoCodec = videoStream.codec_name,
-                                VideoScanType = ScanTypeFromFieldOrder(videoStream.field_order)
-                            };
+                            version.SampleAspectRatio = videoStream.sample_aspect_ratio;
+                            version.DisplayAspectRatio = videoStream.display_aspect_ratio;
+                            version.Width = videoStream.width;
+                            version.Height = videoStream.height;
+                            version.VideoCodec = videoStream.codec_name;
+                            version.VideoScanKind = ScanKindFromFieldOrder(videoStream.field_order);
                         }
 
-                        return statistics;
+                        return version;
                     },
-                    _ => new MediaItemStatistics());
+                    _ => new MediaVersion { Name = "Main" });
 
-        private VideoScanType ScanTypeFromFieldOrder(string fieldOrder) =>
+        private VideoScanKind ScanKindFromFieldOrder(string fieldOrder) =>
             fieldOrder?.ToLowerInvariant() switch
             {
-                var x when x == "tt" || x == "bb" || x == "tb" || x == "bt" => VideoScanType.Interlaced,
-                "progressive" => VideoScanType.Progressive,
-                _ => VideoScanType.Unknown
+                var x when x == "tt" || x == "bb" || x == "tb" || x == "bt" => VideoScanKind.Interlaced,
+                "progressive" => VideoScanKind.Progressive,
+                _ => VideoScanKind.Unknown
             };
 
         // ReSharper disable InconsistentNaming

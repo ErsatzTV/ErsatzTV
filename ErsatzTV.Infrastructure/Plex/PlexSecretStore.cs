@@ -64,7 +64,14 @@ namespace ErsatzTV.Infrastructure.Plex
         private static Task<PlexSecrets> ReadSecrets() =>
             File.ReadAllTextAsync(FileSystemLayout.PlexSecretsPath)
                 .Map(JsonConvert.DeserializeObject<PlexSecrets>)
-                .Map(s => Optional(s).IfNone(new PlexSecrets()));
+                .Map(s => Optional(s).IfNone(new PlexSecrets()))
+                .Map(
+                    s =>
+                    {
+                        s.ServerAuthTokens ??= new Dictionary<string, string>();
+                        s.UserAuthTokens ??= new Dictionary<string, string>();
+                        return s;
+                    });
 
         private static Task<Unit> SaveSecrets(PlexSecrets plexSecrets) =>
             Some(JsonConvert.SerializeObject(plexSecrets)).Match(

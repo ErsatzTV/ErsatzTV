@@ -7,41 +7,26 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface ITelevisionRepository
     {
-        Task<bool> Update(TelevisionShow show);
-        Task<bool> Update(TelevisionSeason season);
-        Task<bool> Update(TelevisionEpisodeMediaItem episode);
-        Task<List<TelevisionShow>> GetAllShows();
-        Task<Option<TelevisionShow>> GetShow(int televisionShowId);
+        Task<bool> Update(Show show);
+        Task<bool> Update(Season season);
+        Task<bool> Update(Episode episode);
+        Task<List<Show>> GetAllShows();
+        Task<Option<Show>> GetShow(int showId);
         Task<int> GetShowCount();
-        Task<List<TelevisionShow>> GetPagedShows(int pageNumber, int pageSize);
-        Task<List<TelevisionEpisodeMediaItem>> GetShowItems(int televisionShowId);
-        Task<List<TelevisionSeason>> GetAllSeasons();
-        Task<Option<TelevisionSeason>> GetSeason(int televisionSeasonId);
-        Task<int> GetSeasonCount(int televisionShowId);
-        Task<List<TelevisionSeason>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize);
-        Task<List<TelevisionEpisodeMediaItem>> GetSeasonItems(int televisionSeasonId);
-        Task<Option<TelevisionEpisodeMediaItem>> GetEpisode(int televisionEpisodeId);
-        Task<int> GetEpisodeCount(int televisionSeasonId);
-        Task<List<TelevisionEpisodeMediaItem>> GetPagedEpisodes(int televisionSeasonId, int pageNumber, int pageSize);
-        Task<Option<TelevisionShow>> GetShowByPath(int mediaSourceId, string path);
-        Task<Option<TelevisionShow>> GetShowByMetadata(TelevisionShowMetadata metadata);
-
-        Task<Either<BaseError, TelevisionShow>> AddShow(
-            int localMediaSourceId,
-            string showFolder,
-            TelevisionShowMetadata metadata);
-
-        Task<Either<BaseError, TelevisionSeason>> GetOrAddSeason(
-            TelevisionShow show,
-            string path,
-            int seasonNumber);
-
-        Task<Either<BaseError, TelevisionEpisodeMediaItem>> GetOrAddEpisode(
-            TelevisionSeason season,
-            int mediaSourceId,
-            string path);
-
-        Task<Unit> DeleteMissingSources(int localMediaSourceId, List<string> allFolders);
+        Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize);
+        Task<List<Episode>> GetShowItems(int showId);
+        Task<List<Season>> GetAllSeasons();
+        Task<Option<Season>> GetSeason(int seasonId);
+        Task<int> GetSeasonCount(int showId);
+        Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize);
+        Task<List<Episode>> GetSeasonItems(int seasonId);
+        Task<Option<Episode>> GetEpisode(int episodeId);
+        Task<int> GetEpisodeCount(int seasonId);
+        Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize);
+        Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata);
+        Task<Either<BaseError, Show>> AddShow(int libraryPathId, string showFolder, ShowMetadata metadata);
+        Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber);
+        Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path);
         Task<Unit> DeleteEmptyShows();
     }
 }

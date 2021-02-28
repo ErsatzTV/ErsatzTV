@@ -2,18 +2,21 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Domain;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
 {
     public abstract class LocalFolderScanner
     {
+        private static readonly SHA1CryptoServiceProvider Crypto;
+
         public static readonly List<string> VideoFileExtensions = new()
         {
             ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
@@ -46,6 +49,8 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly ILogger _logger;
 
+        static LocalFolderScanner() => Crypto = new SHA1CryptoServiceProvider();
+
         protected LocalFolderScanner(
             ILocalFileSystem localFileSystem,
             ILocalStatisticsProvider localStatisticsProvider,
@@ -63,11 +68,18 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                if (mediaItem.Statistics is null ||
-                    (mediaItem.Statistics.LastWriteTime ?? DateTime.MinValue) <
-                    _localFileSystem.GetLastWriteTime(mediaItem.Path))
+                MediaVersion version = mediaItem switch
                 {
-                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", mediaItem.Path);
+                    Movie m => m.MediaVersions.Head(),
+                    Episode e => e.MediaVersions.Head(),
+                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
+                };
+
+                string path = version.MediaFiles.Head().Path;
+
+                if (version.DateUpdated < _localFileSystem.GetLastWriteTime(path))
+                {
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", path);
                     await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
                 }
 
@@ -79,30 +91,47 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        protected async Task SavePosterToDisk<T>(
-            T show,
-            string posterPath,
-            Func<T, Task<bool>> update,
-            int height = 220) where T : IHasAPoster
+        protected bool RefreshArtwork(string artworkFile, Domain.Metadata metadata, ArtworkKind artworkKind)
         {
-            byte[] originalBytes = await _localFileSystem.ReadAllBytes(posterPath);
-            Either<BaseError, string> maybeHash = await _imageCache.ResizeAndSaveImage(originalBytes, height, null);
-            await maybeHash.Match(
-                hash =>
-                {
-                    show.Poster = hash;
-                    show.PosterLastWriteTime = _localFileSystem.GetLastWriteTime(posterPath);
-                    return update(show);
-                },
-                error =>
-                {
-                    _logger.LogWarning("Unable to save poster to disk from {Path}: {Error}", posterPath, error.Value);
-                    return Task.CompletedTask;
-                });
-        }
+            DateTime lastWriteTime = _localFileSystem.GetLastWriteTime(artworkFile);
 
-        protected Task<Either<BaseError, string>> SavePosterToDisk(string posterPath, int height = 220) =>
-            _localFileSystem.ReadAllBytes(posterPath)
-                .Bind(bytes => _imageCache.ResizeAndSaveImage(bytes, height, null));
+            metadata.Artwork ??= new List<Artwork>();
+
+            Option<Artwork> maybePoster =
+                Optional(metadata.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == artworkKind);
+
+            bool shouldRefresh = maybePoster.Match(
+                artwork => artwork.DateUpdated < lastWriteTime,
+                true);
+
+            if (shouldRefresh)
+            {
+                _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
+                string cacheName = _imageCache.CopyArtworkToCache(artworkFile, artworkKind);
+
+                maybePoster.Match(
+                    artwork =>
+                    {
+                        artwork.Path = cacheName;
+                        artwork.DateUpdated = lastWriteTime;
+                    },
+                    () =>
+                    {
+                        var artwork = new Artwork
+                        {
+                            Path = cacheName,
+                            DateAdded = DateTime.UtcNow,
+                            DateUpdated = lastWriteTime,
+                            ArtworkKind = artworkKind
+                        };
+
+                        metadata.Artwork.Add(artwork);
+                    });
+
+                return true;
+            }
+
+            return false;
+        }
     }
 }

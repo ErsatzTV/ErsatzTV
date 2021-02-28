@@ -47,7 +47,7 @@
     private MediaCollectionViewModel _selectedCollection;
 
     protected override async Task OnParametersSetAsync() =>
-        _collections = await Mediator.Send(new GetAllSimpleMediaCollections());
+        _collections = await Mediator.Send(new GetAllCollections());
 
     private string FormatText() => $"Select the collection to add the {EntityType} {EntityName}";
 

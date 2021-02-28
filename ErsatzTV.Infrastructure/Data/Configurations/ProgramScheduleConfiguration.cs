@@ -8,6 +8,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ProgramSchedule> builder)
         {
+            builder.ToTable("ProgramSchedule");
+
             builder.HasIndex(ps => ps.Name)
                 .IsUnique();
 
@@ -18,7 +20,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 
             builder.HasMany(ps => ps.Playouts)
                 .WithOne(p => p.ProgramSchedule)
-                .HasForeignKey(p => p.ProgramScheduleId);
+                .HasForeignKey(p => p.ProgramScheduleId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

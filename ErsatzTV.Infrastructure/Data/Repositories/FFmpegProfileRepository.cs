@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -23,6 +24,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public async Task<Option<FFmpegProfile>> Get(int id) =>
             await _dbContext.FFmpegProfiles
                 .Include(p => p.Resolution)
+                .OrderBy(p => p.Id)
                 .SingleOrDefaultAsync(p => p.Id == id);
 
         public Task<List<FFmpegProfile>> GetAll() =>

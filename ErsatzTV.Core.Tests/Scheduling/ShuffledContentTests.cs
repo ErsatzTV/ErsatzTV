@@ -20,7 +20,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         {
             List<MediaItem> contents = Episodes(10);
 
-            var state = new MediaCollectionEnumeratorState();
+            var state = new CollectionEnumeratorState();
 
             var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state);
 
@@ -40,7 +40,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         public void State_Index_Should_Increment()
         {
             List<MediaItem> contents = Episodes(10);
-            var state = new MediaCollectionEnumeratorState();
+            var state = new CollectionEnumeratorState();
 
             var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state);
 
@@ -55,7 +55,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         public void State_Should_Impact_Iterator_Start()
         {
             List<MediaItem> contents = Episodes(10);
-            var state = new MediaCollectionEnumeratorState { Index = 5, Seed = MagicSeed };
+            var state = new CollectionEnumeratorState { Index = 5, Seed = MagicSeed };
 
             var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state);
 
@@ -70,12 +70,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
         private static List<MediaItem> Episodes(int count) =>
             Range(1, count).Map(
-                    i => (MediaItem) new TelevisionEpisodeMediaItem
+                    i => (MediaItem) new Episode
                     {
                         Id = i,
-                        Metadata = new TelevisionEpisodeMetadata
+                        EpisodeMetadata = new List<EpisodeMetadata>
                         {
-                            Aired = new DateTime(2020, 1, i)
+                            new()
+                            {
+                                ReleaseDate = new DateTime(2020, 1, i)
+                            }
                         }
                     })
                 .Reverse()

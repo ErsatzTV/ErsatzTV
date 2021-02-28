@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application;
-using ErsatzTV.Application.MediaSources.Commands;
+using ErsatzTV.Application.Plex.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using LanguageExt;

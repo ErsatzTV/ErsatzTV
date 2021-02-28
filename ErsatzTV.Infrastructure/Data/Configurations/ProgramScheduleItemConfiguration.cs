@@ -8,21 +8,18 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<ProgramScheduleItem> builder)
         {
-            builder.ToTable("ProgramScheduleItems");
+            builder.ToTable("ProgramScheduleItem");
 
-            builder.HasOne(i => i.MediaCollection)
+            builder.HasOne(i => i.Collection)
                 .WithMany()
-                .HasForeignKey(i => i.MediaCollectionId)
+                .HasForeignKey(i => i.CollectionId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
 
-            builder.HasOne(i => i.TelevisionShow)
+            builder.HasOne(i => i.MediaItem)
                 .WithMany()
-                .HasForeignKey(i => i.TelevisionShowId)
-                .IsRequired(false);
-
-            builder.HasOne(i => i.TelevisionSeason)
-                .WithMany()
-                .HasForeignKey(i => i.TelevisionSeasonId)
+                .HasForeignKey(i => i.MediaItemId)
+                .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
         }
     }

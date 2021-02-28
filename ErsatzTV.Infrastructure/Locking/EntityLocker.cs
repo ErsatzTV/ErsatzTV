@@ -10,31 +10,31 @@ namespace ErsatzTV.Infrastructure.Locking
 
         public EntityLocker() => _lockedMediaSources = new ConcurrentDictionary<int, byte>();
 
-        public event EventHandler OnMediaSourceChanged;
+        public event EventHandler OnLibraryChanged;
 
-        public bool LockMediaSource(int mediaSourceId)
+        public bool LockLibrary(int mediaSourceId)
         {
             if (!_lockedMediaSources.ContainsKey(mediaSourceId) && _lockedMediaSources.TryAdd(mediaSourceId, 0))
             {
-                OnMediaSourceChanged?.Invoke(this, EventArgs.Empty);
+                OnLibraryChanged?.Invoke(this, EventArgs.Empty);
                 return true;
             }
 
             return false;
         }
 
-        public bool UnlockMediaSource(int mediaSourceId)
+        public bool UnlockLibrary(int mediaSourceId)
         {
             if (_lockedMediaSources.TryRemove(mediaSourceId, out byte _))
             {
-                OnMediaSourceChanged?.Invoke(this, EventArgs.Empty);
+                OnLibraryChanged?.Invoke(this, EventArgs.Empty);
                 return true;
             }
 
             return false;
         }
 
-        public bool IsMediaSourceLocked(int mediaSourceId) =>
+        public bool IsLibraryLocked(int mediaSourceId) =>
             _lockedMediaSources.ContainsKey(mediaSourceId);
     }
 }

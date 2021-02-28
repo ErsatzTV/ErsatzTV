@@ -4,7 +4,7 @@ namespace ErsatzTV.Application.MediaCollections
 {
     internal static class Mapper
     {
-        internal static MediaCollectionViewModel ProjectToViewModel(MediaCollection mediaCollection) =>
-            new(mediaCollection.Id, mediaCollection.Name);
+        internal static MediaCollectionViewModel ProjectToViewModel(Collection collection) =>
+            new(collection.Id, collection.Name);
     }
 }

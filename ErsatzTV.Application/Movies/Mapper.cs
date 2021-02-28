@@ -1,10 +1,20 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Linq;
+using ErsatzTV.Core.Domain;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Movies
 {
     internal static class Mapper
     {
-        internal static MovieViewModel ProjectToViewModel(MovieMediaItem movie) =>
-            new(movie.Metadata.Title, movie.Metadata.Year?.ToString(), movie.Metadata.Plot, movie.Poster);
+        internal static MovieViewModel ProjectToViewModel(Movie movie)
+        {
+            MovieMetadata metadata = Optional(movie.MovieMetadata).Flatten().Head();
+            return new MovieViewModel(
+                metadata.Title,
+                metadata.Year?.ToString(),
+                metadata.Plot,
+                Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
+                    .Match(a => a.Path, string.Empty));
+        }
     }
 }

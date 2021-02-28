@@ -13,9 +13,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         TimeSpan? StartTime,
         PlayoutMode PlayoutMode,
         ProgramScheduleItemCollectionType CollectionType,
-        int? MediaCollectionId,
-        int? TelevisionShowId,
-        int? TelevisionSeasonId,
+        int? CollectionId,
+        int? MediaItemId,
         int? MultipleCount,
         TimeSpan? PlayoutDuration,
         bool? OfflineTail) : IProgramScheduleItemRequest;

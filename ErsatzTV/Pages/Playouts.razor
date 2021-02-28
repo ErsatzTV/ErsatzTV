@@ -75,7 +75,7 @@
         var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ProgramSchedule.Name} on {playout.Channel.Number} - {playout.Channel.Name}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Media Collection", parameters, options);
+        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Playout", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {

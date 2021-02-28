@@ -14,7 +14,7 @@
             @if (!string.IsNullOrWhiteSpace(_movie.Poster))
             {
                 <MudPaper Style="flex-shrink: 0;">
-                    <MudCardMedia Image="@($"/posters/{_movie.Poster}")" Style="height: 440px; width: 304px;"/>
+                    <MudCardMedia Image="@($"/artwork/posters/{_movie.Poster}")" Style="height: 440px; width: 304px;"/>
                 </MudPaper>
             }
             <MudCardContent Class="mx-3 my-3">
@@ -68,7 +68,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await Mediator.Send(new AddMovieToSimpleMediaCollection(collection.Id, MovieId));
+            await Mediator.Send(new AddMovieToCollection(collection.Id, MovieId));
             NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }

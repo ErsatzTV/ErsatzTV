@@ -7,6 +7,6 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
     public class ProgramScheduleItemFloodConfiguration : IEntityTypeConfiguration<ProgramScheduleItemFlood>
     {
         public void Configure(EntityTypeBuilder<ProgramScheduleItemFlood> builder) =>
-            builder.ToTable("ProgramScheduleFloodItems");
+            builder.ToTable("ProgramScheduleFloodItem");
     }
 }

@@ -24,170 +24,172 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task<bool> Update(TelevisionShow show)
+        public async Task<bool> Update(Show show)
         {
-            _dbContext.TelevisionShows.Update(show);
+            _dbContext.Shows.Update(show);
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> Update(TelevisionSeason season)
+        public async Task<bool> Update(Season season)
         {
-            _dbContext.TelevisionSeasons.Update(season);
+            _dbContext.Seasons.Update(season);
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> Update(TelevisionEpisodeMediaItem episode)
+        public async Task<bool> Update(Episode episode)
         {
-            _dbContext.TelevisionEpisodeMediaItems.Update(episode);
+            _dbContext.Episodes.Update(episode);
             return await _dbContext.SaveChangesAsync() > 0;
         }
 
-        public Task<List<TelevisionShow>> GetAllShows() =>
-            _dbContext.TelevisionShows
+        public Task<List<Show>> GetAllShows() =>
+            _dbContext.Shows
                 .AsNoTracking()
-                .Include(s => s.Metadata)
+                .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .ToListAsync();
 
-        public Task<Option<TelevisionShow>> GetShow(int televisionShowId) =>
-            _dbContext.TelevisionShows
+        public Task<Option<Show>> GetShow(int showId) =>
+            _dbContext.Shows
                 .AsNoTracking()
-                .Filter(s => s.Id == televisionShowId)
-                .Include(s => s.Metadata)
+                .Filter(s => s.Id == showId)
+                .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
 
         public Task<int> GetShowCount() =>
-            _dbContext.TelevisionShows
+            _dbContext.ShowMetadata
                 .AsNoTracking()
+                .GroupBy(sm => new { sm.Title, sm.Year })
                 .CountAsync();
 
-        public Task<List<TelevisionShow>> GetPagedShows(int pageNumber, int pageSize) =>
-            _dbContext.TelevisionShows
+        public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
+            _dbContext.ShowMetadata.FromSqlRaw(
+                    @"SELECT * FROM ShowMetadata WHERE Id IN
+            (SELECT MIN(Id) FROM ShowMetadata GROUP BY Title, Year, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
+            ORDER BY SortTitle
+            LIMIT {0} OFFSET {1}",
+                    pageSize,
+                    (pageNumber - 1) * pageSize)
+                .Include(mm => mm.Artwork)
+                .OrderBy(mm => mm.SortTitle)
+                .ToListAsync();
+
+        public Task<List<Season>> GetAllSeasons() =>
+            _dbContext.Seasons
                 .AsNoTracking()
-                .Include(s => s.Metadata)
-                .OrderBy(s => s.Metadata == null ? string.Empty : s.Metadata.SortTitle)
+                .Include(s => s.SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .ToListAsync();
+
+        public Task<Option<Season>> GetSeason(int seasonId) =>
+            _dbContext.Seasons
+                .AsNoTracking()
+                .Include(s => s.SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .OrderBy(s => s.Id)
+                .SingleOrDefaultAsync(s => s.Id == seasonId)
+                .Map(Optional);
+
+        public Task<int> GetSeasonCount(int showId) =>
+            _dbContext.Seasons
+                .AsNoTracking()
+                .CountAsync(s => s.ShowId == showId);
+
+        public async Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize)
+        {
+            List<int> showIds = await _dbConnection.QueryAsync<int>(
+                    @"SELECT m1.ShowId
+                FROM ShowMetadata m1
+                LEFT OUTER JOIN ShowMetadata m2 ON m2.ShowId = @ShowId
+                WHERE m1.Title = m2.Title AND m1.Year = m2.Year",
+                    new { ShowId = televisionShowId })
+                .Map(results => results.ToList());
+
+            return await _dbContext.Seasons
+                .AsNoTracking()
+                .Where(s => showIds.Contains(s.ShowId))
+                .Include(s => s.SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .OrderBy(s => s.SeasonNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+        }
 
-        public Task<List<TelevisionSeason>> GetAllSeasons() =>
-            _dbContext.TelevisionSeasons
+        public Task<Option<Episode>> GetEpisode(int episodeId) =>
+            _dbContext.Episodes
                 .AsNoTracking()
-                .Include(s => s.TelevisionShow)
-                .ThenInclude(s => s.Metadata)
-                .ToListAsync();
-
-        public Task<Option<TelevisionSeason>> GetSeason(int televisionSeasonId) =>
-            _dbContext.TelevisionSeasons
-                .AsNoTracking()
-                .Include(s => s.TelevisionShow)
-                .ThenInclude(s => s.Metadata)
-                .SingleOrDefaultAsync(s => s.Id == televisionSeasonId)
-                .Map(Optional);
-
-        public Task<int> GetSeasonCount(int televisionShowId) =>
-            _dbContext.TelevisionSeasons
-                .AsNoTracking()
-                .Where(s => s.TelevisionShowId == televisionShowId)
-                .CountAsync();
-
-        public Task<List<TelevisionSeason>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize) =>
-            _dbContext.TelevisionSeasons
-                .AsNoTracking()
-                .Where(s => s.TelevisionShowId == televisionShowId)
-                .Include(s => s.TelevisionShow)
-                .ThenInclude(s => s.Metadata)
-                .OrderBy(s => s.Number)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-        public Task<Option<TelevisionEpisodeMediaItem>> GetEpisode(int televisionEpisodeId) =>
-            _dbContext.TelevisionEpisodeMediaItems
-                .AsNoTracking()
-                .Include(s => s.Season)
-                .Include(s => s.Metadata)
-                .SingleOrDefaultAsync(s => s.Id == televisionEpisodeId)
-                .Map(Optional);
-
-        public Task<int> GetEpisodeCount(int televisionSeasonId) =>
-            _dbContext.TelevisionEpisodeMediaItems
-                .AsNoTracking()
-                .Where(e => e.SeasonId == televisionSeasonId)
-                .CountAsync();
-
-        public Task<List<TelevisionEpisodeMediaItem>> GetPagedEpisodes(
-            int televisionSeasonId,
-            int pageNumber,
-            int pageSize) =>
-            _dbContext.TelevisionEpisodeMediaItems
-                .AsNoTracking()
-                .Include(e => e.Metadata)
                 .Include(e => e.Season)
-                .ThenInclude(s => s.TelevisionShow)
-                .ThenInclude(s => s.Metadata)
-                .Where(e => e.SeasonId == televisionSeasonId)
-                .OrderBy(s => s.Metadata.Episode)
+                .Include(e => e.EpisodeMetadata)
+                .ThenInclude(em => em.Artwork)
+                .OrderBy(s => s.Id)
+                .SingleOrDefaultAsync(s => s.Id == episodeId)
+                .Map(Optional);
+
+        public Task<int> GetEpisodeCount(int seasonId) =>
+            _dbContext.Episodes
+                .AsNoTracking()
+                .CountAsync(e => e.SeasonId == seasonId);
+
+        public Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize) =>
+            _dbContext.EpisodeMetadata
+                .AsNoTracking()
+                .Filter(em => em.Episode.SeasonId == seasonId)
+                .Include(em => em.Artwork)
+                .Include(em => em.Episode)
+                .ThenInclude(e => e.Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .OrderBy(em => em.Episode.EpisodeNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-        public async Task<Option<TelevisionShow>> GetShowByPath(int mediaSourceId, string path)
+        public async Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata)
         {
-            Option<int> maybeShowId = await _dbContext.LocalTelevisionShowSources
-                .SingleOrDefaultAsync(s => s.MediaSourceId == mediaSourceId && s.Path == path)
-                .Map(Optional)
-                .MapT(s => s.TelevisionShowId);
-
-            return await maybeShowId.Match<Task<Option<TelevisionShow>>>(
-                async id => await _dbContext.TelevisionShows
-                    .Include(s => s.Metadata)
-                    .Include(s => s.Sources)
-                    .SingleOrDefaultAsync(s => s.Id == id),
-                () => Task.FromResult(Option<TelevisionShow>.None));
-        }
-
-        public async Task<Option<TelevisionShow>> GetShowByMetadata(TelevisionShowMetadata metadata)
-        {
-            Option<TelevisionShow> maybeShow = await _dbContext.TelevisionShows
-                .Include(s => s.Metadata)
-                .Where(s => s.Metadata.Title == metadata.Title && s.Metadata.Year == metadata.Year)
+            Option<int> maybeId = await _dbContext.ShowMetadata
+                .Where(s => s.Title == metadata.Title && s.Year == metadata.Year)
+                .Where(s => s.Show.LibraryPathId == libraryPathId)
                 .SingleOrDefaultAsync()
-                .Map(Optional);
+                .Map(Optional)
+                .MapT(sm => sm.ShowId);
 
-            await maybeShow.IfSomeAsync(
-                async show =>
+            return await maybeId.Match(
+                id =>
                 {
-                    await _dbContext.Entry(show).Reference(s => s.Metadata).LoadAsync();
-                    await _dbContext.Entry(show).Collection(s => s.Sources).LoadAsync();
-                });
-
-            return maybeShow;
+                    return _dbContext.Shows
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Artwork)
+                        .OrderBy(s => s.Id)
+                        .SingleOrDefaultAsync(s => s.Id == id)
+                        .Map(Optional);
+                },
+                () => Option<Show>.None.AsTask());
         }
 
-        public async Task<Either<BaseError, TelevisionShow>> AddShow(
-            int localMediaSourceId,
-            string showFolder,
-            TelevisionShowMetadata metadata)
+        public async Task<Either<BaseError, Show>> AddShow(int libraryPathId, string showFolder, ShowMetadata metadata)
         {
             try
             {
-                var show = new TelevisionShow
+                metadata.DateAdded = DateTime.UtcNow;
+                var show = new Show
                 {
-                    Sources = new List<TelevisionShowSource>(),
-                    Metadata = metadata,
-                    Seasons = new List<TelevisionSeason>()
+                    LibraryPathId = libraryPathId,
+                    ShowMetadata = new List<ShowMetadata> { metadata },
+                    Seasons = new List<Season>()
                 };
 
-                show.Sources.Add(
-                    new LocalTelevisionShowSource
-                    {
-                        MediaSourceId = localMediaSourceId,
-                        Path = showFolder,
-                        TelevisionShow = show
-                    });
-
-                await _dbContext.TelevisionShows.AddAsync(show);
+                await _dbContext.Shows.AddAsync(show);
                 await _dbContext.SaveChangesAsync();
 
                 return show;
@@ -198,122 +200,86 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        public async Task<Either<BaseError, TelevisionSeason>> GetOrAddSeason(
-            TelevisionShow show,
-            string path,
-            int seasonNumber)
+        public async Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber)
         {
-            Option<TelevisionSeason> maybeExisting = await _dbContext.TelevisionSeasons
-                .SingleOrDefaultAsync(i => i.Path == path);
+            Option<Season> maybeExisting = await _dbContext.Seasons
+                .Include(s => s.SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .SingleOrDefaultAsync(s => s.ShowId == show.Id && s.SeasonNumber == seasonNumber);
 
             return await maybeExisting.Match(
-                season => Right<BaseError, TelevisionSeason>(season).AsTask(),
-                () => AddSeason(show, path, seasonNumber));
+                season => Right<BaseError, Season>(season).AsTask(),
+                () => AddSeason(show, libraryPathId, seasonNumber));
         }
 
-        public async Task<Either<BaseError, TelevisionEpisodeMediaItem>> GetOrAddEpisode(
-            TelevisionSeason season,
-            int mediaSourceId,
+        public async Task<Either<BaseError, Episode>> GetOrAddEpisode(
+            Season season,
+            LibraryPath libraryPath,
             string path)
         {
-            Option<TelevisionEpisodeMediaItem> maybeExisting = await _dbContext.TelevisionEpisodeMediaItems
-                .Include(i => i.Metadata)
-                .Include(i => i.Statistics)
-                .SingleOrDefaultAsync(i => i.Path == path);
+            Option<Episode> maybeExisting = await _dbContext.Episodes
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(em => em.Artwork)
+                .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
+                .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
             return await maybeExisting.Match(
-                episode => Right<BaseError, TelevisionEpisodeMediaItem>(episode).AsTask(),
-                () => AddEpisode(season, mediaSourceId, path));
+                episode => Right<BaseError, Episode>(episode).AsTask(),
+                () => AddEpisode(season, libraryPath.Id, path));
         }
-
-        public Task<Unit> DeleteMissingSources(int localMediaSourceId, List<string> allFolders) =>
-            _dbContext.LocalTelevisionShowSources
-                .Where(s => s.MediaSourceId == localMediaSourceId && !allFolders.Contains(s.Path))
-                .ToListAsync()
-                .Bind(
-                    list =>
-                    {
-                        _dbContext.LocalTelevisionShowSources.RemoveRange(list);
-                        return _dbContext.SaveChangesAsync();
-                    })
-                .ToUnit();
 
         public Task<Unit> DeleteEmptyShows() =>
-            _dbContext.TelevisionShows
-                .Where(s => s.Sources.Count == 0)
+            _dbContext.Shows
+                .Where(s => s.Seasons.Count == 0)
                 .ToListAsync()
                 .Bind(
                     list =>
                     {
-                        _dbContext.TelevisionShows.RemoveRange(list);
+                        _dbContext.Shows.RemoveRange(list);
                         return _dbContext.SaveChangesAsync();
                     })
                 .ToUnit();
 
-        public async Task<List<TelevisionEpisodeMediaItem>> GetShowItems(int televisionShowId)
+        public async Task<List<Episode>> GetShowItems(int showId)
         {
-            var parameters = new { ShowId = televisionShowId };
-            return await _dbConnection
-                .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
-                    TelevisionEpisodeMediaItem>(
-                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
-mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
-mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
-tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-from TelevisionEpisodes tmi
-inner join MediaItems mi on tmi.Id = mi.Id
-inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
-inner join TelevisionShows ts on ts.Id = tsn.TelevisionShowId
-where ts.Id = @ShowId",
-                    (episode, statistics, metadata) =>
-                    {
-                        episode.Statistics = statistics;
-                        episode.Metadata = metadata;
-                        return episode;
-                    },
-                    parameters,
-                    splitOn: "AudioCodec,TelevisionEpisodeId").Map(result => result.ToList());
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT Episode.Id FROM Show
+            INNER JOIN Season ON Season.ShowId = Show.Id
+            INNER JOIN Episode ON Episode.SeasonId = Season.Id
+            WHERE Show.Id = @ShowId",
+                new { ShowId = showId });
+
+            return await _dbContext.Episodes
+                .Include(e => e.EpisodeMetadata)
+                .Include(e => e.MediaVersions)
+                .Include(e => e.Season)
+                .Filter(e => ids.Contains(e.Id))
+                .ToListAsync();
         }
 
-        public async Task<List<TelevisionEpisodeMediaItem>> GetSeasonItems(int televisionSeasonId)
-        {
-            var parameters = new { SeasonId = televisionSeasonId };
-            return await _dbConnection
-                .QueryAsync<TelevisionEpisodeMediaItem, MediaItemStatistics, TelevisionEpisodeMetadata,
-                    TelevisionEpisodeMediaItem>(
-                    @"select tmi.Id, tmi.SeasonId, mi.MediaSourceId, mi.LastWriteTime, mi.Path, mi.Poster, mi.PosterLastWriteTime,
-mi.Statistics_AudioCodec as AudioCodec, mi.Statistics_DisplayAspectRatio as DisplayAspectRatio, mi.Statistics_Duration as Duration, mi.Statistics_Height as Height, mi.Statistics_LastWriteTime as LastWriteTime, mi.Statistics_SampleAspectRatio as SampleAspectRatio,
-mi.Statistics_VideoCodec as VideoCodec, mi.Statistics_VideoScanType as VideoScanType, mi.Statistics_Width as Width,
-tem.TelevisionEpisodeId, tem.Id, tem.Season, tem.Episode, tem.Plot, tem.Aired, tem.Source, tem.LastWriteTime, tem.Title, tem.SortTitle
-from TelevisionEpisodes tmi
-inner join MediaItems mi on tmi.Id = mi.Id
-inner join TelevisionEpisodeMetadata tem on tem.TelevisionEpisodeId = tmi.Id
-inner join TelevisionSeasons tsn on tsn.Id = tmi.SeasonId
-where tsn.Id = @SeasonId",
-                    (episode, statistics, metadata) =>
-                    {
-                        episode.Statistics = statistics;
-                        episode.Metadata = metadata;
-                        return episode;
-                    },
-                    parameters,
-                    splitOn: "AudioCodec,TelevisionEpisodeId").Map(result => result.ToList());
-        }
+        public Task<List<Episode>> GetSeasonItems(int seasonId) =>
+            _dbContext.Episodes
+                .Include(e => e.EpisodeMetadata)
+                .Include(e => e.MediaVersions)
+                .Include(e => e.Season)
+                .Filter(e => e.SeasonId == seasonId)
+                .ToListAsync();
 
-        private async Task<Either<BaseError, TelevisionSeason>> AddSeason(
-            TelevisionShow show,
-            string path,
-            int seasonNumber)
+        private async Task<Either<BaseError, Season>> AddSeason(Show show, int libraryPathId, int seasonNumber)
         {
             try
             {
-                var season = new TelevisionSeason
+                var season = new Season
                 {
-                    TelevisionShowId = show.Id, Path = path, Number = seasonNumber,
-                    Episodes = new List<TelevisionEpisodeMediaItem>()
+                    LibraryPathId = libraryPathId,
+                    ShowId = show.Id,
+                    SeasonNumber = seasonNumber,
+                    Episodes = new List<Episode>(),
+                    SeasonMetadata = new List<SeasonMetadata>()
                 };
-                await _dbContext.TelevisionSeasons.AddAsync(season);
+                await _dbContext.Seasons.AddAsync(season);
                 await _dbContext.SaveChangesAsync();
                 return season;
             }
@@ -323,20 +289,27 @@ where tsn.Id = @SeasonId",
             }
         }
 
-        private async Task<Either<BaseError, TelevisionEpisodeMediaItem>> AddEpisode(
-            TelevisionSeason season,
-            int mediaSourceId,
-            string path)
+        private async Task<Either<BaseError, Episode>> AddEpisode(Season season, int libraryPathId, string path)
         {
             try
             {
-                var episode = new TelevisionEpisodeMediaItem
+                var episode = new Episode
                 {
-                    MediaSourceId = mediaSourceId,
+                    LibraryPathId = libraryPathId,
                     SeasonId = season.Id,
-                    Path = path
+                    EpisodeMetadata = new List<EpisodeMetadata>(),
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = path }
+                            }
+                        }
+                    }
                 };
-                await _dbContext.TelevisionEpisodeMediaItems.AddAsync(episode);
+                await _dbContext.Episodes.AddAsync(episode);
                 await _dbContext.SaveChangesAsync();
                 return episode;
             }

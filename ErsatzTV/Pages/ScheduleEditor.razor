@@ -15,7 +15,7 @@
         <MudCard>
             <MudCardContent>
                 <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                <MudSelect Class="mt-3" Label="Media Collection Playback Order" @bind-Value="_model.MediaCollectionPlaybackOrder" For="@(() => _model.MediaCollectionPlaybackOrder)">
+                <MudSelect Class="mt-3" Label="Collection Playback Order" @bind-Value="_model.MediaCollectionPlaybackOrder" For="@(() => _model.MediaCollectionPlaybackOrder)">
                     @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
                     {
                         <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>

@@ -16,6 +16,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
@@ -113,8 +114,19 @@ namespace ErsatzTV
             // Log.Logger.Information("XMLTV is at {XmltvPath}", xmltvPath);
 
             var connectionString = $"Data Source={FileSystemLayout.DatabasePath}";
-            
+
             services.AddDbContext<TvContext>(
+                options => options.UseSqlite(
+                    connectionString,
+                    o =>
+                    {
+                        o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        o.MigrationsAssembly("ErsatzTV.Infrastructure");
+                    }),
+                ServiceLifetime.Scoped,
+                ServiceLifetime.Singleton);
+
+            services.AddDbContextFactory<TvContext>(
                 options => options.UseSqlite(
                     connectionString,
                     o =>
@@ -123,12 +135,13 @@ namespace ErsatzTV
                         o.MigrationsAssembly("ErsatzTV.Infrastructure");
                     }));
 
-            services.AddDbContext<LogContext>(options => options.UseSqlite(connectionString));
-
             services.AddTransient<IDbConnection>(_ => new SqliteConnection(connectionString));
             SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(new GuidHandler());
             SqlMapper.AddTypeHandler(new TimeSpanHandler());
+
+            services.AddDbContext<LogContext>(
+                options => options.UseSqlite($"Data Source={FileSystemLayout.LogDatabasePath}"));
 
             services.AddMediatR(typeof(GetAllChannels).Assembly);
 
@@ -182,6 +195,7 @@ namespace ErsatzTV
             services.AddScoped<ILogRepository, LogRepository>();
             services.AddScoped<ITelevisionRepository, TelevisionRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
+            services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddScoped<IFFmpegLocator, FFmpegLocator>();
             services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
             services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
@@ -191,8 +205,9 @@ namespace ErsatzTV
             services.AddScoped<ILocalFileSystem, LocalFileSystem>();
             services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
             services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
+            services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
 
-            services.AddHostedService<PlexService>();
+            // services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();
             services.AddHostedService<WorkerService>();
             services.AddHostedService<SchedulerService>();

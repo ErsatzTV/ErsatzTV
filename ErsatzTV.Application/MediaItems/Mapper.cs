@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.MediaItems
@@ -7,31 +6,28 @@ namespace ErsatzTV.Application.MediaItems
     internal static class Mapper
     {
         internal static MediaItemViewModel ProjectToViewModel(MediaItem mediaItem) =>
-            new(
-                mediaItem.Id,
-                mediaItem.MediaSourceId,
-                mediaItem.Path);
+            new(mediaItem.Id, mediaItem.LibraryPathId);
 
         internal static MediaItemSearchResultViewModel ProjectToSearchViewModel(MediaItem mediaItem) =>
             mediaItem switch
             {
-                TelevisionEpisodeMediaItem e => ProjectToSearchViewModel(e),
-                MovieMediaItem m => ProjectToSearchViewModel(m),
+                Episode e => ProjectToSearchViewModel(e),
+                Movie m => ProjectToSearchViewModel(m),
                 _ => throw new ArgumentOutOfRangeException()
             };
 
-        private static MediaItemSearchResultViewModel ProjectToSearchViewModel(TelevisionEpisodeMediaItem mediaItem) =>
+        private static MediaItemSearchResultViewModel ProjectToSearchViewModel(Episode mediaItem) =>
             new(
                 mediaItem.Id,
-                GetSourceName(mediaItem.Source),
+                GetLibraryName(mediaItem),
                 "TV Show",
                 GetDisplayTitle(mediaItem),
                 GetDisplayDuration(mediaItem));
 
-        private static MediaItemSearchResultViewModel ProjectToSearchViewModel(MovieMediaItem mediaItem) =>
+        private static MediaItemSearchResultViewModel ProjectToSearchViewModel(Movie mediaItem) =>
             new(
                 mediaItem.Id,
-                GetSourceName(mediaItem.Source),
+                GetLibraryName(mediaItem),
                 "Movie",
                 GetDisplayTitle(mediaItem),
                 GetDisplayDuration(mediaItem));
@@ -40,23 +36,41 @@ namespace ErsatzTV.Application.MediaItems
         private static string GetDisplayTitle(MediaItem mediaItem) =>
             mediaItem switch
             {
-                TelevisionEpisodeMediaItem e => e.Metadata != null
-                    ? $"{e.Metadata.Title} - s{e.Metadata.Season:00}e{e.Metadata.Episode:00}"
-                    : Path.GetFileName(e.Path),
-                MovieMediaItem m => m.Metadata?.Title ?? Path.GetFileName(m.Path),
+                Episode e => e.EpisodeMetadata.HeadOrNone()
+                    .Map(em => $"{em.Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}")
+                    .IfNone("[unknown episode]"),
+                Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]"),
                 _ => string.Empty
             };
 
-        private static string GetDisplayDuration(MediaItem mediaItem) =>
-            string.Format(
-                mediaItem.Statistics.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
-                mediaItem.Statistics.Duration);
-
-        private static string GetSourceName(MediaSource source) =>
-            source switch
+        private static string GetDisplayDuration(MediaItem mediaItem)
+        {
+            MediaVersion version = mediaItem switch
             {
-                LocalMediaSource lms => lms.Folder,
-                _ => source.Name
+                Movie m => m.MediaVersions.Head(),
+                Episode e => e.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
             };
+
+            return string.Format(
+                version.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
+                version.Duration);
+        }
+
+        // TODO: fix this when search is reimplemented
+        private static string GetLibraryName(MediaItem item) =>
+            "Library Name";
+
+        public static NamedMediaItemViewModel ProjectToViewModel(Show show) =>
+            new(show.Id, show.ShowMetadata.HeadOrNone().Map(sm => $"{sm?.Title} ({sm?.Year})").IfNone("???"));
+
+        public static NamedMediaItemViewModel ProjectToViewModel(Season season) =>
+            new(season.Id, $"{ShowTitle(season)} ({SeasonDescription(season)})");
+
+        private static string ShowTitle(Season season) =>
+            season.Show.ShowMetadata.HeadOrNone().Map(sm => sm.Title).IfNone("???");
+
+        private static string SeasonDescription(Season season) =>
+            season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}";
     }
 }
