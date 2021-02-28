@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Playouts
 {
@@ -12,7 +13,10 @@ namespace ErsatzTV.Application.Playouts
                 playout.ProgramSchedulePlayoutType);
 
         internal static PlayoutItemViewModel ProjectToViewModel(PlayoutItem playoutItem) =>
-            new(GetDisplayTitle(playoutItem.MediaItem), playoutItem.Start, GetDisplayDuration(playoutItem.MediaItem));
+            new(
+                GetDisplayTitle(playoutItem.MediaItem),
+                new DateTimeOffset(playoutItem.Start, TimeSpan.Zero).ToLocalTime(),
+                GetDisplayDuration(playoutItem.MediaItem));
 
         private static PlayoutChannelViewModel Project(Channel channel) =>
             new(channel.Id, channel.Number, channel.Name);
