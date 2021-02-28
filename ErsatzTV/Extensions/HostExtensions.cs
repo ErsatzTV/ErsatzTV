@@ -30,7 +30,7 @@ namespace ErsatzTV.Extensions
         private static Unit Seed(IServiceScope scope) =>
             Try(() => scope.ServiceProvider)
                 .Bind(services => Try(GetDbContext(services)))
-                .Bind(ctx => Try(Migrate(ctx)))
+                .Bind(ctx => Try(Migrate(ctx, scope.ServiceProvider)))
                 .Bind(ctx => Try(InitializeDb(ctx)))
                 .IfFail(ex => LogException(ex, "Error occured while seeding database", scope.ServiceProvider));
 
@@ -43,9 +43,12 @@ namespace ErsatzTV.Extensions
         private static TvContext GetDbContext(IServiceProvider provider) =>
             provider.GetRequiredService<TvContext>();
 
-        private static TvContext Migrate(TvContext context)
+        private static TvContext Migrate(TvContext context, IServiceProvider provider)
         {
+            ILogger<Program> logger = provider.GetRequiredService<ILogger<Program>>();
+            logger.LogInformation("Applying database migrations");
             context.Database.Migrate();
+            logger.LogInformation("Done applying database migrations");
             return context;
         }
 
