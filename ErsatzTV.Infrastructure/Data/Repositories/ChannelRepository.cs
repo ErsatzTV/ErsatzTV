@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -22,27 +23,39 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public Task<Option<Channel>> Get(int id) =>
-            _dbContext.Channels.SingleOrDefaultAsync(c => c.Id == id).Map(Optional);
+            _dbContext.Channels
+                .Include(c => c.Artwork)
+                .OrderBy(c => c.Id)
+                .SingleOrDefaultAsync(c => c.Id == id)
+                .Map(Optional);
 
         public Task<Option<Channel>> GetByNumber(int number) =>
             _dbContext.Channels
                 .Include(c => c.FFmpegProfile)
                 .ThenInclude(p => p.Resolution)
+                .OrderBy(c => c.Number)
                 .SingleOrDefaultAsync(c => c.Number == number)
                 .Map(Optional);
 
-        public Task<List<Channel>> GetAll() => _dbContext.Channels.ToListAsync();
+        public Task<List<Channel>> GetAll() =>
+            _dbContext.Channels
+                .Include(c => c.Artwork)
+                .ToListAsync();
 
         public Task<List<Channel>> GetAllForGuide() =>
             _dbContext.Channels
                 .Include(c => c.Playouts)
                 .ThenInclude(p => p.Items)
                 .ThenInclude(i => i.MediaItem)
-                .ThenInclude(i => (i as TelevisionEpisodeMediaItem).Metadata)
+                .ThenInclude(i => (i as Episode).EpisodeMetadata)
                 .Include(c => c.Playouts)
                 .ThenInclude(p => p.Items)
                 .ThenInclude(i => i.MediaItem)
-                .ThenInclude(i => (i as MovieMediaItem).Metadata)
+                .ThenInclude(i => (i as Episode).Season)
+                .Include(c => c.Playouts)
+                .ThenInclude(p => p.Items)
+                .ThenInclude(i => i.MediaItem)
+                .ThenInclude(i => (i as Movie).MovieMetadata)
                 .ToListAsync();
 
         public async Task Update(Channel channel)

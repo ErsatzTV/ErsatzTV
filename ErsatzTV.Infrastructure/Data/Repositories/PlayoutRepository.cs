@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 
@@ -25,62 +24,56 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public Task<Option<Playout>> Get(int id) =>
-            _dbContext.Playouts.SingleOrDefaultAsync(p => p.Id == id).Map(Optional);
+            _dbContext.Playouts
+                .OrderBy(p => p.Id)
+                .SingleOrDefaultAsync(p => p.Id == id)
+                .Map(Optional);
 
         public async Task<Option<Playout>> GetFull(int id) =>
             await _dbContext.Playouts
                 .Include(p => p.Channel)
                 .Include(p => p.Items)
                 .Include(p => p.ProgramScheduleAnchors)
+                .ThenInclude(a => a.MediaItem)
                 .Include(p => p.ProgramSchedule)
                 .ThenInclude(ps => ps.Items)
-                .ThenInclude(psi => psi.MediaCollection)
+                .ThenInclude(psi => psi.Collection)
                 .Include(p => p.ProgramSchedule)
                 .ThenInclude(ps => ps.Items)
-                .ThenInclude(psi => psi.TelevisionShow)
+                .ThenInclude(psi => psi.MediaItem)
                 .OrderBy(p => p.Id) // https://github.com/dotnet/efcore/issues/22579#issuecomment-694772289
                 .SingleOrDefaultAsync(p => p.Id == id);
 
-        public async Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now)
-        {
-            var p1 = new SqliteParameter("channelId", channelId);
-            var p2 = new SqliteParameter("now", now);
-            return await _dbContext.PlayoutItems
-                .FromSqlRaw(
-                    "select i.* from playoutitems i inner join playouts p on i.playoutid = p.id where p.channelid = @channelId and i.start <= @now and i.finish > @now",
-                    p1,
-                    p2)
+        public async Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now) =>
+            await _dbContext.PlayoutItems
+                .Where(pi => pi.Playout.ChannelId == channelId)
+                .Where(pi => pi.Start <= now.UtcDateTime && pi.Finish > now.UtcDateTime)
                 .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Movie).MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .AsNoTracking()
                 .SingleOrDefaultAsync();
-        }
 
         public Task<List<PlayoutItem>> GetPlayoutItems(int playoutId) =>
             _dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
-                .ThenInclude(m => (m as MovieMediaItem).Metadata)
+                .ThenInclude(mi => (mi as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaItem)
-                .ThenInclude(m => (m as TelevisionEpisodeMediaItem).Metadata)
+                .ThenInclude(mi => (mi as Movie).MediaVersions)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
+                .ThenInclude(em => em.Artwork)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).MediaVersions)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).Season)
+                .ThenInclude(s => s.SeasonMetadata)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
-
-        public Task<List<int>> GetPlayoutIdsForMediaItems(Seq<MediaItem> mediaItems)
-        {
-            var ids = string.Join(", ", mediaItems.Map(mi => mi.Id));
-            return _dbContext.Playouts.FromSqlRaw(
-                @"SELECT DISTINCT p.* FROM Playouts p
-INNER JOIN ProgramScheduleItems psi on psi.ProgramScheduleId = p.ProgramScheduleId
-INNER JOIN SimpleMediaCollections smc on smc.Id = psi.MediaCollectionId
-INNER JOIN MediaItemSimpleMediaCollection mismc on mismc.SimpleMediaCollectionsId = smc.Id
-WHERE mismc.ItemsId in ({0})
-UNION
-SELECT DISTINCT p.* FROM Playouts p
-INNER JOIN ProgramScheduleItems psi on psi.ProgramScheduleId = p.ProgramScheduleId
-INNER JOIN TelevisionMediaCollections tmc on tmc.Id = psi.MediaCollectionId
-INNER JOIN MediaItems mi on mi.Metadata_Title = tmc.ShowTitle and (tmc.SeasonNumber is null or tmc.SeasonNumber = mi.Metadata_SeasonNumber)
-WHERE mi.Id in ({0})",
-                ids).Select(p => p.Id).ToListAsync();
-        }
 
         public Task<List<Playout>> GetAll() =>
             _dbContext.Playouts

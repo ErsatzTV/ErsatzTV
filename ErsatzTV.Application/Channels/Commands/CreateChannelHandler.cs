@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -36,10 +37,29 @@ namespace ErsatzTV.Application.Channels.Commands
         private async Task<Validation<BaseError, Channel>> Validate(CreateChannel request) =>
             (ValidateName(request), ValidateNumber(request), await FFmpegProfileMustExist(request))
             .Apply(
-                (name, number, ffmpegProfileId) => new Channel(Guid.NewGuid())
+                (name, number, ffmpegProfileId) =>
                 {
-                    Name = name, Number = number, FFmpegProfileId = ffmpegProfileId,
-                    StreamingMode = request.StreamingMode
+                    var artwork = new List<Artwork>();
+                    if (!string.IsNullOrWhiteSpace(request.Logo))
+                    {
+                        artwork.Add(
+                            new Artwork
+                            {
+                                Path = request.Logo,
+                                ArtworkKind = ArtworkKind.Logo,
+                                DateAdded = DateTime.UtcNow,
+                                DateUpdated = DateTime.UtcNow
+                            });
+                    }
+
+                    return new Channel(Guid.NewGuid())
+                    {
+                        Name = name,
+                        Number = number,
+                        FFmpegProfileId = ffmpegProfileId,
+                        StreamingMode = request.StreamingMode,
+                        Artwork = artwork
+                    };
                 });
 
         private Validation<BaseError, string> ValidateName(CreateChannel createChannel) =>

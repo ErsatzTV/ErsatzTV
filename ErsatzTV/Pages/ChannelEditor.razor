@@ -37,7 +37,7 @@
                         <InputFile id="fileInput" OnChange="UploadLogo" hidden/>
                         @if (!string.IsNullOrWhiteSpace(_model.Logo))
                         {
-                            <MudElement HtmlTag="img" src="@($"iptv/images/{_model.Logo}")" Style="max-height: 50px"/>
+                            <MudElement HtmlTag="img" src="@($"iptv/logos/{_model.Logo}")" Style="max-height: 50px"/>
                         }
                     </MudItem>
                     <MudItem xs="6">
@@ -135,9 +135,13 @@
     {
         var buffer = new byte[e.File.Size];
         await e.File.OpenReadStream().ReadAsync(buffer);
-        Either<BaseError, string> maybeCacheFileName = await Mediator.Send(new SaveImageToDisk(buffer));
+        Either<BaseError, string> maybeCacheFileName = await Mediator.Send(new SaveArtworkToDisk(buffer, ArtworkKind.Logo));
         maybeCacheFileName.Match(
-            relativeFileName => _model.Logo = relativeFileName,
+            relativeFileName =>
+            {
+                _model.Logo = relativeFileName;
+                StateHasChanged();
+            },
             error =>
             {
                 Snackbar.Add($"Unexpected error saving channel logo: {error.Value}");

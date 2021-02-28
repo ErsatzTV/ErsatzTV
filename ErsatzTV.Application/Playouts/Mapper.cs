@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿using System;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Playouts
@@ -13,7 +13,10 @@ namespace ErsatzTV.Application.Playouts
                 playout.ProgramSchedulePlayoutType);
 
         internal static PlayoutItemViewModel ProjectToViewModel(PlayoutItem playoutItem) =>
-            new(GetDisplayTitle(playoutItem.MediaItem), playoutItem.Start, GetDisplayDuration(playoutItem.MediaItem));
+            new(
+                GetDisplayTitle(playoutItem.MediaItem),
+                playoutItem.StartOffset,
+                GetDisplayDuration(playoutItem.MediaItem));
 
         private static PlayoutChannelViewModel Project(Channel channel) =>
             new(channel.Id, channel.Number, channel.Name);
@@ -24,16 +27,25 @@ namespace ErsatzTV.Application.Playouts
         private static string GetDisplayTitle(MediaItem mediaItem) =>
             mediaItem switch
             {
-                TelevisionEpisodeMediaItem e => e.Metadata != null
-                    ? $"{e.Metadata.Title} - s{e.Metadata.Season:00}e{e.Metadata.Episode:00}"
-                    : Path.GetFileName(e.Path),
-                MovieMediaItem m => m.Metadata?.Title ?? Path.GetFileName(m.Path),
+                Episode e => e.EpisodeMetadata.HeadOrNone()
+                    .Map(em => $"{em.Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}")
+                    .IfNone("[unknown episode]"),
+                Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]"),
                 _ => string.Empty
             };
 
-        private static string GetDisplayDuration(MediaItem mediaItem) =>
-            string.Format(
-                mediaItem.Statistics.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
-                mediaItem.Statistics.Duration);
+        private static string GetDisplayDuration(MediaItem mediaItem)
+        {
+            MediaVersion version = mediaItem switch
+            {
+                Movie m => m.MediaVersions.Head(),
+                Episode e => e.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
+            };
+
+            return string.Format(
+                version.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
+                version.Duration);
+        }
     }
 }

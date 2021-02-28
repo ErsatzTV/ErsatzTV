@@ -6,8 +6,12 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 {
     public class ConfigElementConfiguration : IEntityTypeConfiguration<ConfigElement>
     {
-        public void Configure(EntityTypeBuilder<ConfigElement> builder) =>
+        public void Configure(EntityTypeBuilder<ConfigElement> builder)
+        {
+            builder.ToTable("ConfigElement");
+
             builder.HasIndex(ce => ce.Key)
                 .IsUnique();
+        }
     }
 }

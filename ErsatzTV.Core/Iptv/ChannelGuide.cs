@@ -41,11 +41,13 @@ namespace ErsatzTV.Core.Iptv
                 xml.WriteEndElement(); // display-name
 
                 xml.WriteStartElement("icon");
-                xml.WriteAttributeString(
-                    "src",
-                    !string.IsNullOrWhiteSpace(channel.Logo)
-                        ? $"{_scheme}://{_host}/iptv/images/{channel.Logo}"
-                        : $"{_scheme}://{_host}/images/ersatztv-500.png");
+                string logo = Optional(channel.Artwork).Flatten()
+                    .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                    .HeadOrNone()
+                    .Match(
+                        artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}",
+                        () => $"{_scheme}://{_host}/images/ersatztv-500.png");
+                xml.WriteAttributeString("src", logo);
                 xml.WriteEndElement(); // icon
 
                 xml.WriteEndElement(); // channel
@@ -55,26 +57,27 @@ namespace ErsatzTV.Core.Iptv
             {
                 foreach (PlayoutItem playoutItem in channel.Playouts.Collect(p => p.Items).OrderBy(i => i.Start))
                 {
-                    string start = playoutItem.Start.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
-                    string stop = playoutItem.Finish.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                    string start = playoutItem.StartOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                    string stop = playoutItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
 
                     string title = playoutItem.MediaItem switch
                     {
-                        MovieMediaItem m => m.Metadata?.Title ?? m.Path,
-                        TelevisionEpisodeMediaItem e => e.Metadata?.Title ?? e.Path,
+                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]"),
+                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Title).IfNone("[unknown episode]"),
                         _ => "[unknown]"
                     };
 
                     string description = playoutItem.MediaItem switch
                     {
-                        MovieMediaItem m => m.Metadata?.Plot,
-                        TelevisionEpisodeMediaItem e => e.Metadata?.Plot,
+                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Plot).IfNone(string.Empty),
+                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Plot).IfNone(string.Empty),
                         _ => string.Empty
                     };
 
                     string contentRating = playoutItem.MediaItem switch
                     {
-                        MovieMediaItem m => m.Metadata?.ContentRating,
+                        // TODO: re-implement content rating
+                        // Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.ContentRating).IfNone(string.Empty),
                         _ => string.Empty
                     };
 
@@ -95,10 +98,10 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteAttributeString("lang", "en");
                     xml.WriteEndElement(); // sub-title
 
-                    if (playoutItem.MediaItem is TelevisionEpisodeMediaItem episode)
+                    if (playoutItem.MediaItem is Episode episode)
                     {
-                        int s = Optional(episode.Metadata?.Season).IfNone(0);
-                        int e = Optional(episode.Metadata?.Episode).IfNone(0);
+                        int s = Optional(episode.Season?.SeasonNumber).IfNone(0);
+                        int e = episode.EpisodeNumber;
                         if (s > 0 && e > 0)
                         {
                             xml.WriteStartElement("episode-num");

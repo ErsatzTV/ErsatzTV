@@ -18,7 +18,7 @@
             @if (!string.IsNullOrWhiteSpace(_season.Poster))
             {
                 <MudPaper Style="flex-shrink: 0;">
-                    <MudCardMedia Image="@($"/posters/{_season.Poster}")" Style="height: 440px; width: 304px;"/>
+                    <MudCardMedia Image="@($"/artwork/posters/{_season.Poster}")" Style="height: 440px; width: 304px;"/>
                 </MudPaper>
             }
             <MudCardContent Class="mx-3 my-3">
@@ -55,7 +55,8 @@
                    Link="@($"/media/tv/episodes/{card.EpisodeId}")"
                    DataRefreshed="@(() => RefreshData())"
                    ContainerClass="media-card-episode-container mx-2"
-                   CardClass="media-card-episode"/>
+                   CardClass="media-card-episode"
+                   ArtworkKind="@ArtworkKind.Thumbnail"/>
     }
 </MudContainer>
 
@@ -99,7 +100,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await Mediator.Send(new AddTelevisionSeasonToSimpleMediaCollection(collection.Id, SeasonId));
+            await Mediator.Send(new AddSeasonToCollection(collection.Id, SeasonId));
             NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }
@@ -114,7 +115,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, SeasonId, null, null, null));
+            await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, SeasonId, null, null, null));
             NavigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }

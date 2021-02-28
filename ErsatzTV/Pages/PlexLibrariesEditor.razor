@@ -1,0 +1,98 @@
+﻿@page "/media/sources/plex/{Id:int}/libraries"
+@using ErsatzTV.Application.Plex
+@using ErsatzTV.Application.Plex.Commands
+@using ErsatzTV.Application.Plex.Queries
+@inject IMediator Mediator
+@inject NavigationManager NavigationManager
+@inject ILogger<PlexLibrariesEditor> Logger
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudTable Hover="true" Items="_libraries" Dense="true" Class="mt-8">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6"><b>@_source.Name</b> Libraries</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col style="width: 100px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Media Type</MudTh>
+            <MudTh>Synchronize</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="MediaType">@context.MediaKind</MudTd>
+            <MudTd DataLabel="Synchronize">
+                <div style="display: flex; justify-content: center">
+                    @if (context.ShouldSyncItems)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => context.ShouldSyncItems = !context.ShouldSyncItems)">Yes</MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Dark" OnClick="@(() => context.ShouldSyncItems = !context.ShouldSyncItems)">No</MudButton>
+                    }
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
+        Save Changes
+    </MudButton>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private PlexMediaSourceViewModel _source;
+    private List<PlexMediaSourceLibraryEditViewModel> _libraries;
+
+    protected override Task OnParametersSetAsync() => LoadData();
+
+    private async Task LoadData()
+    {
+        Option<PlexMediaSourceViewModel> maybeSource = await Mediator.Send(new GetPlexMediaSourceById(Id));
+        await maybeSource.Match(
+            async source =>
+            {
+                _source = source;
+                _libraries = await Mediator.Send(new GetPlexLibrariesBySourceId(Id))
+                    .Map(list => list.Map(ProjectToEditViewModel).ToList());
+            },
+            () =>
+            {
+                NavigationManager.NavigateTo("404");
+                return Task.CompletedTask;
+            });
+    }
+
+    private PlexMediaSourceLibraryEditViewModel ProjectToEditViewModel(PlexLibraryViewModel library) => new()
+    {
+        Id = library.Id,
+        Name = library.Name,
+        MediaKind = library.MediaKind,
+        ShouldSyncItems = library.ShouldSyncItems
+    };
+
+    private async Task SaveChanges()
+    {
+        var request = new UpdatePlexLibraryPreferences(
+            _libraries.Map(l => new PlexLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
+
+        Seq<BaseError> errorMessages = await Mediator.Send(request).Map(e => e.LeftToSeq());
+
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                Snackbar.Add($"Unexpected error saving plex libraries: {error.Value}", Severity.Error);
+                Logger.LogError("Unexpected error saving plex libraries: {Error}", error.Value);
+            },
+            () => NavigationManager.NavigateTo("/media/sources/1"));
+    }
+
+}

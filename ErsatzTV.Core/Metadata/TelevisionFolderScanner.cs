@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -37,88 +39,65 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public async Task<Unit> ScanFolder(LocalMediaSource localMediaSource, string ffprobePath)
+        public async Task<Either<BaseError, Unit>> ScanFolder(LibraryPath libraryPath, string ffprobePath)
         {
-            if (!_localFileSystem.IsMediaSourceAccessible(localMediaSource))
+            if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
             {
-                _logger.LogWarning(
-                    "Media source is not accessible or missing; skipping scan of {Folder}",
-                    localMediaSource.Folder);
-                return Unit.Default;
+                return new MediaSourceInaccessible();
             }
 
-            var allShowFolders = _localFileSystem.ListSubdirectories(localMediaSource.Folder)
+            var allShowFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
                 .Filter(ShouldIncludeFolder)
                 .OrderBy(identity)
                 .ToList();
 
             foreach (string showFolder in allShowFolders)
             {
-                // TODO: check all sources for latest metadata?
-                Either<BaseError, TelevisionShow> maybeShow =
-                    await FindOrCreateShow(localMediaSource.Id, showFolder)
+                Either<BaseError, Show> maybeShow =
+                    await FindOrCreateShow(libraryPath.Id, showFolder)
                         .BindT(show => UpdateMetadataForShow(show, showFolder))
                         .BindT(show => UpdatePosterForShow(show, showFolder));
 
                 await maybeShow.Match(
-                    show => ScanSeasons(localMediaSource, ffprobePath, show, showFolder),
+                    show => ScanSeasons(libraryPath, ffprobePath, show, showFolder),
                     _ => Task.FromResult(Unit.Default));
             }
 
-            await _televisionRepository.DeleteMissingSources(localMediaSource.Id, allShowFolders);
             await _televisionRepository.DeleteEmptyShows();
 
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, TelevisionShow>> FindOrCreateShow(
-            int localMediaSourceId,
+        private async Task<Either<BaseError, Show>> FindOrCreateShow(
+            int libraryPathId,
             string showFolder)
         {
-            Option<TelevisionShow> maybeShowByPath =
-                await _televisionRepository.GetShowByPath(localMediaSourceId, showFolder);
-            return await maybeShowByPath.Match(
-                show => Right<BaseError, TelevisionShow>(show).AsTask(),
-                async () =>
-                {
-                    TelevisionShowMetadata metadata = await _localMetadataProvider.GetMetadataForShow(showFolder);
-                    Option<TelevisionShow> maybeShow = await _televisionRepository.GetShowByMetadata(metadata);
-                    return await maybeShow.Match(
-                        async show =>
-                        {
-                            show.Sources.Add(
-                                new LocalTelevisionShowSource
-                                {
-                                    MediaSourceId = localMediaSourceId,
-                                    Path = showFolder,
-                                    TelevisionShow = show
-                                });
-                            await _televisionRepository.Update(show);
-                            return Right<BaseError, TelevisionShow>(show);
-                        },
-                        async () => await _televisionRepository.AddShow(localMediaSourceId, showFolder, metadata));
-                });
+            ShowMetadata metadata = await _localMetadataProvider.GetMetadataForShow(showFolder);
+            Option<Show> maybeShow = await _televisionRepository.GetShowByMetadata(libraryPathId, metadata);
+            return await maybeShow.Match(
+                show => Right<BaseError, Show>(show).AsTask(),
+                async () => await _televisionRepository.AddShow(libraryPathId, showFolder, metadata));
         }
 
         private async Task<Unit> ScanSeasons(
-            LocalMediaSource localMediaSource,
+            LibraryPath libraryPath,
             string ffprobePath,
-            TelevisionShow show,
-            string showPath)
+            Show show,
+            string showFolder)
         {
-            foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showPath).Filter(ShouldIncludeFolder)
+            foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showFolder).Filter(ShouldIncludeFolder)
                 .OrderBy(identity))
             {
                 Option<int> maybeSeasonNumber = SeasonNumberForFolder(seasonFolder);
                 await maybeSeasonNumber.IfSomeAsync(
                     async seasonNumber =>
                     {
-                        Either<BaseError, TelevisionSeason> maybeSeason = await _televisionRepository
-                            .GetOrAddSeason(show, seasonFolder, seasonNumber)
-                            .BindT(UpdatePoster);
+                        Either<BaseError, Season> maybeSeason = await _televisionRepository
+                            .GetOrAddSeason(show, libraryPath.Id, seasonNumber)
+                            .BindT(season => UpdatePoster(season, seasonFolder));
 
                         await maybeSeason.Match(
-                            season => ScanEpisodes(localMediaSource, ffprobePath, season),
+                            season => ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder),
                             _ => Task.FromResult(Unit.Default));
                     });
             }
@@ -127,16 +106,17 @@ namespace ErsatzTV.Core.Metadata
         }
 
         private async Task<Unit> ScanEpisodes(
-            LocalMediaSource localMediaSource,
+            LibraryPath libraryPath,
             string ffprobePath,
-            TelevisionSeason season)
+            Season season,
+            string seasonPath)
         {
-            foreach (string file in _localFileSystem.ListFiles(season.Path)
+            foreach (string file in _localFileSystem.ListFiles(seasonPath)
                 .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f))).OrderBy(identity))
             {
                 // TODO: figure out how to rebuild playlists
-                Either<BaseError, TelevisionEpisodeMediaItem> maybeEpisode = await _televisionRepository
-                    .GetOrAddEpisode(season, localMediaSource.Id, file)
+                Either<BaseError, Episode> maybeEpisode = await _televisionRepository
+                    .GetOrAddEpisode(season, libraryPath, file)
                     .BindT(episode => UpdateStatistics(episode, ffprobePath).MapT(_ => episode))
                     .BindT(UpdateMetadata)
                     .BindT(UpdateThumbnail);
@@ -148,8 +128,8 @@ namespace ErsatzTV.Core.Metadata
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, TelevisionShow>> UpdateMetadataForShow(
-            TelevisionShow show,
+        private async Task<Either<BaseError, Show>> UpdateMetadataForShow(
+            Show show,
             string showFolder)
         {
             try
@@ -157,9 +137,12 @@ namespace ErsatzTV.Core.Metadata
                 await LocateNfoFileForShow(showFolder).Match(
                     async nfoFile =>
                     {
-                        if (show.Metadata == null || show.Metadata.Source == MetadataSource.Fallback ||
-                            (show.Metadata.LastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(nfoFile))
+                        bool shouldUpdate = Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
+                            m => m.MetadataKind == MetadataKind.Fallback ||
+                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                            true);
+
+                        if (shouldUpdate)
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
                             await _localMetadataProvider.RefreshSidecarMetadata(show, nfoFile);
@@ -167,7 +150,7 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (show.Metadata == null)
+                        if (!Optional(show.ShowMetadata).Flatten().Any())
                         {
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", showFolder);
                             await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder);
@@ -182,17 +165,20 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, TelevisionEpisodeMediaItem>> UpdateMetadata(
-            TelevisionEpisodeMediaItem episode)
+        private async Task<Either<BaseError, Episode>> UpdateMetadata(
+            Episode episode)
         {
             try
             {
                 await LocateNfoFile(episode).Match(
                     async nfoFile =>
                     {
-                        if (episode.Metadata == null || episode.Metadata.Source == MetadataSource.Fallback ||
-                            (episode.Metadata.LastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(nfoFile))
+                        bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
+                            m => m.MetadataKind == MetadataKind.Fallback ||
+                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                            true);
+
+                        if (shouldUpdate)
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
                             await _localMetadataProvider.RefreshSidecarMetadata(episode, nfoFile);
@@ -200,9 +186,10 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (episode.Metadata == null)
+                        if (!Optional(episode.EpisodeMetadata).Flatten().Any())
                         {
-                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", episode.Path);
+                            string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
                             await _localMetadataProvider.RefreshFallbackMetadata(episode);
                         }
                     });
@@ -215,8 +202,8 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, TelevisionShow>> UpdatePosterForShow(
-            TelevisionShow show,
+        private async Task<Either<BaseError, Show>> UpdatePosterForShow(
+            Show show,
             string showFolder)
         {
             try
@@ -224,27 +211,10 @@ namespace ErsatzTV.Core.Metadata
                 await LocatePosterForShow(showFolder).IfSomeAsync(
                     async posterFile =>
                     {
-                        if (string.IsNullOrWhiteSpace(show.Poster) ||
-                            (show.PosterLastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(posterFile))
+                        ShowMetadata metadata = show.ShowMetadata.Head();
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
                         {
-                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            Either<BaseError, string> maybePoster = await SavePosterToDisk(posterFile, 440);
-                            await maybePoster.Match(
-                                poster =>
-                                {
-                                    show.Poster = poster;
-                                    show.PosterLastWriteTime = _localFileSystem.GetLastWriteTime(posterFile);
-                                    return _televisionRepository.Update(show);
-                                },
-                                error =>
-                                {
-                                    _logger.LogWarning(
-                                        "Unable to save poster to disk from {Path}: {Error}",
-                                        posterFile,
-                                        error.Value);
-                                    return Task.CompletedTask;
-                                });
+                            await _televisionRepository.Update(show);
                         }
                     });
 
@@ -256,19 +226,24 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, TelevisionSeason>> UpdatePoster(TelevisionSeason season)
+        private async Task<Either<BaseError, Season>> UpdatePoster(Season season, string seasonFolder)
         {
             try
             {
-                await LocatePoster(season).IfSomeAsync(
+                await LocatePoster(season, seasonFolder).IfSomeAsync(
                     async posterFile =>
                     {
-                        if (string.IsNullOrWhiteSpace(season.Poster) ||
-                            (season.PosterLastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(posterFile))
+                        season.SeasonMetadata ??= new List<SeasonMetadata>();
+                        if (!season.SeasonMetadata.Any())
                         {
-                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(season, posterFile, _televisionRepository.Update, 440);
+                            season.SeasonMetadata.Add(new SeasonMetadata { SeasonId = season.Id });
+                        }
+
+                        SeasonMetadata metadata = season.SeasonMetadata.Head();
+
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
+                        {
+                            await _televisionRepository.Update(season);
                         }
                     });
 
@@ -280,20 +255,17 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, TelevisionEpisodeMediaItem>> UpdateThumbnail(
-            TelevisionEpisodeMediaItem episode)
+        private async Task<Either<BaseError, Episode>> UpdateThumbnail(Episode episode)
         {
             try
             {
                 await LocateThumbnail(episode).IfSomeAsync(
                     async posterFile =>
                     {
-                        if (string.IsNullOrWhiteSpace(episode.Poster) ||
-                            (episode.PosterLastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(posterFile))
+                        EpisodeMetadata metadata = episode.EpisodeMetadata.Head();
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail))
                         {
-                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Thumbnail", posterFile);
-                            await SavePosterToDisk(episode, posterFile, _televisionRepository.Update);
+                            await _televisionRepository.Update(episode);
                         }
                     });
 
@@ -309,9 +281,12 @@ namespace ErsatzTV.Core.Metadata
             Optional(Path.Combine(showFolder, "tvshow.nfo"))
                 .Filter(s => _localFileSystem.FileExists(s));
 
-        private Option<string> LocateNfoFile(TelevisionEpisodeMediaItem episode) =>
-            Optional(Path.ChangeExtension(episode.Path, "nfo"))
+        private Option<string> LocateNfoFile(Episode episode)
+        {
+            string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+            return Optional(Path.ChangeExtension(path, "nfo"))
                 .Filter(s => _localFileSystem.FileExists(s));
+        }
 
         private Option<string> LocatePosterForShow(string showFolder) =>
             ImageFileExtensions
@@ -320,20 +295,21 @@ namespace ErsatzTV.Core.Metadata
                 .Filter(s => _localFileSystem.FileExists(s))
                 .HeadOrNone();
 
-        private Option<string> LocatePoster(TelevisionSeason season)
+        private Option<string> LocatePoster(Season season, string seasonFolder)
         {
-            string folder = Path.GetDirectoryName(season.Path) ?? string.Empty;
+            string folder = Path.GetDirectoryName(seasonFolder) ?? string.Empty;
             return ImageFileExtensions
-                .Map(ext => Path.Combine(folder, $"season{season.Number:00}-poster.{ext}"))
+                .Map(ext => Path.Combine(folder, $"season{season.SeasonNumber:00}-poster.{ext}"))
                 .Filter(s => _localFileSystem.FileExists(s))
                 .HeadOrNone();
         }
 
-        private Option<string> LocateThumbnail(TelevisionEpisodeMediaItem episode)
+        private Option<string> LocateThumbnail(Episode episode)
         {
-            string folder = Path.GetDirectoryName(episode.Path) ?? string.Empty;
+            string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+            string folder = Path.GetDirectoryName(path) ?? string.Empty;
             return ImageFileExtensions
-                .Map(ext => Path.GetFileNameWithoutExtension(episode.Path) + $"-thumb.{ext}")
+                .Map(ext => Path.GetFileNameWithoutExtension(path) + $"-thumb.{ext}")
                 .Map(f => Path.Combine(folder, f))
                 .Filter(f => _localFileSystem.FileExists(f))
                 .HeadOrNone();

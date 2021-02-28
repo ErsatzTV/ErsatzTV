@@ -60,23 +60,23 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             switch (item.CollectionType)
             {
                 case ProgramScheduleItemCollectionType.Collection:
-                    if (item.MediaCollectionId is null)
+                    if (item.CollectionId is null)
                     {
-                        return BaseError.New("[MediaCollection] is required for collection type 'Collection'");
+                        return BaseError.New("[Collection] is required for collection type 'Collection'");
                     }
 
                     break;
                 case ProgramScheduleItemCollectionType.TelevisionShow:
-                    if (item.TelevisionShowId is null)
+                    if (item.MediaItemId is null)
                     {
-                        return BaseError.New("[TelevisionShow] is required for collection type 'TelevisionShow'");
+                        return BaseError.New("[MediaItem] is required for collection type 'TelevisionShow'");
                     }
 
                     break;
                 case ProgramScheduleItemCollectionType.TelevisionSeason:
-                    if (item.TelevisionSeasonId is null)
+                    if (item.MediaItemId is null)
                     {
-                        return BaseError.New("[TelevisionSeason] is required for collection type 'TelevisionSeason'");
+                        return BaseError.New("[MediaItem] is required for collection type 'TelevisionSeason'");
                     }
 
                     break;
@@ -99,9 +99,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     Index = index,
                     StartTime = item.StartTime,
                     CollectionType = item.CollectionType,
-                    MediaCollectionId = item.MediaCollectionId,
-                    TelevisionShowId = item.TelevisionShowId,
-                    TelevisionSeasonId = item.TelevisionSeasonId
+                    CollectionId = item.CollectionId,
+                    MediaItemId = item.MediaItemId
                 },
                 PlayoutMode.One => new ProgramScheduleItemOne
                 {
@@ -109,9 +108,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     Index = index,
                     StartTime = item.StartTime,
                     CollectionType = item.CollectionType,
-                    MediaCollectionId = item.MediaCollectionId,
-                    TelevisionShowId = item.TelevisionShowId,
-                    TelevisionSeasonId = item.TelevisionSeasonId
+                    CollectionId = item.CollectionId,
+                    MediaItemId = item.MediaItemId
                 },
                 PlayoutMode.Multiple => new ProgramScheduleItemMultiple
                 {
@@ -119,9 +117,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     Index = index,
                     StartTime = item.StartTime,
                     CollectionType = item.CollectionType,
-                    MediaCollectionId = item.MediaCollectionId,
-                    TelevisionShowId = item.TelevisionShowId,
-                    TelevisionSeasonId = item.TelevisionSeasonId,
+                    CollectionId = item.CollectionId,
+                    MediaItemId = item.MediaItemId,
                     Count = item.MultipleCount.GetValueOrDefault()
                 },
                 PlayoutMode.Duration => new ProgramScheduleItemDuration
@@ -130,9 +127,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     Index = index,
                     StartTime = item.StartTime,
                     CollectionType = item.CollectionType,
-                    MediaCollectionId = item.MediaCollectionId,
-                    TelevisionShowId = item.TelevisionShowId,
-                    TelevisionSeasonId = item.TelevisionSeasonId,
+                    CollectionId = item.CollectionId,
+                    MediaItemId = item.MediaItemId,
                     PlayoutDuration = item.PlayoutDuration.GetValueOrDefault(),
                     OfflineTail = item.OfflineTail.GetValueOrDefault()
                 },

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -40,18 +41,23 @@ namespace ErsatzTV.Core.Tests.Metadata
             public void SetUp()
             {
                 _movieRepository = new Mock<IMovieRepository>();
-                _movieRepository.Setup(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()))
+                _movieRepository.Setup(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()))
                     .Returns(
-                        (int _, string path) =>
-                            Right<BaseError, MovieMediaItem>(new MovieMediaItem { Path = path }).AsTask());
+                        (LibraryPath _, string path) => Right<BaseError, Movie>(new FakeMovieWithPath(path)).AsTask());
 
                 _localStatisticsProvider = new Mock<ILocalStatisticsProvider>();
                 _localMetadataProvider = new Mock<ILocalMetadataProvider>();
 
+                // fallback metadata adds metadata to a movie, so we need to replicate that here
+                _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<MediaItem>()))
+                    .Returns(
+                        (MediaItem mediaItem) =>
+                        {
+                            ((Movie) mediaItem).MovieMetadata = new List<MovieMetadata> { new() };
+                            return Unit.Default.AsTask();
+                        });
+
                 _imageCache = new Mock<IImageCache>();
-                _imageCache.Setup(
-                        x => x.ResizeAndSaveImage(FakeLocalFileSystem.TestBytes, It.IsAny<int?>(), It.IsAny<int?>()))
-                    .Returns(Right<BaseError, string>("poster").AsTask());
             }
 
             private Mock<IMovieRepository> _movieRepository;
@@ -65,9 +71,9 @@ namespace ErsatzTV.Core.Tests.Metadata
                 MovieFolderScanner service = GetService(
                     new FakeFileEntry(Path.Combine(FakeRoot, Path.Combine("Movie (2020)", "Movie (2020).mkv")))
                 );
-                var source = new LocalMediaSource { Folder = BadFakeRoot };
+                var libraryPath = new LibraryPath { Path = BadFakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsLeft.Should().BeTrue();
                 result.IfLeft(error => error.Should().BeOfType<MediaSourceInaccessible>());
@@ -83,23 +89,23 @@ namespace ErsatzTV.Core.Tests.Metadata
                     Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
 
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath)
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
                 );
-                var source = new LocalMediaSource { Id = 1, Folder = FakeRoot };
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.GetOrAdd(1, moviePath), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
             }
 
@@ -115,24 +121,24 @@ namespace ErsatzTV.Core.Tests.Metadata
                 string metadataPath = Path.ChangeExtension(moviePath, "nfo");
 
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath),
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(metadataPath)
                 );
-                var source = new LocalMediaSource { Id = 1, Folder = FakeRoot };
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.GetOrAdd(1, moviePath), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshSidecarMetadata(It.Is<MediaItem>(i => i.Path == moviePath), metadataPath),
+                    x => x.RefreshSidecarMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath), metadataPath),
                     Times.Once);
             }
 
@@ -148,24 +154,24 @@ namespace ErsatzTV.Core.Tests.Metadata
                 string metadataPath = Path.Combine(Path.GetDirectoryName(moviePath) ?? string.Empty, "movie.nfo");
 
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath),
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(metadataPath)
                 );
-                var source = new LocalMediaSource { Id = 1, Folder = FakeRoot };
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.GetOrAdd(1, moviePath), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshSidecarMetadata(It.Is<MediaItem>(i => i.Path == moviePath), metadataPath),
+                    x => x.RefreshSidecarMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath), metadataPath),
                     Times.Once);
             }
 
@@ -185,28 +191,28 @@ namespace ErsatzTV.Core.Tests.Metadata
                     $"poster.{imageExtension}");
 
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath),
-                    new FakeFileEntry(posterPath)
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                    new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now }
                 );
-                var source = new LocalMediaSource { Id = 1, Folder = FakeRoot };
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.GetOrAdd(1, moviePath), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _imageCache.Verify(
-                    x => x.ResizeAndSaveImage(FakeLocalFileSystem.TestBytes, It.IsAny<int?>(), It.IsAny<int?>()),
+                    x => x.CopyArtworkToCache(posterPath, ArtworkKind.Poster),
                     Times.Once);
             }
 
@@ -226,28 +232,28 @@ namespace ErsatzTV.Core.Tests.Metadata
                     $"Movie (2020)-poster.{imageExtension}");
 
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath),
-                    new FakeFileEntry(posterPath)
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                    new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now }
                 );
-                var source = new LocalMediaSource { Id = 1, Folder = FakeRoot };
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.GetOrAdd(1, moviePath), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _imageCache.Verify(
-                    x => x.ResizeAndSaveImage(FakeLocalFileSystem.TestBytes, It.IsAny<int?>(), It.IsAny<int?>()),
+                    x => x.CopyArtworkToCache(posterPath, ArtworkKind.Poster),
                     Times.Once);
             }
 
@@ -263,27 +269,27 @@ namespace ErsatzTV.Core.Tests.Metadata
                     Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
 
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath),
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(
                         Path.Combine(
                             Path.GetDirectoryName(moviePath) ?? string.Empty,
                             $"Movie (2020)-{extraFile}{videoExtension}"))
                 );
-                var source = new LocalMediaSource { Id = 1, Folder = FakeRoot };
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.GetOrAdd(1, moviePath), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
             }
 
@@ -299,27 +305,27 @@ namespace ErsatzTV.Core.Tests.Metadata
                     Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
 
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath),
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(
                         Path.Combine(
                             Path.GetDirectoryName(moviePath) ?? string.Empty,
                             Path.Combine(extraFolder, $"Movie (2020){videoExtension}")))
                 );
-                var source = new LocalMediaSource { Id = 1, Folder = FakeRoot };
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.GetOrAdd(1, moviePath), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
             }
 
@@ -333,30 +339,27 @@ namespace ErsatzTV.Core.Tests.Metadata
                     Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
 
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath)
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
                 );
-                var source = new LocalMediaSource { Id = 1, Folder = FakeRoot };
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(source, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<int>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.GetOrAdd(1, moviePath), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<MediaItem>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
             }
 
             private MovieFolderScanner GetService(params FakeFileEntry[] files) =>
-                // var mockImageCache = new Mock<IImageCache>();
-                // mockImageCache.Setup(i => i.ResizeAndSaveImage(It.IsAny<byte[]>(), It.IsAny<int?>(), It.IsAny<int?>()))
-                //     .Returns(Right<BaseError, string>("image").AsTask());
                 new(
                     new FakeLocalFileSystem(new List<FakeFileEntry>(files)),
                     _movieRepository.Object,

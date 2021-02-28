@@ -1,0 +1,51 @@
+﻿@page "/media/collections"
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.MediaCollections.Queries
+@using ErsatzTV.Application.MediaCards
+@inject IDialogService Dialog
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+    @foreach (MediaCollectionViewModel card in _data)
+    {
+        <MediaCard Data="@card"
+                   Link="@($"/media/collections/{card.Id}")"
+                   ContainerClass="media-card-episode-container mr-4"
+                   CardClass="media-card-episode"
+                   DeleteClicked="@DeleteMediaCollection"/>
+    }
+</MudContainer>
+
+<MudContainer MaxWidth="MaxWidth.False">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
+        Add Collection
+    </MudButton>
+</MudContainer>
+
+@code {
+    private List<MediaCollectionViewModel> _data;
+
+    protected override Task OnParametersSetAsync() => RefreshData();
+
+    private async Task RefreshData() =>
+        _data = await Mediator.Send(new GetAllCollections());
+
+    private async Task DeleteMediaCollection(MediaCardViewModel vm)
+    {
+        if (vm is MediaCollectionViewModel collection)
+        {
+            var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled)
+            {
+                await Mediator.Send(new DeleteCollection(collection.Id));
+                await RefreshData();
+            }
+        }
+    }
+
+}

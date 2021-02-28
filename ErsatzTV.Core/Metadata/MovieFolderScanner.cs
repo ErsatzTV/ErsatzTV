@@ -37,15 +37,15 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public async Task<Either<BaseError, Unit>> ScanFolder(LocalMediaSource localMediaSource, string ffprobePath)
+        public async Task<Either<BaseError, Unit>> ScanFolder(LibraryPath libraryPath, string ffprobePath)
         {
-            if (!_localFileSystem.IsMediaSourceAccessible(localMediaSource))
+            if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
             {
                 return new MediaSourceInaccessible();
             }
 
             var folderQueue = new Queue<string>();
-            foreach (string folder in _localFileSystem.ListSubdirectories(localMediaSource.Folder).OrderBy(identity))
+            foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path).OrderBy(identity))
             {
                 folderQueue.Enqueue(folder);
             }
@@ -73,10 +73,10 @@ namespace ErsatzTV.Core.Metadata
 
                 foreach (string file in allFiles.OrderBy(identity))
                 {
+                    // TODO: optimize dbcontext use here, do we need tracking? can we make partial updates with dapper?
                     // TODO: figure out how to rebuild playlists
-                    Either<BaseError, MovieMediaItem> x = await _movieRepository.GetOrAdd(localMediaSource.Id, file);
-
-                    Either<BaseError, MovieMediaItem> maybeMovie = await x.AsTask()
+                    Either<BaseError, Movie> maybeMovie = await _movieRepository
+                        .GetOrAdd(libraryPath, file)
                         .BindT(movie => UpdateStatistics(movie, ffprobePath).MapT(_ => movie))
                         .BindT(UpdateMetadata)
                         .BindT(UpdatePoster);
@@ -89,16 +89,19 @@ namespace ErsatzTV.Core.Metadata
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, MovieMediaItem>> UpdateMetadata(MovieMediaItem movie)
+        private async Task<Either<BaseError, Movie>> UpdateMetadata(Movie movie)
         {
             try
             {
                 await LocateNfoFile(movie).Match(
                     async nfoFile =>
                     {
-                        if (movie.Metadata == null || movie.Metadata.Source == MetadataSource.Fallback ||
-                            (movie.Metadata.LastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(nfoFile))
+                        bool shouldUpdate = Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
+                            m => m.MetadataKind == MetadataKind.Fallback ||
+                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                            true);
+
+                        if (shouldUpdate)
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
                             await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile);
@@ -106,9 +109,10 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (movie.Metadata == null)
+                        if (!Optional(movie.MovieMetadata).Flatten().Any())
                         {
-                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", movie.Path);
+                            string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
                             await _localMetadataProvider.RefreshFallbackMetadata(movie);
                         }
                     });
@@ -121,19 +125,17 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, MovieMediaItem>> UpdatePoster(MovieMediaItem movie)
+        private async Task<Either<BaseError, Movie>> UpdatePoster(Movie movie)
         {
             try
             {
                 await LocatePoster(movie).IfSomeAsync(
                     async posterFile =>
                     {
-                        if (string.IsNullOrWhiteSpace(movie.Poster) ||
-                            (movie.PosterLastWriteTime ?? DateTime.MinValue) <
-                            _localFileSystem.GetLastWriteTime(posterFile))
+                        MovieMetadata metadata = movie.MovieMetadata.Head();
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
                         {
-                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Poster", posterFile);
-                            await SavePosterToDisk(movie, posterFile, _movieRepository.Update, 440);
+                            await _movieRepository.Update(movie);
                         }
                     });
 
@@ -145,20 +147,22 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private Option<string> LocateNfoFile(MovieMediaItem movie)
+        private Option<string> LocateNfoFile(Movie movie)
         {
-            string movieAsNfo = Path.ChangeExtension(movie.Path, "nfo");
-            string movieNfo = Path.Combine(Path.GetDirectoryName(movie.Path) ?? string.Empty, "movie.nfo");
+            string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+            string movieAsNfo = Path.ChangeExtension(path, "nfo");
+            string movieNfo = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, "movie.nfo");
             return Seq.create(movieAsNfo, movieNfo)
                 .Filter(s => _localFileSystem.FileExists(s))
                 .HeadOrNone();
         }
 
-        private Option<string> LocatePoster(MovieMediaItem movie)
+        private Option<string> LocatePoster(Movie movie)
         {
-            string folder = Path.GetDirectoryName(movie.Path) ?? string.Empty;
+            string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+            string folder = Path.GetDirectoryName(path) ?? string.Empty;
             IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(
-                    ext => new[] { $"poster.{ext}", Path.GetFileNameWithoutExtension(movie.Path) + $"-poster.{ext}" })
+                    ext => new[] { $"poster.{ext}", Path.GetFileNameWithoutExtension(path) + $"-poster.{ext}" })
                 .Map(f => Path.Combine(folder, f));
             Option<string> result = possibleMoviePosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
             return result;

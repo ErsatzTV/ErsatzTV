@@ -8,8 +8,13 @@ namespace ErsatzTV.Core.Interfaces.Plex
 {
     public interface IPlexServerApiClient
     {
-        Task<Either<BaseError, List<PlexMediaSourceLibrary>>> GetLibraries(
-            PlexMediaSourceConnection connection,
+        Task<Either<BaseError, List<PlexLibrary>>> GetLibraries(
+            PlexConnection connection,
+            PlexServerAuthToken token);
+
+        Task<Either<BaseError, List<PlexMovie>>> GetLibraryContents(
+            PlexLibrary library,
+            PlexConnection connection,
             PlexServerAuthToken token);
     }
 }

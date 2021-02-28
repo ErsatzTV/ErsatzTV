@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using ErsatzTV.Core.Domain;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Iptv
 {
@@ -26,9 +27,12 @@ namespace ErsatzTV.Core.Iptv
             sb.AppendLine($"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
             foreach (Channel channel in _channels)
             {
-                string logo = !string.IsNullOrWhiteSpace(channel.Logo)
-                    ? $"{_scheme}://{_host}/iptv/images/{channel.Logo}"
-                    : $"{_scheme}://{_host}/images/ersatztv-500.png";
+                string logo = Optional(channel.Artwork).Flatten()
+                    .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                    .HeadOrNone()
+                    .Match(
+                        artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}",
+                        () => $"{_scheme}://{_host}/images/ersatztv-500.png");
 
                 string shortUniqueId = Convert.ToBase64String(channel.UniqueId.ToByteArray())
                     .TrimEnd('=')
@@ -42,7 +46,7 @@ namespace ErsatzTV.Core.Iptv
                 };
 
                 sb.AppendLine(
-                    $"#EXTINF:0 tvg-id=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"ErsatzTV\", {channel.Name}");
+                    $"#EXTINF:0 tvg-id=\"{channel.Number}\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"ErsatzTV\", {channel.Name}");
                 sb.AppendLine($"{_scheme}://{_host}/iptv/channel/{channel.Number}.{format}");
             }
 

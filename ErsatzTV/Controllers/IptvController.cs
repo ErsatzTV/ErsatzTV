@@ -4,6 +4,7 @@ using ErsatzTV.Application.Images;
 using ErsatzTV.Application.Images.Queries;
 using ErsatzTV.Application.Streaming.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Iptv;
 using LanguageExt;
 using MediatR;
@@ -60,10 +61,11 @@ namespace ErsatzTV.Controllers
                         },
                         error => BadRequest(error.Value)));
 
-        [HttpGet("iptv/images/{fileName}")]
+        [HttpGet("iptv/logos/{fileName}")]
         public async Task<IActionResult> GetImage(string fileName)
         {
-            Either<BaseError, ImageViewModel> imageContents = await _mediator.Send(new GetImageContents(fileName));
+            Either<BaseError, ImageViewModel> imageContents =
+                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Logo));
             return imageContents.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));

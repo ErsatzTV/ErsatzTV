@@ -1,4 +1,7 @@
-﻿using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -6,6 +9,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.Channels.Mapper;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Channels.Commands
 {
@@ -27,7 +31,33 @@ namespace ErsatzTV.Application.Channels.Commands
             c.Name = update.Name;
             c.Number = update.Number;
             c.FFmpegProfileId = update.FFmpegProfileId;
-            c.Logo = update.Logo;
+
+            if (!string.IsNullOrWhiteSpace(update.Logo))
+            {
+                c.Artwork ??= new List<Artwork>();
+
+                Option<Artwork> maybeLogo =
+                    Optional(c.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Logo);
+
+                maybeLogo.Match(
+                    artwork =>
+                    {
+                        artwork.Path = update.Logo;
+                        artwork.DateUpdated = DateTime.UtcNow;
+                    },
+                    () =>
+                    {
+                        var artwork = new Artwork
+                        {
+                            Path = update.Logo,
+                            DateAdded = DateTime.UtcNow,
+                            DateUpdated = DateTime.UtcNow,
+                            ArtworkKind = ArtworkKind.Logo
+                        };
+                        c.Artwork.Add(artwork);
+                    });
+            }
+
             c.StreamingMode = update.StreamingMode;
             await _channelRepository.Update(c);
             return ProjectToViewModel(c);

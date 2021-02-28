@@ -6,6 +6,6 @@ namespace ErsatzTV.Core.Interfaces.Metadata
 {
     public interface IMovieFolderScanner
     {
-        Task<Either<BaseError, Unit>> ScanFolder(LocalMediaSource localMediaSource, string ffprobePath);
+        Task<Either<BaseError, Unit>> ScanFolder(LibraryPath libraryPath, string ffprobePath);
     }
 }

@@ -1,10 +1,10 @@
 ﻿@page "/schedules/{Id:int}/items"
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Queries
+@using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using ErsatzTV.Application.ProgramSchedules.Queries
-@using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Television.Queries
 @inject NavigationManager NavigationManager
 @inject ILogger<ScheduleItemsEditor> Logger
@@ -25,7 +25,7 @@
     </ColGroup>
     <HeaderContent>
         <MudTh>Start Time</MudTh>
-        <MudTh>Media Collection</MudTh>
+        <MudTh>Collection</MudTh>
         <MudTh>Playout Mode</MudTh>
         <MudTh/>
         <MudTh/>
@@ -104,28 +104,28 @@
                     {
                         <MudAutocomplete Class="mt-3"
                                          T="MediaCollectionViewModel"
-                                         Label="Media Collection"
-                                         @bind-value="_selectedItem.MediaCollection"
+                                         Label="Collection"
+                                         @bind-value="_selectedItem.Collection"
                                          SearchFunc="@SearchMediaCollections"
                                          ToStringFunc="@(c => c?.Name)"/>
                     }
                     @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
                     {
                         <MudAutocomplete Class="mt-3"
-                                         T="TelevisionShowViewModel"
+                                         T="NamedMediaItemViewModel"
                                          Label="Television Show"
-                                         @bind-value="_selectedItem.TelevisionShow"
+                                         @bind-value="_selectedItem.MediaItem"
                                          SearchFunc="@SearchTelevisionShows"
-                                         ToStringFunc="@(s => s == null ? null : $"{s.Title} ({s.Year})")"/>
+                                         ToStringFunc="@(s => s?.Name)"/>
                     }
                     @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
                     {
                         <MudAutocomplete Class="mt-3"
-                                         T="TelevisionSeasonViewModel"
+                                         T="NamedMediaItemViewModel"
                                          Label="Television Season"
-                                         @bind-value="_selectedItem.TelevisionSeason"
+                                         @bind-value="_selectedItem.MediaItem"
                                          SearchFunc="@SearchTelevisionSeasons"
-                                         ToStringFunc="@(s => s == null ? null : $"{s.Title} ({s.Year}) - {s.Plot}")"/>
+                                         ToStringFunc="@(s => s?.Name)"/>
                     }
                     <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
                         @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
@@ -151,8 +151,8 @@
 
     private ProgramScheduleItemsEditViewModel _schedule;
     private List<MediaCollectionViewModel> _mediaCollections;
-    private List<TelevisionShowViewModel> _televisionShows;
-    private List<TelevisionSeasonViewModel> _televisionSeasons;
+    private List<NamedMediaItemViewModel> _televisionShows;
+    private List<NamedMediaItemViewModel> _televisionSeasons;
 
     private ProgramScheduleItemEditViewModel _selectedItem;
 
@@ -160,7 +160,7 @@
 
     private async Task LoadScheduleItems()
     {
-        _mediaCollections = await Mediator.Send(new GetAllMediaCollections());
+        _mediaCollections = await Mediator.Send(new GetAllCollections());
         _televisionShows = await Mediator.Send(new GetAllTelevisionShows());
         _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons());
 
@@ -186,9 +186,8 @@
             StartTime = item.StartTime,
             PlayoutMode = item.PlayoutMode,
             CollectionType = item.CollectionType,
-            MediaCollection = item.MediaCollection,
-            TelevisionShow = item.TelevisionShow,
-            TelevisionSeason = item.TelevisionSeason
+            Collection = item.Collection,
+            MediaItem = item.MediaItem
         };
 
         switch (item)
@@ -246,11 +245,11 @@
     private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
         _mediaCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
-    private Task<IEnumerable<TelevisionShowViewModel>> SearchTelevisionShows(string value) =>
-        _televisionShows.Filter(s => s.Title.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+    private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value) =>
+        _televisionShows.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
-    private Task<IEnumerable<TelevisionSeasonViewModel>> SearchTelevisionSeasons(string value) =>
-        _televisionSeasons.Filter(s => s.Title.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+    private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value) =>
+        _televisionSeasons.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
     private async Task SaveChanges()
     {
@@ -260,9 +259,8 @@
             item.StartTime,
             item.PlayoutMode,
             item.CollectionType,
-            item.MediaCollection?.Id,
-            item.TelevisionShow?.Id,
-            item.TelevisionSeason?.Id,
+            item.Collection?.Id,
+            item.MediaItem?.MediaItemId,
             item.MultipleCount,
             item.PlayoutDuration,
             item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null)).ToList();

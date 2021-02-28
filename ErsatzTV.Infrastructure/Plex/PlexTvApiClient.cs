@@ -49,11 +49,11 @@ namespace ErsatzTV.Infrastructure.Plex
 
                                 var source = new PlexMediaSource
                                 {
-                                    Name = resource.Name,
+                                    ServerName = resource.Name,
                                     ProductVersion = resource.ProductVersion,
                                     ClientIdentifier = resource.ClientIdentifier,
                                     Connections = resource.Connections
-                                        .Map(c => new PlexMediaSourceConnection { Uri = c.Uri }).ToList()
+                                        .Map(c => new PlexConnection { Uri = c.Uri }).ToList()
                                 };
 
                                 return source;

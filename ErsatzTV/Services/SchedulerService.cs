@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -73,19 +74,35 @@ namespace ErsatzTV.Services
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
-            List<int> localMediaSourceIds = await dbContext.LocalMediaSources
-                .Map(ms => ms.Id)
+            List<int> localLibraryIds = await dbContext.LocalMediaSources
+                .SelectMany(ms => ms.Libraries)
+                .Map(l => l.Id)
                 .ToListAsync(cancellationToken);
 
-            foreach (int mediaSourceId in localMediaSourceIds)
+            foreach (int libraryId in localLibraryIds)
             {
-                if (_entityLocker.LockMediaSource(mediaSourceId))
+                if (_entityLocker.LockLibrary(libraryId))
                 {
                     await _channel.WriteAsync(
-                        new ScanLocalMediaSourceIfNeeded(mediaSourceId),
+                        new ScanLocalLibraryIfNeeded(libraryId),
                         cancellationToken);
                 }
             }
+
+            // List<PlexLibrary> plexLibraries = await dbContext.PlexLibraries
+            //     .Filter(l => l.ShouldSyncItems)
+            //     .ToListAsync(cancellationToken);
+            //
+            // foreach (PlexLibrary library in plexLibraries)
+            // {
+            //     // TODO: this locking won't work...
+            //     // if (_entityLocker.LockMediaSource(library.PlexMediaSourceId))
+            //     // {
+            //     // await _channel.WriteAsync(
+            //     //     new SynchronizePlexLibraryByIdIfNeeded(library.PlexMediaSourceId, library.Id),
+            //     //     cancellationToken);
+            //     // }
+            // }
         }
     }
 }

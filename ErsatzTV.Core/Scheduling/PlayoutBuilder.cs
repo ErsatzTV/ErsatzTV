@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -55,15 +54,15 @@ namespace ErsatzTV.Core.Scheduling
                     {
                         case ProgramScheduleItemCollectionType.Collection:
                             Option<List<MediaItem>> maybeItems =
-                                await _mediaCollectionRepository.GetItems(collectionKey.Id);
+                                await _mediaCollectionRepository.GetItems(collectionKey.CollectionId ?? 0);
                             return Tuple(collectionKey, maybeItems.IfNone(new List<MediaItem>()));
                         case ProgramScheduleItemCollectionType.TelevisionShow:
-                            List<TelevisionEpisodeMediaItem> showItems =
-                                await _televisionRepository.GetShowItems(collectionKey.Id);
+                            List<Episode> showItems =
+                                await _televisionRepository.GetShowItems(collectionKey.MediaItemId ?? 0);
                             return Tuple(collectionKey, showItems.Cast<MediaItem>().ToList());
                         case ProgramScheduleItemCollectionType.TelevisionSeason:
-                            List<TelevisionEpisodeMediaItem> seasonItems =
-                                await _televisionRepository.GetSeasonItems(collectionKey.Id);
+                            List<Episode> seasonItems =
+                                await _televisionRepository.GetSeasonItems(collectionKey.MediaItemId ?? 0);
                             return Tuple(collectionKey, seasonItems.Cast<MediaItem>().ToList());
                         default:
                             return Tuple(collectionKey, new List<MediaItem>());
@@ -145,14 +144,21 @@ namespace ErsatzTV.Core.Scheduling
                             DisplayTitle(mediaItem),
                             itemStartTime);
 
+                        MediaVersion version = mediaItem switch
+                        {
+                            Movie m => m.MediaVersions.Head(),
+                            Episode e => e.MediaVersions.Head(),
+                            _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
+                        };
+
                         var playoutItem = new PlayoutItem
                         {
                             MediaItemId = mediaItem.Id,
-                            Start = itemStartTime,
-                            Finish = itemStartTime + mediaItem.Statistics.Duration
+                            Start = itemStartTime.UtcDateTime,
+                            Finish = itemStartTime.UtcDateTime + version.Duration
                         };
 
-                        currentTime = itemStartTime + mediaItem.Statistics.Duration;
+                        currentTime = itemStartTime + version.Duration;
                         enumerator.MoveNext();
 
                         playout.Items.Add(playoutItem);
@@ -187,6 +193,13 @@ namespace ErsatzTV.Core.Scheduling
                                 enumerator.Current.Do(
                                     peekMediaItem =>
                                     {
+                                        MediaVersion peekVersion = peekMediaItem switch
+                                        {
+                                            Movie m => m.MediaVersions.Head(),
+                                            Episode e => e.MediaVersions.Head(),
+                                            _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
+                                        };
+
                                         ProgramScheduleItem peekScheduleItem =
                                             sortedScheduleItems[(index + 1) % sortedScheduleItems.Count];
                                         DateTimeOffset peekScheduleItemStart =
@@ -198,7 +211,7 @@ namespace ErsatzTV.Core.Scheduling
                                         // is after, we need to move on to the next schedule item
                                         // eventually, spots probably have to fit in this gap
                                         bool willNotFinishInTime = currentTime <= peekScheduleItemStart &&
-                                                                   currentTime + peekMediaItem.Statistics.Duration >
+                                                                   currentTime + peekVersion.Duration >
                                                                    peekScheduleItemStart;
                                         if (willNotFinishInTime)
                                         {
@@ -213,6 +226,13 @@ namespace ErsatzTV.Core.Scheduling
                                 enumerator.Current.Do(
                                     peekMediaItem =>
                                     {
+                                        MediaVersion peekVersion = peekMediaItem switch
+                                        {
+                                            Movie m => m.MediaVersions.Head(),
+                                            Episode e => e.MediaVersions.Head(),
+                                            _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
+                                        };
+
                                         // remember when we need to finish this duration item
                                         if (durationFinish.IsNone)
                                         {
@@ -221,7 +241,7 @@ namespace ErsatzTV.Core.Scheduling
 
                                         bool willNotFinishInTime =
                                             currentTime <= durationFinish.IfNone(DateTime.MinValue) &&
-                                            currentTime + peekMediaItem.Statistics.Duration >
+                                            currentTime + peekVersion.Duration >
                                             durationFinish.IfNone(DateTime.MinValue);
                                         if (willNotFinishInTime)
                                         {
@@ -250,7 +270,7 @@ namespace ErsatzTV.Core.Scheduling
             {
                 NextScheduleItem = nextScheduleItem,
                 NextScheduleItemId = nextScheduleItem.Id,
-                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime)
+                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime).UtcDateTime
             };
 
             // build program schedule anchors
@@ -306,7 +326,7 @@ namespace ErsatzTV.Core.Scheduling
                     }
 
                     TimeSpan startTime = item.StartTime.GetValueOrDefault();
-                    DateTime result = start.Date + startTime;
+                    DateTimeOffset result = start.Date + startTime;
                     // need to wrap to the next day if appropriate
                     return start.TimeOfDay > startTime ? result.AddDays(1) : result;
                 case StartType.Dynamic:
@@ -325,7 +345,9 @@ namespace ErsatzTV.Core.Scheduling
             {
                 Option<PlayoutProgramScheduleAnchor> maybeExisting = playout.ProgramScheduleAnchors
                     .FirstOrDefault(
-                        a => a.CollectionType == collectionKey.CollectionType && a.CollectionId == collectionKey.Id);
+                        a => a.CollectionType == collectionKey.CollectionType
+                             && a.CollectionId == collectionKey.CollectionId
+                             && a.MediaItemId == collectionKey.MediaItemId);
 
                 var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State)
                     .ToDictionary(mcs => mcs.Key, mcs => mcs.Head());
@@ -343,7 +365,8 @@ namespace ErsatzTV.Core.Scheduling
                         ProgramSchedule = playout.ProgramSchedule,
                         ProgramScheduleId = playout.ProgramScheduleId,
                         CollectionType = collectionKey.CollectionType,
-                        CollectionId = collectionKey.Id,
+                        CollectionId = collectionKey.CollectionId,
+                        MediaItemId = collectionKey.MediaItemId,
                         EnumeratorState = maybeEnumeratorState[collectionKey]
                     });
 
@@ -360,13 +383,14 @@ namespace ErsatzTV.Core.Scheduling
         {
             Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
                 .FirstOrDefault(
-                    a => a.ProgramScheduleId == playout.ProgramScheduleId && a.CollectionType ==
-                                                                          collectionKey.CollectionType
-                                                                          && a.CollectionId == collectionKey.Id);
+                    a => a.ProgramScheduleId == playout.ProgramScheduleId
+                         && a.CollectionType == collectionKey.CollectionType
+                         && a.CollectionId == collectionKey.CollectionId
+                         && a.MediaItemId == collectionKey.MediaItemId);
 
-            MediaCollectionEnumeratorState state = maybeAnchor.Match(
+            CollectionEnumeratorState state = maybeAnchor.Match(
                 anchor => anchor.EnumeratorState,
-                () => new MediaCollectionEnumeratorState { Seed = Random.Next(), Index = 0 });
+                () => new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 });
 
             switch (playout.ProgramSchedule.MediaCollectionPlaybackOrder)
             {
@@ -385,10 +409,12 @@ namespace ErsatzTV.Core.Scheduling
         private static string DisplayTitle(MediaItem mediaItem) =>
             mediaItem switch
             {
-                TelevisionEpisodeMediaItem e => e.Metadata != null
-                    ? $"{e.Metadata.Title} - s{e.Metadata.Season:00}e{e.Metadata.Episode:00}"
-                    : Path.GetFileName(e.Path),
-                MovieMediaItem m => m.Metadata?.Title ?? Path.GetFileName(m.Path),
+                Episode e => e.EpisodeMetadata.Any() && e.Season != null
+                    ? $"{e.EpisodeMetadata.Head().Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}"
+                    : "[unknown episode]",
+                Movie m => m.MovieMetadata.HeadOrNone().Match(
+                    mm => mm.Title ?? string.Empty,
+                    () => "[unknown movie]"),
                 _ => string.Empty
             };
 
@@ -398,17 +424,17 @@ namespace ErsatzTV.Core.Scheduling
                 ProgramScheduleItemCollectionType.Collection => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.MediaCollectionId.Value
+                    CollectionId = item.CollectionId
                 },
                 ProgramScheduleItemCollectionType.TelevisionShow => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.TelevisionShowId.Value
+                    MediaItemId = item.MediaItemId
                 },
                 ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
-                    Id = item.TelevisionSeasonId.Value
+                    MediaItemId = item.MediaItemId
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(item))
             };
@@ -416,7 +442,8 @@ namespace ErsatzTV.Core.Scheduling
         private class CollectionKey : Record<CollectionKey>
         {
             public ProgramScheduleItemCollectionType CollectionType { get; set; }
-            public int Id { get; set; }
+            public int? CollectionId { get; set; }
+            public int? MediaItemId { get; set; }
         }
     }
 }

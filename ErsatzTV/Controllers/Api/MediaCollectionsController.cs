@@ -25,24 +25,24 @@ namespace ErsatzTV.Controllers.Api
         [ProducesResponseType(400)]
         public Task<IActionResult> Add(
             [Required] [FromBody]
-            CreateSimpleMediaCollection createCollection) =>
+            CreateCollection createCollection) =>
             _mediator.Send(createCollection).ToActionResult();
 
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<MediaCollectionViewModel>), 200)]
         public Task<IActionResult> GetAll() =>
-            _mediator.Send(new GetAllMediaCollections()).ToActionResult();
+            _mediator.Send(new GetAllCollections()).ToActionResult();
 
         [HttpGet("{id}")]
         [ProducesResponseType(typeof(MediaCollectionViewModel), 200)]
         [ProducesResponseType(404)]
         public Task<IActionResult> Get(int id) =>
-            _mediator.Send(new GetSimpleMediaCollectionById(id)).ToActionResult();
+            _mediator.Send(new GetCollectionById(id)).ToActionResult();
 
         [HttpGet("{id}/items")]
         [ProducesResponseType(typeof(IEnumerable<MediaItemViewModel>), 200)]
         [ProducesResponseType(404)]
         public Task<IActionResult> GetItems(int id) =>
-            _mediator.Send(new GetSimpleMediaCollectionItems(id)).ToActionResult();
+            _mediator.Send(new GetCollectionItems(id)).ToActionResult();
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
 using ErsatzTV.Application.MediaCollections;
-using ErsatzTV.Application.Television;
+using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules
@@ -13,9 +13,8 @@ namespace ErsatzTV.Application.ProgramSchedules
             StartType startType,
             TimeSpan? startTime,
             ProgramScheduleItemCollectionType collectionType,
-            MediaCollectionViewModel mediaCollection,
-            TelevisionShowViewModel televisionShow,
-            TelevisionSeasonViewModel televisionSeason,
+            MediaCollectionViewModel collection,
+            NamedMediaItemViewModel mediaItem,
             TimeSpan playoutDuration,
             bool offlineTail) : base(
             id,
@@ -24,9 +23,8 @@ namespace ErsatzTV.Application.ProgramSchedules
             startTime,
             PlayoutMode.Duration,
             collectionType,
-            mediaCollection,
-            televisionShow,
-            televisionSeason)
+            collection,
+            mediaItem)
         {
             PlayoutDuration = playoutDuration;
             OfflineTail = offlineTail;

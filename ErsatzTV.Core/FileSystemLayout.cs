@@ -15,8 +15,14 @@ namespace ErsatzTV.Core
 
         public static readonly string LogDatabasePath = Path.Combine(AppDataFolder, "logs.sqlite3");
 
-        public static readonly string ImageCacheFolder = Path.Combine(AppDataFolder, "cache", "images");
+        public static readonly string LegacyImageCacheFolder = Path.Combine(AppDataFolder, "cache", "images");
 
         public static readonly string PlexSecretsPath = Path.Combine(AppDataFolder, "plex-secrets.json");
+
+        public static readonly string ArtworkCacheFolder = Path.Combine(AppDataFolder, "cache", "artwork");
+
+        public static readonly string PosterCacheFolder = Path.Combine(ArtworkCacheFolder, "posters");
+        public static readonly string ThumbnailCacheFolder = Path.Combine(ArtworkCacheFolder, "thumbnails");
+        public static readonly string LogoCacheFolder = Path.Combine(ArtworkCacheFolder, "logos");
     }
 }
