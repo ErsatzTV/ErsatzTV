@@ -2,7 +2,13 @@
 @page "/media/movies/page/{PageNumber:int}"
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using Unit = LanguageExt.Unit
+@inject ILogger<MovieList> Logger
+@inject ISnackbar Snackbar
 @inject IMediator Mediator
+@inject IDialogService Dialog
 @inject NavigationManager NavigationManager
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
@@ -24,7 +30,9 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
     @foreach (MovieCardViewModel card in _data.Cards.Where(d => !string.IsNullOrWhiteSpace(d.Title)))
     {
-        <MediaCard Data="@card" Link="@($"/media/movies/{card.MovieId}")"/>
+        <MediaCard Data="@card"
+                   Link="@($"/media/movies/{card.MovieId}")"
+                   AddToCollectionClicked="@AddToCollection"/>
     }
 </MudContainer>
 
@@ -52,5 +60,29 @@
     private void PrevPage() => NavigationManager.NavigateTo($"/media/movies/page/{PageNumber - 1}");
 
     private void NextPage() => NavigationManager.NavigateTo($"/media/movies/page/{PageNumber + 1}");
+
+    private async Task AddToCollection(MediaCardViewModel card)
+    {
+        if (card is MovieCardViewModel movie)
+        {
+            var parameters = new DialogParameters { { "EntityType", "movie" }, { "EntityName", movie.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddMovieToCollection(collection.Id, movie.MovieId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding movie to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding movie to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {movie.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
+    }
 
 }
