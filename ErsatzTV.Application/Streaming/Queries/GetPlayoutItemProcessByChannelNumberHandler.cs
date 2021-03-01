@@ -9,6 +9,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
@@ -16,6 +17,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
     {
         private readonly FFmpegProcessService _ffmpegProcessService;
+        private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlayoutRepository _playoutRepository;
 
@@ -24,12 +26,14 @@ namespace ErsatzTV.Application.Streaming.Queries
             IConfigElementRepository configElementRepository,
             IPlayoutRepository playoutRepository,
             IMediaSourceRepository mediaSourceRepository,
-            FFmpegProcessService ffmpegProcessService)
+            FFmpegProcessService ffmpegProcessService,
+            ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
             : base(channelRepository, configElementRepository)
         {
             _playoutRepository = playoutRepository;
             _mediaSourceRepository = mediaSourceRepository;
             _ffmpegProcessService = ffmpegProcessService;
+            _logger = logger;
         }
 
         protected override async Task<Either<BaseError, Process>> GetProcess(
@@ -84,7 +88,16 @@ namespace ErsatzTV.Application.Streaming.Queries
             Option<PlexPathReplacement> maybeReplacement = replacements
                 .SingleOrDefault(r => path.StartsWith(r.PlexPath + Path.DirectorySeparatorChar));
             return maybeReplacement.Match(
-                replacement => path.Replace(replacement.PlexPath, replacement.LocalPath),
+                replacement =>
+                {
+                    string finalPath = path.Replace(replacement.PlexPath, replacement.LocalPath);
+                    _logger.LogInformation(
+                        "Replacing plex path {PlexPath} with {LocalPath} resulting in {FinalPath}",
+                        replacement.PlexPath,
+                        replacement.LocalPath,
+                        finalPath);
+                    return finalPath;
+                },
                 () => path);
         }
     }
