@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using ErsatzTV.Application.Images;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -12,17 +10,17 @@ using ErsatzTV.Core.Plex;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.Caching.Memory;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Plex.Queries
 {
-    public class GetPlexImageHandler : IRequestHandler<GetPlexImage, Either<BaseError, ImageViewModel>>
+    public class GetPlexConnectionParametersHandler : IRequestHandler<GetPlexConnectionParameters,
+        Either<BaseError, PlexConnectionParametersViewModel>>
     {
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IMemoryCache _memoryCache;
         private readonly IPlexSecretStore _plexSecretStore;
 
-        public GetPlexImageHandler(
+        public GetPlexConnectionParametersHandler(
             IMemoryCache memoryCache,
             IMediaSourceRepository mediaSourceRepository,
             IPlexSecretStore plexSecretStore)
@@ -32,50 +30,39 @@ namespace ErsatzTV.Application.Plex.Queries
             _plexSecretStore = plexSecretStore;
         }
 
-        public async Task<Either<BaseError, ImageViewModel>>
-            Handle(GetPlexImage request, CancellationToken cancellationToken)
+        public async Task<Either<BaseError, PlexConnectionParametersViewModel>> Handle(
+            GetPlexConnectionParameters request,
+            CancellationToken cancellationToken)
         {
-            if (!_memoryCache.TryGetValue(request, out ConnectionParameters parameters))
+            if (_memoryCache.TryGetValue(request, out PlexConnectionParametersViewModel parameters))
             {
-                Either<BaseError, ConnectionParameters> maybeParameters =
-                    await Validate(request).Map(v => v.ToEither<ConnectionParameters>());
-                return await maybeParameters.Match(
-                    p =>
-                    {
-                        _memoryCache.Set(request, p, TimeSpan.FromHours(1));
-                        return RequestImageFromPlex(request, p);
-                    },
-                    error => Left<BaseError, ImageViewModel>(error).AsTask());
+                return parameters;
             }
 
-            return await RequestImageFromPlex(request, parameters);
+            Either<BaseError, PlexConnectionParametersViewModel> maybeParameters =
+                await Validate(request)
+                    .MapT(
+                        cp => new PlexConnectionParametersViewModel(
+                            new Uri(cp.ActiveConnection.Uri),
+                            cp.PlexServerAuthToken.AuthToken))
+                    .Map(v => v.ToEither<PlexConnectionParametersViewModel>());
+
+            return maybeParameters.Match(
+                p =>
+                {
+                    _memoryCache.Set(request, p, TimeSpan.FromHours(1));
+                    return maybeParameters;
+                },
+                error => error);
         }
 
-        private async Task<Either<BaseError, ImageViewModel>> RequestImageFromPlex(
-            GetPlexImage request,
-            ConnectionParameters connectionParameters)
-        {
-            var url = $"{connectionParameters.ActiveConnection.Uri}/{request.Path}";
-
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("X-Plex-Token", connectionParameters.PlexServerAuthToken.AuthToken);
-            HttpResponseMessage response = await client.GetAsync(url);
-            if (response.IsSuccessStatusCode)
-            {
-                return new ImageViewModel(
-                    await response.Content.ReadAsByteArrayAsync(),
-                    response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
-            }
-
-            return BaseError.New($"Unsuccessful response from plex image request: {response.StatusCode}");
-        }
-
-        private Task<Validation<BaseError, ConnectionParameters>> Validate(GetPlexImage request) =>
+        private Task<Validation<BaseError, ConnectionParameters>> Validate(GetPlexConnectionParameters request) =>
             PlexMediaSourceMustExist(request)
                 .BindT(MediaSourceMustHaveActiveConnection)
                 .BindT(MediaSourceMustHaveToken);
 
-        private Task<Validation<BaseError, PlexMediaSource>> PlexMediaSourceMustExist(GetPlexImage request) =>
+        private Task<Validation<BaseError, PlexMediaSource>> PlexMediaSourceMustExist(
+            GetPlexConnectionParameters request) =>
             _mediaSourceRepository.GetPlex(request.PlexMediaSourceId)
                 .Map(
                     v => v.ToValidation<BaseError>(
