@@ -23,7 +23,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task Update(PlexMediaSource plexMediaSource);
         Task Update(PlexLibrary plexMediaSourceLibrary);
         Task Delete(int id);
-        Task DisablePlexLibrarySync(IEnumerable<int> libraryIds);
+        Task DisablePlexLibrarySync(List<int> libraryIds);
         Task EnablePlexLibrarySync(IEnumerable<int> libraryIds);
     }
 }

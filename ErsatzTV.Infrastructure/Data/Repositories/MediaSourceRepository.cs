@@ -168,14 +168,29 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
-        public Task DisablePlexLibrarySync(IEnumerable<int> libraryIds) =>
-            _dbConnection.ExecuteAsync(
-                "UPDATE PlexLibrary SET ShouldSyncItems = 0 WHERE Id in @ids",
+        public async Task DisablePlexLibrarySync(List<int> libraryIds)
+        {
+            await _dbConnection.ExecuteAsync(
+                "UPDATE PlexLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
                 new { ids = libraryIds });
+            
+            await _dbConnection.ExecuteAsync(
+                "UPDATE Library SET LastScan = null WHERE Id IN @ids",
+                new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+        }
 
         public Task EnablePlexLibrarySync(IEnumerable<int> libraryIds) =>
             _dbConnection.ExecuteAsync(
-                "UPDATE PlexLibrary SET ShouldSyncItems = 1 WHERE Id in @ids",
+                "UPDATE PlexLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
                 new { ids = libraryIds });
     }
 }
