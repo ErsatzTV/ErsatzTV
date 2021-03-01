@@ -7,6 +7,7 @@
 @inject ILogger<PlexLibrariesEditor> Logger
 @inject ISnackbar Snackbar
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject IEntityLocker Locker
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
     <MudTable Hover="true" Items="_libraries" Dense="true">
@@ -98,7 +99,10 @@
             {
                 foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
                 {
-                    await Channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(id));
+                    if (Locker.LockLibrary(id))
+                    {
+                        await Channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(id));
+                    }
                 }
 
                 NavigationManager.NavigateTo("/media/plex");
