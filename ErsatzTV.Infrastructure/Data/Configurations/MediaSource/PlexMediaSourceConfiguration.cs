@@ -14,6 +14,11 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .WithOne(c => c.PlexMediaSource)
                 .HasForeignKey(c => c.PlexMediaSourceId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(s => s.PathReplacements)
+                .WithOne(r => r.PlexMediaSource)
+                .HasForeignKey(r => r.PlexMediaSourceId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

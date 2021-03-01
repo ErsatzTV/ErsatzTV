@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
@@ -15,6 +16,13 @@ namespace ErsatzTV.Infrastructure.Plex
 {
     public class PlexServerApiClient : IPlexServerApiClient
     {
+        private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+
+        public PlexServerApiClient(IFallbackMetadataProvider fallbackMetadataProvider)
+        {
+            _fallbackMetadataProvider = fallbackMetadataProvider;
+        }
+
         public async Task<Either<BaseError, List<PlexLibrary>>> GetLibraries(
             PlexConnection connection,
             PlexServerAuthToken token)
@@ -77,49 +85,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 _ => None
             };
 
-        private static PlexPartEntry Project(PlexPartResponse response) =>
-            new()
-            {
-                Id = response.Id,
-                Key = response.Key,
-                Duration = response.Duration,
-                File = response.File,
-                Size = response.Size
-            };
-
-        private static PlexMediaEntry Project(PlexMediaResponse response) =>
-            new()
-            {
-                Id = response.Id,
-                Duration = response.Duration,
-                Bitrate = response.Bitrate,
-                Width = response.Width,
-                Height = response.Height,
-                AspectRatio = response.AspectRatio,
-                AudioChannels = response.AudioChannels,
-                AudioCodec = response.AudioCodec,
-                VideoCodec = response.VideoCodec,
-                Container = response.Container,
-                VideoFrameRate = response.VideoFrameRate,
-                Part = response.Part.Map(Project).ToList()
-            };
-
-        private static PlexMetadataEntry Project(PlexMetadataResponse response) =>
-            new()
-            {
-                Key = response.Key,
-                Title = response.Title,
-                Summary = response.Summary,
-                Year = response.Year,
-                Tagline = response.Tagline,
-                Thumb = response.Thumb,
-                Art = response.Art,
-                AddedAt = response.AddedAt,
-                UpdatedAt = response.UpdatedAt,
-                Media = response.Media.Map(Project).ToList()
-            };
-
-        private static PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
+        private PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
         {
             PlexMediaResponse media = response.Media.Head();
             PlexPartResponse part = media.Part.Head();
@@ -129,6 +95,7 @@ namespace ErsatzTV.Infrastructure.Plex
             var metadata = new MovieMetadata
             {
                 Title = response.Title,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
                 Plot = response.Summary,
                 ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt),
                 Year = response.Year,
@@ -160,7 +127,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Height = media.Height,
                 AudioCodec = media.AudioCodec,
                 VideoCodec = media.VideoCodec,
-                // TODO: aspect ratio
+                SampleAspectRatio = ConvertToSAR(media.AspectRatio),
                 MediaFiles = new List<MediaFile>
                 {
                     new PlexMediaFile
@@ -181,5 +148,9 @@ namespace ErsatzTV.Infrastructure.Plex
 
             return movie;
         }
+
+        private static string ConvertToSAR(double aspectRatio) => "1:1";
+            // TODO: fix this with more detailed stats pull from plex for each item
+            // Math.Abs(aspectRatio - 1) < 0.01 ? "1:1" : $"{(int) (aspectRatio * 100)}:100";
     }
 }

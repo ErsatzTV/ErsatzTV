@@ -68,6 +68,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public Task<List<PlexPathReplacement>> GetPlexPathReplacements(int plexMediaSourceId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.PlexPathReplacements
+                .Filter(r => r.PlexMediaSourceId == plexMediaSourceId)
+                .ToListAsync();
+        }
+
         public Task<Option<PlexLibrary>> GetPlexLibrary(int plexLibraryId)
         {
             using TvContext context = _dbContextFactory.CreateDbContext();
@@ -93,6 +101,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return context.PlexMediaSources
                 .Include(p => p.Connections)
                 .Include(p => p.Libraries)
+                .Include(p => p.PathReplacements)
                 .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
                 .SingleOrDefaultAsync(p => p.Id == id)
                 .Map(Optional);
@@ -107,6 +116,20 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Where(p => p.Libraries.Any(l => l.Id == plexLibraryId))
                 .SingleOrDefaultAsync()
                 .Map(Optional);
+        }
+
+        public Task<List<PlexPathReplacement>> GetPlexPathReplacementsByLibraryId(int plexLibraryPathId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.PlexPathReplacements
+                .FromSqlRaw(
+                    @"select ppr.* from LibraryPath lp
+                    inner join PlexLibrary pl ON pl.Id = lp.LibraryId
+                    inner join Library l ON l.Id = pl.Id
+                    inner join PlexPathReplacement ppr on ppr.PlexMediaSourceId = l.MediaSourceId
+                    where lp.Id = {0}",
+                    plexLibraryPathId)
+                .ToListAsync();
         }
 
         public Task<int> CountMediaItems(int id)

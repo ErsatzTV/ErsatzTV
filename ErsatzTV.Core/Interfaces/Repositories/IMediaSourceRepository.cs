@@ -12,10 +12,12 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<MediaSource>> GetAll();
         Task<List<PlexMediaSource>> GetAllPlex();
         Task<List<PlexLibrary>> GetPlexLibraries(int plexMediaSourceId);
+        Task<List<PlexPathReplacement>> GetPlexPathReplacements(int plexMediaSourceId);
         Task<Option<PlexLibrary>> GetPlexLibrary(int plexLibraryId);
         Task<Option<MediaSource>> Get(int id);
         Task<Option<PlexMediaSource>> GetPlex(int id);
         Task<Option<PlexMediaSource>> GetPlexByLibraryId(int plexLibraryId);
+        Task<List<PlexPathReplacement>> GetPlexPathReplacementsByLibraryId(int plexLibraryPathId);
         Task<int> CountMediaItems(int id);
         Task Update(LocalMediaSource localMediaSource);
         Task Update(PlexMediaSource plexMediaSource);

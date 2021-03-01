@@ -178,7 +178,6 @@ namespace ErsatzTV
             services.AddSingleton<FFmpegProcessService>();
             services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
             services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
-            services.AddSingleton<IPlexServerApiClient, PlexServerApiClient>();
             services.AddSingleton<IEntityLocker, EntityLocker>();
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
@@ -206,6 +205,7 @@ namespace ErsatzTV
             services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
             services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
             services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
+            services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
 
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();

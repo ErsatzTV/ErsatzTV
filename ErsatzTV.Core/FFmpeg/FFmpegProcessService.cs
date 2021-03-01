@@ -15,24 +15,17 @@ namespace ErsatzTV.Core.FFmpeg
         public Process ForPlayoutItem(
             string ffmpegPath,
             Channel channel,
-            PlayoutItem item,
+            MediaVersion version,
+            string path,
+            DateTimeOffset start,
             DateTimeOffset now)
         {
-            MediaVersion version = item.MediaItem switch
-            {
-                Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head(),
-                _ => throw new ArgumentOutOfRangeException(nameof(item))
-            };
-
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
                 channel.StreamingMode,
                 channel.FFmpegProfile,
                 version,
-                item.StartOffset,
+                start,
                 now);
-
-            MediaFile file = version.MediaFiles.Head();
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath)
                 .WithThreads(playbackSettings.ThreadCount)
@@ -40,7 +33,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
-                .WithInput(file.Path);
+                .WithInput(path);
 
             playbackSettings.ScaledSize.Match(
                 scaledSize =>
@@ -86,7 +79,7 @@ namespace ErsatzTV.Core.FFmpeg
             return builder.WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel)
                 .WithFormat("mpegts")
-                .WithDuration(item.Start + version.Duration - now)
+                .WithDuration(start + version.Duration - now)
                 .WithPipe()
                 .Build();
         }

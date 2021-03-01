@@ -10,6 +10,11 @@ namespace ErsatzTV.Core.Tests.Metadata
     [TestFixture]
     public class FallbackMetadataProviderTests
     {
+        [SetUp]
+        public void SetUp() => _fallbackMetadataProvider = new FallbackMetadataProvider();
+
+        private FallbackMetadataProvider _fallbackMetadataProvider;
+
         [Test]
         [TestCase("Awesome Show - s01e02.mkv", "Awesome Show", 1, 2)]
         [TestCase("Awesome Show - S01E02.mkv", "Awesome Show", 1, 2)]
@@ -39,7 +44,7 @@ namespace ErsatzTV.Core.Tests.Metadata
             2)]
         public void GetFallbackMetadata_ShouldHandleVariousFormats(string path, string title, int season, int episode)
         {
-            (EpisodeMetadata metadata, int episodeNumber) = FallbackMetadataProvider.GetFallbackMetadata(
+            (EpisodeMetadata metadata, int episodeNumber) = _fallbackMetadataProvider.GetFallbackMetadata(
                 new Episode
                 {
                     LibraryPath = new LibraryPath(),
