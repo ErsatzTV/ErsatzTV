@@ -62,15 +62,15 @@ namespace ErsatzTV.Core.Iptv
 
                     string title = playoutItem.MediaItem switch
                     {
-                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]"),
-                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Title).IfNone("[unknown episode]"),
+                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title ?? string.Empty).IfNone("[unknown movie]"),
+                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Title ?? string.Empty).IfNone("[unknown episode]"),
                         _ => "[unknown]"
                     };
 
                     string description = playoutItem.MediaItem switch
                     {
-                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Plot).IfNone(string.Empty),
-                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Plot).IfNone(string.Empty),
+                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Plot ?? string.Empty).IfNone(string.Empty),
+                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Plot ?? string.Empty).IfNone(string.Empty),
                         _ => string.Empty
                     };
 
