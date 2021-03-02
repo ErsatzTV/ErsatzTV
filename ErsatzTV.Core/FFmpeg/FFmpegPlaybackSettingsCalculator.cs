@@ -67,6 +67,11 @@ namespace ErsatzTV.Core.FFmpeg
                     result.Deinterlace = false;
                     break;
                 case StreamingMode.TransportStream:
+                    if (ffmpegProfile.QsvAcceleration)
+                    {
+                        result.HardwareAcceleration = "qsv";
+                    }
+
                     if (NeedToScale(ffmpegProfile, version))
                     {
                         IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, version);

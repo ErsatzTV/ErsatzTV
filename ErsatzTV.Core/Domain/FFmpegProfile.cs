@@ -6,6 +6,7 @@
         public string Name { get; set; }
         public int ThreadCount { get; set; }
         public bool Transcode { get; set; }
+        public bool QsvAcceleration { get; set; }
         public int ResolutionId { get; set; }
         public Resolution Resolution { get; set; }
         public bool NormalizeResolution { get; set; }

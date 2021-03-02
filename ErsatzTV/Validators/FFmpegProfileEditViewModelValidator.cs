@@ -23,6 +23,14 @@ namespace ErsatzTV.Validators
                     RuleFor(x => x.AudioVolume).GreaterThanOrEqualTo(0);
                     RuleFor(x => x.AudioChannels).GreaterThan(0);
                 });
+
+            When(
+                x => x.QsvAcceleration,
+                () =>
+                {
+                    RuleFor(x => x.VideoCodec).Must(c => c.EndsWith("_qsv"))
+                        .WithMessage("QSV codec is required (h264_qsv, hevc_qsv, mpeg2_qsv)");
+                });
         }
     }
 }

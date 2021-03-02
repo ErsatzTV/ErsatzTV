@@ -9,6 +9,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
     [TestFixture]
     public class FFmpegPlaybackSettingsCalculatorTests
     {
+        [TestFixture]
         public class CalculateSettings
         {
             private readonly FFmpegPlaybackSettingsCalculator _calculator;
@@ -732,9 +733,32 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
                 actual.AudioSampleRate.IfNone(0).Should().Be(48);
             }
-
-            private FFmpegProfile TestProfile() =>
-                new() { Resolution = new Resolution { Width = 1920, Height = 1080 } };
         }
+
+        [TestFixture]
+        public class CalculateSettingsQsv
+        {
+            private readonly FFmpegPlaybackSettingsCalculator _calculator;
+
+            public CalculateSettingsQsv() => _calculator = new FFmpegPlaybackSettingsCalculator();
+            
+            [Test]
+            public void Should_UseHardwareAcceleration()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with { QsvAcceleration = true };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.HardwareAcceleration.Should().Be("qsv");
+            }
+        }
+        
+        private static FFmpegProfile TestProfile() =>
+            new() { Resolution = new Resolution { Width = 1920, Height = 1080 } };
     }
 }

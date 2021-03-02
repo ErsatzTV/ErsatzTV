@@ -9,6 +9,8 @@ namespace ErsatzTV.Core.FFmpeg
     {
         public int ThreadCount { get; set; }
         public List<string> FormatFlags { get; set; }
+        public string HardwareAcceleration { get; set; }
+        public string VideoDecoder { get; set; }
         public bool RealtimeOutput => true;
         public Option<TimeSpan> StreamSeek { get; set; }
         public Option<IDisplaySize> ScaledSize { get; set; }

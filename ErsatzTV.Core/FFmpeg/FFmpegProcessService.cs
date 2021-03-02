@@ -29,17 +29,18 @@ namespace ErsatzTV.Core.FFmpeg
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath)
                 .WithThreads(playbackSettings.ThreadCount)
+                .WithHardwareAcceleration(playbackSettings.HardwareAcceleration)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
-                .WithInput(path);
+                .WithInputCodec(path, playbackSettings.HardwareAcceleration, version.VideoCodec);
 
             playbackSettings.ScaledSize.Match(
                 scaledSize =>
                 {
                     builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
-                        .WithScaling(scaledSize, playbackSettings.ScalingAlgorithm)
+                        .WithScaling(scaledSize, playbackSettings.HardwareAcceleration, playbackSettings.ScalingAlgorithm)
                         .WithSAR();
 
                     scaledSize = scaledSize.PadToEven();

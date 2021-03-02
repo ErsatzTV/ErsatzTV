@@ -49,6 +49,9 @@
                             <MudElement HtmlTag="div" Class="mt-3">
                                 <MudTextField Disabled="@(!_model.Transcode)" Label="Buffer Size" @bind-Value="_model.VideoBufferSize" For="@(() => _model.VideoBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
                             </MudElement>
+                            <MudElement HtmlTag="div" Class="mt-3">
+                                <MudCheckBox Label="QSV Acceleration" @bind-Checked="@_model.QsvAcceleration" For="@(() => _model.QsvAcceleration)"/>
+                            </MudElement>
                         </MudItem>
                         <MudItem>
                             <MudText Typo="Typo.h6">Audio</MudText>

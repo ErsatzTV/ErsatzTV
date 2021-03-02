@@ -31,6 +31,13 @@ namespace ErsatzTV.Core.FFmpeg
 {
     internal class FFmpegProcessBuilder
     {
+        private static readonly Dictionary<string, string> QsvMap = new()
+        {
+            { "h264", "h264_qsv" },
+            { "hevc", "hevc_qsv" },
+            { "mpeg2video", "mpeg2_qsv" }
+        };
+
         private readonly List<string> _arguments = new();
         private readonly Queue<string> _audioFilters = new();
         private readonly string _ffmpegPath;
@@ -42,6 +49,17 @@ namespace ErsatzTV.Core.FFmpeg
         {
             _arguments.Add("-threads");
             _arguments.Add($"{threads}");
+            return this;
+        }
+
+        public FFmpegProcessBuilder WithHardwareAcceleration(string hwAccel)
+        {
+            if (!string.IsNullOrWhiteSpace(hwAccel))
+            {
+                _arguments.Add("-hwaccel");
+                _arguments.Add(hwAccel);
+            }
+
             return this;
         }
 
@@ -104,6 +122,19 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithInput(string input)
         {
+            _arguments.Add("-i");
+            _arguments.Add($"{input}");
+            return this;
+        }
+
+        public FFmpegProcessBuilder WithInputCodec(string input, string hwAccel, string codec)
+        {
+            if (hwAccel == "qsv" && QsvMap.TryGetValue(codec, out string qsvCodec))
+            {
+                _arguments.Add("-c:v");
+                _arguments.Add(qsvCodec);
+            }
+
             _arguments.Add("-i");
             _arguments.Add($"{input}");
             return this;
@@ -242,9 +273,13 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithScaling(IDisplaySize displaySize, string algorithm)
+        public FFmpegProcessBuilder WithScaling(IDisplaySize displaySize, string hwAccel, string algorithm)
         {
-            _videoFilters.Enqueue($"scale={displaySize.Width}:{displaySize.Height}:flags={algorithm}");
+            _videoFilters.Enqueue(
+                hwAccel == "qsv"
+                    ? $"scale_qsv=w={displaySize.Width}:h={displaySize.Height}"
+                    : $"scale={displaySize.Width}:{displaySize.Height}:flags={algorithm}");
+
             return this;
         }
 

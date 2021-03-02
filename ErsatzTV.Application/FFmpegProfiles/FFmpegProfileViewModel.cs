@@ -7,6 +7,7 @@ namespace ErsatzTV.Application.FFmpegProfiles
         string Name,
         int ThreadCount,
         bool Transcode,
+        bool QsvAcceleration,
         ResolutionViewModel Resolution,
         bool NormalizeResolution,
         string VideoCodec,

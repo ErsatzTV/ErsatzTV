@@ -27,6 +27,7 @@ namespace ErsatzTV.ViewModels
             Resolution = viewModel.Resolution;
             ThreadCount = viewModel.ThreadCount;
             Transcode = viewModel.Transcode;
+            QsvAcceleration = viewModel.QsvAcceleration;
             VideoBitrate = viewModel.VideoBitrate;
             VideoBufferSize = viewModel.VideoBufferSize;
             VideoCodec = viewModel.VideoCodec;
@@ -47,6 +48,7 @@ namespace ErsatzTV.ViewModels
         public ResolutionViewModel Resolution { get; set; }
         public int ThreadCount { get; set; }
         public bool Transcode { get; set; }
+        public bool QsvAcceleration { get; set; }
         public int VideoBitrate { get; set; }
         public int VideoBufferSize { get; set; }
         public string VideoCodec { get; set; }
@@ -56,6 +58,7 @@ namespace ErsatzTV.ViewModels
                 Name,
                 ThreadCount,
                 Transcode,
+                QsvAcceleration,
                 Resolution.Id,
                 NormalizeResolution,
                 VideoCodec,
@@ -78,6 +81,7 @@ namespace ErsatzTV.ViewModels
                 Name,
                 ThreadCount,
                 Transcode,
+                QsvAcceleration,
                 Resolution.Id,
                 NormalizeResolution,
                 VideoCodec,
