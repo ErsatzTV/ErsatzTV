@@ -1,5 +1,7 @@
 ﻿@using System.Reflection
+@using System.Web
 @inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
 
 <MudThemeProvider Theme="_ersatzTvTheme"/>
 <MudDialogProvider DisableBackdropClick="true"/>
@@ -7,6 +9,14 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
+        <MudTextField T="string"
+                      @ref="_textField"
+                      Placeholder="Search"
+                      Variant="Variant.Outlined"
+                      Class="search-bar"
+                      OnKeyDown="@OnSearchKeyDown"
+                      Immediate="true">
+        </MudTextField>
         <MudAppBarSpacer/>
         <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
         <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
@@ -56,6 +66,8 @@
 @code {
     private static readonly string InfoVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
 
+    private MudTextField<string> _textField;
+    
     private MudTheme _ersatzTvTheme
     {
         get
@@ -71,6 +83,17 @@
                     Tertiary = Colors.Shades.White
                 }
             };
+        }
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Code == "Enter")
+        {
+            string query = HttpUtility.UrlEncode(_textField.Value);
+            _textField.Reset();
+            NavigationManager.NavigateTo($"/search?query={query}", true);
+            StateHasChanged();
         }
     }
 
