@@ -108,7 +108,7 @@ namespace ErsatzTV.Core.Iptv
                             xml.WriteAttributeString("system", "xmltv_ns");
                             xml.WriteString($"{s - 1}.{e - 1}.0/1");
                             xml.WriteEndElement(); // episode-num
-                            
+
                             xml.WriteStartElement("episode-num");
                             xml.WriteAttributeString("system", "onscreen");
                             xml.WriteString($"S{s:00}E{e:00}");

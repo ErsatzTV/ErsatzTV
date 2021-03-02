@@ -14,5 +14,8 @@ namespace ErsatzTV.Application.Plex
 
         internal static PlexLibraryViewModel ProjectToViewModel(PlexLibrary library) =>
             new(library.Id, library.Name, library.MediaKind, library.ShouldSyncItems);
+
+        internal static PlexPathReplacementViewModel ProjectToViewModel(PlexPathReplacement pathReplacement) =>
+            new(pathReplacement.Id, pathReplacement.PlexPath, pathReplacement.LocalPath);
     }
 }

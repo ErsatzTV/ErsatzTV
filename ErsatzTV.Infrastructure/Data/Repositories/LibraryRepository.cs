@@ -49,10 +49,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(Optional);
         }
 
-        public Task<List<LocalLibrary>> GetAllLocal()
+        public Task<List<Library>> GetAll()
         {
             using TvContext context = _dbContextFactory.CreateDbContext();
-            return context.LocalLibraries.ToListAsync();
+            return context.Libraries.ToListAsync();
         }
 
         public Task<Unit> UpdateLastScan(Library library) => _dbConnection.ExecuteAsync(

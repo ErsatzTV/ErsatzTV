@@ -6,9 +6,11 @@
 @inject NavigationManager NavigationManager
 @inject ILogger<PlexLibrariesEditor> Logger
 @inject ISnackbar Snackbar
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject IEntityLocker Locker
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudTable Hover="true" Items="_libraries" Dense="true" Class="mt-8">
+    <MudTable Hover="true" Items="_libraries" Dense="true">
         <ToolBarContent>
             <MudText Typo="Typo.h6"><b>@_source.Name</b> Libraries</MudText>
         </ToolBarContent>
@@ -86,13 +88,25 @@
 
         Seq<BaseError> errorMessages = await Mediator.Send(request).Map(e => e.LeftToSeq());
 
-        errorMessages.HeadOrNone().Match(
+        await errorMessages.HeadOrNone().Match(
             error =>
             {
                 Snackbar.Add($"Unexpected error saving plex libraries: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving plex libraries: {Error}", error.Value);
+                return Task.CompletedTask;
             },
-            () => NavigationManager.NavigateTo("/media/sources/1"));
+            async () =>
+            {
+                foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
+                {
+                    if (Locker.LockLibrary(id))
+                    {
+                        await Channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(id));
+                    }
+                }
+
+                NavigationManager.NavigateTo("/media/plex");
+            });
     }
 
 }

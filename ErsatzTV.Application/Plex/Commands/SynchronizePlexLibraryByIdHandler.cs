@@ -82,7 +82,7 @@ namespace ErsatzTV.Application.Plex.Commands
                     parameters.Library.Name);
             }
 
-            // _entityLocker.UnlockMediaSource(parameters.MediaSource.Id);
+            _entityLocker.UnlockLibrary(parameters.Library.Id);
             return Unit.Default;
         }
 
@@ -103,8 +103,10 @@ namespace ErsatzTV.Application.Plex.Commands
 
         private Task<Validation<BaseError, PlexMediaSource>> PlexMediaSourceMustExist(
             ISynchronizePlexLibraryById request) =>
-            _mediaSourceRepository.GetPlex(request.PlexMediaSourceId)
-                .Map(v => v.ToValidation<BaseError>($"Plex media source {request.PlexMediaSourceId} does not exist."));
+            _mediaSourceRepository.GetPlexByLibraryId(request.PlexLibraryId)
+                .Map(
+                    v => v.ToValidation<BaseError>(
+                        $"Plex media source for library {request.PlexLibraryId} does not exist."));
 
         private Validation<BaseError, ConnectionParameters> MediaSourceMustHaveActiveConnection(
             PlexMediaSource plexMediaSource)
@@ -134,9 +136,7 @@ namespace ErsatzTV.Application.Plex.Commands
             PlexLibrary Library,
             bool ForceScan);
 
-        private record ConnectionParameters(
-            PlexMediaSource PlexMediaSource,
-            PlexConnection ActiveConnection)
+        private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
         {
             public PlexServerAuthToken PlexServerAuthToken { get; set; }
         }

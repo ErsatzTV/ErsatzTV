@@ -1,7 +1,13 @@
 ﻿@page "/media/tv/shows"
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using Unit = LanguageExt.Unit
+@inject ILogger<TelevisionShowList> Logger
+@inject ISnackbar Snackbar
 @inject IMediator Mediator
+@inject IDialogService Dialog
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
     <MudPaper Style="align-items: center; display: flex; justify-content: center;">
@@ -22,7 +28,9 @@
 <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
     @foreach (TelevisionShowCardViewModel card in _data.Cards)
     {
-        <MediaCard Data="@card" Link="@($"/media/tv/shows/{card.TelevisionShowId}")" DataRefreshed="@(() => RefreshData())"/>
+        <MediaCard Data="@card"
+                   Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
+                   AddToCollectionClicked="@AddToCollection"/>
     }
 </MudContainer>
 
@@ -47,6 +55,30 @@
     {
         _pageNumber += 1;
         await RefreshData();
+    }
+
+    private async Task AddToCollection(MediaCardViewModel card)
+    {
+        if (card is TelevisionShowCardViewModel show)
+        {
+            var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", show.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddShowToCollection(collection.Id, show.TelevisionShowId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding show to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding show to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
     }
 
 }

@@ -14,7 +14,7 @@
             <col/>
             <col/>
             <col/>
-            <col style="width: 60px;"/>
+            <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Id</MudTh>
@@ -27,17 +27,23 @@
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Name">@context.MediaCollectionPlaybackOrder</MudTd>
             <MudTd>
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Direction="Direction.Left" OffsetX="true">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/schedules/{context.Id}")">
-                        Edit Properties
-                    </MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/schedules/{context.Id}/items")">
-                        Edit Schedule Items
-                    </MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteSchedule(context))">
-                        Delete
-                    </MudMenuItem>
-                </MudMenu>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Properties">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@($"/schedules/{context.Id}")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Edit Schedule Items">
+                        <MudIconButton Icon="@Icons.Material.Filled.FormatListNumbered"
+                                       Link="@($"/schedules/{context.Id}/items")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Schedule">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteSchedule(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
             </MudTd>
         </RowTemplate>
     </MudTable>

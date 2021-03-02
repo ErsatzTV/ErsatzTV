@@ -1,5 +1,7 @@
 ﻿@using System.Reflection
+@using System.Web
 @inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
 
 <MudThemeProvider Theme="_ersatzTvTheme"/>
 <MudDialogProvider DisableBackdropClick="true"/>
@@ -7,8 +9,14 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@(_ => DrawerToggle())"/>
-        <MudText Typo="Typo.h5" Class="ml-3">ErsatzTV</MudText>
+        <MudTextField T="string"
+                      @ref="_textField"
+                      Placeholder="Search"
+                      Variant="Variant.Outlined"
+                      Class="search-bar"
+                      OnKeyDown="@OnSearchKeyDown"
+                      Immediate="true">
+        </MudTextField>
         <MudAppBarSpacer/>
         <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
         <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
@@ -21,11 +29,17 @@
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/jasongdove/ErsatzTV" Target="_blank"/>
         </MudTooltip>
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
+    <MudDrawer Open="true" Elevation="2">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">ErsatzTV</MudText>
+        </MudDrawerHeader>
         <MudNavMenu>
-            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+            <MudNavLink Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
             <MudNavLink Href="/channels">Channels</MudNavLink>
             <MudNavLink Href="/ffmpeg">FFmpeg</MudNavLink>
+            @* <MudNavGroup Title="Media Sources" Expanded="true"> *@
+            @*     <MudNavLink Href="/media/plex">Plex</MudNavLink> *@
+            @* </MudNavGroup> *@
             <MudNavGroup Title="Media" Expanded="true">
                 <MudNavLink Href="/media/libraries">Libraries</MudNavLink>
                 <MudNavLink Href="/media/tv/shows">TV Shows</MudNavLink>
@@ -52,10 +66,8 @@
 @code {
     private static readonly string InfoVersion = Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown";
 
-    private bool _drawerOpen = true;
-
-    private void DrawerToggle() => _drawerOpen = !_drawerOpen;
-
+    private MudTextField<string> _textField;
+    
     private MudTheme _ersatzTvTheme
     {
         get
@@ -71,6 +83,17 @@
                     Tertiary = Colors.Shades.White
                 }
             };
+        }
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Code == "Enter")
+        {
+            string query = HttpUtility.UrlEncode(_textField.Value);
+            _textField.Reset();
+            NavigationManager.NavigateTo($"/search?query={query}", true);
+            StateHasChanged();
         }
     }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
@@ -15,6 +16,13 @@ namespace ErsatzTV.Infrastructure.Plex
 {
     public class PlexServerApiClient : IPlexServerApiClient
     {
+        private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+
+        public PlexServerApiClient(IFallbackMetadataProvider fallbackMetadataProvider)
+        {
+            _fallbackMetadataProvider = fallbackMetadataProvider;
+        }
+
         public async Task<Either<BaseError, List<PlexLibrary>>> GetLibraries(
             PlexConnection connection,
             PlexServerAuthToken token)
@@ -46,7 +54,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
                 return await service.GetLibrarySectionContents(library.Key, token.AuthToken)
                     .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
-                    .Map(list => list.Map(ProjectToMovie).ToList());
+                    .Map(list => list.Map(metadata => ProjectToMovie(metadata, library.MediaSourceId)).ToList());
             }
             catch (Exception ex)
             {
@@ -62,108 +70,87 @@ namespace ErsatzTV.Infrastructure.Plex
                     Key = response.Key,
                     Name = response.Title,
                     MediaKind = LibraryMediaKind.Shows,
-                    ShouldSyncItems = false
+                    ShouldSyncItems = false,
+                    Paths = new List<LibraryPath> { new() { Path = $"plex://{response.Uuid}" } }
                 },
                 "movie" => new PlexLibrary
                 {
                     Key = response.Key,
                     Name = response.Title,
                     MediaKind = LibraryMediaKind.Movies,
-                    ShouldSyncItems = false
+                    ShouldSyncItems = false,
+                    Paths = new List<LibraryPath> { new() { Path = $"plex://{response.Uuid}" } }
                 },
                 // TODO: "artist" for music libraries
                 _ => None
             };
 
-        private static PlexPartEntry Project(PlexPartResponse response) =>
-            new()
-            {
-                Id = response.Id,
-                Key = response.Key,
-                Duration = response.Duration,
-                File = response.File,
-                Size = response.Size
-            };
-
-        private static PlexMediaEntry Project(PlexMediaResponse response) =>
-            new()
-            {
-                Id = response.Id,
-                Duration = response.Duration,
-                Bitrate = response.Bitrate,
-                Width = response.Width,
-                Height = response.Height,
-                AspectRatio = response.AspectRatio,
-                AudioChannels = response.AudioChannels,
-                AudioCodec = response.AudioCodec,
-                VideoCodec = response.VideoCodec,
-                Container = response.Container,
-                VideoFrameRate = response.VideoFrameRate,
-                Part = response.Part.Map(Project).ToList()
-            };
-
-        private static PlexMetadataEntry Project(PlexMetadataResponse response) =>
-            new()
-            {
-                Key = response.Key,
-                Title = response.Title,
-                Summary = response.Summary,
-                Year = response.Year,
-                Tagline = response.Tagline,
-                Thumb = response.Thumb,
-                Art = response.Art,
-                AddedAt = response.AddedAt,
-                UpdatedAt = response.UpdatedAt,
-                Media = response.Media.Map(Project).ToList()
-            };
-
-        private static PlexMovie ProjectToMovie(PlexMetadataResponse response)
+        private PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
         {
             PlexMediaResponse media = response.Media.Head();
             PlexPartResponse part = media.Part.Head();
+            DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
             var metadata = new MovieMetadata
             {
                 Title = response.Title,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
                 Plot = response.Summary,
-                ReleaseDate = new DateTime(response.Year, 1, 1), // TODO: actual release date?
+                ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt),
                 Year = response.Year,
                 Tagline = response.Tagline,
-                DateAdded = DateTime.UtcNow, // TODO: actual date added?
+                DateAdded = dateAdded,
                 DateUpdated = lastWriteTime
             };
 
-            // TODO: artwork
+            if (!string.IsNullOrWhiteSpace(response.Thumb))
+            {
+                var path = $"plex/{mediaSourceId}{response.Thumb}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Poster,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
+
+            var version = new MediaVersion
+            {
+                Name = "Main",
+                Duration = TimeSpan.FromMilliseconds(media.Duration),
+                Width = media.Width,
+                Height = media.Height,
+                AudioCodec = media.AudioCodec,
+                VideoCodec = media.VideoCodec,
+                SampleAspectRatio = ConvertToSAR(media.AspectRatio),
+                MediaFiles = new List<MediaFile>
+                {
+                    new PlexMediaFile
+                    {
+                        PlexId = part.Id,
+                        Key = part.Key,
+                        Path = part.File
+                    }
+                }
+            };
 
             var movie = new PlexMovie
             {
                 Key = response.Key,
-                // DateUpdated = lastWriteTime,
                 MovieMetadata = new List<MovieMetadata> { metadata },
-                // TODO: versions
-                // Statistics = new MediaItemStatistics
-                // {
-                //     Duration = TimeSpan.FromMilliseconds(media.Duration),
-                //     Width = media.Width,
-                //     Height = media.Height,
-                //     // TODO: aspect ratio
-                //     AudioCodec = media.AudioCodec,
-                //     VideoCodec = media.VideoCodec,
-                //     LastWriteTime = lastWriteTime
-                // },
-                // TODO: multi-part movies?
-                Part = new PlexMediaItemPart
-                {
-                    PlexId = part.Id,
-                    Key = part.Key,
-                    File = part.File,
-                    Duration = part.Duration,
-                    Size = part.Size
-                }
+                MediaVersions = new List<MediaVersion> { version }
             };
 
             return movie;
         }
+
+        private static string ConvertToSAR(double aspectRatio) => "1:1";
+            // TODO: fix this with more detailed stats pull from plex for each item
+            // Math.Abs(aspectRatio - 1) < 0.01 ? "1:1" : $"{(int) (aspectRatio * 100)}:100";
     }
 }
