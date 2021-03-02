@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -20,7 +21,7 @@ namespace ErsatzTV.Application.Plex.Commands
             UpdatePlexLibraryPreferences request,
             CancellationToken cancellationToken)
         {
-            IEnumerable<int> toDisable = request.Preferences.Filter(p => p.ShouldSyncItems == false).Map(p => p.Id);
+            var toDisable = request.Preferences.Filter(p => p.ShouldSyncItems == false).Map(p => p.Id).ToList();
             await _mediaSourceRepository.DisablePlexLibrarySync(toDisable);
 
             IEnumerable<int> toEnable = request.Preferences.Filter(p => p.ShouldSyncItems).Map(p => p.Id);

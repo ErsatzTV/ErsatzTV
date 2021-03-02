@@ -7,7 +7,10 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
+@using Unit=LanguageExt.Unit;
 @inject IMediator Mediator
+@inject ILogger<TelevisionSeasonList> Logger
+@inject ISnackbar Snackbar
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
 
@@ -52,7 +55,7 @@
     {
         <MediaCard Data="@card" Placeholder="@card.Placeholder"
                    Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
-                   DataRefreshed="@(() => RefreshData())"/>
+                   AddToCollectionClicked="@AddSeasonToCollection"/>
     }
 </MudContainer>
 
@@ -111,6 +114,30 @@
         {
             await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionShow, null, ShowId, null, null, null));
             NavigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
+        }
+    }
+    
+    private async Task AddSeasonToCollection(MediaCardViewModel card)
+    {
+        if (card is TelevisionSeasonCardViewModel season)
+        {
+            var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", season.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddSeasonToCollection(collection.Id, season.TelevisionSeasonId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding season to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding season to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {season.Title} to collection {collection.Name}", Severity.Success));
+            }
         }
     }
 

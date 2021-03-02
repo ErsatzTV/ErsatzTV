@@ -51,7 +51,7 @@ namespace ErsatzTV.Core.Metadata
                 () =>
                 {
                     ShowMetadata metadata = _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder);
-                    metadata.SortTitle = GetSortTitle(metadata.Title);
+                    metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
                     return metadata;
                 });
         }
@@ -73,9 +73,9 @@ namespace ErsatzTV.Core.Metadata
         public Task<Unit> RefreshFallbackMetadata(MediaItem mediaItem) =>
             mediaItem switch
             {
-                Episode e => ApplyMetadataUpdate(e, FallbackMetadataProvider.GetFallbackMetadata(e))
+                Episode e => ApplyMetadataUpdate(e, _fallbackMetadataProvider.GetFallbackMetadata(e))
                     .ToUnit(),
-                Movie m => ApplyMetadataUpdate(m, FallbackMetadataProvider.GetFallbackMetadata(m)).ToUnit(),
+                Movie m => ApplyMetadataUpdate(m, _fallbackMetadataProvider.GetFallbackMetadata(m)).ToUnit(),
                 _ => Task.FromResult(Unit.Default)
             };
 
@@ -100,11 +100,11 @@ namespace ErsatzTV.Core.Metadata
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.Year = metadata.Year;
-                    existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
+                    existing.SortTitle = metadata.SortTitle ?? _fallbackMetadataProvider.GetSortTitle(metadata.Title);
                 },
                 () =>
                 {
-                    metadata.SortTitle ??= GetSortTitle(metadata.Title);
+                    metadata.SortTitle ??= _fallbackMetadataProvider.GetSortTitle(metadata.Title);
                     episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata };
                 });
 
@@ -126,11 +126,11 @@ namespace ErsatzTV.Core.Metadata
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.Year = metadata.Year;
-                    existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
+                    existing.SortTitle = metadata.SortTitle ?? _fallbackMetadataProvider.GetSortTitle(metadata.Title);
                 },
                 () =>
                 {
-                    metadata.SortTitle ??= GetSortTitle(metadata.Title);
+                    metadata.SortTitle ??= _fallbackMetadataProvider.GetSortTitle(metadata.Title);
                     movie.MovieMetadata = new List<MovieMetadata> { metadata };
                 });
 
@@ -152,11 +152,11 @@ namespace ErsatzTV.Core.Metadata
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.Year = metadata.Year;
-                    existing.SortTitle = metadata.SortTitle ?? GetSortTitle(metadata.Title);
+                    existing.SortTitle = metadata.SortTitle ?? _fallbackMetadataProvider.GetSortTitle(metadata.Title);
                 },
                 () =>
                 {
-                    metadata.SortTitle ??= GetSortTitle(metadata.Title);
+                    metadata.SortTitle ??= _fallbackMetadataProvider.GetSortTitle(metadata.Title);
                     show.ShowMetadata = new List<ShowMetadata> { metadata };
                 });
 
@@ -247,7 +247,7 @@ namespace ErsatzTV.Core.Metadata
             catch (Exception ex)
             {
                 _logger.LogInformation(ex, "Failed to read TV episode nfo metadata from {Path}", nfoFileName);
-                return FallbackMetadataProvider.GetFallbackMetadata(episode);
+                return _fallbackMetadataProvider.GetFallbackMetadata(episode);
             }
         }
 
@@ -274,7 +274,7 @@ namespace ErsatzTV.Core.Metadata
             catch (Exception ex)
             {
                 _logger.LogInformation(ex, "Failed to read Movie nfo metadata from {Path}", nfoFileName);
-                return FallbackMetadataProvider.GetFallbackMetadata(mediaItem);
+                return _fallbackMetadataProvider.GetFallbackMetadata(mediaItem);
             }
         }
 
@@ -291,26 +291,6 @@ namespace ErsatzTV.Core.Metadata
             }
 
             return null;
-        }
-
-        private static string GetSortTitle(string title)
-        {
-            if (string.IsNullOrWhiteSpace(title))
-            {
-                return title;
-            }
-
-            if (title.StartsWith("the ", StringComparison.OrdinalIgnoreCase))
-            {
-                return title.Substring(4);
-            }
-
-            if (title.StartsWith("Æ"))
-            {
-                return title.Replace("Æ", "E");
-            }
-
-            return title;
         }
 
         [XmlRoot("movie")]

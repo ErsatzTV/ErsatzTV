@@ -17,6 +17,13 @@
             <div class="media-card-overlay" style="">
                 <MudButton Link="@Link" Style="height: 100%; width: 100%">
                 </MudButton>
+                @if (AddToCollectionClicked.HasDelegate)
+                {
+                    <MudIconButton Color="Color.Tertiary"
+                                   Icon="@Icons.Material.Filled.PlaylistAdd"
+                                   Style="bottom: 0; position: absolute; left: 0;"
+                                   OnClick="@(() => AddToCollectionClicked.InvokeAsync(Data))"/>
+                }
                 @if (DeleteClicked.HasDelegate)
                 {
                     <MudIconButton Color="Color.Tertiary"
@@ -77,6 +84,9 @@
 
     [Parameter]
     public EventCallback<MediaCardViewModel> DeleteClicked { get; set; }
+
+    [Parameter]
+    public EventCallback<MediaCardViewModel> AddToCollectionClicked { get; set; }
 
     private string GetPlaceholder(string sortTitle)
     {

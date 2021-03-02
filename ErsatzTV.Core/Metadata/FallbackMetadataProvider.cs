@@ -17,7 +17,7 @@ namespace ErsatzTV.Core.Metadata
             return GetTelevisionShowMetadata(fileName, metadata);
         }
 
-        public static Tuple<EpisodeMetadata, int> GetFallbackMetadata(Episode episode)
+        public Tuple<EpisodeMetadata, int> GetFallbackMetadata(Episode episode)
         {
             string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
             string fileName = Path.GetFileName(path);
@@ -26,7 +26,7 @@ namespace ErsatzTV.Core.Metadata
             return fileName != null ? GetEpisodeMetadata(fileName, metadata) : Tuple(metadata, 0);
         }
 
-        public static MovieMetadata GetFallbackMetadata(Movie movie)
+        public MovieMetadata GetFallbackMetadata(Movie movie)
         {
             string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
             string fileName = Path.GetFileName(path);
@@ -34,8 +34,28 @@ namespace ErsatzTV.Core.Metadata
 
             return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
         }
+        
+        public string GetSortTitle(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                return title;
+            }
 
-        private static Tuple<EpisodeMetadata, int> GetEpisodeMetadata(string fileName, EpisodeMetadata metadata)
+            if (title.StartsWith("the ", StringComparison.OrdinalIgnoreCase))
+            {
+                return title.Substring(4);
+            }
+
+            if (title.StartsWith("Æ"))
+            {
+                return title.Replace("Æ", "E");
+            }
+
+            return title;
+        }
+
+        private Tuple<EpisodeMetadata, int> GetEpisodeMetadata(string fileName, EpisodeMetadata metadata)
         {
             try
             {
@@ -55,7 +75,7 @@ namespace ErsatzTV.Core.Metadata
             return Tuple(metadata, 0);
         }
 
-        private static MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)
+        private MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)
         {
             try
             {
@@ -76,9 +96,7 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        private static ShowMetadata GetTelevisionShowMetadata(
-            string fileName,
-            ShowMetadata metadata)
+        private ShowMetadata GetTelevisionShowMetadata(string fileName, ShowMetadata metadata)
         {
             try
             {

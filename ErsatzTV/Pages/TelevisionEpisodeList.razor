@@ -7,7 +7,10 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
+@using Unit=LanguageExt.Unit;
 @inject IMediator Mediator
+@inject ILogger<TelevisionEpisodeList> Logger
+@inject ISnackbar Snackbar
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
 
@@ -53,7 +56,7 @@
         <MediaCard Data="@card"
                    Placeholder="@card.Placeholder"
                    Link="@($"/media/tv/episodes/{card.EpisodeId}")"
-                   DataRefreshed="@(() => RefreshData())"
+                   AddToCollectionClicked="@AddEpisodeToCollection"
                    ContainerClass="media-card-episode-container mx-2"
                    CardClass="media-card-episode"
                    ArtworkKind="@ArtworkKind.Thumbnail"/>
@@ -117,6 +120,30 @@
         {
             await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, SeasonId, null, null, null));
             NavigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
+        }
+    }
+    
+    private async Task AddEpisodeToCollection(MediaCardViewModel card)
+    {
+        if (card is TelevisionEpisodeCardViewModel episode)
+        {
+            var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
+            }
         }
     }
 

@@ -10,5 +10,6 @@ namespace ErsatzTV.Core.Domain
 
         // public bool IsOwned { get; set; }
         public List<PlexConnection> Connections { get; set; }
+        public List<PlexPathReplacement> PathReplacements { get; set; }
     }
 }

@@ -14,7 +14,7 @@
             <col/>
             <col/>
             <col/>
-            <col style="width: 60px;"/>
+            <col style="width: 120px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Id</MudTh>
@@ -29,7 +29,18 @@
             <MudTd DataLabel="Schedule">@context.ProgramSchedule.Name</MudTd>
             @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
             <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeletePlayout(context))"></MudIconButton>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Rebuild Playout">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                       OnClick="@(_ => RebuildPlayout(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Playout">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeletePlayout(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
             </MudTd>
         </RowTemplate>
     </MudTable>
@@ -63,12 +74,16 @@
 @code {
     private List<PlayoutViewModel> _playouts;
     private List<PlayoutItemViewModel> _selectedPlayoutItems;
+    private int? _selectedPlayoutId;
 
     protected override Task OnParametersSetAsync() =>
         LoadAllPlayouts();
 
-    private async Task PlayoutSelected(PlayoutViewModel playout) =>
+    private async Task PlayoutSelected(PlayoutViewModel playout)
+    {
+        _selectedPlayoutId = playout.Id;
         _selectedPlayoutItems = await Mediator.Send(new GetPlayoutItemsById(playout.Id));
+    }
 
     private async Task DeletePlayout(PlayoutViewModel playout)
     {
@@ -81,6 +96,16 @@
         {
             await Mediator.Send(new DeletePlayout(playout.Id));
             await LoadAllPlayouts();
+        }
+    }
+
+    private async Task RebuildPlayout(PlayoutViewModel playout)
+    {
+        await Mediator.Send(new BuildPlayout(playout.Id, true));
+        await LoadAllPlayouts();
+        if (_selectedPlayoutId == playout.Id)
+        {
+            await PlayoutSelected(playout);
         }
     }
 

@@ -68,10 +68,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public Task<List<PlexPathReplacement>> GetPlexPathReplacements(int plexMediaSourceId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.PlexPathReplacements
+                .Filter(r => r.PlexMediaSourceId == plexMediaSourceId)
+                .ToListAsync();
+        }
+
         public Task<Option<PlexLibrary>> GetPlexLibrary(int plexLibraryId)
         {
             using TvContext context = _dbContextFactory.CreateDbContext();
             return context.PlexLibraries
+                .Include(l => l.Paths)
                 .OrderBy(l => l.Id) // https://github.com/dotnet/efcore/issues/22579
                 .SingleOrDefaultAsync(l => l.Id == plexLibraryId)
                 .Map(Optional);
@@ -92,9 +101,35 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return context.PlexMediaSources
                 .Include(p => p.Connections)
                 .Include(p => p.Libraries)
+                .Include(p => p.PathReplacements)
                 .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
                 .SingleOrDefaultAsync(p => p.Id == id)
                 .Map(Optional);
+        }
+
+        public Task<Option<PlexMediaSource>> GetPlexByLibraryId(int plexLibraryId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.PlexMediaSources
+                .Include(p => p.Connections)
+                .Include(p => p.Libraries)
+                .Where(p => p.Libraries.Any(l => l.Id == plexLibraryId))
+                .SingleOrDefaultAsync()
+                .Map(Optional);
+        }
+
+        public Task<List<PlexPathReplacement>> GetPlexPathReplacementsByLibraryId(int plexLibraryPathId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.PlexPathReplacements
+                .FromSqlRaw(
+                    @"select ppr.* from LibraryPath lp
+                    inner join PlexLibrary pl ON pl.Id = lp.LibraryId
+                    inner join Library l ON l.Id = pl.Id
+                    inner join PlexPathReplacement ppr on ppr.PlexMediaSourceId = l.MediaSourceId
+                    where lp.Id = {0}",
+                    plexLibraryPathId)
+                .ToListAsync();
         }
 
         public Task<int> CountMediaItems(int id)
@@ -133,14 +168,29 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
-        public Task DisablePlexLibrarySync(IEnumerable<int> libraryIds) =>
-            _dbConnection.ExecuteAsync(
-                "UPDATE PlexMediaSourceLibraries SET ShouldSyncItems = 0 WHERE Id in @ids",
+        public async Task DisablePlexLibrarySync(List<int> libraryIds)
+        {
+            await _dbConnection.ExecuteAsync(
+                "UPDATE PlexLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
                 new { ids = libraryIds });
+            
+            await _dbConnection.ExecuteAsync(
+                "UPDATE Library SET LastScan = null WHERE Id IN @ids",
+                new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+        }
 
         public Task EnablePlexLibrarySync(IEnumerable<int> libraryIds) =>
             _dbConnection.ExecuteAsync(
-                "UPDATE PlexMediaSourceLibraries SET ShouldSyncItems = 1 WHERE Id in @ids",
+                "UPDATE PlexLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
                 new { ids = libraryIds });
     }
 }

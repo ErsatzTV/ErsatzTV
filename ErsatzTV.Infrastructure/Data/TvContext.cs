@@ -21,6 +21,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<LocalLibrary> LocalLibraries { get; set; }
         public DbSet<LibraryPath> LibraryPaths { get; set; }
         public DbSet<PlexLibrary> PlexLibraries { get; set; }
+        public DbSet<PlexPathReplacement> PlexPathReplacements { get; set; }
         public DbSet<MediaItem> MediaItems { get; set; }
         public DbSet<MediaVersion> MediaVersions { get; set; }
         public DbSet<MediaFile> MediaFiles { get; set; }
@@ -31,7 +32,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<Season> Seasons { get; set; }
         public DbSet<Episode> Episodes { get; set; }
         public DbSet<EpisodeMetadata> EpisodeMetadata { get; set; }
-        public DbSet<PlexMovie> PlexMovieMediaItems { get; set; }
+        public DbSet<PlexMovie> PlexMovies { get; set; }
         public DbSet<Collection> Collections { get; set; }
         public DbSet<ProgramSchedule> ProgramSchedules { get; set; }
         public DbSet<Playout> Playouts { get; set; }
