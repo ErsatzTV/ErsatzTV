@@ -105,13 +105,13 @@ namespace ErsatzTV.Core.Iptv
                         if (s > 0 && e > 0)
                         {
                             xml.WriteStartElement("episode-num");
-                            xml.WriteAttributeString("system", "xmltv_ns");
-                            xml.WriteString($"{s - 1}.{e - 1}.0/1");
-                            xml.WriteEndElement(); // episode-num
-
-                            xml.WriteStartElement("episode-num");
                             xml.WriteAttributeString("system", "onscreen");
                             xml.WriteString($"S{s:00}E{e:00}");
+                            xml.WriteEndElement(); // episode-num
+                            
+                            xml.WriteStartElement("episode-num");
+                            xml.WriteAttributeString("system", "xmltv_ns");
+                            xml.WriteString($"{s - 1}.{e - 1}.0/1");
                             xml.WriteEndElement(); // episode-num
                         }
                     }
