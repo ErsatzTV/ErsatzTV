@@ -33,7 +33,13 @@ namespace ErsatzTV.Extensions
                 .Bind(services => Try(GetDbContext(services)))
                 .Bind(ctx => Try(Migrate(ctx, scope.ServiceProvider)))
                 .Bind(ctx => Try(InitializeDb(ctx)))
-                .IfFail(ex => LogException(ex, "Error occured while seeding database", scope.ServiceProvider));
+                .IfFail(
+                    ex =>
+                    {
+                        LogException(ex, "Error occured while migrating database; shutting down.", scope.ServiceProvider);
+                        Environment.Exit(13);
+                        return unit;
+                    });
 
         private static Unit CleanCache(IServiceScope scope) =>
             Try(() => scope.ServiceProvider)
