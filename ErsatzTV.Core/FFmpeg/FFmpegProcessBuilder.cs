@@ -380,7 +380,7 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithQuiet()
         {
-            _arguments.AddRange(new[] { "-hide_banner", "-loglevel", "panic", "-nostats" });
+            _arguments.AddRange(new[] { "-hide_banner", "-loglevel", "error", "-nostats" });
             return this;
         }
 
