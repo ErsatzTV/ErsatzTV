@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20210302122352_Add_FFmpegProfileQsvAcceleration")]
-    partial class Add_FFmpegProfileQsvAcceleration
+    [Migration("20210302224925_Add_FFmpegProfileHardwareAcceleration")]
+    partial class Add_FFmpegProfileHardwareAcceleration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -219,6 +219,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("AudioVolume")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("HardwareAcceleration")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
@@ -232,9 +235,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("NormalizeVideoCodec")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("QsvAcceleration")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ResolutionId")

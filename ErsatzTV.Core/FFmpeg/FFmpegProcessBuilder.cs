@@ -52,12 +52,20 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHardwareAcceleration(string hwAccel)
+        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel)
         {
-            if (!string.IsNullOrWhiteSpace(hwAccel))
+            switch (hwAccel)
             {
-                _arguments.Add("-hwaccel");
-                _arguments.Add(hwAccel);
+                case HardwareAccelerationKind.Qsv:
+                    _arguments.Add("-hwaccel");
+                    _arguments.Add("qsv");
+                    break;
+                case HardwareAccelerationKind.Nvenc:
+                    _arguments.Add("-hwaccel");
+                    _arguments.Add("cuda");
+                    _arguments.Add("-hwaccel_output_format");
+                    _arguments.Add("cuda");
+                    break;
             }
 
             return this;
@@ -127,9 +135,9 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithInputCodec(string input, string hwAccel, string codec)
+        public FFmpegProcessBuilder WithInputCodec(string input, HardwareAccelerationKind hwAccel, string codec)
         {
-            if (hwAccel == "qsv" && QsvMap.TryGetValue(codec, out string qsvCodec))
+            if (hwAccel == HardwareAccelerationKind.Qsv && QsvMap.TryGetValue(codec, out string qsvCodec))
             {
                 _arguments.Add("-c:v");
                 _arguments.Add(qsvCodec);
@@ -273,12 +281,18 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithScaling(IDisplaySize displaySize, string hwAccel, string algorithm)
+        public FFmpegProcessBuilder WithScaling(
+            IDisplaySize displaySize,
+            HardwareAccelerationKind hwAccel,
+            string algorithm)
         {
             _videoFilters.Enqueue(
-                hwAccel == "qsv"
-                    ? $"scale_qsv=w={displaySize.Width}:h={displaySize.Height}"
-                    : $"scale={displaySize.Width}:{displaySize.Height}:flags={algorithm}");
+                hwAccel switch
+                {
+                    HardwareAccelerationKind.Qsv => $"scale_qsv=w={displaySize.Width}:h={displaySize.Height}",
+                    HardwareAccelerationKind.Nvenc => $"scale_cuda={displaySize.Width}:{displaySize.Height}",
+                    _ => $"scale={displaySize.Width}:{displaySize.Height}:flags={algorithm}"
+                });
 
             return this;
         }

@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using LanguageExt;
 using MediatR;
 
@@ -8,7 +9,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
         string Name,
         int ThreadCount,
         bool Transcode,
-        bool QsvAcceleration,
+        HardwareAccelerationKind HardwareAcceleration,
         int ResolutionId,
         bool NormalizeResolution,
         string VideoCodec,

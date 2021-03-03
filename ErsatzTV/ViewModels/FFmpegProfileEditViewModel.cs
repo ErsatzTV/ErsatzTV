@@ -1,11 +1,14 @@
 ﻿using ErsatzTV.Application.FFmpegProfiles;
 using ErsatzTV.Application.FFmpegProfiles.Commands;
 using ErsatzTV.Application.Resolutions;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels
 {
     public class FFmpegProfileEditViewModel
     {
+        private HardwareAccelerationKind _hardwareAcceleration;
+
         public FFmpegProfileEditViewModel()
         {
         }
@@ -27,7 +30,7 @@ namespace ErsatzTV.ViewModels
             Resolution = viewModel.Resolution;
             ThreadCount = viewModel.ThreadCount;
             Transcode = viewModel.Transcode;
-            QsvAcceleration = viewModel.QsvAcceleration;
+            HardwareAcceleration = viewModel.HardwareAcceleration;
             VideoBitrate = viewModel.VideoBitrate;
             VideoBufferSize = viewModel.VideoBufferSize;
             VideoCodec = viewModel.VideoCodec;
@@ -48,7 +51,20 @@ namespace ErsatzTV.ViewModels
         public ResolutionViewModel Resolution { get; set; }
         public int ThreadCount { get; set; }
         public bool Transcode { get; set; }
-        public bool QsvAcceleration { get; set; }
+
+        public HardwareAccelerationKind HardwareAcceleration
+        {
+            get => _hardwareAcceleration;
+            set
+            {
+                _hardwareAcceleration = value;
+                if (_hardwareAcceleration == HardwareAccelerationKind.Nvenc)
+                {
+                    NormalizeResolution = false;
+                }
+            }
+        }
+
         public int VideoBitrate { get; set; }
         public int VideoBufferSize { get; set; }
         public string VideoCodec { get; set; }
@@ -58,7 +74,7 @@ namespace ErsatzTV.ViewModels
                 Name,
                 ThreadCount,
                 Transcode,
-                QsvAcceleration,
+                HardwareAcceleration,
                 Resolution.Id,
                 NormalizeResolution,
                 VideoCodec,
@@ -81,7 +97,7 @@ namespace ErsatzTV.ViewModels
                 Name,
                 ThreadCount,
                 Transcode,
-                QsvAcceleration,
+                HardwareAcceleration,
                 Resolution.Id,
                 NormalizeResolution,
                 VideoCodec,

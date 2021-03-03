@@ -273,6 +273,29 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
             }
+            
+            [Test]
+            public void Should_NotPadToDesiredResolution_When_NotNormalizingResolution()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeResolution = false,
+                    Resolution = new Resolution { Width = 1920, Height = 1080 }
+                };
+
+                // not anamorphic
+                var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.ScaledSize.IsNone.Should().BeTrue();
+                actual.PadToDesiredResolution.Should().BeFalse();
+            }
 
             [Test]
             public void Should_SetDesiredVideoCodec_When_ContentIsPadded_ForTransportStream()
@@ -741,11 +764,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             private readonly FFmpegPlaybackSettingsCalculator _calculator;
 
             public CalculateSettingsQsv() => _calculator = new FFmpegPlaybackSettingsCalculator();
-            
+
             [Test]
             public void Should_UseHardwareAcceleration()
             {
-                FFmpegProfile ffmpegProfile = TestProfile() with { QsvAcceleration = true };
+                FFmpegProfile ffmpegProfile =
+                    TestProfile() with { HardwareAcceleration = HardwareAccelerationKind.Qsv };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
@@ -754,10 +778,10 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
-                actual.HardwareAcceleration.Should().Be("qsv");
+                actual.HardwareAcceleration.Should().Be(HardwareAccelerationKind.Qsv);
             }
         }
-        
+
         private static FFmpegProfile TestProfile() =>
             new() { Resolution = new Resolution { Width = 1920, Height = 1080 } };
     }

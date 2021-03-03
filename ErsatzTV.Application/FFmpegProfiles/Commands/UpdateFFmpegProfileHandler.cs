@@ -35,7 +35,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.Name = update.Name;
             p.ThreadCount = update.ThreadCount;
             p.Transcode = update.Transcode;
-            p.QsvAcceleration = update.QsvAcceleration;
+            p.HardwareAcceleration = update.HardwareAcceleration;
             p.ResolutionId = update.ResolutionId;
             p.NormalizeResolution = update.NormalizeResolution;
             p.VideoCodec = update.VideoCodec;

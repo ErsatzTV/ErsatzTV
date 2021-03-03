@@ -1,10 +1,15 @@
-﻿using ErsatzTV.ViewModels;
+﻿using System.Collections.Generic;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.ViewModels;
 using FluentValidation;
 
 namespace ErsatzTV.Validators
 {
     public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfileEditViewModel>
     {
+        private static readonly List<string> QsvEncoders = new() { "h264_qsv", "hevc_qsv", "mpeg2_qsv" };
+        private static readonly List<string> NvencEncoders = new() { "h264_nvenc", "hevc_nvenc" };
+
         public FFmpegProfileEditViewModelValidator()
         {
             RuleFor(x => x.Name).NotEmpty();
@@ -25,11 +30,30 @@ namespace ErsatzTV.Validators
                 });
 
             When(
-                x => x.QsvAcceleration,
+                x => x.HardwareAcceleration == HardwareAccelerationKind.Qsv,
                 () =>
                 {
-                    RuleFor(x => x.VideoCodec).Must(c => c.EndsWith("_qsv"))
+                    RuleFor(x => x.VideoCodec).Must(c => QsvEncoders.Contains(c))
                         .WithMessage("QSV codec is required (h264_qsv, hevc_qsv, mpeg2_qsv)");
+                });
+
+            When(
+                x => x.HardwareAcceleration == HardwareAccelerationKind.Nvenc,
+                () =>
+                {
+                    RuleFor(x => x.VideoCodec).Must(c => NvencEncoders.Contains(c))
+                        .WithMessage("NVENC codec is required (h264_nvenc, hevc_nvenc)");
+
+                    RuleFor(x => x.NormalizeResolution).Must(x => x == false)
+                        .WithMessage("Resolution normalization (scaling) is not yet supported with NVENC");
+                });
+
+            When(
+                x => x.HardwareAcceleration == HardwareAccelerationKind.None,
+                () =>
+                {
+                    RuleFor(x => x.VideoCodec).Must(c => !QsvEncoders.Contains(c) && !NvencEncoders.Contains(c))
+                        .WithMessage("Hardware acceleration is required for this codec");
                 });
         }
     }
