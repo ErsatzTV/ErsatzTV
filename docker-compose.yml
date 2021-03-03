@@ -11,5 +11,14 @@ services:
         volumes:
             - ersatztv:/root/.local/share/ersatztv
             #- /media/shared:/media/shared:ro 
+# uncomment for nvenc support
+#        environment:
+#            NVIDIA_VISIBLE_DEVICES: all
+#            NVIDIA_DRIVER_CAPABILITIES: all
+#        deploy:
+#            resources:
+#                reservations:
+#                    devices:
+#                        -   capabilities: [ gpu ]
 volumes:
     ersatztv:
