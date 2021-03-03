@@ -66,6 +66,14 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("-hwaccel_output_format");
                     _arguments.Add("cuda");
                     break;
+                case HardwareAccelerationKind.Vaapi:
+                    _arguments.Add("-hwaccel");
+                    _arguments.Add("vaapi");
+                    _arguments.Add("-vaapi_device");
+                    _arguments.Add("/dev/dri/renderD128");
+                    _arguments.Add("-hwaccel_output_format");
+                    _arguments.Add("vaapi");
+                    break;
             }
 
             return this;
@@ -291,6 +299,8 @@ namespace ErsatzTV.Core.FFmpeg
                 {
                     HardwareAccelerationKind.Qsv => $"scale_qsv=w={displaySize.Width}:h={displaySize.Height}",
                     HardwareAccelerationKind.Nvenc => $"scale_cuda={displaySize.Width}:{displaySize.Height}",
+                    HardwareAccelerationKind.Vaapi =>
+                        $"hwupload,scale_vaapi=w={displaySize.Width}:h={displaySize.Height}:format=nv12",
                     _ => $"scale={displaySize.Width}:{displaySize.Height}:flags={algorithm}"
                 });
 

@@ -4,6 +4,7 @@
     {
         None = 0,
         Qsv = 1,
-        Nvenc = 2
+        Nvenc = 2,
+        Vaapi = 3
     }
 }

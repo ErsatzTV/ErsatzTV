@@ -9,6 +9,7 @@ namespace ErsatzTV.Validators
     {
         private static readonly List<string> QsvEncoders = new() { "h264_qsv", "hevc_qsv", "mpeg2_qsv" };
         private static readonly List<string> NvencEncoders = new() { "h264_nvenc", "hevc_nvenc" };
+        private static readonly List<string> VaapiEncoders = new() { "h264_vaapi", "hevc_vaapi", "mpeg2_vaapi" };
 
         public FFmpegProfileEditViewModelValidator()
         {
@@ -46,6 +47,14 @@ namespace ErsatzTV.Validators
 
                     RuleFor(x => x.NormalizeResolution).Must(x => x == false)
                         .WithMessage("Resolution normalization (scaling) is not yet supported with NVENC");
+                });
+            
+            When(
+                x => x.HardwareAcceleration == HardwareAccelerationKind.Vaapi,
+                () =>
+                {
+                    RuleFor(x => x.VideoCodec).Must(c => VaapiEncoders.Contains(c))
+                        .WithMessage("VAAPI codec is required (h264_vaapi, hevc_vaapi, mpeg2_vaapi)");
                 });
 
             When(
