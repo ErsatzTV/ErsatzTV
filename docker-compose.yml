@@ -11,6 +11,11 @@ services:
         volumes:
             - ersatztv:/root/.local/share/ersatztv
             #- /media/shared:/media/shared:ro 
+
+# uncomment for vaapi support
+#        devices:
+#            - /dev/dri/renderD128:/dev/dri/renderD128
+
 # uncomment for nvenc support
 #        environment:
 #            NVIDIA_VISIBLE_DEVICES: all
