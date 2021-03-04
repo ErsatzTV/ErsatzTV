@@ -121,10 +121,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<List<MediaItem>>> GetItems(int id) =>
             Get(id).MapT(GetItemsForCollection).Bind(x => x.Sequence());
 
-        public Task Update(Collection collection)
+        public Task<bool> Update(Collection collection)
         {
             _dbContext.Collections.Update(collection);
-            return _dbContext.SaveChangesAsync();
+            return _dbContext.SaveChangesAsync().Map(result => result > 0);
         }
 
         public async Task Delete(int collectionId)
@@ -133,6 +133,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.Collections.Remove(mediaCollection);
             await _dbContext.SaveChangesAsync();
         }
+
+        public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) =>
+            _dbConnection.QueryAsync<int>(
+                    @"SELECT DISTINCT p.Id
+                    FROM Playout p
+                    INNER JOIN ProgramSchedule PS on p.ProgramScheduleId = PS.Id
+                    INNER JOIN ProgramScheduleItem PSI on p.Anchor_NextScheduleItemId = PSI.Id
+                    WHERE PSI.CollectionId = @CollectionId",
+                    new { CollectionId = collectionId })
+                .Map(result => result.ToList());
 
         private async Task<List<MediaItem>> GetItemsForCollection(Collection collection)
         {

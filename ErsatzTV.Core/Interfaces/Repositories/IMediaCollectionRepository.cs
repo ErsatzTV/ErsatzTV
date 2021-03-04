@@ -14,7 +14,8 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<Collection>> GetCollectionWithItemsUntracked(int id);
         Task<List<Collection>> GetAll();
         Task<Option<List<MediaItem>>> GetItems(int id);
-        Task Update(Collection collection);
+        Task<bool> Update(Collection collection);
         Task Delete(int collectionId);
+        Task<List<int>> PlayoutIdsUsingCollection(int collectionId);
     }
 }

@@ -4,7 +4,7 @@ using LanguageExt;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public record RemoveItemsFromCollection(int MediaCollectionId) : MediatR.IRequest<Either<BaseError, Unit>>
+    public record RemoveItemsFromCollection(int MediaCollectionId) : MediatR.IRequest<Either<BaseError, CollectionUpdateResult>>
     {
         public List<int> MediaItemIds { get; set; } = new();
     }

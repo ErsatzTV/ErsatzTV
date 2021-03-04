@@ -5,11 +5,13 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using MediatR;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
     public class
-        RemoveItemsFromCollectionHandler : MediatR.IRequestHandler<RemoveItemsFromCollection, Either<BaseError, Unit>>
+        RemoveItemsFromCollectionHandler : IRequestHandler<RemoveItemsFromCollection,
+            Either<BaseError, CollectionUpdateResult>>
     {
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
 
@@ -17,14 +19,14 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             IMediaCollectionRepository mediaCollectionRepository) =>
             _mediaCollectionRepository = mediaCollectionRepository;
 
-        public Task<Either<BaseError, Unit>> Handle(
+        public Task<Either<BaseError, CollectionUpdateResult>> Handle(
             RemoveItemsFromCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
-                .MapT(collection => ApplyAddTelevisionEpisodeRequest(request, collection))
+                .MapT(collection => ApplyRemoveItemsRequest(request, collection))
                 .Bind(v => v.ToEitherAsync());
 
-        private Task<Unit> ApplyAddTelevisionEpisodeRequest(
+        private async Task<CollectionUpdateResult> ApplyRemoveItemsRequest(
             RemoveItemsFromCollection request,
             Collection collection)
         {
@@ -34,9 +36,15 @@ namespace ErsatzTV.Application.MediaCollections.Commands
 
             itemsToRemove.ForEach(m => collection.MediaItems.Remove(m));
 
-            return itemsToRemove.Any()
-                ? _mediaCollectionRepository.Update(collection).ToUnit()
-                : Task.FromResult(Unit.Default);
+            if (itemsToRemove.Any() && await _mediaCollectionRepository.Update(collection))
+            {
+                return new CollectionUpdateResult
+                {
+                    ModifiedPlayoutIds = await _mediaCollectionRepository.PlayoutIdsUsingCollection(collection.Id)
+                };
+            }
+
+            return new CollectionUpdateResult();
         }
 
         private Task<Validation<BaseError, Collection>> Validate(

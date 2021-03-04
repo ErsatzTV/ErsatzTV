@@ -1,7 +1,9 @@
 ﻿@page "/media/collections/{Id:int}"
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
+@using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.Playouts.Commands
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
 @inject ILogger<CollectionItems> Logger
@@ -161,7 +163,16 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await Mediator.Send(request);
+            Either<BaseError, CollectionUpdateResult> removeResult = await Mediator.Send(request);
+            await removeResult.Match(
+                async collectionUpdateResult =>
+                {
+                    foreach (int playoutId in collectionUpdateResult.ModifiedPlayoutIds)
+                    {
+                        await Mediator.Send(new BuildPlayout(playoutId, true));
+                    }
+                },
+                _ => Task.CompletedTask);
             await RefreshData();
         }
     }
