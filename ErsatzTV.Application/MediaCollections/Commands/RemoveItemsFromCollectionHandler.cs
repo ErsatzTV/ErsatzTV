@@ -36,15 +36,13 @@ namespace ErsatzTV.Application.MediaCollections.Commands
 
             itemsToRemove.ForEach(m => collection.MediaItems.Remove(m));
 
+            var result = new CollectionUpdateResult();
             if (itemsToRemove.Any() && await _mediaCollectionRepository.Update(collection))
             {
-                return new CollectionUpdateResult
-                {
-                    ModifiedPlayoutIds = await _mediaCollectionRepository.PlayoutIdsUsingCollection(collection.Id)
-                };
+                result.ModifiedPlayoutIds = await _mediaCollectionRepository.PlayoutIdsUsingCollection(collection.Id);
             }
 
-            return new CollectionUpdateResult();
+            return result;
         }
 
         private Task<Validation<BaseError, Collection>> Validate(

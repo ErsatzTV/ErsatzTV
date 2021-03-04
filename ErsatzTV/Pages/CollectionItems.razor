@@ -9,6 +9,7 @@
 @inject ILogger<CollectionItems> Logger
 @inject ISnackbar Snackbar
 @inject IDialogService Dialog
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
 
 <div class="mb-6" style="display: flex; flex-direction: row;">
     <MudText GutterBottom="true" Typo="Typo.h2">@_data.Name</MudText>
@@ -169,7 +170,7 @@
                 {
                     foreach (int playoutId in collectionUpdateResult.ModifiedPlayoutIds)
                     {
-                        await Mediator.Send(new BuildPlayout(playoutId, true));
+                        await Channel.WriteAsync(new BuildPlayout(playoutId, true));
                     }
                 },
                 _ => Task.CompletedTask);

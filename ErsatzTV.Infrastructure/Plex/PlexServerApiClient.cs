@@ -18,10 +18,8 @@ namespace ErsatzTV.Infrastructure.Plex
     {
         private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
 
-        public PlexServerApiClient(IFallbackMetadataProvider fallbackMetadataProvider)
-        {
+        public PlexServerApiClient(IFallbackMetadataProvider fallbackMetadataProvider) =>
             _fallbackMetadataProvider = fallbackMetadataProvider;
-        }
 
         public async Task<Either<BaseError, List<PlexLibrary>>> GetLibraries(
             PlexConnection connection,
@@ -150,7 +148,7 @@ namespace ErsatzTV.Infrastructure.Plex
         }
 
         private static string ConvertToSAR(double aspectRatio) => "1:1";
-            // TODO: fix this with more detailed stats pull from plex for each item
-            // Math.Abs(aspectRatio - 1) < 0.01 ? "1:1" : $"{(int) (aspectRatio * 100)}:100";
+        // TODO: fix this with more detailed stats pull from plex for each item
+        // Math.Abs(aspectRatio - 1) < 0.01 ? "1:1" : $"{(int) (aspectRatio * 100)}:100";
     }
 }

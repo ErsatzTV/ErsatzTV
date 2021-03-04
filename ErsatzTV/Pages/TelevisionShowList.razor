@@ -3,11 +3,12 @@
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
-@using Unit = LanguageExt.Unit
+@using ErsatzTV.Application.Playouts.Commands
 @inject ILogger<TelevisionShowList> Logger
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 @inject IDialogService Dialog
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
     <MudPaper Style="align-items: center; display: flex; justify-content: center;">
@@ -69,14 +70,21 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddShowToCollection(collection.Id, show.TelevisionShowId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, CollectionUpdateResult> addResult = await Mediator.Send(request);
                 addResult.Match(
                     Left: error =>
                     {
                         Snackbar.Add($"Unexpected error adding show to collection: {error.Value}");
                         Logger.LogError("Unexpected error adding show to collection: {Error}", error.Value);
                     },
-                    Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
+                    Right: async collectionUpdateResult =>
+                    {
+                        foreach (int playoutId in collectionUpdateResult.ModifiedPlayoutIds)
+                        {
+                            await Channel.WriteAsync(new BuildPlayout(playoutId, true));
+                        }
+                        Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success);
+                    });
             }
         }
     }

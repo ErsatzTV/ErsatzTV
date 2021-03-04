@@ -3,11 +3,14 @@ using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using MediatR;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
     public class
-        AddEpisodeToCollectionHandler : MediatR.IRequestHandler<AddEpisodeToCollection, Either<BaseError, Unit>>
+        AddEpisodeToCollectionHandler : IRequestHandler<AddEpisodeToCollection,
+            Either<BaseError, CollectionUpdateResult>>
     {
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
@@ -20,15 +23,25 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             _televisionRepository = televisionRepository;
         }
 
-        public Task<Either<BaseError, Unit>> Handle(
+        public Task<Either<BaseError, CollectionUpdateResult>> Handle(
             AddEpisodeToCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
                 .MapT(_ => ApplyAddTelevisionEpisodeRequest(request))
                 .Bind(v => v.ToEitherAsync());
 
-        private Task<Unit> ApplyAddTelevisionEpisodeRequest(AddEpisodeToCollection request) =>
-            _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.EpisodeId);
+        private async Task<CollectionUpdateResult> ApplyAddTelevisionEpisodeRequest(AddEpisodeToCollection request)
+        {
+            var result = new CollectionUpdateResult();
+
+            if (await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.EpisodeId))
+            {
+                result.ModifiedPlayoutIds =
+                    await _mediaCollectionRepository.PlayoutIdsUsingCollection(request.CollectionId);
+            }
+
+            return result;
+        }
 
         private async Task<Validation<BaseError, Unit>> Validate(AddEpisodeToCollection request) =>
             (await CollectionMustExist(request), await ValidateEpisode(request))

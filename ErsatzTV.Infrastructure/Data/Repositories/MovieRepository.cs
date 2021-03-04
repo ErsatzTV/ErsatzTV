@@ -122,7 +122,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        private async Task<Either<BaseError, PlexMovie>> AddPlexMovie(TvContext context, PlexLibrary library, PlexMovie item)
+        private async Task<Either<BaseError, PlexMovie>> AddPlexMovie(
+            TvContext context,
+            PlexLibrary library,
+            PlexMovie item)
         {
             try
             {

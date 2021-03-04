@@ -4,10 +4,13 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using MediatR;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public class AddSeasonToCollectionHandler : MediatR.IRequestHandler<AddSeasonToCollection, Either<BaseError, Unit>>
+    public class
+        AddSeasonToCollectionHandler : IRequestHandler<AddSeasonToCollection, Either<BaseError, CollectionUpdateResult>>
     {
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
@@ -20,15 +23,25 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             _televisionRepository = televisionRepository;
         }
 
-        public Task<Either<BaseError, Unit>> Handle(
+        public Task<Either<BaseError, CollectionUpdateResult>> Handle(
             AddSeasonToCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
                 .MapT(_ => ApplyAddTelevisionSeasonRequest(request))
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<Unit> ApplyAddTelevisionSeasonRequest(AddSeasonToCollection request) =>
-            await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.SeasonId);
+        private async Task<CollectionUpdateResult> ApplyAddTelevisionSeasonRequest(AddSeasonToCollection request)
+        {
+            var result = new CollectionUpdateResult();
+
+            if (await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.SeasonId))
+            {
+                result.ModifiedPlayoutIds =
+                    await _mediaCollectionRepository.PlayoutIdsUsingCollection(request.CollectionId);
+            }
+
+            return result;
+        }
 
         private async Task<Validation<BaseError, Unit>> Validate(AddSeasonToCollection request) =>
             (await CollectionMustExist(request), await ValidateSeason(request))

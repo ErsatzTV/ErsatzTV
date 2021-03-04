@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Application.MediaCollections
 {
-    public record CollectionUpdateResult
+    public class CollectionUpdateResult
     {
         public List<int> ModifiedPlayoutIds { get; set; }
     }
