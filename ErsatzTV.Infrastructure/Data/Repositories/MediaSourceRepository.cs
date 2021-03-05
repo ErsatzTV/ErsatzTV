@@ -173,7 +173,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await _dbConnection.ExecuteAsync(
                 "UPDATE PlexLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
                 new { ids = libraryIds });
-            
+
             await _dbConnection.ExecuteAsync(
                 "UPDATE Library SET LastScan = null WHERE Id IN @ids",
                 new { ids = libraryIds });

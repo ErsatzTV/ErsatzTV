@@ -62,15 +62,18 @@ namespace ErsatzTV.Core.Iptv
 
                     string title = playoutItem.MediaItem switch
                     {
-                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title ?? string.Empty).IfNone("[unknown movie]"),
-                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Title ?? string.Empty).IfNone("[unknown episode]"),
+                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title ?? string.Empty)
+                            .IfNone("[unknown movie]"),
+                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Title ?? string.Empty)
+                            .IfNone("[unknown episode]"),
                         _ => "[unknown]"
                     };
 
                     string description = playoutItem.MediaItem switch
                     {
                         Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Plot ?? string.Empty).IfNone(string.Empty),
-                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Plot ?? string.Empty).IfNone(string.Empty),
+                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Plot ?? string.Empty)
+                            .IfNone(string.Empty),
                         _ => string.Empty
                     };
 
@@ -108,7 +111,7 @@ namespace ErsatzTV.Core.Iptv
                             xml.WriteAttributeString("system", "onscreen");
                             xml.WriteString($"S{s:00}E{e:00}");
                             xml.WriteEndElement(); // episode-num
-                            
+
                             xml.WriteStartElement("episode-num");
                             xml.WriteAttributeString("system", "xmltv_ns");
                             xml.WriteString($"{s - 1}.{e - 1}.0/1");

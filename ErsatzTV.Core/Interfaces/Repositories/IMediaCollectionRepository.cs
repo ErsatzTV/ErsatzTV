@@ -8,13 +8,14 @@ namespace ErsatzTV.Core.Interfaces.Repositories
     public interface IMediaCollectionRepository
     {
         Task<Collection> Add(Collection collection);
-        Task<Unit> AddMediaItem(int collectionId, int mediaItemId);
+        Task<bool> AddMediaItem(int collectionId, int mediaItemId);
         Task<Option<Collection>> Get(int id);
         Task<Option<Collection>> GetCollectionWithItems(int id);
         Task<Option<Collection>> GetCollectionWithItemsUntracked(int id);
         Task<List<Collection>> GetAll();
         Task<Option<List<MediaItem>>> GetItems(int id);
-        Task Update(Collection collection);
+        Task<bool> Update(Collection collection);
         Task Delete(int collectionId);
+        Task<List<int>> PlayoutIdsUsingCollection(int collectionId);
     }
 }

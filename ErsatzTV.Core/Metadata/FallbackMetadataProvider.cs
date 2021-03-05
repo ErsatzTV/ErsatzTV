@@ -34,7 +34,7 @@ namespace ErsatzTV.Core.Metadata
 
             return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
         }
-        
+
         public string GetSortTitle(string title)
         {
             if (string.IsNullOrWhiteSpace(title))
