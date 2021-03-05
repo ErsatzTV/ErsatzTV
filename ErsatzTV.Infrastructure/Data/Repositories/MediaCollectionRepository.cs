@@ -30,8 +30,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
 
-        public async Task<Unit> AddMediaItem(int collectionId, int mediaItemId)
+        public async Task<bool> AddMediaItem(int collectionId, int mediaItemId)
         {
+            var modified = false;
+
             Option<Collection> maybeCollection = await _dbContext.Collections
                 .Include(c => c.MediaItems)
                 .OrderBy(c => c.Id)
@@ -52,12 +54,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             async mediaItem =>
                             {
                                 collection.MediaItems.Add(mediaItem);
-                                await _dbContext.SaveChangesAsync();
+                                modified = await _dbContext.SaveChangesAsync() > 0;
                             });
                     }
                 });
 
-            return Unit.Default;
+            return modified;
         }
 
         public Task<Option<Collection>> Get(int id) =>
@@ -121,10 +123,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<List<MediaItem>>> GetItems(int id) =>
             Get(id).MapT(GetItemsForCollection).Bind(x => x.Sequence());
 
-        public Task Update(Collection collection)
+        public Task<bool> Update(Collection collection)
         {
             _dbContext.Collections.Update(collection);
-            return _dbContext.SaveChangesAsync();
+            return _dbContext.SaveChangesAsync().Map(result => result > 0);
         }
 
         public async Task Delete(int collectionId)
@@ -133,6 +135,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.Collections.Remove(mediaCollection);
             await _dbContext.SaveChangesAsync();
         }
+
+        public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) =>
+            _dbConnection.QueryAsync<int>(
+                    @"SELECT DISTINCT p.Id
+                    FROM Playout p
+                    INNER JOIN ProgramSchedule PS on p.ProgramScheduleId = PS.Id
+                    INNER JOIN ProgramScheduleItem PSI on p.Anchor_NextScheduleItemId = PSI.Id
+                    WHERE PSI.CollectionId = @CollectionId",
+                    new { CollectionId = collectionId })
+                .Map(result => result.ToList());
 
         private async Task<List<MediaItem>> GetItemsForCollection(Collection collection)
         {

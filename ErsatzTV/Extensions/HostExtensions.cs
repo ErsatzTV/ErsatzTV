@@ -36,7 +36,10 @@ namespace ErsatzTV.Extensions
                 .IfFail(
                     ex =>
                     {
-                        LogException(ex, "Error occured while migrating database; shutting down.", scope.ServiceProvider);
+                        LogException(
+                            ex,
+                            "Error occured while migrating database; shutting down.",
+                            scope.ServiceProvider);
                         Environment.Exit(13);
                         return unit;
                     });

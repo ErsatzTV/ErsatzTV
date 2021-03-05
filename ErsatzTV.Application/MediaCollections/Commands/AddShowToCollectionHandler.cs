@@ -1,5 +1,7 @@
 ﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -9,15 +11,18 @@ namespace ErsatzTV.Application.MediaCollections.Commands
 {
     public class AddShowToCollectionHandler : MediatR.IRequestHandler<AddShowToCollection, Either<BaseError, Unit>>
     {
+        private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public AddShowToCollectionHandler(
             IMediaCollectionRepository mediaCollectionRepository,
-            ITelevisionRepository televisionRepository)
+            ITelevisionRepository televisionRepository,
+            ChannelWriter<IBackgroundServiceRequest> channel)
         {
             _mediaCollectionRepository = mediaCollectionRepository;
             _televisionRepository = televisionRepository;
+            _channel = channel;
         }
 
         public Task<Either<BaseError, Unit>> Handle(
@@ -27,8 +32,22 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 .MapT(_ => ApplyAddTelevisionShowRequest(request))
                 .Bind(v => v.ToEitherAsync());
 
-        private Task<Unit> ApplyAddTelevisionShowRequest(AddShowToCollection request)
-            => _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.ShowId);
+        private async Task<Unit> ApplyAddTelevisionShowRequest(AddShowToCollection request)
+        {
+            var result = new Unit();
+
+            if (await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.ShowId))
+            {
+                // rebuild all playouts that use this collection
+                foreach (int playoutId in await _mediaCollectionRepository
+                    .PlayoutIdsUsingCollection(request.CollectionId))
+                {
+                    await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                }
+            }
+
+            return result;
+        }
 
         private async Task<Validation<BaseError, Unit>> Validate(AddShowToCollection request) =>
             (await CollectionMustExist(request), await ValidateShow(request))
