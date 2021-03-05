@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -44,6 +45,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Setup(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()))
                     .Returns(
                         (LibraryPath _, string path) => Right<BaseError, Movie>(new FakeMovieWithPath(path)).AsTask());
+                _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
+                    .Returns(new List<string>().AsEnumerable().AsTask());
 
                 _localStatisticsProvider = new Mock<ILocalStatisticsProvider>();
                 _localMetadataProvider = new Mock<ILocalMetadataProvider>();
@@ -358,6 +361,55 @@ namespace ErsatzTV.Core.Tests.Metadata
                     x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
                     Times.Once);
             }
+
+            [Test]
+            public async Task RenamedMovie_Should_Delete_Old_Movie()
+            {
+                string movieFolder = Path.Combine(FakeRoot, "Movie (2020)");
+                string oldMoviePath = Path.Combine(movieFolder, "Movie (2020).avi");
+
+                _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
+                    .Returns(new List<string> { oldMoviePath }.AsEnumerable().AsTask());
+
+                string moviePath = Path.Combine(movieFolder, "Movie (2020).mkv");
+
+                MovieFolderScanner service = GetService(
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
+                );
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
+
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+
+                result.IsRight.Should().BeTrue();
+
+                _movieRepository.Verify(x => x.DeleteByPath(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.DeleteByPath(libraryPath, oldMoviePath), Times.Once);
+            }
+
+            [Test]
+            public async Task DeletedMovieAndFolder_Should_Delete_Old_Movie()
+            {
+                string movieFolder = Path.Combine(FakeRoot, "Movie (2020)");
+                string oldMoviePath = Path.Combine(movieFolder, "Movie (2020).avi");
+
+                _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
+                    .Returns(new List<string> { oldMoviePath }.AsEnumerable().AsTask());
+
+                string moviePath = Path.Combine(movieFolder, "Movie (2020).mkv");
+
+                MovieFolderScanner service = GetService(
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
+                );
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
+
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+
+                result.IsRight.Should().BeTrue();
+
+                _movieRepository.Verify(x => x.DeleteByPath(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.DeleteByPath(libraryPath, oldMoviePath), Times.Once);
+            }
+
 
             private MovieFolderScanner GetService(params FakeFileEntry[] files) =>
                 new(

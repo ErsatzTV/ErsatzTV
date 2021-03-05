@@ -93,6 +93,44 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(mm => mm.SortTitle)
                 .ToListAsync();
 
+        public Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath) =>
+            _dbConnection.QueryAsync<string>(
+                @"SELECT MF.Path
+                FROM MediaFile MF
+                INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
+                INNER JOIN Movie M on MV.MovieId = M.Id
+                INNER JOIN MediaItem MI on M.Id = MI.Id
+                WHERE MI.LibraryPathId = @LibraryPathId",
+                new { LibraryPathId = libraryPath.Id });
+
+        public async Task<Unit> DeleteByPath(LibraryPath libraryPath, string path)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT M.Id
+                FROM Movie M
+                INNER JOIN MediaItem MI on M.Id = MI.Id
+                INNER JOIN MovieMetadata MM on M.Id = MM.MovieId
+                INNER JOIN MediaVersion MV on M.Id = MV.MovieId
+                INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
+                WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
+                new { LibraryPathId = libraryPath.Id, Path = path });
+
+            foreach (int movieId in ids)
+            {
+                await Delete(movieId);
+            }
+
+            return Unit.Default;
+        }
+
+        private async Task<Unit> Delete(int movieId)
+        {
+            Movie movie = await _dbContext.Movies.FindAsync(movieId);
+            _dbContext.Movies.Remove(movie);
+            await _dbContext.SaveChangesAsync();
+            return Unit.Default;
+        }
+
         private async Task<Either<BaseError, Movie>> AddMovie(int libraryPathId, string path)
         {
             try
