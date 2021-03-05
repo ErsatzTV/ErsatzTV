@@ -5,9 +5,9 @@
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Application.Playouts.Commands
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
+@using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 @inject ILogger<TelevisionEpisodeList> Logger
 @inject ISnackbar Snackbar
@@ -136,21 +136,14 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
-                Either<BaseError, CollectionUpdateResult> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(
                     Left: error =>
                     {
                         Snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
                         Logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
                     },
-                    Right: async collectionUpdateResult =>
-                    {
-                        foreach (int playoutId in collectionUpdateResult.ModifiedPlayoutIds)
-                        {
-                            await Channel.WriteAsync(new BuildPlayout(playoutId, true));
-                        }
-                        Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success);
-                    });
+                    Right: _ => Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
             }
         }
     }

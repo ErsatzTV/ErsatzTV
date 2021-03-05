@@ -1,46 +1,51 @@
 ﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
-using MediatR;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
     public class
-        AddSeasonToCollectionHandler : IRequestHandler<AddSeasonToCollection, Either<BaseError, CollectionUpdateResult>>
+        AddSeasonToCollectionHandler : MediatR.IRequestHandler<AddSeasonToCollection, Either<BaseError, Unit>>
     {
+        private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public AddSeasonToCollectionHandler(
             IMediaCollectionRepository mediaCollectionRepository,
-            ITelevisionRepository televisionRepository)
+            ITelevisionRepository televisionRepository,
+            ChannelWriter<IBackgroundServiceRequest> channel)
         {
             _mediaCollectionRepository = mediaCollectionRepository;
             _televisionRepository = televisionRepository;
+            _channel = channel;
         }
 
-        public Task<Either<BaseError, CollectionUpdateResult>> Handle(
+        public Task<Either<BaseError, Unit>> Handle(
             AddSeasonToCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
                 .MapT(_ => ApplyAddTelevisionSeasonRequest(request))
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<CollectionUpdateResult> ApplyAddTelevisionSeasonRequest(AddSeasonToCollection request)
+        private async Task<Unit> ApplyAddTelevisionSeasonRequest(AddSeasonToCollection request)
         {
-            var result = new CollectionUpdateResult();
-
             if (await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.SeasonId))
             {
-                result.ModifiedPlayoutIds =
-                    await _mediaCollectionRepository.PlayoutIdsUsingCollection(request.CollectionId);
+                // rebuild all playouts that use this collection
+                foreach (int playoutId in await _mediaCollectionRepository
+                    .PlayoutIdsUsingCollection(request.CollectionId))
+                {
+                    await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                }
             }
 
-            return result;
+            return Unit.Default;
         }
 
         private async Task<Validation<BaseError, Unit>> Validate(AddSeasonToCollection request) =>

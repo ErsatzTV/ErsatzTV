@@ -1,46 +1,50 @@
 ﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
-using MediatR;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
     public class
-        AddEpisodeToCollectionHandler : IRequestHandler<AddEpisodeToCollection,
-            Either<BaseError, CollectionUpdateResult>>
+        AddEpisodeToCollectionHandler : MediatR.IRequestHandler<AddEpisodeToCollection, Either<BaseError, Unit>>
     {
+        private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public AddEpisodeToCollectionHandler(
             IMediaCollectionRepository mediaCollectionRepository,
-            ITelevisionRepository televisionRepository)
+            ITelevisionRepository televisionRepository,
+            ChannelWriter<IBackgroundServiceRequest> channel)
         {
             _mediaCollectionRepository = mediaCollectionRepository;
             _televisionRepository = televisionRepository;
+            _channel = channel;
         }
 
-        public Task<Either<BaseError, CollectionUpdateResult>> Handle(
+        public Task<Either<BaseError, Unit>> Handle(
             AddEpisodeToCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
                 .MapT(_ => ApplyAddTelevisionEpisodeRequest(request))
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<CollectionUpdateResult> ApplyAddTelevisionEpisodeRequest(AddEpisodeToCollection request)
+        private async Task<Unit> ApplyAddTelevisionEpisodeRequest(AddEpisodeToCollection request)
         {
-            var result = new CollectionUpdateResult();
-
             if (await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.EpisodeId))
             {
-                result.ModifiedPlayoutIds =
-                    await _mediaCollectionRepository.PlayoutIdsUsingCollection(request.CollectionId);
+                // rebuild all playouts that use this collection
+                foreach (int playoutId in await _mediaCollectionRepository
+                    .PlayoutIdsUsingCollection(request.CollectionId))
+                {
+                    await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                }
             }
 
-            return result;
+            return Unit.Default;
         }
 
         private async Task<Validation<BaseError, Unit>> Validate(AddEpisodeToCollection request) =>
