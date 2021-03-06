@@ -57,11 +57,12 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path) =>
             throw new NotSupportedException();
 
-        public Task<Unit> DeleteEmptyShows() => throw new NotSupportedException();
+        public Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath) => throw new NotSupportedException();
 
-        public Task<Option<Show>> GetShowByPath(int mediaSourceId, string path) => throw new NotSupportedException();
+        public Task<Unit> DeleteByPath(LibraryPath libraryPath, string path) => throw new NotSupportedException();
 
-        public Task<Unit> DeleteMissingSources(int localMediaSourceId, List<string> allFolders) =>
-            throw new NotSupportedException();
+        public Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath) => throw new NotSupportedException();
+
+        public Task<Unit> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
     }
 }

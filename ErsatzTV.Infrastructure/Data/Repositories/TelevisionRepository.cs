@@ -230,9 +230,55 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 () => AddEpisode(season, libraryPath.Id, path));
         }
 
-        public Task<Unit> DeleteEmptyShows() =>
+        public Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath) =>
+            _dbConnection.QueryAsync<string>(
+                @"SELECT MF.Path
+                FROM MediaFile MF
+                INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
+                INNER JOIN Episode E on MV.EpisodeId = E.Id
+                INNER JOIN MediaItem MI on E.Id = MI.Id
+                WHERE MI.LibraryPathId = @LibraryPathId",
+                new { LibraryPathId = libraryPath.Id });
+
+        public async Task<Unit> DeleteByPath(LibraryPath libraryPath, string path)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT E.Id
+                FROM Episode E
+                INNER JOIN MediaItem MI on E.Id = MI.Id
+                INNER JOIN MediaVersion MV on E.Id = MV.EpisodeId
+                INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
+                WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
+                new { LibraryPathId = libraryPath.Id, Path = path });
+
+            foreach (int episodeId in ids)
+            {
+                Episode episode = await _dbContext.Episodes.FindAsync(episodeId);
+                _dbContext.Episodes.Remove(episode);
+            }
+
+            await _dbContext.SaveChangesAsync();
+
+            return Unit.Default;
+        }
+
+        public Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath) =>
+            _dbContext.Seasons
+                .Filter(s => s.LibraryPathId == libraryPath.Id)
+                .Filter(s => s.Episodes.Count == 0)
+                .ToListAsync()
+                .Bind(
+                    list =>
+                    {
+                        _dbContext.Seasons.RemoveRange(list);
+                        return _dbContext.SaveChangesAsync();
+                    })
+                .ToUnit();
+
+        public Task<Unit> DeleteEmptyShows(LibraryPath libraryPath) =>
             _dbContext.Shows
-                .Where(s => s.Seasons.Count == 0)
+                .Filter(s => s.LibraryPathId == libraryPath.Id)
+                .Filter(s => s.Seasons.Count == 0)
                 .ToListAsync()
                 .Bind(
                     list =>
