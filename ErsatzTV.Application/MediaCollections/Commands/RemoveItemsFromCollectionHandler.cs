@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -11,20 +13,25 @@ namespace ErsatzTV.Application.MediaCollections.Commands
     public class
         RemoveItemsFromCollectionHandler : MediatR.IRequestHandler<RemoveItemsFromCollection, Either<BaseError, Unit>>
     {
+        private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
 
         public RemoveItemsFromCollectionHandler(
-            IMediaCollectionRepository mediaCollectionRepository) =>
+            IMediaCollectionRepository mediaCollectionRepository,
+            ChannelWriter<IBackgroundServiceRequest> channel)
+        {
             _mediaCollectionRepository = mediaCollectionRepository;
+            _channel = channel;
+        }
 
         public Task<Either<BaseError, Unit>> Handle(
             RemoveItemsFromCollection request,
             CancellationToken cancellationToken) =>
             Validate(request)
-                .MapT(collection => ApplyAddTelevisionEpisodeRequest(request, collection))
+                .MapT(collection => ApplyRemoveItemsRequest(request, collection))
                 .Bind(v => v.ToEitherAsync());
 
-        private Task<Unit> ApplyAddTelevisionEpisodeRequest(
+        private async Task<Unit> ApplyRemoveItemsRequest(
             RemoveItemsFromCollection request,
             Collection collection)
         {
@@ -34,9 +41,16 @@ namespace ErsatzTV.Application.MediaCollections.Commands
 
             itemsToRemove.ForEach(m => collection.MediaItems.Remove(m));
 
-            return itemsToRemove.Any()
-                ? _mediaCollectionRepository.Update(collection).ToUnit()
-                : Task.FromResult(Unit.Default);
+            if (itemsToRemove.Any() && await _mediaCollectionRepository.Update(collection))
+            {
+                // rebuild all playouts that use this collection
+                foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingCollection(collection.Id))
+                {
+                    await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                }
+            }
+
+            return Unit.Default;
         }
 
         private Task<Validation<BaseError, Collection>> Validate(

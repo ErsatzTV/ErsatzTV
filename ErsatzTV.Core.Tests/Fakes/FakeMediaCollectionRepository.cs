@@ -14,23 +14,15 @@ namespace ErsatzTV.Core.Tests.Fakes
         private readonly Map<int, List<MediaItem>> _data;
 
         public FakeMediaCollectionRepository(Map<int, List<MediaItem>> data) => _data = data;
-
         public Task<Collection> Add(Collection collection) => throw new NotSupportedException();
-        public Task<Unit> AddMediaItem(int collectionId, int mediaItemId) => throw new NotSupportedException();
-
+        public Task<bool> AddMediaItem(int collectionId, int mediaItemId) => throw new NotSupportedException();
         public Task<Option<Collection>> Get(int id) => throw new NotSupportedException();
-
         public Task<Option<Collection>> GetCollectionWithItems(int id) => throw new NotSupportedException();
-
         public Task<Option<Collection>> GetCollectionWithItemsUntracked(int id) => throw new NotSupportedException();
-
         public Task<List<Collection>> GetAll() => throw new NotSupportedException();
-
         public Task<Option<List<MediaItem>>> GetItems(int id) => Some(_data[id].ToList()).AsTask();
-
-        public Task Update(Collection collection) => throw new NotSupportedException();
-
+        Task<bool> IMediaCollectionRepository.Update(Collection collection) => throw new NotSupportedException();
         public Task Delete(int collectionId) => throw new NotSupportedException();
-        public Task<Option<List<MediaItem>>> GetSimpleMediaCollectionItems(int id) => throw new NotSupportedException();
+        public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) => throw new NotSupportedException();
     }
 }

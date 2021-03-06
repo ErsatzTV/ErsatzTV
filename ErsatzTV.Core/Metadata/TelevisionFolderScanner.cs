@@ -63,7 +63,17 @@ namespace ErsatzTV.Core.Metadata
                     _ => Task.FromResult(Unit.Default));
             }
 
-            await _televisionRepository.DeleteEmptyShows();
+            foreach (string path in await _televisionRepository.FindEpisodePaths(libraryPath))
+            {
+                if (!_localFileSystem.FileExists(path))
+                {
+                    _logger.LogInformation("Removing missing episode at {Path}", path);
+                    await _televisionRepository.DeleteByPath(libraryPath, path);
+                }
+            }
+
+            await _televisionRepository.DeleteEmptySeasons(libraryPath);
+            await _televisionRepository.DeleteEmptyShows(libraryPath);
 
             return Unit.Default;
         }

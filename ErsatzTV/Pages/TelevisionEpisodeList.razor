@@ -7,12 +7,13 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
-@using Unit=LanguageExt.Unit;
+@using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 @inject ILogger<TelevisionEpisodeList> Logger
 @inject ISnackbar Snackbar
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
 
 <MudContainer MaxWidth="MaxWidth.Large">
     <MudBreadcrumbs Items="_breadcrumbs" Class="mb-6"></MudBreadcrumbs>
@@ -122,7 +123,7 @@
             NavigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }
-    
+
     private async Task AddEpisodeToCollection(MediaCardViewModel card)
     {
         if (card is TelevisionEpisodeCardViewModel episode)

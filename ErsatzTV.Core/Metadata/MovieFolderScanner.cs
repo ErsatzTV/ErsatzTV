@@ -71,6 +71,7 @@ namespace ErsatzTV.Core.Metadata
                     continue;
                 }
 
+
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     // TODO: optimize dbcontext use here, do we need tracking? can we make partial updates with dapper?
@@ -83,6 +84,15 @@ namespace ErsatzTV.Core.Metadata
 
                     maybeMovie.IfLeft(
                         error => _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value));
+                }
+            }
+
+            foreach (string path in await _movieRepository.FindMoviePaths(libraryPath))
+            {
+                if (!_localFileSystem.FileExists(path))
+                {
+                    _logger.LogInformation("Removing missing movie at {Path}", path);
+                    await _movieRepository.DeleteByPath(libraryPath, path);
                 }
             }
 

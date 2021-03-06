@@ -27,6 +27,9 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Either<BaseError, Show>> AddShow(int libraryPathId, string showFolder, ShowMetadata metadata);
         Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber);
         Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path);
-        Task<Unit> DeleteEmptyShows();
+        Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath);
+        Task<Unit> DeleteByPath(LibraryPath libraryPath, string path);
+        Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath);
+        Task<Unit> DeleteEmptyShows(LibraryPath libraryPath);
     }
 }
