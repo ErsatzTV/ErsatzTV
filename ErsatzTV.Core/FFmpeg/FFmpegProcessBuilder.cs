@@ -57,6 +57,8 @@ namespace ErsatzTV.Core.FFmpeg
                 case HardwareAccelerationKind.Qsv:
                     _arguments.Add("-hwaccel");
                     _arguments.Add("qsv");
+                    _arguments.Add("-init_hw_device");
+                    _arguments.Add("qsv=qsv:MFX_IMPL_hw_any");
                     break;
                 case HardwareAccelerationKind.Nvenc:
                     _arguments.Add("-hwaccel");

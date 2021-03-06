@@ -119,32 +119,32 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 true,
                 true,
                 false,
-                "[0:v]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,setsar=1,hwupload[v]",
+                "[0:v]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             [TestCase(
                 true,
                 false,
                 true,
-                "[0:v]deinterlace_qsv,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:v]deinterlace_qsv,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             [TestCase(
                 true,
                 true,
                 true,
-                "[0:v]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:v]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
-            [TestCase(false, true, false, "[0:v]scale_qsv=w=1920:h=1000,hwdownload,setsar=1,hwupload[v]", "[v]")]
+            [TestCase(false, true, false, "[0:v]scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,hwupload=extra_hw_frames=64[v]", "[v]")]
             [TestCase(
                 false,
                 false,
                 true,
-                "[0:v]hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:v]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             [TestCase(
                 false,
                 true,
                 true,
-                "[0:v]scale_qsv=w=1920:h=1000,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:v]scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             public void Should_Return_QSV_Video_Filter(
                 bool deinterlace,
@@ -200,7 +200,6 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             //     true,
             //     "[0:v]yadif_cuda,scale_npp=1920:1000:format=yuv420p,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
             //     "[v]")]
-            [TestCase(true, false, false, "[0:v][v]", "[v]")]
             [TestCase(
                 true,
                 true,
@@ -211,7 +210,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 true,
                 false,
                 true,
-                "[0:v]hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:v]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 true,
@@ -229,7 +228,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 false,
                 false,
                 true,
-                "[0:v]hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:v]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 false,

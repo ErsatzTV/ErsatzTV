@@ -105,7 +105,8 @@ namespace ErsatzTV.Core.FFmpeg
                 if (acceleration != HardwareAccelerationKind.None)
                 {
                     filterQueue.Add("hwdownload");
-                    if (_scaleToSize.IsNone && acceleration == HardwareAccelerationKind.Nvenc)
+                    if ((_scaleToSize.IsNone && acceleration == HardwareAccelerationKind.Nvenc) ||
+                        acceleration == HardwareAccelerationKind.Qsv)
                     {
                         filterQueue.Add("format=nv12");
                     }
@@ -118,7 +119,8 @@ namespace ErsatzTV.Core.FFmpeg
 
             if ((_scaleToSize.IsSome || _padToSize.IsSome) && acceleration != HardwareAccelerationKind.None)
             {
-                filterQueue.Add("hwupload");
+                filterQueue.Add(
+                    acceleration == HardwareAccelerationKind.Qsv ? "hwupload=extra_hw_frames=64" : "hwupload");
             }
 
             if (filterQueue.Any())
