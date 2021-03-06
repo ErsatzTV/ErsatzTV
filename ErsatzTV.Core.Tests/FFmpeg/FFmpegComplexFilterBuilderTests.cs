@@ -133,7 +133,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 true,
                 "[0:v]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
-            [TestCase(false, true, false, "[0:v]scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,hwupload=extra_hw_frames=64[v]", "[v]")]
+            [TestCase(
+                false,
+                true,
+                false,
+                "[0:v]scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,hwupload=extra_hw_frames=64[v]",
+                "[v]")]
             [TestCase(
                 false,
                 false,

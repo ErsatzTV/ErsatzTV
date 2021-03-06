@@ -273,7 +273,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
             }
-            
+
             [Test]
             public void Should_NotPadToDesiredResolution_When_NotNormalizingResolution()
             {

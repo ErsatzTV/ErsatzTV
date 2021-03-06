@@ -105,7 +105,7 @@ namespace ErsatzTV.Core.FFmpeg
                 if (acceleration != HardwareAccelerationKind.None)
                 {
                     filterQueue.Add("hwdownload");
-                    if ((_scaleToSize.IsNone && acceleration == HardwareAccelerationKind.Nvenc) ||
+                    if (_scaleToSize.IsNone && acceleration == HardwareAccelerationKind.Nvenc ||
                         acceleration == HardwareAccelerationKind.Qsv)
                     {
                         filterQueue.Add("format=nv12");
