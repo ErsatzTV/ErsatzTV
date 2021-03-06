@@ -109,7 +109,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 @"SELECT M.Id
                 FROM Movie M
                 INNER JOIN MediaItem MI on M.Id = MI.Id
-                INNER JOIN MovieMetadata MM on M.Id = MM.MovieId
                 INNER JOIN MediaVersion MV on M.Id = MV.MovieId
                 INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
                 WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
@@ -117,17 +116,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             foreach (int movieId in ids)
             {
-                await Delete(movieId);
+                Movie movie = await _dbContext.Movies.FindAsync(movieId);
+                _dbContext.Movies.Remove(movie);
             }
 
-            return Unit.Default;
-        }
-
-        private async Task<Unit> Delete(int movieId)
-        {
-            Movie movie = await _dbContext.Movies.FindAsync(movieId);
-            _dbContext.Movies.Remove(movie);
             await _dbContext.SaveChangesAsync();
+
             return Unit.Default;
         }
 
