@@ -11,6 +11,7 @@ namespace ErsatzTV.Application.FFmpegProfiles
                 profile.Name,
                 profile.ThreadCount,
                 profile.Transcode,
+                profile.HardwareAcceleration,
                 Project(profile.Resolution),
                 profile.NormalizeResolution,
                 profile.VideoCodec,

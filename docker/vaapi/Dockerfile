@@ -1,5 +1,8 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:5.0-focal-amd64 AS runtime-base
-RUN apt-get update && apt-get install -y ffmpeg
+﻿FROM mcr.microsoft.com/dotnet/aspnet:5.0-focal-amd64 AS dotnet-runtime
+
+FROM jrottenberg/ffmpeg:4.3-vaapi1804 AS runtime-base
+COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
+RUN apt-get update && apt-get install -y libicu-dev
 
 # https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
