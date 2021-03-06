@@ -1,0 +1,16 @@
+﻿version: "3.1"
+
+services:
+    ersatztv:
+        build:
+            context: ..
+            dockerfile: docker/Dockerfile
+            args:
+                INFO_VERSION: "docker-compose-develop"
+        ports:
+            - "8409:8409"
+        volumes:
+            - ersatztv:/root/.local/share/ersatztv
+            #- /media/shared:/media/shared:ro
+volumes:
+    ersatztv:

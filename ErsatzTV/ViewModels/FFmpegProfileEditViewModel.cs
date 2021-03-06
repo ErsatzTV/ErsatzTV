@@ -7,8 +7,6 @@ namespace ErsatzTV.ViewModels
 {
     public class FFmpegProfileEditViewModel
     {
-        private HardwareAccelerationKind _hardwareAcceleration;
-
         public FFmpegProfileEditViewModel()
         {
         }
@@ -51,20 +49,7 @@ namespace ErsatzTV.ViewModels
         public ResolutionViewModel Resolution { get; set; }
         public int ThreadCount { get; set; }
         public bool Transcode { get; set; }
-
-        public HardwareAccelerationKind HardwareAcceleration
-        {
-            get => _hardwareAcceleration;
-            set
-            {
-                _hardwareAcceleration = value;
-                if (_hardwareAcceleration == HardwareAccelerationKind.Nvenc)
-                {
-                    NormalizeResolution = false;
-                }
-            }
-        }
-
+        public HardwareAccelerationKind HardwareAcceleration { get; set; }
         public int VideoBitrate { get; set; }
         public int VideoBufferSize { get; set; }
         public string VideoCodec { get; set; }

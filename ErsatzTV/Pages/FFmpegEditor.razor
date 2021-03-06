@@ -79,7 +79,7 @@
                         </MudItem>
                         <MudItem>
                             <MudText Typo="Typo.h6">Normalization</MudText>
-                            <MudCheckBox Disabled="@(!_model.Transcode || _model.HardwareAcceleration == HardwareAccelerationKind.Nvenc)" Label="Normalize Resolution" @bind-Checked="@_model.NormalizeResolution" For="@(() => _model.NormalizeResolution)"/>
+                            <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Resolution" @bind-Checked="@_model.NormalizeResolution" For="@(() => _model.NormalizeResolution)"/>
                             <MudElement HtmlTag="div" Class="mt-3">
                                 <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Video Codec" @bind-Checked="@_model.NormalizeVideoCodec" For="@(() => _model.NormalizeVideoCodec)"/>
                             </MudElement>

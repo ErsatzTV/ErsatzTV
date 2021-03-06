@@ -45,8 +45,8 @@ namespace ErsatzTV.Validators
                     RuleFor(x => x.VideoCodec).Must(c => NvencEncoders.Contains(c))
                         .WithMessage("NVENC codec is required (h264_nvenc, hevc_nvenc)");
 
-                    RuleFor(x => x.NormalizeResolution).Must(x => x == false)
-                        .WithMessage("Resolution normalization (scaling) is not yet supported with NVENC");
+                    // RuleFor(x => x.NormalizeResolution).Must(x => x == false)
+                    //     .WithMessage("Resolution normalization (scaling) is not yet supported with NVENC");
                 });
             
             When(

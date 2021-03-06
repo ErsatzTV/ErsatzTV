@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -39,9 +38,8 @@ namespace ErsatzTV.Core.FFmpeg
         };
 
         private readonly List<string> _arguments = new();
-        private readonly Queue<string> _audioFilters = new();
         private readonly string _ffmpegPath;
-        private readonly Queue<string> _videoFilters = new();
+        private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
 
         public FFmpegProcessBuilder(string ffmpegPath) => _ffmpegPath = ffmpegPath;
 
@@ -75,6 +73,8 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("vaapi");
                     break;
             }
+
+            _complexFilterBuilder = _complexFilterBuilder.WithHardwareAcceleration(hwAccel);
 
             return this;
         }
@@ -289,85 +289,44 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithScaling(
-            IDisplaySize displaySize,
-            HardwareAccelerationKind hwAccel,
-            string algorithm)
+        public FFmpegProcessBuilder WithScaling(IDisplaySize displaySize)
         {
-            _videoFilters.Enqueue(
-                hwAccel switch
-                {
-                    HardwareAccelerationKind.Qsv => $"scale_qsv=w={displaySize.Width}:h={displaySize.Height}",
-                    HardwareAccelerationKind.Nvenc => $"scale_cuda={displaySize.Width}:{displaySize.Height}",
-                    HardwareAccelerationKind.Vaapi =>
-                        $"hwupload,scale_vaapi=w={displaySize.Width}:h={displaySize.Height}:format=nv12",
-                    _ => $"scale={displaySize.Width}:{displaySize.Height}:flags={algorithm}"
-                });
-
+            _complexFilterBuilder = _complexFilterBuilder.WithScaling(displaySize);
             return this;
         }
 
         public FFmpegProcessBuilder WithBlackBars(IDisplaySize displaySize)
         {
-            _videoFilters.Enqueue($"pad={displaySize.Width}:{displaySize.Height}:(ow-iw)/2:(oh-ih)/2");
+            _complexFilterBuilder = _complexFilterBuilder.WithBlackBars(displaySize);
             return this;
         }
 
         public FFmpegProcessBuilder WithAlignedAudio(Option<TimeSpan> audioDuration)
         {
-            audioDuration.IfSome(duration => _audioFilters.Enqueue($"apad=whole_dur={duration.TotalMilliseconds}ms"));
+            _complexFilterBuilder = _complexFilterBuilder.WithAlignedAudio(audioDuration);
             return this;
         }
 
-        public FFmpegProcessBuilder WithDeinterlace(bool deinterlace, string algorithm = "yadif=1")
+        public FFmpegProcessBuilder WithDeinterlace(bool deinterlace)
         {
-            if (deinterlace)
-            {
-                _videoFilters.Enqueue(algorithm);
-            }
-
-            return this;
-        }
-
-        public FFmpegProcessBuilder WithSAR()
-        {
-            // TODO: minsiz?
-            _videoFilters.Enqueue("setsar=1");
+            _complexFilterBuilder = _complexFilterBuilder.WithDeinterlace(deinterlace);
             return this;
         }
 
         public FFmpegProcessBuilder WithFilterComplex()
         {
-            var complexFilter = new StringBuilder();
             var videoLabel = "0:v";
             var audioLabel = "0:a";
-            bool hasVideoFilters = _videoFilters.Any();
-            if (hasVideoFilters)
-            {
-                (string filter, string finalLabel) = GenerateVideoFilter(_videoFilters);
-                complexFilter.Append(filter);
-                videoLabel = finalLabel;
-            }
 
-            if (_audioFilters.Any())
-            {
-                if (hasVideoFilters)
+            Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build();
+            maybeFilter.IfSome(
+                filter =>
                 {
-                    complexFilter.Append(';');
-                }
-
-                (string filter, string finalLabel) = GenerateAudioFilter(_audioFilters);
-                complexFilter.Append(filter);
-                audioLabel = finalLabel;
-            }
-
-            var complex = complexFilter.ToString();
-
-            if (!string.IsNullOrWhiteSpace(complex))
-            {
-                _arguments.Add("-filter_complex");
-                _arguments.Add(complex);
-            }
+                    _arguments.Add("-filter_complex");
+                    _arguments.Add(filter.ComplexFilter);
+                    videoLabel = filter.VideoLabel;
+                    audioLabel = filter.AudioLabel;
+                });
 
             _arguments.Add("-map");
             _arguments.Add(videoLabel);
@@ -406,26 +365,5 @@ namespace ErsatzTV.Core.FFmpeg
                 StartInfo = startInfo
             };
         }
-
-        private FilterResult GenerateVideoFilter(Queue<string> filterQueue) =>
-            GenerateFilter(filterQueue, "null", 'v');
-
-        private FilterResult GenerateAudioFilter(Queue<string> filterQueue) =>
-            GenerateFilter(filterQueue, "anull", 'a');
-
-        private static FilterResult GenerateFilter(Queue<string> filterQueue, string nullFilter, char av)
-        {
-            var filter = new StringBuilder();
-            var index = 0;
-            filter.Append($"[0:{av}]{nullFilter}[{av}{index}]");
-            while (filterQueue.TryDequeue(out string result))
-            {
-                filter.Append($";[{av}{index}]{result}[{av}{++index}]");
-            }
-
-            return new FilterResult(filter.ToString(), $"[{av}{index}]");
-        }
-
-        private record FilterResult(string Filter, string FinalLabel);
     }
 }
