@@ -9,6 +9,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
     [TestFixture]
     public class FFmpegPlaybackSettingsCalculatorTests
     {
+        [TestFixture]
         public class CalculateSettings
         {
             private readonly FFmpegPlaybackSettingsCalculator _calculator;
@@ -264,6 +265,29 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
+                    ffmpegProfile,
+                    version,
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.ScaledSize.IsNone.Should().BeTrue();
+                actual.PadToDesiredResolution.Should().BeFalse();
+            }
+
+            [Test]
+            public void Should_NotPadToDesiredResolution_When_NotNormalizingResolution()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeResolution = false,
+                    Resolution = new Resolution { Width = 1920, Height = 1080 }
+                };
+
+                // not anamorphic
+                var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
                     DateTimeOffset.Now,
@@ -732,9 +756,33 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
                 actual.AudioSampleRate.IfNone(0).Should().Be(48);
             }
-
-            private FFmpegProfile TestProfile() =>
-                new() { Resolution = new Resolution { Width = 1920, Height = 1080 } };
         }
+
+        [TestFixture]
+        public class CalculateSettingsQsv
+        {
+            private readonly FFmpegPlaybackSettingsCalculator _calculator;
+
+            public CalculateSettingsQsv() => _calculator = new FFmpegPlaybackSettingsCalculator();
+
+            [Test]
+            public void Should_UseHardwareAcceleration()
+            {
+                FFmpegProfile ffmpegProfile =
+                    TestProfile() with { HardwareAcceleration = HardwareAccelerationKind.Qsv };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    new MediaVersion(),
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.HardwareAcceleration.Should().Be(HardwareAccelerationKind.Qsv);
+            }
+        }
+
+        private static FFmpegProfile TestProfile() =>
+            new() { Resolution = new Resolution { Width = 1920, Height = 1080 } };
     }
 }

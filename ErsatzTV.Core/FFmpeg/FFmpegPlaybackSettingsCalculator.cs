@@ -67,6 +67,8 @@ namespace ErsatzTV.Core.FFmpeg
                     result.Deinterlace = false;
                     break;
                 case StreamingMode.TransportStream:
+                    result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
+
                     if (NeedToScale(ffmpegProfile, version))
                     {
                         IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, version);
@@ -77,7 +79,7 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(version);
-                    if (!sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
+                    if (ffmpegProfile.NormalizeResolution && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
                     {
                         result.PadToDesiredResolution = true;
                     }
