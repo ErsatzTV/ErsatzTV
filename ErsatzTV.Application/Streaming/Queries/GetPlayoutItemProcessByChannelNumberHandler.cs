@@ -10,6 +10,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
@@ -68,15 +69,18 @@ namespace ErsatzTV.Application.Streaming.Queries
                         playoutItem.StartOffset,
                         now);
                 },
-                async () =>
+                () =>
                 {
                     if (channel.FFmpegProfile.Transcode)
                     {
-                        return _ffmpegProcessService.ForOfflineImage(ffmpegPath, channel);
+                        return Right<BaseError, Process>(_ffmpegProcessService.ForOfflineImage(ffmpegPath, channel))
+                            .AsTask();
                     }
 
-                    return BaseError.New(
-                        $"Unable to locate playout item for channel {channel.Number}; offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'");
+                    var message =
+                        $"Unable to locate playout item for channel {channel.Number}; offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'";
+
+                    return Left<BaseError, Process>(BaseError.New(message)).AsTask();
                 });
         }
 
