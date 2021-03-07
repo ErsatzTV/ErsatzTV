@@ -213,15 +213,18 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithText(string text)
+        public FFmpegProcessBuilder WithErrorText(IDisplaySize desiredResolution, string text)
         {
             const string FONT_FILE = "fontfile=Resources/Roboto-Regular.ttf";
-            const string FONT_SIZE = "fontsize=30";
+            const string FONT_SIZE = "fontsize=60";
             const string FONT_COLOR = "fontcolor=white";
             const string X = "x=(w-text_w)/2";
-            const string Y = "y=(h-text_h)/2";
+            const string Y = "y=(h-text_h)/3*2";
 
-            return WithFiltergraph($"drawtext={FONT_FILE}:{FONT_SIZE}:{FONT_COLOR}:{X}:{Y}:text='{text}'");
+            return WithFilterComplex(
+                $"[0:0]scale={desiredResolution.Width}:{desiredResolution.Height},drawtext={FONT_FILE}:{FONT_SIZE}:{FONT_COLOR}:{X}:{Y}:text='{text}'[v]",
+                "[v]",
+                "1:a");
         }
 
         public FFmpegProcessBuilder WithDuration(TimeSpan duration) =>
