@@ -46,7 +46,10 @@ jobs:
         shell: bash
         run: |
             tag=$(git describe --tags --abbrev=0)
-            echo "GIT_TAG=${tag:1}" >> $GITHUB_ENV
+            tag2="${tag:1}"
+            short=$(git rev-parse --short HEAD)
+            final="${tag2/prealpha/$short}"
+            echo "GIT_TAG=${final}" >> $GITHUB_ENV
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Cache Docker layers
@@ -71,7 +74,7 @@ jobs:
             INFO_VERSION=${{ env.GIT_TAG }}-docker
           tags: |
             jasongdove/ersatztv:develop
-#            jasongdove/ersatztv:${{ env.GIT_TAG }}
+            jasongdove/ersatztv:develop-${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
       - name: Build and push nvidia
@@ -84,7 +87,7 @@ jobs:
                 INFO_VERSION=${{ env.GIT_TAG }}-docker-nvidia
             tags: |
                 jasongdove/ersatztv:develop-nvidia
-            #            jasongdove/ersatztv:${{ env.GIT_TAG }}
+                jasongdove/ersatztv:develop-nvidia-${{ github.sha }}
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
       - name: Build and push vaapi
@@ -97,6 +100,6 @@ jobs:
                 INFO_VERSION=${{ env.GIT_TAG }}-docker-vaapi
             tags: |
                 jasongdove/ersatztv:develop-vaapi
-            #            jasongdove/ersatztv:${{ env.GIT_TAG }}
+                jasongdove/ersatztv:develop-vaapi-${{ github.sha }}
             cache-from: type=local,src=/tmp/.buildx-cache
             cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
