@@ -98,10 +98,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithLoopedImage("Resources/background.png")
                 .WithLibavfilter()
                 .WithInput("anullsrc")
-                .WithFilterComplex(
-                    $"[0:0]scale={desiredResolution.Width}:{desiredResolution.Height}[video]",
-                    "[video]",
-                    "1:a")
+                .WithErrorText(desiredResolution, "Channel is Offline")
                 .WithPixfmt("yuv420p")
                 .WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel)
