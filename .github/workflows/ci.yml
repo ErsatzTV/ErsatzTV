@@ -55,7 +55,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Extract Git Tag
-        run: echo ::set-env name=GIT_TAG::${GITHUB_REF/refs\/tags\//:1}
+        run: echo "GIT_TAG=${GITHUB_REF/refs\/tags\//:1}" >> $GITHUB_ENV
       - name: Build and push base
         uses: docker/build-push-action@v2
         with:
