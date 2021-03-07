@@ -81,7 +81,7 @@
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    Snackbar.Add(error.Value);
+                    Snackbar.Add(error.Value, Severity.Error);
                     Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
                 },
                 () => NavigationManager.NavigateTo("/schedules"));
