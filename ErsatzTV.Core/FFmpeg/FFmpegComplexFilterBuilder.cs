@@ -89,7 +89,7 @@ namespace ErsatzTV.Core.FFmpeg
                     string filter = acceleration switch
                     {
                         HardwareAccelerationKind.Qsv => $"scale_qsv=w={size.Width}:h={size.Height}",
-                        HardwareAccelerationKind.Nvenc => $"scale_npp={size.Width}:{size.Height}:format=yuv420p",
+                        HardwareAccelerationKind.Nvenc => $"scale_npp={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Vaapi => $"scale_vaapi=w={size.Width}:h={size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
@@ -105,11 +105,12 @@ namespace ErsatzTV.Core.FFmpeg
                 if (acceleration != HardwareAccelerationKind.None)
                 {
                     filterQueue.Add("hwdownload");
-                    if (_scaleToSize.IsNone && acceleration == HardwareAccelerationKind.Nvenc ||
-                        acceleration == HardwareAccelerationKind.Qsv)
+                    string format = acceleration switch
                     {
-                        filterQueue.Add("format=nv12");
-                    }
+                        HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
+                        _ => "format=nv12"
+                    };
+                    filterQueue.Add(format);
                 }
 
                 filterQueue.Add("setsar=1");
@@ -119,8 +120,12 @@ namespace ErsatzTV.Core.FFmpeg
 
             if ((_scaleToSize.IsSome || _padToSize.IsSome) && acceleration != HardwareAccelerationKind.None)
             {
-                filterQueue.Add(
-                    acceleration == HardwareAccelerationKind.Qsv ? "hwupload=extra_hw_frames=64" : "hwupload");
+                string upload = acceleration switch
+                {
+                    HardwareAccelerationKind.Qsv => "hwupload=extra_hw_frames=64",
+                    _ => "hwupload"
+                };
+                filterQueue.Add(upload);
             }
 
             if (filterQueue.Any())
@@ -128,7 +133,7 @@ namespace ErsatzTV.Core.FFmpeg
                 // TODO: any audio filter
                 if (_audioDuration.IsSome)
                 {
-                    complexFilter.Append(";");
+                    complexFilter.Append(';');
                 }
 
                 complexFilter.Append($"[{videoLabel}]");
