@@ -11,7 +11,7 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - Channel-specific streaming mode (MPEG-TS or HLS) and transcoding settings
 - Collection-based scheduling, with collections containing television shows, seasons, episodes and movies
 - Powerful scheduling options such as chronological collection playback throughout the day or over multiple days
-- Hardware-accelerated transcoding options (QSV, NVENC, VAAPI)
+- [Hardware-accelerated transcoding](#Hardware Transcoding) options (QSV, NVENC, VAAPI)
 
 ## In Development
 
@@ -53,6 +53,24 @@ docker run -d \
 ```
 
 After running ErsatzTV for the first time, configure it by visiting the web UI at http://[address]:8409.
+
+### Software Transcoding
+
+The following docker tags are available with software transcoding:
+
+* `develop` - merges to `main` branch
+* `latest` - latest release
+
+### Hardware Transcoding
+
+The following docker tags are available with hardware-accelerated transcoding:
+
+* `develop-nvidia` - merges to `main` branch
+* `develop-vaapi` - merges to `main` branch
+* `latest-nvidia` - latest release
+* `latest-vaapi` - latest release
+
+QSV transcoding has not been tested in docker.
 
 ## Development
 
