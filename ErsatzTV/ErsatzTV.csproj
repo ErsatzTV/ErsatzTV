@@ -36,4 +36,10 @@
       <ProjectReference Include="..\ErsatzTV.Infrastructure\ErsatzTV.Infrastructure.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Update="Resources\background.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
 </Project>
