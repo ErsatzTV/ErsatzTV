@@ -78,7 +78,7 @@ jobs:
             INFO_VERSION=${{ env.GIT_TAG }}-docker
           tags: |
             jasongdove/ersatztv:develop
-            jasongdove/ersatztv:${{ github.sha }}-develop
+            jasongdove/ersatztv:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
@@ -92,7 +92,7 @@ jobs:
             INFO_VERSION=${{ env.GIT_TAG }}-docker-nvidia
           tags: |
             jasongdove/ersatztv:develop-nvidia
-            jasongdove/ersatztv:${{ github.sha }}-develop-nvidia
+            jasongdove/ersatztv:${{ github.sha }}-nvidia
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
@@ -106,6 +106,6 @@ jobs:
             INFO_VERSION=${{ env.GIT_TAG }}-docker-vaapi
           tags: |
             jasongdove/ersatztv:develop-vaapi
-            jasongdove/ersatztv:${{ github.sha }}-develop-vaapi
+            jasongdove/ersatztv:${{ github.sha }}-vaapi
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
