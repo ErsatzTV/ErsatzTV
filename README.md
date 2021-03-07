@@ -11,6 +11,7 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - Channel-specific streaming mode (MPEG-TS or HLS) and transcoding settings
 - Collection-based scheduling, with collections containing television shows, seasons, episodes and movies
 - Powerful scheduling options such as chronological collection playback throughout the day or over multiple days
+- Hardware-accelerated transcoding options (QSV, NVENC, VAAPI)
 
 ## In Development
 

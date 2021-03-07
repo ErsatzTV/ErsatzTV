@@ -41,16 +41,19 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
       - name: Extract Git Tag
         shell: bash
         run: |
-            tag=$(git describe --tags --abbrev=0)
-            tag2="${tag:1}"
-            short=$(git rev-parse --short HEAD)
-            final="${tag2/prealpha/$short}"
-            echo "GIT_TAG=${final}" >> $GITHUB_ENV
+          tag=$(git describe --tags --abbrev=0)
+          tag2="${tag:1}"
+          short=$(git rev-parse --short HEAD)
+          final="${tag2/prealpha/$short}"
+          echo "GIT_TAG=${final}" >> $GITHUB_ENV
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
+
       - name: Cache Docker layers
         uses: actions/cache@v2.1.4
         with:
@@ -58,11 +61,13 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
       - name: Build and push base
         uses: docker/build-push-action@v2
         with:
@@ -73,32 +78,34 @@ jobs:
             INFO_VERSION=${{ env.GIT_TAG }}-docker
           tags: |
             jasongdove/ersatztv:develop
-            jasongdove/ersatztv:develop-${{ github.sha }}
+            jasongdove/ersatztv:${{ github.sha }}-develop
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
       - name: Build and push nvidia
         uses: docker/build-push-action@v2
         with:
-            context: .
-            file: ./docker/nvidia/Dockerfile
-            push: true
-            build-args: |
-                INFO_VERSION=${{ env.GIT_TAG }}-docker-nvidia
-            tags: |
-                jasongdove/ersatztv:develop-nvidia
-                jasongdove/ersatztv:develop-nvidia-${{ github.sha }}
-            cache-from: type=local,src=/tmp/.buildx-cache
-            cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+          context: .
+          file: ./docker/nvidia/Dockerfile
+          push: true
+          build-args: |
+            INFO_VERSION=${{ env.GIT_TAG }}-docker-nvidia
+          tags: |
+            jasongdove/ersatztv:develop-nvidia
+            jasongdove/ersatztv:{{ github.sha }}-develop-nvidia
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+
       - name: Build and push vaapi
         uses: docker/build-push-action@v2
         with:
-            context: .
-            file: ./docker/vaapi/Dockerfile
-            push: true
-            build-args: |
-                INFO_VERSION=${{ env.GIT_TAG }}-docker-vaapi
-            tags: |
-                jasongdove/ersatztv:develop-vaapi
-                jasongdove/ersatztv:develop-vaapi-${{ github.sha }}
-            cache-from: type=local,src=/tmp/.buildx-cache
-            cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+          context: .
+          file: ./docker/vaapi/Dockerfile
+          push: true
+          build-args: |
+            INFO_VERSION=${{ env.GIT_TAG }}-docker-vaapi
+          tags: |
+            jasongdove/ersatztv:develop-vaapi
+            jasongdove/ersatztv:${{ github.sha }}-develop-vaapi
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
