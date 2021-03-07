@@ -55,7 +55,10 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       - name: Extract Git Tag
-        run: echo "GIT_TAG=${GITHUB_REF/refs\/tags\//:1}" >> $GITHUB_ENV
+        shell: bash
+        run: |
+          tag=$(git describe --tags --abbrev=0)
+          echo "GIT_TAG=${tag:1}" >> $GITHUB_ENV
       - name: Build and push base
         uses: docker/build-push-action@v2
         with:
@@ -69,3 +72,29 @@ jobs:
 #            jasongdove/ersatztv:${{ env.GIT_TAG }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+      - name: Build and push nvidia
+        uses: docker/build-push-action@v2
+        with:
+            context: .
+            file: ./docker/nvidia/Dockerfile
+            push: true
+            build-args: |
+                INFO_VERSION=${{ env.GIT_TAG }}-docker-nvidia
+            tags: |
+                jasongdove/ersatztv:develop-nvidia
+            #            jasongdove/ersatztv:${{ env.GIT_TAG }}
+            cache-from: type=local,src=/tmp/.buildx-cache
+            cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
+      - name: Build and push vaapi
+        uses: docker/build-push-action@v2
+        with:
+            context: .
+            file: ./docker/vaapi/Dockerfile
+            push: true
+            build-args: |
+                INFO_VERSION=${{ env.GIT_TAG }}-docker-vaapi
+            tags: |
+                jasongdove/ersatztv:develop-vaapi
+            #            jasongdove/ersatztv:${{ env.GIT_TAG }}
+            cache-from: type=local,src=/tmp/.buildx-cache
+            cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
