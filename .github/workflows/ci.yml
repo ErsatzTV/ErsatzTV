@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - develop
+      - docker-publish
 jobs:
   build_and_test:
     runs-on: ${{ matrix.os }}
