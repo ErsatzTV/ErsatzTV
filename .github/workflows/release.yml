@@ -111,7 +111,6 @@ jobs:
           tags: |
             jasongdove/ersatztv:latest
             jasongdove/ersatztv:${{ env.DOCKER_TAG }}
-            jasongdove/ersatztv:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
@@ -126,7 +125,6 @@ jobs:
           tags: |
             jasongdove/ersatztv:latest-nvidia
             jasongdove/ersatztv:${{ env.DOCKER_TAG }}-nvidia
-            jasongdove/ersatztv:${{ github.sha }}-nvidia
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
@@ -141,6 +139,5 @@ jobs:
           tags: |
             jasongdove/ersatztv:latest-vaapi
             jasongdove/ersatztv:${{ env.DOCKER_TAG }}-vaapi
-            jasongdove/ersatztv:${{ github.sha }}-vaapi
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
