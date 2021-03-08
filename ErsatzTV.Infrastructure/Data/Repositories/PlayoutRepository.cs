@@ -44,8 +44,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(p => p.Id) // https://github.com/dotnet/efcore/issues/22579#issuecomment-694772289
                 .SingleOrDefaultAsync(p => p.Id == id);
 
-        public async Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now) =>
-            await _dbContext.PlayoutItems
+        public Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now) =>
+            _dbContext.PlayoutItems
                 .Where(pi => pi.Playout.ChannelId == channelId)
                 .Where(pi => pi.Start <= now.UtcDateTime && pi.Finish > now.UtcDateTime)
                 .Include(i => i.MediaItem)
@@ -55,7 +55,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mi => (mi as Movie).MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .AsNoTracking()
-                .SingleOrDefaultAsync();
+                .SingleOrDefaultAsync()
+                .Map(Optional);
+
+        public Task<Option<DateTimeOffset>> GetNextItemStart(int channelId, DateTimeOffset now) =>
+            _dbContext.PlayoutItems
+                .Where(pi => pi.Playout.ChannelId == channelId)
+                .Where(pi => pi.Finish > now.UtcDateTime)
+                .OrderBy(pi => pi.Finish)
+                .FirstOrDefaultAsync()
+                .Map(Optional)
+                .MapT(pi => pi.StartOffset);
 
         public Task<List<PlayoutItem>> GetPlayoutItems(int playoutId) =>
             _dbContext.PlayoutItems
