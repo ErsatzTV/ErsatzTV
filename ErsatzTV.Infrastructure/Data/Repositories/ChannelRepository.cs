@@ -39,6 +39,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<Channel>> GetAll() =>
             _dbContext.Channels
+                .Include(c => c.FFmpegProfile)
                 .Include(c => c.Artwork)
                 .ToListAsync();
 

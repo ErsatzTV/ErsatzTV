@@ -45,8 +45,11 @@ namespace ErsatzTV.Core.Iptv
                     _ => "ts"
                 };
 
+                string vcodec = channel.FFmpegProfile.VideoCodec.Split("_").Head();
+                string acodec = channel.FFmpegProfile.AudioCodec;
+
                 sb.AppendLine(
-                    $"#EXTINF:0 tvg-id=\"{channel.Number}\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"ErsatzTV\", {channel.Name}");
+                    $"#EXTINF:0 tvg-id=\"{channel.Number}\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"ErsatzTV\" tvc-stream-vcodec=\"{vcodec}\" tvc-stream-acodec=\"{acodec}\", {channel.Name}");
                 sb.AppendLine($"{_scheme}://{_host}/iptv/channel/{channel.Number}.{format}");
             }
 
