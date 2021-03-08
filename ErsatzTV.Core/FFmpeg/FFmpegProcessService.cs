@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using LanguageExt;
 
 namespace ErsatzTV.Core.FFmpeg
 {
@@ -83,14 +84,14 @@ namespace ErsatzTV.Core.FFmpeg
                 .Build();
         }
 
-        public Process ForOfflineImage(string ffmpegPath, Channel channel)
+        public Process ForOfflineImage(string ffmpegPath, Channel channel, Option<TimeSpan> duration)
         {
             FFmpegPlaybackSettings playbackSettings =
                 _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
 
             IDisplaySize desiredResolution = channel.FFmpegProfile.Resolution;
 
-            return new FFmpegProcessBuilder(ffmpegPath)
+            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath)
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
@@ -102,10 +103,11 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithPixfmt("yuv420p")
                 .WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel)
-                .WithFormat("mpegts")
-                .WithDuration(TimeSpan.FromSeconds(10)) // TODO: figure out when we're back online
-                .WithPipe()
-                .Build();
+                .WithFormat("mpegts");
+
+            duration.IfSome(d => builder = builder.WithDuration(d));
+
+            return builder.WithPipe().Build();
         }
 
         public Process ConcatChannel(string ffmpegPath, Channel channel, string scheme, string host)
