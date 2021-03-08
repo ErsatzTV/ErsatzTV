@@ -227,10 +227,12 @@ namespace ErsatzTV.Core.FFmpeg
                 "1:a");
         }
 
-        public FFmpegProcessBuilder WithDuration(TimeSpan duration) =>
-            // _arguments.Add("-t");
-            // _arguments.Add($"{duration:c}");
-            this;
+        public FFmpegProcessBuilder WithDuration(TimeSpan duration)
+        {
+            _arguments.Add("-t");
+            _arguments.Add($"{duration:c}");
+            return this;
+        }
 
         public FFmpegProcessBuilder WithFormat(string format)
         {
