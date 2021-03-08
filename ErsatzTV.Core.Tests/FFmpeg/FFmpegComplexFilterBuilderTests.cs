@@ -275,44 +275,94 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            [TestCase(true, false, false, "[0:v]deinterlace_vaapi[v]", "[v]")]
+            [TestCase("h264", true, false, false, "[0:v]deinterlace_vaapi[v]", "[v]")]
             [TestCase(
+                "h264",
                 true,
                 true,
                 false,
                 "[0:v]deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
+                "h264",
                 true,
                 false,
                 true,
                 "[0:v]deinterlace_vaapi,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
+                "h264",
                 true,
                 true,
                 true,
                 "[0:v]deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
+                "h264",
                 false,
                 true,
                 false,
                 "[0:v]scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
+                "h264",
                 false,
                 false,
                 true,
                 "[0:v]hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
+                "h264",
                 false,
                 true,
                 true,
                 "[0:v]scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
+            [TestCase("mpeg4", true, false, false, "[0:v]hwupload,deinterlace_vaapi[v]", "[v]")]
+            [TestCase(
+                "mpeg4",
+                true,
+                true,
+                false,
+                "[0:v]hwupload,deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
+                "[v]")]
+            [TestCase(
+                "mpeg4",
+                true,
+                false,
+                true,
+                "[0:v]hwupload,deinterlace_vaapi,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[v]")]
+            [TestCase(
+                "mpeg4",
+                true,
+                true,
+                true,
+                "[0:v]hwupload,deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[v]")]
+            [TestCase(
+                "mpeg4",
+                false,
+                true,
+                false,
+                "[0:v]hwupload,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
+                "[v]")]
+            [TestCase(
+                "mpeg4",
+                false,
+                false,
+                true,
+                "[0:v]setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[v]")]
+            [TestCase(
+                "mpeg4",
+                false,
+                true,
+                true,
+                "[0:v]hwupload,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[v]")]
             public void Should_Return_VAAPI_Video_Filter(
+                string codec,
                 bool deinterlace,
                 bool scale,
                 bool pad,
@@ -321,6 +371,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
                     .WithHardwareAcceleration(HardwareAccelerationKind.Vaapi)
+                    .WithInputCodec(codec)
                     .WithDeinterlace(deinterlace);
 
                 if (scale)

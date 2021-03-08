@@ -14,6 +14,7 @@ namespace ErsatzTV.Core.FFmpeg
         private Option<TimeSpan> _audioDuration = None;
         private bool _deinterlace;
         private Option<HardwareAccelerationKind> _hardwareAccelerationKind = None;
+        private string _inputCodec;
         private Option<IDisplaySize> _padToSize = None;
         private Option<IDisplaySize> _scaleToSize = None;
 
@@ -47,6 +48,12 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegComplexFilterBuilder WithInputCodec(string codec)
+        {
+            _inputCodec = codec;
+            return this;
+        }
+
         public Option<FFmpegComplexFilter> Build()
         {
             var complexFilter = new StringBuilder();
@@ -55,6 +62,13 @@ namespace ErsatzTV.Core.FFmpeg
             var audioLabel = "0:a";
 
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
+            bool isHardwareDecode = acceleration switch
+            {
+                HardwareAccelerationKind.Vaapi => _inputCodec != "mpeg4",
+                HardwareAccelerationKind.Nvenc => true,
+                HardwareAccelerationKind.Qsv => true,
+                _ => false
+            };
 
             _audioDuration.IfSome(
                 audioDuration =>
@@ -66,6 +80,13 @@ namespace ErsatzTV.Core.FFmpeg
                 });
 
             var filterQueue = new List<string>();
+
+            bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None && !isHardwareDecode &&
+                                       (_deinterlace || _scaleToSize.IsSome);
+            if (usesHardwareFilters)
+            {
+                filterQueue.Add("hwupload");
+            }
 
             if (_deinterlace)
             {
@@ -102,7 +123,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             if (_scaleToSize.IsSome || _padToSize.IsSome)
             {
-                if (acceleration != HardwareAccelerationKind.None)
+                if (acceleration != HardwareAccelerationKind.None && (isHardwareDecode || usesHardwareFilters))
                 {
                     filterQueue.Add("hwdownload");
                     string format = acceleration switch

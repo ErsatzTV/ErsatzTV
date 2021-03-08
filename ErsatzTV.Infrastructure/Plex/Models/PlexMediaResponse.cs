@@ -13,6 +13,7 @@ namespace ErsatzTV.Infrastructure.Plex.Models
         public int AudioChannels { get; set; }
         public string AudioCodec { get; set; }
         public string VideoCodec { get; set; }
+        public string VideoProfile { get; set; }
         public string Container { get; set; }
         public string VideoFrameRate { get; set; }
         public List<PlexPartResponse> Part { get; set; }
