@@ -7,6 +7,8 @@ services:
             dockerfile: docker/Dockerfile
             args:
                 INFO_VERSION: "docker-compose-develop"
+        environment:
+            TZ: America/Chicago
         ports:
             - "8409:8409"
         volumes:
