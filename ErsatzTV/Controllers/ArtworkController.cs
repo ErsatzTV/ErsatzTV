@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Controllers
 {
+    [ResponseCache(Duration = 3600)]
     [ApiController]
     [ApiExplorerSettings(IgnoreApi = true)]
     public class PostersController : ControllerBase
