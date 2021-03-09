@@ -4,7 +4,7 @@ namespace ErsatzTV.Application.Channels
 {
     public record ChannelViewModel(
         int Id,
-        int Number,
+        string Number,
         string Name,
         int FFmpegProfileId,
         string Logo,

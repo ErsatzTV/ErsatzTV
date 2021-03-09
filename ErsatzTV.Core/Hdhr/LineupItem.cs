@@ -17,7 +17,7 @@ namespace ErsatzTV.Core.Hdhr
             _channel = channel;
         }
 
-        public string GuideNumber => _channel.Number.ToString();
+        public string GuideNumber => _channel.Number;
         public string GuideName => _channel.Name;
 
         public string URL => _channel.StreamingMode switch

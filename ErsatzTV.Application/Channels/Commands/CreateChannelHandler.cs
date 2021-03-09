@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -35,7 +36,7 @@ namespace ErsatzTV.Application.Channels.Commands
             _channelRepository.Add(c).Map(ProjectToViewModel);
 
         private async Task<Validation<BaseError, Channel>> Validate(CreateChannel request) =>
-            (ValidateName(request), ValidateNumber(request), await FFmpegProfileMustExist(request))
+            (ValidateName(request), await ValidateNumber(request), await FFmpegProfileMustExist(request))
             .Apply(
                 (name, number, ffmpegProfileId) =>
                 {
@@ -66,9 +67,21 @@ namespace ErsatzTV.Application.Channels.Commands
             createChannel.NotEmpty(c => c.Name)
                 .Bind(_ => createChannel.NotLongerThan(50)(c => c.Name));
 
-        // TODO: validate number does not exist?
-        private Validation<BaseError, int> ValidateNumber(CreateChannel createChannel) =>
-            createChannel.AtLeast(1)(c => c.Number);
+        private async Task<Validation<BaseError, string>> ValidateNumber(CreateChannel createChannel)
+        {
+            Option<Channel> maybeExistingChannel = await _channelRepository.GetByNumber(createChannel.Number);
+            return maybeExistingChannel.Match<Validation<BaseError, string>>(
+                _ => BaseError.New("Channel number must be unique"),
+                () =>
+                {
+                    if (Regex.IsMatch(createChannel.Number, @"^[0-9]+(\.[0-9])?$"))
+                    {
+                        return createChannel.Number;
+                    }
+
+                    return BaseError.New("Invalid channel number; one decimal is allowed for subchannels");
+                });
+        }
 
         private async Task<Validation<BaseError, int>> FFmpegProfileMustExist(CreateChannel createChannel) =>
             (await _ffmpegProfileRepository.Get(createChannel.FFmpegProfileId))

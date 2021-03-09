@@ -9,7 +9,7 @@ namespace ErsatzTV.Application.Channels.Commands
     (
         int ChannelId,
         string Name,
-        int Number,
+        string Number,
         int FFmpegProfileId,
         string Logo,
         StreamingMode StreamingMode) : IRequest<Either<BaseError, ChannelViewModel>>;

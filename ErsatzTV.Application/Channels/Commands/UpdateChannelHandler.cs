@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -75,13 +76,18 @@ namespace ErsatzTV.Application.Channels.Commands
             updateChannel.NotEmpty(c => c.Name)
                 .Bind(_ => updateChannel.NotLongerThan(50)(c => c.Name));
 
-        private async Task<Validation<BaseError, int>> ValidateNumber(UpdateChannel updateChannel)
+        private async Task<Validation<BaseError, string>> ValidateNumber(UpdateChannel updateChannel)
         {
             Option<Channel> match = await _channelRepository.GetByNumber(updateChannel.Number);
             int matchId = match.Map(c => c.Id).IfNone(updateChannel.ChannelId);
             if (matchId == updateChannel.ChannelId)
             {
-                return updateChannel.AtLeast(1)(c => c.Number);
+                if (Regex.IsMatch(updateChannel.Number, @"^[0-9](\.[0-9])?$"))
+                {
+                    return updateChannel.Number;
+                }
+
+                return BaseError.New("Invalid channel number; one decimal is allowed for subchannels");
             }
 
             return BaseError.New("Channel number must be unique");
