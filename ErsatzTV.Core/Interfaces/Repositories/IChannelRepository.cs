@@ -9,7 +9,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
     {
         Task<Channel> Add(Channel channel);
         Task<Option<Channel>> Get(int id);
-        Task<Option<Channel>> GetByNumber(int number);
+        Task<Option<Channel>> GetByNumber(string number);
         Task<List<Channel>> GetAll();
         Task<List<Channel>> GetAllForGuide();
         Task Update(Channel channel);

@@ -93,8 +93,9 @@
         else
         {
     // TODO: command for new channel
-            int maxNumber = await Mediator.Send(new GetAllChannels()).Map(channels => channels.Max(c => c.Number));
-            _model.Number = maxNumber + 1;
+            int maxNumber = await Mediator.Send(new GetAllChannels())
+                .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0).Max());
+            _model.Number = (maxNumber + 1).ToString();
             _model.Name = "New Channel";
             _model.FFmpegProfileId = _ffmpegProfiles.Head().Id;
             _model.StreamingMode = StreamingMode.TransportStream;
@@ -124,7 +125,7 @@
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    Snackbar.Add($"Unexpected error saving channel: {error.Value}");
+                    Snackbar.Add(error.Value, Severity.Error);
                     Logger.LogError("Unexpected error saving channel: {Error}", error.Value);
                 },
                 () => NavigationManager.NavigateTo("/channels"));
@@ -144,7 +145,7 @@
             },
             error =>
             {
-                Snackbar.Add($"Unexpected error saving channel logo: {error.Value}");
+                Snackbar.Add($"Unexpected error saving channel logo: {error.Value}", Severity.Error);
                 Logger.LogError("Unexpected error saving channel logo: {Error}", error.Value);
             });
     }
