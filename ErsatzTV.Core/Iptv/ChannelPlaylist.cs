@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using static LanguageExt.Prelude;
@@ -25,7 +26,7 @@ namespace ErsatzTV.Core.Iptv
 
             var xmltv = $"{_scheme}://{_host}/iptv/xmltv.xml";
             sb.AppendLine($"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
-            foreach (Channel channel in _channels)
+            foreach (Channel channel in _channels.OrderBy(c => c.Number))
             {
                 string logo = Optional(channel.Artwork).Flatten()
                     .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
