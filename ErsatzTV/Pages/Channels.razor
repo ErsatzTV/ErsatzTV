@@ -89,5 +89,7 @@
         }
     }
 
-    private async Task LoadChannelsAsync() => _channels = await Mediator.Send(new GetAllChannels());
+    private async Task LoadChannelsAsync() => _channels = await Mediator.Send(new GetAllChannels())
+        .Map(list => list.OrderBy(c => c.Number).ToList());
+
 }
