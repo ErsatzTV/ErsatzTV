@@ -153,6 +153,8 @@ namespace ErsatzTV.Core.FFmpeg
                 _arguments.Add(qsvCodec);
             }
 
+            _complexFilterBuilder = _complexFilterBuilder.WithInputCodec(codec);
+
             _arguments.Add("-i");
             _arguments.Add($"{input}");
             return this;
