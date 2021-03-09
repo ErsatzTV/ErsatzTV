@@ -16,11 +16,11 @@ namespace ErsatzTV.Application.MediaCards.Queries
         public GetCollectionCardsHandler(IMediaCollectionRepository collectionRepository) =>
             _collectionRepository = collectionRepository;
 
-        public async Task<Either<BaseError, CollectionCardResultsViewModel>> Handle(
+        public Task<Either<BaseError, CollectionCardResultsViewModel>> Handle(
             GetCollectionCards request,
             CancellationToken cancellationToken) =>
-            (await _collectionRepository.GetCollectionWithItemsUntracked(request.Id))
-            .ToEither(BaseError.New("Unable to load collection"))
-            .Map(ProjectToViewModel);
+            _collectionRepository.GetCollectionWithItemsUntracked(request.Id)
+                .Map(c => c.ToEither(BaseError.New("Unable to load collection")))
+                .MapT(ProjectToViewModel);
     }
 }
