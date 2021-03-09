@@ -21,7 +21,7 @@
     <MudText GutterBottom="true" Typo="Typo.h4">Movies</MudText>
 
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (MovieCardViewModel card in _data.MovieCards)
+        @foreach (MovieCardViewModel card in _data.MovieCards.OrderBy(m => m.SortTitle))
         {
             <MediaCard Data="@card"
                        Link="@($"/media/movies/{card.MovieId}")"
@@ -35,7 +35,7 @@
     <MudText GutterBottom="true" Typo="Typo.h4">Television Shows</MudText>
 
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionShowCardViewModel card in _data.ShowCards)
+        @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(m => m.SortTitle))
         {
             <MediaCard Data="@card"
                        Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
@@ -49,7 +49,7 @@
     <MudText GutterBottom="true" Typo="Typo.h4">Television Seasons</MudText>
 
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards)
+        @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards.OrderBy(m => m.SortTitle))
         {
             <MediaCard Data="@card"
                        Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
