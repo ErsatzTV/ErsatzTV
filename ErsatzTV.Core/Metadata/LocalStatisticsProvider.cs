@@ -70,6 +70,7 @@ namespace ErsatzTV.Core.Metadata
             mediaItemVersion.Width = version.Width;
             mediaItemVersion.Height = version.Height;
             mediaItemVersion.VideoCodec = version.VideoCodec;
+            mediaItemVersion.VideoProfile = version.VideoProfile;
             mediaItemVersion.VideoScanKind = version.VideoScanKind;
 
             return await _mediaItemRepository.Update(mediaItem) && durationChange;
@@ -134,6 +135,7 @@ namespace ErsatzTV.Core.Metadata
                             version.Width = videoStream.width;
                             version.Height = videoStream.height;
                             version.VideoCodec = videoStream.codec_name;
+                            version.VideoProfile = (videoStream.profile ?? string.Empty).ToLowerInvariant();
                             version.VideoScanKind = ScanKindFromFieldOrder(videoStream.field_order);
                         }
 
@@ -157,6 +159,7 @@ namespace ErsatzTV.Core.Metadata
         public record FFprobeStream(
             int index,
             string codec_name,
+            string profile,
             string codec_type,
             int width,
             int height,

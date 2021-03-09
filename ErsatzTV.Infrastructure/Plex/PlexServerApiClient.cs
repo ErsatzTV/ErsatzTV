@@ -125,6 +125,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Height = media.Height,
                 AudioCodec = media.AudioCodec,
                 VideoCodec = media.VideoCodec,
+                VideoProfile = media.VideoProfile,
                 SampleAspectRatio = ConvertToSAR(media.AspectRatio),
                 MediaFiles = new List<MediaFile>
                 {
