@@ -37,7 +37,7 @@ namespace ErsatzTV.Controllers
                 .Map<ChannelGuide, IActionResult>(Ok);
 
         [HttpGet("iptv/channel/{channelNumber}.ts")]
-        public Task<IActionResult> GetTransportStreamVideo(int channelNumber) =>
+        public Task<IActionResult> GetTransportStreamVideo(string channelNumber) =>
             _mediator.Send(new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
                 .Map(
                     result => result.Match<IActionResult>(
@@ -50,7 +50,7 @@ namespace ErsatzTV.Controllers
                         error => BadRequest(error.Value)));
 
         [HttpGet("iptv/channel/{channelNumber}.m3u8")]
-        public Task<IActionResult> GetHttpLiveStreamingVideo(int channelNumber) =>
+        public Task<IActionResult> GetHttpLiveStreamingVideo(string channelNumber) =>
             _mediator.Send(new GetHlsPlaylistByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
                 .Map(
                     result => result.Match<IActionResult>(

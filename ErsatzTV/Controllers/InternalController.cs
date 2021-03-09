@@ -22,12 +22,12 @@ namespace ErsatzTV.Controllers
         }
 
         [HttpGet("ffmpeg/concat/{channelNumber}")]
-        public Task<IActionResult> GetConcatPlaylist(int channelNumber) =>
+        public Task<IActionResult> GetConcatPlaylist(string channelNumber) =>
             _mediator.Send(new GetConcatPlaylistByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
                 .ToActionResult();
 
         [HttpGet("ffmpeg/stream/{channelNumber}")]
-        public Task<IActionResult> GetStream(int channelNumber) =>
+        public Task<IActionResult> GetStream(string channelNumber) =>
             _mediator.Send(new GetPlayoutItemProcessByChannelNumber(channelNumber)).Map(
                 result =>
                     result.Match<IActionResult>(

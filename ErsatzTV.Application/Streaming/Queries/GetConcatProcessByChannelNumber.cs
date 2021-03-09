@@ -2,7 +2,7 @@
 {
     public record GetConcatProcessByChannelNumber : FFmpegProcessRequest
     {
-        public GetConcatProcessByChannelNumber(string scheme, string host, int channelNumber) : base(channelNumber)
+        public GetConcatProcessByChannelNumber(string scheme, string host, string channelNumber) : base(channelNumber)
         {
             Scheme = scheme;
             Host = host;

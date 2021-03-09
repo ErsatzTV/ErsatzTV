@@ -33,7 +33,7 @@ namespace ErsatzTV.Core.Iptv
             foreach (Channel channel in _channels)
             {
                 xml.WriteStartElement("channel");
-                xml.WriteAttributeString("id", channel.Number.ToString());
+                xml.WriteAttributeString("id", channel.Number);
 
                 xml.WriteStartElement("display-name");
                 xml.WriteAttributeString("lang", "en");
@@ -87,7 +87,7 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteStartElement("programme");
                     xml.WriteAttributeString("start", start);
                     xml.WriteAttributeString("stop", stop);
-                    xml.WriteAttributeString("channel", channel.Number.ToString());
+                    xml.WriteAttributeString("channel", channel.Number);
 
                     xml.WriteStartElement("title");
                     xml.WriteAttributeString("lang", "en");

@@ -5,5 +5,5 @@ using MediatR;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
-    public record FFmpegProcessRequest(int ChannelNumber) : IRequest<Either<BaseError, Process>>;
+    public record FFmpegProcessRequest(string ChannelNumber) : IRequest<Either<BaseError, Process>>;
 }

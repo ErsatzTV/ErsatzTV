@@ -29,7 +29,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync(c => c.Id == id)
                 .Map(Optional);
 
-        public Task<Option<Channel>> GetByNumber(int number) =>
+        public Task<Option<Channel>> GetByNumber(string number) =>
             _dbContext.Channels
                 .Include(c => c.FFmpegProfile)
                 .ThenInclude(p => p.Resolution)

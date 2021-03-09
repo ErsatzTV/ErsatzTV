@@ -47,7 +47,7 @@ namespace ErsatzTV.Infrastructure.Data
 
             var defaultChannel = new Channel(Guid.NewGuid())
             {
-                Number = 1,
+                Number = "1",
                 Name = "ErsatzTV",
                 FFmpegProfile = defaultProfile,
                 StreamingMode = StreamingMode.TransportStream

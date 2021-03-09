@@ -7,7 +7,9 @@ namespace ErsatzTV.Validators
     {
         public ChannelEditViewModelValidator()
         {
-            RuleFor(x => x.Number).GreaterThan(0);
+            RuleFor(x => x.Number).Matches(@"^[0-9]+(\.[0-9])?$")
+                .WithMessage("Invalid channel number; one decimal is allowed for subchannels");
+
             RuleFor(x => x.Name).NotEmpty();
             RuleFor(x => x.FFmpegProfileId).GreaterThan(0);
         }
