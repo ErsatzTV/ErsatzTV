@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Controllers
 {
+    [ResponseCache(Duration = 3600)]
     [ApiController]
     [ApiExplorerSettings(IgnoreApi = true)]
     public class PostersController : ControllerBase
@@ -32,6 +33,16 @@ namespace ErsatzTV.Controllers
         {
             Either<BaseError, ImageViewModel> imageContents =
                 await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Poster, 440));
+            return imageContents.Match<IActionResult>(
+                Left: _ => new NotFoundResult(),
+                Right: r => new FileContentResult(r.Contents, r.MimeType));
+        }
+
+        [HttpGet("/artwork/fanart/{fileName}")]
+        public async Task<IActionResult> GetFanArt(string fileName)
+        {
+            Either<BaseError, ImageViewModel> imageContents =
+                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.FanArt));
             return imageContents.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));

@@ -4,6 +4,7 @@
     {
         Poster = 0,
         Thumbnail = 1,
-        Logo = 2
+        Logo = 2,
+        FanArt = 3
     }
 }

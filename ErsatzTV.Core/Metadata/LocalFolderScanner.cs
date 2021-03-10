@@ -97,10 +97,10 @@ namespace ErsatzTV.Core.Metadata
 
             metadata.Artwork ??= new List<Artwork>();
 
-            Option<Artwork> maybePoster =
+            Option<Artwork> maybeArtwork =
                 Optional(metadata.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == artworkKind);
 
-            bool shouldRefresh = maybePoster.Match(
+            bool shouldRefresh = maybeArtwork.Match(
                 artwork => artwork.DateUpdated < lastWriteTime,
                 true);
 
@@ -109,7 +109,7 @@ namespace ErsatzTV.Core.Metadata
                 _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
                 string cacheName = _imageCache.CopyArtworkToCache(artworkFile, artworkKind);
 
-                maybePoster.Match(
+                maybeArtwork.Match(
                     artwork =>
                     {
                         artwork.Path = cacheName;
