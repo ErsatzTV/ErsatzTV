@@ -10,29 +10,31 @@
 @inject IDialogService Dialog
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
-    <MudPaper Style="align-items: center; display: flex; justify-content: center;">
-        <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
-                       OnClick="@(() => PrevPage())"
-                       Disabled="@(_pageNumber <= 1)">
-        </MudIconButton>
-        <MudText Style="flex-grow: 1"
-                 Align="Align.Center">
-            @Math.Min((_pageNumber - 1) * _pageSize + 1, _data.Count)-@Math.Min(_data.Count, _pageNumber * _pageSize) of @_data.Count
-        </MudText>
-        <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
-                       OnClick="@(() => NextPage())" Disabled="@(_pageNumber * _pageSize >= _data.Count)">
-        </MudIconButton>
-    </MudPaper>
-</MudContainer>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
+        <MudPaper Style="align-items: center; display: flex; justify-content: center;">
+            <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                           OnClick="@(() => PrevPage())"
+                           Disabled="@(_pageNumber <= 1)">
+            </MudIconButton>
+            <MudText Style="flex-grow: 1"
+                     Align="Align.Center">
+                @Math.Min((_pageNumber - 1) * _pageSize + 1, _data.Count)-@Math.Min(_data.Count, _pageNumber * _pageSize) of @_data.Count
+            </MudText>
+            <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                           OnClick="@(() => NextPage())" Disabled="@(_pageNumber * _pageSize >= _data.Count)">
+            </MudIconButton>
+        </MudPaper>
+    </MudContainer>
 
-<MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-    @foreach (TelevisionShowCardViewModel card in _data.Cards)
-    {
-        <MediaCard Data="@card"
-                   Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
-                   AddToCollectionClicked="@AddToCollection"/>
-    }
+    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        @foreach (TelevisionShowCardViewModel card in _data.Cards)
+        {
+            <MediaCard Data="@card"
+                       Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
+                       AddToCollectionClicked="@AddToCollection"/>
+        }
+    </MudContainer>
 </MudContainer>
 
 @code {

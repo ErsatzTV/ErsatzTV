@@ -8,24 +8,26 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<div style="max-width: 400px;">
-    <MudText Typo="Typo.h4" Class="mb-4">Add Playout</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div style="max-width: 400px;">
+        <MudText Typo="Typo.h4" Class="mb-4">Add Playout</MudText>
 
-    <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-        <FluentValidator/>
-        <MudCard>
-            <MudCardContent>
-                <MudAutocomplete T="ChannelViewModel" Label="Channel" @bind-value="_model.Channel" SearchFunc="@SearchChannels" ToStringFunc="@(c => c is null ? null : $"{c.Number} - {c.Name}")"/>
-                <MudAutocomplete Class="mt-3" T="ProgramScheduleViewModel" Label="Schedule" @bind-value="_model.ProgramSchedule" SearchFunc="@SearchProgramSchedules" ToStringFunc="@(s => s?.Name)"/>
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
-                    Add Playout
-                </MudButton>
-            </MudCardActions>
-        </MudCard>
-    </EditForm>
-</div>
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudAutocomplete T="ChannelViewModel" Label="Channel" @bind-value="_model.Channel" SearchFunc="@SearchChannels" ToStringFunc="@(c => c is null ? null : $"{c.Number} - {c.Name}")"/>
+                    <MudAutocomplete Class="mt-3" T="ProgramScheduleViewModel" Label="Schedule" @bind-value="_model.ProgramSchedule" SearchFunc="@SearchProgramSchedules" ToStringFunc="@(s => s?.Name)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                        Add Playout
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
 
 @code {
 

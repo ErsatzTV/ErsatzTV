@@ -5,7 +5,7 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_schedules" Dense="true" SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Schedules</MudText>
@@ -50,31 +50,32 @@
     <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/schedules/add" Class="mt-4">
         Add Schedule
     </MudButton>
+
+    @if (_selectedScheduleItems != null)
+    {
+        <MudTable Hover="true" Items="_selectedScheduleItems.OrderBy(i => i.Index)" Class="mt-8">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">@_selectedSchedule.Name Items</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Start Time</MudTh>
+                <MudTh>Collection</MudTh>
+                <MudTh>Playout Mode</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Start Time">
+                    @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
+                </MudTd>
+                <MudTd DataLabel="Collection">@context.Name</MudTd>
+                <MudTd DataLabel="Playout Mode">@context.PlayoutMode</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager/>
+            </PagerContent>
+        </MudTable>
+    }
 </MudContainer>
 
-@if (_selectedScheduleItems != null)
-{
-    <MudTable Hover="true" Items="_selectedScheduleItems.OrderBy(i => i.Index)" Class="mt-8">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6">@_selectedSchedule.Name Items</MudText>
-        </ToolBarContent>
-        <HeaderContent>
-            <MudTh>Start Time</MudTh>
-            <MudTh>Collection</MudTh>
-            <MudTh>Playout Mode</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Start Time">
-                @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
-            </MudTd>
-            <MudTd DataLabel="Collection">@context.Name</MudTd>
-            <MudTd DataLabel="Playout Mode">@context.PlayoutMode</MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager/>
-        </PagerContent>
-    </MudTable>
-}
 
 @code {
     private List<ProgramScheduleViewModel> _schedules;

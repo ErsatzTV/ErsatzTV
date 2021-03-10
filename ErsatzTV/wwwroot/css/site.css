@@ -1,4 +1,6 @@
-﻿.media-card-grid {
+﻿.mud-breadcrumb-separator > span { color: inherit !important; }
+
+.media-card-grid {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -68,4 +70,38 @@
 .search-bar .mud-input.mud-input-outlined .mud-input-outlined-border {
     border: none;
     border-radius: 4px;
+}
+
+.fanart-container {
+    position: relative;
+    width: 100%;
+    z-index: -1;
+}
+
+.fanart-container img {
+    -o-object-fit: cover;
+    height: 400px;
+    object-fit: cover;
+    position: absolute;
+    transition: opacity 5s ease;
+    width: 100%;
+}
+
+.fanart-container > .fanart-tint {
+    background: linear-gradient(360deg, black, transparent);
+    height: 400px;
+    opacity: 0.85;
+    position: absolute;
+    width: 100%;
+    z-index: 1;
+}
+
+.media-item-title {
+    color: #fff;
+    text-shadow: 1px 1px 5px #000;
+}
+
+.media-item-subtitle {
+    color: #fff;
+    text-shadow: 1px 1px 5px #000;
 }

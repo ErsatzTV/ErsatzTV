@@ -7,33 +7,42 @@
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.Large">
-    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-6"></MudBreadcrumbs>
-    <MudCard Class="mb-6">
-        <div style="display: flex; flex-direction: row;">
-            @if (!string.IsNullOrWhiteSpace(_movie.Poster))
+<MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
+    <div class="fanart-tint"></div>
+    @if (!string.IsNullOrWhiteSpace(_movie.FanArt))
+    {
+        <img src="@($"/artwork/fanart/{_movie.FanArt}")" alt="fan art"/>
+    }
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
+    <div style="display: flex; flex-direction: row;">
+        @if (!string.IsNullOrWhiteSpace(_movie.Poster))
+        {
+            <img class="mud-elevation-2 mr-6"
+                 style="border-radius: 4px; max-height: 440px"
+                 src="@($"/artwork/posters/{_movie.Poster}")" alt="movie poster"/>
+        }
+        <div style="display: flex; flex-direction: column; height: 100%">
+            <MudText Typo="Typo.h2" Class="media-item-title">@_movie.Title</MudText>
+            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_movie.Year</MudText>
+            @if (!string.IsNullOrWhiteSpace(_movie.Plot))
             {
-                <MudPaper Style="flex-shrink: 0;">
-                    <MudCardMedia Image="@($"/artwork/posters/{_movie.Poster}")" Style="height: 440px; width: 304px;"/>
-                </MudPaper>
+                <MudCard Elevation="2" Class="mb-6">
+                    <MudCardContent Class="mx-3 my-3" Style="height: 100%">
+                        <MudText Style="flex-grow: 1">@_movie.Plot</MudText>
+                    </MudCardContent>
+                </MudCard>
             }
-            <MudCardContent Class="mx-3 my-3">
-                <div style="display: flex; flex-direction: column; height: 100%">
-                    <MudText Typo="Typo.h3">@_movie.Title</MudText>
-                    <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_movie.Year</MudText>
-                    <MudText Style="flex-grow: 1">@_movie.Plot</MudText>
-                    <div>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="@AddToCollection">
-                            Add To Collection
-                        </MudButton>
-                    </div>
-                </div>
-            </MudCardContent>
+            <div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@AddToCollection">
+                    Add To Collection
+                </MudButton>
+            </div>
         </div>
-    </MudCard>
+    </div>
 </MudContainer>
 
 @code {

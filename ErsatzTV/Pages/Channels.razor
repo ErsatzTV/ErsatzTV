@@ -7,7 +7,7 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_channels">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Channels</MudText>
@@ -18,7 +18,7 @@
             <col style="width: 20%"/>
             <col style="width: 20%"/>
             <col style="width: 20%"/>
-            <col style="width: 60px;"/>
+            <col style="width: 120px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>
@@ -49,14 +49,18 @@
                 }
             </MudTd>
             <MudTd>
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Direction="Direction.Left" OffsetX="true">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/channels/{context.Id}")">
-                        Edit
-                    </MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteChannelAsync(context))">
-                        Delete
-                    </MudMenuItem>
-                </MudMenu>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Channel">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@($"/channels/{context.Id}")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Channel">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteChannelAsync(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
             </MudTd>
         </RowTemplate>
     </MudTable>

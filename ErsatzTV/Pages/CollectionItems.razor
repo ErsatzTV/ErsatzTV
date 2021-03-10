@@ -9,75 +9,77 @@
 @inject IDialogService Dialog
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<div class="mb-6" style="display: flex; flex-direction: row;">
-    <MudText GutterBottom="true" Typo="Typo.h2">@_data.Name</MudText>
-    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                   Link="@($"/media/collections/{Id}/edit")"
-                   Style="margin-bottom: auto; margin-top: auto;"/>
-</div>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div class="mb-6" style="display: flex; flex-direction: row;">
+        <MudText GutterBottom="true" Typo="Typo.h2">@_data.Name</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                       Link="@($"/media/collections/{Id}/edit")"
+                       Style="margin-bottom: auto; margin-top: auto;"/>
+    </div>
 
-@if (_data.MovieCards.Any())
-{
-    <MudText GutterBottom="true" Typo="Typo.h4">Movies</MudText>
+    @if (_data.MovieCards.Any())
+    {
+        <MudText GutterBottom="true" Typo="Typo.h4">Movies</MudText>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (MovieCardViewModel card in _data.MovieCards.OrderBy(m => m.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"/media/movies/{card.MovieId}")"
-                       DeleteClicked="@RemoveMovieFromCollection"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (MovieCardViewModel card in _data.MovieCards.OrderBy(m => m.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"/media/movies/{card.MovieId}")"
+                           DeleteClicked="@RemoveMovieFromCollection"/>
+            }
+        </MudContainer>
+    }
 
-@if (_data.ShowCards.Any())
-{
-    <MudText GutterBottom="true" Typo="Typo.h4">Television Shows</MudText>
+    @if (_data.ShowCards.Any())
+    {
+        <MudText GutterBottom="true" Typo="Typo.h4">Television Shows</MudText>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(m => m.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
-                       DeleteClicked="@RemoveShowFromCollection"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(m => m.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
+                           DeleteClicked="@RemoveShowFromCollection"/>
+            }
+        </MudContainer>
+    }
 
-@if (_data.SeasonCards.Any())
-{
-    <MudText GutterBottom="true" Typo="Typo.h4">Television Seasons</MudText>
+    @if (_data.SeasonCards.Any())
+    {
+        <MudText GutterBottom="true" Typo="Typo.h4">Television Seasons</MudText>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards.OrderBy(m => m.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
-                       Title="@card.ShowTitle"
-                       Subtitle="@card.Title"
-                       DeleteClicked="@RemoveSeasonFromCollection"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards.OrderBy(m => m.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
+                           Title="@card.ShowTitle"
+                           Subtitle="@card.Title"
+                           DeleteClicked="@RemoveSeasonFromCollection"/>
+            }
+        </MudContainer>
+    }
 
-@if (_data.EpisodeCards.Any())
-{
-    <MudText GutterBottom="true" Typo="Typo.h4">Television Episodes</MudText>
+    @if (_data.EpisodeCards.Any())
+    {
+        <MudText GutterBottom="true" Typo="Typo.h4">Television Episodes</MudText>
 
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"/media/tv/episodes/{card.EpisodeId}")"
-                       Title="@card.ShowTitle"
-                       Subtitle="@card.Title"
-                       ContainerClass="media-card-episode-container mx-2"
-                       CardClass="media-card-episode"
-                       DeleteClicked="@RemoveEpisodeFromCollection"
-                       ArtworkKind="@ArtworkKind.Thumbnail"/>
-        }
-    </MudContainer>
-}
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"/media/tv/episodes/{card.EpisodeId}")"
+                           Title="@card.ShowTitle"
+                           Subtitle="@card.Title"
+                           ContainerClass="media-card-episode-container mx-2"
+                           CardClass="media-card-episode"
+                           DeleteClicked="@RemoveEpisodeFromCollection"
+                           ArtworkKind="@ArtworkKind.Thumbnail"/>
+            }
+        </MudContainer>
+    }
+</MudContainer>
 
 @code {
 

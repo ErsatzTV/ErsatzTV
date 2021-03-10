@@ -9,30 +9,30 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
+        <div style="min-width: 240px">
+            <img src="/images/ersatztv.png" alt="ErsatzTV"/>
+        </div>
         <MudTextField T="string"
-                      @ref="_textField"
-                      Placeholder="Search"
+                      @ref="                            _textField"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Adornment="Adornment.Start"
                       Variant="Variant.Outlined"
                       Class="search-bar"
                       OnKeyDown="@OnSearchKeyDown"
                       Immediate="true">
         </MudTextField>
         <MudAppBarSpacer/>
-        <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
-        <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
-        <MudLink Style="@($"color:{Colors.Shades.White}")" Color="Color.Inherit" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink>
-        <MudDivider Vertical="true" FlexItem="true" DividerType="DividerType.Middle" Class="mx-4 my-5"/>
+        <MudLink Color="Color.Info" Href="/iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
+        <MudLink Color="Color.Info" Href="/iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
+        <MudLink Color="Color.Info" Href="/swagger" Target="_blank" Class="mr-4" Underline="Underline.None">API</MudLink>
         <MudTooltip Text="Discord">
-            <MudIconButton Icon="fab fa-discord" Color="Color.Inherit" Link="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
+            <MudIconButton Icon="fab fa-discord" Color="Color.Primary" Link="https://discord.gg/hHaJm3yGy6" Target="_blank"/>
         </MudTooltip>
         <MudTooltip Text="GitHub">
-            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/jasongdove/ErsatzTV" Target="_blank"/>
+            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Primary" Link="https://github.com/jasongdove/ErsatzTV" Target="_blank"/>
         </MudTooltip>
     </MudAppBar>
-    <MudDrawer Open="true" Elevation="2">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h6">ErsatzTV</MudText>
-        </MudDrawerHeader>
+    <MudDrawer Open="true" Elevation="2" ClipMode="DrawerClipMode.Always">
         <MudNavMenu>
             <MudNavLink Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
             <MudNavLink Href="/channels">Channels</MudNavLink>
@@ -57,9 +57,7 @@
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
-        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-            @Body
-        </MudContainer>
+        @Body
     </MudMainContent>
 </MudLayout>
 
@@ -78,9 +76,18 @@
             {
                 Palette = new Palette
                 {
-                    DrawerBackground = current.Palette.Background,
-                    Background = current.Palette.BackgroundGrey,
-                    Tertiary = Colors.Shades.White
+                    ActionDefault = "rgba(255,255,255, 0.80)",
+                    Primary = "#009000",
+                    AppbarBackground = "#121212",
+                    Background = "#272727",
+                    DrawerBackground = "#1f1f1f",
+                    Surface = "#1f1f1f",
+                    DrawerText = "rgba(255,255,255, 0.80)",
+                    TextPrimary = "rgba(255,255,255, 0.80)",
+                    TextSecondary = "rgba(255,255,255, 0.80)",
+                    Info = "#00c0c0",
+                    Tertiary = "#00c000",
+                    White = Colors.Shades.White
                 }
             };
         }

@@ -7,29 +7,31 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<div style="max-width: 400px;">
-    <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Schedule" : "Add Schedule")</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div style="max-width: 400px;">
+        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Schedule" : "Add Schedule")</MudText>
 
-    <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-        <FluentValidator/>
-        <MudCard>
-            <MudCardContent>
-                <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                <MudSelect Class="mt-3" Label="Collection Playback Order" @bind-Value="_model.MediaCollectionPlaybackOrder" For="@(() => _model.MediaCollectionPlaybackOrder)">
-                    @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
-                    {
-                        <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
-                    @(IsEdit ? "Save Changes" : "Add Schedule")
-                </MudButton>
-            </MudCardActions>
-        </MudCard>
-    </EditForm>
-</div>
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudSelect Class="mt-3" Label="Collection Playback Order" @bind-Value="_model.MediaCollectionPlaybackOrder" For="@(() => _model.MediaCollectionPlaybackOrder)">
+                        @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
+                        {
+                            <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                        @(IsEdit ? "Save Changes" : "Add Schedule")
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
 
 @code {
 

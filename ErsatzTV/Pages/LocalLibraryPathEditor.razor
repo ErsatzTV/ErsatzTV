@@ -10,7 +10,7 @@
 @inject IEntityLocker Locker
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudText Typo="Typo.h4" Class="mb-4">@_library.Name - Add Local Library Path</MudText>
     <div style="max-width: 400px;">
         <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">

@@ -5,7 +5,7 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudCard>
         <MudCardHeader>
             <CardHeaderContent>
@@ -37,7 +37,7 @@
         <ToolBarContent>
             <MudText Typo="Typo.h6">FFmpeg Profiles</MudText>
             <MudToolBarSpacer></MudToolBarSpacer>
-            <MudText Color="Color.Primary">Colored settings will be normalized</MudText>
+            <MudText Color="Color.Tertiary">Colored settings will be normalized</MudText>
         </ToolBarContent>
         <ColGroup>
             <col/>
@@ -45,7 +45,7 @@
             <col/>
             <col/>
             <col/>
-            <col style="width: 60px;"/>
+            <col style="width: 120px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Name</MudTh>
@@ -61,29 +61,33 @@
                 @(context.Transcode ? "Yes" : "No")
             </MudTd>
             <MudTd DataLabel="Resolution">
-                <MudText Color="@(context.Transcode && context.NormalizeResolution ? Color.Primary : Color.Inherit)">
+                <MudText Color="@(context.Transcode && context.NormalizeResolution ? Color.Tertiary : Color.Inherit)">
                     @context.Resolution.Name
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Video Codec">
-                <MudText Color="@(context.Transcode && context.NormalizeVideoCodec ? Color.Primary : Color.Inherit)">
+                <MudText Color="@(context.Transcode && context.NormalizeVideoCodec ? Color.Tertiary : Color.Inherit)">
                     @context.VideoCodec
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Audio Codec">
-                <MudText Color="@(context.Transcode && context.NormalizeAudioCodec ? Color.Primary : Color.Inherit)">
+                <MudText Color="@(context.Transcode && context.NormalizeAudioCodec ? Color.Tertiary : Color.Inherit)">
                     @context.AudioCodec
                 </MudText>
             </MudTd>
             <MudTd>
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Direction="Direction.Left" OffsetX="true">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/ffmpeg/{context.Id}")">
-                        Edit
-                    </MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteProfileAsync(context))">
-                        Delete
-                    </MudMenuItem>
-                </MudMenu>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Channel">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@($"/ffmpeg/{context.Id}")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Channel">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteProfileAsync(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
             </MudTd>
         </RowTemplate>
     </MudTable>
