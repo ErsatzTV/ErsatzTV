@@ -80,8 +80,6 @@
 
     private TelevisionSeasonCardResultsViewModel _data;
 
-    private List<BreadcrumbItem> _breadcrumbs;
-
     protected override Task OnParametersSetAsync() => RefreshData();
 
     private async Task RefreshData()
@@ -90,12 +88,6 @@
             .IfSomeAsync(vm => _show = vm);
 
         _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize));
-
-        _breadcrumbs = new List<BreadcrumbItem>
-        {
-            new("TV Shows", "/media/tv/shows"),
-            new($"{_show.Title} ({_show.Year})", null, true)
-        };
     }
 
     private async Task AddToCollection()
