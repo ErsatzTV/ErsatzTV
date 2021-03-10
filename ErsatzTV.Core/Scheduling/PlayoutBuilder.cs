@@ -106,7 +106,7 @@ namespace ErsatzTV.Core.Scheduling
             PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, sortedScheduleItems);
 
             // start at the previously-decided time
-            DateTimeOffset currentTime = startAnchor.NextStart;
+            DateTimeOffset currentTime = new DateTimeOffset(startAnchor.NextStart, TimeSpan.Zero).ToLocalTime();
             _logger.LogDebug(
                 "Starting playout {PlayoutId} for channel {ChannelNumber} - {ChannelName} at {StartTime}",
                 playout.Id,
@@ -277,7 +277,7 @@ namespace ErsatzTV.Core.Scheduling
             playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
 
             // remove any items outside the desired range
-            playout.Items.RemoveAll(old => old.Finish < playoutStart || old.Start > playoutFinish);
+            playout.Items.RemoveAll(old => old.FinishOffset < playoutStart || old.StartOffset > playoutFinish);
 
             return playout;
         }
