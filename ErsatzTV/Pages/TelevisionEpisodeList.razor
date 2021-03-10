@@ -15,55 +15,55 @@
 @inject NavigationManager NavigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudContainer MaxWidth="MaxWidth.Large">
-        <MudBreadcrumbs Items="_breadcrumbs" Class="mb-6"></MudBreadcrumbs>
-        <MudCard Class="mb-6">
-            <div style="display: flex; flex-direction: row;">
-                @if (!string.IsNullOrWhiteSpace(_season.Poster))
-                {
-                    <MudPaper Style="flex-shrink: 0;">
-                        <MudCardMedia Image="@($"/artwork/posters/{_season.Poster}")" Style="height: 440px; width: 304px;"/>
-                    </MudPaper>
-                }
-                <MudCardContent Class="mx-3 my-3">
-                    <div style="display: flex; flex-direction: column; height: 100%">
-                        <MudText Typo="Typo.h3">@_season.Title</MudText>
-                        <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_season.Year</MudText>
-                        <MudText Style="flex-grow: 1">@_season.Plot</MudText>
-                        <div class="mt-6">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="@AddToCollection">
-                                Add To Collection
-                            </MudButton>
-                            <MudButton Class="ml-3"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Schedule"
-                                       OnClick="@AddToSchedule">
-                                Add To Schedule
-                            </MudButton>
-                        </div>
-                    </div>
-                </MudCardContent>
-            </div>
-        </MudCard>
-    </MudContainer>
-
-    <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
-        @foreach (TelevisionEpisodeCardViewModel card in _data.Cards)
+<MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
+    <div class="fanart-tint"></div>
+    @if (!string.IsNullOrWhiteSpace(_season.FanArt))
+    {
+        <img src="@($"/artwork/fanart/{_season.FanArt}")" alt="fan art"/>
+    }
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
+    <div style="display: flex; flex-direction: row;">
+        @if (!string.IsNullOrWhiteSpace(_season.Poster))
         {
-            <MediaCard Data="@card"
-                       Placeholder="@card.Placeholder"
-                       Link="@($"/media/tv/episodes/{card.EpisodeId}")"
-                       AddToCollectionClicked="@AddEpisodeToCollection"
-                       ContainerClass="media-card-episode-container mx-2"
-                       CardClass="media-card-episode"
-                       ArtworkKind="@ArtworkKind.Thumbnail"/>
+            <img class="mud-elevation-2 mr-6"
+                 style="border-radius: 4px; max-height: 440px"
+                 src="@($"/artwork/posters/{_season.Poster}")" alt="show poster"/>
         }
-    </MudContainer>
+        <div style="display: flex; flex-direction: column; height: 100%">
+            <MudLink Href="@($"/media/tv/shows/{_season.ShowId}")">
+                <MudText Typo="Typo.h2" Class="media-item-title">@_season.Title</MudText>
+            </MudLink>
+            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_season.Name</MudText>
+            <div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@AddToCollection">
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Schedule"
+                           OnClick="@AddToSchedule">
+                    Add To Schedule
+                </MudButton>
+            </div>
+        </div>
+    </div>
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid mt-8">
+    @foreach (TelevisionEpisodeCardViewModel card in _data.Cards)
+    {
+        <MediaCard Data="@card"
+                   Placeholder="@card.Placeholder"
+                   Link="@($"/media/tv/episodes/{card.EpisodeId}")"
+                   AddToCollectionClicked="@AddEpisodeToCollection"
+                   ContainerClass="media-card-episode-container mx-2"
+                   CardClass="media-card-episode"
+                   ArtworkKind="@ArtworkKind.Thumbnail"/>
+    }
 </MudContainer>
 
 @code {
@@ -89,17 +89,17 @@
 
         _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize));
 
-        _breadcrumbs = new List<BreadcrumbItem>
-        {
-            new("TV Shows", "/media/tv/shows"),
-            new($"{_season.Title} ({_season.Year})", $"/media/tv/shows/{_season.ShowId}"),
-            new(_season.Plot, null, true)
-        };
+        // _breadcrumbs = new List<BreadcrumbItem>
+        // {
+        //     new("TV Shows", "/media/tv/shows"),
+        //     new($"{_season.Title} ({_season.Year})", ),
+        //     new(_season.Name, null, true)
+        // };
     }
 
     private async Task AddToCollection()
     {
-        var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Plot}" } };
+        var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Name}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
@@ -114,7 +114,7 @@
 
     private async Task AddToSchedule()
     {
-        var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Plot}" } };
+        var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Name}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog = Dialog.Show<AddToScheduleDialog>("Add To Schedule", parameters, options);

@@ -22,7 +22,8 @@ namespace ErsatzTV.Application.Television
                 season.Show.ShowMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
                 season.Show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString() ?? string.Empty).IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}",
-                season.SeasonMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty));
+                season.SeasonMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty),
+                season.Show.ShowMetadata.HeadOrNone().Map(GetFanArt).IfNone(string.Empty));
 
         internal static TelevisionEpisodeViewModel ProjectToViewModel(Episode episode) =>
             new(

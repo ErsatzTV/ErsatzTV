@@ -21,7 +21,7 @@
                 <MudCardContent Class="ml-3">
                     <div style="display: flex; flex-direction: column; height: 100%">
                         <MudText Typo="Typo.h4">@_episode.Title</MudText>
-                        <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_season.Plot</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_season.Name</MudText>
                         <MudText Style="flex-grow: 1">@_episode.Plot</MudText>
                         <div class="mt-6">
                             <MudButton Variant="Variant.Filled"
@@ -62,7 +62,7 @@
         {
             new("TV Shows", "/media/tv/shows"),
             new($"{_season.Title} ({_season.Year})", $"/media/tv/shows/{_season.ShowId}"),
-            new(_season.Plot, $"/media/tv/seasons/{_episode.SeasonId}"),
+            new(_season.Name, $"/media/tv/seasons/{_episode.SeasonId}"),
             new($"Episode {_episode.Episode}", null, true)
         };
     }
