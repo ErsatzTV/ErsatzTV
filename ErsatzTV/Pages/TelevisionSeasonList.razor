@@ -15,51 +15,57 @@
 @inject NavigationManager NavigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudContainer MaxWidth="MaxWidth.Large">
-        <MudBreadcrumbs Items="_breadcrumbs" Class="mb-6"></MudBreadcrumbs>
-        <MudCard Class="mb-6">
-            <div style="display: flex; flex-direction: row;">
-                @if (!string.IsNullOrWhiteSpace(_show.Poster))
-                {
-                    <MudPaper Style="flex-shrink: 0;">
-                        <MudCardMedia Image="@($"/artwork/posters/{_show.Poster}")" Style="height: 440px; width: 304px;"/>
-                    </MudPaper>
-                }
-                <MudCardContent Class="mx-3 my-3">
-                    <div style="display: flex; flex-direction: column; height: 100%">
-                        <MudText Typo="Typo.h3">@_show.Title</MudText>
-                        <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_show.Year</MudText>
-                        <MudText Style="flex-grow: 1">@_show.Plot</MudText>
-                        <div>
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Add"
-                                       OnClick="@AddToCollection">
-                                Add To Collection
-                            </MudButton>
-                            <MudButton Class="ml-3"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.Schedule"
-                                       OnClick="@AddToSchedule">
-                                Add To Schedule
-                            </MudButton>
-                        </div>
-                    </div>
-                </MudCardContent>
-            </div>
-        </MudCard>
-    </MudContainer>
-
-    <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
-        @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
+<MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
+    <div class="fanart-tint"></div>
+    @if (!string.IsNullOrWhiteSpace(_show.FanArt))
+    {
+        <img src="@($"/artwork/fanart/{_show.FanArt}")" alt="fan art"/>
+    }
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
+    <div style="display: flex; flex-direction: row;">
+        @if (!string.IsNullOrWhiteSpace(_show.Poster))
         {
-            <MediaCard Data="@card" Placeholder="@card.Placeholder"
-                       Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
-                       AddToCollectionClicked="@AddSeasonToCollection"/>
+            <img class="mud-elevation-2 mr-6"
+                 style="border-radius: 4px; max-height: 440px"
+                 src="@($"/artwork/posters/{_show.Poster}")" alt="show poster"/>
         }
-    </MudContainer>
+        <div style="display: flex; flex-direction: column; height: 100%">
+            <MudText Typo="Typo.h2" Class="media-item-title">@_show.Title</MudText>
+            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_show.Year</MudText>
+            @if (!string.IsNullOrWhiteSpace(_show.Plot))
+            {
+                <MudCard Elevation="2" Class="mb-6">
+                    <MudCardContent Class="mx-3 my-3" Style="height: 100%">
+                        <MudText Style="flex-grow: 1">@_show.Plot</MudText>
+                    </MudCardContent>
+                </MudCard>
+            }
+            <div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@AddToCollection">
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Schedule"
+                           OnClick="@AddToSchedule">
+                    Add To Schedule
+                </MudButton>
+            </div>
+        </div>
+    </div>
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid mt-8">
+    @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
+    {
+        <MediaCard Data="@card" Placeholder="@card.Placeholder"
+                   Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
+                   AddToCollectionClicked="@AddSeasonToCollection"/>
+    }
 </MudContainer>
 
 @code {
