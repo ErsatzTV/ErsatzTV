@@ -7,6 +7,7 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
+@using ErsatzTV.Extensions
 @using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 @inject ILogger<TelevisionEpisodeList> Logger
@@ -14,6 +15,7 @@
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject IJSRuntime JsRuntime
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
@@ -57,7 +59,7 @@
     @foreach (TelevisionEpisodeCardViewModel episode in _data.Cards)
     {
         <MudCard Class="mb-6">
-            <div style="display: flex; flex-direction: row;">
+            <div id="@($"episode-{episode.EpisodeId}")" style="display: flex; flex-direction: row; scroll-margin-top: 85px">
                 @if (!string.IsNullOrWhiteSpace(episode.Poster))
                 {
                     <MudPaper style="display: flex; flex-direction: column">
@@ -95,7 +97,13 @@
 
     private TelevisionEpisodeCardResultsViewModel _data;
 
-    private List<BreadcrumbItem> _breadcrumbs;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await NavigationManager.NavigateToFragmentAsync(JsRuntime);
+        }
+    }
 
     protected override Task OnParametersSetAsync() => RefreshData();
 
@@ -105,13 +113,6 @@
             .IfSomeAsync(vm => _season = vm);
 
         _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize));
-
-    // _breadcrumbs = new List<BreadcrumbItem>
-    // {
-    //     new("TV Shows", "/media/tv/shows"),
-    //     new($"{_season.Title} ({_season.Year})", ),
-    //     new(_season.Name, null, true)
-    // };
     }
 
     private async Task AddToCollection()

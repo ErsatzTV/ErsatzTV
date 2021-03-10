@@ -69,7 +69,7 @@
             @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
             {
                 <MediaCard Data="@card"
-                           Link="@($"/media/tv/episodes/{card.EpisodeId}")"
+                           Link="@($"/media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
                            Title="@card.ShowTitle"
                            Subtitle="@card.Title"
                            ContainerClass="media-card-episode-container mx-2"
