@@ -28,7 +28,7 @@
     </MudContainer>
 
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionShowCardViewModel card in _data.Cards)
+        @foreach (TelevisionShowCardViewModel card in _data.Cards.OrderBy(s => s.SortTitle))
         {
             <MediaCard Data="@card"
                        Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
