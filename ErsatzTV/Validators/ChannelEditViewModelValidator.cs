@@ -1,4 +1,5 @@
-﻿using ErsatzTV.ViewModels;
+﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.ViewModels;
 using FluentValidation;
 
 namespace ErsatzTV.Validators
@@ -7,7 +8,7 @@ namespace ErsatzTV.Validators
     {
         public ChannelEditViewModelValidator()
         {
-            RuleFor(x => x.Number).Matches(@"^[0-9]+(\.[0-9])?$")
+            RuleFor(x => x.Number).Matches(Channel.NumberValidator)
                 .WithMessage("Invalid channel number; one decimal is allowed for subchannels");
 
             RuleFor(x => x.Name).NotEmpty();

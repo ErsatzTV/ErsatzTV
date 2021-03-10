@@ -82,7 +82,7 @@ namespace ErsatzTV.Application.Channels.Commands
             int matchId = match.Map(c => c.Id).IfNone(updateChannel.ChannelId);
             if (matchId == updateChannel.ChannelId)
             {
-                if (Regex.IsMatch(updateChannel.Number, @"^[0-9](\.[0-9])?$"))
+                if (Regex.IsMatch(updateChannel.Number, Channel.NumberValidator))
                 {
                     return updateChannel.Number;
                 }
