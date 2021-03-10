@@ -1,4 +1,5 @@
 ﻿@page "/media/tv/seasons/{SeasonId:int}"
+@using ErsatzTV.Extensions
 @using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Television.Queries
 @using ErsatzTV.Application.MediaCards
@@ -7,7 +8,6 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
-@using ErsatzTV.Extensions
 @using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 @inject ILogger<TelevisionEpisodeList> Logger
