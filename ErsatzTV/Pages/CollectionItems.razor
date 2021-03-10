@@ -69,12 +69,12 @@
             @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
             {
                 <MediaCard Data="@card"
-                           Link="@($"/media/tv/episodes/{card.EpisodeId}")"
+                           Link="@($"/media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
                            Title="@card.ShowTitle"
                            Subtitle="@card.Title"
                            ContainerClass="media-card-episode-container mx-2"
                            CardClass="media-card-episode"
-                           DeleteClicked="@RemoveEpisodeFromCollection"
+                           DeleteClicked="@(_ => RemoveEpisodeFromCollection(card))"
                            ArtworkKind="@ArtworkKind.Thumbnail"/>
             }
         </MudContainer>
@@ -139,17 +139,14 @@
         }
     }
 
-    private async Task RemoveEpisodeFromCollection(MediaCardViewModel vm)
+    private async Task RemoveEpisodeFromCollection(TelevisionEpisodeCardViewModel episode)
     {
-        if (vm is TelevisionEpisodeCardViewModel episode)
+        var request = new RemoveItemsFromCollection(Id)
         {
-            var request = new RemoveItemsFromCollection(Id)
-            {
-                MediaItemIds = new List<int> { episode.EpisodeId }
-            };
+            MediaItemIds = new List<int> { episode.EpisodeId }
+        };
 
-            await RemoveItemsWithConfirmation("episode", $"{episode.ShowTitle} - {episode.Title}", request);
-        }
+        await RemoveItemsWithConfirmation("episode", $"{episode.ShowTitle} - {episode.Title}", request);
     }
 
     private async Task RemoveItemsWithConfirmation(

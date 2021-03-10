@@ -33,11 +33,12 @@ namespace ErsatzTV.Application.MediaCards
                 episodeMetadata.EpisodeId,
                 episodeMetadata.ReleaseDate ?? DateTime.MinValue,
                 episodeMetadata.Episode.Season.Show.ShowMetadata.HeadOrNone().Map(m => m.Title).IfNone(string.Empty),
+                episodeMetadata.Episode.Season.ShowId,
+                episodeMetadata.Episode.SeasonId,
+                episodeMetadata.Episode.EpisodeNumber,
                 episodeMetadata.Title,
-                $"Episode {episodeMetadata.Episode.EpisodeNumber}",
-                episodeMetadata.Episode.EpisodeNumber.ToString(),
-                GetThumbnail(episodeMetadata),
-                episodeMetadata.Episode.EpisodeNumber.ToString());
+                episodeMetadata.Episode.EpisodeMetadata.HeadOrNone().Map(em => em.Plot).IfNone(string.Empty),
+                GetThumbnail(episodeMetadata));
 
         internal static MovieCardViewModel ProjectToViewModel(MovieMetadata movieMetadata) =>
             new(

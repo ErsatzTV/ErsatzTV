@@ -94,6 +94,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(sm => sm.Artwork)
                 .Include(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync(s => s.Id == seasonId)
                 .Map(Optional);
