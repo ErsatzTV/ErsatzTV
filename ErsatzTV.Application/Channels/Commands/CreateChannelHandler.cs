@@ -74,7 +74,7 @@ namespace ErsatzTV.Application.Channels.Commands
                 _ => BaseError.New("Channel number must be unique"),
                 () =>
                 {
-                    if (Regex.IsMatch(createChannel.Number, @"^[0-9]+(\.[0-9])?$"))
+                    if (Regex.IsMatch(createChannel.Number, Channel.NumberValidator))
                     {
                         return createChannel.Number;
                     }

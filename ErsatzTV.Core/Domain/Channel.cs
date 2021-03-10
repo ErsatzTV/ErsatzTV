@@ -5,6 +5,8 @@ namespace ErsatzTV.Core.Domain
 {
     public class Channel
     {
+        public static string NumberValidator = @"^[0-9]+(\.[0-9])?$";
+
         public Channel(Guid uniqueId) => UniqueId = uniqueId;
         public int Id { get; set; }
         public Guid UniqueId { get; init; }
