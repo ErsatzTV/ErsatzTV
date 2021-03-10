@@ -8,23 +8,25 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<div style="max-width: 400px;">
-    <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Collection" : "Add Collection")</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div style="max-width: 400px;">
+        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Collection" : "Add Collection")</MudText>
 
-    <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-        <FluentValidator/>
-        <MudCard>
-            <MudCardContent>
-                <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
-                    @(IsEdit ? "Save Changes" : "Add Collection")
-                </MudButton>
-            </MudCardActions>
-        </MudCard>
-    </EditForm>
-</div>
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+                        @(IsEdit ? "Save Changes" : "Add Collection")
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
 
 @code {
 

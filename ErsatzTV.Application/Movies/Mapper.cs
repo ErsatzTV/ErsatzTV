@@ -13,8 +13,12 @@ namespace ErsatzTV.Application.Movies
                 metadata.Title,
                 metadata.Year?.ToString(),
                 metadata.Plot,
-                Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
-                    .Match(a => a.Path, string.Empty));
+                Artwork(metadata, ArtworkKind.Poster),
+                Artwork(metadata, ArtworkKind.FanArt));
         }
+
+        private static string Artwork(Metadata metadata, ArtworkKind artworkKind) =>
+            Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
+                .Match(a => a.Path, string.Empty);
     }
 }

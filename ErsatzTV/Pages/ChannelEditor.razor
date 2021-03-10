@@ -10,55 +10,57 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<div style="max-width: 400px;">
-    <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Channel" : "Add Channel")</MudText>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div style="max-width: 400px;">
+        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Channel" : "Add Channel")</MudText>
 
-    <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-        <FluentValidator/>
-        <MudCard>
-            <MudCardContent>
-                <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
-                <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
-                    @foreach (StreamingMode streamingMode in Enum.GetValues<StreamingMode>())
-                    {
-                        <MudSelectItem Value="@streamingMode">@streamingMode</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect Class="mt-3" Label="FFmpeg Profile" @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
-                           Disabled="@(_model.StreamingMode != StreamingMode.TransportStream)">
-                    @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
-                    {
-                        <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
-                    <MudItem xs="6">
-                        <InputFile id="fileInput" OnChange="UploadLogo" hidden/>
-                        @if (!string.IsNullOrWhiteSpace(_model.Logo))
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
+                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
+                        @foreach (StreamingMode streamingMode in Enum.GetValues<StreamingMode>())
                         {
-                            <MudElement HtmlTag="img" src="@($"iptv/logos/{_model.Logo}")" Style="max-height: 50px"/>
+                            <MudSelectItem Value="@streamingMode">@streamingMode</MudSelectItem>
                         }
-                    </MudItem>
-                    <MudItem xs="6">
-                        <MudButton Class="ml-auto" HtmlTag="label"
-                                   Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.CloudUpload"
-                                   for="fileInput">
-                            Upload Logo
-                        </MudButton>
-                    </MudItem>
-                </MudGrid>
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
-                    @(IsEdit ? "Save Changes" : "Add Channel")
-                </MudButton>
-            </MudCardActions>
-        </MudCard>
-    </EditForm>
-</div>
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="FFmpeg Profile" @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
+                               Disabled="@(_model.StreamingMode != StreamingMode.TransportStream)">
+                        @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
+                        {
+                            <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <InputFile id="fileInput" OnChange="UploadLogo" hidden/>
+                            @if (!string.IsNullOrWhiteSpace(_model.Logo))
+                            {
+                                <MudElement HtmlTag="img" src="@($"iptv/logos/{_model.Logo}")" Style="max-height: 50px"/>
+                            }
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudButton Class="ml-auto" HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       for="fileInput">
+                                Upload Logo
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                        @(IsEdit ? "Save Changes" : "Add Channel")
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
 
 @code {
 

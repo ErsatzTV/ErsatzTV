@@ -5,7 +5,7 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudCard>
         <MudCardHeader>
             <CardHeaderContent>
@@ -45,7 +45,7 @@
             <col/>
             <col/>
             <col/>
-            <col style="width: 60px;"/>
+            <col style="width: 120px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Name</MudTh>
@@ -76,14 +76,18 @@
                 </MudText>
             </MudTd>
             <MudTd>
-                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Direction="Direction.Left" OffsetX="true">
-                    <MudMenuItem Icon="@Icons.Material.Filled.Edit" Link="@($"/ffmpeg/{context.Id}")">
-                        Edit
-                    </MudMenuItem>
-                    <MudMenuItem Icon="@Icons.Material.Filled.Delete" OnClick="@(_ => DeleteProfileAsync(context))">
-                        Delete
-                    </MudMenuItem>
-                </MudMenu>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Channel">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@($"/ffmpeg/{context.Id}")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Channel">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteProfileAsync(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
             </MudTd>
         </RowTemplate>
     </MudTable>

@@ -10,98 +10,99 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-    <FluentValidator/>
-    <MudCard>
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h5">@(IsEdit ? "Edit FFmpeg Profile" : "Add FFmpeg Profile")</MudText>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudGrid>
-                <MudItem xs="12">
-                    <MudGrid Spacing="4" Justify="Justify.Center">
-                        <MudItem>
-                            <MudText Typo="Typo.h6">General</MudText>
-                            <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudTextField Label="Thread Count" @bind-Value="@_model.ThreadCount" For="@(() => _model.ThreadCount)"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudSelect Disabled="@(!_model.Transcode)" Label="Preferred Resolution" @bind-Value="_model.Resolution" For="@(() => _model.Resolution)">
-                                    @foreach (ResolutionViewModel resolution in _resolutions)
-                                    {
-                                        <MudSelectItem Value="@resolution">@resolution.Name</MudSelectItem>
-                                    }
-                                </MudSelect>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudCheckBox Label="Transcode" @bind-Checked="@_model.Transcode" For="@(() => _model.Transcode)"/>
-                            </MudElement>
-                        </MudItem>
-                        <MudItem>
-                            <MudText Typo="Typo.h6">Video</MudText>
-                            <MudTextField Disabled="@(!_model.Transcode)" Label="Codec" @bind-Value="_model.VideoCodec" For="@(() => _model.VideoCodec)"/>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Bitrate" @bind-Value="_model.VideoBitrate" For="@(() => _model.VideoBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Buffer Size" @bind-Value="_model.VideoBufferSize" For="@(() => _model.VideoBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudSelect Disabled="@(!_model.Transcode)" Label="Hardware Acceleration" @bind-Value="_model.HardwareAcceleration" For="@(() => _model.HardwareAcceleration)">
-                                    @foreach (HardwareAccelerationKind hwAccel in Enum.GetValues<HardwareAccelerationKind>())
-                                    {
-                                        <MudSelectItem Value="@hwAccel">@hwAccel</MudSelectItem>
-                                    }
-                                </MudSelect>
-                            </MudElement>
-                        </MudItem>
-                        <MudItem>
-                            <MudText Typo="Typo.h6">Audio</MudText>
-                            <MudTextField Disabled="@(!_model.Transcode)" Label="Codec" @bind-Value="_model.AudioCodec" For="@(() => _model.AudioCodec)"/>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Bitrate" @bind-Value="_model.AudioBitrate" For="@(() => _model.AudioBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Buffer Size" @bind-Value="_model.AudioBufferSize" For="@(() => _model.AudioBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Volume" @bind-Value="_model.AudioVolume" For="@(() => _model.AudioVolume)" Adornment="Adornment.End" AdornmentText="%"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Channels" @bind-Value="_model.AudioChannels" For="@(() => _model.AudioChannels)"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Sample Rate" @bind-Value="_model.AudioSampleRate" For="@(() => _model.AudioSampleRate)" Adornment="Adornment.End" AdornmentText="kHz"/>
-                            </MudElement>
-                        </MudItem>
-                        <MudItem>
-                            <MudText Typo="Typo.h6">Normalization</MudText>
-                            <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Resolution" @bind-Checked="@_model.NormalizeResolution" For="@(() => _model.NormalizeResolution)"/>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Video Codec" @bind-Checked="@_model.NormalizeVideoCodec" For="@(() => _model.NormalizeVideoCodec)"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Audio Codec" @bind-Checked="@_model.NormalizeAudioCodec" For="@(() => _model.NormalizeAudioCodec)"/>
-                            </MudElement>
-                            <MudElement HtmlTag="div" Class="mt-3">
-                                <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Audio" @bind-Checked="@_model.NormalizeAudio" For="@(() => _model.NormalizeAudio)"/>
-                            </MudElement>
-                        </MudItem>
-                    </MudGrid>
-                </MudItem>
-            </MudGrid>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
-                @(IsEdit ? "Save Changes" : "Add Profile")
-            </MudButton>
-        </MudCardActions>
-    </MudCard>
-
-</EditForm>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+        <FluentValidator/>
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h5">@(IsEdit ? "Edit FFmpeg Profile" : "Add FFmpeg Profile")</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid>
+                    <MudItem xs="12">
+                        <MudGrid Spacing="4" Justify="Justify.Center">
+                            <MudItem>
+                                <MudText Typo="Typo.h6">General</MudText>
+                                <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Label="Thread Count" @bind-Value="@_model.ThreadCount" For="@(() => _model.ThreadCount)"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudSelect Disabled="@(!_model.Transcode)" Label="Preferred Resolution" @bind-Value="_model.Resolution" For="@(() => _model.Resolution)">
+                                        @foreach (ResolutionViewModel resolution in _resolutions)
+                                        {
+                                            <MudSelectItem Value="@resolution">@resolution.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudCheckBox Label="Transcode" @bind-Checked="@_model.Transcode" For="@(() => _model.Transcode)"/>
+                                </MudElement>
+                            </MudItem>
+                            <MudItem>
+                                <MudText Typo="Typo.h6">Video</MudText>
+                                <MudTextField Disabled="@(!_model.Transcode)" Label="Codec" @bind-Value="_model.VideoCodec" For="@(() => _model.VideoCodec)"/>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Bitrate" @bind-Value="_model.VideoBitrate" For="@(() => _model.VideoBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Buffer Size" @bind-Value="_model.VideoBufferSize" For="@(() => _model.VideoBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudSelect Disabled="@(!_model.Transcode)" Label="Hardware Acceleration" @bind-Value="_model.HardwareAcceleration" For="@(() => _model.HardwareAcceleration)">
+                                        @foreach (HardwareAccelerationKind hwAccel in Enum.GetValues<HardwareAccelerationKind>())
+                                        {
+                                            <MudSelectItem Value="@hwAccel">@hwAccel</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudElement>
+                            </MudItem>
+                            <MudItem>
+                                <MudText Typo="Typo.h6">Audio</MudText>
+                                <MudTextField Disabled="@(!_model.Transcode)" Label="Codec" @bind-Value="_model.AudioCodec" For="@(() => _model.AudioCodec)"/>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Bitrate" @bind-Value="_model.AudioBitrate" For="@(() => _model.AudioBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Buffer Size" @bind-Value="_model.AudioBufferSize" For="@(() => _model.AudioBufferSize)" Adornment="Adornment.End" AdornmentText="kBit"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Volume" @bind-Value="_model.AudioVolume" For="@(() => _model.AudioVolume)" Adornment="Adornment.End" AdornmentText="%"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Channels" @bind-Value="_model.AudioChannels" For="@(() => _model.AudioChannels)"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudTextField Disabled="@(!_model.Transcode)" Label="Sample Rate" @bind-Value="_model.AudioSampleRate" For="@(() => _model.AudioSampleRate)" Adornment="Adornment.End" AdornmentText="kHz"/>
+                                </MudElement>
+                            </MudItem>
+                            <MudItem>
+                                <MudText Typo="Typo.h6">Normalization</MudText>
+                                <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Resolution" @bind-Checked="@_model.NormalizeResolution" For="@(() => _model.NormalizeResolution)"/>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Video Codec" @bind-Checked="@_model.NormalizeVideoCodec" For="@(() => _model.NormalizeVideoCodec)"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Audio Codec" @bind-Checked="@_model.NormalizeAudioCodec" For="@(() => _model.NormalizeAudioCodec)"/>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Audio" @bind-Checked="@_model.NormalizeAudio" For="@(() => _model.NormalizeAudio)"/>
+                                </MudElement>
+                            </MudItem>
+                        </MudGrid>
+                    </MudItem>
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                    @(IsEdit ? "Save Changes" : "Add Profile")
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </EditForm>
+</MudContainer>
 
 @code {
 

@@ -37,6 +37,16 @@ namespace ErsatzTV.Controllers
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));
         }
+        
+        [HttpGet("/artwork/fanart/{fileName}")]
+        public async Task<IActionResult> GetFanArt(string fileName)
+        {
+            Either<BaseError, ImageViewModel> imageContents =
+                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.FanArt));
+            return imageContents.Match<IActionResult>(
+                Left: _ => new NotFoundResult(),
+                Right: r => new FileContentResult(r.Contents, r.MimeType));
+        }
 
         [HttpGet("/artwork/posters/plex/{plexMediaSourceId}/{*path}")]
         public async Task<IActionResult> GetPlexPoster(int plexMediaSourceId, string path)

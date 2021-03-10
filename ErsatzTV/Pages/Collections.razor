@@ -6,21 +6,23 @@
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
-<MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-    @foreach (MediaCollectionViewModel card in _data)
-    {
-        <MediaCard Data="@card"
-                   Link="@($"/media/collections/{card.Id}")"
-                   ContainerClass="media-card-episode-container mr-4"
-                   CardClass="media-card-episode"
-                   DeleteClicked="@DeleteMediaCollection"/>
-    }
-</MudContainer>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        @foreach (MediaCollectionViewModel card in _data)
+        {
+            <MediaCard Data="@card"
+                       Link="@($"/media/collections/{card.Id}")"
+                       ContainerClass="media-card-episode-container mr-4"
+                       CardClass="media-card-episode"
+                       DeleteClicked="@DeleteMediaCollection"/>
+        }
+    </MudContainer>
 
-<MudContainer MaxWidth="MaxWidth.False">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
-        Add Collection
-    </MudButton>
+    <MudContainer MaxWidth="MaxWidth.False">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
+            Add Collection
+        </MudButton>
+    </MudContainer>
 </MudContainer>
 
 @code {

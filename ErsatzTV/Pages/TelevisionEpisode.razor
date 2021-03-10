@@ -7,33 +7,35 @@
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
 
-<MudContainer MaxWidth="MaxWidth.Large">
-    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-6"></MudBreadcrumbs>
-    <MudCard Class="mb-6">
-        <div style="display: flex; flex-direction: row;">
-            @if (!string.IsNullOrWhiteSpace(_episode.Poster))
-            {
-                <MudPaper style="display: flex; flex-direction: column">
-                    <MudCardMedia Image="@($"/artwork/thumbnails/{_episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
-                </MudPaper>
-            }
-            <MudCardContent Class="ml-3">
-                <div style="display: flex; flex-direction: column; height: 100%">
-                    <MudText Typo="Typo.h4">@_episode.Title</MudText>
-                    <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_season.Plot</MudText>
-                    <MudText Style="flex-grow: 1">@_episode.Plot</MudText>
-                    <div class="mt-6">
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   StartIcon="@Icons.Material.Filled.Add"
-                                   OnClick="@AddToCollection">
-                            Add To Collection
-                        </MudButton>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudBreadcrumbs Items="_breadcrumbs" Class="mb-6"></MudBreadcrumbs>
+        <MudCard Class="mb-6">
+            <div style="display: flex; flex-direction: row;">
+                @if (!string.IsNullOrWhiteSpace(_episode.Poster))
+                {
+                    <MudPaper style="display: flex; flex-direction: column">
+                        <MudCardMedia Image="@($"/artwork/thumbnails/{_episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                    </MudPaper>
+                }
+                <MudCardContent Class="ml-3">
+                    <div style="display: flex; flex-direction: column; height: 100%">
+                        <MudText Typo="Typo.h4">@_episode.Title</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="mb-6 mud-text-secondary">@_season.Plot</MudText>
+                        <MudText Style="flex-grow: 1">@_episode.Plot</MudText>
+                        <div class="mt-6">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="@AddToCollection">
+                                Add To Collection
+                            </MudButton>
+                        </div>
                     </div>
-                </div>
-            </MudCardContent>
-        </div>
-    </MudCard>
+                </MudCardContent>
+            </div>
+        </MudCard>
+    </MudContainer>
 </MudContainer>
 
 @code {

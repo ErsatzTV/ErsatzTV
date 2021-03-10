@@ -80,7 +80,8 @@ namespace ErsatzTV.Core.Metadata
                         .GetOrAdd(libraryPath, file)
                         .BindT(movie => UpdateStatistics(movie, ffprobePath).MapT(_ => movie))
                         .BindT(UpdateMetadata)
-                        .BindT(UpdatePoster);
+                        .BindT(UpdatePoster)
+                        .BindT(UpdateFanArt);
 
                     maybeMovie.IfLeft(
                         error => _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value));
@@ -139,11 +140,33 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                await LocatePoster(movie).IfSomeAsync(
+                await LocateArtwork(movie, ArtworkKind.Poster).IfSomeAsync(
                     async posterFile =>
                     {
                         MovieMetadata metadata = movie.MovieMetadata.Head();
                         if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
+                        {
+                            await _movieRepository.Update(movie);
+                        }
+                    });
+
+                return movie;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
+        
+        private async Task<Either<BaseError, Movie>> UpdateFanArt(Movie movie)
+        {
+            try
+            {
+                await LocateArtwork(movie, ArtworkKind.FanArt).IfSomeAsync(
+                    async posterFile =>
+                    {
+                        MovieMetadata metadata = movie.MovieMetadata.Head();
+                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.FanArt))
                         {
                             await _movieRepository.Update(movie);
                         }
@@ -167,12 +190,19 @@ namespace ErsatzTV.Core.Metadata
                 .HeadOrNone();
         }
 
-        private Option<string> LocatePoster(Movie movie)
+        private Option<string> LocateArtwork(Movie movie, ArtworkKind artworkKind)
         {
+            string segment = artworkKind switch
+            {
+                ArtworkKind.Poster => "poster",
+                ArtworkKind.FanArt => "fanart",
+                _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
+            };
+            
             string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
             string folder = Path.GetDirectoryName(path) ?? string.Empty;
             IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(
-                    ext => new[] { $"poster.{ext}", Path.GetFileNameWithoutExtension(path) + $"-poster.{ext}" })
+                    ext => new[] { $"{segment}.{ext}", Path.GetFileNameWithoutExtension(path) + $"-{segment}.{ext}" })
                 .Map(f => Path.Combine(folder, f));
             Option<string> result = possibleMoviePosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
             return result;

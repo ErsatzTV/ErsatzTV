@@ -42,6 +42,7 @@ namespace ErsatzTV.Application.Images.Queries
                             ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
                             ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
                             ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
+                            ArtworkKind.FanArt => Path.Combine(FileSystemLayout.FanArtCacheFolder, subfolder),
                             _ => FileSystemLayout.LegacyImageCacheFolder
                         };
 

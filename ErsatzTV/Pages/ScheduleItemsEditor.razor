@@ -11,138 +11,140 @@
 @inject ISnackbar Snackbar
 @inject IMediator Mediator
 
-<MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Dense="true" Class="mt-8" @bind-SelectedItem="_selectedItem">
-    <ToolBarContent>
-        <MudText Typo="Typo.h6">@_schedule.Name Items</MudText>
-    </ToolBarContent>
-    <ColGroup>
-        <col/>
-        <col/>
-        <col/>
-        <col style="width: 60px;"/>
-        <col style="width: 60px;"/>
-        <col style="width: 60px;"/>
-    </ColGroup>
-    <HeaderContent>
-        <MudTh>Start Time</MudTh>
-        <MudTh>Collection</MudTh>
-        <MudTh>Playout Mode</MudTh>
-        <MudTh/>
-        <MudTh/>
-        <MudTh/>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Start Time">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
-            </MudText>
-        </MudTd>
-        <MudTd DataLabel="Collection">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @context.CollectionName
-            </MudText>
-        </MudTd>
-        <MudTd DataLabel="Playout Mode">
-            <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                @context.PlayoutMode
-                @if (context.PlayoutMode == PlayoutMode.Multiple && context.MultipleCount.HasValue)
-                {
-                    @($" ({context.MultipleCount})")
-                }
-            </MudText>
-        </MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
-                           OnClick="@(_ => MoveItemUp(context))"
-                           Disabled="@(_schedule.Items.All(x => x.Index >= context.Index))">
-            </MudIconButton>
-        </MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
-                           OnClick="@(_ => MoveItemDown(context))"
-                           Disabled="@(_schedule.Items.All(x => x.Index <= context.Index))">
-            </MudIconButton>
-        </MudTd>
-        <MudTd>
-            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                           OnClick="@(_ => RemoveScheduleItem(context))">
-            </MudIconButton>
-        </MudTd>
-    </RowTemplate>
-    <PagerContent>
-        <MudTablePager/>
-    </PagerContent>
-</MudTable>
-<MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddScheduleItem())" Class="mt-4">
-    Add Schedule Item
-</MudButton>
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
-    Save Changes
-</MudButton>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">@_schedule.Name Items</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col/>
+            <col style="width: 60px;"/>
+            <col style="width: 60px;"/>
+            <col style="width: 60px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Start Time</MudTh>
+            <MudTh>Collection</MudTh>
+            <MudTh>Playout Mode</MudTh>
+            <MudTh/>
+            <MudTh/>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Start Time">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Collection">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @context.CollectionName
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Playout Mode">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @context.PlayoutMode
+                    @if (context.PlayoutMode == PlayoutMode.Multiple && context.MultipleCount.HasValue)
+                    {
+                        @($" ({context.MultipleCount})")
+                    }
+                </MudText>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                               OnClick="@(_ => MoveItemUp(context))"
+                               Disabled="@(_schedule.Items.All(x => x.Index >= context.Index))">
+                </MudIconButton>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                               OnClick="@(_ => MoveItemDown(context))"
+                               Disabled="@(_schedule.Items.All(x => x.Index <= context.Index))">
+                </MudIconButton>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               OnClick="@(_ => RemoveScheduleItem(context))">
+                </MudIconButton>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddScheduleItem())" Class="mt-4">
+        Add Schedule Item
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+        Save Changes
+    </MudButton>
 
-@if (_selectedItem is not null)
-{
-    <div style="max-width: 400px;">
-        <EditForm Model="_selectedItem">
-            <FluentValidator/>
-            <MudCard Class="mt-6">
-                <MudCardContent>
-                    <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
-                        @foreach (StartType startType in Enum.GetValues<StartType>())
+    @if (_selectedItem is not null)
+    {
+        <div style="max-width: 400px;">
+            <EditForm Model="_selectedItem">
+                <FluentValidator/>
+                <MudCard Class="mt-6">
+                    <MudCardContent>
+                        <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
+                            @foreach (StartType startType in Enum.GetValues<StartType>())
+                            {
+                                <MudSelectItem Value="@startType">@startType</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
+                        <MudSelect Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
+                            @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
+                            {
+                                <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
+                            }
+                        </MudSelect>
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
                         {
-                            <MudSelectItem Value="@startType">@startType</MudSelectItem>
+                            <MudAutocomplete Class="mt-3"
+                                             T="MediaCollectionViewModel"
+                                             Label="Collection"
+                                             @bind-value="_selectedItem.Collection"
+                                             SearchFunc="@SearchMediaCollections"
+                                             ToStringFunc="@(c => c?.Name)"/>
                         }
-                    </MudSelect>
-                    <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
-                    <MudSelect Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
-                        @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
                         {
-                            <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
+                            <MudAutocomplete Class="mt-3"
+                                             T="NamedMediaItemViewModel"
+                                             Label="Television Show"
+                                             @bind-value="_selectedItem.MediaItem"
+                                             SearchFunc="@SearchTelevisionShows"
+                                             ToStringFunc="@(s => s?.Name)"/>
                         }
-                    </MudSelect>
-                    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
-                    {
-                        <MudAutocomplete Class="mt-3"
-                                         T="MediaCollectionViewModel"
-                                         Label="Collection"
-                                         @bind-value="_selectedItem.Collection"
-                                         SearchFunc="@SearchMediaCollections"
-                                         ToStringFunc="@(c => c?.Name)"/>
-                    }
-                    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
-                    {
-                        <MudAutocomplete Class="mt-3"
-                                         T="NamedMediaItemViewModel"
-                                         Label="Television Show"
-                                         @bind-value="_selectedItem.MediaItem"
-                                         SearchFunc="@SearchTelevisionShows"
-                                         ToStringFunc="@(s => s?.Name)"/>
-                    }
-                    @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
-                    {
-                        <MudAutocomplete Class="mt-3"
-                                         T="NamedMediaItemViewModel"
-                                         Label="Television Season"
-                                         @bind-value="_selectedItem.MediaItem"
-                                         SearchFunc="@SearchTelevisionSeasons"
-                                         ToStringFunc="@(s => s?.Name)"/>
-                    }
-                    <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
-                        @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
+                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
                         {
-                            <MudSelectItem Value="@playoutMode">@playoutMode</MudSelectItem>
+                            <MudAutocomplete Class="mt-3"
+                                             T="NamedMediaItemViewModel"
+                                             Label="Television Season"
+                                             @bind-value="_selectedItem.MediaItem"
+                                             SearchFunc="@SearchTelevisionSeasons"
+                                             ToStringFunc="@(s => s?.Name)"/>
                         }
-                    </MudSelect>
-                    <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
-                    <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
-                    <MudElement HtmlTag="div" Class="mt-3">
-                        <MudSwitch Label="Offline Tail" @bind-Checked="@_selectedItem.OfflineTail" For="@(() => _selectedItem.OfflineTail)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
-                    </MudElement>
-                </MudCardContent>
-            </MudCard>
-        </EditForm>
-    </div>
-}
+                        <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
+                            @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
+                            {
+                                <MudSelectItem Value="@playoutMode">@playoutMode</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
+                        <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                        <MudElement HtmlTag="div" Class="mt-3">
+                            <MudSwitch Label="Offline Tail" @bind-Checked="@_selectedItem.OfflineTail" For="@(() => _selectedItem.OfflineTail)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                        </MudElement>
+                    </MudCardContent>
+                </MudCard>
+            </EditForm>
+        </div>
+    }
+</MudContainer>
 
 @code {
 
