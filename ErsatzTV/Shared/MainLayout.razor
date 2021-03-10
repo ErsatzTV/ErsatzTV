@@ -9,6 +9,7 @@
 
 <MudLayout>
     <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h4" Style="width: 240px">ErsatzTV</MudText>
         <MudTextField T="string"
                       @ref="_textField"
                       Placeholder="Search"
@@ -29,10 +30,7 @@
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Link="https://github.com/jasongdove/ErsatzTV" Target="_blank"/>
         </MudTooltip>
     </MudAppBar>
-    <MudDrawer Open="true" Elevation="2">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h6">ErsatzTV</MudText>
-        </MudDrawerHeader>
+    <MudDrawer Open="true" Elevation="2" ClipMode="DrawerClipMode.Always">
         <MudNavMenu>
             <MudNavLink Href="/" Match="NavLinkMatch.All">Home</MudNavLink>
             <MudNavLink Href="/channels">Channels</MudNavLink>
