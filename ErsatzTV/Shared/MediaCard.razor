@@ -9,7 +9,7 @@
             <MudPaper Class="@($"media-card {CardClass}")" Style="@ArtworkForItem()">
                 @if (string.IsNullOrWhiteSpace(Data.Poster))
                 {
-                    <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
+                    <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-primary">
                         @GetPlaceholder(Data.SortTitle)
                     </MudText>
                 }
@@ -39,7 +39,7 @@
         <MudPaper Class="@($"media-card {CardClass}")" Style="@ArtworkForItem()">
             @if (string.IsNullOrWhiteSpace(Data.Poster))
             {
-                <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-disabled">
+                <MudText Align="Align.Center" Typo="Typo.h1" Class="media-card-poster-placeholder mud-text-primary">
                     @GetPlaceholder(Data.SortTitle)
                 </MudText>
             }
