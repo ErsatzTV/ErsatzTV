@@ -35,5 +35,17 @@
 
 <script src="_framework/blazor.server.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
+<script type="text/javascript">
+    window.blazorHelpers = {
+        scrollToFragment: (elementId) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        }
+    };
+</script>
 </body>
 </html>

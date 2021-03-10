@@ -80,8 +80,8 @@ namespace ErsatzTV.Core.Metadata
                         .GetOrAdd(libraryPath, file)
                         .BindT(movie => UpdateStatistics(movie, ffprobePath).MapT(_ => movie))
                         .BindT(UpdateMetadata)
-                        .BindT(UpdatePoster)
-                        .BindT(UpdateFanArt);
+                        .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster))
+                        .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt));
 
                     maybeMovie.IfLeft(
                         error => _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value));
@@ -136,37 +136,15 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, Movie>> UpdatePoster(Movie movie)
+        private async Task<Either<BaseError, Movie>> UpdateArtwork(Movie movie, ArtworkKind artworkKind)
         {
             try
             {
-                await LocateArtwork(movie, ArtworkKind.Poster).IfSomeAsync(
+                await LocateArtwork(movie, artworkKind).IfSomeAsync(
                     async posterFile =>
                     {
                         MovieMetadata metadata = movie.MovieMetadata.Head();
-                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
-                        {
-                            await _movieRepository.Update(movie);
-                        }
-                    });
-
-                return movie;
-            }
-            catch (Exception ex)
-            {
-                return BaseError.New(ex.Message);
-            }
-        }
-
-        private async Task<Either<BaseError, Movie>> UpdateFanArt(Movie movie)
-        {
-            try
-            {
-                await LocateArtwork(movie, ArtworkKind.FanArt).IfSomeAsync(
-                    async posterFile =>
-                    {
-                        MovieMetadata metadata = movie.MovieMetadata.Head();
-                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.FanArt))
+                        if (RefreshArtwork(posterFile, metadata, artworkKind))
                         {
                             await _movieRepository.Update(movie);
                         }

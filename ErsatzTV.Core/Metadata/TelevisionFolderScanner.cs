@@ -56,7 +56,8 @@ namespace ErsatzTV.Core.Metadata
                 Either<BaseError, Show> maybeShow =
                     await FindOrCreateShow(libraryPath.Id, showFolder)
                         .BindT(show => UpdateMetadataForShow(show, showFolder))
-                        .BindT(show => UpdatePosterForShow(show, showFolder));
+                        .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Poster))
+                        .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt));
 
                 await maybeShow.Match(
                     show => ScanSeasons(libraryPath, ffprobePath, show, showFolder),
@@ -212,17 +213,18 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, Show>> UpdatePosterForShow(
+        private async Task<Either<BaseError, Show>> UpdateArtworkForShow(
             Show show,
-            string showFolder)
+            string showFolder,
+            ArtworkKind artworkKind)
         {
             try
             {
-                await LocatePosterForShow(showFolder).IfSomeAsync(
+                await LocateArtworkForShow(showFolder, artworkKind).IfSomeAsync(
                     async posterFile =>
                     {
                         ShowMetadata metadata = show.ShowMetadata.Head();
-                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
+                        if (RefreshArtwork(posterFile, metadata, artworkKind))
                         {
                             await _televisionRepository.Update(show);
                         }
@@ -298,12 +300,21 @@ namespace ErsatzTV.Core.Metadata
                 .Filter(s => _localFileSystem.FileExists(s));
         }
 
-        private Option<string> LocatePosterForShow(string showFolder) =>
-            ImageFileExtensions
-                .Map(ext => $"poster.{ext}")
+        private Option<string> LocateArtworkForShow(string showFolder, ArtworkKind artworkKind)
+        {
+            string segment = artworkKind switch
+            {
+                ArtworkKind.Poster => "poster",
+                ArtworkKind.FanArt => "fanart",
+                _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
+            };
+
+            return ImageFileExtensions
+                .Map(ext => $"{segment}.{ext}")
                 .Map(f => Path.Combine(showFolder, f))
                 .Filter(s => _localFileSystem.FileExists(s))
                 .HeadOrNone();
+        }
 
         private Option<string> LocatePoster(Season season, string seasonFolder)
         {

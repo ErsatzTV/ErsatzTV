@@ -12,7 +12,8 @@ namespace ErsatzTV.Application.Television
                 show.ShowMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
                 show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString() ?? string.Empty).IfNone(string.Empty),
                 show.ShowMetadata.HeadOrNone().Map(m => m.Plot ?? string.Empty).IfNone(string.Empty),
-                show.ShowMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty));
+                show.ShowMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty),
+                show.ShowMetadata.HeadOrNone().Map(GetFanArt).IfNone(string.Empty));
 
         internal static TelevisionSeasonViewModel ProjectToViewModel(Season season) =>
             new(
@@ -21,7 +22,8 @@ namespace ErsatzTV.Application.Television
                 season.Show.ShowMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
                 season.Show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString() ?? string.Empty).IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}",
-                season.SeasonMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty));
+                season.SeasonMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty),
+                season.Show.ShowMetadata.HeadOrNone().Map(GetFanArt).IfNone(string.Empty));
 
         internal static TelevisionEpisodeViewModel ProjectToViewModel(Episode episode) =>
             new(
@@ -32,12 +34,14 @@ namespace ErsatzTV.Application.Television
                 episode.EpisodeMetadata.HeadOrNone().Map(m => m.Plot ?? string.Empty).IfNone(string.Empty),
                 episode.EpisodeMetadata.HeadOrNone().Map(GetThumbnail).IfNone(string.Empty));
 
-        private static string GetPoster(Metadata metadata) =>
-            Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
-                .Match(a => a.Path, string.Empty);
+        private static string GetPoster(Metadata metadata) => GetArtwork(metadata, ArtworkKind.Poster);
 
-        private static string GetThumbnail(Metadata metadata) =>
-            Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail))
+        private static string GetFanArt(Metadata metadata) => GetArtwork(metadata, ArtworkKind.FanArt);
+
+        private static string GetThumbnail(Metadata metadata) => GetArtwork(metadata, ArtworkKind.Thumbnail);
+
+        private static string GetArtwork(Metadata metadata, ArtworkKind artworkKind) =>
+            Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
                 .Match(a => a.Path, string.Empty);
     }
 }

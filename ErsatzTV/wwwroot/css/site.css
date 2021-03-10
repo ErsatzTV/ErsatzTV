@@ -1,6 +1,4 @@
-﻿.mud-breadcrumb-separator > span { color: inherit !important; }
-
-.media-card-grid {
+﻿.media-card-grid {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;

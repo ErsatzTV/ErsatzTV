@@ -52,21 +52,10 @@
 
     private MovieViewModel _movie;
 
-    private List<BreadcrumbItem> _breadcrumbs;
-
     protected override Task OnParametersSetAsync() => RefreshData();
 
-    private async Task RefreshData()
-    {
-        await Mediator.Send(new GetMovieById(MovieId))
-            .IfSomeAsync(vm => _movie = vm);
-
-        _breadcrumbs = new List<BreadcrumbItem>
-        {
-            new("Movies", "/media/movies"),
-            new($"{_movie.Title} ({_movie.Year})", null, true)
-        };
-    }
+    private Task RefreshData() =>
+        Mediator.Send(new GetMovieById(MovieId)).IfSomeAsync(vm => _movie = vm);
 
     private async Task AddToCollection()
     {
