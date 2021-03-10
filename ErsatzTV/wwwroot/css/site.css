@@ -1,4 +1,8 @@
-﻿.media-card-grid {
+﻿.mud-breadcrumb-separator > span {
+    color: inherit !important;
+}
+
+.media-card-grid {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -113,11 +117,11 @@
 
 .media-item-title {
     color: #fff;
-    text-shadow: 1px 1px 3px #000;
+    text-shadow: 1px 1px 5px #000;
 }
 
 .media-item-subtitle {
     color: #fff;
-    text-shadow: 1px 1px 3px #000;
+    text-shadow: 1px 1px 5px #000;
 }
 
