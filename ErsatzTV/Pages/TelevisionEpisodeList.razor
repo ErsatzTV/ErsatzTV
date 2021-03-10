@@ -53,16 +53,33 @@
         </div>
     </div>
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid mt-8">
-    @foreach (TelevisionEpisodeCardViewModel card in _data.Cards)
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    @foreach (TelevisionEpisodeCardViewModel episode in _data.Cards)
     {
-        <MediaCard Data="@card"
-                   Placeholder="@card.Placeholder"
-                   Link="@($"/media/tv/episodes/{card.EpisodeId}")"
-                   AddToCollectionClicked="@AddEpisodeToCollection"
-                   ContainerClass="media-card-episode-container mx-2"
-                   CardClass="media-card-episode"
-                   ArtworkKind="@ArtworkKind.Thumbnail"/>
+        <MudCard Class="mb-6">
+            <div style="display: flex; flex-direction: row;">
+                @if (!string.IsNullOrWhiteSpace(episode.Poster))
+                {
+                    <MudPaper style="display: flex; flex-direction: column">
+                        <MudCardMedia Image="@($"/artwork/thumbnails/{episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                    </MudPaper>
+                }
+                <MudCardContent Class="ml-3">
+                    <div style="display: flex; flex-direction: column; height: 100%">
+                        <MudText Typo="Typo.h4">@episode.Episode. @episode.Title</MudText>
+                        <MudText Style="flex-grow: 1">@episode.Plot</MudText>
+                        <div class="mt-6">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="@(_ => AddEpisodeToCollection(episode))">
+                                Add To Collection
+                            </MudButton>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </div>
+        </MudCard>
     }
 </MudContainer>
 
@@ -89,12 +106,12 @@
 
         _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize));
 
-        // _breadcrumbs = new List<BreadcrumbItem>
-        // {
-        //     new("TV Shows", "/media/tv/shows"),
-        //     new($"{_season.Title} ({_season.Year})", ),
-        //     new(_season.Name, null, true)
-        // };
+    // _breadcrumbs = new List<BreadcrumbItem>
+    // {
+    //     new("TV Shows", "/media/tv/shows"),
+    //     new($"{_season.Title} ({_season.Year})", ),
+    //     new(_season.Name, null, true)
+    // };
     }
 
     private async Task AddToCollection()
@@ -126,27 +143,24 @@
         }
     }
 
-    private async Task AddEpisodeToCollection(MediaCardViewModel card)
+    private async Task AddEpisodeToCollection(TelevisionEpisodeCardViewModel episode)
     {
-        if (card is TelevisionEpisodeCardViewModel episode)
-        {
-            var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
-            {
-                var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                addResult.Match(
-                    Left: error =>
-                    {
-                        Snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
-                    },
-                    Right: _ => Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
-            }
+        IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+        {
+            var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
+            Either<BaseError, Unit> addResult = await Mediator.Send(request);
+            addResult.Match(
+                Left: error =>
+                {
+                    Snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
+                    Logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
+                },
+                Right: _ => Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
         }
     }
 

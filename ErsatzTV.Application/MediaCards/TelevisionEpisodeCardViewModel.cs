@@ -7,14 +7,15 @@ namespace ErsatzTV.Application.MediaCards
         int EpisodeId,
         DateTime Aired,
         string ShowTitle,
+        int ShowId,
+        int SeasonId,
+        int Episode,
         string Title,
-        string Subtitle,
-        string SortTitle,
-        string Poster,
-        string Placeholder) : MediaCardViewModel(
+        string Plot,
+        string Poster) : MediaCardViewModel(
         Title,
-        Subtitle,
-        SortTitle,
+        $"Episode {Episode}",
+        $"Episode {Episode}",
         Poster)
     {
     }
