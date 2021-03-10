@@ -37,7 +37,7 @@ namespace ErsatzTV.Controllers
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));
         }
-        
+
         [HttpGet("/artwork/fanart/{fileName}")]
         public async Task<IActionResult> GetFanArt(string fileName)
         {

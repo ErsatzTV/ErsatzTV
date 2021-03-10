@@ -157,7 +157,7 @@ namespace ErsatzTV.Core.Metadata
                 return BaseError.New(ex.Message);
             }
         }
-        
+
         private async Task<Either<BaseError, Movie>> UpdateFanArt(Movie movie)
         {
             try
@@ -198,7 +198,7 @@ namespace ErsatzTV.Core.Metadata
                 ArtworkKind.FanArt => "fanart",
                 _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
             };
-            
+
             string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
             string folder = Path.GetDirectoryName(path) ?? string.Empty;
             IEnumerable<string> possibleMoviePosters = ImageFileExtensions.Collect(
