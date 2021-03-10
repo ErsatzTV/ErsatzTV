@@ -30,7 +30,7 @@
     </MudContainer>
 
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (MovieCardViewModel card in _data.Cards.Where(d => !string.IsNullOrWhiteSpace(d.Title)))
+        @foreach (MovieCardViewModel card in _data.Cards.Where(m => !string.IsNullOrWhiteSpace(m.Title)).OrderBy(m => m.SortTitle))
         {
             <MediaCard Data="@card"
                        Link="@($"/media/movies/{card.MovieId}")"
