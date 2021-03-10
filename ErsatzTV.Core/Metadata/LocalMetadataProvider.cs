@@ -100,11 +100,15 @@ namespace ErsatzTV.Core.Metadata
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.Year = metadata.Year;
-                    existing.SortTitle = metadata.SortTitle ?? _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
                 },
                 () =>
                 {
-                    metadata.SortTitle ??= _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
                     episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata };
                 });
 
@@ -126,11 +130,15 @@ namespace ErsatzTV.Core.Metadata
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.Year = metadata.Year;
-                    existing.SortTitle = metadata.SortTitle ?? _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
                 },
                 () =>
                 {
-                    metadata.SortTitle ??= _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
                     movie.MovieMetadata = new List<MovieMetadata> { metadata };
                 });
 
@@ -152,11 +160,15 @@ namespace ErsatzTV.Core.Metadata
                     existing.OriginalTitle = metadata.OriginalTitle;
                     existing.ReleaseDate = metadata.ReleaseDate;
                     existing.Year = metadata.Year;
-                    existing.SortTitle = metadata.SortTitle ?? _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
                 },
                 () =>
                 {
-                    metadata.SortTitle ??= _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
                     show.ShowMetadata = new List<ShowMetadata> { metadata };
                 });
 
