@@ -45,6 +45,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<Movie> maybeExisting = await _dbContext.Movies
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Genres)
                 .Include(i => i.LibraryPath)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
