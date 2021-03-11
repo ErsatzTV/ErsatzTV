@@ -48,7 +48,7 @@
         <div>
             @foreach (string genre in _movie.Genres.OrderBy(g => g))
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2" Link="@($"/search?query=genre%3a{genre}")" />
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2" Link="@($"/search?query=genre%3a{genre}")"/>
             }
         </div>
     }

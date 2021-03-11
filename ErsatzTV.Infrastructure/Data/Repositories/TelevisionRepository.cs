@@ -192,7 +192,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     LibraryPathId = libraryPathId,
                     ShowMetadata = new List<ShowMetadata> { metadata },
-                    Seasons = new List<Season>(),
+                    Seasons = new List<Season>()
                 };
 
                 await _dbContext.Shows.AddAsync(show);

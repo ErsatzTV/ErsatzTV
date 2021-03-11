@@ -380,7 +380,7 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("premiered")]
             public string Premiered { get; set; }
-            
+
             [XmlElement("genre")]
             public List<string> Genres { get; set; }
         }
