@@ -5,7 +5,8 @@
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")">
     @if (!string.IsNullOrWhiteSpace(Link))
     {
-        <div class="@(IsSelected ? "media-card-selected" : "")" style="position: relative; border-radius: 4px;">
+        <div class="@(IsSelected ? DeleteClicked.HasDelegate ? "media-card-selected-delete" : "media-card-selected" : "")"
+             style="border-radius: 4px; position: relative;">
             <MudPaper Class="@($"media-card {CardClass}")" Style="@ArtworkForItem()">
                 @if (string.IsNullOrWhiteSpace(Data.Poster))
                 {
@@ -16,8 +17,8 @@
             </MudPaper>
             @if (IsSelected)
             {
-                <div style="height: 48px; width: 48px; top: 0; left: 0; position: absolute; display: flex">
-                    <MudIcon Color="Color.Tertiary"
+                <div style="display: flex; height: 48px; left: 0; position: absolute; top: 0; width: 48px;">
+                    <MudIcon Color="@SelectColor"
                              Icon="@Icons.Material.Filled.CheckBox"
                              Style="margin: auto"/>
                 </div>
@@ -29,9 +30,9 @@
                 </MudButton>
                 @if (SelectClicked.HasDelegate)
                 {
-                    <MudIconButton Color="Color.Tertiary"
+                    <MudIconButton Color="@SelectColor"
                                    Icon="@(IsSelected ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
-                                   Style="top: 0; left: 0; position: absolute;"
+                                   Style="left: 0; position: absolute; top: 0;"
                                    OnClick="@(e => SelectClicked.InvokeAsync(e))"/>
                 }
                 @if (AddToCollectionClicked.HasDelegate && !IsSelectMode)
@@ -43,7 +44,7 @@
                 }
                 @if (DeleteClicked.HasDelegate && !IsSelectMode)
                 {
-                    <MudIconButton Color="Color.Tertiary"
+                    <MudIconButton Color="Color.Error"
                                    Icon="@Icons.Material.Filled.Delete"
                                    Style="bottom: 0; position: absolute; right: 0;"
                                    OnClick="@(() => DeleteClicked.InvokeAsync(Data))"/>
@@ -113,6 +114,9 @@
 
     [Parameter]
     public bool IsSelected { get; set; }
+
+    [Parameter]
+    public Color SelectColor { get; set; } = Color.Tertiary;
 
     private string GetPlaceholder(string sortTitle)
     {

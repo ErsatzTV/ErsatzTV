@@ -29,6 +29,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
+        public Task<bool> AllMoviesExist(List<int> movieIds) =>
+            _dbConnection.QuerySingleAsync<int>(
+                    "SELECT COUNT(*) FROM Movie WHERE Id in @MovieIds",
+                    new { MovieIds = movieIds })
+                .Map(c => c == movieIds.Count);
+
         public async Task<Option<Movie>> GetMovie(int movieId)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();

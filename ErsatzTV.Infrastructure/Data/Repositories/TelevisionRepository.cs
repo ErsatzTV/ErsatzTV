@@ -24,6 +24,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
+        public Task<bool> AllShowsExist(List<int> showIds) =>
+            _dbConnection.QuerySingleAsync<int>(
+                    "SELECT COUNT(*) FROM Show WHERE Id in @ShowIds",
+                    new { ShowIds = showIds })
+                .Map(c => c == showIds.Count);
+
         public async Task<bool> Update(Show show)
         {
             _dbContext.Shows.Update(show);

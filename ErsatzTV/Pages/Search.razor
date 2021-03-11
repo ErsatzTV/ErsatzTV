@@ -6,23 +6,20 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
-@inherits FragmentNavigationBase
+@inherits MultiSelectBase<Search>
 @inject NavigationManager NavigationManager
-@inject IMediator Mediator
-@inject ILogger<Search> Logger
-@inject ISnackbar Snackbar
-@inject IDialogService Dialog
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudPaper Square="true" Style="padding: 0; position: fixed; left: 240px; right: 0; z-index: 100; height: 64px; display: flex">
-    <div style="display: flex; flex-direction: row; margin-top: auto; margin-bottom: auto; width: 100%" class="ml-6 mr-6">
-        @if (_selectedCards.Any())
+<MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
+    <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+        @if (IsSelectMode())
         {
-            <MudText Typo="Typo.h6" Color="Color.Primary">@_selectedCards.Count @(_selectedCards.Count == 1 ? "Item" : "Items") Selected</MudText>
+            <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
             <div style="margin-left: auto">
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add">
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(_ => AddSelectionToCollection())">
                     Add To Collection
                 </MudButton>
                 <MudButton Class="ml-3"
@@ -59,8 +56,8 @@
                            Link="@($"/media/movies/{card.MovieId}")"
                            AddToCollectionClicked="@AddToCollection"
                            SelectClicked="@(e => SelectClicked(card, e))"
-                           IsSelected="@_selectedCards.Contains(card)"
-                           IsSelectMode="@_selectedCards.Any()"/>
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
@@ -81,8 +78,8 @@
                            Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
                            AddToCollectionClicked="@AddToCollection"
                            SelectClicked="@(e => SelectClicked(card, e))"
-                           IsSelected="@_selectedCards.Contains(card)"
-                           IsSelectMode="@_selectedCards.Any()"/>
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
@@ -91,8 +88,6 @@
 @code {
     private string _query;
     private SearchCardResultsViewModel _data;
-    private System.Collections.Generic.HashSet<MediaCardViewModel> _selectedCards;
-    private MediaCardViewModel _selectedLast;
 
     protected override async Task OnInitializedAsync()
     {
@@ -104,44 +99,18 @@
             Either<BaseError, SearchCardResultsViewModel> maybeResults = await Mediator.Send(new GetSearchCards(_query));
             maybeResults.IfRight(results => _data = results);
         }
-
-        _selectedCards = new System.Collections.Generic.HashSet<MediaCardViewModel>();
     }
-
-    private void ClearSelection() => _selectedCards.Clear();
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        if (_selectedCards.Contains(card))
+        List<MediaCardViewModel> GetSortedItems()
         {
-            _selectedCards.Remove(card);
+            return _data.MovieCards.OrderBy(m => m.SortTitle)
+                .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
+                .ToList();
         }
-        else
-        {
-            if (e.ShiftKey && _selectedLast != null)
-            {
-                var sorted = _data.MovieCards.OrderBy(m => m.SortTitle)
-                    .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
-                    .ToList();
 
-                int start = sorted.IndexOf(_selectedLast);
-                int finish = sorted.IndexOf(card);
-                if (start > finish)
-                {
-                    int temp = start;
-                    start = finish;
-                    finish = temp;
-                }
-
-                for (int i = start; i < finish; i++)
-                {
-                    _selectedCards.Add(sorted[i]);
-                }
-            }
-
-            _selectedLast = card;
-            _selectedCards.Add(card);
-        }
+        SelectClicked(GetSortedItems, card, e);
     }
 
     private async Task AddToCollection(MediaCardViewModel card)

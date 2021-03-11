@@ -7,6 +7,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IMovieRepository
     {
+        Task<bool> AllMoviesExist(List<int> movieIds);
         Task<Option<Movie>> GetMovie(int movieId);
         Task<Either<BaseError, Movie>> GetOrAdd(LibraryPath libraryPath, string path);
         Task<Either<BaseError, PlexMovie>> GetOrAdd(PlexLibrary library, PlexMovie item);
