@@ -16,5 +16,6 @@ namespace ErsatzTV.Core.Domain
         public DateTime DateUpdated { get; set; }
         public List<Artwork> Artwork { get; set; }
         public List<Genre> Genres { get; set; }
+        public List<Tag> Tags { get; set; }
     }
 }

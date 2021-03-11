@@ -2,52 +2,114 @@
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections.Commands
+@inherits MultiSelectBase<CollectionItems>
 @inject NavigationManager NavigationManager
-@inject IMediator Mediator
-@inject ILogger<CollectionItems> Logger
-@inject ISnackbar Snackbar
-@inject IDialogService Dialog
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div class="mb-6" style="display: flex; flex-direction: row;">
-        <MudText GutterBottom="true" Typo="Typo.h2">@_data.Name</MudText>
-        <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                       Link="@($"/media/collections/{Id}/edit")"
-                       Style="margin-bottom: auto; margin-top: auto;"/>
+<MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
+    <div style="align-items: center; display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%;" class="ml-6 mr-6">
+        @if (IsSelectMode())
+        {
+            <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
+            <div style="margin-left: auto">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Remove"
+                           OnClick="@(_ => RemoveSelectionFromCollection(Id))">
+                    Remove From Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="@(_ => ClearSelection())">
+                    Clear Selection
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <div style="display: flex; flex-direction: row;">
+                <MudText Typo="Typo.h4">@_data.Name</MudText>
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               Link="@($"/media/collections/{Id}/edit")"
+                               Style="margin-bottom: auto; margin-top: auto;"/>
+            </div>
+            @if (_data.MovieCards.Any())
+            {
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
+            }
+            @if (_data.ShowCards.Any())
+            {
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
+            }
+            @if (_data.SeasonCards.Any())
+            {
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#seasons")">@_data.SeasonCards.Count Seasons</MudLink>
+            }
+            @if (_data.EpisodeCards.Any())
+            {
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#episodes")">@_data.EpisodeCards.Count Episodes</MudLink>
+            }
+        }
     </div>
+</MudPaper>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
 
     @if (_data.MovieCards.Any())
     {
-        <MudText GutterBottom="true" Typo="Typo.h4">Movies</MudText>
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
+            Movies
+        </MudText>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
             @foreach (MovieCardViewModel card in _data.MovieCards.OrderBy(m => m.SortTitle))
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/movies/{card.MovieId}")"
-                           DeleteClicked="@RemoveMovieFromCollection"/>
+                           DeleteClicked="@RemoveMovieFromCollection"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
 
     @if (_data.ShowCards.Any())
     {
-        <MudText GutterBottom="true" Typo="Typo.h4">Television Shows</MudText>
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
+            Television Shows
+        </MudText>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
             @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(m => m.SortTitle))
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
-                           DeleteClicked="@RemoveShowFromCollection"/>
+                           DeleteClicked="@RemoveShowFromCollection"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
 
     @if (_data.SeasonCards.Any())
     {
-        <MudText GutterBottom="true" Typo="Typo.h4">Television Seasons</MudText>
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "seasons" } })">
+            Television Seasons
+        </MudText>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
             @foreach (TelevisionSeasonCardViewModel card in _data.SeasonCards.OrderBy(m => m.SortTitle))
@@ -56,14 +118,23 @@
                            Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
                            Title="@card.ShowTitle"
                            Subtitle="@card.Title"
-                           DeleteClicked="@RemoveSeasonFromCollection"/>
+                           DeleteClicked="@RemoveSeasonFromCollection"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
 
     @if (_data.EpisodeCards.Any())
     {
-        <MudText GutterBottom="true" Typo="Typo.h4">Television Episodes</MudText>
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "episodes" } })">
+            Television Episodes
+        </MudText>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
             @foreach (TelevisionEpisodeCardViewModel card in _data.EpisodeCards.OrderBy(e => e.Aired))
@@ -75,7 +146,11 @@
                            ContainerClass="media-card-episode-container mx-2"
                            CardClass="media-card-episode"
                            DeleteClicked="@(_ => RemoveEpisodeFromCollection(card))"
-                           ArtworkKind="@ArtworkKind.Thumbnail"/>
+                           ArtworkKind="@ArtworkKind.Thumbnail"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
@@ -90,7 +165,7 @@
 
     protected override async Task OnParametersSetAsync() => await RefreshData();
 
-    private async Task RefreshData()
+    protected override async Task RefreshData()
     {
         Either<BaseError, CollectionCardResultsViewModel> maybeResult =
             await Mediator.Send(new GetCollectionCards(Id));
@@ -98,6 +173,20 @@
         maybeResult.Match(
             result => _data = result,
             error => NavigationManager.NavigateTo("404"));
+    }
+
+    private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
+    {
+        List<MediaCardViewModel> GetSortedItems()
+        {
+            return _data.MovieCards.OrderBy(m => m.SortTitle)
+                .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
+                .Append(_data.SeasonCards.OrderBy(s => s.SortTitle))
+                .Append(_data.EpisodeCards.OrderBy(ep => ep.Aired))
+                .ToList();
+        }
+
+        SelectClicked(GetSortedItems, card, e);
     }
 
     private async Task RemoveMovieFromCollection(MediaCardViewModel vm)

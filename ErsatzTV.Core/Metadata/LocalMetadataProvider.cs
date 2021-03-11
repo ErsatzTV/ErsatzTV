@@ -146,6 +146,18 @@ namespace ErsatzTV.Core.Metadata
                     {
                         existing.Genres.Add(genre);
                     }
+
+                    foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
+                        .ToList())
+                    {
+                        existing.Tags.Remove(tag);
+                    }
+
+                    foreach (Tag tag in metadata.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
+                        .ToList())
+                    {
+                        existing.Tags.Add(tag);
+                    }
                 },
                 () =>
                 {
@@ -187,6 +199,18 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Genres.Add(genre);
+                    }
+
+                    foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
+                        .ToList())
+                    {
+                        existing.Tags.Remove(tag);
+                    }
+
+                    foreach (Tag tag in metadata.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
+                        .ToList())
+                    {
+                        existing.Tags.Add(tag);
                     }
                 },
                 () =>
@@ -250,7 +274,8 @@ namespace ErsatzTV.Core.Metadata
                         Tagline = nfo.Tagline,
                         Year = nfo.Year,
                         ReleaseDate = GetAired(nfo.Premiered) ?? new DateTime(nfo.Year, 1, 1),
-                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList()
+                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList()
                     },
                     None);
             }
@@ -306,7 +331,8 @@ namespace ErsatzTV.Core.Metadata
                         Plot = nfo.Plot,
                         Outline = nfo.Outline,
                         Tagline = nfo.Tagline,
-                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList()
+                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList()
                     },
                     None);
             }
@@ -358,6 +384,9 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("genre")]
             public List<string> Genres { get; set; }
+
+            [XmlElement("tag")]
+            public List<string> Tags { get; set; }
         }
 
         [XmlRoot("tvshow")]
@@ -383,6 +412,9 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("genre")]
             public List<string> Genres { get; set; }
+
+            [XmlElement("tag")]
+            public List<string> Tags { get; set; }
         }
 
         [XmlRoot("episodedetails")]

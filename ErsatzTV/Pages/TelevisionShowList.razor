@@ -1,63 +1,102 @@
 ﻿@page "/media/tv/shows"
+@page "/media/tv/shows/page/{PageNumber:int}"
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using Unit = LanguageExt.Unit
-@inject ILogger<TelevisionShowList> Logger
-@inject ISnackbar Snackbar
-@inject IMediator Mediator
-@inject IDialogService Dialog
+@inherits MultiSelectBase<TelevisionShowList>
+@inject NavigationManager NavigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
-        <MudPaper Style="align-items: center; display: flex; justify-content: center;">
-            <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
-                           OnClick="@(() => PrevPage())"
-                           Disabled="@(_pageNumber <= 1)">
-            </MudIconButton>
-            <MudText Style="flex-grow: 1"
-                     Align="Align.Center">
-                @Math.Min((_pageNumber - 1) * _pageSize + 1, _data.Count)-@Math.Min(_data.Count, _pageNumber * _pageSize) of @_data.Count
-            </MudText>
-            <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
-                           OnClick="@(() => NextPage())" Disabled="@(_pageNumber * _pageSize >= _data.Count)">
-            </MudIconButton>
-        </MudPaper>
-    </MudContainer>
-
+<MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
+    <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+        @if (IsSelectMode())
+        {
+            <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
+            <div style="margin-left: auto">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(_ => AddSelectionToCollection())">
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="@(_ => ClearSelection())">
+                    Clear Selection
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <div style="margin-left: auto; margin-right: auto; max-width: 300px;">
+                <MudPaper Style="align-items: center; display: flex; justify-content: center;">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                                   OnClick="@PrevPage"
+                                   Disabled="@(PageNumber <= 1)">
+                    </MudIconButton>
+                    <MudText Style="flex-grow: 1"
+                             Align="Align.Center">
+                        @Math.Min((PageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, PageNumber * PageSize) of @_data.Count
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                                   OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= _data.Count)">
+                    </MudIconButton>
+                </MudPaper>
+            </div>
+        }
+    </div>
+</MudPaper>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
         @foreach (TelevisionShowCardViewModel card in _data.Cards.OrderBy(s => s.SortTitle))
         {
             <MediaCard Data="@card"
                        Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
-                       AddToCollectionClicked="@AddToCollection"/>
+                       AddToCollectionClicked="@AddToCollection"
+                       SelectClicked="@(e => SelectClicked(card, e))"
+                       IsSelected="@IsSelected(card)"
+                       IsSelectMode="@IsSelectMode()"/>
         }
     </MudContainer>
 </MudContainer>
 
 @code {
-    private int _pageSize => 100;
-    private int _pageNumber = 1;
+    private static int PageSize => 100;
+
+    [Parameter]
+    public int PageNumber { get; set; }
 
     private TelevisionShowCardResultsViewModel _data;
 
-    protected override Task OnParametersSetAsync() => RefreshData();
-
-    private async Task RefreshData() =>
-        _data = await Mediator.Send(new GetTelevisionShowCards(_pageNumber, _pageSize));
-
-    private async Task PrevPage()
+    protected override Task OnParametersSetAsync()
     {
-        _pageNumber -= 1;
-        await RefreshData();
+        if (PageNumber == 0)
+        {
+            PageNumber = 1;
+        }
+
+        return RefreshData();
     }
 
-    private async Task NextPage()
+    protected override async Task RefreshData() =>
+        _data = await Mediator.Send(new GetTelevisionShowCards(PageNumber, PageSize));
+
+    private void PrevPage() => NavigationManager.NavigateTo($"/media/tv/shows/page/{PageNumber - 1}");
+
+    private void NextPage() => NavigationManager.NavigateTo($"/media/tv/shows/page/{PageNumber + 1}");
+
+    private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        _pageNumber += 1;
-        await RefreshData();
+        List<MediaCardViewModel> GetSortedItems()
+        {
+            return _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
+        }
+
+        SelectClicked(GetSortedItems, card, e);
     }
 
     private async Task AddToCollection(MediaCardViewModel card)

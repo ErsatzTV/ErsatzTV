@@ -15,7 +15,8 @@ namespace ErsatzTV.Application.Television
                 show.ShowMetadata.HeadOrNone().Map(m => m.Plot ?? string.Empty).IfNone(string.Empty),
                 show.ShowMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty),
                 show.ShowMetadata.HeadOrNone().Map(GetFanArt).IfNone(string.Empty),
-                show.ShowMetadata.HeadOrNone().Map(m => m.Genres.Map(g => g.Name).ToList()).IfNone(new List<string>()));
+                show.ShowMetadata.HeadOrNone().Map(m => m.Genres.Map(g => g.Name).ToList()).IfNone(new List<string>()),
+                show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Map(g => g.Name).ToList()).IfNone(new List<string>()));
 
         internal static TelevisionSeasonViewModel ProjectToViewModel(Season season) =>
             new(

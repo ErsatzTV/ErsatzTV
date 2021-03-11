@@ -9,6 +9,8 @@ namespace ErsatzTV.Core.Tests.Fakes
 {
     public class FakeTelevisionRepository : ITelevisionRepository
     {
+        public Task<bool> AllShowsExist(List<int> showIds) => throw new NotSupportedException();
+
         public Task<bool> Update(Show show) => throw new NotSupportedException();
 
         public Task<bool> Update(Season season) => throw new NotSupportedException();

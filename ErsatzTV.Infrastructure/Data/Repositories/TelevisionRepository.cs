@@ -24,6 +24,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
+        public Task<bool> AllShowsExist(List<int> showIds) =>
+            _dbConnection.QuerySingleAsync<int>(
+                    "SELECT COUNT(*) FROM Show WHERE Id in @ShowIds",
+                    new { ShowIds = showIds })
+                .Map(c => c == showIds.Count);
+
         public async Task<bool> Update(Show show)
         {
             _dbContext.Shows.Update(show);
@@ -57,6 +63,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(sm => sm.Artwork)
                 .Include(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Genres)
+                .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Tags)
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
@@ -175,6 +183,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(sm => sm.Artwork)
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Genres)
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Tags)
                         .OrderBy(s => s.Id)
                         .SingleOrDefaultAsync(s => s.Id == id)
                         .Map(Optional);
@@ -188,6 +198,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 metadata.DateAdded = DateTime.UtcNow;
                 metadata.Genres ??= new List<Genre>();
+                metadata.Tags ??= new List<Tag>();
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
