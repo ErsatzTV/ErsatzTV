@@ -5,7 +5,8 @@
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")">
     @if (!string.IsNullOrWhiteSpace(Link))
     {
-        <div style="position: relative">
+        <div class="@(IsSelected ? DeleteClicked.HasDelegate ? "media-card-selected-delete" : "media-card-selected" : "")"
+             style="border-radius: 4px; position: relative;">
             <MudPaper Class="@($"media-card {CardClass}")" Style="@ArtworkForItem()">
                 @if (string.IsNullOrWhiteSpace(Data.Poster))
                 {
@@ -14,19 +15,36 @@
                     </MudText>
                 }
             </MudPaper>
+            @if (IsSelected)
+            {
+                <div style="display: flex; height: 48px; left: 0; position: absolute; top: 0; width: 48px;">
+                    <MudIcon Color="@SelectColor"
+                             Icon="@Icons.Material.Filled.CheckBox"
+                             Style="margin: auto"/>
+                </div>
+            }
             <div class="media-card-overlay" style="">
-                <MudButton Link="@Link" Style="height: 100%; width: 100%">
+                <MudButton Link="@(IsSelectMode ? null : Link)"
+                           Style="height: 100%; width: 100%"
+                           OnClick="@(e => IsSelectMode ? SelectClicked.InvokeAsync(e) : Task.CompletedTask)">
                 </MudButton>
-                @if (AddToCollectionClicked.HasDelegate)
+                @if (SelectClicked.HasDelegate)
+                {
+                    <MudIconButton Color="@SelectColor"
+                                   Icon="@(IsSelected ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
+                                   Style="left: 0; position: absolute; top: 0;"
+                                   OnClick="@(e => SelectClicked.InvokeAsync(e))"/>
+                }
+                @if (AddToCollectionClicked.HasDelegate && !IsSelectMode)
                 {
                     <MudIconButton Color="Color.Tertiary"
                                    Icon="@Icons.Material.Filled.PlaylistAdd"
                                    Style="bottom: 0; left: 0; position: absolute;"
                                    OnClick="@(() => AddToCollectionClicked.InvokeAsync(Data))"/>
                 }
-                @if (DeleteClicked.HasDelegate)
+                @if (DeleteClicked.HasDelegate && !IsSelectMode)
                 {
-                    <MudIconButton Color="Color.Tertiary"
+                    <MudIconButton Color="Color.Error"
                                    Icon="@Icons.Material.Filled.Delete"
                                    Style="bottom: 0; position: absolute; right: 0;"
                                    OnClick="@(() => DeleteClicked.InvokeAsync(Data))"/>
@@ -87,6 +105,18 @@
 
     [Parameter]
     public EventCallback<MediaCardViewModel> AddToCollectionClicked { get; set; }
+
+    [Parameter]
+    public EventCallback<MouseEventArgs> SelectClicked { get; set; }
+
+    [Parameter]
+    public bool IsSelectMode { get; set; }
+
+    [Parameter]
+    public bool IsSelected { get; set; }
+
+    [Parameter]
+    public Color SelectColor { get; set; } = Color.Tertiary;
 
     private string GetPlaceholder(string sortTitle)
     {

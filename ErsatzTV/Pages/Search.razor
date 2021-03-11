@@ -6,42 +6,80 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
+@inherits MultiSelectBase<Search>
 @inject NavigationManager NavigationManager
-@inject IMediator Mediator
-@inject ILogger<Search> Logger
-@inject ISnackbar Snackbar
-@inject IDialogService Dialog
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div class="mb-6" style="display: flex; flex-direction: row;">
-        <MudText GutterBottom="true" Typo="Typo.h4">Search Results: "@_query"</MudText>
+<MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
+    <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+        @if (IsSelectMode())
+        {
+            <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
+            <div style="margin-left: auto">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(_ => AddSelectionToCollection())">
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="@(_ => ClearSelection())">
+                    Clear Selection
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <MudText>@_query</MudText>
+            <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
+            <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
+        }
     </div>
-
+</MudPaper>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Style="margin-top: 96px">
     @if (_data?.MovieCards.Any() == true)
     {
-        <MudText GutterBottom="true" Typo="Typo.h4">Movies</MudText>
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
+            Movies
+        </MudText>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
             @foreach (MovieCardViewModel card in _data.MovieCards.OrderBy(m => m.SortTitle))
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/movies/{card.MovieId}")"
-                           AddToCollectionClicked="@AddToCollection"/>
+                           AddToCollectionClicked="@AddToCollection"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
 
     @if (_data?.ShowCards.Any() == true)
     {
-        <MudText GutterBottom="true" Typo="Typo.h4">Television Shows</MudText>
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
+            Shows
+        </MudText>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
             @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(s => s.SortTitle))
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
-                           AddToCollectionClicked="@AddToCollection"/>
+                           AddToCollectionClicked="@AddToCollection"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
@@ -61,6 +99,18 @@
             Either<BaseError, SearchCardResultsViewModel> maybeResults = await Mediator.Send(new GetSearchCards(_query));
             maybeResults.IfRight(results => _data = results);
         }
+    }
+
+    private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
+    {
+        List<MediaCardViewModel> GetSortedItems()
+        {
+            return _data.MovieCards.OrderBy(m => m.SortTitle)
+                .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
+                .ToList();
+        }
+
+        SelectClicked(GetSortedItems, card, e);
     }
 
     private async Task AddToCollection(MediaCardViewModel card)

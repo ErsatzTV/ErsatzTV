@@ -5,36 +5,61 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using Unit = LanguageExt.Unit
-@inject ILogger<MovieList> Logger
-@inject ISnackbar Snackbar
-@inject IMediator Mediator
-@inject IDialogService Dialog
+@inherits MultiSelectBase<MovieList>
 @inject NavigationManager NavigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudContainer MaxWidth="MaxWidth.Small" Class="mb-6" Style="max-width: 300px">
-        <MudPaper Style="align-items: center; display: flex; justify-content: center;">
-            <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
-                           OnClick="@PrevPage"
-                           Disabled="@(PageNumber <= 1)">
-            </MudIconButton>
-            <MudText Style="flex-grow: 1"
-                     Align="Align.Center">
-                @Math.Min((PageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, PageNumber * PageSize) of @_data.Count
-            </MudText>
-            <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
-                           OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= _data.Count)">
-            </MudIconButton>
-        </MudPaper>
-    </MudContainer>
-
+<MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
+    <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+        @if (IsSelectMode())
+        {
+            <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
+            <div style="margin-left: auto">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(_ => AddSelectionToCollection())">
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="@(_ => ClearSelection())">
+                    Clear Selection
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <div style="margin-left: auto; margin-right: auto; max-width: 300px;">
+                <MudPaper Style="align-items: center; display: flex; justify-content: center;">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                                   OnClick="@PrevPage"
+                                   Disabled="@(PageNumber <= 1)">
+                    </MudIconButton>
+                    <MudText Style="flex-grow: 1"
+                             Align="Align.Center">
+                        @Math.Min((PageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, PageNumber * PageSize) of @_data.Count
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                                   OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= _data.Count)">
+                    </MudIconButton>
+                </MudPaper>
+            </div>
+        }
+    </div>
+</MudPaper>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
         @foreach (MovieCardViewModel card in _data.Cards.Where(m => !string.IsNullOrWhiteSpace(m.Title)).OrderBy(m => m.SortTitle))
         {
             <MediaCard Data="@card"
                        Link="@($"/media/movies/{card.MovieId}")"
-                       AddToCollectionClicked="@AddToCollection"/>
+                       AddToCollectionClicked="@AddToCollection"
+                       SelectClicked="@(e => SelectClicked(card, e))"
+                       IsSelected="@IsSelected(card)"
+                       IsSelectMode="@IsSelectMode()"/>
         }
     </MudContainer>
 </MudContainer>
@@ -57,12 +82,22 @@
         return RefreshData();
     }
 
-    private async Task RefreshData() =>
+    protected override async Task RefreshData() =>
         _data = await Mediator.Send(new GetMovieCards(PageNumber, PageSize));
 
     private void PrevPage() => NavigationManager.NavigateTo($"/media/movies/page/{PageNumber - 1}");
 
     private void NextPage() => NavigationManager.NavigateTo($"/media/movies/page/{PageNumber + 1}");
+
+    private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
+    {
+        List<MediaCardViewModel> GetSortedItems()
+        {
+            return _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
+        }
+
+        SelectClicked(GetSortedItems, card, e);
+    }
 
     private async Task AddToCollection(MediaCardViewModel card)
     {

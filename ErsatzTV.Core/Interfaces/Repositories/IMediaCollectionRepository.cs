@@ -9,6 +9,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
     {
         Task<Collection> Add(Collection collection);
         Task<bool> AddMediaItem(int collectionId, int mediaItemId);
+        Task<bool> AddMediaItems(int collectionId, List<int> mediaItemIds);
         Task<Option<Collection>> Get(int id);
         Task<Option<Collection>> GetCollectionWithItems(int id);
         Task<Option<Collection>> GetCollectionWithItemsUntracked(int id);

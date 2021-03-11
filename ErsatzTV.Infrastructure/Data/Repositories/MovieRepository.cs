@@ -29,6 +29,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
+        public Task<bool> AllMoviesExist(List<int> movieIds) =>
+            _dbConnection.QuerySingleAsync<int>(
+                    "SELECT COUNT(*) FROM Movie WHERE Id in @MovieIds",
+                    new { MovieIds = movieIds })
+                .Map(c => c == movieIds.Count);
+
         public async Task<Option<Movie>> GetMovie(int movieId)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
@@ -37,6 +43,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(m => m.Artwork)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Genres)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(m => m.Tags)
                 .OrderBy(m => m.Id)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
@@ -49,6 +57,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Genres)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Tags)
                 .Include(i => i.LibraryPath)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)

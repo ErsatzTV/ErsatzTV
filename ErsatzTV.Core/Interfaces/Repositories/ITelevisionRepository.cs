@@ -7,6 +7,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface ITelevisionRepository
     {
+        Task<bool> AllShowsExist(List<int> showIds);
         Task<bool> Update(Show show);
         Task<bool> Update(Season season);
         Task<bool> Update(Episode episode);
