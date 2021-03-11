@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
+@inherits FragmentNavigationBase
 @inject NavigationManager NavigationManager
 @inject IMediator Mediator
 @inject ILogger<Search> Logger
@@ -13,14 +14,51 @@
 @inject IDialogService Dialog
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <div class="mb-6" style="display: flex; flex-direction: row;">
-        <MudText GutterBottom="true" Typo="Typo.h4">Search Results: "@_query"</MudText>
+<MudPaper Square="true" Style="padding: 0; position: fixed; left: 240px; right: 0; z-index: 100; height: 64px; display: flex">
+    <div style="display: flex; flex-direction: row; margin-top: auto; margin-bottom: auto; width: 100%" class="ml-6 mr-6">
+        @if (_selectedCards.Any())
+        {
+            <MudText Typo="Typo.h6" Color="Color.Primary">@_selectedCards.Count @(_selectedCards.Count == 1 ? "Item" : "Items") Selected</MudText>
+            <div style="margin-left: auto">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           >
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Schedule"
+                >
+                    Add To Schedule
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="@(_ => ClearSelection())">
+                    Clear Selection
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <MudText>@_query</MudText>
+            <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
+            <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
+        }
     </div>
-
+</MudPaper>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Style="margin-top: 96px">
     @if (_data?.MovieCards.Any() == true)
     {
-        <MudText GutterBottom="true" Typo="Typo.h4">Movies</MudText>
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
+            Movies
+        </MudText>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
             @foreach (MovieCardViewModel card in _data.MovieCards.OrderBy(m => m.SortTitle))
@@ -37,7 +75,12 @@
 
     @if (_data?.ShowCards.Any() == true)
     {
-        <MudText GutterBottom="true" Typo="Typo.h4">Television Shows</MudText>
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
+            Shows
+        </MudText>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
             @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(s => s.SortTitle))
@@ -70,7 +113,12 @@
         _selectedCards = new System.Collections.Generic.HashSet<MediaCardViewModel>();
     }
 
-    private async Task SelectClicked(MovieCardViewModel movie, MouseEventArgs e)
+    private void ClearSelection()
+    {
+        _selectedCards.Clear();
+    }
+
+    private void SelectClicked(MovieCardViewModel movie, MouseEventArgs e)
     {
         if (_selectedCards.Contains(movie))
         {
