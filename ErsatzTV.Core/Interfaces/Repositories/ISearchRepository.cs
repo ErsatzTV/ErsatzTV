@@ -6,6 +6,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface ISearchRepository
     {
-        public Task<List<MediaItem>> SearchMediaItems(string query);
+        public Task<List<MediaItem>> SearchMediaItemsByTitle(string query);
+        public Task<List<MediaItem>> SearchMediaItemsByGenre(string genre);
     }
 }

@@ -21,7 +21,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task<List<MediaItem>> SearchMediaItems(string query)
+        public async Task<List<MediaItem>> SearchMediaItemsByTitle(string query)
         {
             List<int> ids = await _dbConnection.QueryAsync<int>(
                     @"SELECT M.Id FROM Movie M
@@ -32,6 +32,32 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     INNER JOIN ShowMetadata SM on S.Id = SM.ShowId
                     WHERE SM.Title LIKE @Query",
                     new { Query = $"%{query}%" })
+                .Map(results => results.ToList());
+
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            return await context.MediaItems
+                .Filter(m => ids.Contains(m.Id))
+                .Include(m => (m as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(m => (m as Show).ShowMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .OfType<MediaItem>()
+                .ToListAsync();
+        }
+
+        public async Task<List<MediaItem>> SearchMediaItemsByGenre(string genre)
+        {
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                    @"SELECT M.Id FROM Movie M
+                    INNER JOIN MovieMetadata MM on M.Id = MM.MovieId
+                    INNER JOIN Genre G on MM.Id = G.MovieMetadataId
+                    WHERE G.Name LIKE @Query
+                    UNION
+                    SELECT S.Id FROM Show S
+                    INNER JOIN ShowMetadata SM on S.Id = SM.ShowId
+                    INNER JOIN Genre G2 on SM.Id = G2.ShowMetadataId
+                    WHERE G2.Name LIKE @Query",
+                    new { Query = genre })
                 .Map(results => results.ToList());
 
             await using TvContext context = _dbContextFactory.CreateDbContext();

@@ -55,6 +55,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(s => s.Id == showId)
                 .Include(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
+                .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Genres)
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
@@ -171,6 +173,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     return _dbContext.Shows
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Artwork)
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Genres)
                         .OrderBy(s => s.Id)
                         .SingleOrDefaultAsync(s => s.Id == id)
                         .Map(Optional);
@@ -183,11 +187,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             try
             {
                 metadata.DateAdded = DateTime.UtcNow;
+                metadata.Genres ??= new List<Genre>();
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
                     ShowMetadata = new List<ShowMetadata> { metadata },
-                    Seasons = new List<Season>()
+                    Seasons = new List<Season>(),
                 };
 
                 await _dbContext.Shows.AddAsync(show);

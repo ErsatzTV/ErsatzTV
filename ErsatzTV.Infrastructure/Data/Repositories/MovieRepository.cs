@@ -35,6 +35,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await dbContext.Movies
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Artwork)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(m => m.Genres)
                 .OrderBy(m => m.Id)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);

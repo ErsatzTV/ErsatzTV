@@ -176,18 +176,18 @@ namespace ErsatzTV.Core.Metadata
                     existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                         : metadata.SortTitle;
-                    
-                    // foreach (Genre genre in existing.Genres.Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
-                    //     .ToList())
-                    // {
-                    //     existing.Genres.Remove(genre);
-                    // }
-                    //
-                    // foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
-                    //     .ToList())
-                    // {
-                    //     existing.Genres.Add(genre);
-                    // }
+
+                    foreach (Genre genre in existing.Genres.Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                        .ToList())
+                    {
+                        existing.Genres.Remove(genre);
+                    }
+
+                    foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
+                        .ToList())
+                    {
+                        existing.Genres.Add(genre);
+                    }
                 },
                 () =>
                 {
@@ -249,7 +249,8 @@ namespace ErsatzTV.Core.Metadata
                         Outline = nfo.Outline,
                         Tagline = nfo.Tagline,
                         Year = nfo.Year,
-                        ReleaseDate = GetAired(nfo.Premiered) ?? new DateTime(nfo.Year, 1, 1)
+                        ReleaseDate = GetAired(nfo.Premiered) ?? new DateTime(nfo.Year, 1, 1),
+                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList()
                     },
                     None);
             }
@@ -379,6 +380,9 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("premiered")]
             public string Premiered { get; set; }
+            
+            [XmlElement("genre")]
+            public List<string> Genres { get; set; }
         }
 
         [XmlRoot("episodedetails")]
