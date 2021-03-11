@@ -297,7 +297,8 @@ namespace ErsatzTV.Core.Scheduling
                             {
                                 NextScheduleItem = schedule,
                                 NextScheduleItemId = schedule.Id,
-                                NextStart = (start - start.TimeOfDay).UtcDateTime + schedule.StartTime.GetValueOrDefault()
+                                NextStart = (start - start.TimeOfDay).UtcDateTime +
+                                            schedule.StartTime.GetValueOrDefault()
                             };
                         case StartType.Dynamic:
                         default:

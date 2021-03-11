@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 using static LanguageExt.Prelude;
 
@@ -13,7 +14,8 @@ namespace ErsatzTV.Application.Television
                 show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString() ?? string.Empty).IfNone(string.Empty),
                 show.ShowMetadata.HeadOrNone().Map(m => m.Plot ?? string.Empty).IfNone(string.Empty),
                 show.ShowMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty),
-                show.ShowMetadata.HeadOrNone().Map(GetFanArt).IfNone(string.Empty));
+                show.ShowMetadata.HeadOrNone().Map(GetFanArt).IfNone(string.Empty),
+                show.ShowMetadata.HeadOrNone().Map(m => m.Genres.Map(g => g.Name).ToList()).IfNone(new List<string>()));
 
         internal static TelevisionSeasonViewModel ProjectToViewModel(Season season) =>
             new(

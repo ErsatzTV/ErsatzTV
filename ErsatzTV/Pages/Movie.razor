@@ -15,7 +15,7 @@
     }
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
-    <div style="display: flex; flex-direction: row;">
+    <div style="display: flex; flex-direction: row;" class="mb-6">
         @if (!string.IsNullOrWhiteSpace(_movie.Poster))
         {
             <img class="mud-elevation-2 mr-6"
@@ -43,6 +43,15 @@
             </div>
         </div>
     </div>
+    @if (_movie.Genres.Any())
+    {
+        <div>
+            @foreach (string genre in _movie.Genres.OrderBy(g => g))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2" Link="@($"/search?query=genre%3a{genre}")"/>
+            }
+        </div>
+    }
 </MudContainer>
 
 @code {
