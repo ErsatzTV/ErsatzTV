@@ -45,10 +45,21 @@
     </div>
     @if (_movie.Genres.Any())
     {
-        <div>
+        <MudText GutterBottom="true">Genres</MudText>
+        <div class="mb-2">
             @foreach (string genre in _movie.Genres.OrderBy(g => g))
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2" Link="@($"/search?query=genre%3a{genre}")"/>
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2 mb-2" Link="@($"/search?query=genre%3a{genre}")"/>
+            }
+        </div>
+    }
+    @if (_movie.Tags.Any())
+    {
+        <MudText GutterBottom="true">Tags</MudText>
+        <div>
+            @foreach (string tag in _movie.Tags.OrderBy(t => t))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@tag" Class="mr-2 mb-2" Link="@($"/search?query=tag%3a{tag}")"/>
             }
         </div>
     }

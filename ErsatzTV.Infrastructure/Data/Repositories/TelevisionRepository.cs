@@ -63,6 +63,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(sm => sm.Artwork)
                 .Include(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Genres)
+                .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Tags)
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
@@ -181,6 +183,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(sm => sm.Artwork)
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Genres)
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Tags)
                         .OrderBy(s => s.Id)
                         .SingleOrDefaultAsync(s => s.Id == id)
                         .Map(Optional);
@@ -194,6 +198,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 metadata.DateAdded = DateTime.UtcNow;
                 metadata.Genres ??= new List<Genre>();
+                metadata.Tags ??= new List<Tag>();
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
