@@ -18,7 +18,17 @@ namespace ErsatzTV.Application.MediaCards.Queries
         public Task<Either<BaseError, SearchCardResultsViewModel>> Handle(
             GetSearchCards request,
             CancellationToken cancellationToken) =>
-            Try(_searchRepository.SearchMediaItems(request.Query)).Sequence()
+            request.Query.StartsWith("genre:")
+                ? GenreSearch(request.Query.Replace("genre:", string.Empty))
+                : TitleSearch(request.Query);
+
+        private Task<Either<BaseError, SearchCardResultsViewModel>> TitleSearch(string query) =>
+            Try(_searchRepository.SearchMediaItemsByTitle(query)).Sequence()
+                .Map(ProjectToSearchResults)
+                .Map(t => t.ToEither(ex => BaseError.New($"Failed to search: {ex.Message}")));
+
+        private Task<Either<BaseError, SearchCardResultsViewModel>> GenreSearch(string query) =>
+            Try(_searchRepository.SearchMediaItemsByGenre(query)).Sequence()
                 .Map(ProjectToSearchResults)
                 .Map(t => t.ToEither(ex => BaseError.New($"Failed to search: {ex.Message}")));
     }

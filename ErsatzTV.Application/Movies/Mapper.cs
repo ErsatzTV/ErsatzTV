@@ -14,7 +14,8 @@ namespace ErsatzTV.Application.Movies
                 metadata.Year?.ToString(),
                 metadata.Plot,
                 Artwork(metadata, ArtworkKind.Poster),
-                Artwork(metadata, ArtworkKind.FanArt));
+                Artwork(metadata, ArtworkKind.FanArt),
+                metadata.Genres.Map(g => g.Name).ToList());
         }
 
         private static string Artwork(Metadata metadata, ArtworkKind artworkKind) =>

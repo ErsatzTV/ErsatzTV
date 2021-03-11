@@ -13,6 +13,10 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
             builder.HasMany(sm => sm.Artwork)
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(mm => mm.Genres)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
