@@ -146,7 +146,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         existing.Genres.Add(genre);
                     }
-                    
+
                     foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
@@ -200,7 +200,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         existing.Genres.Add(genre);
                     }
-                    
+
                     foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
@@ -412,7 +412,7 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("genre")]
             public List<string> Genres { get; set; }
-            
+
             [XmlElement("tag")]
             public List<string> Tags { get; set; }
         }

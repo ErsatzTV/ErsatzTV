@@ -72,7 +72,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OfType<MediaItem>()
                 .ToListAsync();
         }
-        
+
         public async Task<List<MediaItem>> SearchMediaItemsByTag(string tag)
         {
             List<int> ids = await _dbConnection.QueryAsync<int>(

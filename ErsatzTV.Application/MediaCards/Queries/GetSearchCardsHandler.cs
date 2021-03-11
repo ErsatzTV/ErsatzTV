@@ -34,7 +34,7 @@ namespace ErsatzTV.Application.MediaCards.Queries
             Try(_searchRepository.SearchMediaItemsByGenre(query)).Sequence()
                 .Map(ProjectToSearchResults)
                 .Map(t => t.ToEither(ex => BaseError.New($"Failed to search: {ex.Message}")));
-        
+
         private Task<Either<BaseError, SearchCardResultsViewModel>> TagSearch(string query) =>
             Try(_searchRepository.SearchMediaItemsByTag(query)).Sequence()
                 .Map(ProjectToSearchResults)
