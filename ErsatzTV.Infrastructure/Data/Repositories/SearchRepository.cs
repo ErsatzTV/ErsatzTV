@@ -30,7 +30,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     UNION
                     SELECT S.Id FROM Show S
                     INNER JOIN ShowMetadata SM on S.Id = SM.ShowId
-                    WHERE SM.Title LIKE @Query",
+                    WHERE SM.Title LIKE @Query
+                    GROUP BY SM.Title, SM.Year",
                     new { Query = $"%{query}%" })
                 .Map(results => results.ToList());
 
@@ -56,7 +57,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     SELECT S.Id FROM Show S
                     INNER JOIN ShowMetadata SM on S.Id = SM.ShowId
                     INNER JOIN Genre G2 on SM.Id = G2.ShowMetadataId
-                    WHERE G2.Name LIKE @Query",
+                    WHERE G2.Name LIKE @Query
+                    GROUP BY SM.Title, SM.Year",
                     new { Query = genre })
                 .Map(results => results.ToList());
 
