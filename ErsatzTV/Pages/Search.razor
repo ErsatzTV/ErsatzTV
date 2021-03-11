@@ -27,7 +27,10 @@
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/movies/{card.MovieId}")"
-                           AddToCollectionClicked="@AddToCollection"/>
+                           AddToCollectionClicked="@AddToCollection"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@_selectedCards.Contains(card)"
+                           IsSelectMode="@_selectedCards.Any()"/>
             }
         </MudContainer>
     }
@@ -50,6 +53,8 @@
 @code {
     private string _query;
     private SearchCardResultsViewModel _data;
+    private System.Collections.Generic.HashSet<MediaCardViewModel> _selectedCards;
+    private MediaCardViewModel _selectedLast;
 
     protected override async Task OnInitializedAsync()
     {
@@ -60,6 +65,39 @@
             _query = value;
             Either<BaseError, SearchCardResultsViewModel> maybeResults = await Mediator.Send(new GetSearchCards(_query));
             maybeResults.IfRight(results => _data = results);
+        }
+
+        _selectedCards = new System.Collections.Generic.HashSet<MediaCardViewModel>();
+    }
+
+    private async Task SelectClicked(MovieCardViewModel movie, MouseEventArgs e)
+    {
+        if (_selectedCards.Contains(movie))
+        {
+            _selectedCards.Remove(movie);
+        }
+        else
+        {
+            if (e.ShiftKey && _selectedLast is MovieCardViewModel selectedMovie)
+            {
+                var sorted = _data.MovieCards.OrderBy(m => m.SortTitle).ToList();
+                int start = sorted.IndexOf(selectedMovie);
+                int finish = sorted.IndexOf(movie);
+                if (start > finish)
+                {
+                    int temp = start;
+                    start = finish;
+                    finish = temp;
+                }
+
+                for (int i = start; i < finish; i++)
+                {
+                    _selectedCards.Add(sorted[i]);
+                }
+            }
+
+            _selectedLast = movie;
+            _selectedCards.Add(movie);
         }
     }
 

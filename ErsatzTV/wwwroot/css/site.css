@@ -18,6 +18,10 @@
     width: 152px;
 }
 
+.media-card-selected {
+    box-shadow: 0 0 0 3px #00c000, 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
 .media-card-episode { width: 392px; }
 
 .media-card:hover { /*filter: brightness(75%);*/ }
