@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application.Playouts.Commands;
@@ -9,12 +10,14 @@ using LanguageExt;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public class UpdateCollectionHandler : MediatR.IRequestHandler<UpdateCollection, Either<BaseError, Unit>>
+    public class
+        UpdateCollectionCustomOrderHandler : MediatR.IRequestHandler<UpdateCollectionCustomOrder,
+            Either<BaseError, Unit>>
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
 
-        public UpdateCollectionHandler(
+        public UpdateCollectionCustomOrderHandler(
             IMediaCollectionRepository mediaCollectionRepository,
             ChannelWriter<IBackgroundServiceRequest> channel)
         {
@@ -23,18 +26,23 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         }
 
         public Task<Either<BaseError, Unit>> Handle(
-            UpdateCollection request,
+            UpdateCollectionCustomOrder request,
             CancellationToken cancellationToken) =>
             Validate(request)
                 .MapT(c => ApplyUpdateRequest(c, request))
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<Unit> ApplyUpdateRequest(Collection c, UpdateCollection request)
+        private async Task<Unit> ApplyUpdateRequest(Collection c, UpdateCollectionCustomOrder request)
         {
-            c.Name = request.Name;
-            request.UseCustomPlaybackOrder.IfSome(
-                useCustomPlaybackOrder => c.UseCustomPlaybackOrder = useCustomPlaybackOrder);
-            if (await _mediaCollectionRepository.Update(c) && request.UseCustomPlaybackOrder.IsSome)
+            foreach (MediaItemCustomOrder updateItem in request.MediaItemCustomOrders)
+            {
+                Option<CollectionItem> maybeCollectionItem =
+                    c.CollectionItems.FirstOrDefault(ci => ci.MediaItemId == updateItem.MediaItemId);
+
+                maybeCollectionItem.IfSome(ci => ci.CustomIndex = updateItem.CustomIndex);
+            }
+
+            if (await _mediaCollectionRepository.Update(c))
             {
                 // rebuild all playouts that use this collection
                 foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingCollection(
@@ -47,18 +55,12 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             return Unit.Default;
         }
 
-        private async Task<Validation<BaseError, Collection>>
-            Validate(UpdateCollection request) =>
-            (await CollectionMustExist(request), ValidateName(request))
-            .Apply((collectionToUpdate, _) => collectionToUpdate);
+        private Task<Validation<BaseError, Collection>> Validate(UpdateCollectionCustomOrder request) =>
+            CollectionMustExist(request);
 
         private Task<Validation<BaseError, Collection>> CollectionMustExist(
-            UpdateCollection updateCollection) =>
-            _mediaCollectionRepository.Get(updateCollection.CollectionId)
+            UpdateCollectionCustomOrder request) =>
+            _mediaCollectionRepository.Get(request.CollectionId)
                 .Map(v => v.ToValidation<BaseError>("Collection does not exist."));
-
-        private Validation<BaseError, string> ValidateName(UpdateCollection updateSimpleMediaCollection) =>
-            updateSimpleMediaCollection.NotEmpty(c => c.Name)
-                .Bind(_ => updateSimpleMediaCollection.NotLongerThan(50)(c => c.Name));
     }
 }

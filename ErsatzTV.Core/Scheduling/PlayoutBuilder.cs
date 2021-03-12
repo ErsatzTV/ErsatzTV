@@ -78,7 +78,8 @@ namespace ErsatzTV.Core.Scheduling
                 playout.Channel.Number,
                 playout.Channel.Name);
 
-            Option<CollectionKey> emptyCollection = collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
+            Option<CollectionKey> emptyCollection =
+                collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
             if (emptyCollection.IsSome)
             {
                 _logger.LogError(
@@ -117,9 +118,15 @@ namespace ErsatzTV.Core.Scheduling
                 playout.ProgramScheduleAnchors.Clear();
             }
 
-            var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
-            Map<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators =
-                MapExtensions.Map(collectionMediaItems, (c, i) => GetMediaCollectionEnumerator(playout, c, i));
+            var sortedScheduleItems =
+                playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
+            var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+            foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
+            {
+                IMediaCollectionEnumerator enumerator =
+                    await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems);
+                collectionEnumerators.Add(collectionKey, enumerator);
+            }
 
             // find start anchor
             PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, sortedScheduleItems);
@@ -357,20 +364,20 @@ namespace ErsatzTV.Core.Scheduling
 
         private static List<PlayoutProgramScheduleAnchor> BuildProgramScheduleAnchors(
             Playout playout,
-            Map<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators)
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators)
         {
             var result = new List<PlayoutProgramScheduleAnchor>();
 
             foreach (CollectionKey collectionKey in collectionEnumerators.Keys)
             {
-                Option<PlayoutProgramScheduleAnchor> maybeExisting = playout.ProgramScheduleAnchors
-                    .FirstOrDefault(
-                        a => a.CollectionType == collectionKey.CollectionType
-                             && a.CollectionId == collectionKey.CollectionId
-                             && a.MediaItemId == collectionKey.MediaItemId);
+                Option<PlayoutProgramScheduleAnchor> maybeExisting = playout.ProgramScheduleAnchors.FirstOrDefault(
+                    a => a.CollectionType == collectionKey.CollectionType
+                         && a.CollectionId == collectionKey.CollectionId
+                         && a.MediaItemId == collectionKey.MediaItemId);
 
-                var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State)
-                    .ToDictionary(mcs => mcs.Key, mcs => mcs.Head());
+                var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State).ToDictionary(
+                    mcs => mcs.Key,
+                    mcs => mcs.Head());
 
                 PlayoutProgramScheduleAnchor scheduleAnchor = maybeExisting.Match(
                     existing =>
@@ -396,21 +403,36 @@ namespace ErsatzTV.Core.Scheduling
             return result;
         }
 
-        private static IMediaCollectionEnumerator GetMediaCollectionEnumerator(
+        private async Task<IMediaCollectionEnumerator> GetMediaCollectionEnumerator(
             Playout playout,
             CollectionKey collectionKey,
             List<MediaItem> mediaItems)
         {
-            Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
-                .FirstOrDefault(
-                    a => a.ProgramScheduleId == playout.ProgramScheduleId
-                         && a.CollectionType == collectionKey.CollectionType
-                         && a.CollectionId == collectionKey.CollectionId
-                         && a.MediaItemId == collectionKey.MediaItemId);
+            Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors.FirstOrDefault(
+                a => a.ProgramScheduleId == playout.ProgramScheduleId
+                     && a.CollectionType == collectionKey.CollectionType
+                     && a.CollectionId == collectionKey.CollectionId
+                     && a.MediaItemId == collectionKey.MediaItemId);
 
             CollectionEnumeratorState state = maybeAnchor.Match(
                 anchor => anchor.EnumeratorState,
                 () => new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 });
+
+            if (await _mediaCollectionRepository.IsCustomPlaybackOrder(collectionKey.CollectionId ?? 0))
+            {
+                Option<Collection> collectionWithItems =
+                    await _mediaCollectionRepository.GetCollectionWithCollectionItemsUntracked(
+                        collectionKey.CollectionId ?? 0);
+
+                if (collectionKey.CollectionType == ProgramScheduleItemCollectionType.Collection &&
+                    collectionWithItems.IsSome)
+                {
+                    return new CustomOrderCollectionEnumerator(
+                        collectionWithItems.ValueUnsafe(),
+                        mediaItems,
+                        state);
+                }
+            }
 
             switch (playout.ProgramSchedule.MediaCollectionPlaybackOrder)
             {

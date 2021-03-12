@@ -5,6 +5,7 @@
 @inherits MultiSelectBase<CollectionItems>
 @inject NavigationManager NavigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject IJSRuntime JsRuntime
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="align-items: center; display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%;" class="ml-6 mr-6">
@@ -51,6 +52,16 @@
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#episodes")">@_data.EpisodeCards.Count Episodes</MudLink>
             }
+            @if (SupportsCustomOrdering())
+            {
+                <div style="margin-left: auto">
+                    <MudSwitch T="bool"
+                               Checked="@_data.UseCustomPlaybackOrder"
+                               Color="Color.Primary"
+                               CheckedChanged="@OnUseCustomOrderChanged"
+                               Label="Use Custom Playback Order"/>
+                </div>
+            }
         }
     </div>
 </MudPaper>
@@ -65,8 +76,8 @@
             Movies
         </MudText>
 
-        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-            @foreach (MovieCardViewModel card in _data.MovieCards.OrderBy(m => m.SortTitle))
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid" UserAttributes="@(new Dictionary<string, object> { { "id", "sortable-collection" } })">
+            @foreach (MovieCardViewModel card in OrderMovies(_data.MovieCards))
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/movies/{card.MovieId}")"
@@ -163,6 +174,9 @@
 
     private CollectionCardResultsViewModel _data;
 
+    private bool SupportsCustomOrdering() =>
+        _data.MovieCards.Any() && !_data.ShowCards.Any() && !_data.SeasonCards.Any() && !_data.EpisodeCards.Any();
+
     protected override async Task OnParametersSetAsync() => await RefreshData();
 
     protected override async Task RefreshData()
@@ -173,6 +187,30 @@
         maybeResult.Match(
             result => _data = result,
             error => NavigationManager.NavigateTo("404"));
+    }
+
+    private IOrderedEnumerable<MovieCardViewModel> OrderMovies(List<MovieCardViewModel> movies)
+    {
+        if (_data.UseCustomPlaybackOrder)
+        {
+            return movies.OrderBy(m => m.CustomIndex);
+        }
+
+        return movies.OrderBy(m => m.SortTitle);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await JsRuntime.InvokeVoidAsync("sortableCollection", Id);
+        if (_data.UseCustomPlaybackOrder)
+        {
+            await JsRuntime.InvokeVoidAsync("enableSorting");
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("disableSorting");
+        }
+        await base.OnAfterRenderAsync(firstRender);
     }
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
@@ -253,6 +291,13 @@
             await Mediator.Send(request);
             await RefreshData();
         }
+    }
+
+    private async Task OnUseCustomOrderChanged()
+    {
+        _data.UseCustomPlaybackOrder = !_data.UseCustomPlaybackOrder;
+        var request = new UpdateCollection(Id, _data.Name) { UseCustomPlaybackOrder = _data.UseCustomPlaybackOrder };
+        await Mediator.Send(request);
     }
 
 }
