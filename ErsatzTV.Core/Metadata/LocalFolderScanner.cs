@@ -80,7 +80,15 @@ namespace ErsatzTV.Core.Metadata
                 if (version.DateUpdated < _localFileSystem.GetLastWriteTime(path))
                 {
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", path);
-                    await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
+                    Either<BaseError, Unit> refreshResult =
+                        await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
+                    refreshResult.IfLeft(
+                        error =>
+                            _logger.LogWarning(
+                                "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                                "Statistics",
+                                path,
+                                error.Value));
                 }
 
                 return mediaItem;
