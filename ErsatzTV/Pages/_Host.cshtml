@@ -17,7 +17,33 @@
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet"/>
     <link href="css/site.css" rel="stylesheet"/>
     <link href="ErsatzTV.styles.css" rel="stylesheet"/>
+    <link href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     @await Html.PartialAsync("../Shared/_Favicons")
+    <script>
+        function sortableCollection(collectionId) {
+            $("#sortable-collection").sortable({
+                update: function(event, ui) {
+                    const data = $(this).sortable('serialize');
+                    $.ajax({
+                        data: data,
+                        type: 'POST',
+                        url: `/media/collections/${collectionId}/items`
+                    });
+                }
+            });
+            $("#sortable-collection").disableSelection();
+        }
+
+        function disableSorting() {
+            $("#sortable-collection").sortable("option", "disabled", true);
+        }
+
+        function enableSorting() {
+            $("#sortable-collection").sortable("option", "disabled", false);
+        }
+    </script>
 </head>
 <body>
 <component type="typeof(App)" render-mode="ServerPrerendered"/>

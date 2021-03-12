@@ -52,11 +52,20 @@ namespace ErsatzTV.Application.MediaCards
             ProjectToViewModel(Collection collection) =>
             new(
                 collection.Name,
-                collection.MediaItems.OfType<Movie>().Map(m => ProjectToViewModel(m.MovieMetadata.Head())).ToList(),
+                collection.MediaItems.OfType<Movie>().Map(
+                    m => ProjectToViewModel(m.MovieMetadata.Head()) with
+                    {
+                        CustomIndex = GetCustomIndex(collection, m.Id)
+                    }).ToList(),
                 collection.MediaItems.OfType<Show>().Map(s => ProjectToViewModel(s.ShowMetadata.Head())).ToList(),
                 collection.MediaItems.OfType<Season>().Map(ProjectToViewModel).ToList(),
                 collection.MediaItems.OfType<Episode>().Map(e => ProjectToViewModel(e.EpisodeMetadata.Head()))
-                    .ToList());
+                    .ToList()) { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
+
+        private static int GetCustomIndex(Collection collection, int mediaItemId) =>
+            Optional(collection.CollectionItems.Find(ci => ci.MediaItemId == mediaItemId))
+                .Map(ci => ci.CustomIndex ?? 0)
+                .IfNone(0);
 
         internal static SearchCardResultsViewModel ProjectToSearchResults(List<MediaItem> items) =>
             new(
