@@ -120,6 +120,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<Collection>> GetCollectionWithItemsUntracked(int id) =>
             _dbContext.Collections
                 .AsNoTracking()
+                .Include(c => c.CollectionItems)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => i.LibraryPath)
                 .Include(c => c.MediaItems)
@@ -141,6 +142,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(i => (i as Episode).Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
+                .OrderBy(c => c.Id)
+                .SingleOrDefaultAsync(c => c.Id == id)
+                .Map(Optional);
+
+        public Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id) =>
+            _dbContext.Collections
+                .Include(c => c.CollectionItems)
                 .OrderBy(c => c.Id)
                 .SingleOrDefaultAsync(c => c.Id == id)
                 .Map(Optional);

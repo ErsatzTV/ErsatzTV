@@ -118,8 +118,13 @@ namespace ErsatzTV.Core.Scheduling
             }
 
             var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
-            Map<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators =
-                MapExtensions.Map(collectionMediaItems, (c, i) => GetMediaCollectionEnumerator(playout, c, i));
+            var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+            foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
+            {
+                IMediaCollectionEnumerator enumerator =
+                    await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems);
+                collectionEnumerators.Add(collectionKey, enumerator);
+            }
 
             // find start anchor
             PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, sortedScheduleItems);
@@ -357,7 +362,7 @@ namespace ErsatzTV.Core.Scheduling
 
         private static List<PlayoutProgramScheduleAnchor> BuildProgramScheduleAnchors(
             Playout playout,
-            Map<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators)
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators)
         {
             var result = new List<PlayoutProgramScheduleAnchor>();
 
@@ -396,7 +401,7 @@ namespace ErsatzTV.Core.Scheduling
             return result;
         }
 
-        private static IMediaCollectionEnumerator GetMediaCollectionEnumerator(
+        private async Task<IMediaCollectionEnumerator> GetMediaCollectionEnumerator(
             Playout playout,
             CollectionKey collectionKey,
             List<MediaItem> mediaItems)
@@ -420,6 +425,24 @@ namespace ErsatzTV.Core.Scheduling
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
                 case PlaybackOrder.Shuffle:
                     return new ShuffledMediaCollectionEnumerator(mediaItems, state);
+                case PlaybackOrder.Custom:
+                    Option<Collection> collectionWithItems =
+                        await _mediaCollectionRepository.GetCollectionWithCollectionItemsUntracked(
+                            collectionKey.CollectionId ?? 0);
+                    switch (collectionKey.CollectionType)
+                    {
+                        case ProgramScheduleItemCollectionType.Collection when collectionWithItems.IsSome:
+                            return new CustomOrderCollectionEnumerator(
+                                collectionWithItems.ValueUnsafe(),
+                                mediaItems,
+                                state);
+                        default:
+                            _logger.LogError(
+                                "Invalid enumerator state for custom playback order; falling back to randomized content");
+                            return new RandomizedMediaCollectionEnumerator(mediaItems, state);
+                    }
+
+                    ;
                 default:
                     // TODO: handle this error case differently?
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);

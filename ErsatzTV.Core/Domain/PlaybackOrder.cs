@@ -4,6 +4,7 @@
     {
         Chronological = 1,
         Random = 2,
-        Shuffle = 3
+        Shuffle = 3,
+        Custom = 4
     }
 }
