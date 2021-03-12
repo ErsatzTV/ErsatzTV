@@ -25,9 +25,7 @@
         function sortableCollection(collectionId) {
             $("#sortable-collection").sortable({
                 update: function(event, ui) {
-                    var data = $(this).sortable('serialize');
-
-                    // POST to server using $.post or $.ajax
+                    const data = $(this).sortable('serialize');
                     $.ajax({
                         data: data,
                         type: 'POST',
