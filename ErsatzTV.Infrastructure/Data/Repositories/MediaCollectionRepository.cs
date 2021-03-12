@@ -92,6 +92,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<Option<Collection>> Get(int id) =>
             _dbContext.Collections
+                .Include(c => c.CollectionItems)
                 .OrderBy(c => c.Id)
                 .SingleOrDefaultAsync(c => c.Id == id)
                 .Map(Optional);
@@ -181,6 +182,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     WHERE PSI.CollectionId = @CollectionId",
                     new { CollectionId = collectionId })
                 .Map(result => result.ToList());
+
+        public Task<bool> IsCustomPlaybackOrder(int collectionId) =>
+            _dbConnection.QuerySingleAsync<bool>(
+                @"SELECT UseCustomPlaybackOrder FROM Collection WHERE Id = @CollectionId",
+                new { CollectionId = collectionId });
 
         private async Task<List<MediaItem>> GetItemsForCollection(Collection collection)
         {

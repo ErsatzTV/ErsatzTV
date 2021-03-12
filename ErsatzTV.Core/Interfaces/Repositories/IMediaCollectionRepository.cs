@@ -19,5 +19,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<bool> Update(Collection collection);
         Task Delete(int collectionId);
         Task<List<int>> PlayoutIdsUsingCollection(int collectionId);
+        Task<bool> IsCustomPlaybackOrder(int collectionId);
     }
 }

@@ -78,7 +78,8 @@ namespace ErsatzTV.Core.Scheduling
                 playout.Channel.Number,
                 playout.Channel.Name);
 
-            Option<CollectionKey> emptyCollection = collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
+            Option<CollectionKey> emptyCollection =
+                collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
             if (emptyCollection.IsSome)
             {
                 _logger.LogError(
@@ -117,7 +118,8 @@ namespace ErsatzTV.Core.Scheduling
                 playout.ProgramScheduleAnchors.Clear();
             }
 
-            var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
+            var sortedScheduleItems =
+                playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
             var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
             foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
             {
@@ -368,14 +370,14 @@ namespace ErsatzTV.Core.Scheduling
 
             foreach (CollectionKey collectionKey in collectionEnumerators.Keys)
             {
-                Option<PlayoutProgramScheduleAnchor> maybeExisting = playout.ProgramScheduleAnchors
-                    .FirstOrDefault(
-                        a => a.CollectionType == collectionKey.CollectionType
-                             && a.CollectionId == collectionKey.CollectionId
-                             && a.MediaItemId == collectionKey.MediaItemId);
+                Option<PlayoutProgramScheduleAnchor> maybeExisting = playout.ProgramScheduleAnchors.FirstOrDefault(
+                    a => a.CollectionType == collectionKey.CollectionType
+                         && a.CollectionId == collectionKey.CollectionId
+                         && a.MediaItemId == collectionKey.MediaItemId);
 
-                var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State)
-                    .ToDictionary(mcs => mcs.Key, mcs => mcs.Head());
+                var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State).ToDictionary(
+                    mcs => mcs.Key,
+                    mcs => mcs.Head());
 
                 PlayoutProgramScheduleAnchor scheduleAnchor = maybeExisting.Match(
                     existing =>
@@ -406,16 +408,31 @@ namespace ErsatzTV.Core.Scheduling
             CollectionKey collectionKey,
             List<MediaItem> mediaItems)
         {
-            Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
-                .FirstOrDefault(
-                    a => a.ProgramScheduleId == playout.ProgramScheduleId
-                         && a.CollectionType == collectionKey.CollectionType
-                         && a.CollectionId == collectionKey.CollectionId
-                         && a.MediaItemId == collectionKey.MediaItemId);
+            Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors.FirstOrDefault(
+                a => a.ProgramScheduleId == playout.ProgramScheduleId
+                     && a.CollectionType == collectionKey.CollectionType
+                     && a.CollectionId == collectionKey.CollectionId
+                     && a.MediaItemId == collectionKey.MediaItemId);
 
             CollectionEnumeratorState state = maybeAnchor.Match(
                 anchor => anchor.EnumeratorState,
                 () => new CollectionEnumeratorState { Seed = Random.Next(), Index = 0 });
+
+            if (await _mediaCollectionRepository.IsCustomPlaybackOrder(collectionKey.CollectionId ?? 0))
+            {
+                Option<Collection> collectionWithItems =
+                    await _mediaCollectionRepository.GetCollectionWithCollectionItemsUntracked(
+                        collectionKey.CollectionId ?? 0);
+
+                if (collectionKey.CollectionType == ProgramScheduleItemCollectionType.Collection &&
+                    collectionWithItems.IsSome)
+                {
+                    return new CustomOrderCollectionEnumerator(
+                        collectionWithItems.ValueUnsafe(),
+                        mediaItems,
+                        state);
+                }
+            }
 
             switch (playout.ProgramSchedule.MediaCollectionPlaybackOrder)
             {
@@ -425,24 +442,6 @@ namespace ErsatzTV.Core.Scheduling
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
                 case PlaybackOrder.Shuffle:
                     return new ShuffledMediaCollectionEnumerator(mediaItems, state);
-                case PlaybackOrder.Custom:
-                    Option<Collection> collectionWithItems =
-                        await _mediaCollectionRepository.GetCollectionWithCollectionItemsUntracked(
-                            collectionKey.CollectionId ?? 0);
-                    switch (collectionKey.CollectionType)
-                    {
-                        case ProgramScheduleItemCollectionType.Collection when collectionWithItems.IsSome:
-                            return new CustomOrderCollectionEnumerator(
-                                collectionWithItems.ValueUnsafe(),
-                                mediaItems,
-                                state);
-                        default:
-                            _logger.LogError(
-                                "Invalid enumerator state for custom playback order; falling back to randomized content");
-                            return new RandomizedMediaCollectionEnumerator(mediaItems, state);
-                    }
-
-                    ;
                 default:
                     // TODO: handle this error case differently?
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);

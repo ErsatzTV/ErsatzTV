@@ -13,6 +13,7 @@ namespace ErsatzTV.Application.MediaCards
         string Title,
         string Plot,
         string Poster) : MediaCardViewModel(
+        EpisodeId,
         Title,
         $"Episode {Episode}",
         $"Episode {Episode}",

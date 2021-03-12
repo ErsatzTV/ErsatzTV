@@ -10,6 +10,7 @@
         string SortTitle,
         string Poster,
         string Placeholder) : MediaCardViewModel(
+        TelevisionSeasonId,
         Title,
         Subtitle,
         SortTitle,

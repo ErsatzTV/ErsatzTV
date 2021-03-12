@@ -2,7 +2,7 @@
 @using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 
-<div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")">
+<div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
     @if (!string.IsNullOrWhiteSpace(Link))
     {
         <div class="@(IsSelected ? DeleteClicked.HasDelegate ? "media-card-selected-delete" : "media-card-selected" : "")"
