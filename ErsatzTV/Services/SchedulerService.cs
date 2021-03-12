@@ -56,7 +56,6 @@ namespace ErsatzTV.Services
             await ScanLocalMediaSources(cancellationToken);
         }
 
-
         private async Task BuildPlayouts(CancellationToken cancellationToken)
         {
             using IServiceScope scope = _serviceScopeFactory.CreateScope();

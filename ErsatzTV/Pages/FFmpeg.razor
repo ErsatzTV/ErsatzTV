@@ -2,8 +2,11 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Commands
 @using ErsatzTV.Application.FFmpegProfiles.Queries
+@using Unit = LanguageExt.Unit
 @inject IDialogService Dialog
 @inject IMediator Mediator
+@inject ILogger<FFmpeg> Logger
+@inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudCard>
@@ -110,7 +113,17 @@
         await LoadFFmpegProfilesAsync();
     }
 
-    private Task SaveSettings() => Mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings));
+    private async Task SaveSettings()
+    {
+        Either<BaseError, Unit> result = await Mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings));
+        result.Match(
+            Left: error =>
+            {
+                Snackbar.Add(error.Value, Severity.Error);
+                Logger.LogError("Unexpected error saving FFmpeg settings: {Error}", error.Value);
+            },
+            Right: _ => Snackbar.Add("Successfully saved FFmpeg settings", Severity.Success));
+    }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
 

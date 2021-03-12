@@ -88,6 +88,25 @@ namespace ErsatzTV.Core.Scheduling
                 return playout;
             }
 
+            Option<CollectionKey> zeroDurationCollection = collectionMediaItems.Find(
+                c => c.Value.Any(
+                    mi => mi switch
+                    {
+                        Movie m => m.MediaVersions.HeadOrNone().Map(mv => mv.Duration).IfNone(TimeSpan.Zero) ==
+                                   TimeSpan.Zero,
+                        Episode e => e.MediaVersions.HeadOrNone().Map(mv => mv.Duration).IfNone(TimeSpan.Zero) ==
+                                     TimeSpan.Zero,
+                        _ => true
+                    })).Map(c => c.Key);
+            if (zeroDurationCollection.IsSome)
+            {
+                _logger.LogError(
+                    "Unable to rebuild playout; collection {@CollectionKey} contains items with zero duration!",
+                    zeroDurationCollection.ValueUnsafe());
+
+                return playout;
+            }
+
             playout.Items ??= new List<PlayoutItem>();
             playout.ProgramScheduleAnchors ??= new List<PlayoutProgramScheduleAnchor>();
 
