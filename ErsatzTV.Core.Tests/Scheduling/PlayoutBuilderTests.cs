@@ -38,6 +38,24 @@ namespace ErsatzTV.Core.Tests.Scheduling
         }
 
         [Test]
+        [Timeout(2000)]
+        public async Task ZeroDurationItem_Should_Abort()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.Zero, DateTime.Today)
+            };
+
+            (PlayoutBuilder builder, Playout playout) = TestDataFloodForItems(mediaItems, PlaybackOrder.Random);
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+            Playout result = await builder.BuildPlayoutItems(playout, start, finish);
+
+            result.Items.Should().BeNull();
+        }
+
+        [Test]
         public async Task InitialFlood_Should_StartAtMidnight()
         {
             var mediaItems = new List<MediaItem>
