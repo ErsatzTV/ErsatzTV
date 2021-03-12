@@ -29,7 +29,7 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public async Task<bool> RefreshStatistics(string ffprobePath, MediaItem mediaItem)
+        public async Task<Either<BaseError, Unit>> RefreshStatistics(string ffprobePath, MediaItem mediaItem)
         {
             try
             {
@@ -40,14 +40,20 @@ namespace ErsatzTV.Core.Metadata
                     _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                 };
 
-                FFprobe ffprobe = await GetProbeOutput(ffprobePath, filePath);
-                MediaVersion version = ProjectToMediaVersion(ffprobe);
-                return await ApplyVersionUpdate(mediaItem, version, filePath);
+                Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, filePath);
+                return await maybeProbe.Match(
+                    async ffprobe =>
+                    {
+                        MediaVersion version = ProjectToMediaVersion(ffprobe);
+                        await ApplyVersionUpdate(mediaItem, version, filePath);
+                        return Right<BaseError, Unit>(Unit.Default);
+                    },
+                    error => Task.FromResult(Left<BaseError, Unit>(error)));
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
-                return false;
+                return BaseError.New(ex.Message);
             }
         }
 
@@ -76,7 +82,7 @@ namespace ErsatzTV.Core.Metadata
             return await _mediaItemRepository.Update(mediaItem) && durationChange;
         }
 
-        private Task<FFprobe> GetProbeOutput(string ffprobePath, string filePath)
+        private Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -101,11 +107,13 @@ namespace ErsatzTV.Core.Metadata
             };
 
             probe.Start();
-            return probe.StandardOutput.ReadToEndAsync().MapAsync(
+            return probe.StandardOutput.ReadToEndAsync().MapAsync<string, Either<BaseError, FFprobe>>(
                 async output =>
                 {
                     await probe.WaitForExitAsync();
-                    return JsonConvert.DeserializeObject<FFprobe>(output);
+                    return probe.ExitCode == 0
+                        ? JsonConvert.DeserializeObject<FFprobe>(output)
+                        : BaseError.New($"FFprobe at {ffprobePath} exited with code {probe.ExitCode}");
                 });
         }
 
