@@ -1,0 +1,24 @@
+﻿<MudDialog>
+    <DialogContent>
+        <MudContainer>
+            <MudHighlighter Class="mud-primary-text"
+                            Style="background-color: transparent; font-weight: bold"
+                            Text="Do you really want to sign out of Plex? All synchronized content will be removed."/>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">Sign out</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+
+}

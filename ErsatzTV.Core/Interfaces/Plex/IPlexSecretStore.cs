@@ -10,8 +10,8 @@ namespace ErsatzTV.Core.Interfaces.Plex
         Task<string> GetClientIdentifier();
         Task<List<PlexUserAuthToken>> GetUserAuthTokens();
         Task<Unit> UpsertUserAuthToken(PlexUserAuthToken userAuthToken);
-        Task<List<PlexServerAuthToken>> GetServerAuthTokens();
         Task<Option<PlexServerAuthToken>> GetServerAuthToken(string clientIdentifier);
         Task<Unit> UpsertServerAuthToken(PlexServerAuthToken serverAuthToken);
+        Task<Unit> DeleteAll();
     }
 }

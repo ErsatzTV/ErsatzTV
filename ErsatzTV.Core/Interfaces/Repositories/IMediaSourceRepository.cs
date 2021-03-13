@@ -22,7 +22,8 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task Update(LocalMediaSource localMediaSource);
         Task Update(PlexMediaSource plexMediaSource);
         Task Update(PlexLibrary plexMediaSourceLibrary);
-        Task Delete(int id);
+        Task Delete(int mediaSourceId);
+        Task<Unit> DeleteAllPlex();
         Task DisablePlexLibrarySync(List<int> libraryIds);
         Task EnablePlexLibrarySync(IEnumerable<int> libraryIds);
     }

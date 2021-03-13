@@ -42,9 +42,18 @@
             </MudTd>
         </RowTemplate>
     </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddPlexMediaSource())" Class="mt-4">
-        Add Plex Media Source
-    </MudButton>
+    @if (_mediaSources.Any())
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(_ => SignOutOfPlex())" Class="mt-4">
+            Sign out of plex
+        </MudButton>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddPlexMediaSource())" Class="mt-4">
+            Sign in to plex
+        </MudButton>
+    }
 </MudContainer>
 
 @code {
@@ -55,27 +64,17 @@
     private async Task LoadMediaSources() =>
         _mediaSources = await Mediator.Send(new GetAllPlexMediaSources());
 
-    // private async Task DeleteMediaSource(PlexMediaSourceViewModel mediaSource)
-    // {
-    //     int count = await Mediator.Send(new CountMediaItemsById(mediaSource.Id));
-    //
-    //     var parameters = new DialogParameters
-    //     {
-    //         { "EntityType", "media source" },
-    //         { "EntityName", mediaSource.Name },
-    //         { "DetailText", $"This media source contains {count} media items." },
-    //         { "DetailHighlight", count.ToString() }
-    //     };
-    //     var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-    //
-    //     IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Media Source", parameters, options);
-    //     DialogResult result = await dialog.Result;
-    //     if (!result.Cancelled)
-    //     {
-    //         await Mediator.Send(new DeleteLocalMediaSource(mediaSource.Id));
-    //         await LoadMediaSources();
-    //     }
-    // }
+    private async Task SignOutOfPlex()
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+        IDialogReference dialog = Dialog.Show<SignOutOfPlexDialog>("Sign out of Plex", options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(new SignOutOfPlex());
+            await LoadMediaSources();
+        }
+    }
 
     private async Task AddPlexMediaSource()
     {
