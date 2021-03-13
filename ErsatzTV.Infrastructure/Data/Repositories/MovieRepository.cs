@@ -72,9 +72,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Either<BaseError, PlexMovie>> GetOrAdd(PlexLibrary library, PlexMovie item)
         {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            Option<PlexMovie> maybeExisting = await context.PlexMovies
-                .AsNoTracking()
+            Option<PlexMovie> maybeExisting = await _dbContext.PlexMovies
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Genres)
                 .Include(i => i.MediaVersions)
@@ -84,7 +82,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 plexMovie => Right<BaseError, PlexMovie>(plexMovie).AsTask(),
-                async () => await AddPlexMovie(context, library, item));
+                async () => await AddPlexMovie(_dbContext, library, item));
         }
 
         public async Task<bool> Update(Movie movie)
