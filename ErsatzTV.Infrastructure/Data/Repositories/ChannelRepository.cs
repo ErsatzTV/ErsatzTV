@@ -59,6 +59,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(p => p.Items)
                 .ThenInclude(i => i.MediaItem)
                 .ThenInclude(i => (i as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
                 .ToListAsync();
 
         public async Task Update(Channel channel)
