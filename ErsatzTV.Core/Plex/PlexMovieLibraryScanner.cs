@@ -101,7 +101,48 @@ namespace ErsatzTV.Core.Plex
             return Right<BaseError, PlexMovie>(existing).AsTask();
         }
 
-        private Task<Either<BaseError, PlexMovie>> UpdateArtwork(PlexMovie existing, PlexMovie incoming) =>
-            Right<BaseError, PlexMovie>(existing).AsTask();
+        private Task<Either<BaseError, PlexMovie>> UpdateArtwork(PlexMovie existing, PlexMovie incoming)
+        {
+            MovieMetadata existingMetadata = existing.MovieMetadata.Head();
+            MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
+
+            UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
+            UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
+
+            return Right<BaseError, PlexMovie>(existing).AsTask();
+        }
+
+        private void UpdateArtworkIfNeeded(
+            MovieMetadata existingMetadata,
+            MovieMetadata incomingMetadata,
+            ArtworkKind artworkKind)
+        {
+            Option<Artwork> maybeIncomingArtwork = Optional(incomingMetadata.Artwork).Flatten()
+                .Find(a => a.ArtworkKind == artworkKind);
+
+            maybeIncomingArtwork.Match(
+                incomingArtwork =>
+                {
+                    Option<Artwork> maybeExistingArtwork = Optional(existingMetadata.Artwork).Flatten()
+                        .Find(a => a.ArtworkKind == artworkKind);
+
+                    maybeExistingArtwork.Match(
+                        existingArtwork =>
+                        {
+                            existingArtwork.Path = incomingArtwork.Path;
+                            existingArtwork.DateUpdated = incomingArtwork.DateUpdated;
+                        },
+                        () =>
+                        {
+                            existingMetadata.Artwork ??= new List<Artwork>();
+                            existingMetadata.Artwork.Add(incomingArtwork);
+                        });
+                },
+                () =>
+                {
+                    existingMetadata.Artwork ??= new List<Artwork>();
+                    existingMetadata.Artwork.RemoveAll(a => a.ArtworkKind == artworkKind);
+                });
+        }
     }
 }
