@@ -185,7 +185,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<bool> IsCustomPlaybackOrder(int collectionId) =>
             _dbConnection.QuerySingleAsync<bool>(
-                @"SELECT UseCustomPlaybackOrder FROM Collection WHERE Id = @CollectionId",
+                @"SELECT IFNULL(MIN(UseCustomPlaybackOrder), 0) FROM Collection WHERE Id = @CollectionId",
                 new { CollectionId = collectionId });
 
         private async Task<List<MediaItem>> GetItemsForCollection(Collection collection)
