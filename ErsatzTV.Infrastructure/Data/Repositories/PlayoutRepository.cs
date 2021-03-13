@@ -61,8 +61,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<DateTimeOffset>> GetNextItemStart(int channelId, DateTimeOffset now) =>
             _dbContext.PlayoutItems
                 .Where(pi => pi.Playout.ChannelId == channelId)
-                .Where(pi => pi.Finish > now.UtcDateTime)
-                .OrderBy(pi => pi.Finish)
+                .Where(pi => pi.Start > now.UtcDateTime)
+                .OrderBy(pi => pi.Start)
                 .FirstOrDefaultAsync()
                 .Map(Optional)
                 .MapT(pi => pi.StartOffset);

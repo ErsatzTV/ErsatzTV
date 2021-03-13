@@ -7,10 +7,13 @@ namespace ErsatzTV.Infrastructure.Locking
     public class EntityLocker : IEntityLocker
     {
         private readonly ConcurrentDictionary<int, byte> _lockedMediaSources;
+        private bool _plex;
 
         public EntityLocker() => _lockedMediaSources = new ConcurrentDictionary<int, byte>();
 
         public event EventHandler OnLibraryChanged;
+
+        public event EventHandler OnPlexChanged;
 
         public bool LockLibrary(int mediaSourceId)
         {
@@ -36,5 +39,31 @@ namespace ErsatzTV.Infrastructure.Locking
 
         public bool IsLibraryLocked(int mediaSourceId) =>
             _lockedMediaSources.ContainsKey(mediaSourceId);
+
+        public bool LockPlex()
+        {
+            if (!_plex)
+            {
+                _plex = true;
+                OnPlexChanged?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool UnlockPlex()
+        {
+            if (_plex)
+            {
+                _plex = false;
+                OnPlexChanged?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsPlexLocked() => _plex;
     }
 }
