@@ -99,7 +99,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Year = response.Year,
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
-                DateUpdated = lastWriteTime
+                DateUpdated = lastWriteTime,
+                Genres = response.Genre.Map(g => new Genre { Name = g.Tag }).ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Thumb))

@@ -76,6 +76,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<PlexMovie> maybeExisting = await context.PlexMovies
                 .AsNoTracking()
                 .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Genres)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(i => i.Key)
