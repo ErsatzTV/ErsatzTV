@@ -117,6 +117,21 @@ namespace ErsatzTV.Infrastructure.Plex
                 metadata.Artwork.Add(artwork);
             }
 
+            if (!string.IsNullOrWhiteSpace(response.Art))
+            {
+                var path = $"plex/{mediaSourceId}{response.Art}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.FanArt,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
+
             var version = new MediaVersion
             {
                 Name = "Main",
