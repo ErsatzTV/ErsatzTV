@@ -12,6 +12,7 @@ namespace ErsatzTV.Infrastructure.Plex.Models
 
         public bool Owned { get; set; }
         public string Provides { get; set; }
+        public bool HttpsRequired { get; set; }
         public List<PlexResourceConnection> Connections { get; set; }
     }
 }

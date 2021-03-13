@@ -42,9 +42,9 @@
             </MudTd>
         </RowTemplate>
     </MudTable>
-    @* <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddPlexMediaSource())" Class="mt-4"> *@
-    @*     Add Plex Media Source *@
-    @* </MudButton> *@
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => AddPlexMediaSource())" Class="mt-4">
+        Add Plex Media Source
+    </MudButton>
 </MudContainer>
 
 @code {
@@ -76,10 +76,6 @@
     //         await LoadMediaSources();
     //     }
     // }
-
-    // edit media source
-    // - manage libraries to include in smart collections
-    // - manage list of path replacements
 
     private async Task AddPlexMediaSource()
     {

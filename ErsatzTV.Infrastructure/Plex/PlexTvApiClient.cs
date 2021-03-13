@@ -34,8 +34,22 @@ namespace ErsatzTV.Infrastructure.Plex
                 string clientIdentifier = await _plexSecretStore.GetClientIdentifier();
                 foreach (PlexUserAuthToken token in await _plexSecretStore.GetUserAuthTokens())
                 {
-                    List<PlexResource> resources = await _plexTvApi.GetResources(clientIdentifier, token.AuthToken);
-                    IEnumerable<PlexMediaSource> sources = resources
+                    List<PlexResource> httpResources = await _plexTvApi.GetResources(
+                        0,
+                        clientIdentifier,
+                        token.AuthToken);
+                    
+                    List<PlexResource> httpsResources = await _plexTvApi.GetResources(
+                        1,
+                        clientIdentifier,
+                        token.AuthToken);
+
+
+                    List<PlexResource> allResources = httpResources.Filter(resource => resource.HttpsRequired == false)
+                        .Append(httpsResources.Filter(resource => resource.HttpsRequired))
+                        .ToList();
+                    
+                    IEnumerable<PlexMediaSource> sources = allResources
                         .Filter(r => r.Provides.Split(",").Any(p => p == "server"))
                         .Filter(r => r.Owned) // TODO: maybe support non-owned servers in the future
                         .Map(
@@ -46,13 +60,16 @@ namespace ErsatzTV.Infrastructure.Plex
                                     resource.AccessToken);
 
                                 _plexSecretStore.UpsertServerAuthToken(serverAuthToken);
-
+                                List<PlexResourceConnection> sortedConnections = resource.HttpsRequired
+                                    ? resource.Connections
+                                    : resource.Connections.OrderBy(c => c.Local ? 0 : 1).ToList();
+                                
                                 var source = new PlexMediaSource
                                 {
                                     ServerName = resource.Name,
                                     ProductVersion = resource.ProductVersion,
                                     ClientIdentifier = resource.ClientIdentifier,
-                                    Connections = resource.Connections
+                                    Connections = sortedConnections
                                         .Map(c => new PlexConnection { Uri = c.Uri }).ToList()
                                 };
 
