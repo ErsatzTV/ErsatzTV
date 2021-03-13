@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using ErsatzTV.Core.Domain;
+using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Iptv
@@ -104,10 +106,32 @@ namespace ErsatzTV.Core.Iptv
                         xml.WriteString("Movie");
                         xml.WriteEndElement(); // category
 
-                        int year = movie.MovieMetadata.HeadOrNone().Match(mm => mm.Year ?? 0, () => 0);
-                        xml.WriteStartElement("date");
-                        xml.WriteString(year.ToString());
-                        xml.WriteEndElement(); // date
+                        Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
+                        if (maybeMetadata.IsSome)
+                        {
+                            MovieMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                            if (metadata.Year.HasValue)
+                            {
+                                xml.WriteStartElement("date");
+                                xml.WriteString(metadata.Year.Value.ToString());
+                                xml.WriteEndElement(); // date
+                            }
+
+                            string poster = Optional(metadata.Artwork).Flatten()
+                                .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
+                                .HeadOrNone()
+                                .Match(
+                                    artwork => $"{_scheme}://{_host}/artwork/posters/{artwork.Path}",
+                                    () => string.Empty);
+
+                            if (!string.IsNullOrWhiteSpace(poster))
+                            {
+                                xml.WriteStartElement("icon");
+                                xml.WriteAttributeString("src", poster);
+                                xml.WriteEndElement(); // icon
+                            }
+                        }
                     }
 
                     xml.WriteStartElement("title");
