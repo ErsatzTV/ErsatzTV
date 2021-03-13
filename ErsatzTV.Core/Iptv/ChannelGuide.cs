@@ -97,12 +97,17 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteAttributeString("stop", stop);
                     xml.WriteAttributeString("channel", channel.Number);
 
-                    if (playoutItem.MediaItem is Movie)
+                    if (playoutItem.MediaItem is Movie movie)
                     {
                         xml.WriteStartElement("category");
                         xml.WriteAttributeString("lang", "en");
                         xml.WriteString("Movie");
                         xml.WriteEndElement(); // category
+
+                        int year = movie.MovieMetadata.HeadOrNone().Match(mm => mm.Year ?? 0, () => 0);
+                        xml.WriteStartElement("date");
+                        xml.WriteString(year.ToString());
+                        xml.WriteEndElement(); // date
                     }
 
                     xml.WriteStartElement("title");
