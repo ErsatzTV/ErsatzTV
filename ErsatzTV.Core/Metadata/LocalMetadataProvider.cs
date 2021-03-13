@@ -48,7 +48,12 @@ namespace ErsatzTV.Core.Metadata
                 maybeMetadata = await LoadTelevisionShowMetadata(nfoFileName);
             }
 
-            return maybeMetadata.IfNone(
+            return maybeMetadata.Match(
+                metadata =>
+                {
+                    metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    return metadata;
+                },
                 () =>
                 {
                     ShowMetadata metadata = _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder);
