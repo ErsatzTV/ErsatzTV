@@ -45,7 +45,7 @@ namespace ErsatzTV.Core.Plex
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexMovie> maybeMovie = await _movieRepository
                             .GetOrAdd(plexMediaSourceLibrary, incoming)
-                            .BindT(existing => UpdateStatistics(existing, incoming))
+                            .BindT(existing => UpdateStatistics(existing, incoming, connection, token))
                             .BindT(existing => UpdateMetadata(existing, incoming))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
@@ -76,26 +76,53 @@ namespace ErsatzTV.Core.Plex
             return Unit.Default;
         }
 
-        private Task<Either<BaseError, PlexMovie>> UpdateStatistics(PlexMovie existing, PlexMovie incoming) =>
-            Right<BaseError, PlexMovie>(existing).AsTask();
+        private async Task<Either<BaseError, PlexMovie>> UpdateStatistics(
+            PlexMovie existing,
+            PlexMovie incoming,
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            MediaVersion existingVersion = existing.MediaVersions.Head();
+            MediaVersion incomingVersion = incoming.MediaVersions.Head();
+
+            if (incomingVersion.DateUpdated > existingVersion.DateUpdated ||
+                string.IsNullOrWhiteSpace(existingVersion.SampleAspectRatio))
+            {
+                Either<BaseError, MediaVersion> maybeStatistics =
+                    await _plexServerApiClient.GetStatistics(incoming, connection, token);
+
+                maybeStatistics.IfRight(
+                    mediaVersion =>
+                    {
+                        existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio ?? "1:1";
+                        existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
+                        existingVersion.DateUpdated = incomingVersion.DateUpdated;
+                    });
+            }
+
+            return Right<BaseError, PlexMovie>(existing);
+        }
 
         private Task<Either<BaseError, PlexMovie>> UpdateMetadata(PlexMovie existing, PlexMovie incoming)
         {
             MovieMetadata existingMetadata = existing.MovieMetadata.Head();
             MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
 
-            foreach (Genre genre in existingMetadata.Genres
-                .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
-                .ToList())
+            if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
             {
-                existingMetadata.Genres.Remove(genre);
-            }
+                foreach (Genre genre in existingMetadata.Genres
+                    .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    existingMetadata.Genres.Remove(genre);
+                }
 
-            foreach (Genre genre in incomingMetadata.Genres
-                .Filter(g => existingMetadata.Genres.All(g2 => g2.Name != g.Name))
-                .ToList())
-            {
-                existingMetadata.Genres.Add(genre);
+                foreach (Genre genre in incomingMetadata.Genres
+                    .Filter(g => existingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    existingMetadata.Genres.Add(genre);
+                }
             }
 
             return Right<BaseError, PlexMovie>(existing).AsTask();
@@ -106,8 +133,11 @@ namespace ErsatzTV.Core.Plex
             MovieMetadata existingMetadata = existing.MovieMetadata.Head();
             MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
 
-            UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
-            UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
+            if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
+            {
+                UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
+                UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
+            }
 
             return Right<BaseError, PlexMovie>(existing).AsTask();
         }

@@ -18,5 +18,12 @@ namespace ErsatzTV.Infrastructure.Plex
                 string key,
                 [Query] [AliasAs("X-Plex-Token")]
                 string token);
+
+        [Get("/library/metadata/{key}")]
+        public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
+            GetMetadata(
+                string key,
+                [Query] [AliasAs("X-Plex-Token")]
+                string token);
     }
 }

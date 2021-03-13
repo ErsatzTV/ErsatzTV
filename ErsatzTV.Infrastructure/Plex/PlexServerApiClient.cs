@@ -60,6 +60,27 @@ namespace ErsatzTV.Infrastructure.Plex
             }
         }
 
+        public async Task<Either<BaseError, MediaVersion>> GetStatistics(
+            PlexMovie movie,
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            try
+            {
+                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
+                return await service.GetMetadata(movie.Key.Split("/").Last(), token.AuthToken)
+                    .Map(
+                        r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0)
+                            .HeadOrNone())
+                    .BindT(ProjectToMediaVersion)
+                    .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
+
         private static Option<PlexLibrary> Project(PlexLibraryResponse response) =>
             response.Type switch
             {
@@ -142,7 +163,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 AudioCodec = media.AudioCodec,
                 VideoCodec = media.VideoCodec,
                 VideoProfile = media.VideoProfile,
-                SampleAspectRatio = ConvertToSAR(media.AspectRatio),
+                // specifically omit sample aspect ratio
+                DateUpdated = lastWriteTime,
                 MediaFiles = new List<MediaFile>
                 {
                     new PlexMediaFile
@@ -164,8 +186,21 @@ namespace ErsatzTV.Infrastructure.Plex
             return movie;
         }
 
-        private static string ConvertToSAR(double aspectRatio) => "1:1";
-        // TODO: fix this with more detailed stats pull from plex for each item
-        // Math.Abs(aspectRatio - 1) < 0.01 ? "1:1" : $"{(int) (aspectRatio * 100)}:100";
+        private Option<MediaVersion> ProjectToMediaVersion(PlexMetadataResponse response)
+        {
+            Option<PlexStreamResponse> maybeStream =
+                response.Media.Head().Part.Head().Stream.Find(s => s.StreamType == 1);
+            return maybeStream.Map(
+                stream => new MediaVersion
+                {
+                    SampleAspectRatio = stream.PixelAspectRatio,
+                    VideoScanKind = stream.ScanType switch
+                    {
+                        "interlaced" => VideoScanKind.Interlaced,
+                        "progressive" => VideoScanKind.Progressive,
+                        _ => VideoScanKind.Unknown
+                    }
+                });
+        }
     }
 }
