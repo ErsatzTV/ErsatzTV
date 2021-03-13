@@ -9,7 +9,7 @@
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
 @inject IEntityLocker Locker
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_libraries" Dense="true">
         <ToolBarContent>
             <MudText Typo="Typo.h6"><b>@_source.Name</b> Libraries</MudText>

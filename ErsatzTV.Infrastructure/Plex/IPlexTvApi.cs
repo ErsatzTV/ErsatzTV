@@ -34,7 +34,7 @@ namespace ErsatzTV.Infrastructure.Plex
             [Query] [AliasAs("X-Plex-Token")]
             string token);
 
-        [Get("/resources")]
+        [Get("/resources?includeHttps=1")]
         Task<List<PlexResource>> GetResources(
             [Header("X-Plex-Client-Identifier")]
             string clientIdentifier,
