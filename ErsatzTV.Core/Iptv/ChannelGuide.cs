@@ -121,10 +121,6 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteStartElement("previously-shown");
                     xml.WriteEndElement(); // previously-shown
 
-                    xml.WriteStartElement("sub-title");
-                    xml.WriteAttributeString("lang", "en");
-                    xml.WriteEndElement(); // sub-title
-
                     if (playoutItem.MediaItem is Episode episode)
                     {
                         int s = Optional(episode.Season?.SeasonNumber).IfNone(0);
