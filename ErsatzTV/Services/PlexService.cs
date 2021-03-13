@@ -46,13 +46,7 @@ namespace ErsatzTV.Services
                 FileSystemLayout.PlexSecretsPath);
 
             // synchronize sources on startup
-            List<PlexMediaSource> sources = await SynchronizeSources(
-                new SynchronizePlexMediaSources(),
-                cancellationToken);
-            foreach (PlexMediaSource source in sources)
-            {
-                await SynchronizeLibraries(new SynchronizePlexLibraries(source.Id), cancellationToken);
-            }
+            await SynchronizeSources(new SynchronizePlexMediaSources(), cancellationToken);
 
             await foreach (IPlexBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
             {
@@ -63,6 +57,9 @@ namespace ErsatzTV.Services
                         TryCompletePlexPinFlow pinRequest => CompletePinFlow(pinRequest, cancellationToken),
                         SynchronizePlexMediaSources sourcesRequest => SynchronizeSources(
                             sourcesRequest,
+                            cancellationToken),
+                        SynchronizePlexLibraries synchronizePlexLibrariesRequest => SynchronizeLibraries(
+                            synchronizePlexLibrariesRequest,
                             cancellationToken),
                         _ => throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}")
                     };
