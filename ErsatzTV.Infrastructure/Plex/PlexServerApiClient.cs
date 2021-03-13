@@ -121,7 +121,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
-                Genres = response.Genre.Map(g => new Genre { Name = g.Tag }).ToList()
+                Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Thumb))
