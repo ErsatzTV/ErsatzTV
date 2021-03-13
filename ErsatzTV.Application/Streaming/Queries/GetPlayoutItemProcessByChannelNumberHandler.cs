@@ -6,10 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
@@ -17,6 +20,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
     {
         private readonly FFmpegProcessService _ffmpegProcessService;
+        private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlayoutRepository _playoutRepository;
@@ -27,12 +31,14 @@ namespace ErsatzTV.Application.Streaming.Queries
             IPlayoutRepository playoutRepository,
             IMediaSourceRepository mediaSourceRepository,
             FFmpegProcessService ffmpegProcessService,
+            ILocalFileSystem localFileSystem,
             ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
             : base(channelRepository, configElementRepository)
         {
             _playoutRepository = playoutRepository;
             _mediaSourceRepository = mediaSourceRepository;
             _ffmpegProcessService = ffmpegProcessService;
+            _localFileSystem = localFileSystem;
             _logger = logger;
         }
 
@@ -42,47 +48,122 @@ namespace ErsatzTV.Application.Streaming.Queries
             string ffmpegPath)
         {
             DateTimeOffset now = DateTimeOffset.Now;
-            Option<PlayoutItem> maybePlayoutItem = await _playoutRepository.GetPlayoutItem(channel.Id, now);
-            return await maybePlayoutItem.Match<Task<Either<BaseError, Process>>>(
-                async playoutItem =>
+            Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await _playoutRepository
+                .GetPlayoutItem(channel.Id, now)
+                .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
+                .BindT(ValidatePlayoutItemPath);
+
+            return await maybePlayoutItem.Match(
+                playoutItemWithPath =>
                 {
-                    MediaVersion version = playoutItem.MediaItem switch
+                    MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem switch
                     {
                         Movie m => m.MediaVersions.Head(),
                         Episode e => e.MediaVersions.Head(),
-                        _ => throw new ArgumentOutOfRangeException(nameof(playoutItem))
+                        _ => throw new ArgumentOutOfRangeException(nameof(playoutItemWithPath))
                     };
 
-                    MediaFile file = version.MediaFiles.Head();
-                    string path = file.Path;
-                    if (playoutItem.MediaItem is PlexMovie plexMovie)
-                    {
-                        path = await GetReplacementPlexPath(plexMovie.LibraryPathId, path);
-                    }
-
-                    return _ffmpegProcessService.ForPlayoutItem(
-                        ffmpegPath,
-                        channel,
-                        version,
-                        path,
-                        playoutItem.StartOffset,
-                        now);
+                    return Right<BaseError, Process>(
+                        _ffmpegProcessService.ForPlayoutItem(
+                            ffmpegPath,
+                            channel,
+                            version,
+                            playoutItemWithPath.Path,
+                            playoutItemWithPath.PlayoutItem.StartOffset,
+                            now)).AsTask();
                 },
-                async () =>
+                async error =>
                 {
-                    if (channel.FFmpegProfile.Transcode)
+                    var offlineTranscodeMessage =
+                        $"offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'";
+
+                    Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
+                        .Filter(transcode => transcode)
+                        .Match(
+                            _ => _playoutRepository.GetNextItemStart(channel.Id, now)
+                                .MapT(nextStart => nextStart - now),
+                            () => Option<TimeSpan>.None.AsTask());
+
+                    switch (error)
                     {
-                        Option<TimeSpan> maybeDuration = await _playoutRepository.GetNextItemStart(channel.Id, now)
-                            .MapT(nextStart => nextStart - now);
+                        case UnableToLocatePlayoutItem:
+                            if (channel.FFmpegProfile.Transcode)
+                            {
+                                return _ffmpegProcessService.ForError(
+                                    ffmpegPath,
+                                    channel,
+                                    maybeDuration,
+                                    "Channel is Offline");
+                            }
+                            else
+                            {
+                                var message =
+                                    $"Unable to locate playout item for channel {channel.Number}; {offlineTranscodeMessage}";
 
-                        return _ffmpegProcessService.ForOfflineImage(ffmpegPath, channel, maybeDuration);
+                                return BaseError.New(message);
+                            }
+                        case PlayoutItemDoesNotExistOnDisk:
+                            if (channel.FFmpegProfile.Transcode)
+                            {
+                                return _ffmpegProcessService.ForError(ffmpegPath, channel, maybeDuration, error.Value);
+                            }
+                            else
+                            {
+                                var message =
+                                    $"Playout item does not exist on disk for channel {channel.Number}; {offlineTranscodeMessage}";
+
+                                return BaseError.New(message);
+                            }
+                        default:
+                            if (channel.FFmpegProfile.Transcode)
+                            {
+                                return _ffmpegProcessService.ForError(
+                                    ffmpegPath,
+                                    channel,
+                                    maybeDuration,
+                                    "Channel is Offline");
+                            }
+                            else
+                            {
+                                var message =
+                                    $"Unexpected error locating playout item for channel {channel.Number}; {offlineTranscodeMessage}";
+
+                                return BaseError.New(message);
+                            }
                     }
-
-                    var message =
-                        $"Unable to locate playout item for channel {channel.Number}; offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'";
-
-                    return BaseError.New(message);
                 });
+        }
+
+        private async Task<Either<BaseError, PlayoutItemWithPath>> ValidatePlayoutItemPath(PlayoutItem playoutItem)
+        {
+            string path = await GetPlayoutItemPath(playoutItem);
+
+            // TODO: this won't work with url streaming from plex
+            if (_localFileSystem.FileExists(path))
+            {
+                return new PlayoutItemWithPath(playoutItem, path);
+            }
+
+            return new PlayoutItemDoesNotExistOnDisk(path);
+        }
+
+        private async Task<string> GetPlayoutItemPath(PlayoutItem playoutItem)
+        {
+            MediaVersion version = playoutItem.MediaItem switch
+            {
+                Movie m => m.MediaVersions.Head(),
+                Episode e => e.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(playoutItem))
+            };
+
+            MediaFile file = version.MediaFiles.Head();
+            string path = file.Path;
+            if (playoutItem.MediaItem is PlexMovie plexMovie)
+            {
+                path = await GetReplacementPlexPath(plexMovie.LibraryPathId, path);
+            }
+
+            return path;
         }
 
         private async Task<string> GetReplacementPlexPath(int libraryPathId, string path)
@@ -105,5 +186,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                 },
                 () => path);
         }
+
+        private record PlayoutItemWithPath(PlayoutItem PlayoutItem, string Path);
     }
 }
