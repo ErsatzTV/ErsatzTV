@@ -64,9 +64,17 @@ namespace ErsatzTV.Core.Iptv
                     {
                         Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title ?? string.Empty)
                             .IfNone("[unknown movie]"),
-                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Title ?? string.Empty)
-                            .IfNone("[unknown episode]"),
+                        Episode e => e.Season.Show.ShowMetadata.HeadOrNone().Map(em => em.Title ?? string.Empty)
+                            .IfNone("[unknown show]"),
                         _ => "[unknown]"
+                    };
+
+                    string subtitle = playoutItem.MediaItem switch
+                    {
+                        Episode e => e.EpisodeMetadata.HeadOrNone().Match(
+                            em => em.Title ?? string.Empty,
+                            () => string.Empty),
+                        _ => string.Empty
                     };
 
                     string description = playoutItem.MediaItem switch
@@ -89,10 +97,26 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteAttributeString("stop", stop);
                     xml.WriteAttributeString("channel", channel.Number);
 
+                    if (playoutItem.MediaItem is Movie)
+                    {
+                        xml.WriteStartElement("category");
+                        xml.WriteAttributeString("lang", "en");
+                        xml.WriteString("Movie");
+                        xml.WriteEndElement(); // category
+                    }
+
                     xml.WriteStartElement("title");
                     xml.WriteAttributeString("lang", "en");
                     xml.WriteString(title);
                     xml.WriteEndElement(); // title
+
+                    if (!string.IsNullOrWhiteSpace(subtitle))
+                    {
+                        xml.WriteStartElement("sub-title");
+                        xml.WriteAttributeString("lang", "en");
+                        xml.WriteString(subtitle);
+                        xml.WriteEndElement(); // subtitle
+                    }
 
                     xml.WriteStartElement("previously-shown");
                     xml.WriteEndElement(); // previously-shown
