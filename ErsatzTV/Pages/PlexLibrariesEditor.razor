@@ -28,16 +28,7 @@
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="MediaType">@context.MediaKind</MudTd>
             <MudTd DataLabel="Synchronize">
-                <div style="display: flex; justify-content: center">
-                    @if (context.ShouldSyncItems)
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => context.ShouldSyncItems = !context.ShouldSyncItems)">Yes</MudButton>
-                    }
-                    else
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Dark" OnClick="@(() => context.ShouldSyncItems = !context.ShouldSyncItems)">No</MudButton>
-                    }
-                </div>
+                <MudSwitch T="bool" @bind-Checked="@context.ShouldSyncItems" Color="Color.Primary" />
             </MudTd>
         </RowTemplate>
     </MudTable>
