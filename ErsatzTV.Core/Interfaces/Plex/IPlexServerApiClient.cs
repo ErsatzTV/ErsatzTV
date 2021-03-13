@@ -16,5 +16,10 @@ namespace ErsatzTV.Core.Interfaces.Plex
             PlexLibrary library,
             PlexConnection connection,
             PlexServerAuthToken token);
+
+        Task<Either<BaseError, MediaVersion>> GetStatistics(
+            PlexMovie movie,
+            PlexConnection connection,
+            PlexServerAuthToken token);
     }
 }

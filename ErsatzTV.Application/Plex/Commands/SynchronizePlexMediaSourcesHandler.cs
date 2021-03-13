@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -15,15 +17,21 @@ namespace ErsatzTV.Application.Plex.Commands
         SynchronizePlexMediaSourcesHandler : IRequestHandler<SynchronizePlexMediaSources,
             Either<BaseError, List<PlexMediaSource>>>
     {
+        private readonly ChannelWriter<IPlexBackgroundServiceRequest> _channel;
+        private readonly IEntityLocker _entityLocker;
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlexTvApiClient _plexTvApiClient;
 
         public SynchronizePlexMediaSourcesHandler(
             IMediaSourceRepository mediaSourceRepository,
-            IPlexTvApiClient plexTvApiClient)
+            IPlexTvApiClient plexTvApiClient,
+            ChannelWriter<IPlexBackgroundServiceRequest> channel,
+            IEntityLocker entityLocker)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _plexTvApiClient = plexTvApiClient;
+            _channel = channel;
+            _entityLocker = entityLocker;
         }
 
         public Task<Either<BaseError, List<PlexMediaSource>>> Handle(
@@ -38,6 +46,13 @@ namespace ErsatzTV.Application.Plex.Commands
             {
                 await SynchronizeServer(allExisting, server);
             }
+
+            foreach (PlexMediaSource mediaSource in await _mediaSourceRepository.GetAllPlex())
+            {
+                await _channel.WriteAsync(new SynchronizePlexLibraries(mediaSource.Id));
+            }
+
+            _entityLocker.UnlockPlex();
 
             return allExisting;
         }

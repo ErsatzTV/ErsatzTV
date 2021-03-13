@@ -32,12 +32,6 @@ namespace ErsatzTV.Infrastructure.Plex
                     tokens => tokens.Map(kvp => new PlexUserAuthToken(kvp.Key, kvp.Value)).ToList(),
                     () => new List<PlexUserAuthToken>()));
 
-        public Task<List<PlexServerAuthToken>> GetServerAuthTokens() =>
-            ReadSecrets().Map(
-                s => Optional(s.ServerAuthTokens).Match(
-                    tokens => tokens.Map(kvp => new PlexServerAuthToken(kvp.Key, kvp.Value)).ToList(),
-                    () => new List<PlexServerAuthToken>()));
-
         public Task<Option<PlexServerAuthToken>> GetServerAuthToken(string clientIdentifier) =>
             ReadSecrets().Map(
                 s => Optional(s.ServerAuthTokens.SingleOrDefault(kvp => kvp.Key == clientIdentifier))
@@ -60,6 +54,9 @@ namespace ErsatzTV.Infrastructure.Plex
                     secrets.ServerAuthTokens[serverAuthToken.ClientIdentifier] = serverAuthToken.AuthToken;
                     return SaveSecrets(secrets);
                 });
+
+        public Task<Unit> DeleteAll() =>
+            ReadSecrets().Bind(secrets => SaveSecrets(new PlexSecrets { ClientIdentifier = secrets.ClientIdentifier }));
 
         private static Task<PlexSecrets> ReadSecrets() =>
             File.ReadAllTextAsync(FileSystemLayout.PlexSecretsPath)

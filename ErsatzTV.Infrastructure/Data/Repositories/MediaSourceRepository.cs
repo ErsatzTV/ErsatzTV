@@ -160,12 +160,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
-        public async Task Delete(int id)
+        public async Task Delete(int mediaSourceId)
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
-            MediaSource mediaSource = await context.MediaSources.FindAsync(id);
+            MediaSource mediaSource = await context.MediaSources.FindAsync(mediaSourceId);
             context.MediaSources.Remove(mediaSource);
             await context.SaveChangesAsync();
+        }
+
+        public async Task<Unit> DeleteAllPlex()
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            List<PlexMediaSource> allMediaSources = await context.PlexMediaSources.ToListAsync();
+            context.PlexMediaSources.RemoveRange(allMediaSources);
+            await context.SaveChangesAsync();
+            return Unit.Default;
         }
 
         public async Task DisablePlexLibrarySync(List<int> libraryIds)

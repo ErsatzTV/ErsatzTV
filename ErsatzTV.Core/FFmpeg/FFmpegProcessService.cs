@@ -84,7 +84,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .Build();
         }
 
-        public Process ForOfflineImage(string ffmpegPath, Channel channel, Option<TimeSpan> duration)
+        public Process ForError(string ffmpegPath, Channel channel, Option<TimeSpan> duration, string errorMessage)
         {
             FFmpegPlaybackSettings playbackSettings =
                 _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
@@ -99,7 +99,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithLoopedImage("Resources/background.png")
                 .WithLibavfilter()
                 .WithInput("anullsrc")
-                .WithErrorText(desiredResolution, "Channel is Offline")
+                .WithErrorText(desiredResolution, errorMessage)
                 .WithPixfmt("yuv420p")
                 .WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel)
