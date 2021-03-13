@@ -73,7 +73,7 @@ namespace ErsatzTV.Controllers
                         response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
                 });
         }
-        
+
         [HttpGet("/artwork/fanart/plex/{plexMediaSourceId}/{*path}")]
         public async Task<IActionResult> GetPlexFanArt(int plexMediaSourceId, string path)
         {

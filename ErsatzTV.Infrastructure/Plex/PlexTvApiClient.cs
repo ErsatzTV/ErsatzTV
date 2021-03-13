@@ -38,17 +38,17 @@ namespace ErsatzTV.Infrastructure.Plex
                         0,
                         clientIdentifier,
                         token.AuthToken);
-                    
+
                     List<PlexResource> httpsResources = await _plexTvApi.GetResources(
                         1,
                         clientIdentifier,
                         token.AuthToken);
 
 
-                    List<PlexResource> allResources = httpResources.Filter(resource => resource.HttpsRequired == false)
+                    var allResources = httpResources.Filter(resource => resource.HttpsRequired == false)
                         .Append(httpsResources.Filter(resource => resource.HttpsRequired))
                         .ToList();
-                    
+
                     IEnumerable<PlexMediaSource> sources = allResources
                         .Filter(r => r.Provides.Split(",").Any(p => p == "server"))
                         .Filter(r => r.Owned) // TODO: maybe support non-owned servers in the future
@@ -63,7 +63,7 @@ namespace ErsatzTV.Infrastructure.Plex
                                 List<PlexResourceConnection> sortedConnections = resource.HttpsRequired
                                     ? resource.Connections
                                     : resource.Connections.OrderBy(c => c.Local ? 0 : 1).ToList();
-                                
+
                                 var source = new PlexMediaSource
                                 {
                                     ServerName = resource.Name,
