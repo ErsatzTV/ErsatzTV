@@ -12,13 +12,30 @@ namespace ErsatzTV.Core.Interfaces.Plex
             PlexConnection connection,
             PlexServerAuthToken token);
 
-        Task<Either<BaseError, List<PlexMovie>>> GetLibraryContents(
+        Task<Either<BaseError, List<PlexMovie>>> GetMovieLibraryContents(
             PlexLibrary library,
             PlexConnection connection,
             PlexServerAuthToken token);
 
+        Task<Either<BaseError, List<PlexShow>>> GetShowLibraryContents(
+            PlexLibrary library,
+            PlexConnection connection,
+            PlexServerAuthToken token);
+
+        Task<Either<BaseError, List<PlexSeason>>> GetShowSeasons(
+            PlexLibrary library,
+            PlexShow show,
+            PlexConnection connection,
+            PlexServerAuthToken token);
+
+        Task<Either<BaseError, List<PlexEpisode>>> GetSeasonEpisodes(
+            PlexLibrary library,
+            PlexSeason season,
+            PlexConnection connection,
+            PlexServerAuthToken token);
+
         Task<Either<BaseError, MediaVersion>> GetStatistics(
-            PlexMovie movie,
+            string key,
             PlexConnection connection,
             PlexServerAuthToken token);
     }
