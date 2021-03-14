@@ -11,5 +11,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<MediaItem>> GetAll();
         Task<List<MediaItem>> Search(string searchString);
         Task<bool> Update(MediaItem mediaItem);
+        Task<Unit> RemoveGenre(Genre genre);
+        Task<Unit> UpdateStatistics(MediaVersion mediaVersion);
     }
 }

@@ -75,5 +75,7 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item) =>
             throw new NotSupportedException();
+
+        public Task<Unit> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
     }
 }

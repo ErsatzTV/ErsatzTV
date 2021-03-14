@@ -359,6 +359,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 async () => await AddPlexEpisode(context, library, item));
         }
 
+        public Task<Unit> AddGenre(ShowMetadata metadata, Genre genre) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Genre (Name, SeasonMetadataId) VALUES (@Name, @MetadataId)",
+                new { genre.Name, MetadataId = metadata.Id }).ToUnit();
+
         public async Task<List<Episode>> GetShowItems(int showId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(

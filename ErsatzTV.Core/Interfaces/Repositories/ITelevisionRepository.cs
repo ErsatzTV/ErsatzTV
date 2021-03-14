@@ -35,5 +35,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item);
         Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item);
         Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item);
+        Task<Unit> AddGenre(ShowMetadata metadata, Genre genre);
     }
 }

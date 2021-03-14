@@ -117,14 +117,14 @@ namespace ErsatzTV.Infrastructure.Plex
         }
 
         public async Task<Either<BaseError, MediaVersion>> GetStatistics(
-            PlexMovie movie,
+            string key,
             PlexConnection connection,
             PlexServerAuthToken token)
         {
             try
             {
                 IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
-                return await service.GetMetadata(movie.Key.Split("/").Last(), token.AuthToken)
+                return await service.GetMetadata(key, token.AuthToken)
                     .Map(
                         r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0)
                             .HeadOrNone())
