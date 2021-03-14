@@ -56,6 +56,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(i => (i as Episode).Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .Include(c => c.Playouts)
                 .ThenInclude(p => p.Items)
                 .ThenInclude(i => i.MediaItem)

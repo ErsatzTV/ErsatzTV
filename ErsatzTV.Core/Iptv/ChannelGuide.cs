@@ -152,6 +152,26 @@ namespace ErsatzTV.Core.Iptv
 
                     if (playoutItem.MediaItem is Episode episode)
                     {
+                        Option<ShowMetadata> maybeMetadata =
+                            Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten();
+                        if (maybeMetadata.IsSome)
+                        {
+                            ShowMetadata metadata = maybeMetadata.ValueUnsafe();
+                            string poster = Optional(metadata.Artwork).Flatten()
+                                .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
+                                .HeadOrNone()
+                                .Match(
+                                    artwork => $"{_scheme}://{_host}/artwork/posters/{artwork.Path}",
+                                    () => string.Empty);
+
+                            if (!string.IsNullOrWhiteSpace(poster))
+                            {
+                                xml.WriteStartElement("icon");
+                                xml.WriteAttributeString("src", poster);
+                                xml.WriteEndElement(); // icon
+                            }
+                        }
+
                         int s = Optional(episode.Season?.SeasonNumber).IfNone(0);
                         int e = episode.EpisodeNumber;
                         if (s > 0 && e > 0)
