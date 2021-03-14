@@ -45,7 +45,6 @@ namespace ErsatzTV.Core.Plex
                 {
                     foreach (PlexShow incoming in showEntries)
                     {
-                        // TODO: optimize dbcontext use here, do we need tracking? can we make partial updates with dapper?
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexShow> maybeShow = await _televisionRepository
                             .GetOrAddPlexShow(plexMediaSourceLibrary, incoming)
@@ -64,7 +63,8 @@ namespace ErsatzTV.Core.Plex
                             });
                     }
 
-                    // TODO: delete removed shows
+                    var showKeys = showEntries.Map(s => s.Key).ToList();
+                    await _televisionRepository.RemoveMissingPlexShows(plexMediaSourceLibrary, showKeys);
 
                     return Unit.Default;
                 },
@@ -141,7 +141,6 @@ namespace ErsatzTV.Core.Plex
                     {
                         incoming.ShowId = show.Id;
 
-                        // TODO: optimize dbcontext use here, do we need tracking? can we make partial updates with dapper?
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexSeason> maybeSeason = await _televisionRepository
                             .GetOrAddPlexSeason(plexMediaSourceLibrary, incoming)
@@ -159,7 +158,8 @@ namespace ErsatzTV.Core.Plex
                             });
                     }
 
-                    // TODO: delete removed seasons
+                    var seasonKeys = seasonEntries.Map(s => s.Key).ToList();
+                    await _televisionRepository.RemoveMissingPlexSeasons(show.Key, seasonKeys);
 
                     return Unit.Default;
                 },
@@ -206,7 +206,6 @@ namespace ErsatzTV.Core.Plex
                     {
                         incoming.SeasonId = season.Id;
 
-                        // TODO: optimize dbcontext use here, do we need tracking? can we make partial updates with dapper?
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexEpisode> maybeEpisode = await _televisionRepository
                             .GetOrAddPlexEpisode(plexMediaSourceLibrary, incoming)
@@ -220,7 +219,8 @@ namespace ErsatzTV.Core.Plex
                                 error.Value));
                     }
 
-                    // TODO: delete removed episodes
+                    var episodeKeys = episodeEntries.Map(s => s.Key).ToList();
+                    await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
 
                     return Unit.Default;
                 },

@@ -364,6 +364,35 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "INSERT INTO Genre (Name, SeasonMetadataId) VALUES (@Name, @MetadataId)",
                 new { genre.Name, MetadataId = metadata.Id }).ToUnit();
 
+        public Task<Unit> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys) =>
+            _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                WHERE lp.LibraryId = @LibraryId AND ps.Key not in @Keys)",
+                new { LibraryId = library.Id, Keys = showKeys }).ToUnit();
+        
+        public Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys) =>
+            _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN Season s ON m.Id = s.Id
+                INNER JOIN PlexSeason ps ON ps.Id = m.Id
+                INNER JOIN PlexShow P on P.Id = s.ShowId
+                WHERE P.Key = @ShowKey AND ps.Key not in @Keys)",
+                new { ShowKey = showKey, Keys = seasonKeys }).ToUnit();
+        
+        public Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
+            _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN Episode e ON m.Id = e.Id
+                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
+                INNER JOIN PlexSeason P on P.Id = e.SeasonId
+                WHERE P.Key = @SeasonKey AND pe.Key not in @Keys)",
+                new { SeasonKey = seasonKey, Keys = episodeKeys }).ToUnit();
+
         public async Task<List<Episode>> GetShowItems(int showId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(

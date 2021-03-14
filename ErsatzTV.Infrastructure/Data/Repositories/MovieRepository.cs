@@ -147,6 +147,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "INSERT INTO Genre (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { genre.Name, MetadataId = metadata.Id }).ToUnit();
 
+        public Task<Unit> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys) =>
+            _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                WHERE lp.LibraryId = @LibraryId AND pm.Key not in @Keys)",
+                new { LibraryId = library.Id, Keys = movieKeys }).ToUnit();
+
         private async Task<Either<BaseError, Movie>> AddMovie(int libraryPathId, string path)
         {
             try
