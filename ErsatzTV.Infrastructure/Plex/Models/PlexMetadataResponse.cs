@@ -14,6 +14,7 @@ namespace ErsatzTV.Infrastructure.Plex.Models
         public string OriginallyAvailableAt { get; set; }
         public int AddedAt { get; set; }
         public int UpdatedAt { get; set; }
+        public int Index { get; set; }
         public List<PlexMediaResponse> Media { get; set; }
         public List<PlexGenreResponse> Genre { get; set; }
     }

@@ -42,7 +42,7 @@ namespace ErsatzTV.Infrastructure.Plex
             }
         }
 
-        public async Task<Either<BaseError, List<PlexMovie>>> GetLibraryContents(
+        public async Task<Either<BaseError, List<PlexMovie>>> GetMovieLibraryContents(
             PlexLibrary library,
             PlexConnection connection,
             PlexServerAuthToken token)
@@ -59,6 +59,44 @@ namespace ErsatzTV.Infrastructure.Plex
                 return BaseError.New(ex.Message);
             }
         }
+
+        public async Task<Either<BaseError, List<PlexShow>>> GetShowLibraryContents(
+            PlexLibrary library,
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            try
+            {
+                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
+                return await service.GetLibrarySectionContents(library.Key, token.AuthToken)
+                    .Map(r => r.MediaContainer.Metadata)
+                    .Map(list => list.Map(metadata => ProjectToShow(metadata, library.MediaSourceId)).ToList());
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        public async Task<Either<BaseError, List<PlexSeason>>> GetShowSeasons(
+            PlexLibrary library,
+            PlexShow show,
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            try
+            {
+                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
+                return await service.GetChildren(show.Key.Split("/").Reverse().Skip(1).Head(), token.AuthToken)
+                    .Map(r => r.MediaContainer.Metadata)
+                    .Map(list => list.Map(metadata => ProjectToSeason(metadata, library.MediaSourceId)).ToList());
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
+
 
         public async Task<Either<BaseError, MediaVersion>> GetStatistics(
             PlexMovie movie,
@@ -201,6 +239,117 @@ namespace ErsatzTV.Infrastructure.Plex
                         _ => VideoScanKind.Unknown
                     }
                 });
+        }
+
+        private PlexShow ProjectToShow(PlexMetadataResponse response, int mediaSourceId)
+        {
+            DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
+            DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+
+            var metadata = new ShowMetadata
+            {
+                Title = response.Title,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+                Plot = response.Summary,
+                ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt),
+                Year = response.Year,
+                Tagline = response.Tagline,
+                DateAdded = dateAdded,
+                DateUpdated = lastWriteTime,
+                Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList()
+            };
+
+            if (!string.IsNullOrWhiteSpace(response.Thumb))
+            {
+                var path = $"plex/{mediaSourceId}{response.Thumb}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Poster,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.Art))
+            {
+                var path = $"plex/{mediaSourceId}{response.Art}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.FanArt,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
+
+            var show = new PlexShow
+            {
+                Key = response.Key,
+                ShowMetadata = new List<ShowMetadata> { metadata }
+            };
+
+            return show;
+        }
+
+        private PlexSeason ProjectToSeason(PlexMetadataResponse response, int mediaSourceId)
+        {
+            DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
+            DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+
+            var metadata = new SeasonMetadata
+            {
+                Title = response.Title,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+                Year = response.Year,
+                DateAdded = dateAdded,
+                DateUpdated = lastWriteTime
+            };
+
+            if (!string.IsNullOrWhiteSpace(response.Thumb))
+            {
+                var path = $"plex/{mediaSourceId}{response.Thumb}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Poster,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.Art))
+            {
+                var path = $"plex/{mediaSourceId}{response.Art}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.FanArt,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
+
+            var season = new PlexSeason
+            {
+                Key = response.Key,
+                SeasonNumber = response.Index,
+                SeasonMetadata = new List<SeasonMetadata> { metadata }
+            };
+
+            return season;
         }
     }
 }

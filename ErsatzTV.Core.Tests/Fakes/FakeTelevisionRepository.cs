@@ -66,5 +66,11 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath) => throw new NotSupportedException();
 
         public Task<Unit> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
+
+        public Task<Either<BaseError, PlexShow>> GetOrAdd(PlexLibrary library, PlexShow item) =>
+            throw new NotSupportedException();
+
+        public Task<Either<BaseError, PlexSeason>> GetOrAdd(PlexLibrary library, PlexSeason item) =>
+            throw new NotSupportedException();
     }
 }

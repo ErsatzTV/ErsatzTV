@@ -24,17 +24,20 @@ namespace ErsatzTV.Application.Plex.Commands
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlexMovieLibraryScanner _plexMovieLibraryScanner;
         private readonly IPlexSecretStore _plexSecretStore;
+        private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
 
         public SynchronizePlexLibraryByIdHandler(
             IMediaSourceRepository mediaSourceRepository,
             IPlexSecretStore plexSecretStore,
             IPlexMovieLibraryScanner plexMovieLibraryScanner,
+            IPlexTelevisionLibraryScanner plexTelevisionLibraryScanner,
             IEntityLocker entityLocker,
             ILogger<SynchronizePlexLibraryByIdHandler> logger)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _plexSecretStore = plexSecretStore;
             _plexMovieLibraryScanner = plexMovieLibraryScanner;
+            _plexTelevisionLibraryScanner = plexTelevisionLibraryScanner;
             _entityLocker = entityLocker;
             _logger = logger;
         }
@@ -67,8 +70,10 @@ namespace ErsatzTV.Application.Plex.Commands
                             parameters.Library);
                         break;
                     case LibraryMediaKind.Shows:
-                        // TODO: plex tv scanner
-                        // await _televisionFolderScanner.ScanFolder(parameters.LocalMediaSource, parameters.FFprobePath);
+                        await _plexTelevisionLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection,
+                            parameters.ConnectionParameters.PlexServerAuthToken,
+                            parameters.Library);
                         break;
                 }
 

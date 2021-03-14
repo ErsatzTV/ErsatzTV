@@ -31,7 +31,7 @@ namespace ErsatzTV.Core.Plex
             PlexServerAuthToken token,
             PlexLibrary plexMediaSourceLibrary)
         {
-            Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetLibraryContents(
+            Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetMovieLibraryContents(
                 plexMediaSourceLibrary,
                 connection,
                 token);
@@ -70,8 +70,6 @@ namespace ErsatzTV.Core.Plex
 
                     return Task.CompletedTask;
                 });
-
-            // need plex media item model that can be used to lookup by unique id (metadata key?)
 
             return Unit.Default;
         }

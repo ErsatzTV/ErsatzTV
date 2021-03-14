@@ -195,6 +195,33 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN Library l ON l.Id = lp.LibraryId
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexSeason ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
         }
 
         public Task EnablePlexLibrarySync(IEnumerable<int> libraryIds) =>
