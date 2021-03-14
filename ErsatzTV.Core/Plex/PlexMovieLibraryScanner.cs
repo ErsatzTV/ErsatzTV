@@ -10,7 +10,7 @@ using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Plex
 {
-    public class PlexMovieLibraryScanner : IPlexMovieLibraryScanner
+    public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScanner
     {
         private readonly ILogger<PlexMovieLibraryScanner> _logger;
         private readonly IMovieRepository _movieRepository;
@@ -19,7 +19,9 @@ namespace ErsatzTV.Core.Plex
         public PlexMovieLibraryScanner(
             IPlexServerApiClient plexServerApiClient,
             IMovieRepository movieRepository,
+            IMetadataRepository metadataRepository,
             ILogger<PlexMovieLibraryScanner> logger)
+            : base(metadataRepository)
         {
             _plexServerApiClient = plexServerApiClient;
             _movieRepository = movieRepository;
@@ -31,7 +33,7 @@ namespace ErsatzTV.Core.Plex
             PlexServerAuthToken token,
             PlexLibrary plexMediaSourceLibrary)
         {
-            Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetLibraryContents(
+            Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetMovieLibraryContents(
                 plexMediaSourceLibrary,
                 connection,
                 token);
@@ -71,8 +73,6 @@ namespace ErsatzTV.Core.Plex
                     return Task.CompletedTask;
                 });
 
-            // need plex media item model that can be used to lookup by unique id (metadata key?)
-
             return Unit.Default;
         }
 
@@ -89,7 +89,7 @@ namespace ErsatzTV.Core.Plex
                 string.IsNullOrWhiteSpace(existingVersion.SampleAspectRatio))
             {
                 Either<BaseError, MediaVersion> maybeStatistics =
-                    await _plexServerApiClient.GetStatistics(incoming, connection, token);
+                    await _plexServerApiClient.GetStatistics(incoming.Key.Split("/").Last(), connection, token);
 
                 maybeStatistics.IfRight(
                     mediaVersion =>
@@ -128,51 +128,18 @@ namespace ErsatzTV.Core.Plex
             return Right<BaseError, PlexMovie>(existing).AsTask();
         }
 
-        private Task<Either<BaseError, PlexMovie>> UpdateArtwork(PlexMovie existing, PlexMovie incoming)
+        private async Task<Either<BaseError, PlexMovie>> UpdateArtwork(PlexMovie existing, PlexMovie incoming)
         {
             MovieMetadata existingMetadata = existing.MovieMetadata.Head();
             MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
 
             if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
             {
-                UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
-                UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
+                await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
+                await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
             }
 
-            return Right<BaseError, PlexMovie>(existing).AsTask();
-        }
-
-        private void UpdateArtworkIfNeeded(
-            MovieMetadata existingMetadata,
-            MovieMetadata incomingMetadata,
-            ArtworkKind artworkKind)
-        {
-            Option<Artwork> maybeIncomingArtwork = Optional(incomingMetadata.Artwork).Flatten()
-                .Find(a => a.ArtworkKind == artworkKind);
-
-            maybeIncomingArtwork.Match(
-                incomingArtwork =>
-                {
-                    Option<Artwork> maybeExistingArtwork = Optional(existingMetadata.Artwork).Flatten()
-                        .Find(a => a.ArtworkKind == artworkKind);
-
-                    maybeExistingArtwork.Match(
-                        existingArtwork =>
-                        {
-                            existingArtwork.Path = incomingArtwork.Path;
-                            existingArtwork.DateUpdated = incomingArtwork.DateUpdated;
-                        },
-                        () =>
-                        {
-                            existingMetadata.Artwork ??= new List<Artwork>();
-                            existingMetadata.Artwork.Add(incomingArtwork);
-                        });
-                },
-                () =>
-                {
-                    existingMetadata.Artwork ??= new List<Artwork>();
-                    existingMetadata.Artwork.RemoveAll(a => a.ArtworkKind == artworkKind);
-                });
+            return existing;
         }
     }
 }

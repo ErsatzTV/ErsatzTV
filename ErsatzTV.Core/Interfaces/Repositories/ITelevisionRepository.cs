@@ -32,5 +32,9 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> DeleteByPath(LibraryPath libraryPath, string path);
         Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath);
         Task<Unit> DeleteEmptyShows(LibraryPath libraryPath);
+        Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item);
+        Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item);
+        Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item);
+        Task<Unit> AddGenre(ShowMetadata metadata, Genre genre);
     }
 }

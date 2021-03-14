@@ -158,12 +158,12 @@ namespace ErsatzTV.Application.Streaming.Queries
 
             MediaFile file = version.MediaFiles.Head();
             string path = file.Path;
-            if (playoutItem.MediaItem is PlexMovie plexMovie)
+            return playoutItem.MediaItem switch
             {
-                path = await GetReplacementPlexPath(plexMovie.LibraryPathId, path);
-            }
-
-            return path;
+                PlexMovie plexMovie => await GetReplacementPlexPath(plexMovie.LibraryPathId, path),
+                PlexEpisode plexEpisode => await GetReplacementPlexPath(plexEpisode.LibraryPathId, path),
+                _ => path
+            };
         }
 
         private async Task<string> GetReplacementPlexPath(int libraryPathId, string path)

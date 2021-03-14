@@ -17,11 +17,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     {
         private readonly IDbConnection _dbConnection;
         private readonly TvContext _dbContext;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public TelevisionRepository(TvContext dbContext, IDbConnection dbConnection)
+        public TelevisionRepository(
+            TvContext dbContext,
+            IDbConnection dbConnection,
+            IDbContextFactory<TvContext> dbContextFactory)
         {
             _dbContext = dbContext;
             _dbConnection = dbConnection;
+            _dbContextFactory = dbContextFactory;
         }
 
         public Task<bool> AllShowsExist(List<int> showIds) =>
@@ -305,6 +310,60 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     })
                 .ToUnit();
 
+        public async Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item)
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            Option<PlexShow> maybeExisting = await context.PlexShows
+                .AsNoTracking()
+                .Include(i => i.ShowMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(i => i.ShowMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .OrderBy(i => i.Key)
+                .SingleOrDefaultAsync(i => i.Key == item.Key);
+
+            return await maybeExisting.Match(
+                plexShow => Right<BaseError, PlexShow>(plexShow).AsTask(),
+                async () => await AddPlexShow(context, library, item));
+        }
+
+        public async Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item)
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            Option<PlexSeason> maybeExisting = await context.PlexSeasons
+                .AsNoTracking()
+                .Include(i => i.SeasonMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .OrderBy(i => i.Key)
+                .SingleOrDefaultAsync(i => i.Key == item.Key);
+
+            return await maybeExisting.Match(
+                plexSeason => Right<BaseError, PlexSeason>(plexSeason).AsTask(),
+                async () => await AddPlexSeason(context, library, item));
+        }
+
+        public async Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item)
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            Option<PlexEpisode> maybeExisting = await context.PlexEpisodes
+                .AsNoTracking()
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .OrderBy(i => i.Key)
+                .SingleOrDefaultAsync(i => i.Key == item.Key);
+
+            return await maybeExisting.Match(
+                plexEpisode => Right<BaseError, PlexEpisode>(plexEpisode).AsTask(),
+                async () => await AddPlexEpisode(context, library, item));
+        }
+
+        public Task<Unit> AddGenre(ShowMetadata metadata, Genre genre) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Genre (Name, SeasonMetadataId) VALUES (@Name, @MetadataId)",
+                new { genre.Name, MetadataId = metadata.Id }).ToUnit();
+
         public async Task<List<Episode>> GetShowItems(int showId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
@@ -375,6 +434,66 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 await _dbContext.Episodes.AddAsync(episode);
                 await _dbContext.SaveChangesAsync();
                 return episode;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        private async Task<Either<BaseError, PlexShow>> AddPlexShow(
+            TvContext context,
+            PlexLibrary library,
+            PlexShow item)
+        {
+            try
+            {
+                item.LibraryPathId = library.Paths.Head().Id;
+
+                await context.PlexShows.AddAsync(item);
+                await context.SaveChangesAsync();
+                await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
+                return item;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        private async Task<Either<BaseError, PlexSeason>> AddPlexSeason(
+            TvContext context,
+            PlexLibrary library,
+            PlexSeason item)
+        {
+            try
+            {
+                item.LibraryPathId = library.Paths.Head().Id;
+
+                await context.PlexSeasons.AddAsync(item);
+                await context.SaveChangesAsync();
+                await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
+                return item;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        private async Task<Either<BaseError, PlexEpisode>> AddPlexEpisode(
+            TvContext context,
+            PlexLibrary library,
+            PlexEpisode item)
+        {
+            try
+            {
+                item.LibraryPathId = library.Paths.Head().Id;
+
+                await context.PlexEpisodes.AddAsync(item);
+                await context.SaveChangesAsync();
+                await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
+                return item;
             }
             catch (Exception ex)
             {

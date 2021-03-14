@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -11,18 +12,30 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 {
     public class MediaItemRepository : IMediaItemRepository
     {
-        private readonly TvContext _dbContext;
+        private readonly IDbConnection _dbConnection;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public MediaItemRepository(TvContext dbContext) => _dbContext = dbContext;
+        public MediaItemRepository(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+        {
+            _dbContextFactory = dbContextFactory;
+            _dbConnection = dbConnection;
+        }
 
-        public Task<Option<MediaItem>> Get(int id) =>
-            _dbContext.MediaItems
+        public async Task<Option<MediaItem>> Get(int id)
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            return await context.MediaItems
                 .Include(i => i.LibraryPath)
                 .OrderBy(i => i.Id)
                 .SingleOrDefaultAsync(i => i.Id == id)
                 .Map(Optional);
+        }
 
-        public Task<List<MediaItem>> GetAll() => _dbContext.MediaItems.ToListAsync();
+        public async Task<List<MediaItem>> GetAll()
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            return await context.MediaItems.ToListAsync();
+        }
 
         public Task<List<MediaItem>> Search(string searchString) =>
             // TODO: fix this when we need to search
@@ -47,8 +60,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<bool> Update(MediaItem mediaItem)
         {
-            _dbContext.MediaItems.Update(mediaItem);
-            return await _dbContext.SaveChangesAsync() > 0;
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            context.MediaItems.Update(mediaItem);
+            return await context.SaveChangesAsync() > 0;
         }
     }
 }

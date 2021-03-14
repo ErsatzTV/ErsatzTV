@@ -13,6 +13,8 @@ using Map = LanguageExt.Map;
 
 namespace ErsatzTV.Core.Scheduling
 {
+    // TODO: these tests fail on days when offset changes
+    // because the change happens during the playout
     public class PlayoutBuilder : IPlayoutBuilder
     {
         private static readonly Random Random = new();
