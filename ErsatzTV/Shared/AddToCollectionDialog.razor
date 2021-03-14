@@ -1,8 +1,11 @@
 ﻿@using Microsoft.Extensions.Caching.Memory
 @using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
 @inject IMediator Mediator
 @inject IMemoryCache MemoryCache
+@inject ISnackbar Snackbar
+@inject ILogger<AddToCollectionDialog> Logger
 
 <MudDialog>
     <DialogContent>
@@ -18,10 +21,16 @@
                 <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
             }
         </MudSelect>
+        <MudTextFieldString Label="New Collection Name"
+                            Disabled="@(_selectedCollection != _newCollection)"
+                            @bind-Text="@_newCollectionName"
+                            Immediate="true"
+                            Class="mb-6 mx-4">
+        </MudTextFieldString>
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(_selectedCollection == null)" OnClick="Submit">
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!CanSubmit())" OnClick="Submit">
             Add To Collection
         </MudButton>
     </DialogActions>
@@ -44,25 +53,58 @@
     [Parameter]
     public string DetailHighlight { get; set; }
 
+    private readonly MediaCollectionViewModel _newCollection = new(-1, "(New Collection)");
+    private string _newCollectionName;
+
     private List<MediaCollectionViewModel> _collections;
 
     private MediaCollectionViewModel _selectedCollection;
 
+    private bool CanSubmit() =>
+        _selectedCollection != null && (_selectedCollection != _newCollection || !string.IsNullOrWhiteSpace(_newCollectionName));
+
     protected override async Task OnParametersSetAsync()
     {
-        _collections = await Mediator.Send(new GetAllCollections());
+        _collections = await Mediator.Send(new GetAllCollections())
+            .Map(list => new[] { _newCollection }.Append(list).ToList());
+
         if (MemoryCache.TryGetValue("AddToCollectionDialog.SelectedCollectionId", out int id))
         {
             _selectedCollection = _collections.SingleOrDefault(c => c.Id == id);
+        }
+        else
+        {
+            _selectedCollection = _newCollection;
         }
     }
 
     private string FormatText() => $"Select the collection to add the {EntityType} {EntityName}";
 
-    private void Submit()
+    private async Task Submit()
     {
-        MemoryCache.Set("AddToCollectionDialog.SelectedCollectionId", _selectedCollection.Id);
-        MudDialog.Close(DialogResult.Ok(_selectedCollection));
+        if (_selectedCollection == _newCollection)
+        {
+            Either<BaseError, MediaCollectionViewModel> maybeResult =
+                await Mediator.Send(new CreateCollection(_newCollectionName));
+
+            maybeResult.Match(
+                collection =>
+                {
+                    MemoryCache.Set("AddToCollectionDialog.SelectedCollectionId", collection.Id);
+                    MudDialog.Close(DialogResult.Ok(collection));
+                },
+                error =>
+                {
+                    Snackbar.Add(error.Value, Severity.Error);
+                    Logger.LogError("Error creating new collection: {Error}", error.Value);
+                    MudDialog.Close(DialogResult.Cancel());
+                });
+        }
+        else
+        {
+            MemoryCache.Set("AddToCollectionDialog.SelectedCollectionId", _selectedCollection.Id);
+            MudDialog.Close(DialogResult.Ok(_selectedCollection));
+        }
     }
 
     private void Cancel() => MudDialog.Cancel();
