@@ -13,18 +13,23 @@
         <ColGroup>
             <col/>
             <col/>
-            <col/>
             <col style="width: 120px;"/>
         </ColGroup>
         <HeaderContent>
-            <MudTh>Id</MudTh>
-            <MudTh>Channel</MudTh>
-            <MudTh>Schedule</MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<PlayoutViewModel, object>(x => decimal.Parse(x.Channel.Number))">
+                    Channel
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<PlayoutViewModel, object>(x => x.ProgramSchedule.Name)">
+                    Schedule
+                </MudTableSortLabel>
+            </MudTh>
             @* <MudTh>Playout Type</MudTh> *@
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Id">@context.Id</MudTd>
             <MudTd DataLabel="Channel">@context.Channel.Number - @context.Channel.Name</MudTd>
             <MudTd DataLabel="Schedule">@context.ProgramSchedule.Name</MudTd>
             @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
@@ -110,7 +115,8 @@
     }
 
     private async Task LoadAllPlayouts() =>
-        _playouts = await Mediator.Send(new GetAllPlayouts());
+        _playouts = await Mediator.Send(new GetAllPlayouts())
+            .Map(list => list.OrderBy(x => decimal.Parse(x.Channel.Number)).ToList());
 
 
 }
