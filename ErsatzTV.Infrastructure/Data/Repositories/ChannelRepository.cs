@@ -45,6 +45,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<Channel>> GetAllForGuide() =>
             _dbContext.Channels
+                .Include(c => c.Artwork)
                 .Include(c => c.Playouts)
                 .ThenInclude(p => p.Items)
                 .ThenInclude(i => i.MediaItem)
