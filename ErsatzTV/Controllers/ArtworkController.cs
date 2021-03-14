@@ -59,7 +59,7 @@ namespace ErsatzTV.Controllers
             GetPlexArtwork(
                 plexMediaSourceId,
                 $"/{path}");
-        
+
         [HttpGet("/artwork/thumbnails/plex/{plexMediaSourceId}/{*path}")]
         public Task<IActionResult> GetPlexThumbnail(int plexMediaSourceId, string path) =>
             GetPlexArtwork(
@@ -75,7 +75,7 @@ namespace ErsatzTV.Controllers
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));
         }
-        
+
         private async Task<IActionResult> GetPlexArtwork(int plexMediaSourceId, string transcodePath)
         {
             Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
