@@ -13,17 +13,14 @@
         <ColGroup>
             <col/>
             <col/>
-            <col/>
             <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
-            <MudTh>Id</MudTh>
             <MudTh>Name</MudTh>
             <MudTh>Collection Playback Order</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Id">@context.Id</MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Name">@context.MediaCollectionPlaybackOrder</MudTd>
             <MudTd>
@@ -88,7 +85,7 @@
     {
         _selectedSchedule = schedule;
         await Mediator.Send(new GetProgramScheduleItems(schedule.Id))
-            .IterT(results => _selectedScheduleItems = results.ToList());
+            .IterT(results => _selectedScheduleItems = results.OrderBy(x => x.Name).ToList());
     }
 
     private async Task DeleteSchedule(ProgramScheduleViewModel programSchedule)
