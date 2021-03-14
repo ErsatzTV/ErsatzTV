@@ -16,5 +16,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<MovieMetadata>> GetPagedMovies(int pageNumber, int pageSize);
         Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath);
         Task<Unit> DeleteByPath(LibraryPath libraryPath, string path);
+        Task<Unit> AddGenre(MovieMetadata metadata, Genre genre);
     }
 }
