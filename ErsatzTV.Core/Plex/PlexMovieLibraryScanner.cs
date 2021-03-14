@@ -13,6 +13,7 @@ namespace ErsatzTV.Core.Plex
     public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScanner
     {
         private readonly ILogger<PlexMovieLibraryScanner> _logger;
+        private readonly IMetadataRepository _metadataRepository;
         private readonly IMovieRepository _movieRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
 
@@ -25,6 +26,7 @@ namespace ErsatzTV.Core.Plex
         {
             _plexServerApiClient = plexServerApiClient;
             _movieRepository = movieRepository;
+            _metadataRepository = metadataRepository;
             _logger = logger;
         }
 
@@ -51,16 +53,11 @@ namespace ErsatzTV.Core.Plex
                             .BindT(existing => UpdateMetadata(existing, incoming))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
-                        await maybeMovie.Match(
-                            async movie => await _movieRepository.Update(movie),
-                            error =>
-                            {
-                                _logger.LogWarning(
-                                    "Error processing plex movie at {Key}: {Error}",
-                                    incoming.Key,
-                                    error.Value);
-                                return Task.CompletedTask;
-                            });
+                        maybeMovie.IfLeft(
+                            error => _logger.LogWarning(
+                                "Error processing plex movie at {Key}: {Error}",
+                                incoming.Key,
+                                error.Value));
                     }
                 },
                 error =>
@@ -91,13 +88,16 @@ namespace ErsatzTV.Core.Plex
                 Either<BaseError, MediaVersion> maybeStatistics =
                     await _plexServerApiClient.GetStatistics(incoming.Key.Split("/").Last(), connection, token);
 
-                maybeStatistics.IfRight(
-                    mediaVersion =>
+                await maybeStatistics.Match(
+                    async mediaVersion =>
                     {
                         existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio ?? "1:1";
                         existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
                         existingVersion.DateUpdated = incomingVersion.DateUpdated;
-                    });
+
+                        await _metadataRepository.UpdateStatistics(existingVersion);
+                    },
+                    _ => Task.CompletedTask);
             }
 
             return Right<BaseError, PlexMovie>(existing);
@@ -115,6 +115,7 @@ namespace ErsatzTV.Core.Plex
                     .ToList())
                 {
                     existingMetadata.Genres.Remove(genre);
+                    _metadataRepository.RemoveGenre(genre);
                 }
 
                 foreach (Genre genre in incomingMetadata.Genres
@@ -122,6 +123,7 @@ namespace ErsatzTV.Core.Plex
                     .ToList())
                 {
                     existingMetadata.Genres.Add(genre);
+                    _movieRepository.AddGenre(existingMetadata, genre);
                 }
             }
 
