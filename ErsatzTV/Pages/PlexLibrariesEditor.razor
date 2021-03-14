@@ -20,8 +20,16 @@
             <col style="width: 100px;"/>
         </ColGroup>
         <HeaderContent>
-            <MudTh>Name</MudTh>
-            <MudTh>Media Type</MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<PlexMediaSourceLibraryEditViewModel, object>(x => x.Name)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<PlexMediaSourceLibraryEditViewModel, object>(x => x.MediaKind)">
+                    Media Kind
+                </MudTableSortLabel>
+            </MudTh>
             <MudTh>Synchronize</MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -55,7 +63,7 @@
             {
                 _source = source;
                 _libraries = await Mediator.Send(new GetPlexLibrariesBySourceId(Id))
-                    .Map(list => list.Map(ProjectToEditViewModel).ToList());
+                    .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
             },
             () =>
             {
