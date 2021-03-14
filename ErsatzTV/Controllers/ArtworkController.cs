@@ -49,56 +49,22 @@ namespace ErsatzTV.Controllers
         }
 
         [HttpGet("/artwork/posters/plex/{plexMediaSourceId}/{*path}")]
-        public async Task<IActionResult> GetPlexPoster(int plexMediaSourceId, string path)
-        {
-            Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
-                await _mediator.Send(new GetPlexConnectionParameters(plexMediaSourceId));
-
-            return await connectionParameters.Match<Task<IActionResult>>(
-                Left: _ => new NotFoundResult().AsTask<IActionResult>(),
-                Right: async r =>
-                {
-                    HttpClient client = _httpClientFactory.CreateClient();
-                    client.DefaultRequestHeaders.Add("X-Plex-Token", r.AuthToken);
-
-                    var transcodePath = $"photo/:/transcode?url=/{path}&height=440&width=304&minSize=1&upscale=0";
-                    var fullPath = new Uri(r.Uri, transcodePath);
-                    HttpResponseMessage response = await client.GetAsync(
-                        fullPath,
-                        HttpCompletionOption.ResponseHeadersRead);
-                    Stream stream = await response.Content.ReadAsStreamAsync();
-
-                    return new FileStreamResult(
-                        stream,
-                        response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
-                });
-        }
+        public Task<IActionResult> GetPlexPoster(int plexMediaSourceId, string path) =>
+            GetPlexArtwork(
+                plexMediaSourceId,
+                $"photo/:/transcode?url=/{path}&height=440&width=304&minSize=1&upscale=0");
 
         [HttpGet("/artwork/fanart/plex/{plexMediaSourceId}/{*path}")]
-        public async Task<IActionResult> GetPlexFanArt(int plexMediaSourceId, string path)
-        {
-            Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
-                await _mediator.Send(new GetPlexConnectionParameters(plexMediaSourceId));
-
-            return await connectionParameters.Match<Task<IActionResult>>(
-                Left: _ => new NotFoundResult().AsTask<IActionResult>(),
-                Right: async r =>
-                {
-                    HttpClient client = _httpClientFactory.CreateClient();
-                    client.DefaultRequestHeaders.Add("X-Plex-Token", r.AuthToken);
-
-                    var transcodePath = $"/{path}";
-                    var fullPath = new Uri(r.Uri, transcodePath);
-                    HttpResponseMessage response = await client.GetAsync(
-                        fullPath,
-                        HttpCompletionOption.ResponseHeadersRead);
-                    Stream stream = await response.Content.ReadAsStreamAsync();
-
-                    return new FileStreamResult(
-                        stream,
-                        response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
-                });
-        }
+        public Task<IActionResult> GetPlexFanArt(int plexMediaSourceId, string path) =>
+            GetPlexArtwork(
+                plexMediaSourceId,
+                $"/{path}");
+        
+        [HttpGet("/artwork/thumbnails/plex/{plexMediaSourceId}/{*path}")]
+        public Task<IActionResult> GetPlexThumbnail(int plexMediaSourceId, string path) =>
+            GetPlexArtwork(
+                plexMediaSourceId,
+                $"photo/:/transcode?url=/{path}&height=220&width=392&minSize=1&upscale=0");
 
         [HttpGet("/artwork/thumbnails/{fileName}")]
         public async Task<IActionResult> GetThumbnail(string fileName)
@@ -108,6 +74,30 @@ namespace ErsatzTV.Controllers
             return imageContents.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
                 Right: r => new FileContentResult(r.Contents, r.MimeType));
+        }
+        
+        private async Task<IActionResult> GetPlexArtwork(int plexMediaSourceId, string transcodePath)
+        {
+            Either<BaseError, PlexConnectionParametersViewModel> connectionParameters =
+                await _mediator.Send(new GetPlexConnectionParameters(plexMediaSourceId));
+
+            return await connectionParameters.Match<Task<IActionResult>>(
+                Left: _ => new NotFoundResult().AsTask<IActionResult>(),
+                Right: async r =>
+                {
+                    HttpClient client = _httpClientFactory.CreateClient();
+                    client.DefaultRequestHeaders.Add("X-Plex-Token", r.AuthToken);
+
+                    var fullPath = new Uri(r.Uri, transcodePath);
+                    HttpResponseMessage response = await client.GetAsync(
+                        fullPath,
+                        HttpCompletionOption.ResponseHeadersRead);
+                    Stream stream = await response.Content.ReadAsStreamAsync();
+
+                    return new FileStreamResult(
+                        stream,
+                        response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
+                });
         }
     }
 }

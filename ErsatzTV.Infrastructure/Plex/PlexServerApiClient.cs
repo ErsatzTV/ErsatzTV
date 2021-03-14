@@ -97,6 +97,24 @@ namespace ErsatzTV.Infrastructure.Plex
             }
         }
 
+        public async Task<Either<BaseError, List<PlexEpisode>>> GetSeasonEpisodes(
+            PlexLibrary library,
+            PlexSeason season,
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            try
+            {
+                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
+                return await service.GetChildren(season.Key.Split("/").Reverse().Skip(1).Head(), token.AuthToken)
+                    .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
+                    .Map(list => list.Map(metadata => ProjectToEpisode(metadata, library.MediaSourceId)).ToList());
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
+        }
 
         public async Task<Either<BaseError, MediaVersion>> GetStatistics(
             PlexMovie movie,
@@ -350,6 +368,77 @@ namespace ErsatzTV.Infrastructure.Plex
             };
 
             return season;
+        }
+
+        private PlexEpisode ProjectToEpisode(PlexMetadataResponse response, int mediaSourceId)
+        {
+            PlexMediaResponse media = response.Media.Head();
+            PlexPartResponse part = media.Part.Head();
+            DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
+            DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+
+            var metadata = new EpisodeMetadata
+            {
+                Title = response.Title,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+                Plot = response.Summary,
+                Year = response.Year,
+                Tagline = response.Tagline,
+                DateAdded = dateAdded,
+                DateUpdated = lastWriteTime
+            };
+
+            if (!string.IsNullOrWhiteSpace(response.OriginallyAvailableAt))
+            {
+                metadata.ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt);
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.Thumb))
+            {
+                var path = $"plex/{mediaSourceId}{response.Thumb}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
+
+            var version = new MediaVersion
+            {
+                Name = "Main",
+                Duration = TimeSpan.FromMilliseconds(media.Duration),
+                Width = media.Width,
+                Height = media.Height,
+                AudioCodec = media.AudioCodec,
+                VideoCodec = media.VideoCodec,
+                VideoProfile = media.VideoProfile,
+                // specifically omit sample aspect ratio
+                DateUpdated = lastWriteTime,
+                MediaFiles = new List<MediaFile>
+                {
+                    new PlexMediaFile
+                    {
+                        PlexId = part.Id,
+                        Key = part.Key,
+                        Path = part.File
+                    }
+                }
+            };
+
+            var episode = new PlexEpisode
+            {
+                Key = response.Key,
+                EpisodeNumber = response.Index,
+                EpisodeMetadata = new List<EpisodeMetadata> { metadata },
+                MediaVersions = new List<MediaVersion> { version }
+            };
+
+            return episode;
         }
     }
 }
