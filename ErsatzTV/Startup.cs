@@ -196,6 +196,7 @@ namespace ErsatzTV
             services.AddScoped<ISearchRepository, SearchRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
             services.AddScoped<ILibraryRepository, LibraryRepository>();
+            services.AddScoped<IMetadataRepository, MetadataRepository>();
             services.AddScoped<IFFmpegLocator, FFmpegLocator>();
             services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
             services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();

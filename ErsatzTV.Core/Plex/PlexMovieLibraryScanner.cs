@@ -19,7 +19,9 @@ namespace ErsatzTV.Core.Plex
         public PlexMovieLibraryScanner(
             IPlexServerApiClient plexServerApiClient,
             IMovieRepository movieRepository,
+            IMetadataRepository metadataRepository,
             ILogger<PlexMovieLibraryScanner> logger)
+            : base(metadataRepository)
         {
             _plexServerApiClient = plexServerApiClient;
             _movieRepository = movieRepository;
@@ -126,18 +128,18 @@ namespace ErsatzTV.Core.Plex
             return Right<BaseError, PlexMovie>(existing).AsTask();
         }
 
-        private Task<Either<BaseError, PlexMovie>> UpdateArtwork(PlexMovie existing, PlexMovie incoming)
+        private async Task<Either<BaseError, PlexMovie>> UpdateArtwork(PlexMovie existing, PlexMovie incoming)
         {
             MovieMetadata existingMetadata = existing.MovieMetadata.Head();
             MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
 
             if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
             {
-                UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
-                UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
+                await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
+                await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
             }
 
-            return Right<BaseError, PlexMovie>(existing).AsTask();
+            return existing;
         }
     }
 }

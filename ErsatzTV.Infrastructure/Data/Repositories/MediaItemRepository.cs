@@ -65,23 +65,5 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             context.MediaItems.Update(mediaItem);
             return await context.SaveChangesAsync() > 0;
         }
-
-        public Task<Unit> RemoveGenre(Genre genre) =>
-            _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id }).ToUnit();
-
-        public Task<Unit> UpdateStatistics(MediaVersion mediaVersion) =>
-            _dbConnection.ExecuteAsync(
-                @"UPDATE MediaVersion SET
-                  SampleAspectRatio = @SampleAspectRatio,
-                  VideoScanKind = @VideoScanKind,
-                  DateUpdated = @DateUpdated
-                  WHERE Id = @MediaVersionId",
-                new
-                {
-                    mediaVersion.SampleAspectRatio,
-                    mediaVersion.VideoScanKind,
-                    mediaVersion.DateUpdated,
-                    MediaVersionId = mediaVersion.Id
-                }).ToUnit();
     }
 }
