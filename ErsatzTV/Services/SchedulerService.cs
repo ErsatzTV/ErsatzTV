@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
+using ErsatzTV.Application.Plex.Commands;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -54,6 +56,7 @@ namespace ErsatzTV.Services
         {
             await BuildPlayouts(cancellationToken);
             await ScanLocalMediaSources(cancellationToken);
+            await ScanPlexMediaSources(cancellationToken);
         }
 
         private async Task BuildPlayouts(CancellationToken cancellationToken)
@@ -87,21 +90,26 @@ namespace ErsatzTV.Services
                         cancellationToken);
                 }
             }
+        }
 
-            // List<PlexLibrary> plexLibraries = await dbContext.PlexLibraries
-            //     .Filter(l => l.ShouldSyncItems)
-            //     .ToListAsync(cancellationToken);
-            //
-            // foreach (PlexLibrary library in plexLibraries)
-            // {
-            //     // TODO: this locking won't work...
-            //     // if (_entityLocker.LockMediaSource(library.PlexMediaSourceId))
-            //     // {
-            //     // await _channel.WriteAsync(
-            //     //     new SynchronizePlexLibraryByIdIfNeeded(library.PlexMediaSourceId, library.Id),
-            //     //     cancellationToken);
-            //     // }
-            // }
+        private async Task ScanPlexMediaSources(CancellationToken cancellationToken)
+        {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+
+            List<PlexLibrary> plexLibraries = await dbContext.PlexLibraries
+                .Filter(l => l.ShouldSyncItems)
+                .ToListAsync(cancellationToken);
+
+            foreach (PlexLibrary library in plexLibraries)
+            {
+                if (_entityLocker.LockLibrary(library.Id))
+                {
+                    await _channel.WriteAsync(
+                        new SynchronizePlexLibraryByIdIfNeeded(library.Id),
+                        cancellationToken);
+                }
+            }
         }
     }
 }
