@@ -45,7 +45,6 @@ namespace ErsatzTV.Core.Plex
                 {
                     foreach (PlexMovie incoming in movieEntries)
                     {
-                        // TODO: optimize dbcontext use here, do we need tracking? can we make partial updates with dapper?
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexMovie> maybeMovie = await _movieRepository
                             .GetOrAdd(plexMediaSourceLibrary, incoming)
@@ -59,6 +58,9 @@ namespace ErsatzTV.Core.Plex
                                 incoming.Key,
                                 error.Value));
                     }
+
+                    var movieKeys = movieEntries.Map(s => s.Key).ToList();
+                    await _movieRepository.RemoveMissingPlexMovies(plexMediaSourceLibrary, movieKeys);
                 },
                 error =>
                 {
