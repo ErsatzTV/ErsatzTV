@@ -172,13 +172,17 @@ namespace ErsatzTV.Infrastructure.Plex
                 Title = response.Title,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
                 Plot = response.Summary,
-                ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt),
                 Year = response.Year,
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList()
             };
+
+            if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
+            {
+                metadata.ReleaseDate = releaseDate;
+            }
 
             if (!string.IsNullOrWhiteSpace(response.Thumb))
             {
@@ -269,13 +273,17 @@ namespace ErsatzTV.Infrastructure.Plex
                 Title = response.Title,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
                 Plot = response.Summary,
-                ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt),
                 Year = response.Year,
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList()
             };
+
+            if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
+            {
+                metadata.ReleaseDate = releaseDate;
+            }
 
             if (!string.IsNullOrWhiteSpace(response.Thumb))
             {
@@ -388,9 +396,9 @@ namespace ErsatzTV.Infrastructure.Plex
                 DateUpdated = lastWriteTime
             };
 
-            if (!string.IsNullOrWhiteSpace(response.OriginallyAvailableAt))
+            if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
             {
-                metadata.ReleaseDate = DateTime.Parse(response.OriginallyAvailableAt);
+                metadata.ReleaseDate = releaseDate;
             }
 
             if (!string.IsNullOrWhiteSpace(response.Thumb))
