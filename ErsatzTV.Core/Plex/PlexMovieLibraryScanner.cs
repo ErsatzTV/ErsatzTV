@@ -103,7 +103,7 @@ namespace ErsatzTV.Core.Plex
             return Right<BaseError, PlexMovie>(existing);
         }
 
-        private Task<Either<BaseError, PlexMovie>> UpdateMetadata(PlexMovie existing, PlexMovie incoming)
+        private async Task<Either<BaseError, PlexMovie>> UpdateMetadata(PlexMovie existing, PlexMovie incoming)
         {
             MovieMetadata existingMetadata = existing.MovieMetadata.Head();
             MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
@@ -115,7 +115,7 @@ namespace ErsatzTV.Core.Plex
                     .ToList())
                 {
                     existingMetadata.Genres.Remove(genre);
-                    _metadataRepository.RemoveGenre(genre);
+                    await _metadataRepository.RemoveGenre(genre);
                 }
 
                 foreach (Genre genre in incomingMetadata.Genres
@@ -123,11 +123,11 @@ namespace ErsatzTV.Core.Plex
                     .ToList())
                 {
                     existingMetadata.Genres.Add(genre);
-                    _movieRepository.AddGenre(existingMetadata, genre);
+                    await _movieRepository.AddGenre(existingMetadata, genre);
                 }
             }
 
-            return Right<BaseError, PlexMovie>(existing).AsTask();
+            return existing;
         }
 
         private async Task<Either<BaseError, PlexMovie>> UpdateArtwork(PlexMovie existing, PlexMovie incoming)
