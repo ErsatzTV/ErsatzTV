@@ -72,7 +72,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Either<BaseError, PlexMovie>> GetOrAdd(PlexLibrary library, PlexMovie item)
         {
-            Option<PlexMovie> maybeExisting = await _dbContext.PlexMovies
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            Option<PlexMovie> maybeExisting = await context.PlexMovies
+                .AsNoTracking()
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Genres)
                 .Include(i => i.MovieMetadata)
@@ -84,7 +86,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 plexMovie => Right<BaseError, PlexMovie>(plexMovie).AsTask(),
-                async () => await AddPlexMovie(_dbContext, library, item));
+                async () => await AddPlexMovie(context, library, item));
         }
 
         public async Task<bool> Update(Movie movie)
@@ -139,6 +141,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return Unit.Default;
         }
+
+        public Task<Unit> AddGenre(MovieMetadata metadata, Genre genre) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Genre (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
+                new { genre.Name, MetadataId = metadata.Id }).ToUnit();
 
         private async Task<Either<BaseError, Movie>> AddMovie(int libraryPathId, string path)
         {
