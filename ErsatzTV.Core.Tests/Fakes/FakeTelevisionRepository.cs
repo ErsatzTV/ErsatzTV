@@ -77,5 +77,14 @@ namespace ErsatzTV.Core.Tests.Fakes
             throw new NotSupportedException();
 
         public Task<Unit> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
+
+        public Task<Unit> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys) =>
+            throw new NotSupportedException();
+
+        public Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys) =>
+            throw new NotSupportedException();
+
+        public Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
+            throw new NotSupportedException();
     }
 }

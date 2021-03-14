@@ -17,5 +17,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath);
         Task<Unit> DeleteByPath(LibraryPath libraryPath, string path);
         Task<Unit> AddGenre(MovieMetadata metadata, Genre genre);
+        Task<Unit> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys);
     }
 }
