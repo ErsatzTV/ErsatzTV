@@ -34,13 +34,21 @@ namespace ErsatzTV.Core.Scheduling
 
         public void MoveNext()
         {
-            State.Index++;
-            if (State.Index % _shuffled.Count == 0)
+            if ((State.Index + 1) % _shuffled.Count == 0)
             {
+                Option<MediaItem> tail = Current;
+
                 State.Index = 0;
-                State.Seed = _random.Next();
-                _random = new Random(State.Seed);
-                _shuffled = Shuffle(_mediaItems, _random);
+                do
+                {
+                    State.Seed = _random.Next();
+                    _random = new Random(State.Seed);
+                    _shuffled = Shuffle(_mediaItems, _random);
+                } while (_mediaItems.Count > 1 && Current == tail);
+            }
+            else
+            {
+                State.Index++;
             }
 
             State.Index %= _shuffled.Count;
