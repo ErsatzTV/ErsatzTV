@@ -1,4 +1,5 @@
 ﻿@page "/media/plex"
+@using ErsatzTV.Core.Interfaces.Plex
 @using ErsatzTV.Application.Plex
 @using ErsatzTV.Application.Plex.Commands
 @using ErsatzTV.Application.Plex.Queries
@@ -9,6 +10,7 @@
 @inject ISnackbar Snackbar
 @inject ILogger<PlexMediaSources> Logger
 @inject IJSRuntime JsRuntime
+@inject IPlexSecretStore PlexSecretStore
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Dense="true" Items="_mediaSources">
@@ -64,18 +66,35 @@
             Sign in to plex
         </MudButton>
     }
+
+    @if (_mediaSources.Any() && !_isAuthorized)
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Secondary"
+                   OnClick="@(_ => AddPlexMediaSource())"
+                   Disabled="@Locker.IsPlexLocked()"
+                   Class="ml-4 mt-4">
+            Fix Plex Credentials
+        </MudButton>
+    }
+
 </MudContainer>
 
 @code {
-    private List<PlexMediaSourceViewModel> _mediaSources;
+    private List<PlexMediaSourceViewModel> _mediaSources = new();
+
+    private bool _isAuthorized;
 
     protected override async Task OnParametersSetAsync() => await LoadMediaSources();
 
     protected override void OnInitialized() =>
         Locker.OnPlexChanged += PlexChanged;
 
-    private async Task LoadMediaSources() =>
+    private async Task LoadMediaSources()
+    {
+        _isAuthorized = await PlexSecretStore.GetUserAuthTokens().Map(list => Prelude.Optional(list).Flatten().Any());
         _mediaSources = await Mediator.Send(new GetAllPlexMediaSources());
+    }
 
     private async Task SignOutOfPlex()
     {

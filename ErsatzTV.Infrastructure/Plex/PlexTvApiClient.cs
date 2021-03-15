@@ -8,6 +8,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
 using LanguageExt;
+using Refit;
 
 namespace ErsatzTV.Infrastructure.Plex
 {
@@ -20,9 +21,7 @@ namespace ErsatzTV.Infrastructure.Plex
 
         public PlexTvApiClient(IPlexTvApi plexTvApi, IPlexSecretStore plexSecretStore)
         {
-            // var client = new HttpClient(new HttpLoggingHandler()) { BaseAddress = new Uri("https://plex.tv/api/v2") };
-
-            _plexTvApi = plexTvApi; // RestService.For<IPlexTvApi>(client);
+            _plexTvApi = plexTvApi;
             _plexSecretStore = plexSecretStore;
         }
 
@@ -79,6 +78,15 @@ namespace ErsatzTV.Infrastructure.Plex
                 }
 
                 return result;
+            }
+            catch (ApiException apiException)
+            {
+                if (apiException.ReasonPhrase == "Unauthorized")
+                {
+                    await _plexSecretStore.DeleteAll();
+                }
+                
+                return BaseError.New(apiException.Message);
             }
             catch (Exception ex)
             {
