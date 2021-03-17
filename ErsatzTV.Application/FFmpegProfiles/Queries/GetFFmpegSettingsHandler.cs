@@ -22,12 +22,15 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
             Option<string> ffprobePath = await _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath);
             Option<int> defaultFFmpegProfileId =
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegDefaultProfileId);
+            Option<bool> saveReports =
+                await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
 
             return new FFmpegSettingsViewModel
             {
                 FFmpegPath = ffmpegPath.IfNone(string.Empty),
                 FFprobePath = ffprobePath.IfNone(string.Empty),
-                DefaultFFmpegProfileId = defaultFFmpegProfileId.IfNone(0)
+                DefaultFFmpegProfileId = defaultFFmpegProfileId.IfNone(0),
+                SaveReports = saveReports.IfNone(false)
             };
         }
     }

@@ -8,6 +8,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using Refit;
 
 namespace ErsatzTV.Infrastructure.Plex
@@ -15,14 +16,16 @@ namespace ErsatzTV.Infrastructure.Plex
     public class PlexTvApiClient : IPlexTvApiClient
     {
         private const string AppName = "ErsatzTV";
+        private readonly ILogger<PlexTvApiClient> _logger;
         private readonly IPlexSecretStore _plexSecretStore;
 
         private readonly IPlexTvApi _plexTvApi;
 
-        public PlexTvApiClient(IPlexTvApi plexTvApi, IPlexSecretStore plexSecretStore)
+        public PlexTvApiClient(IPlexTvApi plexTvApi, IPlexSecretStore plexSecretStore, ILogger<PlexTvApiClient> logger)
         {
             _plexTvApi = plexTvApi;
             _plexSecretStore = plexSecretStore;
+            _logger = logger;
         }
 
         public async Task<Either<BaseError, List<PlexMediaSource>>> GetServers()
@@ -85,11 +88,12 @@ namespace ErsatzTV.Infrastructure.Plex
                 {
                     await _plexSecretStore.DeleteAll();
                 }
-                
+
                 return BaseError.New(apiException.Message);
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error getting plex servers");
                 return BaseError.New(ex.Message);
             }
         }
@@ -104,6 +108,7 @@ namespace ErsatzTV.Infrastructure.Plex
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Error starting plex pin flow");
                 return BaseError.New(ex.Message);
             }
         }
@@ -130,9 +135,9 @@ namespace ErsatzTV.Infrastructure.Plex
                     return true;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // ignored
+                _logger.LogError(ex, "Error completing plex pin flow");
             }
 
             return false;
