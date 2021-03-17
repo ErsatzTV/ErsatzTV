@@ -31,7 +31,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 List<PlexLibraryResponse> directory =
                     await service.GetLibraries(token.AuthToken).Map(r => r.MediaContainer.Directory);
                 return directory
-                    .Filter(l => l.Hidden == 0)
+                    // .Filter(l => l.Hidden == 0)
                     .Map(Project)
                     .Somes()
                     .ToList();
