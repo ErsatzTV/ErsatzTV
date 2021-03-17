@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -70,12 +71,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
 
         private async Task<Unit> ApplyUpdate(UpdateFFmpegSettings request)
         {
-            Option<ConfigElement> ffmpegPath = await _configElementRepository.Get(ConfigElementKey.FFmpegPath);
-            Option<ConfigElement> ffprobePath = await _configElementRepository.Get(ConfigElementKey.FFprobePath);
-            Option<ConfigElement> defaultFFmpegProfileId =
-                await _configElementRepository.Get(ConfigElementKey.FFmpegDefaultProfileId);
-
-            ffmpegPath.Match(
+            await _configElementRepository.Get(ConfigElementKey.FFmpegPath).Match(
                 ce =>
                 {
                     ce.Value = request.Settings.FFmpegPath;
@@ -88,7 +84,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     _configElementRepository.Add(ce);
                 });
 
-            ffprobePath.Match(
+            await _configElementRepository.Get(ConfigElementKey.FFprobePath).Match(
                 ce =>
                 {
                     ce.Value = request.Settings.FFprobePath;
@@ -101,7 +97,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     _configElementRepository.Add(ce);
                 });
 
-            defaultFFmpegProfileId.Match(
+            await _configElementRepository.Get(ConfigElementKey.FFmpegDefaultProfileId).Match(
                 ce =>
                 {
                     ce.Value = request.Settings.DefaultFFmpegProfileId.ToString();
@@ -116,6 +112,27 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     };
                     _configElementRepository.Add(ce);
                 });
+
+            await _configElementRepository.Get(ConfigElementKey.FFmpegSaveReports).Match(
+                ce =>
+                {
+                    ce.Value = request.Settings.SaveReports.ToString();
+                    _configElementRepository.Update(ce);
+                },
+                () =>
+                {
+                    var ce = new ConfigElement
+                    {
+                        Key = ConfigElementKey.FFmpegSaveReports.Key,
+                        Value = request.Settings.SaveReports.ToString()
+                    };
+                    _configElementRepository.Add(ce);
+                });
+
+            if (request.Settings.SaveReports && !Directory.Exists(FileSystemLayout.FFmpegReportsFolder))
+            {
+                Directory.CreateDirectory(FileSystemLayout.FFmpegReportsFolder);
+            }
 
             return Unit.Default;
         }

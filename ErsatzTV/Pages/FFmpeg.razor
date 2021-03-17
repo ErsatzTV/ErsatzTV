@@ -29,6 +29,12 @@
                         }
                     </MudSelect>
                 </MudElement>
+                <MudElement HtmlTag="div" Class="mt-3">
+                    <MudSwitch T="bool"
+                               Label="Save troubleshooting reports to disk"
+                               Color="Color.Primary"
+                               @bind-Checked="@_ffmpegSettings.SaveReports" />
+                </MudElement>
             </MudForm>
         </MudCardContent>
         <MudCardActions>

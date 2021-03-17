@@ -23,6 +23,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly IConfigElementRepository _configElementRepository;
         private readonly IPlayoutRepository _playoutRepository;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
@@ -35,6 +36,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
             : base(channelRepository, configElementRepository)
         {
+            _configElementRepository = configElementRepository;
             _playoutRepository = playoutRepository;
             _mediaSourceRepository = mediaSourceRepository;
             _ffmpegProcessService = ffmpegProcessService;
@@ -54,7 +56,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                 .BindT(ValidatePlayoutItemPath);
 
             return await maybePlayoutItem.Match(
-                playoutItemWithPath =>
+                async playoutItemWithPath =>
                 {
                     MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem switch
                     {
@@ -63,14 +65,18 @@ namespace ErsatzTV.Application.Streaming.Queries
                         _ => throw new ArgumentOutOfRangeException(nameof(playoutItemWithPath))
                     };
 
+                    bool saveReports = await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
+                        .Map(result => result.IfNone(false));
+
                     return Right<BaseError, Process>(
                         _ffmpegProcessService.ForPlayoutItem(
                             ffmpegPath,
+                            saveReports,
                             channel,
                             version,
                             playoutItemWithPath.Path,
                             playoutItemWithPath.PlayoutItem.StartOffset,
-                            now)).AsTask();
+                            now));
                 },
                 async error =>
                 {

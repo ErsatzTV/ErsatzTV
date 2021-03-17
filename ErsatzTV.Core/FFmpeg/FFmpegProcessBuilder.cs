@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -39,9 +40,14 @@ namespace ErsatzTV.Core.FFmpeg
 
         private readonly List<string> _arguments = new();
         private readonly string _ffmpegPath;
+        private readonly bool _saveReports;
         private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
 
-        public FFmpegProcessBuilder(string ffmpegPath) => _ffmpegPath = ffmpegPath;
+        public FFmpegProcessBuilder(string ffmpegPath, bool saveReports)
+        {
+            _ffmpegPath = ffmpegPath;
+            _saveReports = saveReports;
+        }
 
         public FFmpegProcessBuilder WithThreads(int threads)
         {
@@ -364,6 +370,12 @@ namespace ErsatzTV.Core.FFmpeg
                 CreateNoWindow = true,
                 StandardOutputEncoding = Encoding.UTF8
             };
+
+            if (_saveReports)
+            {
+                string fileName = Path.Combine(FileSystemLayout.FFmpegReportsFolder, "%p-%t.log");
+                startInfo.EnvironmentVariables.Add("FFREPORT", $"file={fileName}:level=32");
+            }
 
             foreach (string argument in _arguments)
             {
