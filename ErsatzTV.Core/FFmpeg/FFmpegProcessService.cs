@@ -15,6 +15,7 @@ namespace ErsatzTV.Core.FFmpeg
 
         public Process ForPlayoutItem(
             string ffmpegPath,
+            bool saveReports,
             Channel channel,
             MediaVersion version,
             string path,
@@ -28,7 +29,7 @@ namespace ErsatzTV.Core.FFmpeg
                 start,
                 now);
 
-            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath)
+            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports)
                 .WithThreads(playbackSettings.ThreadCount)
                 .WithHardwareAcceleration(playbackSettings.HardwareAcceleration)
                 .WithQuiet()
@@ -91,7 +92,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             IDisplaySize desiredResolution = channel.FFmpegProfile.Resolution;
 
-            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath)
+            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false)
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
@@ -114,7 +115,7 @@ namespace ErsatzTV.Core.FFmpeg
         {
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
 
-            return new FFmpegProcessBuilder(ffmpegPath)
+            return new FFmpegProcessBuilder(ffmpegPath, false)
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
