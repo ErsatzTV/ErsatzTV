@@ -33,6 +33,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             dbContext.Entry(metadata).State = EntityState.Added;
+            foreach (Genre genre in metadata.Genres)
+            {
+                dbContext.Entry(genre).State = EntityState.Added;
+            }
+
+            foreach (Tag tag in metadata.Tags)
+            {
+                dbContext.Entry(tag).State = EntityState.Added;
+            }
+
             return await dbContext.SaveChangesAsync() > 0;
         }
 
