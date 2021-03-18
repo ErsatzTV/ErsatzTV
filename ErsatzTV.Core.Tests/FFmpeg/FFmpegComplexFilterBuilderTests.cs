@@ -38,7 +38,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     {
                         filter.ComplexFilter.Should().Be($"[0:a]apad=whole_dur={duration.TotalMilliseconds}ms[a]");
                         filter.AudioLabel.Should().Be("[a]");
-                        filter.VideoLabel.Should().Be("0:v");
+                        filter.VideoLabel.Should().Be("0:V");
                     });
             }
 
@@ -57,29 +57,29 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     filter =>
                     {
                         filter.ComplexFilter.Should().Be(
-                            $"[0:a]apad=whole_dur={duration.TotalMilliseconds}ms[a];[0:v]yadif=1[v]");
+                            $"[0:a]apad=whole_dur={duration.TotalMilliseconds}ms[a];[0:V]yadif=1[v]");
                         filter.AudioLabel.Should().Be("[a]");
                         filter.VideoLabel.Should().Be("[v]");
                     });
             }
 
             [Test]
-            [TestCase(true, false, false, "[0:v]yadif=1[v]", "[v]")]
-            [TestCase(true, true, false, "[0:v]yadif=1,scale=1920:1000:flags=fast_bilinear,setsar=1[v]", "[v]")]
-            [TestCase(true, false, true, "[0:v]yadif=1,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v]", "[v]")]
+            [TestCase(true, false, false, "[0:V]yadif=1[v]", "[v]")]
+            [TestCase(true, true, false, "[0:V]yadif=1,scale=1920:1000:flags=fast_bilinear,setsar=1[v]", "[v]")]
+            [TestCase(true, false, true, "[0:V]yadif=1,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v]", "[v]")]
             [TestCase(
                 true,
                 true,
                 true,
-                "[0:v]yadif=1,scale=1920:1000:flags=fast_bilinear,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v]",
+                "[0:V]yadif=1,scale=1920:1000:flags=fast_bilinear,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v]",
                 "[v]")]
-            [TestCase(false, true, false, "[0:v]scale=1920:1000:flags=fast_bilinear,setsar=1[v]", "[v]")]
-            [TestCase(false, false, true, "[0:v]setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v]", "[v]")]
+            [TestCase(false, true, false, "[0:V]scale=1920:1000:flags=fast_bilinear,setsar=1[v]", "[v]")]
+            [TestCase(false, false, true, "[0:V]setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v]", "[v]")]
             [TestCase(
                 false,
                 true,
                 true,
-                "[0:v]scale=1920:1000:flags=fast_bilinear,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v]",
+                "[0:V]scale=1920:1000:flags=fast_bilinear,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2[v]",
                 "[v]")]
             public void Should_Return_Software_Video_Filter(
                 bool deinterlace,
@@ -114,42 +114,42 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            [TestCase(true, false, false, "[0:v]deinterlace_qsv[v]", "[v]")]
+            [TestCase(true, false, false, "[0:V]deinterlace_qsv[v]", "[v]")]
             [TestCase(
                 true,
                 true,
                 false,
-                "[0:v]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,hwupload=extra_hw_frames=64[v]",
+                "[0:V]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             [TestCase(
                 true,
                 false,
                 true,
-                "[0:v]deinterlace_qsv,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
+                "[0:V]deinterlace_qsv,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             [TestCase(
                 true,
                 true,
                 true,
-                "[0:v]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
+                "[0:V]deinterlace_qsv,scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             [TestCase(
                 false,
                 true,
                 false,
-                "[0:v]scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,hwupload=extra_hw_frames=64[v]",
+                "[0:V]scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             [TestCase(
                 false,
                 false,
                 true,
-                "[0:v]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
+                "[0:V]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             [TestCase(
                 false,
                 true,
                 true,
-                "[0:v]scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
+                "[0:V]scale_qsv=w=1920:h=1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload=extra_hw_frames=64[v]",
                 "[v]")]
             public void Should_Return_QSV_Video_Filter(
                 bool deinterlace,
@@ -186,60 +186,60 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             [Test]
             // TODO: get yadif_cuda working in docker
-            // [TestCase(true, false, false, "[0:v]yadif_cuda[v]", "[v]")]
+            // [TestCase(true, false, false, "[0:V]yadif_cuda[v]", "[v]")]
             // [TestCase(
             //     true,
             //     true,
             //     false,
-            //     "[0:v]yadif_cuda,scale_npp=1920:1000:format=yuv420p,hwdownload,setsar=1,hwupload[v]",
+            //     "[0:V]yadif_cuda,scale_npp=1920:1000:format=yuv420p,hwdownload,setsar=1,hwupload[v]",
             //     "[v]")]
             // [TestCase(
             //     true,
             //     false,
             //     true,
-            //     "[0:v]yadif_cuda,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+            //     "[0:V]yadif_cuda,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
             //     "[v]")]
             // [TestCase(
             //     true,
             //     true,
             //     true,
-            //     "[0:v]yadif_cuda,scale_npp=1920:1000:format=yuv420p,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+            //     "[0:V]yadif_cuda,scale_npp=1920:1000:format=yuv420p,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
             //     "[v]")]
             [TestCase(
                 true,
                 true,
                 false,
-                "[0:v]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,hwupload[v]",
+                "[0:V]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 true,
                 false,
                 true,
-                "[0:v]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 true,
                 true,
                 true,
-                "[0:v]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 false,
                 true,
                 false,
-                "[0:v]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,hwupload[v]",
+                "[0:V]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 false,
                 false,
                 true,
-                "[0:v]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 false,
                 true,
                 true,
-                "[0:v]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             public void Should_Return_NVENC_Video_Filter(
                 bool deinterlace,
@@ -275,91 +275,91 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            [TestCase("h264", true, false, false, "[0:v]deinterlace_vaapi[v]", "[v]")]
+            [TestCase("h264", true, false, false, "[0:V]deinterlace_vaapi[v]", "[v]")]
             [TestCase(
                 "h264",
                 true,
                 true,
                 false,
-                "[0:v]deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
+                "[0:V]deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "h264",
                 true,
                 false,
                 true,
-                "[0:v]deinterlace_vaapi,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]deinterlace_vaapi,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "h264",
                 true,
                 true,
                 true,
-                "[0:v]deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "h264",
                 false,
                 true,
                 false,
-                "[0:v]scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
+                "[0:V]scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "h264",
                 false,
                 false,
                 true,
-                "[0:v]hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "h264",
                 false,
                 true,
                 true,
-                "[0:v]scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
-            [TestCase("mpeg4", true, false, false, "[0:v]hwupload,deinterlace_vaapi[v]", "[v]")]
+            [TestCase("mpeg4", true, false, false, "[0:V]hwupload,deinterlace_vaapi[v]", "[v]")]
             [TestCase(
                 "mpeg4",
                 true,
                 true,
                 false,
-                "[0:v]hwupload,deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
+                "[0:V]hwupload,deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "mpeg4",
                 true,
                 false,
                 true,
-                "[0:v]hwupload,deinterlace_vaapi,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]hwupload,deinterlace_vaapi,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "mpeg4",
                 true,
                 true,
                 true,
-                "[0:v]hwupload,deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]hwupload,deinterlace_vaapi,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "mpeg4",
                 false,
                 true,
                 false,
-                "[0:v]hwupload,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
+                "[0:V]hwupload,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "mpeg4",
                 false,
                 false,
                 true,
-                "[0:v]setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 "mpeg4",
                 false,
                 true,
                 true,
-                "[0:v]hwupload,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:V]hwupload,scale_vaapi=w=1920:h=1000,hwdownload,format=nv12|vaapi,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             public void Should_Return_VAAPI_Video_Filter(
                 string codec,
