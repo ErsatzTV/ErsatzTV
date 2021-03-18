@@ -5,6 +5,7 @@
 @using ErsatzTV.Application.Images.Commands
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Channels.Queries
+@using static LanguageExt.Prelude
 @inject NavigationManager NavigationManager
 @inject ILogger<ChannelEditor> Logger
 @inject ISnackbar Snackbar
@@ -95,8 +96,9 @@
         else
         {
     // TODO: command for new channel
-            int maxNumber = await Mediator.Send(new GetAllChannels())
-                .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0).Max());
+            IEnumerable<int> channelNumbers = await Mediator.Send(new GetAllChannels())
+                .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
+            int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
             _model.Number = (maxNumber + 1).ToString();
             _model.Name = "New Channel";
             _model.FFmpegProfileId = _ffmpegProfiles.Head().Id;
