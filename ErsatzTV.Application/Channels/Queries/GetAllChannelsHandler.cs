@@ -3,9 +3,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.Channels.Mapper;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Channels.Queries
 {
@@ -15,7 +15,7 @@ namespace ErsatzTV.Application.Channels.Queries
 
         public GetAllChannelsHandler(IChannelRepository channelRepository) => _channelRepository = channelRepository;
 
-        public Task<List<ChannelViewModel>> Handle(GetAllChannels request, CancellationToken cancellationToken) =>
-            _channelRepository.GetAll().Map(channels => channels.Map(ProjectToViewModel).ToList());
+        public async Task<List<ChannelViewModel>> Handle(GetAllChannels request, CancellationToken cancellationToken) =>
+            Optional(await _channelRepository.GetAll()).Flatten().Map(ProjectToViewModel).ToList();
     }
 }
