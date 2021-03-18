@@ -11,12 +11,6 @@ namespace ErsatzTV.Core.Tests.Fakes
     {
         public Task<bool> AllShowsExist(List<int> showIds) => throw new NotSupportedException();
 
-        public Task<bool> Update(Show show) => throw new NotSupportedException();
-
-        public Task<bool> Update(Season season) => throw new NotSupportedException();
-
-        public Task<bool> Update(Episode episode) => throw new NotSupportedException();
-
         public Task<List<Show>> GetAllShows() => throw new NotSupportedException();
 
         public Task<Option<Show>> GetShow(int showId) => throw new NotSupportedException();
@@ -86,5 +80,13 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
             throw new NotSupportedException();
+
+        public Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber) => throw new NotSupportedException();
+
+        public Task<bool> Update(Show show) => throw new NotSupportedException();
+
+        public Task<bool> Update(Season season) => throw new NotSupportedException();
+
+        public Task<bool> Update(Episode episode) => throw new NotSupportedException();
     }
 }

@@ -4,19 +4,46 @@ using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories
 {
     public class MetadataRepository : IMetadataRepository
     {
         private readonly IDbConnection _dbConnection;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public MetadataRepository(IDbConnection dbConnection) => _dbConnection = dbConnection;
+        public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+        {
+            _dbContextFactory = dbContextFactory;
+            _dbConnection = dbConnection;
+        }
 
         public Task<Unit> RemoveGenre(Genre genre) =>
             _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id }).ToUnit();
 
-        public Task<Unit> UpdateStatistics(MediaVersion mediaVersion) =>
+        public async Task<bool> Update(Metadata metadata)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            dbContext.Entry(metadata).State = EntityState.Modified;
+            return await dbContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> Add(Metadata metadata)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            dbContext.Entry(metadata).State = EntityState.Added;
+            return await dbContext.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> UpdateLocalStatistics(MediaVersion mediaVersion)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            dbContext.Entry(mediaVersion).State = EntityState.Modified;
+            return await dbContext.SaveChangesAsync() > 0;
+        }
+
+        public Task<Unit> UpdatePlexStatistics(MediaVersion mediaVersion) =>
             _dbConnection.ExecuteAsync(
                 @"UPDATE MediaVersion SET
                   SampleAspectRatio = @SampleAspectRatio,

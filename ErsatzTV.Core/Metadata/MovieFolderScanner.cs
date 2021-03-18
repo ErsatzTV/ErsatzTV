@@ -27,9 +27,10 @@ namespace ErsatzTV.Core.Metadata
             IMovieRepository movieRepository,
             ILocalStatisticsProvider localStatisticsProvider,
             ILocalMetadataProvider localMetadataProvider,
+            IMetadataRepository metadataRepository,
             IImageCache imageCache,
             ILogger<MovieFolderScanner> logger)
-            : base(localFileSystem, localStatisticsProvider, imageCache, logger)
+            : base(localFileSystem, localStatisticsProvider, metadataRepository, imageCache, logger)
         {
             _localFileSystem = localFileSystem;
             _movieRepository = movieRepository;
@@ -74,7 +75,6 @@ namespace ErsatzTV.Core.Metadata
 
                 foreach (string file in allFiles.OrderBy(identity))
                 {
-                    // TODO: optimize dbcontext use here, do we need tracking? can we make partial updates with dapper?
                     // TODO: figure out how to rebuild playlists
                     Either<BaseError, Movie> maybeMovie = await _movieRepository
                         .GetOrAdd(libraryPath, file)
@@ -144,10 +144,7 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         MovieMetadata metadata = movie.MovieMetadata.Head();
-                        if (RefreshArtwork(posterFile, metadata, artworkKind))
-                        {
-                            await _movieRepository.Update(movie);
-                        }
+                        await RefreshArtwork(posterFile, metadata, artworkKind);
                     });
 
                 return movie;

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -47,6 +48,7 @@ namespace ErsatzTV.Core.Metadata
 
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
+        private readonly IMetadataRepository _metadataRepository;
         private readonly ILogger _logger;
 
         static LocalFolderScanner() => Crypto = new SHA1CryptoServiceProvider();
@@ -54,11 +56,13 @@ namespace ErsatzTV.Core.Metadata
         protected LocalFolderScanner(
             ILocalFileSystem localFileSystem,
             ILocalStatisticsProvider localStatisticsProvider,
+            IMetadataRepository metadataRepository,
             IImageCache imageCache,
             ILogger logger)
         {
             _localFileSystem = localFileSystem;
             _localStatisticsProvider = localStatisticsProvider;
+            _metadataRepository = metadataRepository;
             _imageCache = imageCache;
             _logger = logger;
         }
@@ -99,14 +103,13 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        protected bool RefreshArtwork(string artworkFile, Domain.Metadata metadata, ArtworkKind artworkKind)
+        protected async Task<bool> RefreshArtwork(string artworkFile, Domain.Metadata metadata, ArtworkKind artworkKind)
         {
             DateTime lastWriteTime = _localFileSystem.GetLastWriteTime(artworkFile);
 
             metadata.Artwork ??= new List<Artwork>();
 
-            Option<Artwork> maybeArtwork =
-                Optional(metadata.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == artworkKind);
+            Option<Artwork> maybeArtwork = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind);
 
             bool shouldRefresh = maybeArtwork.Match(
                 artwork => artwork.DateUpdated < lastWriteTime,
@@ -117,13 +120,14 @@ namespace ErsatzTV.Core.Metadata
                 _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
                 string cacheName = _imageCache.CopyArtworkToCache(artworkFile, artworkKind);
 
-                maybeArtwork.Match(
-                    artwork =>
+                await maybeArtwork.Match(
+                    async artwork =>
                     {
                         artwork.Path = cacheName;
                         artwork.DateUpdated = lastWriteTime;
+                        await _metadataRepository.UpdateArtworkPath(artwork);
                     },
-                    () =>
+                    async () =>
                     {
                         var artwork = new Artwork
                         {
@@ -132,8 +136,8 @@ namespace ErsatzTV.Core.Metadata
                             DateUpdated = lastWriteTime,
                             ArtworkKind = artworkKind
                         };
-
                         metadata.Artwork.Add(artwork);
+                        await _metadataRepository.AddArtwork(metadata, artwork);
                     });
 
                 return true;

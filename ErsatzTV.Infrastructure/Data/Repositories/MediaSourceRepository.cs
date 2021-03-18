@@ -171,8 +171,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public async Task<Unit> DeleteAllPlex()
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
+            
             List<PlexMediaSource> allMediaSources = await context.PlexMediaSources.ToListAsync();
             context.PlexMediaSources.RemoveRange(allMediaSources);
+            
+            List<PlexLibrary> allPlexLibraries = await context.PlexLibraries.ToListAsync();
+            context.PlexLibraries.RemoveRange(allPlexLibraries);
+            
             await context.SaveChangesAsync();
             return Unit.Default;
         }

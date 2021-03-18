@@ -26,10 +26,12 @@ namespace ErsatzTV.Core.Metadata
             ITelevisionRepository televisionRepository,
             ILocalStatisticsProvider localStatisticsProvider,
             ILocalMetadataProvider localMetadataProvider,
+            IMetadataRepository metadataRepository,
             IImageCache imageCache,
             ILogger<TelevisionFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
+            metadataRepository,
             imageCache,
             logger)
         {
@@ -224,10 +226,7 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         ShowMetadata metadata = show.ShowMetadata.Head();
-                        if (RefreshArtwork(posterFile, metadata, artworkKind))
-                        {
-                            await _televisionRepository.Update(show);
-                        }
+                        await RefreshArtwork(posterFile, metadata, artworkKind);
                     });
 
                 return show;
@@ -245,18 +244,14 @@ namespace ErsatzTV.Core.Metadata
                 await LocatePoster(season, seasonFolder).IfSomeAsync(
                     async posterFile =>
                     {
-                        season.SeasonMetadata ??= new List<SeasonMetadata>();
-                        if (!season.SeasonMetadata.Any())
-                        {
-                            season.SeasonMetadata.Add(new SeasonMetadata { SeasonId = season.Id });
-                        }
+                        // season.SeasonMetadata ??= new List<SeasonMetadata>();
+                        // if (!season.SeasonMetadata.Any())
+                        // {
+                        //     season.SeasonMetadata.Add(new SeasonMetadata { SeasonId = season.Id });
+                        // }
 
                         SeasonMetadata metadata = season.SeasonMetadata.Head();
-
-                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Poster))
-                        {
-                            await _televisionRepository.Update(season);
-                        }
+                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster);
                     });
 
                 return season;
@@ -275,10 +270,7 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         EpisodeMetadata metadata = episode.EpisodeMetadata.Head();
-                        if (RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail))
-                        {
-                            await _televisionRepository.Update(episode);
-                        }
+                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail);
                     });
 
                 return episode;

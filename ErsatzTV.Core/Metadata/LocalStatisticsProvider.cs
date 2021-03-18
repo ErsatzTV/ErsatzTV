@@ -18,13 +18,16 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<LocalStatisticsProvider> _logger;
         private readonly IMediaItemRepository _mediaItemRepository;
+        private readonly IMetadataRepository _metadataRepository;
 
         public LocalStatisticsProvider(
             IMediaItemRepository mediaItemRepository,
+            IMetadataRepository metadataRepository,
             ILocalFileSystem localFileSystem,
             ILogger<LocalStatisticsProvider> logger)
         {
             _mediaItemRepository = mediaItemRepository;
+            _metadataRepository = metadataRepository;
             _localFileSystem = localFileSystem;
             _logger = logger;
         }
@@ -79,7 +82,7 @@ namespace ErsatzTV.Core.Metadata
             mediaItemVersion.VideoProfile = version.VideoProfile;
             mediaItemVersion.VideoScanKind = version.VideoScanKind;
 
-            return await _mediaItemRepository.Update(mediaItem) && durationChange;
+            return await _metadataRepository.UpdateLocalStatistics(mediaItemVersion) && durationChange;
         }
 
         private Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)

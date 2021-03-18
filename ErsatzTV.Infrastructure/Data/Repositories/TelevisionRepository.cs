@@ -16,15 +16,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     public class TelevisionRepository : ITelevisionRepository
     {
         private readonly IDbConnection _dbConnection;
-        private readonly TvContext _dbContext;
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public TelevisionRepository(
-            TvContext dbContext,
-            IDbConnection dbConnection,
-            IDbContextFactory<TvContext> dbContextFactory)
+        public TelevisionRepository(IDbConnection dbConnection, IDbContextFactory<TvContext> dbContextFactory)
         {
-            _dbContext = dbContext;
             _dbConnection = dbConnection;
             _dbContextFactory = dbContextFactory;
         }
@@ -35,33 +30,20 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     new { ShowIds = showIds })
                 .Map(c => c == showIds.Count);
 
-        public async Task<bool> Update(Show show)
+        public async Task<List<Show>> GetAllShows()
         {
-            _dbContext.Shows.Update(show);
-            return await _dbContext.SaveChangesAsync() > 0;
-        }
-
-        public async Task<bool> Update(Season season)
-        {
-            _dbContext.Seasons.Update(season);
-            return await _dbContext.SaveChangesAsync() > 0;
-        }
-
-        public async Task<bool> Update(Episode episode)
-        {
-            _dbContext.Episodes.Update(episode);
-            return await _dbContext.SaveChangesAsync() > 0;
-        }
-
-        public Task<List<Show>> GetAllShows() =>
-            _dbContext.Shows
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Shows
                 .AsNoTracking()
                 .Include(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
                 .ToListAsync();
+        }
 
-        public Task<Option<Show>> GetShow(int showId) =>
-            _dbContext.Shows
+        public async Task<Option<Show>> GetShow(int showId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Shows
                 .AsNoTracking()
                 .Filter(s => s.Id == showId)
                 .Include(s => s.ShowMetadata)
@@ -73,27 +55,37 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
+        }
 
-        public Task<int> GetShowCount() =>
-            _dbContext.ShowMetadata
+        public async Task<int> GetShowCount()
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.ShowMetadata
                 .AsNoTracking()
                 .GroupBy(sm => new { sm.Title, sm.Year })
                 .CountAsync();
+        }
 
-        public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
-            _dbContext.ShowMetadata.FromSqlRaw(
+        public async Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.ShowMetadata.FromSqlRaw(
                     @"SELECT * FROM ShowMetadata WHERE Id IN
             (SELECT MIN(Id) FROM ShowMetadata GROUP BY Title, Year, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
             ORDER BY SortTitle
             LIMIT {0} OFFSET {1}",
                     pageSize,
                     (pageNumber - 1) * pageSize)
+                .AsNoTracking()
                 .Include(mm => mm.Artwork)
                 .OrderBy(mm => mm.SortTitle)
                 .ToListAsync();
+        }
 
-        public Task<List<Season>> GetAllSeasons() =>
-            _dbContext.Seasons
+        public async Task<List<Season>> GetAllSeasons()
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Seasons
                 .AsNoTracking()
                 .Include(s => s.SeasonMetadata)
                 .ThenInclude(sm => sm.Artwork)
@@ -101,9 +93,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
                 .ToListAsync();
+        }
 
-        public Task<Option<Season>> GetSeason(int seasonId) =>
-            _dbContext.Seasons
+        public async Task<Option<Season>> GetSeason(int seasonId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Seasons
                 .AsNoTracking()
                 .Include(s => s.SeasonMetadata)
                 .ThenInclude(sm => sm.Artwork)
@@ -113,11 +108,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync(s => s.Id == seasonId)
                 .Map(Optional);
+        }
 
-        public Task<int> GetSeasonCount(int showId) =>
-            _dbContext.Seasons
+        public async Task<int> GetSeasonCount(int showId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Seasons
                 .AsNoTracking()
                 .CountAsync(s => s.ShowId == showId);
+        }
 
         public async Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize)
         {
@@ -129,7 +128,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     new { ShowId = televisionShowId })
                 .Map(results => results.ToList());
 
-            return await _dbContext.Seasons
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Seasons
                 .AsNoTracking()
                 .Where(s => showIds.Contains(s.ShowId))
                 .Include(s => s.SeasonMetadata)
@@ -142,8 +142,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public Task<Option<Episode>> GetEpisode(int episodeId) =>
-            _dbContext.Episodes
+        public async Task<Option<Episode>> GetEpisode(int episodeId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Episodes
                 .AsNoTracking()
                 .Include(e => e.Season)
                 .Include(e => e.EpisodeMetadata)
@@ -151,14 +153,20 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync(s => s.Id == episodeId)
                 .Map(Optional);
+        }
 
-        public Task<int> GetEpisodeCount(int seasonId) =>
-            _dbContext.Episodes
+        public async Task<int> GetEpisodeCount(int seasonId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Episodes
                 .AsNoTracking()
                 .CountAsync(e => e.SeasonId == seasonId);
+        }
 
-        public Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize) =>
-            _dbContext.EpisodeMetadata
+        public async Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.EpisodeMetadata
                 .AsNoTracking()
                 .Filter(em => em.Episode.SeasonId == seasonId)
                 .Include(em => em.Artwork)
@@ -170,10 +178,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+        }
 
         public async Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata)
         {
-            Option<int> maybeId = await _dbContext.ShowMetadata
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<int> maybeId = await dbContext.ShowMetadata
                 .Where(s => s.Title == metadata.Title && s.Year == metadata.Year)
                 .Where(s => s.Show.LibraryPathId == libraryPathId)
                 .SingleOrDefaultAsync()
@@ -183,7 +193,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await maybeId.Match(
                 id =>
                 {
-                    return _dbContext.Shows
+                    return dbContext.Shows
+                        .AsNoTracking()
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Artwork)
                         .Include(s => s.ShowMetadata)
@@ -199,6 +210,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Either<BaseError, Show>> AddShow(int libraryPathId, string showFolder, ShowMetadata metadata)
         {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
             try
             {
                 metadata.DateAdded = DateTime.UtcNow;
@@ -211,8 +224,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     Seasons = new List<Season>()
                 };
 
-                await _dbContext.Shows.AddAsync(show);
-                await _dbContext.SaveChangesAsync();
+                await dbContext.Shows.AddAsync(show);
+                await dbContext.SaveChangesAsync();
 
                 return show;
             }
@@ -224,14 +237,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber)
         {
-            Option<Season> maybeExisting = await _dbContext.Seasons
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<Season> maybeExisting = await dbContext.Seasons
                 .Include(s => s.SeasonMetadata)
                 .ThenInclude(sm => sm.Artwork)
+                .OrderBy(s => s.ShowId)
+                .ThenBy(s => s.SeasonNumber)
                 .SingleOrDefaultAsync(s => s.ShowId == show.Id && s.SeasonNumber == seasonNumber);
 
             return await maybeExisting.Match(
                 season => Right<BaseError, Season>(season).AsTask(),
-                () => AddSeason(show, libraryPathId, seasonNumber));
+                () => AddSeason(dbContext, show, libraryPathId, seasonNumber));
         }
 
         public async Task<Either<BaseError, Episode>> GetOrAddEpisode(
@@ -239,7 +255,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             LibraryPath libraryPath,
             string path)
         {
-            Option<Episode> maybeExisting = await _dbContext.Episodes
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<Episode> maybeExisting = await dbContext.Episodes
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
                 .Include(i => i.MediaVersions)
@@ -249,7 +266,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 episode => Right<BaseError, Episode>(episode).AsTask(),
-                () => AddEpisode(season, libraryPath.Id, path));
+                () => AddEpisode(dbContext, season, libraryPath.Id, path));
         }
 
         public Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath) =>
@@ -273,47 +290,46 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
                 new { LibraryPathId = libraryPath.Id, Path = path });
 
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             foreach (int episodeId in ids)
             {
-                Episode episode = await _dbContext.Episodes.FindAsync(episodeId);
-                _dbContext.Episodes.Remove(episode);
+                Episode episode = await dbContext.Episodes.FindAsync(episodeId);
+                dbContext.Episodes.Remove(episode);
             }
 
-            await _dbContext.SaveChangesAsync();
+            await dbContext.SaveChangesAsync();
 
             return Unit.Default;
         }
 
-        public Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath) =>
-            _dbContext.Seasons
+        public async Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            List<Season> seasons = await dbContext.Seasons
                 .Filter(s => s.LibraryPathId == libraryPath.Id)
                 .Filter(s => s.Episodes.Count == 0)
-                .ToListAsync()
-                .Bind(
-                    list =>
-                    {
-                        _dbContext.Seasons.RemoveRange(list);
-                        return _dbContext.SaveChangesAsync();
-                    })
-                .ToUnit();
+                .ToListAsync();
+            dbContext.Seasons.RemoveRange(seasons);
+            await dbContext.SaveChangesAsync();
+            return Unit.Default;
+        }
 
-        public Task<Unit> DeleteEmptyShows(LibraryPath libraryPath) =>
-            _dbContext.Shows
+        public async Task<Unit> DeleteEmptyShows(LibraryPath libraryPath)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            List<Show> shows = await dbContext.Shows
                 .Filter(s => s.LibraryPathId == libraryPath.Id)
                 .Filter(s => s.Seasons.Count == 0)
-                .ToListAsync()
-                .Bind(
-                    list =>
-                    {
-                        _dbContext.Shows.RemoveRange(list);
-                        return _dbContext.SaveChangesAsync();
-                    })
-                .ToUnit();
+                .ToListAsync();
+            dbContext.Shows.RemoveRange(shows);
+            await dbContext.SaveChangesAsync();
+            return Unit.Default;
+        }
 
         public async Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item)
         {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            Option<PlexShow> maybeExisting = await context.PlexShows
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<PlexShow> maybeExisting = await dbContext.PlexShows
                 .AsNoTracking()
                 .Include(i => i.ShowMetadata)
                 .ThenInclude(mm => mm.Genres)
@@ -324,13 +340,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 plexShow => Right<BaseError, PlexShow>(plexShow).AsTask(),
-                async () => await AddPlexShow(context, library, item));
+                async () => await AddPlexShow(dbContext, library, item));
         }
 
         public async Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item)
         {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            Option<PlexSeason> maybeExisting = await context.PlexSeasons
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<PlexSeason> maybeExisting = await dbContext.PlexSeasons
                 .AsNoTracking()
                 .Include(i => i.SeasonMetadata)
                 .ThenInclude(mm => mm.Artwork)
@@ -339,13 +355,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 plexSeason => Right<BaseError, PlexSeason>(plexSeason).AsTask(),
-                async () => await AddPlexSeason(context, library, item));
+                async () => await AddPlexSeason(dbContext, library, item));
         }
 
         public async Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item)
         {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            Option<PlexEpisode> maybeExisting = await context.PlexEpisodes
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<PlexEpisode> maybeExisting = await dbContext.PlexEpisodes
                 .AsNoTracking()
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(mm => mm.Artwork)
@@ -356,7 +372,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 plexEpisode => Right<BaseError, PlexEpisode>(plexEpisode).AsTask(),
-                async () => await AddPlexEpisode(context, library, item));
+                async () => await AddPlexEpisode(dbContext, library, item));
         }
 
         public Task<Unit> AddGenre(ShowMetadata metadata, Genre genre) =>
@@ -372,7 +388,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
                 WHERE lp.LibraryId = @LibraryId AND ps.Key not in @Keys)",
                 new { LibraryId = library.Id, Keys = showKeys }).ToUnit();
-        
+
         public Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys) =>
             _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
@@ -382,7 +398,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN PlexShow P on P.Id = s.ShowId
                 WHERE P.Key = @ShowKey AND ps.Key not in @Keys)",
                 new { ShowKey = showKey, Keys = seasonKeys }).ToUnit();
-        
+
         public Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
             _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
@@ -393,6 +409,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE P.Key = @SeasonKey AND pe.Key not in @Keys)",
                 new { SeasonKey = seasonKey, Keys = episodeKeys }).ToUnit();
 
+        public async Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber)
+        {
+            episode.EpisodeNumber = episodeNumber;
+            await _dbConnection.ExecuteAsync(
+                @"UPDATE Episode SET EpisodeNumber = @EpisodeNumber WHERE Id = @Id",
+                new { EpisodeNumber = episodeNumber, Id = episode.Id });
+            return Unit.Default;
+        }
+
         public async Task<List<Episode>> GetShowItems(int showId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
@@ -402,7 +427,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             WHERE Show.Id = @ShowId",
                 new { ShowId = showId });
 
-            return await _dbContext.Episodes
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Episodes
+                .AsNoTracking()
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
@@ -410,15 +437,23 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public Task<List<Episode>> GetSeasonItems(int seasonId) =>
-            _dbContext.Episodes
+        public async Task<List<Episode>> GetSeasonItems(int seasonId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Episodes
+                .AsNoTracking()
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
                 .Filter(e => e.SeasonId == seasonId)
                 .ToListAsync();
+        }
 
-        private async Task<Either<BaseError, Season>> AddSeason(Show show, int libraryPathId, int seasonNumber)
+        private static async Task<Either<BaseError, Season>> AddSeason(
+            TvContext dbContext,
+            Show show,
+            int libraryPathId,
+            int seasonNumber)
         {
             try
             {
@@ -428,10 +463,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     ShowId = show.Id,
                     SeasonNumber = seasonNumber,
                     Episodes = new List<Episode>(),
-                    SeasonMetadata = new List<SeasonMetadata>()
+                    SeasonMetadata = new List<SeasonMetadata>
+                    {
+                        new()
+                    }
                 };
-                await _dbContext.Seasons.AddAsync(season);
-                await _dbContext.SaveChangesAsync();
+                await dbContext.Seasons.AddAsync(season);
+                await dbContext.SaveChangesAsync();
                 return season;
             }
             catch (Exception ex)
@@ -440,7 +478,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        private async Task<Either<BaseError, Episode>> AddEpisode(Season season, int libraryPathId, string path)
+        private static async Task<Either<BaseError, Episode>> AddEpisode(
+            TvContext dbContext,
+            Season season,
+            int libraryPathId,
+            string path)
         {
             try
             {
@@ -448,7 +490,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     LibraryPathId = libraryPathId,
                     SeasonId = season.Id,
-                    EpisodeMetadata = new List<EpisodeMetadata>(),
+                    EpisodeMetadata = new List<EpisodeMetadata>
+                    {
+                        new()
+                        {
+                            DateUpdated = DateTime.MinValue,
+                            MetadataKind = MetadataKind.Fallback
+                        }
+                    },
                     MediaVersions = new List<MediaVersion>
                     {
                         new()
@@ -460,8 +509,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         }
                     }
                 };
-                await _dbContext.Episodes.AddAsync(episode);
-                await _dbContext.SaveChangesAsync();
+                await dbContext.Episodes.AddAsync(episode);
+                await dbContext.SaveChangesAsync();
                 return episode;
             }
             catch (Exception ex)
@@ -470,8 +519,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        private async Task<Either<BaseError, PlexShow>> AddPlexShow(
-            TvContext context,
+        private static async Task<Either<BaseError, PlexShow>> AddPlexShow(
+            TvContext dbContext,
             PlexLibrary library,
             PlexShow item)
         {
@@ -479,9 +528,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 item.LibraryPathId = library.Paths.Head().Id;
 
-                await context.PlexShows.AddAsync(item);
-                await context.SaveChangesAsync();
-                await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
+                await dbContext.PlexShows.AddAsync(item);
+                await dbContext.SaveChangesAsync();
+                await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
                 return item;
             }
             catch (Exception ex)
@@ -490,8 +539,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        private async Task<Either<BaseError, PlexSeason>> AddPlexSeason(
-            TvContext context,
+        private static async Task<Either<BaseError, PlexSeason>> AddPlexSeason(
+            TvContext dbContext,
             PlexLibrary library,
             PlexSeason item)
         {
@@ -499,9 +548,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 item.LibraryPathId = library.Paths.Head().Id;
 
-                await context.PlexSeasons.AddAsync(item);
-                await context.SaveChangesAsync();
-                await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
+                await dbContext.PlexSeasons.AddAsync(item);
+                await dbContext.SaveChangesAsync();
+                await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
                 return item;
             }
             catch (Exception ex)
@@ -510,8 +559,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        private async Task<Either<BaseError, PlexEpisode>> AddPlexEpisode(
-            TvContext context,
+        private static async Task<Either<BaseError, PlexEpisode>> AddPlexEpisode(
+            TvContext dbContext,
             PlexLibrary library,
             PlexEpisode item)
         {
@@ -519,9 +568,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 item.LibraryPathId = library.Paths.Head().Id;
 
-                await context.PlexEpisodes.AddAsync(item);
-                await context.SaveChangesAsync();
-                await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
+                await dbContext.PlexEpisodes.AddAsync(item);
+                await dbContext.SaveChangesAsync();
+                await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
                 return item;
             }
             catch (Exception ex)
