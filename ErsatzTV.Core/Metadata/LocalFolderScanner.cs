@@ -10,7 +10,6 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
 {
@@ -48,8 +47,8 @@ namespace ErsatzTV.Core.Metadata
 
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
-        private readonly IMetadataRepository _metadataRepository;
         private readonly ILogger _logger;
+        private readonly IMetadataRepository _metadataRepository;
 
         static LocalFolderScanner() => Crypto = new SHA1CryptoServiceProvider();
 
@@ -112,7 +111,7 @@ namespace ErsatzTV.Core.Metadata
             Option<Artwork> maybeArtwork = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind);
 
             bool shouldRefresh = maybeArtwork.Match(
-                artwork => artwork.DateUpdated < lastWriteTime,
+                artwork => lastWriteTime.Subtract(artwork.DateUpdated) > TimeSpan.FromSeconds(1),
                 true);
 
             if (shouldRefresh)

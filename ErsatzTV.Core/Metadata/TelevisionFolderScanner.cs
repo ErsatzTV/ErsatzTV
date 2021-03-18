@@ -244,12 +244,6 @@ namespace ErsatzTV.Core.Metadata
                 await LocatePoster(season, seasonFolder).IfSomeAsync(
                     async posterFile =>
                     {
-                        // season.SeasonMetadata ??= new List<SeasonMetadata>();
-                        // if (!season.SeasonMetadata.Any())
-                        // {
-                        //     season.SeasonMetadata.Add(new SeasonMetadata { SeasonId = season.Id });
-                        // }
-
                         SeasonMetadata metadata = season.SeasonMetadata.Head();
                         await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster);
                     });
