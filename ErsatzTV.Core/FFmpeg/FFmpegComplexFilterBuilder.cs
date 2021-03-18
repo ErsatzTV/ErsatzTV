@@ -58,7 +58,7 @@ namespace ErsatzTV.Core.FFmpeg
         {
             var complexFilter = new StringBuilder();
 
-            var videoLabel = "0:v";
+            var videoLabel = "0:V";
             var audioLabel = "0:a";
 
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
