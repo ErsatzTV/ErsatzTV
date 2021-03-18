@@ -13,8 +13,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     public class PlayoutRepository : IPlayoutRepository
     {
         private readonly TvContext _dbContext;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public PlayoutRepository(TvContext dbContext) => _dbContext = dbContext;
+        public PlayoutRepository(TvContext dbContext, IDbContextFactory<TvContext> dbContextFactory)
+        {
+            _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
+        }
 
         public async Task<Playout> Add(Playout playout)
         {
@@ -67,8 +72,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(Optional)
                 .MapT(pi => pi.StartOffset);
 
-        public Task<List<PlayoutItem>> GetPlayoutItems(int playoutId) =>
-            _dbContext.PlayoutItems
+        public async Task<List<PlayoutItem>> GetPlayoutItems(int playoutId)
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            return await context.PlayoutItems
+                .AsNoTracking()
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Movie).MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
@@ -84,12 +92,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(s => s.SeasonMetadata)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
+        }
 
-        public Task<List<Playout>> GetAll() =>
-            _dbContext.Playouts
+        public async Task<List<Playout>> GetAll()
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            return await context.Playouts
+                .AsNoTracking()
                 .Include(p => p.Channel)
                 .Include(p => p.ProgramSchedule)
                 .ToListAsync();
+        }
 
         public async Task Update(Playout playout)
         {
