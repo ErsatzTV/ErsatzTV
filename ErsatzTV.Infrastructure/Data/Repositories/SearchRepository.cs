@@ -26,6 +26,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             return await dbContext.MediaItems
                 .AsNoTracking()
+                .Include(mi => mi.LibraryPath)
+                .ThenInclude(lp => lp.Library)
                 .Include(mi => (mi as Movie).MovieMetadata)
                 .ThenInclude(mm => mm.Genres)
                 .Include(mi => (mi as Movie).MovieMetadata)

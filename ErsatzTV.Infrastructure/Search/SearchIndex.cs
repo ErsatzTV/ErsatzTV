@@ -31,6 +31,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string GenreField = "genre";
         private const string TagField = "tag";
         private const string PlotField = "plot";
+        private const string LibraryName = "library_name";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -41,7 +42,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         public SearchIndex(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
-        public int Version => 1;
+        public int Version => 2;
 
         public Task<bool> Initialize()
         {
@@ -71,7 +72,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(TypeField, MovieType, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
-                        new TextField(PlotField, metadata.Plot, Field.Store.NO)
+                        new TextField(PlotField, metadata.Plot, Field.Store.NO),
+                        new TextField(LibraryName, movie.LibraryPath.Library.Name, Field.Store.NO)
                     };
 
                     foreach (Genre genre in metadata.Genres)
@@ -101,7 +103,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(TypeField, ShowType, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
-                        new TextField(PlotField, metadata.Plot, Field.Store.NO)
+                        new TextField(PlotField, metadata.Plot, Field.Store.NO),
+                        new TextField(LibraryName, show.LibraryPath.Library.Name, Field.Store.NO)
                     };
 
                     foreach (Genre genre in metadata.Genres)

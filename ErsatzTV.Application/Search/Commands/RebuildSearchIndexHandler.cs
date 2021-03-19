@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
@@ -30,7 +32,9 @@ namespace ErsatzTV.Application.Search.Commands
 
         public async Task<Unit> Handle(RebuildSearchIndex request, CancellationToken cancellationToken)
         {
-            if (await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
+            bool indexFolderExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
+            
+            if (!indexFolderExists || await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
                 _searchIndex.Version)
             {
                 _logger.LogDebug("Migrating search index to version {Version}", _searchIndex.Version);
