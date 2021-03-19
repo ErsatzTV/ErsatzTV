@@ -417,6 +417,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     _movieRepository.Object,
                     _localStatisticsProvider.Object,
                     _localMetadataProvider.Object,
+                    new Mock<IMetadataRepository>().Object,
                     _imageCache.Object,
                     new Mock<ILogger<MovieFolderScanner>>().Object
                 );

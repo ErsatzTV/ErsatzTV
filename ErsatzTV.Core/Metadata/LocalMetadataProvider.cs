@@ -23,16 +23,19 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILogger<LocalMetadataProvider> _logger;
 
         private readonly IMediaItemRepository _mediaItemRepository;
+        private readonly IMetadataRepository _metadataRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public LocalMetadataProvider(
             IMediaItemRepository mediaItemRepository,
+            IMetadataRepository metadataRepository,
             ITelevisionRepository televisionRepository,
             IFallbackMetadataProvider fallbackMetadataProvider,
             ILocalFileSystem localFileSystem,
             ILogger<LocalMetadataProvider> logger)
         {
             _mediaItemRepository = mediaItemRepository;
+            _metadataRepository = metadataRepository;
             _televisionRepository = televisionRepository;
             _fallbackMetadataProvider = fallbackMetadataProvider;
             _localFileSystem = localFileSystem;
@@ -92,8 +95,11 @@ namespace ErsatzTV.Core.Metadata
         private async Task ApplyMetadataUpdate(Episode episode, Tuple<EpisodeMetadata, int> metadataEpisodeNumber)
         {
             (EpisodeMetadata metadata, int episodeNumber) = metadataEpisodeNumber;
-            episode.EpisodeNumber = episodeNumber;
-            Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
+            if (episode.EpisodeNumber != episodeNumber)
+            {
+                await _televisionRepository.SetEpisodeNumber(episode, episodeNumber);
+            }
+            await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {
                     existing.Outline = metadata.Outline;
@@ -109,20 +115,22 @@ namespace ErsatzTV.Core.Metadata
                     existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                         : metadata.SortTitle;
+
+                    return _metadataRepository.Update(existing);
                 },
                 () =>
                 {
                     metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                         : metadata.SortTitle;
+                    metadata.EpisodeId = episode.Id;
                     episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata };
-                });
 
-            await _televisionRepository.Update(episode);
+                    return _metadataRepository.Add(metadata);
+                });
         }
 
-        private async Task ApplyMetadataUpdate(Movie movie, MovieMetadata metadata)
-        {
+        private Task ApplyMetadataUpdate(Movie movie, MovieMetadata metadata) =>
             Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {
@@ -163,20 +171,21 @@ namespace ErsatzTV.Core.Metadata
                     {
                         existing.Tags.Add(tag);
                     }
+
+                    return _metadataRepository.Update(existing);
                 },
                 () =>
                 {
                     metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                         : metadata.SortTitle;
+                    metadata.MovieId = movie.Id;
                     movie.MovieMetadata = new List<MovieMetadata> { metadata };
+
+                    return _metadataRepository.Add(metadata);
                 });
 
-            await _mediaItemRepository.Update(movie);
-        }
-
-        private async Task ApplyMetadataUpdate(Show show, ShowMetadata metadata)
-        {
+        private Task ApplyMetadataUpdate(Show show, ShowMetadata metadata) =>
             Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {
@@ -217,17 +226,19 @@ namespace ErsatzTV.Core.Metadata
                     {
                         existing.Tags.Add(tag);
                     }
+
+                    return _metadataRepository.Update(existing);
                 },
                 () =>
                 {
                     metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                         : metadata.SortTitle;
+                    metadata.ShowId = show.Id;
                     show.ShowMetadata = new List<ShowMetadata> { metadata };
-                });
 
-            await _televisionRepository.Update(show);
-        }
+                    return _metadataRepository.Add(metadata);
+                });
 
         private async Task<Option<MovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
         {

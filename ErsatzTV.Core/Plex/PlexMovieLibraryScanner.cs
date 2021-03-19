@@ -97,7 +97,7 @@ namespace ErsatzTV.Core.Plex
                         existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
                         existingVersion.DateUpdated = incomingVersion.DateUpdated;
 
-                        await _metadataRepository.UpdateStatistics(existingVersion);
+                        await _metadataRepository.UpdatePlexStatistics(existingVersion);
                     },
                     _ => Task.CompletedTask);
             }
@@ -127,6 +127,8 @@ namespace ErsatzTV.Core.Plex
                     existingMetadata.Genres.Add(genre);
                     await _movieRepository.AddGenre(existingMetadata, genre);
                 }
+                
+                // TODO: update other metadata?
             }
 
             return existing;
