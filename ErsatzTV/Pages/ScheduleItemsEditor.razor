@@ -83,65 +83,86 @@
 
     @if (_selectedItem is not null)
     {
-        <div style="max-width: 400px;">
-            <EditForm Model="_selectedItem">
-                <FluentValidator/>
-                <MudCard Class="mt-6">
+        <div style="display: flex; flex-direction: row;" class="mt-6">
+            <div style="max-width: 400px; flex-grow: 1">
+                <EditForm Model="_selectedItem">
+                    <FluentValidator/>
+                    <MudCard>
+                        <MudCardContent>
+                            <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
+                                @foreach (StartType startType in Enum.GetValues<StartType>())
+                                {
+                                    <MudSelectItem Value="@startType">@startType</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
+                            <MudSelect Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
+                                @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
+                                {
+                                    <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
+                                }
+                            </MudSelect>
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
+                            {
+                                <MudAutocomplete Class="mt-3"
+                                                 T="MediaCollectionViewModel"
+                                                 Label="Collection"
+                                                 @bind-value="_selectedItem.Collection"
+                                                 SearchFunc="@SearchMediaCollections"
+                                                 ToStringFunc="@(c => c?.Name)"/>
+                            }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+                            {
+                                <MudAutocomplete Class="mt-3"
+                                                 T="NamedMediaItemViewModel"
+                                                 Label="Television Show"
+                                                 @bind-value="_selectedItem.MediaItem"
+                                                 SearchFunc="@SearchTelevisionShows"
+                                                 ToStringFunc="@(s => s?.Name)"/>
+                            }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+                            {
+                                <MudAutocomplete Class="mt-3"
+                                                 T="NamedMediaItemViewModel"
+                                                 Label="Television Season"
+                                                 @bind-value="_selectedItem.MediaItem"
+                                                 SearchFunc="@SearchTelevisionSeasons"
+                                                 ToStringFunc="@(s => s?.Name)"/>
+                            }
+                            <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
+                                @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
+                                {
+                                    <MudSelectItem Value="@playoutMode">@playoutMode</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
+                            <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                            <MudElement HtmlTag="div" Class="mt-3">
+                                <MudSwitch Label="Offline Tail" @bind-Checked="@_selectedItem.OfflineTail" For="@(() => _selectedItem.OfflineTail)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
+                            </MudElement>
+                        </MudCardContent>
+                    </MudCard>
+                </EditForm>
+            </div>
+            <div style="max-width: 600px;" class="ml-6">
+                <MudCard>
                     <MudCardContent>
-                        <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
-                            @foreach (StartType startType in Enum.GetValues<StartType>())
-                            {
-                                <MudSelectItem Value="@startType">@startType</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
-                        <MudSelect Label="Collection Type" @bind-Value="_selectedItem.CollectionType" For="@(() => _selectedItem.CollectionType)">
-                            @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
-                            {
-                                <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
-                            }
-                        </MudSelect>
-                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
-                        {
-                            <MudAutocomplete Class="mt-3"
-                                             T="MediaCollectionViewModel"
-                                             Label="Collection"
-                                             @bind-value="_selectedItem.Collection"
-                                             SearchFunc="@SearchMediaCollections"
-                                             ToStringFunc="@(c => c?.Name)"/>
-                        }
-                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
-                        {
-                            <MudAutocomplete Class="mt-3"
-                                             T="NamedMediaItemViewModel"
-                                             Label="Television Show"
-                                             @bind-value="_selectedItem.MediaItem"
-                                             SearchFunc="@SearchTelevisionShows"
-                                             ToStringFunc="@(s => s?.Name)"/>
-                        }
-                        @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
-                        {
-                            <MudAutocomplete Class="mt-3"
-                                             T="NamedMediaItemViewModel"
-                                             Label="Television Season"
-                                             @bind-value="_selectedItem.MediaItem"
-                                             SearchFunc="@SearchTelevisionSeasons"
-                                             ToStringFunc="@(s => s?.Name)"/>
-                        }
-                        <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
-                            @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
-                            {
-                                <MudSelectItem Value="@playoutMode">@playoutMode</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
-                        <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
-                        <MudElement HtmlTag="div" Class="mt-3">
-                            <MudSwitch Label="Offline Tail" @bind-Checked="@_selectedItem.OfflineTail" For="@(() => _selectedItem.OfflineTail)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
-                        </MudElement>
+                        <MudText Class="mt-3" Typo="Typo.h6">
+                            Start Type
+                        </MudText>
+                        <MudText Class="mt-3">
+                            A <b>fixed</b> start type requires a <b>start time</b>, while a <b>dynamic</b> start type means the schedule item will start immediately after the preceding schedule item.
+                        </MudText>
+                        <MudText Class="mt-3 mb-2" Typo="Typo.h6">Playout Mode</MudText>
+                        <ul class="mud-typography-body1">
+                            <li><b>One</b> - to play one media item from the collection before advancing to the next schedule item.</li>
+                            <li><b>Multiple</b> - to play a specified <b>count</b> of media items from the collection before advancing to the next schedule item.</li>
+                            <li><b>Duration</b> - to play the maximum number of complete media items that will fit in the specified <b>playout duration</b>, before either going offline for the remainder of the <b>playout duration</b> (an <b>offline tail</b>), or immediately advancing to the next schedule item.</li>
+                            <li><b>Flood</b> - to play media items from the collection forever, or until the next schedule item's <b>start time</b> if one exists.</li>
+                        </ul>
                     </MudCardContent>
                 </MudCard>
-            </EditForm>
+            </div>
         </div>
     }
 </MudContainer>
