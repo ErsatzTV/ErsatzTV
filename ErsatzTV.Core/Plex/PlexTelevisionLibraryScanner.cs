@@ -257,7 +257,7 @@ namespace ErsatzTV.Core.Plex
                         existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
                         existingVersion.DateUpdated = incomingVersion.DateUpdated;
 
-                        await _metadataRepository.UpdateStatistics(existingVersion);
+                        await _metadataRepository.UpdatePlexStatistics(existingVersion);
                     },
                     _ => Task.CompletedTask);
             }

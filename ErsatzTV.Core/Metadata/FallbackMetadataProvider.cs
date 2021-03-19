@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
@@ -86,6 +87,8 @@ namespace ErsatzTV.Core.Metadata
                     metadata.Title = match.Groups[1].Value;
                     metadata.Year = int.Parse(match.Groups[2].Value);
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
+                    metadata.Genres = new List<Genre>();
+                    metadata.Tags = new List<Tag>();
                 }
             }
             catch (Exception)
