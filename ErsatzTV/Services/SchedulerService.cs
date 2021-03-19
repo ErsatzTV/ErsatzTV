@@ -58,7 +58,7 @@ namespace ErsatzTV.Services
             await BuildPlayouts(cancellationToken);
             await ScanLocalMediaSources(cancellationToken);
             await ScanPlexMediaSources(cancellationToken);
-            await RefreshSearchIndex(cancellationToken);
+            await RebuildSearchIndex(cancellationToken);
         }
 
         private async Task BuildPlayouts(CancellationToken cancellationToken)
@@ -114,9 +114,9 @@ namespace ErsatzTV.Services
             }
         }
 
-        private async Task RefreshSearchIndex(CancellationToken cancellationToken)
+        private async Task RebuildSearchIndex(CancellationToken cancellationToken)
         {
-            await _channel.WriteAsync(new RefreshSearchIndex(), cancellationToken);
+            await _channel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
         }
     }
 }

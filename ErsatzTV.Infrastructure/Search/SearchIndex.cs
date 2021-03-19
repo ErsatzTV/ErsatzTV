@@ -30,16 +30,18 @@ namespace ErsatzTV.Infrastructure.Search
         private const string SortTitleField = "sort_title";
         private const string GenreField = "genre";
         private const string TagField = "tag";
+        private const string PlotField = "plot";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
 
         private readonly ILocalFileSystem _localFileSystem;
 
-        private readonly string[] _searchFields =
-            { IdField, TypeField, TitleField, SortTitleField, GenreField, TagField };
+        private readonly string[] _searchFields = { TitleField, GenreField, TagField };
 
         public SearchIndex(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
+
+        public int Version => 1;
 
         public Task<bool> Initialize()
         {
@@ -47,13 +49,13 @@ namespace ErsatzTV.Infrastructure.Search
             return Task.FromResult(true);
         }
 
-        public async Task<Unit> AddItems(List<MediaItem> items)
+        public async Task<Unit> Rebuild(List<MediaItem> items)
         {
             await Initialize();
 
             using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
             var analyzer = new StandardAnalyzer(AppLuceneVersion);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.CREATE };
             using var writer = new IndexWriter(dir, indexConfig);
 
             foreach (Movie movie in items.OfType<Movie>())
@@ -68,7 +70,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
                         new StringField(TypeField, MovieType, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO)
+                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
+                        new TextField(PlotField, metadata.Plot, Field.Store.NO)
                     };
 
                     foreach (Genre genre in metadata.Genres)
@@ -97,7 +100,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(IdField, show.Id.ToString(), Field.Store.YES),
                         new StringField(TypeField, ShowType, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO)
+                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
+                        new TextField(PlotField, metadata.Plot, Field.Store.NO)
                     };
 
                     foreach (Genre genre in metadata.Genres)

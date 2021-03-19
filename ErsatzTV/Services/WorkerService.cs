@@ -85,8 +85,8 @@ namespace ErsatzTV.Services
                                     synchronizePlexLibraryById.PlexLibraryId,
                                     error.Value));
                             break;
-                        case RefreshSearchIndex refreshSearchIndex:
-                            await mediator.Send(refreshSearchIndex, cancellationToken);
+                        case RebuildSearchIndex rebuildSearchIndex:
+                            await mediator.Send(rebuildSearchIndex, cancellationToken);
                             break;
                     }
                 }

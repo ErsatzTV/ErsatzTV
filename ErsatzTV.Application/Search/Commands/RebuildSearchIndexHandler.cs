@@ -1,0 +1,69 @@
+﻿using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
+using LanguageExt;
+using Microsoft.Extensions.Logging;
+
+namespace ErsatzTV.Application.Search.Commands
+{
+    public class RebuildSearchIndexHandler : MediatR.IRequestHandler<RebuildSearchIndex, Unit>
+    {
+        private readonly IConfigElementRepository _configElementRepository;
+        private readonly ILogger<RebuildSearchIndexHandler> _logger;
+        private readonly ISearchIndex _searchIndex;
+        private readonly ISearchRepository _searchRepository;
+
+        public RebuildSearchIndexHandler(
+            ISearchIndex searchIndex,
+            ISearchRepository searchRepository,
+            IConfigElementRepository configElementRepository,
+            ILogger<RebuildSearchIndexHandler> logger)
+        {
+            _searchIndex = searchIndex;
+            _logger = logger;
+            _searchRepository = searchRepository;
+            _configElementRepository = configElementRepository;
+        }
+
+        public async Task<Unit> Handle(RebuildSearchIndex request, CancellationToken cancellationToken)
+        {
+            if (await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
+                _searchIndex.Version)
+            {
+                _logger.LogDebug("Migrating search index to version {Version}", _searchIndex.Version);
+
+                List<MediaItem> items = await _searchRepository.GetItemsToIndex();
+                await _searchIndex.Rebuild(items);
+
+                Option<ConfigElement> maybeVersion =
+                    await _configElementRepository.Get(ConfigElementKey.SearchIndexVersion);
+                await maybeVersion.Match(
+                    version =>
+                    {
+                        version.Value = _searchIndex.Version.ToString();
+                        return _configElementRepository.Update(version);
+                    },
+                    () =>
+                    {
+                        var configElement = new ConfigElement
+                        {
+                            Key = ConfigElementKey.SearchIndexVersion.Key,
+                            Value = _searchIndex.Version.ToString()
+                        };
+                        return _configElementRepository.Add(configElement);
+                    });
+
+                _logger.LogDebug("Done migrating search index");
+            }
+            else
+            {
+                _logger.LogDebug("Search index is already version {Version}", _searchIndex.Version);
+            }
+
+            return Unit.Default;
+        }
+    }
+}
