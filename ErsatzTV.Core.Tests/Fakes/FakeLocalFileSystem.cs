@@ -36,6 +36,8 @@ namespace ErsatzTV.Core.Tests.Fakes
             _folders = allFolders.Distinct().Map(f => new FakeFolderEntry(f)).ToList();
         }
 
+        public Unit EnsureFolderExists(string folder) => Unit.Default;
+
         public DateTime GetLastWriteTime(string path) =>
             Optional(_files.SingleOrDefault(f => f.Path == path))
                 .Map(f => f.LastWriteTime)

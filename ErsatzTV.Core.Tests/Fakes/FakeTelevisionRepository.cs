@@ -20,6 +20,8 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
             throw new NotSupportedException();
 
+        public Task<List<ShowMetadata>> GetShowsForCards(List<int> ids) => throw new NotSupportedException();
+
         public Task<List<Episode>> GetShowItems(int showId) => throw new NotSupportedException();
 
         public Task<List<Season>> GetAllSeasons() => throw new NotSupportedException();

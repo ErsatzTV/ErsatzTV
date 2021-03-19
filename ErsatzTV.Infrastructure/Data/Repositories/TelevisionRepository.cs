@@ -82,6 +82,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<ShowMetadata>> GetShowsForCards(List<int> ids)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.ShowMetadata
+                .AsNoTracking()
+                .Filter(sm => ids.Contains(sm.ShowId))
+                .Include(sm => sm.Artwork)
+                .OrderBy(sm => sm.SortTitle)
+                .ToListAsync();
+        }
+
         public async Task<List<Season>> GetAllSeasons()
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();

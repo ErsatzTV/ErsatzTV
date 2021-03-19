@@ -104,6 +104,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.MovieMetadata
+                .AsNoTracking()
+                .Filter(mm => ids.Contains(mm.MovieId))
+                .Include(mm => mm.Artwork)
+                .OrderBy(mm => mm.SortTitle)
+                .ToListAsync();
+        }
+
         public Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath) =>
             _dbConnection.QueryAsync<string>(
                 @"SELECT MF.Path

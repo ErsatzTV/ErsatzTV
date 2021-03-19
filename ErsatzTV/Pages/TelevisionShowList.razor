@@ -4,6 +4,9 @@
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.Search.Queries
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<TelevisionShowList>
 @inject NavigationManager NavigationManager
@@ -32,7 +35,8 @@
         }
         else
         {
-            <div style="margin-left: auto; margin-right: auto; max-width: 300px;">
+            <MudText Style="margin-bottom: auto; margin-top: auto; width: 33%">@_query</MudText>
+            <div style="width: 33%; max-width: 300px;">
                 <MudPaper Style="align-items: center; display: flex; justify-content: center;">
                     <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
                                    OnClick="@PrevPage"
@@ -71,6 +75,7 @@
     public int PageNumber { get; set; }
 
     private TelevisionShowCardResultsViewModel _data;
+    private string _query;
 
     protected override Task OnParametersSetAsync()
     {
@@ -78,16 +83,41 @@
         {
             PageNumber = 1;
         }
+        
+        string query = new Uri(NavigationManager.Uri).Query;
+        if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
+        {
+            _query = value;
+        }
 
         return RefreshData();
     }
 
-    protected override async Task RefreshData() =>
-        _data = await Mediator.Send(new GetTelevisionShowCards(PageNumber, PageSize));
+    protected override async Task RefreshData()
+    {
+        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:show" : $"type:show AND ({_query})";
+        _data = await Mediator.Send(new QuerySearchIndexShows(searchQuery, PageNumber, PageSize));
+    }
 
-    private void PrevPage() => NavigationManager.NavigateTo($"/media/tv/shows/page/{PageNumber - 1}");
+    private void PrevPage()
+    {
+        var uri = $"/media/tv/shows/page/{PageNumber - 1}";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        NavigationManager.NavigateTo(uri);
+    }
 
-    private void NextPage() => NavigationManager.NavigateTo($"/media/tv/shows/page/{PageNumber + 1}");
+    private void NextPage()
+    {
+        var uri = $"/media/tv/shows/page/{PageNumber + 1}";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        NavigationManager.NavigateTo(uri);
+    }
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {

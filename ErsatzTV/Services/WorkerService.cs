@@ -6,7 +6,10 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Application.Plex.Commands;
+using ErsatzTV.Application.Search.Commands;
+using ErsatzTV.Application.Search.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Search;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -81,6 +84,9 @@ namespace ErsatzTV.Services
                                     "Unable to synchronize plex library {LibraryId}: {Error}",
                                     synchronizePlexLibraryById.PlexLibraryId,
                                     error.Value));
+                            break;
+                        case RefreshSearchIndex refreshSearchIndex:
+                            await mediator.Send(refreshSearchIndex, cancellationToken);
                             break;
                     }
                 }
