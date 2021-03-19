@@ -107,14 +107,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(Optional);
         }
 
-        public Task<Option<PlexMediaSource>> GetPlexByLibraryId(int plexLibraryId)
+        public async Task<Option<PlexMediaSource>> GetPlexByLibraryId(int plexLibraryId)
         {
-            using TvContext context = _dbContextFactory.CreateDbContext();
-            return context.PlexMediaSources
+            int? id = await _dbConnection.QuerySingleAsync<int?>(
+                @"SELECT L.MediaSourceId FROM Library L
+                INNER JOIN PlexLibrary PL on L.Id = PL.Id
+                WHERE L.Id = @PlexLibraryId", new { PlexLibraryId = plexLibraryId });
+            
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            return await context.PlexMediaSources
                 .Include(p => p.Connections)
                 .Include(p => p.Libraries)
-                .Where(p => p.Libraries.Any(l => l.Id == plexLibraryId))
-                .SingleOrDefaultAsync()
+                .OrderBy(p => p.Id)
+                .SingleOrDefaultAsync(p => p.Id == id)
                 .Map(Optional);
         }
 
