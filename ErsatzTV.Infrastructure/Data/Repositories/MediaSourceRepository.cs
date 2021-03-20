@@ -187,7 +187,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return Unit.Default;
         }
 
-        public async Task DisablePlexLibrarySync(List<int> libraryIds)
+        public async Task<List<int>> DisablePlexLibrarySync(List<int> libraryIds)
         {
             await _dbConnection.ExecuteAsync(
                 "UPDATE PlexLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
@@ -197,6 +197,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "UPDATE Library SET LastScan = null WHERE Id IN @ids",
                 new { ids = libraryIds });
 
+            List<int> movieIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+            
             await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
@@ -224,6 +232,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
 
+            List<int> showIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+            
             await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
@@ -232,6 +248,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN Library l ON l.Id = lp.LibraryId
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
+
+            return movieIds.Append(showIds).ToList();
         }
 
         public Task EnablePlexLibrarySync(IEnumerable<int> libraryIds) =>

@@ -19,9 +19,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
-        public Task<Unit> RemoveGenre(Genre genre) =>
-            _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id }).ToUnit();
-
         public async Task<bool> Update(Metadata metadata)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
@@ -53,7 +50,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await dbContext.SaveChangesAsync() > 0;
         }
 
-        public Task<Unit> UpdatePlexStatistics(MediaVersion mediaVersion) =>
+        public Task<bool> UpdatePlexStatistics(MediaVersion mediaVersion) =>
             _dbConnection.ExecuteAsync(
                 @"UPDATE MediaVersion SET
                   SampleAspectRatio = @SampleAspectRatio,
@@ -66,7 +63,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     mediaVersion.VideoScanKind,
                     mediaVersion.DateUpdated,
                     MediaVersionId = mediaVersion.Id
-                }).ToUnit();
+                }).Map(result => result > 0);
 
         public Task<Unit> UpdateArtworkPath(Artwork artwork) =>
             _dbConnection.ExecuteAsync(
@@ -111,5 +108,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 @"DELETE FROM Artwork WHERE ArtworkKind = @ArtworkKind AND (MovieMetadataId = @Id
                 OR ShowMetadataId = @Id OR SeasonMetadataId = @Id OR EpisodeMetadataId = @Id)",
                 new { ArtworkKind = artworkKind, metadata.Id }).ToUnit();
+
+        public Task<bool> RemoveGenre(Genre genre) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id })
+                .Map(result => result > 0);
     }
 }
