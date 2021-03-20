@@ -7,6 +7,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories
 {
@@ -21,7 +22,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task<List<MediaItem>> GetItemsToIndex()
+        public Task<List<int>> GetItemIdsToIndex() =>
+            _dbConnection.QueryAsync<int>(@"SELECT Id FROM MediaItem")
+                .Map(result => result.ToList());
+
+        public async Task<Option<MediaItem>> GetItemToIndex(int id)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             return await dbContext.MediaItems
@@ -36,7 +41,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Genres)
                 .Include(mi => (mi as Show).ShowMetadata)
                 .ThenInclude(mm => mm.Tags)
-                .ToListAsync();
+                .OrderBy(mi => mi.Id)
+                .SingleOrDefaultAsync(mi => mi.Id == id)
+                .Map(Optional);
         }
 
         public async Task<List<MediaItem>> SearchMediaItemsByTitle(string query)
