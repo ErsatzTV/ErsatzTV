@@ -8,8 +8,8 @@ namespace ErsatzTV.Core.Interfaces.Metadata
     {
         Task<ShowMetadata> GetMetadataForShow(string showFolder);
         Task<bool> RefreshSidecarMetadata(MediaItem mediaItem, string path);
-        Task<Unit> RefreshSidecarMetadata(Show televisionShow, string showFolder);
+        Task<bool> RefreshSidecarMetadata(Show televisionShow, string showFolder);
         Task<bool> RefreshFallbackMetadata(MediaItem mediaItem);
-        Task<Unit> RefreshFallbackMetadata(Show televisionShow, string showFolder);
+        Task<bool> RefreshFallbackMetadata(Show televisionShow, string showFolder);
     }
 }

@@ -174,10 +174,7 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         MovieMetadata metadata = movie.MovieMetadata.Head();
-                        if (await RefreshArtwork(posterFile, metadata, artworkKind))
-                        {
-                            result.IsUpdated = true;
-                        }
+                        await RefreshArtwork(posterFile, metadata, artworkKind);
                     });
 
                 return result;

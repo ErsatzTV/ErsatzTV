@@ -7,6 +7,7 @@ using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
@@ -212,6 +213,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(sm => sm.Genres)
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Tags)
+                        .Include(s => s.LibraryPath)
+                        .ThenInclude(lp => lp.Library)
                         .OrderBy(s => s.Id)
                         .SingleOrDefaultAsync(s => s.Id == id)
                         .Map(Optional);
@@ -219,7 +222,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 () => Option<Show>.None.AsTask());
         }
 
-        public async Task<Either<BaseError, Show>> AddShow(int libraryPathId, string showFolder, ShowMetadata metadata)
+        public async Task<Either<BaseError, MediaItemScanResult<Show>>> AddShow(int libraryPathId, string showFolder, ShowMetadata metadata)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
@@ -237,8 +240,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
                 await dbContext.Shows.AddAsync(show);
                 await dbContext.SaveChangesAsync();
+                await dbContext.Entry(show).Reference(s => s.LibraryPath).LoadAsync();
+                await dbContext.Entry(show.LibraryPath).Reference(lp => lp.Library).LoadAsync();
 
-                return show;
+                return new MediaItemScanResult<Show>(show) { IsAdded = true };
             }
             catch (Exception ex)
             {
@@ -325,16 +330,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return Unit.Default;
         }
 
-        public async Task<Unit> DeleteEmptyShows(LibraryPath libraryPath)
+        public async Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             List<Show> shows = await dbContext.Shows
                 .Filter(s => s.LibraryPathId == libraryPath.Id)
                 .Filter(s => s.Seasons.Count == 0)
                 .ToListAsync();
+            var ids = shows.Map(s => s.Id).ToList();
             dbContext.Shows.RemoveRange(shows);
             await dbContext.SaveChangesAsync();
-            return Unit.Default;
+            return ids;
         }
 
         public async Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item)

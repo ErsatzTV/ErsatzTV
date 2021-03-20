@@ -22,19 +22,16 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<LocalMetadataProvider> _logger;
 
-        private readonly IMediaItemRepository _mediaItemRepository;
         private readonly IMetadataRepository _metadataRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public LocalMetadataProvider(
-            IMediaItemRepository mediaItemRepository,
             IMetadataRepository metadataRepository,
             ITelevisionRepository televisionRepository,
             IFallbackMetadataProvider fallbackMetadataProvider,
             ILocalFileSystem localFileSystem,
             ILogger<LocalMetadataProvider> logger)
         {
-            _mediaItemRepository = mediaItemRepository;
             _metadataRepository = metadataRepository;
             _televisionRepository = televisionRepository;
             _fallbackMetadataProvider = fallbackMetadataProvider;
@@ -69,15 +66,23 @@ namespace ErsatzTV.Core.Metadata
             mediaItem switch
             {
                 Episode e => LoadMetadata(e, path)
-                    .Bind(maybeMetadata => maybeMetadata.Match(metadata => ApplyMetadataUpdate(e, metadata), () => Task.FromResult(false))),
+                    .Bind(
+                        maybeMetadata => maybeMetadata.Match(
+                            metadata => ApplyMetadataUpdate(e, metadata),
+                            () => Task.FromResult(false))),
                 Movie m => LoadMetadata(m, path)
-                    .Bind(maybeMetadata => maybeMetadata.Match(metadata => ApplyMetadataUpdate(m, metadata), () => Task.FromResult(false))),
+                    .Bind(
+                        maybeMetadata => maybeMetadata.Match(
+                            metadata => ApplyMetadataUpdate(m, metadata),
+                            () => Task.FromResult(false))),
                 _ => Task.FromResult(false)
             };
 
-        public Task<Unit> RefreshSidecarMetadata(Show televisionShow, string showFolder) =>
+        public Task<bool> RefreshSidecarMetadata(Show televisionShow, string showFolder) =>
             LoadMetadata(televisionShow, showFolder).Bind(
-                maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(televisionShow, metadata)));
+                maybeMetadata => maybeMetadata.Match(
+                    metadata => ApplyMetadataUpdate(televisionShow, metadata),
+                    () => Task.FromResult(false)));
 
         public Task<bool> RefreshFallbackMetadata(MediaItem mediaItem) =>
             mediaItem switch
@@ -87,9 +92,8 @@ namespace ErsatzTV.Core.Metadata
                 _ => Task.FromResult(false)
             };
 
-        public Task<Unit> RefreshFallbackMetadata(Show televisionShow, string showFolder) =>
-            ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder))
-                .ToUnit();
+        public Task<bool> RefreshFallbackMetadata(Show televisionShow, string showFolder) =>
+            ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder));
 
         private async Task<bool> ApplyMetadataUpdate(Episode episode, Tuple<EpisodeMetadata, int> metadataEpisodeNumber)
         {
@@ -98,6 +102,7 @@ namespace ErsatzTV.Core.Metadata
             {
                 await _televisionRepository.SetEpisodeNumber(episode, episodeNumber);
             }
+
             await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {
@@ -186,7 +191,7 @@ namespace ErsatzTV.Core.Metadata
                     return _metadataRepository.Add(metadata);
                 });
 
-        private Task ApplyMetadataUpdate(Show show, ShowMetadata metadata) =>
+        private Task<bool> ApplyMetadataUpdate(Show show, ShowMetadata metadata) =>
             Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {

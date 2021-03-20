@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using LanguageExt;
 
 namespace ErsatzTV.Core.Tests.Fakes
@@ -45,7 +46,7 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata) =>
             throw new NotSupportedException();
 
-        public Task<Either<BaseError, Show>>
+        public Task<Either<BaseError, MediaItemScanResult<Show>>>
             AddShow(int libraryPathId, string showFolder, ShowMetadata metadata) =>
             throw new NotSupportedException();
 
@@ -61,7 +62,7 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath) => throw new NotSupportedException();
 
-        public Task<Unit> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
+        public Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
 
         public Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item) =>
             throw new NotSupportedException();

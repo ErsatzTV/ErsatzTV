@@ -8,6 +8,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -18,6 +19,7 @@ namespace ErsatzTV.Core.Metadata
     {
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
+        private readonly ISearchIndex _searchIndex;
         private readonly ILogger<TelevisionFolderScanner> _logger;
         private readonly ITelevisionRepository _televisionRepository;
 
@@ -28,6 +30,7 @@ namespace ErsatzTV.Core.Metadata
             ILocalMetadataProvider localMetadataProvider,
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
+            ISearchIndex searchIndex,
             ILogger<TelevisionFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
@@ -38,6 +41,7 @@ namespace ErsatzTV.Core.Metadata
             _localFileSystem = localFileSystem;
             _televisionRepository = televisionRepository;
             _localMetadataProvider = localMetadataProvider;
+            _searchIndex = searchIndex;
             _logger = logger;
         }
 
@@ -55,14 +59,26 @@ namespace ErsatzTV.Core.Metadata
 
             foreach (string showFolder in allShowFolders)
             {
-                Either<BaseError, Show> maybeShow =
+                Either<BaseError, MediaItemScanResult<Show>> maybeShow =
                     await FindOrCreateShow(libraryPath.Id, showFolder)
                         .BindT(show => UpdateMetadataForShow(show, showFolder))
                         .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Poster))
                         .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt));
 
                 await maybeShow.Match(
-                    show => ScanSeasons(libraryPath, ffprobePath, show, showFolder),
+                    async result =>
+                    {
+                        if (result.IsAdded)
+                        {
+                            await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                        }
+                        else if (result.IsUpdated)
+                        {
+                            await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                        }
+                        
+                        await ScanSeasons(libraryPath, ffprobePath, result.Item, showFolder);
+                    },
                     _ => Task.FromResult(Unit.Default));
             }
 
@@ -76,19 +92,20 @@ namespace ErsatzTV.Core.Metadata
             }
 
             await _televisionRepository.DeleteEmptySeasons(libraryPath);
-            await _televisionRepository.DeleteEmptyShows(libraryPath);
+            List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);
+            await _searchIndex.RemoveItems(ids);
 
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, Show>> FindOrCreateShow(
+        private async Task<Either<BaseError, MediaItemScanResult<Show>>> FindOrCreateShow(
             int libraryPathId,
             string showFolder)
         {
             ShowMetadata metadata = await _localMetadataProvider.GetMetadataForShow(showFolder);
             Option<Show> maybeShow = await _televisionRepository.GetShowByMetadata(libraryPathId, metadata);
             return await maybeShow.Match(
-                show => Right<BaseError, Show>(show).AsTask(),
+                show => Right<BaseError, MediaItemScanResult<Show>>(new MediaItemScanResult<Show>(show)).AsTask(),
                 async () => await _televisionRepository.AddShow(libraryPathId, showFolder, metadata));
         }
 
@@ -141,12 +158,13 @@ namespace ErsatzTV.Core.Metadata
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, Show>> UpdateMetadataForShow(
-            Show show,
+        private async Task<Either<BaseError, MediaItemScanResult<Show>>> UpdateMetadataForShow(
+            MediaItemScanResult<Show> result,
             string showFolder)
         {
             try
             {
+                Show show = result.Item;
                 await LocateNfoFileForShow(showFolder).Match(
                     async nfoFile =>
                     {
@@ -158,7 +176,10 @@ namespace ErsatzTV.Core.Metadata
                         if (shouldUpdate)
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                            await _localMetadataProvider.RefreshSidecarMetadata(show, nfoFile);
+                            if (await _localMetadataProvider.RefreshSidecarMetadata(show, nfoFile))
+                            {
+                                result.IsUpdated = true;
+                            }
                         }
                     },
                     async () =>
@@ -166,11 +187,14 @@ namespace ErsatzTV.Core.Metadata
                         if (!Optional(show.ShowMetadata).Flatten().Any())
                         {
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", showFolder);
-                            await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder);
+                            if (await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder))
+                            {
+                                result.IsUpdated = true;
+                            }
                         }
                     });
 
-                return show;
+                return result;
             }
             catch (Exception ex)
             {
@@ -215,13 +239,14 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, Show>> UpdateArtworkForShow(
-            Show show,
+        private async Task<Either<BaseError, MediaItemScanResult<Show>>> UpdateArtworkForShow(
+            MediaItemScanResult<Show> result,
             string showFolder,
             ArtworkKind artworkKind)
         {
             try
             {
+                Show show = result.Item;
                 await LocateArtworkForShow(showFolder, artworkKind).IfSomeAsync(
                     async posterFile =>
                     {
@@ -229,7 +254,7 @@ namespace ErsatzTV.Core.Metadata
                         await RefreshArtwork(posterFile, metadata, artworkKind);
                     });
 
-                return show;
+                return result;
             }
             catch (Exception ex)
             {
