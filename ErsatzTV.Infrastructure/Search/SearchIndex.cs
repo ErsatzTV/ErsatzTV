@@ -40,6 +40,8 @@ namespace ErsatzTV.Infrastructure.Search
         private const string MovieType = "movie";
         private const string ShowType = "show";
 
+        private static bool _isRebuilding;
+
         private readonly ILocalFileSystem _localFileSystem;
 
         private readonly string[] _searchFields = { TitleField, GenreField, TagField };
@@ -61,6 +63,8 @@ namespace ErsatzTV.Infrastructure.Search
 
         public async Task<Unit> Rebuild(List<int> itemIds)
         {
+            _isRebuilding = true;
+
             await Initialize();
 
             using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
@@ -85,6 +89,8 @@ namespace ErsatzTV.Infrastructure.Search
                     }
                 }
             }
+
+            _isRebuilding = false;
 
             return Unit.Default;
         }
@@ -131,7 +137,8 @@ namespace ErsatzTV.Infrastructure.Search
 
         public Task<SearchResult> Search(string searchQuery, int skip, int limit, string searchField = "")
         {
-            if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
+            if (_isRebuilding ||
+                string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
             {
                 return new SearchResult(new List<SearchItem>(), 0).AsTask();
             }
