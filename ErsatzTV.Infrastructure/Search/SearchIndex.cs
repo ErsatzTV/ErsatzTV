@@ -44,7 +44,6 @@ namespace ErsatzTV.Infrastructure.Search
 
         private readonly ILocalFileSystem _localFileSystem;
 
-        private readonly string[] _searchFields = { TitleField, GenreField, TagField };
         private readonly ISearchRepository _searchRepository;
 
         public SearchIndex(ILocalFileSystem localFileSystem, ISearchRepository searchRepository)
@@ -150,7 +149,8 @@ namespace ErsatzTV.Infrastructure.Search
             using var analyzer = new StandardAnalyzer(AppLuceneVersion);
             QueryParser parser = !string.IsNullOrWhiteSpace(searchField)
                 ? new QueryParser(AppLuceneVersion, searchField, analyzer)
-                : new MultiFieldQueryParser(AppLuceneVersion, _searchFields, analyzer);
+                : new MultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzer);
+            parser.AllowLeadingWildcard = true;
             Query query = ParseQuery(searchQuery, parser);
             var filter = new DuplicateFilter(TitleAndYearField);
             var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
