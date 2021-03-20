@@ -9,6 +9,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Tests.Fakes;
 using FluentAssertions;
@@ -44,12 +45,16 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository = new Mock<IMovieRepository>();
                 _movieRepository.Setup(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()))
                     .Returns(
-                        (LibraryPath _, string path) => Right<BaseError, Movie>(new FakeMovieWithPath(path)).AsTask());
+                        (LibraryPath _, string path) =>
+                            Right<BaseError, MediaItemScanResult<Movie>>(new FakeMovieWithPath(path)).AsTask());
                 _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
                     .Returns(new List<string>().AsEnumerable().AsTask());
 
                 _localStatisticsProvider = new Mock<ILocalStatisticsProvider>();
                 _localMetadataProvider = new Mock<ILocalMetadataProvider>();
+
+                _localStatisticsProvider.Setup(x => x.RefreshStatistics(It.IsAny<string>(), It.IsAny<MediaItem>()))
+                    .Returns<string, MediaItem>((_, _) => Right<BaseError, bool>(true).AsTask());
 
                 // fallback metadata adds metadata to a movie, so we need to replicate that here
                 _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<MediaItem>()))
@@ -57,7 +62,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                         (MediaItem mediaItem) =>
                         {
                             ((Movie) mediaItem).MovieMetadata = new List<MovieMetadata> { new() };
-                            return Unit.Default.AsTask();
+                            return Task.FromResult(true);
                         });
 
                 _imageCache = new Mock<IImageCache>();
@@ -104,11 +109,14 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
             }
 
@@ -137,11 +145,15 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshSidecarMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath), metadataPath),
+                    x => x.RefreshSidecarMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath),
+                        metadataPath),
                     Times.Once);
             }
 
@@ -170,11 +182,15 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshSidecarMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath), metadataPath),
+                    x => x.RefreshSidecarMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath),
+                        metadataPath),
                     Times.Once);
             }
 
@@ -207,11 +223,14 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _imageCache.Verify(
@@ -248,11 +267,14 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _imageCache.Verify(
@@ -288,11 +310,14 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
             }
 
@@ -324,11 +349,14 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
             }
 
@@ -354,11 +382,14 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
 
                 _localStatisticsProvider.Verify(
-                    x => x.RefreshStatistics(FFprobePath, It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
 
                 _localMetadataProvider.Verify(
-                    x => x.RefreshFallbackMetadata(It.Is<FakeMovieWithPath>(i => i.Path == moviePath)),
+                    x => x.RefreshFallbackMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
             }
 
@@ -419,6 +450,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     _localMetadataProvider.Object,
                     new Mock<IMetadataRepository>().Object,
                     _imageCache.Object,
+                    new Mock<ISearchIndex>().Object,
                     new Mock<ILogger<MovieFolderScanner>>().Object
                 );
         }

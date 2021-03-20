@@ -21,6 +21,24 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
+        public async Task<List<MediaItem>> GetItemsToIndex()
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.MediaItems
+                .AsNoTracking()
+                .Include(mi => mi.LibraryPath)
+                .ThenInclude(lp => lp.Library)
+                .Include(mi => (mi as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(mi => (mi as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .Include(mi => (mi as Show).ShowMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(mi => (mi as Show).ShowMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .ToListAsync();
+        }
+
         public async Task<List<MediaItem>> SearchMediaItemsByTitle(string query)
         {
             List<int> ids = await _dbConnection.QueryAsync<int>(

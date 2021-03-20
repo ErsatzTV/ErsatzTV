@@ -1,8 +1,8 @@
 ﻿@page "/search"
 @using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.Search.Queries
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
@@ -34,23 +34,43 @@
         else
         {
             <MudText>@_query</MudText>
-            <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
-            <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
+            if (_movies.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")">@_movies.Count Movies</MudLink>
+            }
+            else
+            {
+                <MudText Class="ml-4">0 Movies</MudText>
+            }
+
+            if (_shows.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_shows.Count Shows</MudLink>
+            }
+            else
+            {
+                <MudText Class="ml-4">0 Shows</MudText>
+            }
         }
     </div>
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Style="margin-top: 96px">
-    @if (_data?.MovieCards.Any() == true)
+    @if (_movies.Count > 0)
     {
-        <MudText GutterBottom="true"
-                 Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
-            Movies
-        </MudText>
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
+                Movies
+            </MudText>
+            @if (_movies.Count > 50)
+            {
+                <MudLink Href="@GetMoviesLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-            @foreach (MovieCardViewModel card in _data.MovieCards.OrderBy(m => m.SortTitle))
+            @foreach (MovieCardViewModel card in _movies.Cards.OrderBy(m => m.SortTitle))
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/movies/{card.MovieId}")"
@@ -62,17 +82,22 @@
         </MudContainer>
     }
 
-    @if (_data?.ShowCards.Any() == true)
+    @if (_shows.Count > 0)
     {
-        <MudText GutterBottom="true"
-                 Typo="Typo.h4"
-                 Style="scroll-margin-top: 160px"
-                 UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
-            Shows
-        </MudText>
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
+                Shows
+            </MudText>
+            @if (_shows.Count > 50)
+            {
+                <MudLink Href="@GetShowsLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
 
         <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-            @foreach (TelevisionShowCardViewModel card in _data.ShowCards.OrderBy(s => s.SortTitle))
+            @foreach (TelevisionShowCardViewModel card in _shows.Cards.OrderBy(s => s.SortTitle))
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
@@ -87,7 +112,8 @@
 
 @code {
     private string _query;
-    private SearchCardResultsViewModel _data;
+    private MovieCardResultsViewModel _movies;
+    private TelevisionShowCardResultsViewModel _shows;
 
     protected override async Task OnInitializedAsync()
     {
@@ -96,8 +122,9 @@
         if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
         {
             _query = value;
-            Either<BaseError, SearchCardResultsViewModel> maybeResults = await Mediator.Send(new GetSearchCards(_query));
-            maybeResults.IfRight(results => _data = results);
+
+            _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
+            _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50));
         }
     }
 
@@ -105,8 +132,8 @@
     {
         List<MediaCardViewModel> GetSortedItems()
         {
-            return _data.MovieCards.OrderBy(m => m.SortTitle)
-                .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
+            return _movies.Cards.OrderBy(m => m.SortTitle)
+                .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
                 .ToList();
         }
 
@@ -156,6 +183,26 @@
                     Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
             }
         }
+    }
+
+    private string GetMoviesLink()
+    {
+        var uri = "/media/movies";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        return uri;
+    }
+
+    private string GetShowsLink()
+    {
+        var uri = "/media/tv/shows";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        return uri;
     }
 
 }

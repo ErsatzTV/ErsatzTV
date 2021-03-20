@@ -1,9 +1,12 @@
 ﻿@page "/media/movies"
 @page "/media/movies/page/{PageNumber:int}"
+@using LanguageExt.UnsafeValueAccess
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
 @using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.Search.Queries
 @using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<MovieList>
 @inject NavigationManager NavigationManager
@@ -32,7 +35,8 @@
         }
         else
         {
-            <div style="margin-left: auto; margin-right: auto; max-width: 300px;">
+            <MudText Style="margin-bottom: auto; margin-top: auto; width: 33%">@_query</MudText>
+            <div style="max-width: 300px; width: 33%;">
                 <MudPaper Style="align-items: center; display: flex; justify-content: center;">
                     <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
                                    OnClick="@PrevPage"
@@ -63,6 +67,12 @@
         }
     </MudContainer>
 </MudContainer>
+@if (_data.PageMap.IsSome)
+{
+    <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
+               BaseUri="/media/movies"
+               Query="@_query"/>
+}
 
 @code {
     private static int PageSize => 100;
@@ -71,6 +81,7 @@
     public int PageNumber { get; set; }
 
     private MovieCardResultsViewModel _data;
+    private string _query;
 
     protected override Task OnParametersSetAsync()
     {
@@ -79,15 +90,40 @@
             PageNumber = 1;
         }
 
+        string query = new Uri(NavigationManager.Uri).Query;
+        if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
+        {
+            _query = value;
+        }
+
         return RefreshData();
     }
 
-    protected override async Task RefreshData() =>
-        _data = await Mediator.Send(new GetMovieCards(PageNumber, PageSize));
+    protected override async Task RefreshData()
+    {
+        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:movie" : $"type:movie AND ({_query})";
+        _data = await Mediator.Send(new QuerySearchIndexMovies(searchQuery, PageNumber, PageSize));
+    }
 
-    private void PrevPage() => NavigationManager.NavigateTo($"/media/movies/page/{PageNumber - 1}");
+    private void PrevPage()
+    {
+        var uri = $"/media/movies/page/{PageNumber - 1}";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        NavigationManager.NavigateTo(uri);
+    }
 
-    private void NextPage() => NavigationManager.NavigateTo($"/media/movies/page/{PageNumber + 1}");
+    private void NextPage()
+    {
+        var uri = $"/media/movies/page/{PageNumber + 1}";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        NavigationManager.NavigateTo(uri);
+    }
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {

@@ -11,6 +11,16 @@ namespace ErsatzTV.Core.Metadata
 {
     public class LocalFileSystem : ILocalFileSystem
     {
+        public Unit EnsureFolderExists(string folder)
+        {
+            if (!Directory.Exists(folder))
+            {
+                Directory.CreateDirectory(folder);
+            }
+
+            return Unit.Default;
+        }
+
         public DateTime GetLastWriteTime(string path) =>
             Try(File.GetLastWriteTimeUtc(path)).IfFail(() => DateTime.MinValue);
 

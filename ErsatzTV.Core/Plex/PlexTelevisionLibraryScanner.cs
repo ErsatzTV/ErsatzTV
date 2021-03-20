@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Metadata;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -15,18 +17,21 @@ namespace ErsatzTV.Core.Plex
         private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
         private readonly IMetadataRepository _metadataRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
+        private readonly ISearchIndex _searchIndex;
         private readonly ITelevisionRepository _televisionRepository;
 
         public PlexTelevisionLibraryScanner(
             IPlexServerApiClient plexServerApiClient,
             ITelevisionRepository televisionRepository,
             IMetadataRepository metadataRepository,
+            ISearchIndex searchIndex,
             ILogger<PlexTelevisionLibraryScanner> logger)
             : base(metadataRepository)
         {
             _plexServerApiClient = plexServerApiClient;
             _televisionRepository = televisionRepository;
             _metadataRepository = metadataRepository;
+            _searchIndex = searchIndex;
             _logger = logger;
         }
 
@@ -46,13 +51,25 @@ namespace ErsatzTV.Core.Plex
                     foreach (PlexShow incoming in showEntries)
                     {
                         // TODO: figure out how to rebuild playlists
-                        Either<BaseError, PlexShow> maybeShow = await _televisionRepository
+                        Either<BaseError, MediaItemScanResult<PlexShow>> maybeShow = await _televisionRepository
                             .GetOrAddPlexShow(plexMediaSourceLibrary, incoming)
                             .BindT(existing => UpdateMetadata(existing, incoming))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
                         await maybeShow.Match(
-                            async show => await ScanSeasons(plexMediaSourceLibrary, show, connection, token),
+                            async result =>
+                            {
+                                if (result.IsAdded)
+                                {
+                                    await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                                }
+                                else if (result.IsUpdated)
+                                {
+                                    await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                                }
+
+                                await ScanSeasons(plexMediaSourceLibrary, result.Item, connection, token);
+                            },
                             error =>
                             {
                                 _logger.LogWarning(
@@ -64,7 +81,9 @@ namespace ErsatzTV.Core.Plex
                     }
 
                     var showKeys = showEntries.Map(s => s.Key).ToList();
-                    await _televisionRepository.RemoveMissingPlexShows(plexMediaSourceLibrary, showKeys);
+                    List<int> ids =
+                        await _televisionRepository.RemoveMissingPlexShows(plexMediaSourceLibrary, showKeys);
+                    await _searchIndex.RemoveItems(ids);
 
                     return Unit.Default;
                 },
@@ -79,8 +98,11 @@ namespace ErsatzTV.Core.Plex
                 });
         }
 
-        private Task<Either<BaseError, PlexShow>> UpdateMetadata(PlexShow existing, PlexShow incoming)
+        private async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> UpdateMetadata(
+            MediaItemScanResult<PlexShow> result,
+            PlexShow incoming)
         {
+            PlexShow existing = result.Item;
             ShowMetadata existingMetadata = existing.ShowMetadata.Head();
             ShowMetadata incomingMetadata = incoming.ShowMetadata.Head();
 
@@ -93,7 +115,10 @@ namespace ErsatzTV.Core.Plex
                     .ToList())
                 {
                     existingMetadata.Genres.Remove(genre);
-                    _metadataRepository.RemoveGenre(genre);
+                    if (await _metadataRepository.RemoveGenre(genre))
+                    {
+                        result.IsUpdated = true;
+                    }
                 }
 
                 foreach (Genre genre in incomingMetadata.Genres
@@ -101,15 +126,21 @@ namespace ErsatzTV.Core.Plex
                     .ToList())
                 {
                     existingMetadata.Genres.Add(genre);
-                    _televisionRepository.AddGenre(existingMetadata, genre);
+                    if (await _televisionRepository.AddGenre(existingMetadata, genre))
+                    {
+                        result.IsUpdated = true;
+                    }
                 }
             }
 
-            return Right<BaseError, PlexShow>(existing).AsTask();
+            return result;
         }
 
-        private async Task<Either<BaseError, PlexShow>> UpdateArtwork(PlexShow existing, PlexShow incoming)
+        private async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> UpdateArtwork(
+            MediaItemScanResult<PlexShow> result,
+            PlexShow incoming)
         {
+            PlexShow existing = result.Item;
             ShowMetadata existingMetadata = existing.ShowMetadata.Head();
             ShowMetadata incomingMetadata = incoming.ShowMetadata.Head();
 
@@ -119,7 +150,7 @@ namespace ErsatzTV.Core.Plex
                 await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
             }
 
-            return existing;
+            return result;
         }
 
         private async Task<Either<BaseError, Unit>> ScanSeasons(
