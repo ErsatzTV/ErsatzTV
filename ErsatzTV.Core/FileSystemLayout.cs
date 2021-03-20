@@ -20,6 +20,7 @@ namespace ErsatzTV.Core
         public static readonly string PlexSecretsPath = Path.Combine(AppDataFolder, "plex-secrets.json");
 
         public static readonly string FFmpegReportsFolder = Path.Combine(AppDataFolder, "ffmpeg-reports");
+        public static readonly string SearchIndexFolder = Path.Combine(AppDataFolder, "search-index");
 
         public static readonly string ArtworkCacheFolder = Path.Combine(AppDataFolder, "cache", "artwork");
 

@@ -8,6 +8,7 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Application.Plex.Commands;
+using ErsatzTV.Application.Search.Commands;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Infrastructure.Data;
@@ -54,6 +55,7 @@ namespace ErsatzTV.Services
 
         private async Task DoWork(CancellationToken cancellationToken)
         {
+            await RebuildSearchIndex(cancellationToken);
             await BuildPlayouts(cancellationToken);
             await ScanLocalMediaSources(cancellationToken);
             await ScanPlexMediaSources(cancellationToken);
@@ -111,5 +113,8 @@ namespace ErsatzTV.Services
                 }
             }
         }
+
+        private async Task RebuildSearchIndex(CancellationToken cancellationToken) =>
+            await _channel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
     }
 }

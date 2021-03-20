@@ -4,9 +4,10 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Metadata;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Plex
 {
@@ -16,17 +17,20 @@ namespace ErsatzTV.Core.Plex
         private readonly IMetadataRepository _metadataRepository;
         private readonly IMovieRepository _movieRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
+        private readonly ISearchIndex _searchIndex;
 
         public PlexMovieLibraryScanner(
             IPlexServerApiClient plexServerApiClient,
             IMovieRepository movieRepository,
             IMetadataRepository metadataRepository,
+            ISearchIndex searchIndex,
             ILogger<PlexMovieLibraryScanner> logger)
             : base(metadataRepository)
         {
             _plexServerApiClient = plexServerApiClient;
             _movieRepository = movieRepository;
             _metadataRepository = metadataRepository;
+            _searchIndex = searchIndex;
             _logger = logger;
         }
 
@@ -46,21 +50,37 @@ namespace ErsatzTV.Core.Plex
                     foreach (PlexMovie incoming in movieEntries)
                     {
                         // TODO: figure out how to rebuild playlists
-                        Either<BaseError, PlexMovie> maybeMovie = await _movieRepository
+                        Either<BaseError, MediaItemScanResult<PlexMovie>> maybeMovie = await _movieRepository
                             .GetOrAdd(plexMediaSourceLibrary, incoming)
                             .BindT(existing => UpdateStatistics(existing, incoming, connection, token))
                             .BindT(existing => UpdateMetadata(existing, incoming))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
-                        maybeMovie.IfLeft(
-                            error => _logger.LogWarning(
-                                "Error processing plex movie at {Key}: {Error}",
-                                incoming.Key,
-                                error.Value));
+                        await maybeMovie.Match(
+                            async result =>
+                            {
+                                if (result.IsAdded)
+                                {
+                                    await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                                }
+                                else if (result.IsUpdated)
+                                {
+                                    await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                                }
+                            },
+                            error =>
+                            {
+                                _logger.LogWarning(
+                                    "Error processing plex movie at {Key}: {Error}",
+                                    incoming.Key,
+                                    error.Value);
+                                return Task.CompletedTask;
+                            });
                     }
 
                     var movieKeys = movieEntries.Map(s => s.Key).ToList();
-                    await _movieRepository.RemoveMissingPlexMovies(plexMediaSourceLibrary, movieKeys);
+                    List<int> ids = await _movieRepository.RemoveMissingPlexMovies(plexMediaSourceLibrary, movieKeys);
+                    await _searchIndex.RemoveItems(ids);
                 },
                 error =>
                 {
@@ -75,12 +95,13 @@ namespace ErsatzTV.Core.Plex
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, PlexMovie>> UpdateStatistics(
-            PlexMovie existing,
+        private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateStatistics(
+            MediaItemScanResult<PlexMovie> result,
             PlexMovie incoming,
             PlexConnection connection,
             PlexServerAuthToken token)
         {
+            PlexMovie existing = result.Item;
             MediaVersion existingVersion = existing.MediaVersions.Head();
             MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
@@ -102,11 +123,14 @@ namespace ErsatzTV.Core.Plex
                     _ => Task.CompletedTask);
             }
 
-            return Right<BaseError, PlexMovie>(existing);
+            return result;
         }
 
-        private async Task<Either<BaseError, PlexMovie>> UpdateMetadata(PlexMovie existing, PlexMovie incoming)
+        private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateMetadata(
+            MediaItemScanResult<PlexMovie> result,
+            PlexMovie incoming)
         {
+            PlexMovie existing = result.Item;
             MovieMetadata existingMetadata = existing.MovieMetadata.Head();
             MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
 
@@ -117,7 +141,10 @@ namespace ErsatzTV.Core.Plex
                     .ToList())
                 {
                     existingMetadata.Genres.Remove(genre);
-                    await _metadataRepository.RemoveGenre(genre);
+                    if (await _metadataRepository.RemoveGenre(genre))
+                    {
+                        result.IsUpdated = true;
+                    }
                 }
 
                 foreach (Genre genre in incomingMetadata.Genres
@@ -125,17 +152,23 @@ namespace ErsatzTV.Core.Plex
                     .ToList())
                 {
                     existingMetadata.Genres.Add(genre);
-                    await _movieRepository.AddGenre(existingMetadata, genre);
+                    if (await _movieRepository.AddGenre(existingMetadata, genre))
+                    {
+                        result.IsUpdated = true;
+                    }
                 }
-                
+
                 // TODO: update other metadata?
             }
 
-            return existing;
+            return result;
         }
 
-        private async Task<Either<BaseError, PlexMovie>> UpdateArtwork(PlexMovie existing, PlexMovie incoming)
+        private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateArtwork(
+            MediaItemScanResult<PlexMovie> result,
+            PlexMovie incoming)
         {
+            PlexMovie existing = result.Item;
             MovieMetadata existingMetadata = existing.MovieMetadata.Head();
             MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
 
@@ -145,7 +178,7 @@ namespace ErsatzTV.Core.Plex
                 await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
             }
 
-            return existing;
+            return result;
         }
     }
 }

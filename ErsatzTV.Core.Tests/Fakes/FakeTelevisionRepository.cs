@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using LanguageExt;
 
 namespace ErsatzTV.Core.Tests.Fakes
@@ -19,6 +20,8 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
             throw new NotSupportedException();
+
+        public Task<List<ShowMetadata>> GetShowsForCards(List<int> ids) => throw new NotSupportedException();
 
         public Task<List<Episode>> GetShowItems(int showId) => throw new NotSupportedException();
 
@@ -43,7 +46,7 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata) =>
             throw new NotSupportedException();
 
-        public Task<Either<BaseError, Show>>
+        public Task<Either<BaseError, MediaItemScanResult<Show>>>
             AddShow(int libraryPathId, string showFolder, ShowMetadata metadata) =>
             throw new NotSupportedException();
 
@@ -59,9 +62,11 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath) => throw new NotSupportedException();
 
-        public Task<Unit> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
+        public Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
 
-        public Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item) =>
+        public Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAddPlexShow(
+            PlexLibrary library,
+            PlexShow item) =>
             throw new NotSupportedException();
 
         public Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item) =>
@@ -70,9 +75,9 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item) =>
             throw new NotSupportedException();
 
-        public Task<Unit> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
+        public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
 
-        public Task<Unit> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys) =>
+        public Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys) =>
             throw new NotSupportedException();
 
         public Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys) =>

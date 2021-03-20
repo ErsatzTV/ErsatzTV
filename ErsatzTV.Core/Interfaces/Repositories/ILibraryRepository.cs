@@ -15,6 +15,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<LibraryPath>> GetLocalPaths(int libraryId);
         Task<Option<LibraryPath>> GetPath(int libraryPathId);
         Task<int> CountMediaItemsByPath(int libraryPathId);
+        Task<List<int>> GetMediaIdsByLocalPath(int libraryPathId);
         Task DeleteLocalPath(int libraryPathId);
     }
 }

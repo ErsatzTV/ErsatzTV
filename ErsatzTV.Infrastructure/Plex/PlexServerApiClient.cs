@@ -176,7 +176,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
-                Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList()
+                Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
+                Tags = new List<Tag>()
             };
 
             if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
@@ -277,7 +278,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
-                Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList()
+                Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
+                Tags = new List<Tag>()
             };
 
             if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))

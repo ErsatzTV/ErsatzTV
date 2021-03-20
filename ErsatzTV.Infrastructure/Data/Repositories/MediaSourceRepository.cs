@@ -112,8 +112,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             int? id = await _dbConnection.QuerySingleAsync<int?>(
                 @"SELECT L.MediaSourceId FROM Library L
                 INNER JOIN PlexLibrary PL on L.Id = PL.Id
-                WHERE L.Id = @PlexLibraryId", new { PlexLibraryId = plexLibraryId });
-            
+                WHERE L.Id = @PlexLibraryId",
+                new { PlexLibraryId = plexLibraryId });
+
             await using TvContext context = _dbContextFactory.CreateDbContext();
             return await context.PlexMediaSources
                 .Include(p => p.Connections)
@@ -176,18 +177,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public async Task<Unit> DeleteAllPlex()
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
-            
+
             List<PlexMediaSource> allMediaSources = await context.PlexMediaSources.ToListAsync();
             context.PlexMediaSources.RemoveRange(allMediaSources);
-            
+
             List<PlexLibrary> allPlexLibraries = await context.PlexLibraries.ToListAsync();
             context.PlexLibraries.RemoveRange(allPlexLibraries);
-            
+
             await context.SaveChangesAsync();
             return Unit.Default;
         }
 
-        public async Task DisablePlexLibrarySync(List<int> libraryIds)
+        public async Task<List<int>> DisablePlexLibrarySync(List<int> libraryIds)
         {
             await _dbConnection.ExecuteAsync(
                 "UPDATE PlexLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
@@ -196,6 +197,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await _dbConnection.ExecuteAsync(
                 "UPDATE Library SET LastScan = null WHERE Id IN @ids",
                 new { ids = libraryIds });
+
+            List<int> movieIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
@@ -224,6 +233,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
 
+            List<int> showIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+
             await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
@@ -232,6 +249,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN Library l ON l.Id = lp.LibraryId
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
+
+            return movieIds.Append(showIds).ToList();
         }
 
         public Task EnablePlexLibrarySync(IEnumerable<int> libraryIds) =>
