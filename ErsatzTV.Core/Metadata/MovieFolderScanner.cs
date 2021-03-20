@@ -81,7 +81,7 @@ namespace ErsatzTV.Core.Metadata
                     // TODO: figure out how to rebuild playlists
                     Either<BaseError, MediaItemScanResult<Movie>> maybeMovie = await _movieRepository
                         .GetOrAdd(libraryPath, file)
-                        .BindT(movie => UpdateStatistics(movie, ffprobePath).MapT(_ => movie))
+                        .BindT(movie => UpdateStatistics(movie, ffprobePath))
                         .BindT(UpdateMetadata)
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster))
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt));
