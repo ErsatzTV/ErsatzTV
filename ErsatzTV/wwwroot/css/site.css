@@ -107,3 +107,17 @@
     color: #fff;
     text-shadow: 1px 1px 5px #000;
 }
+
+.letter-bar-container {
+    right: 1em;
+    position: fixed;
+    top: 128px;
+    height: calc(100vh - 128px);
+}
+
+.letter-bar {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    height: 100%;
+}
