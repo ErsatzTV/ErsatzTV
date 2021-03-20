@@ -15,9 +15,9 @@ namespace ErsatzTV.Core.Plex
     {
         private readonly ILogger<PlexMovieLibraryScanner> _logger;
         private readonly IMetadataRepository _metadataRepository;
-        private readonly ISearchIndex _searchIndex;
         private readonly IMovieRepository _movieRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
+        private readonly ISearchIndex _searchIndex;
 
         public PlexMovieLibraryScanner(
             IPlexServerApiClient plexServerApiClient,

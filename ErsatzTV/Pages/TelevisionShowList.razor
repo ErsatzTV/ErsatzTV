@@ -1,7 +1,6 @@
 ﻿@page "/media/tv/shows"
 @page "/media/tv/shows/page/{PageNumber:int}"
 @using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.Search.Queries
@@ -36,7 +35,7 @@
         else
         {
             <MudText Style="margin-bottom: auto; margin-top: auto; width: 33%">@_query</MudText>
-            <div style="width: 33%; max-width: 300px;">
+            <div style="max-width: 300px; width: 33%;">
                 <MudPaper Style="align-items: center; display: flex; justify-content: center;">
                     <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
                                    OnClick="@PrevPage"
@@ -83,7 +82,7 @@
         {
             PageNumber = 1;
         }
-        
+
         string query = new Uri(NavigationManager.Uri).Query;
         if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
         {

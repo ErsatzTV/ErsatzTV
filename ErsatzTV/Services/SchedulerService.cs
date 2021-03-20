@@ -114,9 +114,7 @@ namespace ErsatzTV.Services
             }
         }
 
-        private async Task RebuildSearchIndex(CancellationToken cancellationToken)
-        {
+        private async Task RebuildSearchIndex(CancellationToken cancellationToken) =>
             await _channel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
-        }
     }
 }

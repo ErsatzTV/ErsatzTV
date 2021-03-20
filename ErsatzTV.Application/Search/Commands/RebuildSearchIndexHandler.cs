@@ -33,8 +33,9 @@ namespace ErsatzTV.Application.Search.Commands
         public async Task<Unit> Handle(RebuildSearchIndex request, CancellationToken cancellationToken)
         {
             bool indexFolderExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
-            
-            if (!indexFolderExists || await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
+
+            if (!indexFolderExists ||
+                await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
                 _searchIndex.Version)
             {
                 _logger.LogDebug("Migrating search index to version {Version}", _searchIndex.Version);

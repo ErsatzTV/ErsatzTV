@@ -24,7 +24,12 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<int> GetEpisodeCount(int seasonId);
         Task<List<EpisodeMetadata>> GetPagedEpisodes(int seasonId, int pageNumber, int pageSize);
         Task<Option<Show>> GetShowByMetadata(int libraryPathId, ShowMetadata metadata);
-        Task<Either<BaseError, MediaItemScanResult<Show>>> AddShow(int libraryPathId, string showFolder, ShowMetadata metadata);
+
+        Task<Either<BaseError, MediaItemScanResult<Show>>> AddShow(
+            int libraryPathId,
+            string showFolder,
+            ShowMetadata metadata);
+
         Task<Either<BaseError, Season>> GetOrAddSeason(Show show, int libraryPathId, int seasonNumber);
         Task<Either<BaseError, Episode>> GetOrAddEpisode(Season season, LibraryPath libraryPath, string path);
         Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath);

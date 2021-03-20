@@ -19,11 +19,11 @@ namespace ErsatzTV.Application.Streaming.Queries
     public class
         GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
     {
+        private readonly IConfigElementRepository _configElementRepository;
         private readonly FFmpegProcessService _ffmpegProcessService;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
-        private readonly IConfigElementRepository _configElementRepository;
         private readonly IPlayoutRepository _playoutRepository;
 
         public GetPlayoutItemProcessByChannelNumberHandler(

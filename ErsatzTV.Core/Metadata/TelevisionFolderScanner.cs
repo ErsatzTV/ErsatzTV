@@ -19,8 +19,8 @@ namespace ErsatzTV.Core.Metadata
     {
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
-        private readonly ISearchIndex _searchIndex;
         private readonly ILogger<TelevisionFolderScanner> _logger;
+        private readonly ISearchIndex _searchIndex;
         private readonly ITelevisionRepository _televisionRepository;
 
         public TelevisionFolderScanner(
@@ -76,7 +76,7 @@ namespace ErsatzTV.Core.Metadata
                         {
                             await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
                         }
-                        
+
                         await ScanSeasons(libraryPath, ffprobePath, result.Item, showFolder);
                     },
                     _ => Task.FromResult(Unit.Default));
@@ -147,7 +147,9 @@ namespace ErsatzTV.Core.Metadata
                 // TODO: figure out how to rebuild playlists
                 Either<BaseError, Episode> maybeEpisode = await _televisionRepository
                     .GetOrAddEpisode(season, libraryPath, file)
-                    .BindT(episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffprobePath).MapT(_ => episode))
+                    .BindT(
+                        episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffprobePath)
+                            .MapT(_ => episode))
                     .BindT(UpdateMetadata)
                     .BindT(UpdateThumbnail);
 

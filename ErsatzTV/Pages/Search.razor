@@ -42,7 +42,7 @@
             {
                 <MudText Class="ml-4">0 Movies</MudText>
             }
-            
+
             if (_shows.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_shows.Count Shows</MudLink>
@@ -57,7 +57,7 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Style="margin-top: 96px">
     @if (_movies.Count > 0)
     {
-        <div class="mb-4" style="display: flex; flex-direction: row; align-items: baseline">
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
             <MudText Typo="Typo.h4"
                      Style="scroll-margin-top: 160px"
                      UserAttributes="@(new Dictionary<string, object> { { "id", "movies" } })">
@@ -84,7 +84,7 @@
 
     @if (_shows.Count > 0)
     {
-        <div class="mb-4" style="display: flex; flex-direction: row; align-items: baseline">
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
             <MudText Typo="Typo.h4"
                      Style="scroll-margin-top: 160px"
                      UserAttributes="@(new Dictionary<string, object> { { "id", "shows" } })">
@@ -114,7 +114,7 @@
     private string _query;
     private MovieCardResultsViewModel _movies;
     private TelevisionShowCardResultsViewModel _shows;
-    
+
     protected override async Task OnInitializedAsync()
     {
         string query = new Uri(NavigationManager.Uri).Query;
@@ -194,7 +194,7 @@
         }
         return uri;
     }
-    
+
     private string GetShowsLink()
     {
         var uri = "/media/tv/shows";
