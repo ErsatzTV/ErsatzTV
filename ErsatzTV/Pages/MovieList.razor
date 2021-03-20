@@ -1,12 +1,12 @@
 ﻿@page "/media/movies"
 @page "/media/movies/page/{PageNumber:int}"
+@using LanguageExt.UnsafeValueAccess
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.Search.Queries
-@using LanguageExt.UnsafeValueAccess
-@using Microsoft.AspNetCore.WebUtilities
-@using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<MovieList>
 @inject NavigationManager NavigationManager
@@ -71,7 +71,7 @@
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
                BaseUri="/media/movies"
-               Query="@_query" />
+               Query="@_query"/>
 }
 
 @code {

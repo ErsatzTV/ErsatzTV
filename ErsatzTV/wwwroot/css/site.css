@@ -109,15 +109,15 @@
 }
 
 .letter-bar-container {
-    right: 1em;
-    position: fixed;
-    top: 128px;
     height: calc(100vh - 128px);
+    position: fixed;
+    right: 1em;
+    top: 128px;
 }
 
 .letter-bar {
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
     height: 100%;
+    justify-content: space-around;
 }
