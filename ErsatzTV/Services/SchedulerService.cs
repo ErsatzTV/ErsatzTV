@@ -55,10 +55,10 @@ namespace ErsatzTV.Services
 
         private async Task DoWork(CancellationToken cancellationToken)
         {
+            await RebuildSearchIndex(cancellationToken);
             await BuildPlayouts(cancellationToken);
             await ScanLocalMediaSources(cancellationToken);
             await ScanPlexMediaSources(cancellationToken);
-            await RebuildSearchIndex(cancellationToken);
         }
 
         private async Task BuildPlayouts(CancellationToken cancellationToken)

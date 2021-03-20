@@ -130,7 +130,7 @@ namespace ErsatzTV.Core.Metadata
                 // TODO: figure out how to rebuild playlists
                 Either<BaseError, Episode> maybeEpisode = await _televisionRepository
                     .GetOrAddEpisode(season, libraryPath, file)
-                    .BindT(episode => UpdateStatistics(episode, ffprobePath).MapT(_ => episode))
+                    .BindT(episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffprobePath).MapT(_ => episode))
                     .BindT(UpdateMetadata)
                     .BindT(UpdateThumbnail);
 

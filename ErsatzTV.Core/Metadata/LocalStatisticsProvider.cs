@@ -17,22 +17,19 @@ namespace ErsatzTV.Core.Metadata
     {
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<LocalStatisticsProvider> _logger;
-        private readonly IMediaItemRepository _mediaItemRepository;
         private readonly IMetadataRepository _metadataRepository;
 
         public LocalStatisticsProvider(
-            IMediaItemRepository mediaItemRepository,
             IMetadataRepository metadataRepository,
             ILocalFileSystem localFileSystem,
             ILogger<LocalStatisticsProvider> logger)
         {
-            _mediaItemRepository = mediaItemRepository;
             _metadataRepository = metadataRepository;
             _localFileSystem = localFileSystem;
             _logger = logger;
         }
 
-        public async Task<Either<BaseError, Unit>> RefreshStatistics(string ffprobePath, MediaItem mediaItem)
+        public async Task<Either<BaseError, bool>> RefreshStatistics(string ffprobePath, MediaItem mediaItem)
         {
             try
             {
@@ -48,10 +45,10 @@ namespace ErsatzTV.Core.Metadata
                     async ffprobe =>
                     {
                         MediaVersion version = ProjectToMediaVersion(ffprobe);
-                        await ApplyVersionUpdate(mediaItem, version, filePath);
-                        return Right<BaseError, Unit>(Unit.Default);
+                        bool result = await ApplyVersionUpdate(mediaItem, version, filePath);
+                        return Right<BaseError, bool>(result);
                     },
-                    error => Task.FromResult(Left<BaseError, Unit>(error)));
+                    error => Task.FromResult(Left<BaseError, bool>(error)));
             }
             catch (Exception ex)
             {

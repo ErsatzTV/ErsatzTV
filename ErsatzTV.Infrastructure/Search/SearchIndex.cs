@@ -59,69 +59,40 @@ namespace ErsatzTV.Infrastructure.Search
             var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.CREATE };
             using var writer = new IndexWriter(dir, indexConfig);
 
-            foreach (Movie movie in items.OfType<Movie>())
-            {
-                Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
-                if (maybeMetadata.IsSome)
-                {
-                    MovieMetadata metadata = maybeMetadata.ValueUnsafe();
-
-                    var doc = new Document
-                    {
-                        new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, MovieType, Field.Store.NO),
-                        new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
-                        new TextField(PlotField, metadata.Plot, Field.Store.NO),
-                        new TextField(LibraryName, movie.LibraryPath.Library.Name, Field.Store.NO)
-                    };
-
-                    foreach (Genre genre in metadata.Genres)
-                    {
-                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
-                    }
-
-                    foreach (Tag tag in metadata.Tags)
-                    {
-                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
-                    }
-
-                    writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
-                }
-            }
-
-            foreach (Show show in items.OfType<Show>())
-            {
-                Option<ShowMetadata> maybeMetadata = show.ShowMetadata.HeadOrNone();
-                if (maybeMetadata.IsSome)
-                {
-                    ShowMetadata metadata = maybeMetadata.ValueUnsafe();
-                    
-                    var doc = new Document
-                    {
-                        new StringField(IdField, show.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, ShowType, Field.Store.NO),
-                        new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
-                        new TextField(PlotField, metadata.Plot, Field.Store.NO),
-                        new TextField(LibraryName, show.LibraryPath.Library.Name, Field.Store.NO)
-                    };
-
-                    foreach (Genre genre in metadata.Genres)
-                    {
-                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
-                    }
-
-                    foreach (Tag tag in metadata.Tags)
-                    {
-                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
-                    }
-
-                    writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
-                }
-            }
+            UpdateMovies(items.OfType<Movie>(), writer);
+            UpdateShows(items.OfType<Show>(), writer);
 
             return Unit.Default;
+        }
+
+        public Task<Unit> AddItems(List<MediaItem> items) => UpdateItems(items);
+
+        public Task<Unit> UpdateItems(List<MediaItem> items)
+        {
+            using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
+            var analyzer = new StandardAnalyzer(AppLuceneVersion);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.APPEND };
+            using var writer = new IndexWriter(dir, indexConfig);
+
+            UpdateMovies(items.OfType<Movie>(), writer);
+            UpdateShows(items.OfType<Show>(), writer);
+
+            return Task.FromResult(Unit.Default);
+        }
+
+        public Task<Unit> RemoveItems(List<int> ids)
+        {
+            using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
+            var analyzer = new StandardAnalyzer(AppLuceneVersion);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.APPEND };
+            using var writer = new IndexWriter(dir, indexConfig);
+
+            foreach (int id in ids)
+            {
+                writer.DeleteDocuments(new Term(IdField, id.ToString()));
+            }
+
+            return Task.FromResult(Unit.Default);
         }
 
         public async Task<SearchResult> Search(string searchQuery, int skip, int limit, string searchField = "")
@@ -146,6 +117,82 @@ namespace ErsatzTV.Infrastructure.Search
             return new SearchResult(
                 selectedHits.Map(d => ProjectToSearchItem(searcher.Doc(d.Doc))).ToList(),
                 topDocs.TotalHits);
+        }
+
+        private static void UpdateMovies(IEnumerable<Movie> movies, IndexWriter writer)
+        {
+            foreach (Movie movie in movies)
+            {
+                Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
+                if (maybeMetadata.IsSome)
+                {
+                    MovieMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                    var doc = new Document
+                    {
+                        new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, MovieType, Field.Store.NO),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
+                        new TextField(LibraryName, movie.LibraryPath.Library.Name, Field.Store.NO)
+                    };
+
+                    if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                    {
+                        doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                    }
+
+                    foreach (Genre genre in metadata.Genres)
+                    {
+                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    }
+
+                    foreach (Tag tag in metadata.Tags)
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
+                }
+            }
+        }
+
+        private static void UpdateShows(IEnumerable<Show> shows, IndexWriter writer)
+        {
+            foreach (Show show in shows)
+            {
+                Option<ShowMetadata> maybeMetadata = show.ShowMetadata.HeadOrNone();
+                if (maybeMetadata.IsSome)
+                {
+                    ShowMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                    var doc = new Document
+                    {
+                        new StringField(IdField, show.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, ShowType, Field.Store.NO),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
+                        new TextField(LibraryName, show.LibraryPath.Library.Name, Field.Store.NO)
+                    };
+
+                    if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                    {
+                        doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                    }
+
+                    foreach (Genre genre in metadata.Genres)
+                    {
+                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    }
+
+                    foreach (Tag tag in metadata.Tags)
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
+                }
+            }
         }
 
         private SearchItem ProjectToSearchItem(Document doc) => new(Convert.ToInt32(doc.Get(IdField)));

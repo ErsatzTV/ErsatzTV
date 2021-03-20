@@ -65,34 +65,33 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
-        public Task<Unit> RefreshSidecarMetadata(MediaItem mediaItem, string path) =>
+        public Task<bool> RefreshSidecarMetadata(MediaItem mediaItem, string path) =>
             mediaItem switch
             {
                 Episode e => LoadMetadata(e, path)
-                    .Bind(maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(e, metadata))),
+                    .Bind(maybeMetadata => maybeMetadata.Match(metadata => ApplyMetadataUpdate(e, metadata), () => Task.FromResult(false))),
                 Movie m => LoadMetadata(m, path)
-                    .Bind(maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(m, metadata))),
-                _ => Task.FromResult(Unit.Default)
+                    .Bind(maybeMetadata => maybeMetadata.Match(metadata => ApplyMetadataUpdate(m, metadata), () => Task.FromResult(false))),
+                _ => Task.FromResult(false)
             };
 
         public Task<Unit> RefreshSidecarMetadata(Show televisionShow, string showFolder) =>
             LoadMetadata(televisionShow, showFolder).Bind(
                 maybeMetadata => maybeMetadata.IfSomeAsync(metadata => ApplyMetadataUpdate(televisionShow, metadata)));
 
-        public Task<Unit> RefreshFallbackMetadata(MediaItem mediaItem) =>
+        public Task<bool> RefreshFallbackMetadata(MediaItem mediaItem) =>
             mediaItem switch
             {
-                Episode e => ApplyMetadataUpdate(e, _fallbackMetadataProvider.GetFallbackMetadata(e))
-                    .ToUnit(),
-                Movie m => ApplyMetadataUpdate(m, _fallbackMetadataProvider.GetFallbackMetadata(m)).ToUnit(),
-                _ => Task.FromResult(Unit.Default)
+                Episode e => ApplyMetadataUpdate(e, _fallbackMetadataProvider.GetFallbackMetadata(e)),
+                Movie m => ApplyMetadataUpdate(m, _fallbackMetadataProvider.GetFallbackMetadata(m)),
+                _ => Task.FromResult(false)
             };
 
         public Task<Unit> RefreshFallbackMetadata(Show televisionShow, string showFolder) =>
             ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder))
                 .ToUnit();
 
-        private async Task ApplyMetadataUpdate(Episode episode, Tuple<EpisodeMetadata, int> metadataEpisodeNumber)
+        private async Task<bool> ApplyMetadataUpdate(Episode episode, Tuple<EpisodeMetadata, int> metadataEpisodeNumber)
         {
             (EpisodeMetadata metadata, int episodeNumber) = metadataEpisodeNumber;
             if (episode.EpisodeNumber != episodeNumber)
@@ -128,9 +127,11 @@ namespace ErsatzTV.Core.Metadata
 
                     return _metadataRepository.Add(metadata);
                 });
+
+            return true;
         }
 
-        private Task ApplyMetadataUpdate(Movie movie, MovieMetadata metadata) =>
+        private Task<bool> ApplyMetadataUpdate(Movie movie, MovieMetadata metadata) =>
             Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
                 existing =>
                 {

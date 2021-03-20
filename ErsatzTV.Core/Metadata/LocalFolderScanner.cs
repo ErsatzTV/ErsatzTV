@@ -66,12 +66,14 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        protected async Task<Either<BaseError, T>> UpdateStatistics<T>(T mediaItem, string ffprobePath)
+        protected async Task<Either<BaseError, MediaItemScanResult<T>>> UpdateStatistics<T>(
+            MediaItemScanResult<T> mediaItem,
+            string ffprobePath)
             where T : MediaItem
         {
             try
             {
-                MediaVersion version = mediaItem switch
+                MediaVersion version = mediaItem.Item switch
                 {
                     Movie m => m.MediaVersions.Head(),
                     Episode e => e.MediaVersions.Head(),
@@ -83,9 +85,16 @@ namespace ErsatzTV.Core.Metadata
                 if (version.DateUpdated < _localFileSystem.GetLastWriteTime(path))
                 {
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", path);
-                    Either<BaseError, Unit> refreshResult =
-                        await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem);
-                    refreshResult.IfLeft(
+                    Either<BaseError, bool> refreshResult =
+                        await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem.Item);
+                    refreshResult.Match(
+                        result =>
+                        {
+                            if (result)
+                            {
+                                mediaItem.IsUpdated = true;
+                            }
+                        },
                         error =>
                             _logger.LogWarning(
                                 "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",

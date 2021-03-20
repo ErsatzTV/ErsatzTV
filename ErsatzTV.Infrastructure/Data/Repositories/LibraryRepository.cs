@@ -84,6 +84,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 @"SELECT COUNT(*) FROM MediaItem WHERE LibraryPathId = @LibraryPathId",
                 new { LibraryPathId = libraryPathId });
 
+        public Task<List<int>> GetMediaIdsByLocalPath(int libraryPathId) =>
+            _dbConnection.QueryAsync<int>(
+                    @"SELECT Id FROM MediaItem WHERE LibraryPathId = @LibraryPathId",
+                    new { LibraryPathId = libraryPathId })
+                .Map(result => result.ToList());
+
         public async Task DeleteLocalPath(int libraryPathId)
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();

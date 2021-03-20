@@ -7,6 +7,7 @@ using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
@@ -45,7 +46,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(Optional);
         }
 
-        public async Task<Either<BaseError, Movie>> GetOrAdd(LibraryPath libraryPath, string path)
+        public async Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(LibraryPath libraryPath, string path)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<Movie> maybeExisting = await dbContext.Movies
@@ -56,13 +57,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Tags)
                 .Include(i => i.LibraryPath)
+                .ThenInclude(lp => lp.Library)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
             return await maybeExisting.Match(
-                mediaItem => Right<BaseError, Movie>(mediaItem).AsTask(),
+                mediaItem =>
+                    Right<BaseError, MediaItemScanResult<Movie>>(
+                        new MediaItemScanResult<Movie>(mediaItem) { IsAdded = false }).AsTask(),
                 async () => await AddMovie(dbContext, libraryPath.Id, path));
         }
 
@@ -125,17 +129,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE MI.LibraryPathId = @LibraryPathId",
                 new { LibraryPathId = libraryPath.Id });
 
-        public async Task<Unit> DeleteByPath(LibraryPath libraryPath, string path)
+        public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
-                @"SELECT M.Id
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                    @"SELECT M.Id
                 FROM Movie M
                 INNER JOIN MediaItem MI on M.Id = MI.Id
                 INNER JOIN MediaVersion MV on M.Id = MV.MovieId
                 INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
                 WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
-                new { LibraryPathId = libraryPath.Id, Path = path });
+                    new { LibraryPathId = libraryPath.Id, Path = path })
+                .Map(result => result.ToList());
 
             foreach (int movieId in ids)
             {
@@ -143,9 +148,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 dbContext.Movies.Remove(movie);
             }
 
-            await dbContext.SaveChangesAsync();
-
-            return Unit.Default;
+            bool changed = await dbContext.SaveChangesAsync() > 0;
+            return changed ? ids : new List<int>();
         }
 
         public Task<Unit> AddGenre(MovieMetadata metadata, Genre genre) =>
@@ -162,7 +166,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE lp.LibraryId = @LibraryId AND pm.Key not in @Keys)",
                 new { LibraryId = library.Id, Keys = movieKeys }).ToUnit();
 
-        private static async Task<Either<BaseError, Movie>> AddMovie(
+        private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
             TvContext dbContext,
             int libraryPathId,
             string path)
@@ -186,7 +190,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 await dbContext.Movies.AddAsync(movie);
                 await dbContext.SaveChangesAsync();
                 await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
-                return movie;
+                await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+                return new MediaItemScanResult<Movie>(movie) { IsAdded = true };
             }
             catch (Exception ex)
             {

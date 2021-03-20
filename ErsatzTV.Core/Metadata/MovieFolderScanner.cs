@@ -8,6 +8,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -21,6 +22,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<MovieFolderScanner> _logger;
         private readonly IMovieRepository _movieRepository;
+        private readonly ISearchIndex _searchIndex;
 
         public MovieFolderScanner(
             ILocalFileSystem localFileSystem,
@@ -29,12 +31,14 @@ namespace ErsatzTV.Core.Metadata
             ILocalMetadataProvider localMetadataProvider,
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
+            ISearchIndex searchIndex,
             ILogger<MovieFolderScanner> logger)
             : base(localFileSystem, localStatisticsProvider, metadataRepository, imageCache, logger)
         {
             _localFileSystem = localFileSystem;
             _movieRepository = movieRepository;
             _localMetadataProvider = localMetadataProvider;
+            _searchIndex = searchIndex;
             _logger = logger;
         }
 
@@ -72,19 +76,33 @@ namespace ErsatzTV.Core.Metadata
                     continue;
                 }
 
-
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     // TODO: figure out how to rebuild playlists
-                    Either<BaseError, Movie> maybeMovie = await _movieRepository
+                    Either<BaseError, MediaItemScanResult<Movie>> maybeMovie = await _movieRepository
                         .GetOrAdd(libraryPath, file)
                         .BindT(movie => UpdateStatistics(movie, ffprobePath).MapT(_ => movie))
                         .BindT(UpdateMetadata)
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster))
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt));
 
-                    maybeMovie.IfLeft(
-                        error => _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value));
+                    await maybeMovie.Match(
+                        async result =>
+                        {
+                            if (result.IsAdded)
+                            {
+                                await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                            }
+                            else if (result.IsUpdated)
+                            {
+                                await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                            }
+                        },
+                        error =>
+                        {
+                            _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value);
+                            return Task.CompletedTask;
+                        });
                 }
             }
 
@@ -93,17 +111,20 @@ namespace ErsatzTV.Core.Metadata
                 if (!_localFileSystem.FileExists(path))
                 {
                     _logger.LogInformation("Removing missing movie at {Path}", path);
-                    await _movieRepository.DeleteByPath(libraryPath, path);
+                    List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
+                    await _searchIndex.RemoveItems(ids);
                 }
             }
 
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, Movie>> UpdateMetadata(Movie movie)
+        private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateMetadata(
+            MediaItemScanResult<Movie> result)
         {
             try
             {
+                Movie movie = result.Item;
                 await LocateNfoFile(movie).Match(
                     async nfoFile =>
                     {
@@ -115,7 +136,10 @@ namespace ErsatzTV.Core.Metadata
                         if (shouldUpdate)
                         {
                             _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                            await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile);
+                            if (await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile))
+                            {
+                                result.IsUpdated = true;
+                            }
                         }
                     },
                     async () =>
@@ -124,11 +148,14 @@ namespace ErsatzTV.Core.Metadata
                         {
                             string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
-                            await _localMetadataProvider.RefreshFallbackMetadata(movie);
+                            if (await _localMetadataProvider.RefreshFallbackMetadata(movie))
+                            {
+                                result.IsUpdated = true;
+                            }
                         }
                     });
 
-                return movie;
+                return result;
             }
             catch (Exception ex)
             {
@@ -136,18 +163,24 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, Movie>> UpdateArtwork(Movie movie, ArtworkKind artworkKind)
+        private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateArtwork(
+            MediaItemScanResult<Movie> result,
+            ArtworkKind artworkKind)
         {
             try
             {
+                Movie movie = result.Item;
                 await LocateArtwork(movie, artworkKind).IfSomeAsync(
                     async posterFile =>
                     {
                         MovieMetadata metadata = movie.MovieMetadata.Head();
-                        await RefreshArtwork(posterFile, metadata, artworkKind);
+                        if (await RefreshArtwork(posterFile, metadata, artworkKind))
+                        {
+                            result.IsUpdated = true;
+                        }
                     });
 
-                return movie;
+                return result;
             }
             catch (Exception ex)
             {
