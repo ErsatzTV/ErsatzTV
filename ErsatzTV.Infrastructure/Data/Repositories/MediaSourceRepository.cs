@@ -159,6 +159,40 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
+        public async Task<Unit> UpdatePathReplacements(
+            int plexMediaSourceId,
+            List<PlexPathReplacement> toAdd,
+            List<PlexPathReplacement> toUpdate,
+            List<PlexPathReplacement> toDelete)
+        {
+            foreach (PlexPathReplacement add in toAdd)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"INSERT INTO PlexPathReplacement
+                    (PlexPath, LocalPath, PlexMediaSourceId)
+                    VALUES (@PlexPath, @LocalPath, @PlexMediaSourceId)",
+                    new { add.PlexPath, add.LocalPath, PlexMediaSourceId = plexMediaSourceId });
+            }
+
+            foreach (PlexPathReplacement update in toUpdate)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"UPDATE PlexPathReplacement
+                    SET PlexPath = @PlexPath, LocalPath = @LocalPath
+                    WHERE Id = @Id",
+                    new { update.PlexPath, update.LocalPath, update.Id });
+            }
+
+            foreach (PlexPathReplacement delete in toDelete)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"DELETE FROM PlexPathReplacement WHERE Id = @Id",
+                    new { delete.Id });
+            }
+
+            return Unit.Default;
+        }
+
         public async Task Update(PlexLibrary plexMediaSourceLibrary)
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
