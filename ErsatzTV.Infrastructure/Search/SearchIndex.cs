@@ -13,6 +13,7 @@ using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers.Classic;
+using Lucene.Net.Sandbox.Queries;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
@@ -31,7 +32,9 @@ namespace ErsatzTV.Infrastructure.Search
         private const string GenreField = "genre";
         private const string TagField = "tag";
         private const string PlotField = "plot";
-        private const string LibraryName = "library_name";
+        private const string LibraryNameField = "library_name";
+        private const string TitleAndYearField = "title_and_year";
+        private const string JumpLetterField = "jump_letter";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -42,7 +45,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         public SearchIndex(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
-        public int Version => 2;
+        public int Version => 1;
 
         public Task<bool> Initialize()
         {
@@ -112,7 +115,8 @@ namespace ErsatzTV.Infrastructure.Search
                 : new MultiFieldQueryParser(AppLuceneVersion, _searchFields, analyzer);
             Query query = ParseQuery(searchQuery, parser);
             var sortField = new SortField(SortTitleField, SortFieldType.STRING);
-            TopFieldDocs topDocs = searcher.Search(query, null, hitsLimit, new Sort(sortField), true, true);
+            var filter = new DuplicateFilter(TitleAndYearField);
+            TopFieldDocs topDocs = searcher.Search(query, filter, hitsLimit, new Sort(sortField), true, true);
             IEnumerable<ScoreDoc> selectedHits = topDocs.ScoreDocs.Skip(skip).Take(limit);
             return new SearchResult(
                 selectedHits.Map(d => ProjectToSearchItem(searcher.Doc(d.Doc))).ToList(),
@@ -134,7 +138,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(TypeField, MovieType, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
-                        new TextField(LibraryName, movie.LibraryPath.Library.Name, Field.Store.NO)
+                        new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO)
                     };
 
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
@@ -172,7 +177,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(TypeField, ShowType, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
-                        new TextField(LibraryName, show.LibraryPath.Library.Name, Field.Store.NO)
+                        new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO)
                     };
 
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
@@ -211,5 +217,8 @@ namespace ErsatzTV.Infrastructure.Search
 
             return query;
         }
+
+        private static string GetTitleAndYear(Metadata metadata) =>
+            $"{metadata.Title}_{metadata.Year}";
     }
 }
