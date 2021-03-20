@@ -95,13 +95,15 @@
         }
         else
         {
+            FFmpegSettingsViewModel ffmpegSettings = await Mediator.Send(new GetFFmpegSettings());
+            
     // TODO: command for new channel
             IEnumerable<int> channelNumbers = await Mediator.Send(new GetAllChannels())
                 .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
             int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
             _model.Number = (maxNumber + 1).ToString();
             _model.Name = "New Channel";
-            _model.FFmpegProfileId = _ffmpegProfiles.Head().Id;
+            _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
             _model.StreamingMode = StreamingMode.TransportStream;
         }
     }
