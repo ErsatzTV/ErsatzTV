@@ -18,6 +18,7 @@ using Lucene.Net.Sandbox.Queries;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Lucene.Net.Util;
+using Microsoft.Extensions.Logging;
 using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search
@@ -43,13 +44,18 @@ namespace ErsatzTV.Infrastructure.Search
         private static bool _isRebuilding;
 
         private readonly ILocalFileSystem _localFileSystem;
+        private readonly ILogger<SearchIndex> _logger;
 
         private readonly ISearchRepository _searchRepository;
 
-        public SearchIndex(ILocalFileSystem localFileSystem, ISearchRepository searchRepository)
+        public SearchIndex(
+            ILocalFileSystem localFileSystem,
+            ISearchRepository searchRepository,
+            ILogger<SearchIndex> logger)
         {
             _localFileSystem = localFileSystem;
             _searchRepository = searchRepository;
+            _logger = logger;
         }
 
         public int Version => 1;
@@ -212,77 +218,91 @@ namespace ErsatzTV.Infrastructure.Search
             return new SearchPageMap(map);
         }
 
-        private static void UpdateMovie(Movie movie, IndexWriter writer)
+        private void UpdateMovie(Movie movie, IndexWriter writer)
         {
             Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
             if (maybeMetadata.IsSome)
             {
                 MovieMetadata metadata = maybeMetadata.ValueUnsafe();
 
-                var doc = new Document
+                try
                 {
-                    new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
-                    new StringField(TypeField, MovieType, Field.Store.NO),
-                    new TextField(TitleField, metadata.Title, Field.Store.NO),
-                    new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
-                    new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
-                };
+                    var doc = new Document
+                    {
+                        new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, MovieType, Field.Store.NO),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                        new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    };
 
-                if (!string.IsNullOrWhiteSpace(metadata.Plot))
-                {
-                    doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                    if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                    {
+                        doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                    }
+
+                    foreach (Genre genre in metadata.Genres)
+                    {
+                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    }
+
+                    foreach (Tag tag in metadata.Tags)
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
                 }
-
-                foreach (Genre genre in metadata.Genres)
+                catch (Exception ex)
                 {
-                    doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    _logger.LogWarning(ex, "Error indexing movie with metadata {@Metadata}", metadata);
                 }
-
-                foreach (Tag tag in metadata.Tags)
-                {
-                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
-                }
-
-                writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
             }
         }
 
-        private static void UpdateShow(Show show, IndexWriter writer)
+        private void UpdateShow(Show show, IndexWriter writer)
         {
             Option<ShowMetadata> maybeMetadata = show.ShowMetadata.HeadOrNone();
             if (maybeMetadata.IsSome)
             {
                 ShowMetadata metadata = maybeMetadata.ValueUnsafe();
 
-                var doc = new Document
+                try
                 {
-                    new StringField(IdField, show.Id.ToString(), Field.Store.YES),
-                    new StringField(TypeField, ShowType, Field.Store.NO),
-                    new TextField(TitleField, metadata.Title, Field.Store.NO),
-                    new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
-                    new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
-                    new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
-                };
+                    var doc = new Document
+                    {
+                        new StringField(IdField, show.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, ShowType, Field.Store.NO),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                        new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    };
 
-                if (!string.IsNullOrWhiteSpace(metadata.Plot))
-                {
-                    doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                    if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                    {
+                        doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                    }
+
+                    foreach (Genre genre in metadata.Genres)
+                    {
+                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    }
+
+                    foreach (Tag tag in metadata.Tags)
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
                 }
-
-                foreach (Genre genre in metadata.Genres)
+                catch (Exception ex)
                 {
-                    doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
                 }
-
-                foreach (Tag tag in metadata.Tags)
-                {
-                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
-                }
-
-                writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
             }
         }
 
