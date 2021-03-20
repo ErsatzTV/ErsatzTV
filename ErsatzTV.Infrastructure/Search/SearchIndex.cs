@@ -114,13 +114,64 @@ namespace ErsatzTV.Infrastructure.Search
                 ? new QueryParser(AppLuceneVersion, searchField, analyzer)
                 : new MultiFieldQueryParser(AppLuceneVersion, _searchFields, analyzer);
             Query query = ParseQuery(searchQuery, parser);
-            var sortField = new SortField(SortTitleField, SortFieldType.STRING);
             var filter = new DuplicateFilter(TitleAndYearField);
-            TopFieldDocs topDocs = searcher.Search(query, filter, hitsLimit, new Sort(sortField), true, true);
+            var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
+            TopFieldDocs topDocs = searcher.Search(query, filter, hitsLimit, sort, true, true);
             IEnumerable<ScoreDoc> selectedHits = topDocs.ScoreDocs.Skip(skip).Take(limit);
-            return new SearchResult(
+
+            var searchResult = new SearchResult(
                 selectedHits.Map(d => ProjectToSearchItem(searcher.Doc(d.Doc))).ToList(),
-                topDocs.TotalHits).AsTask();
+                topDocs.TotalHits);
+
+            searchResult.PageMap = GetSearchPageMap(searcher, query, filter, sort, limit);
+
+            return searchResult.AsTask();
+        }
+
+        private static Option<SearchPageMap> GetSearchPageMap(
+            IndexSearcher searcher,
+            Query query,
+            DuplicateFilter filter,
+            Sort sort,
+            int limit)
+        {
+            ScoreDoc[] allDocs = searcher.Search(query, filter, int.MaxValue, sort, true, true).ScoreDocs;
+            var letters = new List<char>
+            {
+                '#', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+                'u', 'v', 'w', 'x', 'y', 'z'
+            };
+            var map = letters.ToDictionary(letter => letter, _ => 0);
+
+            var current = 0;
+            var page = 0;
+            while (current < allDocs.Length)
+            {
+                // walk up by page size (limit)
+                page++;
+                current += limit;
+                if (current > allDocs.Length)
+                {
+                    current = allDocs.Length;
+                }
+
+                char jumpLetter = searcher.Doc(allDocs[current - 1].Doc).Get(JumpLetterField).Head();
+                foreach (char letter in letters.Where(l => letters.IndexOf(l) <= letters.IndexOf(jumpLetter)))
+                {
+                    if (map[letter] == 0)
+                    {
+                        map[letter] = page;
+                    }
+                }
+            }
+
+            int max = map.Values.Max();
+            foreach (char letter in letters.Where(letter => map[letter] == 0))
+            {
+                map[letter] = max;
+            }
+
+            return new SearchPageMap(map);
         }
 
         private static void UpdateMovies(IEnumerable<Movie> movies, IndexWriter writer)
@@ -137,9 +188,10 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
                         new StringField(TypeField, MovieType, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                         new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
-                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO)
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
 
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
@@ -176,9 +228,10 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(IdField, show.Id.ToString(), Field.Store.YES),
                         new StringField(TypeField, ShowType, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                         new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
-                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO)
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
 
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
@@ -220,5 +273,15 @@ namespace ErsatzTV.Infrastructure.Search
 
         private static string GetTitleAndYear(Metadata metadata) =>
             $"{metadata.Title}_{metadata.Year}";
+
+        private static string GetJumpLetter(Metadata metadata)
+        {
+            char c = metadata.SortTitle.ToLowerInvariant().Head();
+            return c switch
+            {
+                (>= 'a' and <= 'z') => c.ToString(),
+                _ => "#"
+            };
+        }
     }
 }

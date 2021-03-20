@@ -4,6 +4,7 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.Search.Queries
+@using LanguageExt.UnsafeValueAccess
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
@@ -66,6 +67,12 @@
         }
     </MudContainer>
 </MudContainer>
+@if (_data.PageMap.IsSome)
+{
+    <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
+               BaseUri="/media/tv/shows"
+               Query="@_query" />
+}
 
 @code {
     private static int PageSize => 100;

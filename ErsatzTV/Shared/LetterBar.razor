@@ -1,31 +1,56 @@
-﻿<div class="letter-bar-container">
+﻿@using ErsatzTV.Core.Search
+@using Microsoft.AspNetCore.WebUtilities
+<div class="letter-bar-container">
     <div class="letter-bar">
-        <MudLink>#</MudLink>
-        <MudLink>A</MudLink>
-        <MudLink>B</MudLink>
-        <MudLink>C</MudLink>
-        <MudLink>D</MudLink>
-        <MudLink>E</MudLink>
-        <MudLink>F</MudLink>
-        <MudLink>G</MudLink>
-        <MudLink>H</MudLink>
-        <MudLink>I</MudLink>
-        <MudLink>J</MudLink>
-        <MudLink>K</MudLink>
-        <MudLink>L</MudLink>
-        <MudLink>M</MudLink>
-        <MudLink>N</MudLink>
-        <MudLink>O</MudLink>
-        <MudLink>P</MudLink>
-        <MudLink>Q</MudLink>
-        <MudLink>R</MudLink>
-        <MudLink>S</MudLink>
-        <MudLink>T</MudLink>
-        <MudLink>U</MudLink>
-        <MudLink>V</MudLink>
-        <MudLink>W</MudLink>
-        <MudLink>X</MudLink>
-        <MudLink>Y</MudLink>
-        <MudLink>Z</MudLink>
+        <MudLink Href="@GetLinkForLetter('#')">#</MudLink>
+        <MudLink Href="@GetLinkForLetter('a')">A</MudLink>
+        <MudLink Href="@GetLinkForLetter('b')">B</MudLink>
+        <MudLink Href="@GetLinkForLetter('c')">C</MudLink>
+        <MudLink Href="@GetLinkForLetter('d')">D</MudLink>
+        <MudLink Href="@GetLinkForLetter('e')">E</MudLink>
+        <MudLink Href="@GetLinkForLetter('f')">F</MudLink>
+        <MudLink Href="@GetLinkForLetter('g')">G</MudLink>
+        <MudLink Href="@GetLinkForLetter('h')">H</MudLink>
+        <MudLink Href="@GetLinkForLetter('i')">I</MudLink>
+        <MudLink Href="@GetLinkForLetter('j')">J</MudLink>
+        <MudLink Href="@GetLinkForLetter('k')">K</MudLink>
+        <MudLink Href="@GetLinkForLetter('l')">L</MudLink>
+        <MudLink Href="@GetLinkForLetter('m')">M</MudLink>
+        <MudLink Href="@GetLinkForLetter('n')">N</MudLink>
+        <MudLink Href="@GetLinkForLetter('o')">O</MudLink>
+        <MudLink Href="@GetLinkForLetter('p')">P</MudLink>
+        <MudLink Href="@GetLinkForLetter('q')">Q</MudLink>
+        <MudLink Href="@GetLinkForLetter('r')">R</MudLink>
+        <MudLink Href="@GetLinkForLetter('s')">S</MudLink>
+        <MudLink Href="@GetLinkForLetter('t')">T</MudLink>
+        <MudLink Href="@GetLinkForLetter('u')">U</MudLink>
+        <MudLink Href="@GetLinkForLetter('v')">V</MudLink>
+        <MudLink Href="@GetLinkForLetter('w')">W</MudLink>
+        <MudLink Href="@GetLinkForLetter('x')">X</MudLink>
+        <MudLink Href="@GetLinkForLetter('y')">Y</MudLink>
+        <MudLink Href="@GetLinkForLetter('z')">Z</MudLink>
     </div>
 </div>
+
+@code {
+
+    [Parameter]
+    public SearchPageMap PageMap { get; set; }
+
+    [Parameter]
+    public string BaseUri { get; set; }
+
+    [Parameter]
+    public string Query { get; set; }
+
+    private string GetLinkForLetter(char letter)
+    {
+        var uri = $"{BaseUri}/page/{PageMap.PageMap[letter]}";
+        if (!string.IsNullOrWhiteSpace(Query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", Query);
+        }
+        return uri;
+    }
+
+}

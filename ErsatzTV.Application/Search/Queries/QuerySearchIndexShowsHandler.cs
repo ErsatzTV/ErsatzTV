@@ -28,17 +28,16 @@ namespace ErsatzTV.Application.Search.Queries
             QuerySearchIndexShows request,
             CancellationToken cancellationToken)
         {
-            (List<SearchItem> searchItems, int totalCount) =
-                await _searchIndex.Search(
-                    request.Query,
-                    (request.PageNumber - 1) * request.PageSize,
-                    request.PageSize);
+            SearchResult searchResult = await _searchIndex.Search(
+                request.Query,
+                (request.PageNumber - 1) * request.PageSize,
+                request.PageSize);
 
             List<TelevisionShowCardViewModel> items = await _televisionRepository
-                .GetShowsForCards(searchItems.Map(i => i.Id).ToList())
+                .GetShowsForCards(searchResult.Items.Map(i => i.Id).ToList())
                 .Map(list => list.Map(ProjectToViewModel).ToList());
 
-            return new TelevisionShowCardResultsViewModel(totalCount, items);
+            return new TelevisionShowCardResultsViewModel(searchResult.TotalCount, items, searchResult.PageMap);
         }
     }
 }
