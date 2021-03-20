@@ -174,7 +174,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE lp.LibraryId = @LibraryId AND pm.Key not in @Keys",
                 new { LibraryId = library.Id, Keys = movieKeys }).Map(result => result.ToList());
 
-            await _dbConnection.ExecuteAsync(@"DELETE FROM MediaItem WHERE Id IN @Ids", new { Ids = ids });
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                WHERE lp.LibraryId = @LibraryId AND pm.Key not in @Keys)",
+                new { LibraryId = library.Id, Keys = movieKeys });
 
             return ids;
         }

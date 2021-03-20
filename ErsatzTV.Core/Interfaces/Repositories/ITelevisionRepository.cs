@@ -31,11 +31,11 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> DeleteByPath(LibraryPath libraryPath, string path);
         Task<Unit> DeleteEmptySeasons(LibraryPath libraryPath);
         Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath);
-        Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item);
+        Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAddPlexShow(PlexLibrary library, PlexShow item);
         Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item);
         Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item);
-        Task<Unit> AddGenre(ShowMetadata metadata, Genre genre);
-        Task<Unit> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys);
+        Task<bool> AddGenre(ShowMetadata metadata, Genre genre);
+        Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys);
         Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys);
         Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys);
         Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber);

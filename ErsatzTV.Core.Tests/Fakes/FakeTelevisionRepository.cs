@@ -64,7 +64,9 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<List<int>> DeleteEmptyShows(LibraryPath libraryPath) => throw new NotSupportedException();
 
-        public Task<Either<BaseError, PlexShow>> GetOrAddPlexShow(PlexLibrary library, PlexShow item) =>
+        public Task<Either<BaseError, MediaItemScanResult<PlexShow>>> GetOrAddPlexShow(
+            PlexLibrary library,
+            PlexShow item) =>
             throw new NotSupportedException();
 
         public Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item) =>
@@ -73,9 +75,9 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item) =>
             throw new NotSupportedException();
 
-        public Task<Unit> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
+        public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
 
-        public Task<Unit> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys) =>
+        public Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys) =>
             throw new NotSupportedException();
 
         public Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys) =>

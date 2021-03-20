@@ -95,11 +95,11 @@ namespace ErsatzTV.Infrastructure.Search
             return Task.FromResult(Unit.Default);
         }
 
-        public async Task<SearchResult> Search(string searchQuery, int skip, int limit, string searchField = "")
+        public Task<SearchResult> Search(string searchQuery, int skip, int limit, string searchField = "")
         {
             if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
             {
-                return new SearchResult(new List<SearchItem>(), 0);
+                return new SearchResult(new List<SearchItem>(), 0).AsTask();
             }
 
             using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
@@ -116,7 +116,7 @@ namespace ErsatzTV.Infrastructure.Search
             IEnumerable<ScoreDoc> selectedHits = topDocs.ScoreDocs.Skip(skip).Take(limit);
             return new SearchResult(
                 selectedHits.Map(d => ProjectToSearchItem(searcher.Doc(d.Doc))).ToList(),
-                topDocs.TotalHits);
+                topDocs.TotalHits).AsTask();
         }
 
         private static void UpdateMovies(IEnumerable<Movie> movies, IndexWriter writer)
