@@ -10,7 +10,7 @@ namespace ErsatzTV.Core.Interfaces.Search
     {
         public int Version { get; }
         Task<bool> Initialize();
-        Task<Unit> Rebuild(List<MediaItem> items);
+        Task<Unit> Rebuild(List<int> itemIds);
         Task<Unit> AddItems(List<MediaItem> items);
         Task<Unit> UpdateItems(List<MediaItem> items);
         Task<Unit> RemoveItems(List<int> ids);

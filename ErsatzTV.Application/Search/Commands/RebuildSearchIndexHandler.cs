@@ -40,8 +40,8 @@ namespace ErsatzTV.Application.Search.Commands
             {
                 _logger.LogDebug("Migrating search index to version {Version}", _searchIndex.Version);
 
-                List<MediaItem> items = await _searchRepository.GetItemsToIndex();
-                await _searchIndex.Rebuild(items);
+                List<int> itemIds = await _searchRepository.GetItemIdsToIndex();
+                await _searchIndex.Rebuild(itemIds);
 
                 Option<ConfigElement> maybeVersion =
                     await _configElementRepository.Get(ConfigElementKey.SearchIndexVersion);

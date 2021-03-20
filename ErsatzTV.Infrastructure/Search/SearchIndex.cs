@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
 using LanguageExt;
@@ -42,8 +43,13 @@ namespace ErsatzTV.Infrastructure.Search
         private readonly ILocalFileSystem _localFileSystem;
 
         private readonly string[] _searchFields = { TitleField, GenreField, TagField };
+        private readonly ISearchRepository _searchRepository;
 
-        public SearchIndex(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
+        public SearchIndex(ILocalFileSystem localFileSystem, ISearchRepository searchRepository)
+        {
+            _localFileSystem = localFileSystem;
+            _searchRepository = searchRepository;
+        }
 
         public int Version => 1;
 
@@ -53,7 +59,7 @@ namespace ErsatzTV.Infrastructure.Search
             return Task.FromResult(true);
         }
 
-        public async Task<Unit> Rebuild(List<MediaItem> items)
+        public async Task<Unit> Rebuild(List<int> itemIds)
         {
             await Initialize();
 
@@ -62,8 +68,23 @@ namespace ErsatzTV.Infrastructure.Search
             var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.CREATE };
             using var writer = new IndexWriter(dir, indexConfig);
 
-            UpdateMovies(items.OfType<Movie>(), writer);
-            UpdateShows(items.OfType<Show>(), writer);
+            foreach (int id in itemIds)
+            {
+                Option<MediaItem> maybeMediaItem = await _searchRepository.GetItemToIndex(id);
+                if (maybeMediaItem.IsSome)
+                {
+                    MediaItem mediaItem = maybeMediaItem.ValueUnsafe();
+                    switch (mediaItem)
+                    {
+                        case Movie movie:
+                            UpdateMovie(movie, writer);
+                            break;
+                        case Show show:
+                            UpdateShow(show, writer);
+                            break;
+                    }
+                }
+            }
 
             return Unit.Default;
         }
@@ -77,8 +98,18 @@ namespace ErsatzTV.Infrastructure.Search
             var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.APPEND };
             using var writer = new IndexWriter(dir, indexConfig);
 
-            UpdateMovies(items.OfType<Movie>(), writer);
-            UpdateShows(items.OfType<Show>(), writer);
+            foreach (MediaItem item in items)
+            {
+                switch (item)
+                {
+                    case Movie movie:
+                        UpdateMovie(movie, writer);
+                        break;
+                    case Show show:
+                        UpdateShow(show, writer);
+                        break;
+                }
+            }
 
             return Task.FromResult(Unit.Default);
         }
@@ -174,83 +205,77 @@ namespace ErsatzTV.Infrastructure.Search
             return new SearchPageMap(map);
         }
 
-        private static void UpdateMovies(IEnumerable<Movie> movies, IndexWriter writer)
+        private static void UpdateMovie(Movie movie, IndexWriter writer)
         {
-            foreach (Movie movie in movies)
+            Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
+            if (maybeMetadata.IsSome)
             {
-                Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
-                if (maybeMetadata.IsSome)
+                MovieMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                var doc = new Document
                 {
-                    MovieMetadata metadata = maybeMetadata.ValueUnsafe();
+                    new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
+                    new StringField(TypeField, MovieType, Field.Store.NO),
+                    new TextField(TitleField, metadata.Title, Field.Store.NO),
+                    new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                    new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
+                    new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                };
 
-                    var doc = new Document
-                    {
-                        new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, MovieType, Field.Store.NO),
-                        new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
-                        new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
-                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
-                    };
-
-                    if (!string.IsNullOrWhiteSpace(metadata.Plot))
-                    {
-                        doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
-                    }
-
-                    foreach (Genre genre in metadata.Genres)
-                    {
-                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
-                    }
-
-                    foreach (Tag tag in metadata.Tags)
-                    {
-                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
-                    }
-
-                    writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
+                if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                {
+                    doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
                 }
+
+                foreach (Genre genre in metadata.Genres)
+                {
+                    doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                }
+
+                foreach (Tag tag in metadata.Tags)
+                {
+                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                }
+
+                writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
             }
         }
 
-        private static void UpdateShows(IEnumerable<Show> shows, IndexWriter writer)
+        private static void UpdateShow(Show show, IndexWriter writer)
         {
-            foreach (Show show in shows)
+            Option<ShowMetadata> maybeMetadata = show.ShowMetadata.HeadOrNone();
+            if (maybeMetadata.IsSome)
             {
-                Option<ShowMetadata> maybeMetadata = show.ShowMetadata.HeadOrNone();
-                if (maybeMetadata.IsSome)
+                ShowMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                var doc = new Document
                 {
-                    ShowMetadata metadata = maybeMetadata.ValueUnsafe();
+                    new StringField(IdField, show.Id.ToString(), Field.Store.YES),
+                    new StringField(TypeField, ShowType, Field.Store.NO),
+                    new TextField(TitleField, metadata.Title, Field.Store.NO),
+                    new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                    new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
+                    new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                };
 
-                    var doc = new Document
-                    {
-                        new StringField(IdField, show.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, ShowType, Field.Store.NO),
-                        new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
-                        new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
-                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
-                    };
-
-                    if (!string.IsNullOrWhiteSpace(metadata.Plot))
-                    {
-                        doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
-                    }
-
-                    foreach (Genre genre in metadata.Genres)
-                    {
-                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
-                    }
-
-                    foreach (Tag tag in metadata.Tags)
-                    {
-                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
-                    }
-
-                    writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
+                if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                {
+                    doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
                 }
+
+                foreach (Genre genre in metadata.Genres)
+                {
+                    doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                }
+
+                foreach (Tag tag in metadata.Tags)
+                {
+                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                }
+
+                writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
             }
         }
 
