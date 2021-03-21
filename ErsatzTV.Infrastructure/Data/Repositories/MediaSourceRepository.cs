@@ -159,6 +159,29 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
+        public async Task<Unit> UpdateLibraries(
+            int plexMediaSourceId,
+            List<PlexLibrary> toAdd,
+            List<PlexLibrary> toDelete)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            foreach (PlexLibrary add in toAdd)
+            {
+                add.MediaSourceId = plexMediaSourceId;
+                dbContext.Entry(add).State = EntityState.Added;
+            }
+
+            foreach (PlexLibrary delete in toDelete)
+            {
+                dbContext.Entry(delete).State = EntityState.Deleted;
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return Unit.Default;
+        }
+
         public async Task<Unit> UpdatePathReplacements(
             int plexMediaSourceId,
             List<PlexPathReplacement> toAdd,

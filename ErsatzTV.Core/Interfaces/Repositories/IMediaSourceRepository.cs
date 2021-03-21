@@ -21,6 +21,10 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<int> CountMediaItems(int id);
         Task Update(LocalMediaSource localMediaSource);
         Task Update(PlexMediaSource plexMediaSource);
+        Task<Unit> UpdateLibraries(
+            int plexMediaSourceId,
+            List<PlexLibrary> toAdd,
+            List<PlexLibrary> toDelete);
         Task<Unit> UpdatePathReplacements(
             int plexMediaSourceId,
             List<PlexPathReplacement> toAdd,
