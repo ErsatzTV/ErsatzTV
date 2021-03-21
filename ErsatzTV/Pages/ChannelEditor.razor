@@ -96,7 +96,7 @@
         else
         {
             FFmpegSettingsViewModel ffmpegSettings = await Mediator.Send(new GetFFmpegSettings());
-            
+
     // TODO: command for new channel
             IEnumerable<int> channelNumbers = await Mediator.Send(new GetAllChannels())
                 .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
