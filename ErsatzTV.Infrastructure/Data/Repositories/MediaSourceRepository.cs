@@ -152,11 +152,37 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
-        public async Task Update(PlexMediaSource plexMediaSource)
+        public async Task Update(
+            PlexMediaSource plexMediaSource,
+            List<PlexConnection> toAdd,
+            List<PlexConnection> toDelete)
         {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            context.PlexMediaSources.Update(plexMediaSource);
-            await context.SaveChangesAsync();
+            await _dbConnection.ExecuteAsync(
+                @"UPDATE PlexMediaSource SET ProductVersion = @ProductVersion, ServerName = @ServerName WHERE Id = @Id",
+                new { plexMediaSource.ProductVersion, plexMediaSource.ServerName, plexMediaSource.Id });
+
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            foreach (PlexConnection add in toAdd)
+            {
+                add.PlexMediaSourceId = plexMediaSource.Id;
+                dbContext.Entry(add).State = EntityState.Added;
+            }
+
+            foreach (PlexConnection delete in toDelete)
+            {
+                dbContext.Entry(delete).State = EntityState.Deleted;
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            PlexMediaSource pms = await dbContext.PlexMediaSources.FindAsync(plexMediaSource.Id);
+            await dbContext.Entry(pms).Collection(x => x.Connections).LoadAsync();
+            if (plexMediaSource.Connections.Any() && plexMediaSource.Connections.All(c => !c.IsActive))
+            {
+                plexMediaSource.Connections.Head().IsActive = true;
+                await dbContext.SaveChangesAsync();
+            }
         }
 
         public async Task<Unit> UpdateLibraries(
