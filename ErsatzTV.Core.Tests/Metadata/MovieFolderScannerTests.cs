@@ -239,6 +239,50 @@ namespace ErsatzTV.Core.Tests.Metadata
             }
 
             [Test]
+            public async Task NewMovie_Statistics_And_FallbackMetadata_And_FolderPoster(
+                [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+                string videoExtension,
+                [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.ImageFileExtensions))]
+                string imageExtension)
+            {
+                string moviePath = Path.Combine(
+                    FakeRoot,
+                    Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+                string posterPath = Path.Combine(
+                    Path.GetDirectoryName(moviePath) ?? string.Empty,
+                    $"folder.{imageExtension}");
+
+                MovieFolderScanner service = GetService(
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                    new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now }
+                );
+                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
+
+                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+
+                result.IsRight.Should().BeTrue();
+
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+
+                _localStatisticsProvider.Verify(
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
+                    Times.Once);
+
+                _localMetadataProvider.Verify(
+                    x => x.RefreshFallbackMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
+                    Times.Once);
+
+                _imageCache.Verify(
+                    x => x.CopyArtworkToCache(posterPath, ArtworkKind.Poster),
+                    Times.Once);
+            }
+
+            [Test]
             public async Task NewMovie_Statistics_And_FallbackMetadata_And_MovieNamePoster(
                 [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
                 string videoExtension,

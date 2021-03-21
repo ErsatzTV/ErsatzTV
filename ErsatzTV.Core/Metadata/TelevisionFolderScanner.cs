@@ -319,15 +319,16 @@ namespace ErsatzTV.Core.Metadata
 
         private Option<string> LocateArtworkForShow(string showFolder, ArtworkKind artworkKind)
         {
-            string segment = artworkKind switch
+            string[] segments = artworkKind switch
             {
-                ArtworkKind.Poster => "poster",
-                ArtworkKind.FanArt => "fanart",
+                ArtworkKind.Poster => new[] { "poster", "folder" },
+                ArtworkKind.FanArt => new[] { "fanart" },
                 _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
             };
 
             return ImageFileExtensions
-                .Map(ext => $"{segment}.{ext}")
+                .Map(ext => segments.Map(segment => $"{segment}.{ext}"))
+                .Flatten()
                 .Map(f => Path.Combine(showFolder, f))
                 .Filter(s => _localFileSystem.FileExists(s))
                 .HeadOrNone();
