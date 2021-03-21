@@ -49,7 +49,7 @@
         <div class="mb-2">
             @foreach (string studio in _movie.Studios.OrderBy(s => s))
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@studio" Class="mr-2 mb-2" Link="@($"/search?query=studio%3a%22{studio.ToLowerInvariant()}%22")"/>
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@studio" Class="mr-2 mb-2" Link="@($"/search?query=studio%3a%22{Uri.EscapeDataString(studio.ToLowerInvariant())}%22")"/>
             }
         </div>
     }
@@ -59,7 +59,7 @@
         <div class="mb-2">
             @foreach (string genre in _movie.Genres.OrderBy(g => g))
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2 mb-2" Link="@($"/search?query=genre%3a%22{genre.ToLowerInvariant()}%22")"/>
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2 mb-2" Link="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre.ToLowerInvariant())}%22")"/>
             }
         </div>
     }
@@ -69,7 +69,7 @@
         <div>
             @foreach (string tag in _movie.Tags.OrderBy(t => t))
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@tag" Class="mr-2 mb-2" Link="@($"/search?query=tag%3a%22{tag.ToLowerInvariant()}%22")"/>
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@tag" Class="mr-2 mb-2" Link="@($"/search?query=tag%3a%22{Uri.EscapeDataString(tag.ToLowerInvariant())}%22")"/>
             }
         </div>
     }
