@@ -100,6 +100,7 @@ namespace ErsatzTV.Core.Metadata
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
                     metadata.Genres = new List<Genre>();
                     metadata.Tags = new List<Tag>();
+                    metadata.Studios = new List<Studio>();
                     metadata.DateUpdated = DateTime.UtcNow;
                 }
             }

@@ -112,5 +112,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<bool> RemoveGenre(Genre genre) =>
             _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id })
                 .Map(result => result > 0);
+
+        public Task<bool> RemoveTag(Tag tag) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Tag WHERE Id = @TagId", new { TagId = tag.Id })
+                .Map(result => result > 0);
+
+        public Task<bool> RemoveStudio(Studio studio) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Studio WHERE Id = @StudioId", new { StudioId = studio.Id })
+                .Map(result => result > 0);
     }
 }

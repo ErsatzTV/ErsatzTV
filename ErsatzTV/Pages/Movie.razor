@@ -43,6 +43,16 @@
             </div>
         </div>
     </div>
+    @if (_movie.Studios.Any())
+    {
+        <MudText GutterBottom="true">Studios</MudText>
+        <div class="mb-2">
+            @foreach (string studio in _movie.Studios.OrderBy(s => s))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@studio" Class="mr-2 mb-2" Link="@($"/search?query=studio%3a%22{studio.ToLowerInvariant()}%22")"/>
+            }
+        </div>
+    }
     @if (_movie.Genres.Any())
     {
         <MudText GutterBottom="true">Genres</MudText>

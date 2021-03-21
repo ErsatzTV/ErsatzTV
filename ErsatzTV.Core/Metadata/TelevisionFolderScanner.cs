@@ -200,7 +200,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -241,7 +241,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -264,7 +264,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -283,7 +283,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -302,7 +302,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 

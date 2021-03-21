@@ -38,6 +38,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string TitleAndYearField = "title_and_year";
         private const string JumpLetterField = "jump_letter";
         private const string ReleaseDateField = "release_date";
+        private const string StudioField = "studio";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -48,7 +49,7 @@ namespace ErsatzTV.Infrastructure.Search
         private readonly ILogger<SearchIndex> _logger;
 
         private readonly ISearchRepository _searchRepository;
-
+        
         public SearchIndex(
             ILocalFileSystem localFileSystem,
             ISearchRepository searchRepository,
@@ -263,6 +264,11 @@ namespace ErsatzTV.Infrastructure.Search
                         doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
                     }
 
+                    foreach (Studio studio in metadata.Studios)
+                    {
+                        doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
+                    }
+
                     writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
                 }
                 catch (Exception ex)
@@ -314,6 +320,11 @@ namespace ErsatzTV.Infrastructure.Search
                     foreach (Tag tag in metadata.Tags)
                     {
                         doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    foreach (Studio studio in metadata.Studios)
+                    {
+                        doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                     }
 
                     writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);

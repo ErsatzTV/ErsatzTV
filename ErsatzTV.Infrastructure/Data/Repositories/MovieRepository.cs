@@ -41,6 +41,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(m => m.Genres)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Tags)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(m => m.Studios)
                 .OrderBy(m => m.Id)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
@@ -56,6 +58,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Genres)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Tags)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Studios)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .Include(i => i.MediaVersions)
@@ -81,6 +85,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Genres)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Tags)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Studios)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaVersions)
@@ -164,6 +170,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Genre (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public Task<bool> AddTag(MovieMetadata metadata, Tag tag) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Tag (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
+                new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public Task<bool> AddStudio(MovieMetadata metadata, Studio studio) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Studio (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
+                new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
         public async Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys)
         {
