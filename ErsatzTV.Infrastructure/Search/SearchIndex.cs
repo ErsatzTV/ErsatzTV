@@ -273,6 +273,7 @@ namespace ErsatzTV.Infrastructure.Search
                 }
                 catch (Exception ex)
                 {
+                    metadata.Movie = null;
                     _logger.LogWarning(ex, "Error indexing movie with metadata {@Metadata}", metadata);
                 }
             }
@@ -331,6 +332,7 @@ namespace ErsatzTV.Infrastructure.Search
                 }
                 catch (Exception ex)
                 {
+                    metadata.Show = null;
                     _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
                 }
             }
