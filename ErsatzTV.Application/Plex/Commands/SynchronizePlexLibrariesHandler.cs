@@ -78,7 +78,10 @@ namespace ErsatzTV.Application.Plex.Commands
                     var existing = connectionParameters.PlexMediaSource.Libraries.OfType<PlexLibrary>().ToList();
                     var toAdd = libraries.Filter(library => existing.All(l => l.Key != library.Key)).ToList();
                     var toRemove = existing.Filter(library => libraries.All(l => l.Key != library.Key)).ToList();
-                    return _mediaSourceRepository.UpdateLibraries(connectionParameters.PlexMediaSource.Id, toAdd, toRemove);
+                    return _mediaSourceRepository.UpdateLibraries(
+                        connectionParameters.PlexMediaSource.Id,
+                        toAdd,
+                        toRemove);
                 },
                 error =>
                 {

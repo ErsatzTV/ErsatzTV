@@ -66,8 +66,10 @@ namespace ErsatzTV.Application.Plex.Commands
                 {
                     existing.ProductVersion = server.ProductVersion;
                     existing.ServerName = server.ServerName;
-                    var toAdd = server.Connections.Filter(connection => existing.Connections.All(c => c.Uri != connection.Uri)).ToList();
-                    var toRemove = existing.Connections.Filter(connection => server.Connections.All(c => c.Uri != connection.Uri)).ToList();
+                    var toAdd = server.Connections
+                        .Filter(connection => existing.Connections.All(c => c.Uri != connection.Uri)).ToList();
+                    var toRemove = existing.Connections
+                        .Filter(connection => server.Connections.All(c => c.Uri != connection.Uri)).ToList();
                     return _mediaSourceRepository.Update(existing, toAdd, toRemove);
                 },
                 async () =>
@@ -76,7 +78,7 @@ namespace ErsatzTV.Application.Plex.Commands
                     {
                         server.Connections.Head().IsActive = true;
                     }
-                    
+
                     await _mediaSourceRepository.Add(server);
                 });
         }
