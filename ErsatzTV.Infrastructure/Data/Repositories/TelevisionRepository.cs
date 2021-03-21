@@ -53,6 +53,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(sm => sm.Genres)
                 .Include(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Tags)
+                .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Studios)
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
@@ -354,11 +356,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<PlexShow> maybeExisting = await dbContext.PlexShows
                 .AsNoTracking()
                 .Include(i => i.ShowMetadata)
-                .ThenInclude(mm => mm.Genres)
+                .ThenInclude(sm => sm.Genres)
                 .Include(i => i.ShowMetadata)
-                .ThenInclude(mm => mm.Tags)
+                .ThenInclude(sm => sm.Tags)
                 .Include(i => i.ShowMetadata)
-                .ThenInclude(mm => mm.Artwork)
+                .ThenInclude(sm => sm.Studios)
+                .Include(i => i.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .OrderBy(i => i.Key)
@@ -464,8 +468,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) =>
             _dbConnection.ExecuteAsync(
-                "INSERT INTO Genre (Name, SeasonMetadataId) VALUES (@Name, @MetadataId)",
+                "INSERT INTO Genre (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
                 new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public Task<bool> AddTag(ShowMetadata metadata, Tag tag) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Tag (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
+                new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public Task<bool> AddStudio(ShowMetadata metadata, Studio studio) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Studio (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
+                new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
         public async Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys)
         {
@@ -504,6 +518,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     SeasonMetadata = new List<SeasonMetadata>
                     {
                         new()
+                        {
+                            DateAdded = DateTime.UtcNow
+                        }
                     }
                 };
                 await dbContext.Seasons.AddAsync(season);
@@ -524,6 +541,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             try
             {
+                if (dbContext.MediaFiles.Any(mf => mf.Path == path))
+                {
+                    return BaseError.New("Multi-episode files are not yet supported");
+                }
+                
                 var episode = new Episode
                 {
                     LibraryPathId = libraryPathId,
@@ -532,6 +554,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     {
                         new()
                         {
+                            DateAdded = DateTime.UtcNow,
                             DateUpdated = DateTime.MinValue,
                             MetadataKind = MetadataKind.Fallback
                         }
@@ -605,6 +628,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             try
             {
+                if (dbContext.MediaFiles.Any(mf => mf.Path == item.MediaVersions.Head().MediaFiles.Head().Path))
+                {
+                    return BaseError.New("Multi-episode files are not yet supported");
+                }
+
                 item.LibraryPathId = library.Paths.Head().Id;
 
                 await dbContext.PlexEpisodes.AddAsync(item);

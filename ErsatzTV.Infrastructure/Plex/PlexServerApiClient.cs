@@ -177,8 +177,14 @@ namespace ErsatzTV.Infrastructure.Plex
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
-                Tags = new List<Tag>()
+                Tags = new List<Tag>(),
+                Studios = new List<Studio>()
             };
+
+            if (!string.IsNullOrWhiteSpace(response.Studio))
+            {
+                metadata.Studios.Add(new Studio { Name = response.Studio });
+            }
 
             if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
             {
@@ -279,8 +285,14 @@ namespace ErsatzTV.Infrastructure.Plex
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
-                Tags = new List<Tag>()
+                Tags = new List<Tag>(),
+                Studios = new List<Studio>()
             };
+
+            if (!string.IsNullOrWhiteSpace(response.Studio))
+            {
+                metadata.Studios.Add(new Studio { Name = response.Studio });
+            }
 
             if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
             {

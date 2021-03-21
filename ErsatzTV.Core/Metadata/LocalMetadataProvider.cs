@@ -23,16 +23,19 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILogger<LocalMetadataProvider> _logger;
 
         private readonly IMetadataRepository _metadataRepository;
+        private readonly IMovieRepository _movieRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public LocalMetadataProvider(
             IMetadataRepository metadataRepository,
+            IMovieRepository movieRepository,
             ITelevisionRepository televisionRepository,
             IFallbackMetadataProvider fallbackMetadataProvider,
             ILocalFileSystem localFileSystem,
             ILogger<LocalMetadataProvider> logger)
         {
             _metadataRepository = metadataRepository;
+            _movieRepository = movieRepository;
             _televisionRepository = televisionRepository;
             _fallbackMetadataProvider = fallbackMetadataProvider;
             _localFileSystem = localFileSystem;
@@ -138,7 +141,7 @@ namespace ErsatzTV.Core.Metadata
 
         private Task<bool> ApplyMetadataUpdate(Movie movie, MovieMetadata metadata) =>
             Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
-                existing =>
+                async existing =>
                 {
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
@@ -158,29 +161,49 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Genres.Remove(genre);
+                        await _metadataRepository.RemoveGenre(genre);
                     }
 
                     foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
                         .ToList())
                     {
                         existing.Genres.Add(genre);
+                        await _movieRepository.AddGenre(existing, genre);
                     }
 
                     foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
                         existing.Tags.Remove(tag);
+                        await _metadataRepository.RemoveTag(tag);
                     }
 
                     foreach (Tag tag in metadata.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
                         existing.Tags.Add(tag);
+                        await _movieRepository.AddTag(existing, tag);
                     }
 
-                    return _metadataRepository.Update(existing);
+                    foreach (Studio studio in existing.Studios
+                        .Filter(s => metadata.Studios.All(s2 => s2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Studios.Remove(studio);
+                        await _metadataRepository.RemoveStudio(studio);
+                    }
+
+                    foreach (Studio studio in metadata.Studios
+                        .Filter(s => existing.Studios.All(s2 => s2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Studios.Add(studio);
+                        await _movieRepository.AddStudio(existing, studio);
+                    }
+
+                    return await _metadataRepository.Update(existing);
                 },
-                () =>
+                async () =>
                 {
                     metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
@@ -188,12 +211,12 @@ namespace ErsatzTV.Core.Metadata
                     metadata.MovieId = movie.Id;
                     movie.MovieMetadata = new List<MovieMetadata> { metadata };
 
-                    return _metadataRepository.Add(metadata);
+                    return await _metadataRepository.Add(metadata);
                 });
 
         private Task<bool> ApplyMetadataUpdate(Show show, ShowMetadata metadata) =>
             Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
-                existing =>
+                async existing =>
                 {
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
@@ -213,29 +236,49 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Genres.Remove(genre);
+                        await _metadataRepository.RemoveGenre(genre);
                     }
 
                     foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
                         .ToList())
                     {
                         existing.Genres.Add(genre);
+                        await _televisionRepository.AddGenre(existing, genre);
                     }
 
                     foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
                         existing.Tags.Remove(tag);
+                        await _metadataRepository.RemoveTag(tag);
                     }
 
                     foreach (Tag tag in metadata.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
                         existing.Tags.Add(tag);
+                        await _televisionRepository.AddTag(existing, tag);
                     }
 
-                    return _metadataRepository.Update(existing);
+                    foreach (Studio studio in existing.Studios
+                        .Filter(s => metadata.Studios.All(s2 => s2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Studios.Remove(studio);
+                        await _metadataRepository.RemoveStudio(studio);
+                    }
+
+                    foreach (Studio studio in metadata.Studios
+                        .Filter(s => existing.Studios.All(s2 => s2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Studios.Add(studio);
+                        await _televisionRepository.AddStudio(existing, studio);
+                    }
+
+                    return await _metadataRepository.Update(existing);
                 },
-                () =>
+                async () =>
                 {
                     metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
@@ -243,7 +286,7 @@ namespace ErsatzTV.Core.Metadata
                     metadata.ShowId = show.Id;
                     show.ShowMetadata = new List<ShowMetadata> { metadata };
 
-                    return _metadataRepository.Add(metadata);
+                    return await _metadataRepository.Add(metadata);
                 });
 
         private async Task<Option<MovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
@@ -294,10 +337,11 @@ namespace ErsatzTV.Core.Metadata
                         Plot = nfo.Plot,
                         Outline = nfo.Outline,
                         Tagline = nfo.Tagline,
-                        Year = nfo.Year,
-                        ReleaseDate = GetAired(nfo.Premiered) ?? new DateTime(nfo.Year, 1, 1),
+                        Year = GetYear(nfo.Year, nfo.Premiered),
+                        ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
                         Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList()
+                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
                     },
                     None);
             }
@@ -322,7 +366,7 @@ namespace ErsatzTV.Core.Metadata
                             MetadataKind = MetadataKind.Sidecar,
                             DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                             Title = nfo.Title,
-                            ReleaseDate = GetAired(nfo.Aired),
+                            ReleaseDate = GetAired(0, nfo.Aired),
                             Plot = nfo.Plot
                         };
                         return Tuple(metadata, nfo.Episode);
@@ -354,7 +398,8 @@ namespace ErsatzTV.Core.Metadata
                         Outline = nfo.Outline,
                         Tagline = nfo.Tagline,
                         Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList()
+                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
                     },
                     None);
             }
@@ -365,19 +410,36 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private static DateTime? GetAired(string aired)
+        private static int? GetYear(int year, string premiered)
         {
-            if (string.IsNullOrWhiteSpace(aired))
+            if (year > 1000)
+            {
+                return year;
+            }
+
+            if (string.IsNullOrWhiteSpace(premiered))
             {
                 return null;
             }
 
-            if (DateTime.TryParse(aired, out DateTime parsed))
+            if (DateTime.TryParse(premiered, out DateTime parsed))
             {
-                return parsed;
+                return parsed.Year;
             }
 
             return null;
+        }
+
+        private static DateTime? GetAired(int year, string aired)
+        {
+            DateTime? fallback = year > 1000 ? new DateTime(year, 1, 1) : null;
+
+            if (string.IsNullOrWhiteSpace(aired))
+            {
+                return fallback;
+            }
+
+            return DateTime.TryParse(aired, out DateTime parsed) ? parsed : fallback;
         }
 
         [XmlRoot("movie")]
@@ -409,6 +471,9 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("tag")]
             public List<string> Tags { get; set; }
+
+            [XmlElement("studio")]
+            public List<string> Studios { get; set; }
         }
 
         [XmlRoot("tvshow")]
@@ -437,6 +502,9 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("tag")]
             public List<string> Tags { get; set; }
+
+            [XmlElement("studio")]
+            public List<string> Studios { get; set; }
         }
 
         [XmlRoot("episodedetails")]

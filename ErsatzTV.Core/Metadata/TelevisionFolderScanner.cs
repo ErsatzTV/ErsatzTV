@@ -200,7 +200,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -225,7 +225,11 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (!Optional(episode.EpisodeMetadata).Flatten().Any())
+                        bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
+                            m => m.DateUpdated == DateTime.MinValue,
+                            true);
+
+                        if (shouldUpdate)
                         {
                             string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
@@ -237,7 +241,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -260,7 +264,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -279,7 +283,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -298,7 +302,7 @@ namespace ErsatzTV.Core.Metadata
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 

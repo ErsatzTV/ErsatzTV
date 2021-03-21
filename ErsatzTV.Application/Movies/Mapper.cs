@@ -16,7 +16,8 @@ namespace ErsatzTV.Application.Movies
                 Artwork(metadata, ArtworkKind.Poster),
                 Artwork(metadata, ArtworkKind.FanArt),
                 metadata.Genres.Map(g => g.Name).ToList(),
-                metadata.Tags.Map(t => t.Name).ToList());
+                metadata.Tags.Map(t => t.Name).ToList(),
+                metadata.Studios.Map(s => s.Name).ToList());
         }
 
         private static string Artwork(Metadata metadata, ArtworkKind artworkKind) =>
