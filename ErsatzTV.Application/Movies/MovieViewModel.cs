@@ -9,5 +9,6 @@ namespace ErsatzTV.Application.Movies
         string Poster,
         string FanArt,
         List<string> Genres,
-        List<string> Tags);
+        List<string> Tags,
+        List<string> Studios);
 }

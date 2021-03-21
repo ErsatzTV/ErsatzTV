@@ -14,11 +14,15 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(mm => mm.Genres)
+            builder.HasMany(sm => sm.Genres)
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.HasMany(mm => mm.Tags)
+            builder.HasMany(sm => sm.Tags)
+                .WithOne()
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(sm => sm.Studios)
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
         }
