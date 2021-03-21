@@ -210,6 +210,14 @@ namespace ErsatzTV.Core.Metadata
                     ext => new[] { $"{segment}.{ext}", Path.GetFileNameWithoutExtension(path) + $"-{segment}.{ext}" })
                 .Map(f => Path.Combine(folder, f));
             Option<string> result = possibleMoviePosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
+            if (result.IsNone && artworkKind == ArtworkKind.Poster)
+            {
+                IEnumerable<string> possibleFolderPosters = ImageFileExtensions.Collect(
+                        ext => new[] { $"folder.{ext}" })
+                    .Map(f => Path.Combine(folder, f));
+                result = possibleFolderPosters.Filter(p => _localFileSystem.FileExists(p)).HeadOrNone();
+            }
+
             return result;
         }
     }
