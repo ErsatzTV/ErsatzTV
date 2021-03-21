@@ -225,7 +225,11 @@ namespace ErsatzTV.Core.Metadata
                     },
                     async () =>
                     {
-                        if (!Optional(episode.EpisodeMetadata).Flatten().Any())
+                        bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
+                            m => m.DateUpdated == DateTime.MinValue,
+                            true);
+
+                        if (shouldUpdate)
                         {
                             string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);

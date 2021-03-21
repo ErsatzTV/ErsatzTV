@@ -294,8 +294,8 @@ namespace ErsatzTV.Core.Metadata
                         Plot = nfo.Plot,
                         Outline = nfo.Outline,
                         Tagline = nfo.Tagline,
-                        Year = nfo.Year,
-                        ReleaseDate = GetAired(nfo.Premiered) ?? new DateTime(nfo.Year, 1, 1),
+                        Year = GetYear(nfo.Year, nfo.Premiered),
+                        ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
                         Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                         Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList()
                     },
@@ -322,7 +322,7 @@ namespace ErsatzTV.Core.Metadata
                             MetadataKind = MetadataKind.Sidecar,
                             DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                             Title = nfo.Title,
-                            ReleaseDate = GetAired(nfo.Aired),
+                            ReleaseDate = GetAired(0, nfo.Aired),
                             Plot = nfo.Plot
                         };
                         return Tuple(metadata, nfo.Episode);
@@ -365,19 +365,36 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private static DateTime? GetAired(string aired)
+        private static int? GetYear(int year, string premiered)
         {
-            if (string.IsNullOrWhiteSpace(aired))
+            if (year > 1000)
+            {
+                return year;
+            }
+
+            if (string.IsNullOrWhiteSpace(premiered))
             {
                 return null;
             }
 
-            if (DateTime.TryParse(aired, out DateTime parsed))
+            if (DateTime.TryParse(premiered, out DateTime parsed))
             {
-                return parsed;
+                return parsed.Year;
             }
 
             return null;
+        }
+
+        private static DateTime? GetAired(int year, string aired)
+        {
+            DateTime? fallback = year > 1000 ? new DateTime(year, 1, 1) : null;
+
+            if (string.IsNullOrWhiteSpace(aired))
+            {
+                return fallback;
+            }
+
+            return DateTime.TryParse(aired, out DateTime parsed) ? parsed : fallback;
         }
 
         [XmlRoot("movie")]

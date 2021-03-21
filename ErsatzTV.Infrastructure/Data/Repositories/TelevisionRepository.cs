@@ -504,6 +504,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     SeasonMetadata = new List<SeasonMetadata>
                     {
                         new()
+                        {
+                            DateAdded = DateTime.UtcNow
+                        }
                     }
                 };
                 await dbContext.Seasons.AddAsync(season);
@@ -532,6 +535,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     {
                         new()
                         {
+                            DateAdded = DateTime.UtcNow,
                             DateUpdated = DateTime.MinValue,
                             MetadataKind = MetadataKind.Fallback
                         }
