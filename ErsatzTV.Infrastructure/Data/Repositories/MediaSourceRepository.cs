@@ -257,7 +257,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await context.SaveChangesAsync();
         }
 
-        public async Task<Unit> DeleteAllPlex()
+        public async Task<List<int>> DeleteAllPlex()
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
 
@@ -267,8 +267,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             List<PlexLibrary> allPlexLibraries = await context.PlexLibraries.ToListAsync();
             context.PlexLibraries.RemoveRange(allPlexLibraries);
 
+            List<int> movieIds = await context.PlexMovies.Map(pm => pm.Id).ToListAsync();
+            List<int> showIds = await context.PlexShows.Map(ps => ps.Id).ToListAsync();
+
             await context.SaveChangesAsync();
-            return Unit.Default;
+
+            return movieIds.Append(showIds).ToList();
         }
 
         public async Task<List<int>> DisablePlexLibrarySync(List<int> libraryIds)
