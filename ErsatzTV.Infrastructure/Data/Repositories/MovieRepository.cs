@@ -201,6 +201,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return ids;
         }
 
+        public Task<bool> UpdateSortTitle(MovieMetadata movieMetadata) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE MovieMetadata SET SortTitle = @SortTitle WHERE Id = @Id",
+                new { movieMetadata.SortTitle, movieMetadata.Id }).Map(result => result > 0);
+
         private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
             TvContext dbContext,
             int libraryPathId,

@@ -180,6 +180,15 @@ namespace ErsatzTV.Core.Plex
                     }
                 }
 
+                if (incomingMetadata.SortTitle != existingMetadata.SortTitle)
+                {
+                    existingMetadata.SortTitle = incomingMetadata.SortTitle;
+                    if (await _movieRepository.UpdateSortTitle(existingMetadata))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+
                 // TODO: update other metadata?
             }
 
