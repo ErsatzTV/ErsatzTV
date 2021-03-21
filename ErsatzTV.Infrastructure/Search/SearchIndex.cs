@@ -37,6 +37,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string LibraryNameField = "library_name";
         private const string TitleAndYearField = "title_and_year";
         private const string JumpLetterField = "jump_letter";
+        private const string ReleaseDateField = "release_date";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -58,7 +59,7 @@ namespace ErsatzTV.Infrastructure.Search
             _logger = logger;
         }
 
-        public int Version => 1;
+        public int Version => 2;
 
         public Task<bool> Initialize()
         {
@@ -238,6 +239,15 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
 
+                    if (metadata.ReleaseDate.HasValue)
+                    {
+                        doc.Add(
+                            new StringField(
+                                ReleaseDateField,
+                                metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                                Field.Store.NO));
+                    }
+
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
                     {
                         doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
@@ -281,6 +291,15 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
+
+                    if (metadata.ReleaseDate.HasValue)
+                    {
+                        doc.Add(
+                            new StringField(
+                                ReleaseDateField,
+                                metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                                Field.Store.NO));
+                    }
 
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
                     {
