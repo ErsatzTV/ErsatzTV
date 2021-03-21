@@ -6,7 +6,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Plex.Commands
 {
@@ -35,20 +34,7 @@ namespace ErsatzTV.Application.Plex.Commands
             var toRemove = plexMediaSource.PathReplacements.Filter(r => incoming.All(pr => pr.Id != r.Id)).ToList();
             var toUpdate = incoming.Except(toAdd).ToList();
 
-            plexMediaSource.PathReplacements.AddRange(toAdd);
-            toRemove.ForEach(pr => plexMediaSource.PathReplacements.Remove(pr));
-            foreach (PlexPathReplacement pathReplacement in toUpdate)
-            {
-                Optional(plexMediaSource.PathReplacements.SingleOrDefault(pr => pr.Id == pathReplacement.Id))
-                    .IfSome(
-                        pr =>
-                        {
-                            pr.PlexPath = pathReplacement.PlexPath;
-                            pr.LocalPath = pathReplacement.LocalPath;
-                        });
-            }
-
-            return _mediaSourceRepository.Update(plexMediaSource).ToUnit();
+            return _mediaSourceRepository.UpdatePathReplacements(plexMediaSource.Id, toAdd, toUpdate, toRemove);
         }
 
         private static PlexPathReplacement Project(PlexPathReplacementItem vm) =>
