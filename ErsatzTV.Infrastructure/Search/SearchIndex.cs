@@ -49,7 +49,7 @@ namespace ErsatzTV.Infrastructure.Search
         private readonly ILogger<SearchIndex> _logger;
 
         private readonly ISearchRepository _searchRepository;
-        
+
         public SearchIndex(
             ILocalFileSystem localFileSystem,
             ISearchRepository searchRepository,

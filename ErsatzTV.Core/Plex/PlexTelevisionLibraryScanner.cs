@@ -131,7 +131,7 @@ namespace ErsatzTV.Core.Plex
                         result.IsUpdated = true;
                     }
                 }
-                
+
                 foreach (Studio studio in existingMetadata.Studios
                     .Filter(s => incomingMetadata.Studios.All(s2 => s2.Name != s.Name))
                     .ToList())
