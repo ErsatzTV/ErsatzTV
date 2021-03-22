@@ -285,9 +285,24 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
-            return await maybeExisting.Match(
-                episode => Right<BaseError, Episode>(episode).AsTask(),
-                () => AddEpisode(dbContext, season, libraryPath.Id, path));
+            return await maybeExisting.Match<Task<Either<BaseError, Episode>>>(
+                async episode =>
+                {
+                    // move the file to the new season if needed
+                    // this can happen when adding NFO metadata to existing content
+                    if (episode.SeasonId != season.Id)
+                    {
+                        episode.SeasonId = season.Id;
+                        episode.Season = season;
+
+                        await _dbConnection.ExecuteAsync(
+                            @"UPDATE Episode SET SeasonId = @SeasonId WHERE Id = @EpisodeId",
+                            new { SeasonId = season.Id, EpisodeId = episode.Id });
+                    }
+
+                    return episode;
+                },
+                async () => await AddEpisode(dbContext, season, libraryPath.Id, path));
         }
 
         public Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath) =>
