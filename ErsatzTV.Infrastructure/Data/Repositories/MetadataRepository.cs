@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Threading.Tasks;
 using Dapper;
 using ErsatzTV.Core.Domain;
@@ -108,6 +109,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 @"DELETE FROM Artwork WHERE ArtworkKind = @ArtworkKind AND (MovieMetadataId = @Id
                 OR ShowMetadataId = @Id OR SeasonMetadataId = @Id OR EpisodeMetadataId = @Id)",
                 new { ArtworkKind = artworkKind, metadata.Id }).ToUnit();
+
+        public Task<Unit> MarkAsUpdated(ShowMetadata metadata, DateTime dateUpdated) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE ShowMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
+                new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
+
+        public Task<Unit> MarkAsUpdated(SeasonMetadata metadata, DateTime dateUpdated) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE SeasonMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
+                new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
+
+        public Task<Unit> MarkAsUpdated(MovieMetadata metadata, DateTime dateUpdated) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE MovieMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
+                new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
 
         public Task<bool> RemoveGenre(Genre genre) =>
             _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id })

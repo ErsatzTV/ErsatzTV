@@ -153,6 +153,8 @@ namespace ErsatzTV.Core.Plex
                         result.IsUpdated = true;
                     }
                 }
+
+                await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
             }
 
             return result;
@@ -170,6 +172,7 @@ namespace ErsatzTV.Core.Plex
             {
                 await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
                 await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
+                await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
             }
 
             return result;
@@ -235,6 +238,7 @@ namespace ErsatzTV.Core.Plex
             if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
             {
                 await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
+                await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
             }
 
             return existing;
