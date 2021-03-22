@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using LanguageExt;
 
@@ -16,5 +17,8 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> UpdateArtworkPath(Artwork artwork);
         Task<Unit> AddArtwork(Domain.Metadata metadata, Artwork artwork);
         Task<Unit> RemoveArtwork(Domain.Metadata metadata, ArtworkKind artworkKind);
+        Task<Unit> MarkAsUpdated(ShowMetadata metadata, DateTime dateUpdated);
+        Task<Unit> MarkAsUpdated(SeasonMetadata metadata, DateTime dateUpdated);
+        Task<Unit> MarkAsUpdated(MovieMetadata metadata, DateTime dateUpdated);
     }
 }
