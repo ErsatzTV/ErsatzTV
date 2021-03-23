@@ -12,11 +12,12 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - Collection-based scheduling, with collections containing television shows, seasons, episodes and movies
 - Powerful scheduling options such as chronological collection playback throughout the day or over multiple days
 - [Hardware-accelerated transcoding](#Hardware-Transcoding) options (QSV, NVENC, VAAPI)
+- [Plex](https://www.plex.tv/) media and metadata
 
 ## In Development
 
-- [Plex](https://www.plex.tv/) media, metadata and collections
-  
+- Music video libraries
+ 
 ## Planned Features
 
 - [Jellyfin](https://jellyfin.org/) media, metadata and collections 
@@ -27,15 +28,15 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 
 ### Television Show
 
-![Television Show](docs/television-show.png)
+![Television Show](docs/images/television-show.png)
 
 ### Media Collection
 
-![Media Collection](docs/media-collection.png)
+![Media Collection](docs/images/media-collection.png)
 
 ### Plex Live TV
 
-![Plex Live TV Stream](docs/plex-live-tv-stream.png)
+![Plex Live TV Stream](docs/images/plex-live-tv-stream.png)
 Sintel is © copyright Blender Foundation | durian.blender.org
 
 ## Running ErsatzTV
@@ -54,21 +55,17 @@ docker run -d \
 
 After running ErsatzTV for the first time, configure it by visiting the web UI at http://[address]:8409.
 
-### Software Transcoding
-
-The following docker tags are available with software transcoding:
+The following docker tags are available:
 
 * `develop` - merges to `main` branch
 * `latest` - latest release
 
 ### Hardware Transcoding
 
-The following docker tags are available with hardware-accelerated transcoding:
+The following docker images are available with hardware-accelerated transcoding:
 
-* `develop-nvidia` - merges to `main` branch
-* `develop-vaapi` - merges to `main` branch
-* `latest-nvidia` - latest release
-* `latest-vaapi` - latest release
+* `jasongdove/ersatztv-nvidia`
+* `jasongdove/ersatztv-vaapi`
 
 QSV transcoding has not been tested in docker.
 
