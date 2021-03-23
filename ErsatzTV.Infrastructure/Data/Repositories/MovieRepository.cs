@@ -256,7 +256,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
     }

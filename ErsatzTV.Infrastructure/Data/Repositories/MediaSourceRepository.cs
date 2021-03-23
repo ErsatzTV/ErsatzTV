@@ -196,6 +196,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 add.MediaSourceId = plexMediaSourceId;
                 dbContext.Entry(add).State = EntityState.Added;
+                foreach (LibraryPath path in add.Paths)
+                {
+                    dbContext.Entry(path).State = EntityState.Added;
+                }
             }
 
             foreach (PlexLibrary delete in toDelete)
