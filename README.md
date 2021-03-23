@@ -55,7 +55,9 @@ docker run -d \
 
 After running ErsatzTV for the first time, configure it by visiting the web UI at http://[address]:8409.
 
-The following docker tags are available:
+### Software Transcoding
+
+The following docker tags are available with software transcoding:
 
 * `develop` - merges to `main` branch
 * `latest` - latest release
@@ -64,8 +66,10 @@ The following docker tags are available:
 
 The following docker images are available with hardware-accelerated transcoding:
 
-* `jasongdove/ersatztv-nvidia`
-* `jasongdove/ersatztv-vaapi`
+* `develop-nvidia` - merges to `main` branch
+* `develop-vaapi` - merges to `main` branch
+* `latest-nvidia` - latest release
+* `latest-vaapi` - latest release
 
 QSV transcoding has not been tested in docker.
 
