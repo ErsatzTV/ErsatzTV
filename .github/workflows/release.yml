@@ -124,8 +124,8 @@ jobs:
           build-args: |
             INFO_VERSION=${{ env.GIT_TAG }}-docker-nvidia
           tags: |
-            jasongdove/ersatztv-nvidia:latest
-            jasongdove/ersatztv-nvidia:${{ env.DOCKER_TAG }}
+            jasongdove/ersatztv:latest-nvidia
+            jasongdove/ersatztv:${{ env.DOCKER_TAG }}-nvidia
 
       - name: Build and push vaapi
         uses: docker/build-push-action@v2
@@ -137,5 +137,5 @@ jobs:
           build-args: |
             INFO_VERSION=${{ env.GIT_TAG }}-docker-vaapi
           tags: |
-            jasongdove/ersatztv-vaapi:latest
-            jasongdove/ersatztv-vaapi:${{ env.DOCKER_TAG }}
+            jasongdove/ersatztv:latest-vaapi
+            jasongdove/ersatztv:${{ env.DOCKER_TAG }}-vaapi
