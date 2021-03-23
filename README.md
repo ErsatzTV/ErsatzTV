@@ -64,7 +64,7 @@ The following docker tags are available with software transcoding:
 
 ### Hardware Transcoding
 
-The following docker images are available with hardware-accelerated transcoding:
+The following docker tags are available with hardware-accelerated transcoding:
 
 * `develop-nvidia` - merges to `main` branch
 * `develop-vaapi` - merges to `main` branch
