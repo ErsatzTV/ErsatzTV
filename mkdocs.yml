@@ -7,3 +7,8 @@ nav:
     - 'Configure Clients': 'user-guide/configure-clients.md'
 theme:
     name: material
+    palette:
+      - scheme: slate
+    logo: images/ersatztv-square-logo.png
+extra_css:
+    - stylesheets/extra.css
