@@ -10,5 +10,6 @@ theme:
     palette:
       - scheme: slate
     logo: images/ersatztv-square-logo.png
+    favicon: images/favicon-32x32.png
 extra_css:
     - stylesheets/extra.css
