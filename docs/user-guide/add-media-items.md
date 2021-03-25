@@ -1,6 +1,4 @@
-﻿# Add Media Items
-
-ErsatzTV needs to know about your media items in order to create channels.
+﻿ErsatzTV needs to know about your media items in order to create channels.
 Two library kinds are currently supported: [Local](#local-libraries) and [Plex](#plex-libraries).
 
 ## Local Libraries
@@ -35,3 +33,17 @@ With Plex libraries, Plex provides all metadata.
 
 ### Add Media Items
 
+## Collections
+
+ErsatzTV does not schedule individual media items; only collections of items can be scheduled.
+To create a collection, find the media items you would like to include and select them by clicking the selection button in the top left of the poster:
+
+![Poster Selection Button](../images/poster-selection-button.png)
+
+Then, add to a collection by clicking the `Add To Collection` button at the top of the page.
+
+![Add Selection To Collection](../images/add-selection-to-collection.png)
+
+In the `Add To Collection` dialog, either select an existing collection for the items, or enter a new collection name to create a collection and add all of the selected items in a single step.
+
+![Add To Collection Dialog](../images/add-to-collection-dialog.png)

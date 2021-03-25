@@ -1,6 +1,4 @@
-﻿# Install ErsatzTV
-
-ErsatzTV is available as Docker images and as pre-built binary packages for Windows, MacOS and Linux. 
+﻿ErsatzTV is available as Docker images and as pre-built binary packages for Windows, MacOS and Linux. 
 
 ## Docker Images
 

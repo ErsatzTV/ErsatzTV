@@ -14,7 +14,7 @@ Two streaming modes are currently supported: `Transport Stream` and `HttpLiveStr
 
 ### FFmpeg Profile
 
-FFmpeg Profiles are collections of encoding settings that are applied to all content on a channel.
+FFmpeg Profiles are collections of transcoding settings that are applied to all content on a channel.
 The default FFmpeg Profile is probably "good enough" for initial testing.
 
 ### Logo
@@ -38,5 +38,42 @@ Select the desired playback order for media items within each collection in the 
 
 Schedules contain an ordered list of items (collections), and will play back one or more items from each collection before advancing to the next schedule item.
 
+Edit the new schedule's items by clicking the `Edit Schedule Items` button for the schedule:
+
+![Schedules Edit Schedule Items Button](../images/schedules-edit-schedule-items.png)
+
+Add a new item to the schedule by clicking `Add Schedule Item` and configure as desired.
+
+#### Start Type
+
+Items with a `Dynamic` start type will start immediately after the preceding schedule item, while a `Fixed` start type requires a start time.
+
+#### Collection Type
+
+Schedule items can contain the following collection types:
+
+- `Collection`: Select a collection that you have created manually.
+- `Television Show`: Select an entire television show.
+- `Television Season`: Select a specific season of a television show.
+
+#### Collection
+
+Based on the selected collection type, select the desired collection.
+
+#### Playout Mode
+
+Select how you want this schedule item to behave every time it is selected for playback.
+
+- `One`: Play one media item from the collection before advancing to the next schedule item.
+- `Multiple`: Play the specified `Multiple Count` of media items from the collection before advancing to the next schedule item.
+- `Duration`: Play the maximum number of complete media items that will fit in the specified `Playout Duration` before either going offline for the remainder of the playout duration (an `Offline Tail`), or immediately advancing to the next schedule item.
+- `Flood`: Play media items from the collection either forever or until the next schedule item's start time, if one exists.
+
+Click `Save Changes` to save all changes made to the schedule's items.
+
 ## Create Playout
 
+Playouts assign a schedule to a channel and individually track the ordered playback of collection items.
+If a schedule is used in multiple playouts (channels), the channels may not have the same content playing at the same time.
+
+To create a Playout, navigate to the `Playouts` page and click the `Add Playout` button. Then, select the appropriate channel and schedule, and click `Add Playout` to save.
