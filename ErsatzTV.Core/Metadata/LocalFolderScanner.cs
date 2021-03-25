@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
@@ -15,8 +14,6 @@ namespace ErsatzTV.Core.Metadata
 {
     public abstract class LocalFolderScanner
     {
-        private static readonly SHA1CryptoServiceProvider Crypto;
-
         public static readonly List<string> VideoFileExtensions = new()
         {
             ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
@@ -49,8 +46,6 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly ILogger _logger;
         private readonly IMetadataRepository _metadataRepository;
-
-        static LocalFolderScanner() => Crypto = new SHA1CryptoServiceProvider();
 
         protected LocalFolderScanner(
             ILocalFileSystem localFileSystem,
