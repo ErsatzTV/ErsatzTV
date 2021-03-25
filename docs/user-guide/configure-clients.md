@@ -35,4 +35,5 @@ Enter the `XMLTV` url from ErsatzTV and click `Save`.
 
 ## TiviMate
 
-## Channels
+## Channels DVR
+
