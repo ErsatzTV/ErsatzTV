@@ -13,3 +13,21 @@ theme:
     favicon: images/favicon-32x32.png
 extra_css:
     - stylesheets/extra.css
+copyright: Copyright &copy; 2020 - 2021 Jason Dove
+extra:
+  social:
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/hHaJm3yGy6
+      name: ErsatzTV on Discord
+    - icon: fontawesome/brands/github
+      link: https://github.com/jasongdove/ErsatzTV
+      name: ErsatzTV on GitHub
+    - icon: fontawesome/regular/heart
+      link: https://github.com/sponsors/jasongdove
+      name: Sponsor on GitHub
+    - icon: fontawesome/brands/paypal
+      link: https://www.paypal.me/jasongdove
+      name: Donate on PayPal
+google_analytics:
+  - UA-193031642-1
+  - auto
