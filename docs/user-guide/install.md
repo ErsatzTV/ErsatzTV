@@ -24,19 +24,19 @@ VAAPI hardware-accelerated transcoding: `jasongdove/ersatztv:develop-vaapi`
 
 ### Docker
 
-1. Download the latest container image
+1\. Download the latest container image
 
 ```
 docker pull jasongdove/ersatztv
 ```
 
-2. Create a directory to store configuration data
+2\. Create a directory to store configuration data
 
 ```
 mkdir /path/to/config
 ```
 
-3. Create and run a container
+3\. Create and run a container
 
 ```
 docker run -d \
@@ -50,6 +50,28 @@ docker run -d \
 ```
 
 ### Unraid Docker
+
+ 1. Install the Commuinity Applications plugin by pasting the following URL in the Plugins / Install Plugin section of UnRAID  
+
+```
+https://raw.githubusercontent.com/Squidly271/community.applications/master/plugins/community.applications.plg
+```  
+
+ ![Community Applications Install](../images/unraid-install-community-apps.png)  
+2. Click on the `Apps` tab in UnRAID, search for `ersatztv`, and click the `install` button.
+
+![Search Community Applications ErsatzTV](../images/unraid-docker-install-ersatz.png)
+3. Choose an appropriate branch (Use `vaapi` for video acceleration for AMD GPUs and Intel CPUs with QuickSync, use `nvidia` for video acceleration for nVidia GPUs)
+
+![ErsatzTV Docker branches](../images/unraid-docker-ersatz-branches.png)
+	<div align="center">`VAAPI` and `nVidia` branches are for hardware acceleration. See [latest release tags](install.md#latest-release-tags)</div>
+4. Map your path to shared media
+
+![Media Mapping](../images/unraid-docker-media-map.png)
+5. <B>OPTIONAL</B> In advanced view, add extra parameters for video acceleration. **NOTE** The [nVidia-Driver plugin](https://forums.unraid.net/topic/98978-plugin-nvidia-driver/) must be installed prior to this step.
+
+![Adding video acceleration options](../images/unraid-docker-ersatz-hwtranscoding.png)
+6. Open your browser to `http://[docker-ip]:8409` (First run may take a few minutes to be available.)
 
 ## Windows
 
