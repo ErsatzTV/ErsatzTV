@@ -62,4 +62,18 @@ docker run -d \
 
 ## MacOS
 
+### Manual Installation
+
+1. Create a folder `ersatztv` at your preferred install location.
+2. Download and extract the latest version to the `ersatztv` folder.
+3. Run `ErsatzTV`
+4. Open your browser to `http://[server-ip]:8409`
+
 ## Linux
+
+### Manual Installation
+
+1. Create a folder `ersatztv` at your preferred install location.
+2. Download and extract the latest version to the `ersatztv` folder.
+3. Run `ErsatzTV`
+4. Open your browser to `http://[server-ip]:8409`

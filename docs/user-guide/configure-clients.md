@@ -1,6 +1,15 @@
-﻿For all clients, the `M3U` and/or the `XMLTV` urls are needed and can be copied from the top right of the ErsatzTV UI.
+﻿## Required Urls
+
+For all clients, the `M3U` and/or the `XMLTV` urls are needed and can be copied from the top right of the ErsatzTV UI.
 
 ![ErsatzTV M3U and XMLTV Links](../images/etv-m3u-xmltv-links.png)
+
+## Supported Clients
+
+- [Plex](#plex)
+- [Jellyfin](#jellyfin)
+- [TiviMate](#tivimate)
+- [Channels DVR](#channels-dvr)
 
 ## Plex
 
@@ -29,11 +38,26 @@ From the Admin Dashboard in Jellyfin, click `Live TV` and `+` to add a tv guide 
 
 ![Jellyfin Add TV Guide Data Provider](../images/jellyfin-add-tv-guide-data-provider.png)
 
-Enter the `XMLTV` url from ErsatzTV and click `Save`.
+Enter the `XMLTV` url from ErsatzTV (see [required urls](#required-urls)) and click `Save`.
 
 ![Jellyfin XMLTV Settings](../images/jellyfin-xmltv-settings.png)
 
 ## TiviMate
+
+### Add Playlist
+
+Start by adding a playlist under `Settings` > `Playlists` > `Add playlist`.
+The playlist type is `M3U Playlist` and the url is the `M3U` url from ErsatzTV (see [required urls](#required-urls)).
+
+![TiviMate Playlist URL](../images/tivimate-playlist-url.png)
+
+Change the playlist name if desired, and leave `TV playlist` selected.
+
+### Add EPG
+
+The EPG url should be automatically detected by TiviMate, but can be manually entered as the `XMLTV` url from ErsatzTV (see [required urls](#required-urls)).
+
+![TiviMate EPG URL](../images/tivimate-epg-url.png)
 
 ## Channels DVR
 
