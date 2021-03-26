@@ -32,7 +32,7 @@ namespace ErsatzTV.Core.Iptv
             xml.WriteStartElement("tv");
             xml.WriteAttributeString("generator-info-name", "ersatztv");
 
-            foreach (Channel channel in _channels.OrderBy(c => c.Number))
+            foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
             {
                 xml.WriteStartElement("channel");
                 xml.WriteAttributeString("id", channel.Number);
