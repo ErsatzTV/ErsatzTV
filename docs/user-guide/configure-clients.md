@@ -9,7 +9,7 @@ For all clients, the `M3U` and/or the `XMLTV` urls are needed and can be copied 
 - [Plex](#plex)
 - [Jellyfin](#jellyfin)
 - [TiviMate](#tivimate)
-- [Channels DVR](#channels-dvr)
+- [Channels DVR Server](#channels-dvr-server)
 
 ## Plex
 
@@ -59,5 +59,33 @@ The EPG url should be automatically detected by TiviMate, but can be manually en
 
 ![TiviMate EPG URL](../images/tivimate-epg-url.png)
 
-## Channels DVR
+## Channels DVR Server
 
+[Channels Plus](https://getchannels.com/plus/) is required for ErsatzTV to work with Channels (via Channels DVR Server).
+
+### Add Custom Channel Source
+
+In Channels DVR Server Settings, click `Add Source` and select `Custom Channels`.
+
+- Give your custom channel source a name
+- Select `MPEG-TS` as the stream format
+- Enter the `M3U` url from ErsatzTV (see [required urls](#required-urls))
+- Select `Refresh URL daily`
+- Set a stream limit if desired (not required)
+- Click `Save`
+
+![Channels Custom Channel Source](../images/channels-custom-channels-source.png)
+
+### Add Guide Data Provider
+
+In Channels DVR Settings, click the gear icon next to the ErsatzTV channel source and select `Set Provider`:
+
+![Channels Guide Data Set Provider](../images/channels-guide-data-set-provider.png)
+
+Click the drop down next to zip code and select `XMLTV > Custom URL`:
+
+![Channels XMLTV Custom URL Dropdown](../images/channels-xmltv-custom-url-dropdown.png)
+
+Enter the `XMLTV` url from ErsatzTV (see [required urls](#required-urls)) and click `Save`.
+
+![Channels XMLTV Custom URL](../images/channels-xmltv-custom-url.png)
