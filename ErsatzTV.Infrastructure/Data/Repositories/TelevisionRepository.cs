@@ -236,6 +236,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 metadata.DateAdded = DateTime.UtcNow;
                 metadata.Genres ??= new List<Genre>();
                 metadata.Tags ??= new List<Tag>();
+                metadata.Studios ??= new List<Studio>();
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
