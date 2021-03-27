@@ -158,8 +158,20 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             List<PlexConnection> toDelete)
         {
             await _dbConnection.ExecuteAsync(
-                @"UPDATE PlexMediaSource SET ProductVersion = @ProductVersion, ServerName = @ServerName WHERE Id = @Id",
-                new { plexMediaSource.ProductVersion, plexMediaSource.ServerName, plexMediaSource.Id });
+                @"UPDATE PlexMediaSource SET
+                  ProductVersion = @ProductVersion,
+                  Platform = @Platform,
+                  PlatformVersion = @PlatformVersion,
+                  ServerName = @ServerName
+                  WHERE Id = @Id",
+                new
+                {
+                    plexMediaSource.ProductVersion,
+                    plexMediaSource.Platform,
+                    plexMediaSource.PlatformVersion,
+                    plexMediaSource.ServerName,
+                    plexMediaSource.Id
+                });
 
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 

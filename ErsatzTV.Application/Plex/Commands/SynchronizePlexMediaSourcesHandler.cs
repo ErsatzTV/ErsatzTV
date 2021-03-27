@@ -64,6 +64,8 @@ namespace ErsatzTV.Application.Plex.Commands
             await maybeExisting.Match(
                 existing =>
                 {
+                    existing.Platform = server.Platform;
+                    existing.PlatformVersion = server.PlatformVersion;
                     existing.ProductVersion = server.ProductVersion;
                     existing.ServerName = server.ServerName;
                     var toAdd = server.Connections
