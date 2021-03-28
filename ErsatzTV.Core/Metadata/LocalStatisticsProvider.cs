@@ -68,18 +68,9 @@ namespace ErsatzTV.Core.Metadata
 
             bool durationChange = mediaItemVersion.Duration != version.Duration;
 
-            mediaItemVersion.DateUpdated = _localFileSystem.GetLastWriteTime(filePath);
-            mediaItemVersion.Duration = version.Duration;
-            mediaItemVersion.AudioCodec = version.AudioCodec;
-            mediaItemVersion.SampleAspectRatio = version.SampleAspectRatio;
-            mediaItemVersion.DisplayAspectRatio = version.DisplayAspectRatio;
-            mediaItemVersion.Width = version.Width;
-            mediaItemVersion.Height = version.Height;
-            mediaItemVersion.VideoCodec = version.VideoCodec;
-            mediaItemVersion.VideoProfile = version.VideoProfile;
-            mediaItemVersion.VideoScanKind = version.VideoScanKind;
+            version.DateUpdated = _localFileSystem.GetLastWriteTime(filePath);
 
-            return await _metadataRepository.UpdateLocalStatistics(mediaItemVersion) && durationChange;
+            return await _metadataRepository.UpdateLocalStatistics(mediaItemVersion.Id, version) && durationChange;
         }
 
         private Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
@@ -125,7 +116,8 @@ namespace ErsatzTV.Core.Metadata
                 .Match(
                     json =>
                     {
-                        var version = new MediaVersion { Name = "Main", DateAdded = DateTime.UtcNow };
+                        var version = new MediaVersion
+                            { Name = "Main", DateAdded = DateTime.UtcNow, Streams = new List<MediaStream>() };
 
                         if (double.TryParse(json.format.duration, out double duration))
                         {
@@ -139,13 +131,34 @@ namespace ErsatzTV.Core.Metadata
                                 path,
                                 json.format.duration);
                         }
-
-                        FFprobeStream audioStream = json.streams.FirstOrDefault(s => s.codec_type == "audio");
-                        if (audioStream != null)
+                        
+                        foreach (FFprobeStream audioStream in json.streams.Filter(s => s.codec_type == "audio"))
                         {
-                            version.AudioCodec = audioStream.codec_name;
-                        }
+                            var stream = new MediaStream
+                            {
+                                MediaVersionId = version.Id,
+                                MediaStreamKind = MediaStreamKind.Audio,
+                                Index = audioStream.index,
+                                Codec = audioStream.codec_name,
+                                Profile = (audioStream.profile ?? string.Empty).ToLowerInvariant(),
+                                Channels = audioStream.channels
+                            };
+                            
+                            if (audioStream.disposition is not null)
+                            {
+                                stream.Default = audioStream.disposition.@default == 1;
+                                stream.Forced = audioStream.disposition.forced == 1;
+                            }
 
+                            if (audioStream.tags is not null)
+                            {
+                                stream.Language = audioStream.tags.language;
+                                stream.Title = audioStream.tags.title;
+                            }
+
+                            version.Streams.Add(stream);
+                        }
+                        
                         FFprobeStream videoStream = json.streams.FirstOrDefault(s => s.codec_type == "video");
                         if (videoStream != null)
                         {
@@ -153,14 +166,56 @@ namespace ErsatzTV.Core.Metadata
                             version.DisplayAspectRatio = videoStream.display_aspect_ratio;
                             version.Width = videoStream.width;
                             version.Height = videoStream.height;
-                            version.VideoCodec = videoStream.codec_name;
-                            version.VideoProfile = (videoStream.profile ?? string.Empty).ToLowerInvariant();
+                            // version.VideoCodec = videoStream.codec_name;
+                            // version.VideoProfile = (videoStream.profile ?? string.Empty).ToLowerInvariant();
                             version.VideoScanKind = ScanKindFromFieldOrder(videoStream.field_order);
+
+                            var stream = new MediaStream
+                            {
+                                MediaVersionId = version.Id,
+                                MediaStreamKind = MediaStreamKind.Video,
+                                Index = videoStream.index,
+                                Codec = videoStream.codec_name,
+                                Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant(),
+                            };
+                            
+                            if (videoStream.disposition is not null)
+                            {
+                                stream.Default = videoStream.disposition.@default == 1;
+                                stream.Forced = videoStream.disposition.forced == 1;
+                            }
+
+                            version.Streams.Add(stream);
+                        }
+
+                        foreach (FFprobeStream subtitleStream in json.streams.Filter(s => s.codec_type == "subtitle"))
+                        {
+                            var stream = new MediaStream
+                            {
+                                MediaVersionId = version.Id,
+                                MediaStreamKind = MediaStreamKind.Audio,
+                                Index = subtitleStream.index,
+                                Codec = subtitleStream.codec_name,
+                            };
+                            
+                            if (subtitleStream.disposition is not null)
+                            {
+                                stream.Default = subtitleStream.disposition.@default == 1;
+                                stream.Forced = subtitleStream.disposition.forced == 1;
+                            }
+                            
+                            if (subtitleStream.tags is not null)
+                            {
+                                stream.Language = subtitleStream.tags.language;
+                            }
+
+                            version.Streams.Add(stream);
                         }
 
                         return version;
                     },
-                    _ => new MediaVersion { Name = "Main", DateAdded = DateTime.UtcNow });
+                    _ => new MediaVersion
+                        { Name = "Main", DateAdded = DateTime.UtcNow, Streams = new List<MediaStream>() });
 
         private VideoScanKind ScanKindFromFieldOrder(string fieldOrder) =>
             fieldOrder?.ToLowerInvariant() switch
@@ -172,20 +227,23 @@ namespace ErsatzTV.Core.Metadata
 
         // ReSharper disable InconsistentNaming
         public record FFprobe(FFprobeFormat format, List<FFprobeStream> streams);
-
         public record FFprobeFormat(string duration);
-
+        public record FFprobeDisposition(int @default, int forced);
+        public record FFProbeTags(string language, string title);
         public record FFprobeStream(
             int index,
             string codec_name,
             string profile,
             string codec_type,
+            int channels,
             int width,
             int height,
             string sample_aspect_ratio,
             string display_aspect_ratio,
             string field_order,
-            string r_frame_rate);
+            string r_frame_rate,
+            FFprobeDisposition disposition,
+            FFProbeTags tags);
         // ReSharper restore InconsistentNaming
     }
 }

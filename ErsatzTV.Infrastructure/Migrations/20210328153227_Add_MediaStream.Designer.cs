@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20210328152453_Add_MediaStream")]
+    [Migration("20210328153227_Add_MediaStream")]
     partial class Add_MediaStream
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -419,7 +419,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("Language")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("MediaStreamType")
+                    b.Property<int>("MediaStreamKind")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("MediaVersionId")

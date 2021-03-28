@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories
 {
@@ -44,11 +46,55 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> UpdateLocalStatistics(MediaVersion mediaVersion)
+        public async Task<bool> UpdateLocalStatistics(int mediaVersionId, MediaVersion incoming)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            dbContext.Entry(mediaVersion).State = EntityState.Modified;
-            return await dbContext.SaveChangesAsync() > 0;
+            Option<MediaVersion> maybeVersion = await dbContext.MediaVersions
+                .Include(v => v.Streams)
+                .OrderBy(v => v.Id)
+                .SingleOrDefaultAsync(v => v.Id == mediaVersionId)
+                .Map(Optional);
+
+            return await maybeVersion.Match(
+                async existing =>
+                {
+                    existing.DateUpdated = incoming.DateUpdated;
+                    existing.Duration = incoming.Duration;
+                    existing.SampleAspectRatio = incoming.SampleAspectRatio;
+                    existing.DisplayAspectRatio = incoming.DisplayAspectRatio;
+                    existing.Width = incoming.Width;
+                    existing.Height = incoming.Height;
+                    existing.VideoScanKind = incoming.VideoScanKind;
+
+                    var toAdd = incoming.Streams.Filter(s => existing.Streams.All(es => es.Index != s.Index)).ToList();
+                    var toRemove = existing.Streams.Filter(es => incoming.Streams.All(s => s.Index != es.Index))
+                        .ToList();
+                    var toUpdate = incoming.Streams.Except(toAdd).ToList();
+
+                    // add
+                    existing.Streams.AddRange(toAdd);
+
+                    // remove
+                    existing.Streams.RemoveAll(s => toRemove.Contains(s));
+
+                    // update
+                    foreach (MediaStream incomingStream in toUpdate)
+                    {
+                        MediaStream existingStream = existing.Streams.First(s => s.Index == incomingStream.Index);
+
+                        existingStream.Codec = incomingStream.Codec;
+                        existingStream.Profile = incomingStream.Profile;
+                        existingStream.MediaStreamKind = incomingStream.MediaStreamKind;
+                        existingStream.Language = incomingStream.Language;
+                        existingStream.Channels = incomingStream.Channels;
+                        existingStream.Title = incomingStream.Title;
+                        existingStream.Default = incomingStream.Default;
+                        existingStream.Forced = incomingStream.Forced;
+                    }
+
+                    return await dbContext.SaveChangesAsync() > 0;
+                },
+                () => Task.FromResult(false));
         }
 
         public Task<bool> UpdatePlexStatistics(MediaVersion mediaVersion) =>

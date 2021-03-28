@@ -445,7 +445,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("Language")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("MediaStreamType")
+                    b.Property<int>("MediaStreamKind")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("MediaVersionId")

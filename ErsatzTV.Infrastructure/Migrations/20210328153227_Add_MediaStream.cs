@@ -15,7 +15,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                     Index = table.Column<int>("INTEGER", nullable: false),
                     Codec = table.Column<string>("TEXT", nullable: true),
                     Profile = table.Column<string>("TEXT", nullable: true),
-                    MediaStreamType = table.Column<int>("INTEGER", nullable: false),
+                    MediaStreamKind = table.Column<int>("INTEGER", nullable: false),
                     Language = table.Column<string>("TEXT", nullable: true),
                     Channels = table.Column<int>("INTEGER", nullable: false),
                     Title = table.Column<string>("TEXT", nullable: true),
