@@ -36,7 +36,8 @@ namespace ErsatzTV.Core.Plex
                     r =>
                     {
                         string separatorChar = IsWindows(r.PlexMediaSource) ? @"\" : @"/";
-                        return path.StartsWith(r.PlexPath + separatorChar);
+                        string prefix = r.PlexPath.EndsWith(separatorChar) ? r.PlexPath : r.PlexPath + separatorChar;
+                        return path.StartsWith(prefix);
                     });
             return maybeReplacement.Match(
                 replacement =>
