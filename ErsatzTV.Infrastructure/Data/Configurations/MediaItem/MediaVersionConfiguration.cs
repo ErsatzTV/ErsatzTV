@@ -14,6 +14,11 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .WithOne(f => f.MediaVersion)
                 .HasForeignKey(f => f.MediaVersionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(v => v.Streams)
+                .WithOne(s => s.MediaVersion)
+                .HasForeignKey(s => s.MediaVersionId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
