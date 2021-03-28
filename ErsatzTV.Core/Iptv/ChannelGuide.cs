@@ -48,7 +48,7 @@ namespace ErsatzTV.Core.Iptv
                     .HeadOrNone()
                     .Match(
                         artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}",
-                        () => $"{_scheme}://{_host}/images/ersatztv-500.png");
+                        () => $"{_scheme}://{_host}/iptv/images/ersatztv-500.png");
                 xml.WriteAttributeString("src", logo);
                 xml.WriteEndElement(); // icon
 
@@ -122,7 +122,7 @@ namespace ErsatzTV.Core.Iptv
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
                                 .Match(
-                                    artwork => $"{_scheme}://{_host}/artwork/posters/{artwork.Path}",
+                                    artwork => $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}",
                                     () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
@@ -161,7 +161,7 @@ namespace ErsatzTV.Core.Iptv
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
                                 .Match(
-                                    artwork => $"{_scheme}://{_host}/artwork/posters/{artwork.Path}",
+                                    artwork => $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}",
                                     () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
