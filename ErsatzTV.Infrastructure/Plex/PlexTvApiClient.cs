@@ -70,6 +70,8 @@ namespace ErsatzTV.Infrastructure.Plex
                                 {
                                     ServerName = resource.Name,
                                     ProductVersion = resource.ProductVersion,
+                                    Platform = resource.Platform,
+                                    PlatformVersion = resource.PlatformVersion,
                                     ClientIdentifier = resource.ClientIdentifier,
                                     Connections = sortedConnections
                                         .Map(c => new PlexConnection { Uri = c.Uri }).ToList()

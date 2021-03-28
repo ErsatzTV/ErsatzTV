@@ -14,6 +14,7 @@ using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
@@ -25,6 +26,7 @@ using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
+using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
@@ -212,6 +214,8 @@ namespace ErsatzTV
             services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
             services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
             services.AddScoped<ISearchIndex, SearchIndex>();
+            services.AddScoped<IRuntimeInfo, RuntimeInfo>();
+            services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
 
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();

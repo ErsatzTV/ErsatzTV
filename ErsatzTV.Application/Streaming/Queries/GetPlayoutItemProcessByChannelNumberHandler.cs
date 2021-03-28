@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
-using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Streaming.Queries
@@ -22,26 +19,23 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly IConfigElementRepository _configElementRepository;
         private readonly FFmpegProcessService _ffmpegProcessService;
         private readonly ILocalFileSystem _localFileSystem;
-        private readonly ILogger<GetPlayoutItemProcessByChannelNumberHandler> _logger;
-        private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlayoutRepository _playoutRepository;
+        private readonly IPlexPathReplacementService _plexPathReplacementService;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
             IChannelRepository channelRepository,
             IConfigElementRepository configElementRepository,
             IPlayoutRepository playoutRepository,
-            IMediaSourceRepository mediaSourceRepository,
             FFmpegProcessService ffmpegProcessService,
             ILocalFileSystem localFileSystem,
-            ILogger<GetPlayoutItemProcessByChannelNumberHandler> logger)
+            IPlexPathReplacementService plexPathReplacementService)
             : base(channelRepository, configElementRepository)
         {
             _configElementRepository = configElementRepository;
             _playoutRepository = playoutRepository;
-            _mediaSourceRepository = mediaSourceRepository;
             _ffmpegProcessService = ffmpegProcessService;
             _localFileSystem = localFileSystem;
-            _logger = logger;
+            _plexPathReplacementService = plexPathReplacementService;
         }
 
         protected override async Task<Either<BaseError, Process>> GetProcess(
@@ -166,31 +160,14 @@ namespace ErsatzTV.Application.Streaming.Queries
             string path = file.Path;
             return playoutItem.MediaItem switch
             {
-                PlexMovie plexMovie => await GetReplacementPlexPath(plexMovie.LibraryPathId, path),
-                PlexEpisode plexEpisode => await GetReplacementPlexPath(plexEpisode.LibraryPathId, path),
+                PlexMovie plexMovie => await _plexPathReplacementService.GetReplacementPlexPath(
+                    plexMovie.LibraryPathId,
+                    path),
+                PlexEpisode plexEpisode => await _plexPathReplacementService.GetReplacementPlexPath(
+                    plexEpisode.LibraryPathId,
+                    path),
                 _ => path
             };
-        }
-
-        private async Task<string> GetReplacementPlexPath(int libraryPathId, string path)
-        {
-            List<PlexPathReplacement> replacements =
-                await _mediaSourceRepository.GetPlexPathReplacementsByLibraryId(libraryPathId);
-            // TODO: this might barf mixing platforms (i.e. plex on linux, etv on windows)
-            Option<PlexPathReplacement> maybeReplacement = replacements
-                .SingleOrDefault(r => path.StartsWith(r.PlexPath + Path.DirectorySeparatorChar));
-            return maybeReplacement.Match(
-                replacement =>
-                {
-                    string finalPath = path.Replace(replacement.PlexPath, replacement.LocalPath);
-                    _logger.LogInformation(
-                        "Replacing plex path {PlexPath} with {LocalPath} resulting in {FinalPath}",
-                        replacement.PlexPath,
-                        replacement.LocalPath,
-                        finalPath);
-                    return finalPath;
-                },
-                () => path);
         }
 
         private record PlayoutItemWithPath(PlayoutItem PlayoutItem, string Path);
