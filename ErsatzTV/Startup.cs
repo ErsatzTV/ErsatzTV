@@ -179,7 +179,6 @@ namespace ErsatzTV
         private void CustomServices(IServiceCollection services)
         {
             services.AddSingleton<FFmpegPlaybackSettingsCalculator>();
-            services.AddSingleton<FFmpegProcessService>();
             services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
             services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
             services.AddSingleton<IEntityLocker, EntityLocker>();
@@ -216,6 +215,8 @@ namespace ErsatzTV
             services.AddScoped<ISearchIndex, SearchIndex>();
             services.AddScoped<IRuntimeInfo, RuntimeInfo>();
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
+            services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
+            services.AddScoped<FFmpegProcessService>();
 
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();

@@ -66,8 +66,8 @@ namespace ErsatzTV.Application.Channels.Commands
         }
 
         private async Task<Validation<BaseError, Channel>> Validate(UpdateChannel request) =>
-            (await ChannelMustExist(request), ValidateName(request), await ValidateNumber(request))
-            .Apply((channelToUpdate, _, _) => channelToUpdate);
+            (await ChannelMustExist(request), ValidateName(request), await ValidateNumber(request), ValidatePreferredLanguage(request))
+            .Apply((channelToUpdate, _, _, _) => channelToUpdate);
 
         private Task<Validation<BaseError, Channel>> ChannelMustExist(UpdateChannel updateChannel) =>
             _channelRepository.Get(updateChannel.ChannelId)
@@ -93,5 +93,10 @@ namespace ErsatzTV.Application.Channels.Commands
 
             return BaseError.New("Channel number must be unique");
         }
+        
+        private Validation<BaseError, string> ValidatePreferredLanguage(UpdateChannel updateChannel) =>
+            Optional(updateChannel.PreferredLanguageCode)
+                .Filter(lc => string.IsNullOrWhiteSpace(lc) || lc.Length == 3)
+                .ToValidation<BaseError>($"[PreferredLanguageCode] must be 3 characters");
     }
 }

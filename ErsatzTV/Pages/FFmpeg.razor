@@ -30,7 +30,7 @@
                     </MudSelect>
                 </MudElement>
                 <MudElement HtmlTag="div" Class="mt-3">
-                    <MudTextField T="string" Label="Preferred Language Code" @bind-Value="_ffmpegSettings.PreferredLanguageCode" Required="true" RequiredError="Preferred Language Code is required!"/>
+                    <MudTextField T="string" Label="Preferred Language Code" @bind-Value="_ffmpegSettings.PreferredLanguageCode" Validation="@(new Func<string, string>(ValidateLanguageCode))" Required="true" RequiredError="Preferred Language Code is required!"/>
                 </MudElement>
                 <MudElement HtmlTag="div" Class="mt-3">
                     <MudSwitch T="bool"
@@ -135,6 +135,8 @@
     }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
+
+    private static string ValidateLanguageCode(string languageCode) => languageCode.Length != 3 ? "Preferred language code must be 3 characters" : null;
 
     private async Task LoadFFmpegProfilesAsync() =>
         _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());

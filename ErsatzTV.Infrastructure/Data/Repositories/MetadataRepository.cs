@@ -46,7 +46,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> UpdateLocalStatistics(int mediaVersionId, MediaVersion incoming)
+        public async Task<bool> UpdateLocalStatistics(int mediaVersionId, MediaVersion incoming, bool updateVersion = true)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<MediaVersion> maybeVersion = await dbContext.MediaVersions
@@ -58,13 +58,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await maybeVersion.Match(
                 async existing =>
                 {
-                    existing.DateUpdated = incoming.DateUpdated;
-                    existing.Duration = incoming.Duration;
-                    existing.SampleAspectRatio = incoming.SampleAspectRatio;
-                    existing.DisplayAspectRatio = incoming.DisplayAspectRatio;
-                    existing.Width = incoming.Width;
-                    existing.Height = incoming.Height;
-                    existing.VideoScanKind = incoming.VideoScanKind;
+                    if (updateVersion)
+                    {
+                        existing.DateUpdated = incoming.DateUpdated;
+                        existing.Duration = incoming.Duration;
+                        existing.SampleAspectRatio = incoming.SampleAspectRatio;
+                        existing.DisplayAspectRatio = incoming.DisplayAspectRatio;
+                        existing.Width = incoming.Width;
+                        existing.Height = incoming.Height;
+                        existing.VideoScanKind = incoming.VideoScanKind;
+                    }
 
                     var toAdd = incoming.Streams.Filter(s => existing.Streams.All(es => es.Index != s.Index)).ToList();
                     var toRemove = existing.Streams.Filter(es => incoming.Streams.All(s => s.Index != es.Index))
@@ -110,10 +113,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     incoming.SampleAspectRatio,
                     incoming.VideoScanKind,
                     incoming.DateUpdated,
-                    MediaVersionId = incoming.Id
+                    MediaVersionId = mediaVersionId
                 }).Map(result => result > 0);
 
-            return await UpdateLocalStatistics(mediaVersionId, incoming) || updatedVersion;
+            return await UpdateLocalStatistics(mediaVersionId, incoming, false) || updatedVersion;
         }
 
         public Task<Unit> UpdateArtworkPath(Artwork artwork) =>

@@ -13,6 +13,8 @@ namespace ErsatzTV.Validators
 
             RuleFor(x => x.Name).NotEmpty();
             RuleFor(x => x.FFmpegProfileId).GreaterThan(0);
+            RuleFor(x => x.PreferredLanguageCode).Length(3)
+                .When(vm => !string.IsNullOrWhiteSpace(vm.PreferredLanguageCode));
         }
     }
 }

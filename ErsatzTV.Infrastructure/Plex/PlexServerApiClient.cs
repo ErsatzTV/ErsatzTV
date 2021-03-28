@@ -238,7 +238,8 @@ namespace ErsatzTV.Infrastructure.Plex
                         Key = part.Key,
                         Path = part.File
                     }
-                }
+                },
+                Streams = new List<MediaStream>()
             };
 
             var movie = new PlexMovie
@@ -261,7 +262,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 {
                     var version = new MediaVersion
                     {
-                        SampleAspectRatio = videoStream.PixelAspectRatio,
+                        SampleAspectRatio = videoStream.PixelAspectRatio ?? "1:1",
                         VideoScanKind = videoStream.ScanType switch
                         {
                             "interlaced" => VideoScanKind.Interlaced,

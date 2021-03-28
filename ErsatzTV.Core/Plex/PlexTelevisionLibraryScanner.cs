@@ -309,7 +309,7 @@ namespace ErsatzTV.Core.Plex
                 await maybeStatistics.Match(
                     async mediaVersion =>
                     {
-                        existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio ?? "1:1";
+                        existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
                         existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
                         existingVersion.DateUpdated = mediaVersion.DateUpdated;
 
