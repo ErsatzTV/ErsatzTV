@@ -46,7 +46,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await dbContext.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> UpdateLocalStatistics(int mediaVersionId, MediaVersion incoming, bool updateVersion = true)
+        public async Task<bool> UpdateLocalStatistics(
+            int mediaVersionId,
+            MediaVersion incoming,
+            bool updateVersion = true)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<MediaVersion> maybeVersion = await dbContext.MediaVersions

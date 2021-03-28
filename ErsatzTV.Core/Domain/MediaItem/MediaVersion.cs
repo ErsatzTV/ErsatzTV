@@ -13,12 +13,16 @@ namespace ErsatzTV.Core.Domain
         public TimeSpan Duration { get; set; }
         public string SampleAspectRatio { get; set; }
         public string DisplayAspectRatio { get; set; }
+
         [Obsolete("Use MediaSource instead")]
         public string VideoCodec { get; set; }
+
         [Obsolete("Use MediaSource instead")]
         public string VideoProfile { get; set; }
+
         [Obsolete("Use MediaSource instead")]
         public string AudioCodec { get; set; }
+
         public VideoScanKind VideoScanKind { get; set; }
         public DateTime DateAdded { get; set; }
         public DateTime DateUpdated { get; set; }

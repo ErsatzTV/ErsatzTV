@@ -131,7 +131,7 @@ namespace ErsatzTV.Core.Metadata
                                 path,
                                 json.format.duration);
                         }
-                        
+
                         foreach (FFprobeStream audioStream in json.streams.Filter(s => s.codec_type == "audio"))
                         {
                             var stream = new MediaStream
@@ -143,7 +143,7 @@ namespace ErsatzTV.Core.Metadata
                                 Profile = (audioStream.profile ?? string.Empty).ToLowerInvariant(),
                                 Channels = audioStream.channels
                             };
-                            
+
                             if (audioStream.disposition is not null)
                             {
                                 stream.Default = audioStream.disposition.@default == 1;
@@ -158,7 +158,7 @@ namespace ErsatzTV.Core.Metadata
 
                             version.Streams.Add(stream);
                         }
-                        
+
                         FFprobeStream videoStream = json.streams.FirstOrDefault(s => s.codec_type == "video");
                         if (videoStream != null)
                         {
@@ -174,9 +174,9 @@ namespace ErsatzTV.Core.Metadata
                                 MediaStreamKind = MediaStreamKind.Video,
                                 Index = videoStream.index,
                                 Codec = videoStream.codec_name,
-                                Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant(),
+                                Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant()
                             };
-                            
+
                             if (videoStream.disposition is not null)
                             {
                                 stream.Default = videoStream.disposition.@default == 1;
@@ -193,15 +193,15 @@ namespace ErsatzTV.Core.Metadata
                                 MediaVersionId = version.Id,
                                 MediaStreamKind = MediaStreamKind.Subtitle,
                                 Index = subtitleStream.index,
-                                Codec = subtitleStream.codec_name,
+                                Codec = subtitleStream.codec_name
                             };
-                            
+
                             if (subtitleStream.disposition is not null)
                             {
                                 stream.Default = subtitleStream.disposition.@default == 1;
                                 stream.Forced = subtitleStream.disposition.forced == 1;
                             }
-                            
+
                             if (subtitleStream.tags is not null)
                             {
                                 stream.Language = subtitleStream.tags.language;
@@ -225,9 +225,13 @@ namespace ErsatzTV.Core.Metadata
 
         // ReSharper disable InconsistentNaming
         public record FFprobe(FFprobeFormat format, List<FFprobeStream> streams);
+
         public record FFprobeFormat(string duration);
+
         public record FFprobeDisposition(int @default, int forced);
+
         public record FFProbeTags(string language, string title);
+
         public record FFprobeStream(
             int index,
             string codec_name,

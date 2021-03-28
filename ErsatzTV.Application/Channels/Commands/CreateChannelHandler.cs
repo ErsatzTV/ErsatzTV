@@ -37,7 +37,8 @@ namespace ErsatzTV.Application.Channels.Commands
             _channelRepository.Add(c).Map(ProjectToViewModel);
 
         private async Task<Validation<BaseError, Channel>> Validate(CreateChannel request) =>
-            (ValidateName(request), await ValidateNumber(request), await FFmpegProfileMustExist(request), ValidatePreferredLanguage(request))
+            (ValidateName(request), await ValidateNumber(request), await FFmpegProfileMustExist(request),
+                ValidatePreferredLanguage(request))
             .Apply(
                 (name, number, ffmpegProfileId, preferredLanguageCode) =>
                 {
@@ -68,11 +69,11 @@ namespace ErsatzTV.Application.Channels.Commands
         private Validation<BaseError, string> ValidateName(CreateChannel createChannel) =>
             createChannel.NotEmpty(c => c.Name)
                 .Bind(_ => createChannel.NotLongerThan(50)(c => c.Name));
-        
+
         private Validation<BaseError, string> ValidatePreferredLanguage(CreateChannel createChannel) =>
             Optional(createChannel.PreferredLanguageCode)
                 .Filter(lc => string.IsNullOrWhiteSpace(lc) || lc.Length == 3)
-                .ToValidation<BaseError>($"[PreferredLanguageCode] must be 3 characters");
+                .ToValidation<BaseError>("[PreferredLanguageCode] must be 3 characters");
 
         private async Task<Validation<BaseError, string>> ValidateNumber(CreateChannel createChannel)
         {
