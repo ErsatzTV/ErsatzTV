@@ -231,6 +231,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 VideoCodec = media.VideoCodec,
                 VideoProfile = media.VideoProfile,
                 // specifically omit sample aspect ratio
+                DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 MediaFiles = new List<MediaFile>
                 {
@@ -440,6 +441,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 VideoCodec = media.VideoCodec,
                 VideoProfile = media.VideoProfile,
                 // specifically omit sample aspect ratio
+                DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 MediaFiles = new List<MediaFile>
                 {
