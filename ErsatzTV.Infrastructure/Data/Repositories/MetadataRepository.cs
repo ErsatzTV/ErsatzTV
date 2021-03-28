@@ -97,8 +97,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 () => Task.FromResult(false));
         }
 
-        public Task<bool> UpdatePlexStatistics(MediaVersion mediaVersion) =>
-            _dbConnection.ExecuteAsync(
+        public async Task<bool> UpdatePlexStatistics(int mediaVersionId, MediaVersion incoming)
+        {
+            bool updatedVersion = await _dbConnection.ExecuteAsync(
                 @"UPDATE MediaVersion SET
                   SampleAspectRatio = @SampleAspectRatio,
                   VideoScanKind = @VideoScanKind,
@@ -106,11 +107,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                   WHERE Id = @MediaVersionId",
                 new
                 {
-                    mediaVersion.SampleAspectRatio,
-                    mediaVersion.VideoScanKind,
-                    mediaVersion.DateUpdated,
-                    MediaVersionId = mediaVersion.Id
+                    incoming.SampleAspectRatio,
+                    incoming.VideoScanKind,
+                    incoming.DateUpdated,
+                    MediaVersionId = incoming.Id
                 }).Map(result => result > 0);
+
+            return await UpdateLocalStatistics(mediaVersionId, incoming) || updatedVersion;
+        }
 
         public Task<Unit> UpdateArtworkPath(Artwork artwork) =>
             _dbConnection.ExecuteAsync(

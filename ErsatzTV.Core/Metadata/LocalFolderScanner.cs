@@ -77,7 +77,7 @@ namespace ErsatzTV.Core.Metadata
 
                 string path = version.MediaFiles.Head().Path;
 
-                if (version.DateUpdated < _localFileSystem.GetLastWriteTime(path))
+                if (version.DateUpdated < _localFileSystem.GetLastWriteTime(path) || !version.Streams.Any())
                 {
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", path);
                     Either<BaseError, bool> refreshResult =

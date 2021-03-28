@@ -283,6 +283,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(em => em.Artwork)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
@@ -414,6 +416,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -582,7 +586,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             MediaFiles = new List<MediaFile>
                             {
                                 new() { Path = path }
-                            }
+                            },
+                            Streams = new List<MediaStream>()
                         }
                     }
                 };

@@ -301,8 +301,7 @@ namespace ErsatzTV.Core.Plex
             MediaVersion existingVersion = existing.MediaVersions.Head();
             MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
-            if (incomingVersion.DateUpdated > existingVersion.DateUpdated ||
-                string.IsNullOrWhiteSpace(existingVersion.SampleAspectRatio))
+            if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
             {
                 Either<BaseError, MediaVersion> maybeStatistics =
                     await _plexServerApiClient.GetStatistics(incoming.Key.Split("/").Last(), connection, token);
@@ -312,9 +311,9 @@ namespace ErsatzTV.Core.Plex
                     {
                         existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio ?? "1:1";
                         existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
-                        existingVersion.DateUpdated = incomingVersion.DateUpdated;
+                        existingVersion.DateUpdated = mediaVersion.DateUpdated;
 
-                        await _metadataRepository.UpdatePlexStatistics(existingVersion);
+                        await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, mediaVersion);
                     },
                     _ => Task.CompletedTask);
             }

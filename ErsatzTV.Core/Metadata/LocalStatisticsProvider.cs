@@ -166,8 +166,6 @@ namespace ErsatzTV.Core.Metadata
                             version.DisplayAspectRatio = videoStream.display_aspect_ratio;
                             version.Width = videoStream.width;
                             version.Height = videoStream.height;
-                            // version.VideoCodec = videoStream.codec_name;
-                            // version.VideoProfile = (videoStream.profile ?? string.Empty).ToLowerInvariant();
                             version.VideoScanKind = ScanKindFromFieldOrder(videoStream.field_order);
 
                             var stream = new MediaStream
@@ -193,7 +191,7 @@ namespace ErsatzTV.Core.Metadata
                             var stream = new MediaStream
                             {
                                 MediaVersionId = version.Id,
-                                MediaStreamKind = MediaStreamKind.Audio,
+                                MediaStreamKind = MediaStreamKind.Subtitle,
                                 Index = subtitleStream.index,
                                 Codec = subtitleStream.codec_name,
                             };
