@@ -135,6 +135,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     inner join PlexPathReplacement ppr on ppr.PlexMediaSourceId = l.MediaSourceId
                     where lp.Id = {0}",
                     plexLibraryPathId)
+                .Include(ppr => ppr.PlexMediaSource)
                 .ToListAsync();
         }
 
