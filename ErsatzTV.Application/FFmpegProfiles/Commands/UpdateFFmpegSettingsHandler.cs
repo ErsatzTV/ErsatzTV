@@ -133,6 +133,23 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             {
                 Directory.CreateDirectory(FileSystemLayout.FFmpegReportsFolder);
             }
+            
+            await _configElementRepository.Get(ConfigElementKey.FFmpegPreferredLanguageCode).Match(
+                ce =>
+                {
+                    ce.Value = request.Settings.PreferredLanguageCode;
+                    _configElementRepository.Update(ce);
+                },
+                () =>
+                {
+                    var ce = new ConfigElement
+                    {
+                        Key = ConfigElementKey.FFmpegPreferredLanguageCode.Key,
+                        Value = request.Settings.PreferredLanguageCode
+                    };
+                    _configElementRepository.Add(ce);
+                });
+
 
             return Unit.Default;
         }

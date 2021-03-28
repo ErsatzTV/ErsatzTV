@@ -32,6 +32,7 @@ namespace ErsatzTV.Application.Channels.Commands
             c.Name = update.Name;
             c.Number = update.Number;
             c.FFmpegProfileId = update.FFmpegProfileId;
+            c.PreferredLanguageCode = update.PreferredLanguageCode;
 
             if (!string.IsNullOrWhiteSpace(update.Logo))
             {

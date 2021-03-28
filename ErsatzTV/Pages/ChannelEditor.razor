@@ -34,6 +34,7 @@
                             <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
                         }
                     </MudSelect>
+                    <MudTextField Class="mt-3" Label="Preferred Language Code" @bind-Value="_model.PreferredLanguageCode" For="@(() => _model.PreferredLanguageCode)"/>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
                             <InputFile id="fileInput" OnChange="UploadLogo" hidden/>
@@ -90,6 +91,7 @@
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
                     _model.Logo = channelViewModel.Logo;
                     _model.StreamingMode = channelViewModel.StreamingMode;
+                    _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
                 },
                 () => NavigationManager.NavigateTo("404"));
         }

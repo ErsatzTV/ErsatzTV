@@ -59,7 +59,8 @@ namespace ErsatzTV.Application.Channels.Commands
                         Number = number,
                         FFmpegProfileId = ffmpegProfileId,
                         StreamingMode = request.StreamingMode,
-                        Artwork = artwork
+                        Artwork = artwork,
+                        PreferredLanguageCode = request.PreferredLanguageCode
                     };
                 });
 

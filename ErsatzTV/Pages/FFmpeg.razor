@@ -30,6 +30,9 @@
                     </MudSelect>
                 </MudElement>
                 <MudElement HtmlTag="div" Class="mt-3">
+                    <MudTextField T="string" Label="Preferred Language Code" @bind-Value="_ffmpegSettings.PreferredLanguageCode" Required="true" RequiredError="Preferred Language Code is required!"/>
+                </MudElement>
+                <MudElement HtmlTag="div" Class="mt-3">
                     <MudSwitch T="bool"
                                Label="Save troubleshooting reports to disk"
                                Color="Color.Primary"

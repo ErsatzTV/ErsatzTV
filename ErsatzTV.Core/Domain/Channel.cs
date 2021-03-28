@@ -16,8 +16,7 @@ namespace ErsatzTV.Core.Domain
         public FFmpegProfile FFmpegProfile { get; set; }
         public StreamingMode StreamingMode { get; set; }
         public List<Playout> Playouts { get; set; }
-
         public List<Artwork> Artwork { get; set; }
-        // public SourceMode Mode { get; set; }
+        public string PreferredLanguageCode { get; set; }
     }
 }
