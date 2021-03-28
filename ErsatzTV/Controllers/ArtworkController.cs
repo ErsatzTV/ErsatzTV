@@ -27,7 +27,8 @@ namespace ErsatzTV.Controllers
             _mediator = mediator;
             _httpClientFactory = httpClientFactory;
         }
-
+        
+        [HttpGet("/iptv/artwork/posters/{fileName}")]
         [HttpGet("/artwork/posters/{fileName}")]
         public async Task<IActionResult> GetPoster(string fileName)
         {
@@ -48,6 +49,7 @@ namespace ErsatzTV.Controllers
                 Right: r => new FileContentResult(r.Contents, r.MimeType));
         }
 
+        [HttpGet("/iptv/artwork/posters/plex/{plexMediaSourceId}/{*path}")]
         [HttpGet("/artwork/posters/plex/{plexMediaSourceId}/{*path}")]
         public Task<IActionResult> GetPlexPoster(int plexMediaSourceId, string path) =>
             GetPlexArtwork(
