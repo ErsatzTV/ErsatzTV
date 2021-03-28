@@ -29,7 +29,7 @@ namespace ErsatzTV.Core.FFmpeg
         {
             var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
 
-            string language = channel.PreferredLanguageCode.ToLowerInvariant();
+            string language = (channel.PreferredLanguageCode ?? string.Empty).ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(language))
             {
                 _logger.LogDebug("Channel {Number} has no preferred language code", channel.Number);
