@@ -111,6 +111,38 @@ namespace ErsatzTV.Core.Tests.Plex
 
             result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
         }
+        
+        [Test]
+        public async Task PlexWindows_To_EtvLinux_UncPathWithTrailingSlash()
+        {
+            var replacements = new List<PlexPathReplacement>
+            {
+                new()
+                {
+                    Id = 1,
+                    PlexPath = @"\\192.168.1.100\Something\Some Shared Folder\",
+                    LocalPath = @"/mnt/something else/Some Shared Folder/",
+                    PlexMediaSource = new PlexMediaSource { Platform = "Windows" }
+                }
+            };
+
+            var repo = new Mock<IMediaSourceRepository>();
+            repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+
+            var runtime = new Mock<IRuntimeInfo>();
+            runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+
+            var service = new PlexPathReplacementService(
+                repo.Object,
+                runtime.Object,
+                new Mock<ILogger<PlexPathReplacementService>>().Object);
+
+            string result = await service.GetReplacementPlexPath(
+                0,
+                @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
+
+            result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
+        }
 
         [Test]
         public async Task PlexLinux_To_EtvWindows()
