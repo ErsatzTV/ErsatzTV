@@ -27,7 +27,7 @@ namespace ErsatzTV.Controllers
             _mediator = mediator;
             _httpClientFactory = httpClientFactory;
         }
-        
+
         [HttpGet("/iptv/artwork/posters/{fileName}")]
         [HttpGet("/artwork/posters/{fileName}")]
         public async Task<IActionResult> GetPoster(string fileName)

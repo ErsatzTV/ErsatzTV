@@ -44,7 +44,7 @@ namespace ErsatzTV.Core.Metadata
                 return await maybeProbe.Match(
                     async ffprobe =>
                     {
-                        MediaVersion version = ProjectToMediaVersion(ffprobe);
+                        MediaVersion version = ProjectToMediaVersion(filePath, ffprobe);
                         bool result = await ApplyVersionUpdate(mediaItem, version, filePath);
                         return Right<BaseError, bool>(result);
                     },
@@ -68,18 +68,9 @@ namespace ErsatzTV.Core.Metadata
 
             bool durationChange = mediaItemVersion.Duration != version.Duration;
 
-            mediaItemVersion.DateUpdated = _localFileSystem.GetLastWriteTime(filePath);
-            mediaItemVersion.Duration = version.Duration;
-            mediaItemVersion.AudioCodec = version.AudioCodec;
-            mediaItemVersion.SampleAspectRatio = version.SampleAspectRatio;
-            mediaItemVersion.DisplayAspectRatio = version.DisplayAspectRatio;
-            mediaItemVersion.Width = version.Width;
-            mediaItemVersion.Height = version.Height;
-            mediaItemVersion.VideoCodec = version.VideoCodec;
-            mediaItemVersion.VideoProfile = version.VideoProfile;
-            mediaItemVersion.VideoScanKind = version.VideoScanKind;
+            version.DateUpdated = _localFileSystem.GetLastWriteTime(filePath);
 
-            return await _metadataRepository.UpdateLocalStatistics(mediaItemVersion) && durationChange;
+            return await _metadataRepository.UpdateLocalStatistics(mediaItemVersion.Id, version) && durationChange;
         }
 
         private Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)
@@ -117,7 +108,7 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
-        private MediaVersion ProjectToMediaVersion(FFprobe probeOutput) =>
+        private MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
             Optional(probeOutput)
                 .Filter(json => json?.format != null && json.streams != null)
                 .ToValidation<BaseError>("Unable to parse ffprobe output")
@@ -125,14 +116,47 @@ namespace ErsatzTV.Core.Metadata
                 .Match(
                     json =>
                     {
-                        var duration = TimeSpan.FromSeconds(double.Parse(json.format.duration));
+                        var version = new MediaVersion
+                            { Name = "Main", DateAdded = DateTime.UtcNow, Streams = new List<MediaStream>() };
 
-                        var version = new MediaVersion { Name = "Main", Duration = duration };
-
-                        FFprobeStream audioStream = json.streams.FirstOrDefault(s => s.codec_type == "audio");
-                        if (audioStream != null)
+                        if (double.TryParse(json.format.duration, out double duration))
                         {
-                            version.AudioCodec = audioStream.codec_name;
+                            var seconds = TimeSpan.FromSeconds(duration);
+                            version.Duration = seconds;
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Media item at {Path} has a missing or invalid duration {Duration} and will cause scheduling issues",
+                                path,
+                                json.format.duration);
+                        }
+
+                        foreach (FFprobeStream audioStream in json.streams.Filter(s => s.codec_type == "audio"))
+                        {
+                            var stream = new MediaStream
+                            {
+                                MediaVersionId = version.Id,
+                                MediaStreamKind = MediaStreamKind.Audio,
+                                Index = audioStream.index,
+                                Codec = audioStream.codec_name,
+                                Profile = (audioStream.profile ?? string.Empty).ToLowerInvariant(),
+                                Channels = audioStream.channels
+                            };
+
+                            if (audioStream.disposition is not null)
+                            {
+                                stream.Default = audioStream.disposition.@default == 1;
+                                stream.Forced = audioStream.disposition.forced == 1;
+                            }
+
+                            if (audioStream.tags is not null)
+                            {
+                                stream.Language = audioStream.tags.language;
+                                stream.Title = audioStream.tags.title;
+                            }
+
+                            version.Streams.Add(stream);
                         }
 
                         FFprobeStream videoStream = json.streams.FirstOrDefault(s => s.codec_type == "video");
@@ -142,14 +166,54 @@ namespace ErsatzTV.Core.Metadata
                             version.DisplayAspectRatio = videoStream.display_aspect_ratio;
                             version.Width = videoStream.width;
                             version.Height = videoStream.height;
-                            version.VideoCodec = videoStream.codec_name;
-                            version.VideoProfile = (videoStream.profile ?? string.Empty).ToLowerInvariant();
                             version.VideoScanKind = ScanKindFromFieldOrder(videoStream.field_order);
+
+                            var stream = new MediaStream
+                            {
+                                MediaVersionId = version.Id,
+                                MediaStreamKind = MediaStreamKind.Video,
+                                Index = videoStream.index,
+                                Codec = videoStream.codec_name,
+                                Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant()
+                            };
+
+                            if (videoStream.disposition is not null)
+                            {
+                                stream.Default = videoStream.disposition.@default == 1;
+                                stream.Forced = videoStream.disposition.forced == 1;
+                            }
+
+                            version.Streams.Add(stream);
+                        }
+
+                        foreach (FFprobeStream subtitleStream in json.streams.Filter(s => s.codec_type == "subtitle"))
+                        {
+                            var stream = new MediaStream
+                            {
+                                MediaVersionId = version.Id,
+                                MediaStreamKind = MediaStreamKind.Subtitle,
+                                Index = subtitleStream.index,
+                                Codec = subtitleStream.codec_name
+                            };
+
+                            if (subtitleStream.disposition is not null)
+                            {
+                                stream.Default = subtitleStream.disposition.@default == 1;
+                                stream.Forced = subtitleStream.disposition.forced == 1;
+                            }
+
+                            if (subtitleStream.tags is not null)
+                            {
+                                stream.Language = subtitleStream.tags.language;
+                            }
+
+                            version.Streams.Add(stream);
                         }
 
                         return version;
                     },
-                    _ => new MediaVersion { Name = "Main" });
+                    _ => new MediaVersion
+                        { Name = "Main", DateAdded = DateTime.UtcNow, Streams = new List<MediaStream>() });
 
         private VideoScanKind ScanKindFromFieldOrder(string fieldOrder) =>
             fieldOrder?.ToLowerInvariant() switch
@@ -164,17 +228,24 @@ namespace ErsatzTV.Core.Metadata
 
         public record FFprobeFormat(string duration);
 
+        public record FFprobeDisposition(int @default, int forced);
+
+        public record FFProbeTags(string language, string title);
+
         public record FFprobeStream(
             int index,
             string codec_name,
             string profile,
             string codec_type,
+            int channels,
             int width,
             int height,
             string sample_aspect_ratio,
             string display_aspect_ratio,
             string field_order,
-            string r_frame_rate);
+            string r_frame_rate,
+            FFprobeDisposition disposition,
+            FFProbeTags tags);
         // ReSharper restore InconsistentNaming
     }
 }

@@ -54,12 +54,12 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public Option<FFmpegComplexFilter> Build()
+        public Option<FFmpegComplexFilter> Build(int videoStreamIndex, int audioStreamIndex)
         {
             var complexFilter = new StringBuilder();
 
-            var videoLabel = "0:V";
-            var audioLabel = "0:a";
+            var videoLabel = $"0:{videoStreamIndex}";
+            var audioLabel = $"0:{audioStreamIndex}";
 
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
             bool isHardwareDecode = acceleration switch
