@@ -8,5 +8,6 @@ namespace ErsatzTV.Application.Channels
         string Name,
         int FFmpegProfileId,
         string Logo,
+        string PreferredLanguageCode,
         StreamingMode StreamingMode);
 }

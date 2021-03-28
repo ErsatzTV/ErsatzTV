@@ -13,6 +13,7 @@ namespace ErsatzTV.Application.Channels
                 channel.Name,
                 channel.FFmpegProfileId,
                 GetLogo(channel),
+                channel.PreferredLanguageCode,
                 channel.StreamingMode);
 
         private static string GetLogo(Channel channel) =>

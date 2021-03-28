@@ -24,13 +24,16 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegDefaultProfileId);
             Option<bool> saveReports =
                 await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
+            Option<string> preferredLanguageCode =
+                await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
 
             return new FFmpegSettingsViewModel
             {
                 FFmpegPath = ffmpegPath.IfNone(string.Empty),
                 FFprobePath = ffprobePath.IfNone(string.Empty),
                 DefaultFFmpegProfileId = defaultFFmpegProfileId.IfNone(0),
-                SaveReports = saveReports.IfNone(false)
+                SaveReports = saveReports.IfNone(false),
+                PreferredLanguageCode = preferredLanguageCode.IfNone("eng")
             };
         }
     }

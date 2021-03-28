@@ -79,7 +79,7 @@ namespace ErsatzTV.Core.Tests.Plex
 
             result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
         }
-        
+
         [Test]
         public async Task PlexWindows_To_EtvLinux_UncPath()
         {
@@ -111,7 +111,7 @@ namespace ErsatzTV.Core.Tests.Plex
 
             result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
         }
-        
+
         [Test]
         public async Task PlexWindows_To_EtvLinux_UncPathWithTrailingSlash()
         {

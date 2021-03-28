@@ -63,7 +63,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         .Map(result => result.IfNone(false));
 
                     return Right<BaseError, Process>(
-                        _ffmpegProcessService.ForPlayoutItem(
+                        await _ffmpegProcessService.ForPlayoutItem(
                             ffmpegPath,
                             saveReports,
                             channel,

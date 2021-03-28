@@ -12,8 +12,8 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<bool> RemoveStudio(Studio studio);
         Task<bool> Update(Domain.Metadata metadata);
         Task<bool> Add(Domain.Metadata metadata);
-        Task<bool> UpdateLocalStatistics(MediaVersion mediaVersion);
-        Task<bool> UpdatePlexStatistics(MediaVersion mediaVersion);
+        Task<bool> UpdateLocalStatistics(int mediaVersionId, MediaVersion incoming, bool updateVersion = true);
+        Task<bool> UpdatePlexStatistics(int mediaVersionId, MediaVersion incoming);
         Task<Unit> UpdateArtworkPath(Artwork artwork);
         Task<Unit> AddArtwork(Domain.Metadata metadata, Artwork artwork);
         Task<Unit> RemoveArtwork(Domain.Metadata metadata, ArtworkKind artworkKind);

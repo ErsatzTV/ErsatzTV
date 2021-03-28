@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using LanguageExt;
@@ -8,12 +9,18 @@ namespace ErsatzTV.Core.FFmpeg
 {
     public class FFmpegProcessService
     {
+        private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
         private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
-        public FFmpegProcessService(FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService) =>
+        public FFmpegProcessService(
+            FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
+            IFFmpegStreamSelector ffmpegStreamSelector)
+        {
             _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
+            _ffmpegStreamSelector = ffmpegStreamSelector;
+        }
 
-        public Process ForPlayoutItem(
+        public async Task<Process> ForPlayoutItem(
             string ffmpegPath,
             bool saveReports,
             Channel channel,
@@ -22,10 +29,15 @@ namespace ErsatzTV.Core.FFmpeg
             DateTimeOffset start,
             DateTimeOffset now)
         {
+            MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
+            MediaStream audioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
+
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
                 channel.StreamingMode,
                 channel.FFmpegProfile,
                 version,
+                videoStream,
+                audioStream,
                 start,
                 now);
 
@@ -36,7 +48,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
-                .WithInputCodec(path, playbackSettings.HardwareAcceleration, version.VideoCodec);
+                .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec);
 
             playbackSettings.ScaledSize.Match(
                 scaledSize =>
@@ -51,7 +63,8 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     builder = builder
-                        .WithAlignedAudio(playbackSettings.AudioDuration).WithFilterComplex();
+                        .WithAlignedAudio(playbackSettings.AudioDuration)
+                        .WithFilterComplex(videoStream.Index, audioStream.Index);
                 },
                 () =>
                 {
@@ -61,19 +74,19 @@ namespace ErsatzTV.Core.FFmpeg
                             .WithDeinterlace(playbackSettings.Deinterlace)
                             .WithBlackBars(channel.FFmpegProfile.Resolution)
                             .WithAlignedAudio(playbackSettings.AudioDuration)
-                            .WithFilterComplex();
+                            .WithFilterComplex(videoStream.Index, audioStream.Index);
                     }
                     else if (playbackSettings.Deinterlace)
                     {
                         builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
                             .WithAlignedAudio(playbackSettings.AudioDuration)
-                            .WithFilterComplex();
+                            .WithFilterComplex(videoStream.Index, audioStream.Index);
                     }
                     else
                     {
                         builder = builder
                             .WithAlignedAudio(playbackSettings.AudioDuration)
-                            .WithFilterComplex();
+                            .WithFilterComplex(videoStream.Index, audioStream.Index);
                     }
                 });
 
