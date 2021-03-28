@@ -3,6 +3,7 @@
 @using ErsatzTV.Application.FFmpegProfiles.Commands
 @using ErsatzTV.Application.FFmpegProfiles.Queries
 @using Unit = LanguageExt.Unit
+@using System.Globalization
 @inject IDialogService Dialog
 @inject IMediator Mediator
 @inject ILogger<FFmpeg> Logger
@@ -136,7 +137,18 @@
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
 
-    private static string ValidateLanguageCode(string languageCode) => languageCode.Length != 3 ? "Preferred language code must be 3 characters" : null;
+    private static string ValidateLanguageCode(string languageCode)
+    {
+        if (string.IsNullOrWhiteSpace(languageCode))
+        {
+            return null;
+        }
+
+        Option<CultureInfo> culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures)
+            .FirstOrDefault(ci => string.Equals(ci.ThreeLetterISOLanguageName, languageCode, StringComparison.OrdinalIgnoreCase));
+
+        return culture.IsNone ? "Preferred language code is invalid" : null;
+    }
 
     private async Task LoadFFmpegProfilesAsync() =>
         _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());

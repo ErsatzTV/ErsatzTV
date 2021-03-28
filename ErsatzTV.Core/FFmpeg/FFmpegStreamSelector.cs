@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -28,14 +29,14 @@ namespace ErsatzTV.Core.FFmpeg
         {
             var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
 
-            string language = channel.PreferredLanguageCode;
+            string language = channel.PreferredLanguageCode.ToLowerInvariant();
             if (string.IsNullOrWhiteSpace(language))
             {
                 _logger.LogDebug("Channel {Number} has no preferred language code", channel.Number);
                 Option<string> maybeDefaultLanguage = await _configElementRepository.GetValue<string>(
                     ConfigElementKey.FFmpegPreferredLanguageCode);
                 maybeDefaultLanguage.Match(
-                    lang => language = lang,
+                    lang => language = lang.ToLowerInvariant(),
                     () =>
                     {
                         _logger.LogDebug("FFmpeg has no preferred language code; falling back to {Code}", "eng");
@@ -43,7 +44,11 @@ namespace ErsatzTV.Core.FFmpeg
                     });
             }
 
-            var correctLanguage = audioStreams.Filter(s => s.Language == language).ToList();
+            var correctLanguage = audioStreams.Filter(
+                s => string.Equals(
+                    s.Language,
+                    language,
+                    StringComparison.InvariantCultureIgnoreCase)).ToList();
             if (correctLanguage.Any())
             {
                 _logger.LogDebug(

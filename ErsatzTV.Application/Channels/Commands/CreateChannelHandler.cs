@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -72,8 +74,11 @@ namespace ErsatzTV.Application.Channels.Commands
 
         private Validation<BaseError, string> ValidatePreferredLanguage(CreateChannel createChannel) =>
             Optional(createChannel.PreferredLanguageCode)
-                .Filter(lc => string.IsNullOrWhiteSpace(lc) || lc.Length == 3)
-                .ToValidation<BaseError>("[PreferredLanguageCode] must be 3 characters");
+                .Filter(
+                    lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
+                        ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
+                .ToValidation<BaseError>("Preferred language code is invalid");
+
 
         private async Task<Validation<BaseError, string>> ValidateNumber(CreateChannel createChannel)
         {
