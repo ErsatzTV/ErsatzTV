@@ -44,7 +44,7 @@ namespace ErsatzTV.Core.Metadata
                 return await maybeProbe.Match(
                     async ffprobe =>
                     {
-                        MediaVersion version = ProjectToMediaVersion(ffprobe);
+                        MediaVersion version = ProjectToMediaVersion(filePath, ffprobe);
                         bool result = await ApplyVersionUpdate(mediaItem, version, filePath);
                         return Right<BaseError, bool>(result);
                     },
@@ -117,7 +117,7 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
-        private MediaVersion ProjectToMediaVersion(FFprobe probeOutput) =>
+        private MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
             Optional(probeOutput)
                 .Filter(json => json?.format != null && json.streams != null)
                 .ToValidation<BaseError>("Unable to parse ffprobe output")
@@ -125,9 +125,20 @@ namespace ErsatzTV.Core.Metadata
                 .Match(
                     json =>
                     {
-                        var duration = TimeSpan.FromSeconds(double.Parse(json.format.duration));
+                        var version = new MediaVersion { Name = "Main", DateAdded = DateTime.UtcNow };
 
-                        var version = new MediaVersion { Name = "Main", Duration = duration };
+                        if (double.TryParse(json.format.duration, out double duration))
+                        {
+                            var seconds = TimeSpan.FromSeconds(duration);
+                            version.Duration = seconds;
+                        }
+                        else
+                        {
+                            _logger.LogWarning(
+                                "Media item at {Path} has a missing or invalid duration {Duration} and will cause scheduling issues",
+                                path,
+                                json.format.duration);
+                        }
 
                         FFprobeStream audioStream = json.streams.FirstOrDefault(s => s.codec_type == "audio");
                         if (audioStream != null)
@@ -149,7 +160,7 @@ namespace ErsatzTV.Core.Metadata
 
                         return version;
                     },
-                    _ => new MediaVersion { Name = "Main" });
+                    _ => new MediaVersion { Name = "Main", DateAdded = DateTime.UtcNow });
 
         private VideoScanKind ScanKindFromFieldOrder(string fieldOrder) =>
             fieldOrder?.ToLowerInvariant() switch
