@@ -145,8 +145,10 @@ namespace ErsatzTV.Core.Scheduling
             // start with the previously-decided schedule item
             int index = sortedScheduleItems.IndexOf(startAnchor.NextScheduleItem);
 
-            Option<int> multipleRemaining = None;
-            Option<DateTimeOffset> durationFinish = None;
+            // start with the previous multiple/duration states
+            Option<int> multipleRemaining = Optional(startAnchor.MultipleRemaining);
+            Option<DateTimeOffset> durationFinish = startAnchor.DurationFinishOffset;
+
             // loop until we're done filling the desired amount of time
             while (currentTime < playoutFinish)
             {
@@ -298,7 +300,9 @@ namespace ErsatzTV.Core.Scheduling
             {
                 NextScheduleItem = nextScheduleItem,
                 NextScheduleItemId = nextScheduleItem.Id,
-                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime).UtcDateTime
+                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime).UtcDateTime,
+                MultipleRemaining = multipleRemaining.IsSome ? multipleRemaining.ValueUnsafe() : null,
+                DurationFinish = durationFinish.IsSome ? durationFinish.ValueUnsafe().UtcDateTime : null
             };
 
             // build program schedule anchors
