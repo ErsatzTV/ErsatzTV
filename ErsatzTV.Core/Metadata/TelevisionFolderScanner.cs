@@ -45,7 +45,10 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public async Task<Either<BaseError, Unit>> ScanFolder(LibraryPath libraryPath, string ffprobePath)
+        public async Task<Either<BaseError, Unit>> ScanFolder(
+            LibraryPath libraryPath,
+            string ffprobePath,
+            DateTimeOffset lastScan)
         {
             if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
             {
@@ -77,7 +80,7 @@ namespace ErsatzTV.Core.Metadata
                             await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
                         }
 
-                        await ScanSeasons(libraryPath, ffprobePath, result.Item, showFolder);
+                        await ScanSeasons(libraryPath, ffprobePath, result.Item, showFolder, lastScan);
                     },
                     _ => Task.FromResult(Unit.Default));
             }
@@ -113,7 +116,8 @@ namespace ErsatzTV.Core.Metadata
             LibraryPath libraryPath,
             string ffprobePath,
             Show show,
-            string showFolder)
+            string showFolder,
+            DateTimeOffset lastScan)
         {
             foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showFolder).Filter(ShouldIncludeFolder)
                 .OrderBy(identity))
@@ -127,7 +131,7 @@ namespace ErsatzTV.Core.Metadata
                             .BindT(season => UpdatePoster(season, seasonFolder));
 
                         await maybeSeason.Match(
-                            season => ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder),
+                            season => ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder, lastScan),
                             _ => Task.FromResult(Unit.Default));
                     });
             }
@@ -139,8 +143,14 @@ namespace ErsatzTV.Core.Metadata
             LibraryPath libraryPath,
             string ffprobePath,
             Season season,
-            string seasonPath)
+            string seasonPath,
+            DateTimeOffset lastScan)
         {
+            if (_localFileSystem.GetLastWriteTime(seasonPath) < lastScan)
+            {
+                return Unit.Default;
+            }
+
             foreach (string file in _localFileSystem.ListFiles(seasonPath)
                 .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f))).OrderBy(identity))
             {

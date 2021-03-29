@@ -42,7 +42,10 @@ namespace ErsatzTV.Core.Metadata
             _logger = logger;
         }
 
-        public async Task<Either<BaseError, Unit>> ScanFolder(LibraryPath libraryPath, string ffprobePath)
+        public async Task<Either<BaseError, Unit>> ScanFolder(
+            LibraryPath libraryPath,
+            string ffprobePath,
+            DateTimeOffset lastScan)
         {
             if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
             {
@@ -73,6 +76,11 @@ namespace ErsatzTV.Core.Metadata
                         folderQueue.Enqueue(subdirectory);
                     }
 
+                    continue;
+                }
+
+                if (_localFileSystem.GetLastWriteTime(movieFolder) < lastScan)
+                {
                     continue;
                 }
 
