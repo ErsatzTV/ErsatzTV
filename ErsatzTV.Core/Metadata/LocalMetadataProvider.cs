@@ -113,7 +113,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Plot = metadata.Plot;
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
-                    
+
                     if (existing.DateAdded == DateTime.MinValue)
                     {
                         existing.DateAdded = metadata.DateAdded;
@@ -149,17 +149,17 @@ namespace ErsatzTV.Core.Metadata
                 async existing =>
                 {
                     var updated = false;
-                    
+
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
-                    
+
                     if (existing.DateAdded == DateTime.MinValue)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }
-                    
+
                     existing.DateUpdated = metadata.DateUpdated;
                     existing.MetadataKind = metadata.MetadataKind;
                     existing.OriginalTitle = metadata.OriginalTitle;
@@ -254,7 +254,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Plot = metadata.Plot;
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
-                    
+
                     if (existing.DateAdded == DateTime.MinValue)
                     {
                         existing.DateAdded = metadata.DateAdded;

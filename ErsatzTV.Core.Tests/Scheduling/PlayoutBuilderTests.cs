@@ -610,6 +610,190 @@ namespace ErsatzTV.Core.Tests.Scheduling
             result.Items[5].MediaItemId.Should().Be(4);
         }
 
+        [Test]
+        public async Task Alternating_MultipleContent_Should_Maintain_Counts()
+        {
+            var collectionOne = new Collection
+            {
+                Id = 1,
+                Name = "Multiple Items 1",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
+                }
+            };
+
+            var collectionTwo = new Collection
+            {
+                Id = 2,
+                Name = "Multiple Items 2",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (collectionOne.Id, collectionOne.MediaItems.ToList()),
+                    (collectionTwo.Id, collectionTwo.MediaItems.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemMultiple
+                {
+                    Id = 1,
+                    Index = 1,
+                    Collection = collectionOne,
+                    CollectionId = collectionOne.Id,
+                    StartTime = null,
+                    Count = 3
+                },
+                new ProgramScheduleItemMultiple
+                {
+                    Id = 2,
+                    Index = 2,
+                    Collection = collectionTwo,
+                    CollectionId = collectionTwo.Id,
+                    StartTime = null,
+                    Count = 3
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items,
+                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+                Anchor = new PlayoutAnchor
+                {
+                    NextStart = HoursAfterMidnight(1).UtcDateTime,
+                    NextScheduleItem = items[0],
+                    NextScheduleItemId = 1,
+                    MultipleRemaining = 2
+                }
+            };
+
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(5);
+
+            Playout result = await builder.BuildPlayoutItems(playout, start, finish);
+
+            result.Items.Count.Should().Be(4);
+
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[0].MediaItemId.Should().Be(1);
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[1].MediaItemId.Should().Be(1);
+
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
+            result.Items[2].MediaItemId.Should().Be(2);
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4));
+            result.Items[3].MediaItemId.Should().Be(2);
+
+            result.Anchor.NextScheduleItem.Should().Be(items[1]);
+            result.Anchor.MultipleRemaining.Should().Be(1);
+        }
+
+        [Test]
+        public async Task Alternating_Duration_Should_Maintain_Duration()
+        {
+            var collectionOne = new Collection
+            {
+                Id = 1,
+                Name = "Duration Items 1",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
+                }
+            };
+
+            var collectionTwo = new Collection
+            {
+                Id = 2,
+                Name = "Duration Items 2",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (collectionOne.Id, collectionOne.MediaItems.ToList()),
+                    (collectionTwo.Id, collectionTwo.MediaItems.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemDuration
+                {
+                    Id = 1,
+                    Index = 1,
+                    Collection = collectionOne,
+                    CollectionId = collectionOne.Id,
+                    StartTime = null,
+                    PlayoutDuration = TimeSpan.FromHours(3),
+                    OfflineTail = false
+                },
+                new ProgramScheduleItemDuration
+                {
+                    Id = 2,
+                    Index = 2,
+                    Collection = collectionTwo,
+                    CollectionId = collectionTwo.Id,
+                    StartTime = null,
+                    PlayoutDuration = TimeSpan.FromHours(3),
+                    OfflineTail = false
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items,
+                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+                Anchor = new PlayoutAnchor
+                {
+                    NextStart = HoursAfterMidnight(1).UtcDateTime,
+                    NextScheduleItem = items[0],
+                    NextScheduleItemId = 1,
+                    DurationFinish = HoursAfterMidnight(3).UtcDateTime
+                }
+            };
+
+            var televisionRepo = new FakeTelevisionRepository();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(5);
+
+            Playout result = await builder.BuildPlayoutItems(playout, start, finish);
+
+            result.Items.Count.Should().Be(4);
+
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[0].MediaItemId.Should().Be(1);
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[1].MediaItemId.Should().Be(1);
+
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
+            result.Items[2].MediaItemId.Should().Be(2);
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4));
+            result.Items[3].MediaItemId.Should().Be(2);
+
+            result.Anchor.NextScheduleItem.Should().Be(items[1]);
+            result.Anchor.DurationFinish.Should().Be(HoursAfterMidnight(6).UtcDateTime);
+        }
+
         private static DateTimeOffset HoursAfterMidnight(int hours)
         {
             DateTimeOffset now = DateTimeOffset.Now;
