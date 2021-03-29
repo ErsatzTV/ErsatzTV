@@ -73,12 +73,11 @@ namespace ErsatzTV.Application.Channels.Commands
                 .Bind(_ => createChannel.NotLongerThan(50)(c => c.Name));
 
         private Validation<BaseError, string> ValidatePreferredLanguage(CreateChannel createChannel) =>
-            Optional(createChannel.PreferredLanguageCode)
+            Optional(createChannel.PreferredLanguageCode ?? string.Empty)
                 .Filter(
                     lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
                         ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
                 .ToValidation<BaseError>("Preferred language code is invalid");
-
 
         private async Task<Validation<BaseError, string>> ValidateNumber(CreateChannel createChannel)
         {

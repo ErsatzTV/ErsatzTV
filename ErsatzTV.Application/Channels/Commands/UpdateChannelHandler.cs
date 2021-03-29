@@ -97,7 +97,7 @@ namespace ErsatzTV.Application.Channels.Commands
         }
 
         private Validation<BaseError, string> ValidatePreferredLanguage(UpdateChannel updateChannel) =>
-            Optional(updateChannel.PreferredLanguageCode)
+            Optional(updateChannel.PreferredLanguageCode ?? string.Empty)
                 .Filter(
                     lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
                         ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
