@@ -215,6 +215,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(sm => sm.Genres)
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Tags)
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Studios)
                         .Include(s => s.LibraryPath)
                         .ThenInclude(lp => lp.Library)
                         .OrderBy(s => s.Id)
