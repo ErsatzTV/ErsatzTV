@@ -149,6 +149,8 @@ namespace ErsatzTV.Core.Scheduling
             Option<int> multipleRemaining = Optional(startAnchor.MultipleRemaining);
             Option<DateTimeOffset> durationFinish = startAnchor.DurationFinishOffset;
 
+            bool customGroup = multipleRemaining.IsSome || durationFinish.IsSome;
+
             // loop until we're done filling the desired amount of time
             while (currentTime < playoutFinish)
             {
@@ -185,8 +187,14 @@ namespace ErsatzTV.Core.Scheduling
                         {
                             MediaItemId = mediaItem.Id,
                             Start = itemStartTime.UtcDateTime,
-                            Finish = itemStartTime.UtcDateTime + version.Duration
+                            Finish = itemStartTime.UtcDateTime + version.Duration,
+                            CustomGroup = customGroup
                         };
+
+                        if (!string.IsNullOrWhiteSpace(scheduleItem.CustomTitle))
+                        {
+                            playoutItem.CustomTitle = scheduleItem.CustomTitle;
+                        }
 
                         currentTime = itemStartTime + version.Duration;
                         enumerator.MoveNext();
@@ -201,11 +209,13 @@ namespace ErsatzTV.Core.Scheduling
                                     "Advancing to next schedule item after playout mode {PlayoutMode}",
                                     "One");
                                 index++;
+                                customGroup = false;
                                 break;
                             case ProgramScheduleItemMultiple multiple:
                                 if (multipleRemaining.IsNone)
                                 {
                                     multipleRemaining = multiple.Count;
+                                    customGroup = true;
                                 }
 
                                 multipleRemaining = multipleRemaining.Map(i => i - 1);
@@ -216,6 +226,7 @@ namespace ErsatzTV.Core.Scheduling
                                         "Multiple");
                                     index++;
                                     multipleRemaining = None;
+                                    customGroup = false;
                                 }
 
                                 break;
@@ -223,6 +234,8 @@ namespace ErsatzTV.Core.Scheduling
                                 enumerator.Current.Do(
                                     peekMediaItem =>
                                     {
+                                        customGroup = true;
+                                        
                                         MediaVersion peekVersion = peekMediaItem switch
                                         {
                                             Movie m => m.MediaVersions.Head(),
@@ -249,6 +262,7 @@ namespace ErsatzTV.Core.Scheduling
                                                 "Advancing to next schedule item after playout mode {PlayoutMode}",
                                                 "Flood");
                                             index++;
+                                            customGroup = false;
                                         }
                                     });
                                 break;
@@ -267,6 +281,7 @@ namespace ErsatzTV.Core.Scheduling
                                         if (durationFinish.IsNone)
                                         {
                                             durationFinish = itemStartTime + duration.PlayoutDuration;
+                                            customGroup = true;
                                         }
 
                                         bool willNotFinishInTime =
@@ -279,6 +294,7 @@ namespace ErsatzTV.Core.Scheduling
                                                 "Advancing to next schedule item after playout mode {PlayoutMode}",
                                                 "Duration");
                                             index++;
+                                            customGroup = false;
 
                                             if (duration.OfflineTail)
                                             {

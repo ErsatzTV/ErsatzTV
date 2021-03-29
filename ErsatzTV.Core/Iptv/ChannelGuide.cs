@@ -57,49 +57,36 @@ namespace ErsatzTV.Core.Iptv
 
             foreach (Channel channel in _channels.OrderBy(c => c.Number))
             {
-                foreach (PlayoutItem playoutItem in channel.Playouts.Collect(p => p.Items).OrderBy(i => i.Start))
+                var sorted = channel.Playouts.Collect(p => p.Items).OrderBy(x => x.Start).ToList();
+                var i = 0;
+                while (i < sorted.Count)
                 {
-                    string start = playoutItem.StartOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
-                    string stop = playoutItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                    PlayoutItem startItem = sorted[i];
+                    bool hasCustomTitle = !string.IsNullOrWhiteSpace(startItem.CustomTitle);
 
-                    string title = playoutItem.MediaItem switch
+                    int finishIndex = i;
+                    while (hasCustomTitle && finishIndex + 1 < sorted.Count && sorted[finishIndex + 1].CustomGroup)
                     {
-                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title ?? string.Empty)
-                            .IfNone("[unknown movie]"),
-                        Episode e => e.Season.Show.ShowMetadata.HeadOrNone().Map(em => em.Title ?? string.Empty)
-                            .IfNone("[unknown show]"),
-                        _ => "[unknown]"
-                    };
+                        finishIndex++;
+                    }
 
-                    string subtitle = playoutItem.MediaItem switch
-                    {
-                        Episode e => e.EpisodeMetadata.HeadOrNone().Match(
-                            em => em.Title ?? string.Empty,
-                            () => string.Empty),
-                        _ => string.Empty
-                    };
+                    PlayoutItem finishItem = sorted[finishIndex];
+                    i = finishIndex;
 
-                    string description = playoutItem.MediaItem switch
-                    {
-                        Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Plot ?? string.Empty).IfNone(string.Empty),
-                        Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Plot ?? string.Empty)
-                            .IfNone(string.Empty),
-                        _ => string.Empty
-                    };
+                    string start = startItem.StartOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                    string stop = finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
 
-                    string contentRating = playoutItem.MediaItem switch
-                    {
-                        // TODO: re-implement content rating
-                        // Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.ContentRating).IfNone(string.Empty),
-                        _ => string.Empty
-                    };
+                    string title = GetTitle(startItem);
+                    string subtitle = GetSubtitle(startItem);
+                    string description = GetDescription(startItem);
+                    string contentRating = string.Empty;
 
                     xml.WriteStartElement("programme");
                     xml.WriteAttributeString("start", start);
                     xml.WriteAttributeString("stop", stop);
                     xml.WriteAttributeString("channel", channel.Number);
 
-                    if (playoutItem.MediaItem is Movie movie)
+                    if (!hasCustomTitle && startItem.MediaItem is Movie movie)
                     {
                         xml.WriteStartElement("category");
                         xml.WriteAttributeString("lang", "en");
@@ -150,7 +137,7 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteStartElement("previously-shown");
                     xml.WriteEndElement(); // previously-shown
 
-                    if (playoutItem.MediaItem is Episode episode)
+                    if (!hasCustomTitle && startItem.MediaItem is Episode episode)
                     {
                         Option<ShowMetadata> maybeMetadata =
                             Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten();
@@ -209,6 +196,8 @@ namespace ErsatzTV.Core.Iptv
                     }
 
                     xml.WriteEndElement(); // programme
+
+                    i++;
                 }
             }
 
@@ -217,6 +206,55 @@ namespace ErsatzTV.Core.Iptv
 
             xml.Flush();
             return Encoding.UTF8.GetString(ms.ToArray());
+        }
+
+        private static string GetTitle(PlayoutItem playoutItem)
+        {
+            if (!string.IsNullOrWhiteSpace(playoutItem.CustomTitle))
+            {
+                return playoutItem.CustomTitle;
+            }
+
+            return playoutItem.MediaItem switch
+            {
+                Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title ?? string.Empty)
+                    .IfNone("[unknown movie]"),
+                Episode e => e.Season.Show.ShowMetadata.HeadOrNone().Map(em => em.Title ?? string.Empty)
+                    .IfNone("[unknown show]"),
+                _ => "[unknown]"
+            };
+        }
+
+        private static string GetSubtitle(PlayoutItem playoutItem)
+        {
+            if (!string.IsNullOrWhiteSpace(playoutItem.CustomTitle))
+            {
+                return string.Empty;
+            }
+
+            return playoutItem.MediaItem switch
+            {
+                Episode e => e.EpisodeMetadata.HeadOrNone().Match(
+                    em => em.Title ?? string.Empty,
+                    () => string.Empty),
+                _ => string.Empty
+            };
+        }
+
+        private static string GetDescription(PlayoutItem playoutItem)
+        {
+            if (!string.IsNullOrWhiteSpace(playoutItem.CustomTitle))
+            {
+                return string.Empty;
+            }
+
+            return playoutItem.MediaItem switch
+            {
+                Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Plot ?? string.Empty).IfNone(string.Empty),
+                Episode e => e.EpisodeMetadata.HeadOrNone().Map(em => em.Plot ?? string.Empty)
+                    .IfNone(string.Empty),
+                _ => string.Empty
+            };
         }
     }
 }

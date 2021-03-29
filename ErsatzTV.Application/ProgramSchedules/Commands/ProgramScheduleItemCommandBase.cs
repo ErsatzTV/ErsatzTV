@@ -100,7 +100,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     StartTime = item.StartTime,
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
-                    MediaItemId = item.MediaItemId
+                    MediaItemId = item.MediaItemId,
+                    CustomTitle = item.CustomTitle
                 },
                 PlayoutMode.One => new ProgramScheduleItemOne
                 {
@@ -109,7 +110,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     StartTime = item.StartTime,
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
-                    MediaItemId = item.MediaItemId
+                    MediaItemId = item.MediaItemId,
+                    CustomTitle = item.CustomTitle
                 },
                 PlayoutMode.Multiple => new ProgramScheduleItemMultiple
                 {
@@ -119,7 +121,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MediaItemId = item.MediaItemId,
-                    Count = item.MultipleCount.GetValueOrDefault()
+                    Count = item.MultipleCount.GetValueOrDefault(),
+                    CustomTitle = item.CustomTitle
                 },
                 PlayoutMode.Duration => new ProgramScheduleItemDuration
                 {
@@ -130,7 +133,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionId = item.CollectionId,
                     MediaItemId = item.MediaItemId,
                     PlayoutDuration = item.PlayoutDuration.GetValueOrDefault(),
-                    OfflineTail = item.OfflineTail.GetValueOrDefault()
+                    OfflineTail = item.OfflineTail.GetValueOrDefault(),
+                    CustomTitle = item.CustomTitle
                 },
                 _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
             };

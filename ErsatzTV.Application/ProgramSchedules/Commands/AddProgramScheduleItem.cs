@@ -16,5 +16,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? MediaItemId,
         int? MultipleCount,
         TimeSpan? PlayoutDuration,
-        bool? OfflineTail) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
+        bool? OfflineTail,
+        string CustomTitle) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
 }

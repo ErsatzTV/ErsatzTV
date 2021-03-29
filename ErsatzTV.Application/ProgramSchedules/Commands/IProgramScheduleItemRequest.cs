@@ -13,5 +13,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? MultipleCount { get; }
         TimeSpan? PlayoutDuration { get; }
         bool? OfflineTail { get; }
+        string CustomTitle { get; }
     }
 }

@@ -28,7 +28,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                             _ => null
                         },
                         duration.PlayoutDuration,
-                        duration.OfflineTail),
+                        duration.OfflineTail,
+                        duration.CustomTitle),
                 ProgramScheduleItemFlood flood =>
                     new ProgramScheduleItemFloodViewModel(
                         flood.Id,
@@ -44,7 +45,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
                             Season season => MediaItems.Mapper.ProjectToViewModel(season),
                             _ => null
-                        }),
+                        },
+                        flood.CustomTitle),
                 ProgramScheduleItemMultiple multiple =>
                     new ProgramScheduleItemMultipleViewModel(
                         multiple.Id,
@@ -61,7 +63,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Season season => MediaItems.Mapper.ProjectToViewModel(season),
                             _ => null
                         },
-                        multiple.Count),
+                        multiple.Count,
+                        multiple.CustomTitle),
                 ProgramScheduleItemOne one =>
                     new ProgramScheduleItemOneViewModel(
                         one.Id,
@@ -77,7 +80,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
                             Season season => MediaItems.Mapper.ProjectToViewModel(season),
                             _ => null
-                        }),
+                        },
+                        one.CustomTitle),
                 _ => throw new NotSupportedException(
                     $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")
             };
