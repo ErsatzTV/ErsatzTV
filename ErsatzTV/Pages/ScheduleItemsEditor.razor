@@ -140,6 +140,7 @@
                             <MudElement HtmlTag="div" Class="mt-3">
                                 <MudSwitch Label="Offline Tail" @bind-Checked="@_selectedItem.OfflineTail" For="@(() => _selectedItem.OfflineTail)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
                             </MudElement>
+                            <MudTextField Class="mt-3" Label="Custom Title" @bind-Value="@_selectedItem.CustomTitle" For="@(() => _selectedItem.CustomTitle)"/>
                         </MudCardContent>
                     </MudCard>
                 </EditForm>
@@ -210,7 +211,8 @@
             PlayoutMode = item.PlayoutMode,
             CollectionType = item.CollectionType,
             Collection = item.Collection,
-            MediaItem = item.MediaItem
+            MediaItem = item.MediaItem,
+            CustomTitle = item.CustomTitle
         };
 
         switch (item)
@@ -286,7 +288,8 @@
             item.MediaItem?.MediaItemId,
             item.MultipleCount,
             item.PlayoutDuration,
-            item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null)).ToList();
+            item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null,
+            item.CustomTitle)).ToList();
 
         Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
 

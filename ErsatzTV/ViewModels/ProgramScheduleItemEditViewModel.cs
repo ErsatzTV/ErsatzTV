@@ -75,6 +75,8 @@ namespace ErsatzTV.ViewModels
             set => _offlineTail = value;
         }
 
+        public string CustomTitle { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

@@ -9,6 +9,8 @@ namespace ErsatzTV.Core.Domain
         public MediaItem MediaItem { get; set; }
         public DateTime Start { get; set; }
         public DateTime Finish { get; set; }
+        public string CustomTitle { get; set; }
+        public bool CustomGroup { get; set; }
         public int PlayoutId { get; set; }
         public Playout Playout { get; set; }
 
