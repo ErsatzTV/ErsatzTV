@@ -81,7 +81,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Path = BadFakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsLeft.Should().BeTrue();
                 result.IfLeft(error => error.Should().BeOfType<MediaSourceInaccessible>());
@@ -101,7 +104,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -137,7 +143,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -174,7 +183,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -215,7 +227,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -259,7 +274,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -303,7 +321,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -346,7 +367,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -385,7 +409,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -418,7 +445,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -453,7 +483,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
@@ -477,7 +510,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue);
 
                 result.IsRight.Should().BeTrue();
 
