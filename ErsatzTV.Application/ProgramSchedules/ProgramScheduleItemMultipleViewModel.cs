@@ -15,7 +15,8 @@ namespace ErsatzTV.Application.ProgramSchedules
             ProgramScheduleItemCollectionType collectionType,
             MediaCollectionViewModel collection,
             NamedMediaItemViewModel mediaItem,
-            int count) : base(
+            int count,
+            string customTitle) : base(
             id,
             index,
             startType,
@@ -23,7 +24,8 @@ namespace ErsatzTV.Application.ProgramSchedules
             PlayoutMode.Multiple,
             collectionType,
             collection,
-            mediaItem) =>
+            mediaItem,
+            customTitle) =>
             Count = count;
 
         public int Count { get; }

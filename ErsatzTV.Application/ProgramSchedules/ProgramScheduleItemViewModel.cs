@@ -13,7 +13,8 @@ namespace ErsatzTV.Application.ProgramSchedules
         PlayoutMode PlayoutMode,
         ProgramScheduleItemCollectionType CollectionType,
         MediaCollectionViewModel Collection,
-        NamedMediaItemViewModel MediaItem)
+        NamedMediaItemViewModel MediaItem,
+        string CustomTitle)
     {
         public string Name => CollectionType switch
         {
