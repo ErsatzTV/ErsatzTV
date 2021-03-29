@@ -113,7 +113,12 @@ namespace ErsatzTV.Core.Metadata
                     existing.Plot = metadata.Plot;
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
-                    existing.DateAdded = metadata.DateAdded;
+                    
+                    if (existing.DateAdded == DateTime.MinValue)
+                    {
+                        existing.DateAdded = metadata.DateAdded;
+                    }
+
                     existing.DateUpdated = metadata.DateUpdated;
                     existing.MetadataKind = metadata.MetadataKind;
                     existing.OriginalTitle = metadata.OriginalTitle;
@@ -143,11 +148,18 @@ namespace ErsatzTV.Core.Metadata
             Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
                 async existing =>
                 {
+                    var updated = false;
+                    
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
-                    existing.DateAdded = metadata.DateAdded;
+                    
+                    if (existing.DateAdded == DateTime.MinValue)
+                    {
+                        existing.DateAdded = metadata.DateAdded;
+                    }
+                    
                     existing.DateUpdated = metadata.DateUpdated;
                     existing.MetadataKind = metadata.MetadataKind;
                     existing.OriginalTitle = metadata.OriginalTitle;
@@ -161,28 +173,40 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Genres.Remove(genre);
-                        await _metadataRepository.RemoveGenre(genre);
+                        if (await _metadataRepository.RemoveGenre(genre))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
                         .ToList())
                     {
                         existing.Genres.Add(genre);
-                        await _movieRepository.AddGenre(existing, genre);
+                        if (await _movieRepository.AddGenre(existing, genre))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
                         existing.Tags.Remove(tag);
-                        await _metadataRepository.RemoveTag(tag);
+                        if (await _metadataRepository.RemoveTag(tag))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Tag tag in metadata.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
                         existing.Tags.Add(tag);
-                        await _movieRepository.AddTag(existing, tag);
+                        if (await _movieRepository.AddTag(existing, tag))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Studio studio in existing.Studios
@@ -190,7 +214,10 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Studios.Remove(studio);
-                        await _metadataRepository.RemoveStudio(studio);
+                        if (await _metadataRepository.RemoveStudio(studio))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Studio studio in metadata.Studios
@@ -198,10 +225,13 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Studios.Add(studio);
-                        await _movieRepository.AddStudio(existing, studio);
+                        if (await _movieRepository.AddStudio(existing, studio))
+                        {
+                            updated = true;
+                        }
                     }
 
-                    return await _metadataRepository.Update(existing);
+                    return await _metadataRepository.Update(existing) || updated;
                 },
                 async () =>
                 {
@@ -218,11 +248,18 @@ namespace ErsatzTV.Core.Metadata
             Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
                 async existing =>
                 {
+                    var updated = false;
+
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
-                    existing.DateAdded = metadata.DateAdded;
+                    
+                    if (existing.DateAdded == DateTime.MinValue)
+                    {
+                        existing.DateAdded = metadata.DateAdded;
+                    }
+
                     existing.DateUpdated = metadata.DateUpdated;
                     existing.MetadataKind = metadata.MetadataKind;
                     existing.OriginalTitle = metadata.OriginalTitle;
@@ -236,28 +273,40 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Genres.Remove(genre);
-                        await _metadataRepository.RemoveGenre(genre);
+                        if (await _metadataRepository.RemoveGenre(genre))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
                         .ToList())
                     {
                         existing.Genres.Add(genre);
-                        await _televisionRepository.AddGenre(existing, genre);
+                        if (await _televisionRepository.AddGenre(existing, genre))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
                         existing.Tags.Remove(tag);
-                        await _metadataRepository.RemoveTag(tag);
+                        if (await _metadataRepository.RemoveTag(tag))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Tag tag in metadata.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
                         .ToList())
                     {
                         existing.Tags.Add(tag);
-                        await _televisionRepository.AddTag(existing, tag);
+                        if (await _televisionRepository.AddTag(existing, tag))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Studio studio in existing.Studios
@@ -265,7 +314,10 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Studios.Remove(studio);
-                        await _metadataRepository.RemoveStudio(studio);
+                        if (await _metadataRepository.RemoveStudio(studio))
+                        {
+                            updated = true;
+                        }
                     }
 
                     foreach (Studio studio in metadata.Studios
@@ -273,10 +325,13 @@ namespace ErsatzTV.Core.Metadata
                         .ToList())
                     {
                         existing.Studios.Add(studio);
-                        await _televisionRepository.AddStudio(existing, studio);
+                        if (await _televisionRepository.AddStudio(existing, studio))
+                        {
+                            updated = true;
+                        }
                     }
 
-                    return await _metadataRepository.Update(existing);
+                    return await _metadataRepository.Update(existing) || updated;
                 },
                 async () =>
                 {
@@ -332,6 +387,7 @@ namespace ErsatzTV.Core.Metadata
                     nfo => new ShowMetadata
                     {
                         MetadataKind = MetadataKind.Sidecar,
+                        DateAdded = DateTime.UtcNow,
                         DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                         Title = nfo.Title,
                         Plot = nfo.Plot,
@@ -364,6 +420,7 @@ namespace ErsatzTV.Core.Metadata
                         var metadata = new EpisodeMetadata
                         {
                             MetadataKind = MetadataKind.Sidecar,
+                            DateAdded = DateTime.UtcNow,
                             DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                             Title = nfo.Title,
                             ReleaseDate = GetAired(0, nfo.Aired),
@@ -390,6 +447,7 @@ namespace ErsatzTV.Core.Metadata
                     nfo => new MovieMetadata
                     {
                         MetadataKind = MetadataKind.Sidecar,
+                        DateAdded = DateTime.UtcNow,
                         DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                         Title = nfo.Title,
                         Year = nfo.Year,
