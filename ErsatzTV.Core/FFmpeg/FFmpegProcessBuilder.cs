@@ -331,8 +331,8 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithFilterComplex(int videoStreamIndex, int audioStreamIndex)
         {
-            var videoLabel = $"0:v:{videoStreamIndex}";
-            var audioLabel = $"0:a:{audioStreamIndex}";
+            var videoLabel = $"0:{videoStreamIndex}";
+            var audioLabel = $"0:{audioStreamIndex}";
 
             Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(videoStreamIndex, audioStreamIndex);
             maybeFilter.IfSome(
