@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -61,21 +62,30 @@ namespace ErsatzTV.Application.MediaSources.Commands
             var lastScan = new DateTimeOffset(localLibrary.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
             if (forceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
             {
+                var sw = new Stopwatch();
+                sw.Start();
+
                 foreach (LibraryPath libraryPath in localLibrary.Paths)
                 {
                     switch (localLibrary.MediaKind)
                     {
                         case LibraryMediaKind.Movies:
-                            await _movieFolderScanner.ScanFolder(libraryPath, ffprobePath);
+                            await _movieFolderScanner.ScanFolder(libraryPath, ffprobePath, lastScan);
                             break;
                         case LibraryMediaKind.Shows:
-                            await _televisionFolderScanner.ScanFolder(libraryPath, ffprobePath);
+                            await _televisionFolderScanner.ScanFolder(libraryPath, ffprobePath, lastScan);
                             break;
                     }
                 }
 
                 localLibrary.LastScan = DateTime.UtcNow;
                 await _libraryRepository.UpdateLastScan(localLibrary);
+
+                sw.Stop();
+                _logger.LogDebug(
+                    "Scan of library {Name} completed in {Duration}",
+                    localLibrary.Name,
+                    TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds));
             }
             else
             {
