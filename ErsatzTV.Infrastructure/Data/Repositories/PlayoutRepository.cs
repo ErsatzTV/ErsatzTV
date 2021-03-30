@@ -96,6 +96,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Episode).Season)
                 .ThenInclude(s => s.SeasonMetadata)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).Season.Show)
+                .ThenInclude(s => s.ShowMetadata)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
         }
