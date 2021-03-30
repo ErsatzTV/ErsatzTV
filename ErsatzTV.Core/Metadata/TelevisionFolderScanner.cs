@@ -80,9 +80,22 @@ namespace ErsatzTV.Core.Metadata
                             await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
                         }
 
-                        await ScanSeasons(libraryPath, ffprobePath, result.Item, showFolder, lastScan);
+                        await ScanSeasons(
+                            libraryPath,
+                            ffprobePath,
+                            result.Item,
+                            showFolder,
+                            // force scanning all folders if we're adding a new show
+                            result.IsAdded ? DateTimeOffset.MinValue : lastScan);
                     },
-                    _ => Task.FromResult(Unit.Default));
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Error processing show in folder {Folder}: {Error}",
+                            showFolder,
+                            error.Value);
+                        return Task.FromResult(Unit.Default);
+                    });
             }
 
             foreach (string path in await _televisionRepository.FindEpisodePaths(libraryPath))
@@ -132,7 +145,14 @@ namespace ErsatzTV.Core.Metadata
 
                         await maybeSeason.Match(
                             season => ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder, lastScan),
-                            _ => Task.FromResult(Unit.Default));
+                            error =>
+                            {
+                                _logger.LogWarning(
+                                    "Error processing season in folder {Folder}: {Error}",
+                                    seasonFolder,
+                                    error.Value);
+                                return Task.FromResult(Unit.Default);
+                            });
                     });
             }
 
