@@ -36,17 +36,26 @@ namespace ErsatzTV.Core.Metadata
         public bool FileExists(string path) => File.Exists(path);
         public Task<byte[]> ReadAllBytes(string path) => File.ReadAllBytesAsync(path);
 
-        public Unit CopyFile(string source, string destination)
+        public async Task<Either<BaseError, Unit>> CopyFile(string source, string destination)
         {
-            string directory = Path.GetDirectoryName(destination) ?? string.Empty;
-            if (!Directory.Exists(directory))
+            try
             {
-                Directory.CreateDirectory(directory);
+                string directory = Path.GetDirectoryName(destination) ?? string.Empty;
+                if (!Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                await using FileStream sourceStream = File.OpenRead(source);
+                await using FileStream destinationStream = File.Create(destination);
+                await sourceStream.CopyToAsync(destinationStream);
+
+                return Unit.Default;
             }
-
-            File.Copy(source, destination, true);
-
-            return Unit.Default;
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
         }
     }
 }
