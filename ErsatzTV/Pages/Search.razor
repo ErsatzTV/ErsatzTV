@@ -187,7 +187,7 @@
 
     private string GetMoviesLink()
     {
-        var uri = "/media/movies";
+        var uri = "/media/movies/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             uri = QueryHelpers.AddQueryString(uri, "query", _query);
@@ -197,7 +197,7 @@
 
     private string GetShowsLink()
     {
-        var uri = "/media/tv/shows";
+        var uri = "/media/tv/shows/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             uri = QueryHelpers.AddQueryString(uri, "query", _query);
