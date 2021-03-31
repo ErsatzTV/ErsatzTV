@@ -42,6 +42,7 @@ namespace ErsatzTV.Core.FFmpeg
         private readonly string _ffmpegPath;
         private readonly bool _saveReports;
         private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
+        private bool _isConcat;
 
         public FFmpegProcessBuilder(string ffmpegPath, bool saveReports)
         {
@@ -186,6 +187,8 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithConcat(string concatPlaylist)
         {
+            _isConcat = true;
+
             var arguments = new List<string>
             {
                 "-f", "concat",
@@ -193,8 +196,6 @@ namespace ErsatzTV.Core.FFmpeg
                 "-protocol_whitelist", "file,http,tcp,https,tcp,tls",
                 "-probesize", "32",
                 "-i", concatPlaylist,
-                "-map", "0:v",
-                "-map", "0:a",
                 "-c", "copy",
                 "-muxdelay", "0",
                 "-muxpreload", "0"
@@ -373,7 +374,9 @@ namespace ErsatzTV.Core.FFmpeg
 
             if (_saveReports)
             {
-                string fileName = Path.Combine(FileSystemLayout.FFmpegReportsFolder, "%p-%t.log");
+                string fileName = _isConcat
+                    ? Path.Combine(FileSystemLayout.FFmpegReportsFolder, "ffmpeg-%t-concat.log")
+                    : Path.Combine(FileSystemLayout.FFmpegReportsFolder, "ffmpeg-%t-transcode.log");
                 startInfo.EnvironmentVariables.Add("FFREPORT", $"file={fileName}:level=32");
             }
 

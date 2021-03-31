@@ -124,11 +124,11 @@ namespace ErsatzTV.Core.FFmpeg
             return builder.WithPipe().Build();
         }
 
-        public Process ConcatChannel(string ffmpegPath, Channel channel, string scheme, string host)
+        public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
         {
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
 
-            return new FFmpegProcessBuilder(ffmpegPath, false)
+            return new FFmpegProcessBuilder(ffmpegPath, saveReports)
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)

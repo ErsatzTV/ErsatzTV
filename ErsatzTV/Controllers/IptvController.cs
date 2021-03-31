@@ -44,6 +44,9 @@ namespace ErsatzTV.Controllers
                         process =>
                         {
                             _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
+                            // _logger.LogDebug(
+                            //     "ffmpeg concat arguments {FFmpegArguments}",
+                            //     string.Join(" ", process.StartInfo.ArgumentList));
                             process.Start();
                             return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
                         },
