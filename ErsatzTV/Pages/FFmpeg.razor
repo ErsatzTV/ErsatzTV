@@ -74,17 +74,17 @@
                 @(context.Transcode ? "Yes" : "No")
             </MudTd>
             <MudTd DataLabel="Resolution">
-                <MudText Color="@(context.Transcode && context.NormalizeResolution ? Color.Tertiary : Color.Inherit)">
+                <MudText Color="@(context.Transcode && context.NormalizeVideo ? Color.Tertiary : Color.Inherit)">
                     @context.Resolution.Name
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Video Codec">
-                <MudText Color="@(context.Transcode && context.NormalizeVideoCodec ? Color.Tertiary : Color.Inherit)">
+                <MudText Color="@(context.Transcode && context.NormalizeVideo ? Color.Tertiary : Color.Inherit)">
                     @context.VideoCodec
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Audio Codec">
-                <MudText Color="@(context.Transcode && context.NormalizeAudioCodec ? Color.Tertiary : Color.Inherit)">
+                <MudText Color="@(context.Transcode && context.NormalizeAudio ? Color.Tertiary : Color.Inherit)">
                     @context.AudioCodec
                 </MudText>
             </MudTd>

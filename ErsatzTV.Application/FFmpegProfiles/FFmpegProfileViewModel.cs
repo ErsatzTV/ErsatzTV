@@ -10,17 +10,16 @@ namespace ErsatzTV.Application.FFmpegProfiles
         bool Transcode,
         HardwareAccelerationKind HardwareAcceleration,
         ResolutionViewModel Resolution,
-        bool NormalizeResolution,
+        bool NormalizeVideo,
         string VideoCodec,
-        bool NormalizeVideoCodec,
         int VideoBitrate,
         int VideoBufferSize,
         string AudioCodec,
-        bool NormalizeAudioCodec,
         int AudioBitrate,
         int AudioBufferSize,
         int AudioVolume,
         int AudioChannels,
         int AudioSampleRate,
-        bool NormalizeAudio);
+        bool NormalizeAudio,
+        string FrameRate);
 }

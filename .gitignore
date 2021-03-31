@@ -40,3 +40,6 @@ msbuild.wrn
 core
 
 scripts/generate-api-sdk/swagger.json
+
+docker-compose.override.yml
+
