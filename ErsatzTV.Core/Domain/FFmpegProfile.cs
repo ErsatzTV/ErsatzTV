@@ -15,7 +15,6 @@
         public int VideoBufferSize { get; set; }
         public string FrameRate { get; set; }
         public string AudioCodec { get; set; }
-        public bool NormalizeAudioCodec { get; set; }
         public int AudioBitrate { get; set; }
         public int AudioBufferSize { get; set; }
         public int AudioVolume { get; set; }
@@ -42,7 +41,6 @@
                 AudioSampleRate = 48,
                 NormalizeVideo = true,
                 FrameRate = "24",
-                NormalizeAudioCodec = true,
                 NormalizeAudio = true
             };
     }

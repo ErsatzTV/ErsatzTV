@@ -585,7 +585,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
+                    NormalizeAudio = true,
                     AudioCodec = "aac"
                 };
 
@@ -608,7 +608,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = false,
+                    NormalizeAudio = false,
                     AudioCodec = "aac"
                 };
 
@@ -631,7 +631,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
+                    NormalizeAudio = true,
                     AudioCodec = "aac"
                 };
 
@@ -654,7 +654,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
+                    NormalizeAudio = true,
                     AudioCodec = "aac"
                 };
 
@@ -677,7 +677,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
+                    NormalizeAudio = true,
                     AudioBitrate = 2424
                 };
 
@@ -700,7 +700,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
+                    NormalizeAudio = true,
                     AudioBufferSize = 2424
                 };
 
@@ -723,7 +723,6 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
                     NormalizeAudio = true,
                     AudioCodec = "ac3",
                     AudioChannels = 6
@@ -748,7 +747,6 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
                     NormalizeAudio = true,
                     AudioCodec = "ac3",
                     AudioSampleRate = 48
@@ -773,7 +771,6 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
                     NormalizeAudio = true,
                     AudioChannels = 6
                 };
@@ -797,7 +794,6 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
                     NormalizeAudio = true,
                     AudioSampleRate = 48
                 };

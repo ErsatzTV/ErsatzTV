@@ -85,9 +85,6 @@
                                 <MudText Typo="Typo.h6">Normalization</MudText>
                                 <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Video" @bind-Checked="@_model.NormalizeVideo" For="@(() => _model.NormalizeVideo)"/>
                                 <MudElement HtmlTag="div" Class="mt-3">
-                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Audio Codec" @bind-Checked="@_model.NormalizeAudioCodec" For="@(() => _model.NormalizeAudioCodec)"/>
-                                </MudElement>
-                                <MudElement HtmlTag="div" Class="mt-3">
                                     <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Audio" @bind-Checked="@_model.NormalizeAudio" For="@(() => _model.NormalizeAudio)"/>
                                 </MudElement>
                             </MudItem>

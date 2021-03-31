@@ -22,7 +22,6 @@ namespace ErsatzTV.ViewModels
             Id = viewModel.Id;
             Name = viewModel.Name;
             NormalizeAudio = viewModel.NormalizeAudio;
-            NormalizeAudioCodec = viewModel.NormalizeAudioCodec;
             NormalizeVideo = viewModel.NormalizeVideo;
             Resolution = viewModel.Resolution;
             ThreadCount = viewModel.ThreadCount;
@@ -43,7 +42,6 @@ namespace ErsatzTV.ViewModels
         public int Id { get; set; }
         public string Name { get; set; }
         public bool NormalizeAudio { get; set; }
-        public bool NormalizeAudioCodec { get; set; }
         public bool NormalizeVideo { get; set; }
         public ResolutionViewModel Resolution { get; set; }
         public int ThreadCount { get; set; }
@@ -66,7 +64,6 @@ namespace ErsatzTV.ViewModels
                 VideoBitrate,
                 VideoBufferSize,
                 AudioCodec,
-                NormalizeAudioCodec,
                 AudioBitrate,
                 AudioBufferSize,
                 AudioVolume,
@@ -89,7 +86,6 @@ namespace ErsatzTV.ViewModels
                 VideoBitrate,
                 VideoBufferSize,
                 AudioCodec,
-                NormalizeAudioCodec,
                 AudioBitrate,
                 AudioBufferSize,
                 AudioVolume,

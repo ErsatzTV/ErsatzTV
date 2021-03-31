@@ -48,7 +48,6 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     VideoBitrate = request.VideoBitrate,
                     VideoBufferSize = request.VideoBufferSize,
                     AudioCodec = request.AudioCodec,
-                    NormalizeAudioCodec = request.NormalizeAudioCodec,
                     AudioBitrate = request.AudioBitrate,
                     AudioBufferSize = request.AudioBufferSize,
                     AudioVolume = request.AudioVolume,
