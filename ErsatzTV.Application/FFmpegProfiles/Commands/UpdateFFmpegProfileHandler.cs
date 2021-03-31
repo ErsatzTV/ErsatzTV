@@ -37,9 +37,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.Transcode = update.Transcode;
             p.HardwareAcceleration = update.HardwareAcceleration;
             p.ResolutionId = update.ResolutionId;
-            p.NormalizeResolution = update.NormalizeResolution;
+            p.NormalizeVideo = update.NormalizeVideo;
             p.VideoCodec = update.VideoCodec;
-            p.NormalizeVideoCodec = update.NormalizeVideoCodec;
             p.VideoBitrate = update.VideoBitrate;
             p.VideoBufferSize = update.VideoBufferSize;
             p.AudioCodec = update.AudioCodec;
@@ -50,6 +49,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.AudioChannels = update.AudioChannels;
             p.AudioSampleRate = update.AudioSampleRate;
             p.NormalizeAudio = update.NormalizeAudio;
+            p.FrameRate = update.FrameRate;
             await _ffmpegProfileRepository.Update(p);
             return ProjectToViewModel(p);
         }

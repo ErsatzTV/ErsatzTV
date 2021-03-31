@@ -81,9 +81,14 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(version);
-                    if (ffmpegProfile.NormalizeResolution && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
+                    if (ffmpegProfile.NormalizeVideo && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
                     {
                         result.PadToDesiredResolution = true;
+                    }
+
+                    if (ffmpegProfile.NormalizeVideo)
+                    {
+                        result.FrameRate = Optional(ffmpegProfile.FrameRate);
                     }
 
                     if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
@@ -141,7 +146,7 @@ namespace ErsatzTV.Core.FFmpeg
             };
 
         private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
-            ffmpegProfile.NormalizeResolution &&
+            ffmpegProfile.NormalizeVideo &&
             IsIncorrectSize(ffmpegProfile.Resolution, version) ||
             IsTooLarge(ffmpegProfile.Resolution, version) ||
             IsOddSize(version);
@@ -159,7 +164,7 @@ namespace ErsatzTV.Core.FFmpeg
             version.Height % 2 == 1 || version.Width % 2 == 1;
 
         private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaStream videoStream) =>
-            ffmpegProfile.NormalizeVideoCodec && ffmpegProfile.VideoCodec != videoStream.Codec;
+            ffmpegProfile.NormalizeVideo && ffmpegProfile.VideoCodec != videoStream.Codec;
 
         private static bool NeedToNormalizeAudioCodec(FFmpegProfile ffmpegProfile, MediaStream audioStream) =>
             ffmpegProfile.NormalizeAudioCodec && ffmpegProfile.AudioCodec != audioStream.Codec;

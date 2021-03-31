@@ -43,9 +43,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     Transcode = request.Transcode,
                     HardwareAcceleration = request.HardwareAcceleration,
                     ResolutionId = resolutionId,
-                    NormalizeResolution = request.NormalizeResolution,
+                    NormalizeVideo = request.NormalizeVideo,
                     VideoCodec = request.VideoCodec,
-                    NormalizeVideoCodec = request.NormalizeVideoCodec,
                     VideoBitrate = request.VideoBitrate,
                     VideoBufferSize = request.VideoBufferSize,
                     AudioCodec = request.AudioCodec,
@@ -55,7 +54,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     AudioVolume = request.AudioVolume,
                     AudioChannels = request.AudioChannels,
                     AudioSampleRate = request.AudioSampleRate,
-                    NormalizeAudio = request.NormalizeAudio
+                    NormalizeAudio = request.NormalizeAudio,
+                    FrameRate = request.FrameRate
                 });
 
         private Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>

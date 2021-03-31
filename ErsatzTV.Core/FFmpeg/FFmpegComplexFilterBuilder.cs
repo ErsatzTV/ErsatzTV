@@ -13,6 +13,7 @@ namespace ErsatzTV.Core.FFmpeg
     {
         private Option<TimeSpan> _audioDuration = None;
         private bool _deinterlace;
+        private Option<string> _frameRate = None;
         private Option<HardwareAccelerationKind> _hardwareAccelerationKind = None;
         private string _inputCodec;
         private Option<IDisplaySize> _padToSize = None;
@@ -51,6 +52,12 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegComplexFilterBuilder WithInputCodec(string codec)
         {
             _inputCodec = codec;
+            return this;
+        }
+
+        public FFmpegComplexFilterBuilder WithFrameRate(Option<string> frameRate)
+        {
+            _frameRate = frameRate;
             return this;
         }
 
@@ -103,6 +110,8 @@ namespace ErsatzTV.Core.FFmpeg
                     filterQueue.Add(filter);
                 }
             }
+
+            _frameRate.IfSome(frameRate => filterQueue.Add($"fps=fps={frameRate}"));
 
             _scaleToSize.IfSome(
                 size =>

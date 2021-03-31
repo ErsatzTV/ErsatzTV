@@ -13,9 +13,8 @@ namespace ErsatzTV.Application.FFmpegProfiles
                 profile.Transcode,
                 profile.HardwareAcceleration,
                 Project(profile.Resolution),
-                profile.NormalizeResolution,
+                profile.NormalizeVideo,
                 profile.VideoCodec,
-                profile.NormalizeVideoCodec,
                 profile.VideoBitrate,
                 profile.VideoBufferSize,
                 profile.AudioCodec,
@@ -25,7 +24,8 @@ namespace ErsatzTV.Application.FFmpegProfiles
                 profile.AudioVolume,
                 profile.AudioChannels,
                 profile.AudioSampleRate,
-                profile.NormalizeAudio);
+                profile.NormalizeAudio,
+                profile.FrameRate);
 
         private static ResolutionViewModel Project(Resolution resolution) =>
             new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);

@@ -9,11 +9,11 @@
         public HardwareAccelerationKind HardwareAcceleration { get; set; }
         public int ResolutionId { get; set; }
         public Resolution Resolution { get; set; }
-        public bool NormalizeResolution { get; set; }
         public string VideoCodec { get; set; }
-        public bool NormalizeVideoCodec { get; set; }
+        public bool NormalizeVideo { get; set; }
         public int VideoBitrate { get; set; }
         public int VideoBufferSize { get; set; }
+        public string FrameRate { get; set; }
         public string AudioCodec { get; set; }
         public bool NormalizeAudioCodec { get; set; }
         public int AudioBitrate { get; set; }
@@ -40,8 +40,8 @@
                 AudioVolume = 100,
                 AudioChannels = 2,
                 AudioSampleRate = 48,
-                NormalizeResolution = true,
-                NormalizeVideoCodec = true,
+                NormalizeVideo = true,
+                FrameRate = "24",
                 NormalizeAudioCodec = true,
                 NormalizeAudio = true
             };

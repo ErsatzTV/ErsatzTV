@@ -48,7 +48,8 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
-                .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec);
+                .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec)
+                .WithFrameRate(playbackSettings.FrameRate);
 
             playbackSettings.ScaledSize.Match(
                 scaledSize =>

@@ -23,8 +23,7 @@ namespace ErsatzTV.ViewModels
             Name = viewModel.Name;
             NormalizeAudio = viewModel.NormalizeAudio;
             NormalizeAudioCodec = viewModel.NormalizeAudioCodec;
-            NormalizeResolution = viewModel.NormalizeResolution;
-            NormalizeVideoCodec = viewModel.NormalizeVideoCodec;
+            NormalizeVideo = viewModel.NormalizeVideo;
             Resolution = viewModel.Resolution;
             ThreadCount = viewModel.ThreadCount;
             Transcode = viewModel.Transcode;
@@ -32,6 +31,7 @@ namespace ErsatzTV.ViewModels
             VideoBitrate = viewModel.VideoBitrate;
             VideoBufferSize = viewModel.VideoBufferSize;
             VideoCodec = viewModel.VideoCodec;
+            FrameRate = viewModel.FrameRate;
         }
 
         public int AudioBitrate { get; set; }
@@ -44,8 +44,7 @@ namespace ErsatzTV.ViewModels
         public string Name { get; set; }
         public bool NormalizeAudio { get; set; }
         public bool NormalizeAudioCodec { get; set; }
-        public bool NormalizeResolution { get; set; }
-        public bool NormalizeVideoCodec { get; set; }
+        public bool NormalizeVideo { get; set; }
         public ResolutionViewModel Resolution { get; set; }
         public int ThreadCount { get; set; }
         public bool Transcode { get; set; }
@@ -53,6 +52,7 @@ namespace ErsatzTV.ViewModels
         public int VideoBitrate { get; set; }
         public int VideoBufferSize { get; set; }
         public string VideoCodec { get; set; }
+        public string FrameRate { get; set; }
 
         public CreateFFmpegProfile ToCreate() =>
             new(
@@ -61,9 +61,8 @@ namespace ErsatzTV.ViewModels
                 Transcode,
                 HardwareAcceleration,
                 Resolution.Id,
-                NormalizeResolution,
+                NormalizeVideo,
                 VideoCodec,
-                NormalizeVideoCodec,
                 VideoBitrate,
                 VideoBufferSize,
                 AudioCodec,
@@ -73,7 +72,8 @@ namespace ErsatzTV.ViewModels
                 AudioVolume,
                 AudioChannels,
                 AudioSampleRate,
-                NormalizeAudio
+                NormalizeAudio,
+                FrameRate
             );
 
         public UpdateFFmpegProfile ToUpdate() =>
@@ -84,9 +84,8 @@ namespace ErsatzTV.ViewModels
                 Transcode,
                 HardwareAcceleration,
                 Resolution.Id,
-                NormalizeResolution,
+                NormalizeVideo,
                 VideoCodec,
-                NormalizeVideoCodec,
                 VideoBitrate,
                 VideoBufferSize,
                 AudioCodec,
@@ -96,7 +95,8 @@ namespace ErsatzTV.ViewModels
                 AudioVolume,
                 AudioChannels,
                 AudioSampleRate,
-                NormalizeAudio
+                NormalizeAudio,
+                FrameRate
             );
     }
 }
