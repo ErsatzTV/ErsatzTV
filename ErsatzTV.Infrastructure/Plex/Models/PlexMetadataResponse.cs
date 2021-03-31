@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ErsatzTV.Infrastructure.Plex.Models
 {
@@ -12,8 +13,8 @@ namespace ErsatzTV.Infrastructure.Plex.Models
         public string Thumb { get; set; }
         public string Art { get; set; }
         public string OriginallyAvailableAt { get; set; }
-        public int AddedAt { get; set; }
-        public int UpdatedAt { get; set; }
+        public long AddedAt { get; set; }
+        public long UpdatedAt { get; set; }
         public int Index { get; set; }
         public string Studio { get; set; }
         public List<PlexMediaResponse> Media { get; set; }
