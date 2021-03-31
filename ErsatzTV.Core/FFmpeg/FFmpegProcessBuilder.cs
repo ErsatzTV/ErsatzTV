@@ -330,6 +330,16 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithVideoTrackTimeScale(Option<int> videoTrackTimeScale)
+        {
+            videoTrackTimeScale.IfSome(timeScale =>
+            {
+                _arguments.Add("-video_track_timescale");
+                _arguments.Add($"{timeScale}");
+            });
+            return this;
+        }
+
         public FFmpegProcessBuilder WithDeinterlace(bool deinterlace)
         {
             _complexFilterBuilder = _complexFilterBuilder.WithDeinterlace(deinterlace);

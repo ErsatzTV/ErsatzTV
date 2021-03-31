@@ -91,6 +91,8 @@ namespace ErsatzTV.Core.FFmpeg
                         result.FrameRate = string.IsNullOrWhiteSpace(ffmpegProfile.FrameRate)
                             ? None
                             : Some(ffmpegProfile.FrameRate);
+
+                        result.VideoTrackTimeScale = 90000;
                     }
 
                     if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
