@@ -380,6 +380,7 @@ namespace ErsatzTV.Core.FFmpeg
                 startInfo.EnvironmentVariables.Add("FFREPORT", $"file={fileName}:level=32");
             }
 
+            startInfo.ArgumentList.Add("-nostdin");
             foreach (string argument in _arguments)
             {
                 startInfo.ArgumentList.Add(argument);
