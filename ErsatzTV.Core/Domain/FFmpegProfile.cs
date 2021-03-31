@@ -27,7 +27,7 @@
             new()
             {
                 Name = name,
-                ThreadCount = 4,
+                ThreadCount = 0,
                 Transcode = true,
                 ResolutionId = resolution.Id,
                 Resolution = resolution,
