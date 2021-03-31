@@ -28,7 +28,7 @@ namespace ErsatzTV.CommandLine.Commands
         public string Name { get; set; }
 
         [CommandOption("thread-count", Description = "The number of threads")]
-        public int ThreadCount { get; set; } = 4;
+        public int ThreadCount { get; set; } = 0;
 
         [CommandOption("transcode", Description = "Whether to transcode all media")]
         public bool Transcode { get; set; } = true;

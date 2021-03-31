@@ -14,7 +14,7 @@ namespace ErsatzTV.Validators
         public FFmpegProfileEditViewModelValidator()
         {
             RuleFor(x => x.Name).NotEmpty();
-            RuleFor(x => x.ThreadCount).GreaterThan(0);
+            RuleFor(x => x.ThreadCount).GreaterThanOrEqualTo(0);
 
             When(
                 x => x.Transcode,

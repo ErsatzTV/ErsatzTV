@@ -69,7 +69,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 .Bind(_ => updateFFmpegProfile.NotLongerThan(50)(x => x.Name));
 
         private Validation<BaseError, int> ValidateThreadCount(UpdateFFmpegProfile updateFFmpegProfile) =>
-            updateFFmpegProfile.AtLeast(1)(p => p.ThreadCount);
+            updateFFmpegProfile.AtLeast(0)(p => p.ThreadCount);
 
         private async Task<Validation<BaseError, int>> ResolutionMustExist(UpdateFFmpegProfile updateFFmpegProfile) =>
             (await _resolutionRepository.Get(updateFFmpegProfile.ResolutionId))
