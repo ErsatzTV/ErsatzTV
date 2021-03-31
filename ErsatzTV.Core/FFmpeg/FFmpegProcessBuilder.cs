@@ -229,7 +229,7 @@ namespace ErsatzTV.Core.FFmpeg
             const string X = "x=(w-text_w)/2";
             const string Y = "y=(h-text_h)/3*2";
 
-            string fontSize = text.Length > 60 ? "fontsize=40" : "fontsize=60";
+            string fontSize = text.Length > 80 ? "fontsize=30" : text.Length > 60 ? "fontsize=40" : "fontsize=60";
 
             return WithFilterComplex(
                 $"[0:0]scale={desiredResolution.Width}:{desiredResolution.Height},drawtext={FONT_FILE}:{fontSize}:{FONT_COLOR}:{X}:{Y}:text='{text}'[v]",
@@ -321,6 +321,12 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegProcessBuilder WithAlignedAudio(Option<TimeSpan> audioDuration)
         {
             _complexFilterBuilder = _complexFilterBuilder.WithAlignedAudio(audioDuration);
+            return this;
+        }
+
+        public FFmpegProcessBuilder WithFrameRate(Option<string> frameRate)
+        {
+            _complexFilterBuilder = _complexFilterBuilder.WithFrameRate(frameRate);
             return this;
         }
 

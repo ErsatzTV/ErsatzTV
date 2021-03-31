@@ -235,7 +235,7 @@ namespace ErsatzTV.Core.Scheduling
                                     peekMediaItem =>
                                     {
                                         customGroup = true;
-                                        
+
                                         MediaVersion peekVersion = peekMediaItem switch
                                         {
                                             Movie m => m.MediaVersions.Head(),
