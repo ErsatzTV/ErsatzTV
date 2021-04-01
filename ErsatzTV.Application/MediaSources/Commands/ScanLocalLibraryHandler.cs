@@ -23,6 +23,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<ScanLocalLibraryHandler> _logger;
         private readonly IMovieFolderScanner _movieFolderScanner;
+        private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
         private readonly ITelevisionFolderScanner _televisionFolderScanner;
 
         public ScanLocalLibraryHandler(
@@ -30,6 +31,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             IConfigElementRepository configElementRepository,
             IMovieFolderScanner movieFolderScanner,
             ITelevisionFolderScanner televisionFolderScanner,
+            IMusicVideoFolderScanner musicVideoFolderScanner,
             IEntityLocker entityLocker,
             ILogger<ScanLocalLibraryHandler> logger)
         {
@@ -37,6 +39,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             _configElementRepository = configElementRepository;
             _movieFolderScanner = movieFolderScanner;
             _televisionFolderScanner = televisionFolderScanner;
+            _musicVideoFolderScanner = musicVideoFolderScanner;
             _entityLocker = entityLocker;
             _logger = logger;
         }
@@ -74,6 +77,9 @@ namespace ErsatzTV.Application.MediaSources.Commands
                             break;
                         case LibraryMediaKind.Shows:
                             await _televisionFolderScanner.ScanFolder(libraryPath, ffprobePath, lastScan);
+                            break;
+                        case LibraryMediaKind.MusicVideos:
+                            await _musicVideoFolderScanner.ScanFolder(libraryPath, ffprobePath, lastScan);
                             break;
                     }
                 }
