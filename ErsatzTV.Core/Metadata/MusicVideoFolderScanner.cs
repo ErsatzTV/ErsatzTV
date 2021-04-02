@@ -137,7 +137,8 @@ namespace ErsatzTV.Core.Metadata
             return await maybeMetadata.Match(
                 async metadata =>
                 {
-                    Option<MusicVideo> maybeMusicVideo = await _musicVideoRepository.GetByMetadata(libraryPath, metadata);
+                    Option<MusicVideo> maybeMusicVideo =
+                        await _musicVideoRepository.GetByMetadata(libraryPath, metadata);
                     return await maybeMusicVideo.Match(
                         musicVideo =>
                             Right<BaseError, MediaItemScanResult<MusicVideo>>(
@@ -198,10 +199,10 @@ namespace ErsatzTV.Core.Metadata
             {
                 MusicVideo musicVideo = result.Item;
                 await LocateThumbnail(musicVideo).IfSomeAsync(
-                    async posterFile =>
+                    async thumbnailFile =>
                     {
                         MusicVideoMetadata metadata = musicVideo.MusicVideoMetadata.Head();
-                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail);
+                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail);
                     });
 
                 return result;

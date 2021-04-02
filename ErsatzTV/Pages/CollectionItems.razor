@@ -169,7 +169,7 @@
             }
         </MudContainer>
     }
-    
+
     @if (_data.MusicVideoCards.Any())
     {
         <MudText GutterBottom="true"
@@ -242,15 +242,12 @@
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        List<MediaCardViewModel> GetSortedItems()
-        {
-            return _data.MovieCards.OrderBy(m => m.SortTitle)
-                .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
-                .Append(_data.SeasonCards.OrderBy(s => s.SortTitle))
-                .Append(_data.EpisodeCards.OrderBy(ep => ep.Aired))
-                .Append(_data.MusicVideoCards.OrderBy(mv => mv.SortTitle))
-                .ToList();
-        }
+        List<MediaCardViewModel> GetSortedItems() => _data.MovieCards.OrderBy(m => m.SortTitle)
+            .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
+            .Append(_data.SeasonCards.OrderBy(s => s.SortTitle))
+            .Append(_data.EpisodeCards.OrderBy(ep => ep.Aired))
+            .Append(_data.MusicVideoCards.OrderBy(mv => mv.SortTitle))
+            .ToList();
 
         SelectClicked(GetSortedItems, card, e);
     }
@@ -267,7 +264,7 @@
             await RemoveItemsWithConfirmation("movie", $"{movie.Title} ({movie.Subtitle})", request);
         }
     }
-    
+
     private async Task RemoveMusicVideoFromCollection(MediaCardViewModel vm)
     {
         if (vm is MusicVideoCardViewModel musicVideo)

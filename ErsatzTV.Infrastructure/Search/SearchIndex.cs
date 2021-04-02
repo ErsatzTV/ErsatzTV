@@ -345,7 +345,7 @@ namespace ErsatzTV.Infrastructure.Search
                 }
             }
         }
-        
+
         private void UpdateMusicVideo(MusicVideo musicVideo, IndexWriter writer)
         {
             Option<MusicVideoMetadata> maybeMetadata = musicVideo.MusicVideoMetadata.HeadOrNone();

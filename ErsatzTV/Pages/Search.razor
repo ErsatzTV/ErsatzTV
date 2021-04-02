@@ -117,7 +117,7 @@
             }
         </MudContainer>
     }
-    
+
     @if (_musicVideos.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
@@ -168,13 +168,10 @@
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        List<MediaCardViewModel> GetSortedItems()
-        {
-            return _movies.Cards.OrderBy(m => m.SortTitle)
-                .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
-                .Append(_musicVideos.Cards.OrderBy(s => s.SortTitle))
-                .ToList();
-        }
+        List<MediaCardViewModel> GetSortedItems() => _movies.Cards.OrderBy(m => m.SortTitle)
+            .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
+            .Append(_musicVideos.Cards.OrderBy(s => s.SortTitle))
+            .ToList();
 
         SelectClicked(GetSortedItems, card, e);
     }
@@ -222,7 +219,7 @@
                     Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
             }
         }
-        
+
         if (card is MusicVideoCardViewModel musicVideo)
         {
             var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };
@@ -264,7 +261,7 @@
         }
         return uri;
     }
-    
+
     private string GetMusicVideosLink()
     {
         var uri = "/media/music/videos/page/1";

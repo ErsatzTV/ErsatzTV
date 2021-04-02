@@ -60,6 +60,7 @@
         {
             <MediaCard Data="@card"
                        Link=""
+                       ArtworkKind="ArtworkKind.Thumbnail"
                        AddToCollectionClicked="@AddToCollection"
                        SelectClicked="@(e => SelectClicked(card, e))"
                        IsSelected="@IsSelected(card)"
@@ -142,7 +143,7 @@
         {
             var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        
+
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)

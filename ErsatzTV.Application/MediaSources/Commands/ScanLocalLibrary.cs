@@ -16,7 +16,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
         public bool ForceScan => false;
         public bool Rescan => false;
     }
-    
+
     public record ForceScanLocalLibrary(int LibraryId) : IScanLocalLibrary
     {
         public bool ForceScan => true;
@@ -26,6 +26,6 @@ namespace ErsatzTV.Application.MediaSources.Commands
     public record ForceRescanLocalLibrary(int LibraryId) : IScanLocalLibrary
     {
         public bool ForceScan => true;
-        public bool Rescan => false;
+        public bool Rescan => true;
     }
 }
