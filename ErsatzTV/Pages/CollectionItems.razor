@@ -52,6 +52,10 @@
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#episodes")">@_data.EpisodeCards.Count Episodes</MudLink>
             }
+            @if (_data.MusicVideoCards.Any())
+            {
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")">@_data.MusicVideoCards.Count Music Videos</MudLink>
+            }
             @if (SupportsCustomOrdering())
             {
                 <div style="margin-left: auto">
@@ -165,6 +169,29 @@
             }
         </MudContainer>
     }
+
+    @if (_data.MusicVideoCards.Any())
+    {
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "music_videos" } })">
+            Music Videos
+        </MudText>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (MusicVideoCardViewModel card in _data.MusicVideoCards.OrderBy(e => e.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           DeleteClicked="@RemoveMusicVideoFromCollection"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 @code {
@@ -215,14 +242,12 @@
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        List<MediaCardViewModel> GetSortedItems()
-        {
-            return _data.MovieCards.OrderBy(m => m.SortTitle)
-                .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
-                .Append(_data.SeasonCards.OrderBy(s => s.SortTitle))
-                .Append(_data.EpisodeCards.OrderBy(ep => ep.Aired))
-                .ToList();
-        }
+        List<MediaCardViewModel> GetSortedItems() => _data.MovieCards.OrderBy(m => m.SortTitle)
+            .Append<MediaCardViewModel>(_data.ShowCards.OrderBy(s => s.SortTitle))
+            .Append(_data.SeasonCards.OrderBy(s => s.SortTitle))
+            .Append(_data.EpisodeCards.OrderBy(ep => ep.Aired))
+            .Append(_data.MusicVideoCards.OrderBy(mv => mv.SortTitle))
+            .ToList();
 
         SelectClicked(GetSortedItems, card, e);
     }
@@ -237,6 +262,19 @@
             };
 
             await RemoveItemsWithConfirmation("movie", $"{movie.Title} ({movie.Subtitle})", request);
+        }
+    }
+
+    private async Task RemoveMusicVideoFromCollection(MediaCardViewModel vm)
+    {
+        if (vm is MusicVideoCardViewModel musicVideo)
+        {
+            var request = new RemoveItemsFromCollection(Id)
+            {
+                MediaItemIds = new List<int> { musicVideo.MusicVideoId }
+            };
+
+            await RemoveItemsWithConfirmation("music video", $"{musicVideo.Title} ({musicVideo.Subtitle})", request);
         }
     }
 

@@ -332,11 +332,12 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithVideoTrackTimeScale(Option<int> videoTrackTimeScale)
         {
-            videoTrackTimeScale.IfSome(timeScale =>
-            {
-                _arguments.Add("-video_track_timescale");
-                _arguments.Add($"{timeScale}");
-            });
+            videoTrackTimeScale.IfSome(
+                timeScale =>
+                {
+                    _arguments.Add("-video_track_timescale");
+                    _arguments.Add($"{timeScale}");
+                });
             return this;
         }
 

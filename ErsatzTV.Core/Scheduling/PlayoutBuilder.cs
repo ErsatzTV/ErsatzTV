@@ -99,6 +99,8 @@ namespace ErsatzTV.Core.Scheduling
                                    TimeSpan.Zero,
                         Episode e => e.MediaVersions.HeadOrNone().Map(mv => mv.Duration).IfNone(TimeSpan.Zero) ==
                                      TimeSpan.Zero,
+                        MusicVideo mv => mv.MediaVersions.HeadOrNone().Map(v => v.Duration).IfNone(TimeSpan.Zero) ==
+                                         TimeSpan.Zero,
                         _ => true
                     })).Map(c => c.Key);
             if (zeroDurationCollection.IsSome)
@@ -180,6 +182,7 @@ namespace ErsatzTV.Core.Scheduling
                         {
                             Movie m => m.MediaVersions.Head(),
                             Episode e => e.MediaVersions.Head(),
+                            MusicVideo mv => mv.MediaVersions.Head(),
                             _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                         };
 
@@ -240,6 +243,7 @@ namespace ErsatzTV.Core.Scheduling
                                         {
                                             Movie m => m.MediaVersions.Head(),
                                             Episode e => e.MediaVersions.Head(),
+                                            MusicVideo mv => mv.MediaVersions.Head(),
                                             _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                                         };
 
@@ -274,6 +278,7 @@ namespace ErsatzTV.Core.Scheduling
                                         {
                                             Movie m => m.MediaVersions.Head(),
                                             Episode e => e.MediaVersions.Head(),
+                                            MusicVideo mv => mv.MediaVersions.Head(),
                                             _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                                         };
 
@@ -479,6 +484,9 @@ namespace ErsatzTV.Core.Scheduling
                 Movie m => m.MovieMetadata.HeadOrNone().Match(
                     mm => mm.Title ?? string.Empty,
                     () => "[unknown movie]"),
+                MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
+                    mvm => $"{mvm.Artist} - {mvm.Title}",
+                    () => "[unknown music video]"),
                 _ => string.Empty
             };
 

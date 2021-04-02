@@ -198,6 +198,7 @@ namespace ErsatzTV
             services.AddScoped<ITelevisionRepository, TelevisionRepository>();
             services.AddScoped<ISearchRepository, SearchRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
+            services.AddScoped<IMusicVideoRepository, MusicVideoRepository>();
             services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddScoped<IMetadataRepository, MetadataRepository>();
             services.AddScoped<IFFmpegLocator, FFmpegLocator>();
@@ -209,6 +210,7 @@ namespace ErsatzTV
             services.AddScoped<ILocalFileSystem, LocalFileSystem>();
             services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
             services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
+            services.AddScoped<IMusicVideoFolderScanner, MusicVideoFolderScanner>();
             services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
             services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
             services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
