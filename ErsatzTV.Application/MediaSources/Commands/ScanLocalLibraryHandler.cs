@@ -16,13 +16,15 @@ using Unit = LanguageExt.Unit;
 namespace ErsatzTV.Application.MediaSources.Commands
 {
     public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>,
-        IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>
+        IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>,
+        IRequestHandler<ForceRescanLocalLibrary, Either<BaseError, string>>
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly IEntityLocker _entityLocker;
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<ScanLocalLibraryHandler> _logger;
         private readonly IMovieFolderScanner _movieFolderScanner;
+        private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
         private readonly ITelevisionFolderScanner _televisionFolderScanner;
 
         public ScanLocalLibraryHandler(
@@ -30,6 +32,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             IConfigElementRepository configElementRepository,
             IMovieFolderScanner movieFolderScanner,
             ITelevisionFolderScanner televisionFolderScanner,
+            IMusicVideoFolderScanner musicVideoFolderScanner,
             IEntityLocker entityLocker,
             ILogger<ScanLocalLibraryHandler> logger)
         {
@@ -37,9 +40,14 @@ namespace ErsatzTV.Application.MediaSources.Commands
             _configElementRepository = configElementRepository;
             _movieFolderScanner = movieFolderScanner;
             _televisionFolderScanner = televisionFolderScanner;
+            _musicVideoFolderScanner = musicVideoFolderScanner;
             _entityLocker = entityLocker;
             _logger = logger;
         }
+
+        public Task<Either<BaseError, string>> Handle(
+            ForceRescanLocalLibrary request,
+            CancellationToken cancellationToken) => Handle(request);
 
         public Task<Either<BaseError, string>> Handle(
             ForceScanLocalLibrary request,
@@ -57,7 +65,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
 
         private async Task<Unit> PerformScan(RequestParameters parameters)
         {
-            (LocalLibrary localLibrary, string ffprobePath, bool forceScan) = parameters;
+            (LocalLibrary localLibrary, string ffprobePath, bool forceScan, bool rescan) = parameters;
 
             var lastScan = new DateTimeOffset(localLibrary.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
             if (forceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
@@ -65,15 +73,20 @@ namespace ErsatzTV.Application.MediaSources.Commands
                 var sw = new Stopwatch();
                 sw.Start();
 
+                DateTimeOffset effectiveLastScan = rescan ? DateTimeOffset.MinValue : lastScan;
+
                 foreach (LibraryPath libraryPath in localLibrary.Paths)
                 {
                     switch (localLibrary.MediaKind)
                     {
                         case LibraryMediaKind.Movies:
-                            await _movieFolderScanner.ScanFolder(libraryPath, ffprobePath, lastScan);
+                            await _movieFolderScanner.ScanFolder(libraryPath, ffprobePath, effectiveLastScan);
                             break;
                         case LibraryMediaKind.Shows:
-                            await _televisionFolderScanner.ScanFolder(libraryPath, ffprobePath, lastScan);
+                            await _televisionFolderScanner.ScanFolder(libraryPath, ffprobePath, effectiveLastScan);
+                            break;
+                        case LibraryMediaKind.MusicVideos:
+                            await _musicVideoFolderScanner.ScanFolder(libraryPath, ffprobePath, effectiveLastScan);
                             break;
                     }
                 }
@@ -104,7 +117,8 @@ namespace ErsatzTV.Application.MediaSources.Commands
                 (library, ffprobePath) => new RequestParameters(
                     library,
                     ffprobePath,
-                    request.ForceScan));
+                    request.ForceScan,
+                    request.Rescan));
 
         private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(
             IScanLocalLibrary request) =>
@@ -119,6 +133,6 @@ namespace ErsatzTV.Application.MediaSources.Commands
                     ffprobePath =>
                         ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
 
-        private record RequestParameters(LocalLibrary LocalLibrary, string FFprobePath, bool ForceScan);
+        private record RequestParameters(LocalLibrary LocalLibrary, string FFprobePath, bool ForceScan, bool Rescan);
     }
 }

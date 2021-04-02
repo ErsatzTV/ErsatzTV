@@ -51,6 +51,15 @@
             {
                 <MudText Class="ml-4">0 Shows</MudText>
             }
+
+            if (_musicVideos.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")">@_musicVideos.Count Music Videos</MudLink>
+            }
+            else
+            {
+                <MudText Class="ml-4">0 Music Videos</MudText>
+            }
         }
     </div>
 </MudPaper>
@@ -108,12 +117,40 @@
             }
         </MudContainer>
     }
+
+    @if (_musicVideos.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "music_videos" } })">
+                Music Videos
+            </MudText>
+            @if (_shows.Count > 50)
+            {
+                <MudLink Href="@GetMusicVideosLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (MusicVideoCardViewModel card in _musicVideos.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           AddToCollectionClicked="@AddToCollection"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 @code {
     private string _query;
     private MovieCardResultsViewModel _movies;
     private TelevisionShowCardResultsViewModel _shows;
+    private MusicVideoCardResultsViewModel _musicVideos;
 
     protected override async Task OnInitializedAsync()
     {
@@ -125,17 +162,16 @@
 
             _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
             _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50));
+            _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50));
         }
     }
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        List<MediaCardViewModel> GetSortedItems()
-        {
-            return _movies.Cards.OrderBy(m => m.SortTitle)
-                .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
-                .ToList();
-        }
+        List<MediaCardViewModel> GetSortedItems() => _movies.Cards.OrderBy(m => m.SortTitle)
+            .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
+            .Append(_musicVideos.Cards.OrderBy(s => s.SortTitle))
+            .ToList();
 
         SelectClicked(GetSortedItems, card, e);
     }
@@ -183,6 +219,27 @@
                     Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
             }
         }
+
+        if (card is MusicVideoCardViewModel musicVideo)
+        {
+            var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding music video to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding music video to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {musicVideo.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
     }
 
     private string GetMoviesLink()
@@ -198,6 +255,16 @@
     private string GetShowsLink()
     {
         var uri = "/media/tv/shows/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        return uri;
+    }
+
+    private string GetMusicVideosLink()
+    {
+        var uri = "/media/music/videos/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             uri = QueryHelpers.AddQueryString(uri, "query", _query);

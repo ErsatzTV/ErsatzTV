@@ -3,6 +3,7 @@
     public enum LibraryMediaKind
     {
         Movies = 1,
-        Shows = 2
+        Shows = 2,
+        MusicVideos = 3
     }
 }

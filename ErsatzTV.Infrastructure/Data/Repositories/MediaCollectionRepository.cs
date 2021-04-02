@@ -104,6 +104,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Movie).MovieMetadata)
                 .Include(c => c.MediaItems)
+                .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
+                .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Show).ShowMetadata)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Season).Show)
@@ -127,6 +129,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Movie).MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(c => c.MediaItems)
+                .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Artwork)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Show).ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
@@ -196,6 +201,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             result.AddRange(await GetShowItems(collection));
             result.AddRange(await GetSeasonItems(collection));
             result.AddRange(await GetEpisodeItems(collection));
+            result.AddRange(await GetMusicVideoItems(collection));
 
             return result.Distinct().ToList();
         }
@@ -210,6 +216,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await _dbContext.Movies
                 .Include(m => m.MovieMetadata)
+                .Include(m => m.MediaVersions)
+                .Filter(m => ids.Contains(m.Id))
+                .ToListAsync();
+        }
+
+        private async Task<List<MusicVideo>> GetMusicVideoItems(Collection collection)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM CollectionItem ci
+            INNER JOIN MusicVideo m ON m.Id = ci.MediaItemId
+            WHERE ci.CollectionId = @CollectionId",
+                new { CollectionId = collection.Id });
+
+            return await _dbContext.MusicVideos
+                .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
                 .Filter(m => ids.Contains(m.Id))
                 .ToListAsync();
