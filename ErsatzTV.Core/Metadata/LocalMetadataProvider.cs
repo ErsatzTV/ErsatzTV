@@ -18,18 +18,21 @@ namespace ErsatzTV.Core.Metadata
         private static readonly XmlSerializer MovieSerializer = new(typeof(MovieNfo));
         private static readonly XmlSerializer EpisodeSerializer = new(typeof(TvShowEpisodeNfo));
         private static readonly XmlSerializer TvShowSerializer = new(typeof(TvShowNfo));
+        private static readonly XmlSerializer MusicVideoSerializer = new(typeof(MusicVideoNfo));
         private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<LocalMetadataProvider> _logger;
 
         private readonly IMetadataRepository _metadataRepository;
         private readonly IMovieRepository _movieRepository;
+        private readonly IMusicVideoRepository _musicVideoRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public LocalMetadataProvider(
             IMetadataRepository metadataRepository,
             IMovieRepository movieRepository,
             ITelevisionRepository televisionRepository,
+            IMusicVideoRepository musicVideoRepository,
             IFallbackMetadataProvider fallbackMetadataProvider,
             ILocalFileSystem localFileSystem,
             ILogger<LocalMetadataProvider> logger)
@@ -37,6 +40,7 @@ namespace ErsatzTV.Core.Metadata
             _metadataRepository = metadataRepository;
             _movieRepository = movieRepository;
             _televisionRepository = televisionRepository;
+            _musicVideoRepository = musicVideoRepository;
             _fallbackMetadataProvider = fallbackMetadataProvider;
             _localFileSystem = localFileSystem;
             _logger = logger;
@@ -65,6 +69,23 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
+        public async Task<Option<MusicVideoMetadata>> GetMetadataForMusicVideo(string filePath)
+        {
+            string nfoFileName = Path.ChangeExtension(filePath, "nfo");
+            Option<MusicVideoMetadata> maybeMetadata = None;
+            if (_localFileSystem.FileExists(nfoFileName))
+            {
+                maybeMetadata = await LoadMusicVideoMetadata(nfoFileName);
+            }
+
+            return maybeMetadata.Map(
+                metadata =>
+                {
+                    metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    return metadata;
+                });
+        }
+
         public Task<bool> RefreshSidecarMetadata(MediaItem mediaItem, string path) =>
             mediaItem switch
             {
@@ -77,6 +98,11 @@ namespace ErsatzTV.Core.Metadata
                     .Bind(
                         maybeMetadata => maybeMetadata.Match(
                             metadata => ApplyMetadataUpdate(m, metadata),
+                            () => Task.FromResult(false))),
+                MusicVideo mv => LoadMetadata(mv, path)
+                    .Bind(
+                        maybeMetadata => maybeMetadata.Match(
+                            metadata => ApplyMetadataUpdate(mv, metadata),
                             () => Task.FromResult(false))),
                 _ => Task.FromResult(false)
             };
@@ -97,6 +123,37 @@ namespace ErsatzTV.Core.Metadata
 
         public Task<bool> RefreshFallbackMetadata(Show televisionShow, string showFolder) =>
             ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder));
+
+        private async Task<Option<MusicVideoMetadata>> LoadMusicVideoMetadata(string nfoFileName)
+        {
+            try
+            {
+                await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
+                Option<MusicVideoNfo> maybeNfo = MusicVideoSerializer.Deserialize(fileStream) as MusicVideoNfo;
+                return maybeNfo.Match<Option<MusicVideoMetadata>>(
+                    nfo => new MusicVideoMetadata
+                    {
+                        MetadataKind = MetadataKind.Sidecar,
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
+                        Artist = nfo.Artist,
+                        Album = nfo.Album,
+                        Title = nfo.Title,
+                        Plot = nfo.Plot,
+                        Year = GetYear(nfo.Year, nfo.Premiered),
+                        ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
+                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
+                    },
+                    None);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex, "Failed to read music video nfo metadata from {Path}", nfoFileName);
+                return None;
+            }
+        }
 
         private async Task<bool> ApplyMetadataUpdate(Episode episode, Tuple<EpisodeMetadata, int> metadataEpisodeNumber)
         {
@@ -344,6 +401,106 @@ namespace ErsatzTV.Core.Metadata
                     return await _metadataRepository.Add(metadata);
                 });
 
+        private Task<bool> ApplyMetadataUpdate(MusicVideo musicVideo, MusicVideoMetadata metadata) =>
+            Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone().Match(
+                async existing =>
+                {
+                    var updated = false;
+
+                    existing.Artist = metadata.Artist;
+                    existing.Title = metadata.Title;
+                    existing.Year = metadata.Year;
+                    existing.Plot = metadata.Plot;
+                    existing.Album = metadata.Album;
+
+                    if (existing.DateAdded == DateTime.MinValue)
+                    {
+                        existing.DateAdded = metadata.DateAdded;
+                    }
+
+                    existing.DateUpdated = metadata.DateUpdated;
+                    existing.MetadataKind = metadata.MetadataKind;
+                    existing.OriginalTitle = metadata.OriginalTitle;
+                    existing.ReleaseDate = metadata.ReleaseDate;
+                    existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
+
+                    foreach (Genre genre in existing.Genres.Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                        .ToList())
+                    {
+                        existing.Genres.Remove(genre);
+                        if (await _metadataRepository.RemoveGenre(genre))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
+                        .ToList())
+                    {
+                        existing.Genres.Add(genre);
+                        if (await _musicVideoRepository.AddGenre(existing, genre))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Tag tag in existing.Tags.Filter(t => metadata.Tags.All(t2 => t2.Name != t.Name))
+                        .ToList())
+                    {
+                        existing.Tags.Remove(tag);
+                        if (await _metadataRepository.RemoveTag(tag))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Tag tag in metadata.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
+                        .ToList())
+                    {
+                        existing.Tags.Add(tag);
+                        if (await _musicVideoRepository.AddTag(existing, tag))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Studio studio in existing.Studios
+                        .Filter(s => metadata.Studios.All(s2 => s2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Studios.Remove(studio);
+                        if (await _metadataRepository.RemoveStudio(studio))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Studio studio in metadata.Studios
+                        .Filter(s => existing.Studios.All(s2 => s2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Studios.Add(studio);
+                        if (await _musicVideoRepository.AddStudio(existing, studio))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    return await _metadataRepository.Update(existing) || updated;
+                },
+                async () =>
+                {
+                    metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
+                    metadata.MusicVideoId = musicVideo.Id;
+                    musicVideo.MusicVideoMetadata = new List<MusicVideoMetadata> { metadata };
+
+                    return await _metadataRepository.Add(metadata);
+                });
+
         private async Task<Option<MovieMetadata>> LoadMetadata(Movie mediaItem, string nfoFileName)
         {
             if (nfoFileName == null || !File.Exists(nfoFileName))
@@ -375,6 +532,17 @@ namespace ErsatzTV.Core.Metadata
             }
 
             return await LoadTelevisionShowMetadata(nfoFileName);
+        }
+
+        private async Task<Option<MusicVideoMetadata>> LoadMetadata(MusicVideo musicVideo, string nfoFileName)
+        {
+            if (nfoFileName == null || !File.Exists(nfoFileName))
+            {
+                _logger.LogDebug("NFO file does not exist at {Path}", nfoFileName);
+                return None;
+            }
+
+            return await LoadMusicVideoMetadata(nfoFileName);
         }
 
         private async Task<Option<ShowMetadata>> LoadTelevisionShowMetadata(string nfoFileName)
@@ -588,6 +756,37 @@ namespace ErsatzTV.Core.Metadata
 
             [XmlElement("plot")]
             public string Plot { get; set; }
+        }
+
+        [XmlRoot("musicvideo")]
+        public class MusicVideoNfo
+        {
+            [XmlElement("artist")]
+            public string Artist { get; set; }
+
+            [XmlElement("title")]
+            public string Title { get; set; }
+
+            [XmlElement("album")]
+            public string Album { get; set; }
+
+            [XmlElement("plot")]
+            public string Plot { get; set; }
+
+            [XmlElement("premiered")]
+            public string Premiered { get; set; }
+
+            [XmlElement("year")]
+            public int Year { get; set; }
+
+            [XmlElement("genre")]
+            public List<string> Genres { get; set; }
+
+            [XmlElement("tag")]
+            public List<string> Tags { get; set; }
+
+            [XmlElement("studio")]
+            public List<string> Studios { get; set; }
         }
     }
 }
