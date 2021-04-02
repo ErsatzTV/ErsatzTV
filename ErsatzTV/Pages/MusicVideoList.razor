@@ -59,7 +59,7 @@
         @foreach (MusicVideoCardViewModel card in _data.Cards.Where(m => !string.IsNullOrWhiteSpace(m.Title)).OrderBy(m => m.SortTitle))
         {
             <MediaCard Data="@card"
-                       Link="@($"/media/music/videos/{card.MusicVideoId}")"
+                       Link=""
                        AddToCollectionClicked="@AddToCollection"
                        SelectClicked="@(e => SelectClicked(card, e))"
                        IsSelected="@IsSelected(card)"

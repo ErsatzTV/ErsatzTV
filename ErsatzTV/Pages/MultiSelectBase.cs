@@ -145,6 +145,7 @@ namespace ErsatzTV.Pages
                 itemIds.AddRange(_selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId));
                 itemIds.AddRange(_selectedItems.OfType<TelevisionSeasonCardViewModel>().Map(s => s.TelevisionSeasonId));
                 itemIds.AddRange(_selectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId));
+                itemIds.AddRange(_selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId));
 
                 await Mediator.Send(
                     new RemoveItemsFromCollection(collectionId)
