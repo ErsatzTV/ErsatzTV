@@ -107,7 +107,8 @@ namespace ErsatzTV.Pages
                 var request = new AddItemsToCollection(
                     collection.Id,
                     _selectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
-                    _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList());
+                    _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
+                    _selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList());
 
                 Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(

@@ -20,5 +20,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre);
         Task<bool> AddTag(MusicVideoMetadata metadata, Tag tag);
         Task<bool> AddStudio(MusicVideoMetadata metadata, Studio studio);
+        Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids);
+        Task<Option<MusicVideo>> GetMusicVideo(int musicVideoId);
     }
 }

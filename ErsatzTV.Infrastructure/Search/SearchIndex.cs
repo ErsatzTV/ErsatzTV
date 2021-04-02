@@ -29,6 +29,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         private const string IdField = "id";
         private const string TypeField = "type";
+        private const string ArtistField = "artist";
         private const string TitleField = "title";
         private const string SortTitleField = "sort_title";
         private const string GenreField = "genre";
@@ -42,6 +43,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
+        private const string MusicVideoType = "music_video";
 
         private static bool _isRebuilding;
 
@@ -93,6 +95,9 @@ namespace ErsatzTV.Infrastructure.Search
                         case Show show:
                             UpdateShow(show, writer);
                             break;
+                        case MusicVideo musicVideo:
+                            UpdateMusicVideo(musicVideo, writer);
+                            break;
                     }
                 }
             }
@@ -120,6 +125,9 @@ namespace ErsatzTV.Infrastructure.Search
                         break;
                     case Show show:
                         UpdateShow(show, writer);
+                        break;
+                    case MusicVideo musicVideo:
+                        UpdateMusicVideo(musicVideo, writer);
                         break;
                 }
             }
@@ -334,6 +342,66 @@ namespace ErsatzTV.Infrastructure.Search
                 {
                     metadata.Show = null;
                     _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
+                }
+            }
+        }
+        
+        private void UpdateMusicVideo(MusicVideo musicVideo, IndexWriter writer)
+        {
+            Option<MusicVideoMetadata> maybeMetadata = musicVideo.MusicVideoMetadata.HeadOrNone();
+            if (maybeMetadata.IsSome)
+            {
+                MusicVideoMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                try
+                {
+                    var doc = new Document
+                    {
+                        new StringField(IdField, musicVideo.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, MusicVideoType, Field.Store.NO),
+                        new TextField(ArtistField, metadata.Artist, Field.Store.NO),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                        new TextField(LibraryNameField, musicVideo.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    };
+
+                    if (metadata.ReleaseDate.HasValue)
+                    {
+                        doc.Add(
+                            new StringField(
+                                ReleaseDateField,
+                                metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                                Field.Store.NO));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                    {
+                        doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                    }
+
+                    foreach (Genre genre in metadata.Genres)
+                    {
+                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    }
+
+                    foreach (Tag tag in metadata.Tags)
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    foreach (Studio studio in metadata.Studios)
+                    {
+                        doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
+                    }
+
+                    writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
+                }
+                catch (Exception ex)
+                {
+                    metadata.MusicVideo = null;
+                    _logger.LogWarning(ex, "Error indexing music video with metadata {@Metadata}", metadata);
                 }
             }
         }

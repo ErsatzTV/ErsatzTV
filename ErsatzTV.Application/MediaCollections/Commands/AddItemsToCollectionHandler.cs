@@ -41,7 +41,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         {
             if (await _mediaCollectionRepository.AddMediaItems(
                 request.CollectionId,
-                request.MovieIds.Append(request.ShowIds).ToList()))
+                request.MovieIds.Append(request.ShowIds).Append(request.MusicVideoIds).ToList()))
             {
                 // rebuild all playouts that use this collection
                 foreach (int playoutId in await _mediaCollectionRepository

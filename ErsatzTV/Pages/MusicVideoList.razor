@@ -1,0 +1,163 @@
+﻿@page "/media/music/videos"
+@page "/media/music/videos/page/{PageNumber:int}"
+@using LanguageExt.UnsafeValueAccess
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
+@using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.Search.Queries
+@using Unit = LanguageExt.Unit
+@inherits MultiSelectBase<MusicVideoList>
+@inject NavigationManager NavigationManager
+@inject ChannelWriter<IBackgroundServiceRequest> Channel
+
+<MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
+    <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+        @if (IsSelectMode())
+        {
+            <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
+            <div style="margin-left: auto">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(_ => AddSelectionToCollection())">
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="@(_ => ClearSelection())">
+                    Clear Selection
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <MudText Style="margin-bottom: auto; margin-top: auto; width: 33%">@_query</MudText>
+            <div style="max-width: 300px; width: 33%;">
+                <MudPaper Style="align-items: center; display: flex; justify-content: center;">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                                   OnClick="@PrevPage"
+                                   Disabled="@(PageNumber <= 1)">
+                    </MudIconButton>
+                    <MudText Style="flex-grow: 1"
+                             Align="Align.Center">
+                        @Math.Min((PageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, PageNumber * PageSize) of @_data.Count
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                                   OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= _data.Count)">
+                    </MudIconButton>
+                </MudPaper>
+            </div>
+        }
+    </div>
+</MudPaper>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
+    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        @foreach (MusicVideoCardViewModel card in _data.Cards.Where(m => !string.IsNullOrWhiteSpace(m.Title)).OrderBy(m => m.SortTitle))
+        {
+            <MediaCard Data="@card"
+                       Link="@($"/media/music/videos/{card.MusicVideoId}")"
+                       AddToCollectionClicked="@AddToCollection"
+                       SelectClicked="@(e => SelectClicked(card, e))"
+                       IsSelected="@IsSelected(card)"
+                       IsSelectMode="@IsSelectMode()"/>
+        }
+    </MudContainer>
+</MudContainer>
+@if (_data.PageMap.IsSome)
+{
+    <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
+               BaseUri="/media/music/videos"
+               Query="@_query"/>
+}
+
+@code {
+    private static int PageSize => 100;
+
+    [Parameter]
+    public int PageNumber { get; set; }
+
+    private MusicVideoCardResultsViewModel _data;
+    private string _query;
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (PageNumber == 0)
+        {
+            PageNumber = 1;
+        }
+
+        string query = new Uri(NavigationManager.Uri).Query;
+        if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
+        {
+            _query = value;
+        }
+        else
+        {
+            _query = null;
+        }
+
+        return RefreshData();
+    }
+
+    protected override async Task RefreshData()
+    {
+        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:music_video" : $"type:music_video AND ({_query})";
+        _data = await Mediator.Send(new QuerySearchIndexMusicVideos(searchQuery, PageNumber, PageSize));
+    }
+
+    private void PrevPage()
+    {
+        var uri = $"/media/music/videos/page/{PageNumber - 1}";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        NavigationManager.NavigateTo(uri);
+    }
+
+    private void NextPage()
+    {
+        var uri = $"/media/music/videos/page/{PageNumber + 1}";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        NavigationManager.NavigateTo(uri);
+    }
+
+    private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
+    {
+        List<MediaCardViewModel> GetSortedItems() => _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
+
+        SelectClicked(GetSortedItems, card, e);
+    }
+
+    private async Task AddToCollection(MediaCardViewModel card)
+    {
+        if (card is MusicVideoCardViewModel musicVideo)
+        {
+            var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding music video to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding music video to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {musicVideo.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
+    }
+
+}

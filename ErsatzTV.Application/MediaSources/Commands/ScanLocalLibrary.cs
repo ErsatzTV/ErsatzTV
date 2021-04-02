@@ -8,15 +8,24 @@ namespace ErsatzTV.Application.MediaSources.Commands
     {
         int LibraryId { get; }
         bool ForceScan { get; }
+        bool Rescan { get; }
     }
 
     public record ScanLocalLibraryIfNeeded(int LibraryId) : IScanLocalLibrary
     {
         public bool ForceScan => false;
+        public bool Rescan => false;
     }
-
+    
     public record ForceScanLocalLibrary(int LibraryId) : IScanLocalLibrary
     {
         public bool ForceScan => true;
+        public bool Rescan => false;
+    }
+
+    public record ForceRescanLocalLibrary(int LibraryId) : IScanLocalLibrary
+    {
+        public bool ForceScan => true;
+        public bool Rescan => false;
     }
 }

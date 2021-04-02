@@ -149,5 +149,33 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Studio (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
                 new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public async Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.MusicVideoMetadata
+                .AsNoTracking()
+                .Filter(mvm => ids.Contains(mvm.MusicVideoId))
+                .Include(mvm => mvm.Artwork)
+                .OrderBy(mvm => mvm.SortTitle)
+                .ToListAsync();
+        }
+
+        public async Task<Option<MusicVideo>> GetMusicVideo(int musicVideoId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.MusicVideos
+                .Include(m => m.MusicVideoMetadata)
+                .ThenInclude(m => m.Artwork)
+                .Include(m => m.MusicVideoMetadata)
+                .ThenInclude(m => m.Genres)
+                .Include(m => m.MusicVideoMetadata)
+                .ThenInclude(m => m.Tags)
+                .Include(m => m.MusicVideoMetadata)
+                .ThenInclude(m => m.Studios)
+                .OrderBy(m => m.Id)
+                .SingleOrDefaultAsync(m => m.Id == musicVideoId)
+                .Map(Optional);
+        }
     }
 }

@@ -56,6 +56,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                     {
                         Movie m => m.MediaVersions.Head(),
                         Episode e => e.MediaVersions.Head(),
+                        MusicVideo mv => mv.MediaVersions.Head(),
                         _ => throw new ArgumentOutOfRangeException(nameof(playoutItemWithPath))
                     };
 
@@ -153,6 +154,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             {
                 Movie m => m.MediaVersions.Head(),
                 Episode e => e.MediaVersions.Head(),
+                MusicVideo mv => mv.MediaVersions.Head(),
                 _ => throw new ArgumentOutOfRangeException(nameof(playoutItem))
             };
 
