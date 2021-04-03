@@ -120,6 +120,7 @@ namespace ErsatzTV.Core.FFmpeg
 
                         result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
                         result.AudioDuration = version.Duration;
+                        result.NormalizeLoudness = ffmpegProfile.NormalizeLoudness;
                     }
                     else
                     {

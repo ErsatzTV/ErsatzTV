@@ -837,6 +837,52 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
                 actual.AudioDuration.IfNone(TimeSpan.MinValue).Should().Be(TimeSpan.FromMinutes(2));
             }
+
+            [Test]
+            public void Should_SetNormalizeLoudness_When_NormalizingAudio_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = true,
+                    NormalizeLoudness = true
+                };
+
+                var version = new MediaVersion();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.NormalizeLoudness.Should().BeTrue();
+            }
+
+            [Test]
+            public void Should_NotSetNormalizeLoudness_When_NotNormalizingAudio_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = false,
+                    NormalizeLoudness = true
+                };
+
+                var version = new MediaVersion();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.NormalizeLoudness.Should().BeFalse();
+            }
         }
 
         [TestFixture]

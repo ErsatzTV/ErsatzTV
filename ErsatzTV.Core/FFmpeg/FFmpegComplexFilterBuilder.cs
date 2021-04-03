@@ -16,6 +16,7 @@ namespace ErsatzTV.Core.FFmpeg
         private Option<string> _frameRate = None;
         private Option<HardwareAccelerationKind> _hardwareAccelerationKind = None;
         private string _inputCodec;
+        private bool _normalizeLoudness;
         private Option<IDisplaySize> _padToSize = None;
         private Option<IDisplaySize> _scaleToSize = None;
 
@@ -49,6 +50,12 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegComplexFilterBuilder WithNormalizeLoudness(bool normalizeLoudness)
+        {
+            _normalizeLoudness = normalizeLoudness;
+            return this;
+        }
+
         public FFmpegComplexFilterBuilder WithInputCodec(string codec)
         {
             _inputCodec = codec;
@@ -77,22 +84,22 @@ namespace ErsatzTV.Core.FFmpeg
                 _ => false
             };
 
-            _audioDuration.IfSome(
-                audioDuration =>
-                {
-                    complexFilter.Append($"[{audioLabel}]");
-                    complexFilter.Append($"apad=whole_dur={audioDuration.TotalMilliseconds}ms");
-                    audioLabel = "[a]";
-                    complexFilter.Append(audioLabel);
-                });
+            var audioFilterQueue = new List<string>();
+            var videoFilterQueue = new List<string>();
 
-            var filterQueue = new List<string>();
+            if (_normalizeLoudness)
+            {
+                audioFilterQueue.Add("loudnorm=I=-16:TP=-1.5:LRA=11");
+            }
+
+            _audioDuration.IfSome(
+                audioDuration => audioFilterQueue.Add($"apad=whole_dur={audioDuration.TotalMilliseconds}ms"));
 
             bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None && !isHardwareDecode &&
                                        (_deinterlace || _scaleToSize.IsSome);
             if (usesHardwareFilters)
             {
-                filterQueue.Add("hwupload");
+                videoFilterQueue.Add("hwupload");
             }
 
             if (_deinterlace)
@@ -107,11 +114,11 @@ namespace ErsatzTV.Core.FFmpeg
 
                 if (!string.IsNullOrWhiteSpace(filter))
                 {
-                    filterQueue.Add(filter);
+                    videoFilterQueue.Add(filter);
                 }
             }
 
-            _frameRate.IfSome(frameRate => filterQueue.Add($"fps=fps={frameRate}"));
+            _frameRate.IfSome(frameRate => videoFilterQueue.Add($"fps=fps={frameRate}"));
 
             _scaleToSize.IfSome(
                 size =>
@@ -126,7 +133,7 @@ namespace ErsatzTV.Core.FFmpeg
 
                     if (!string.IsNullOrWhiteSpace(filter))
                     {
-                        filterQueue.Add(filter);
+                        videoFilterQueue.Add(filter);
                     }
                 });
 
@@ -134,19 +141,19 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 if (acceleration != HardwareAccelerationKind.None && (isHardwareDecode || usesHardwareFilters))
                 {
-                    filterQueue.Add("hwdownload");
+                    videoFilterQueue.Add("hwdownload");
                     string format = acceleration switch
                     {
                         HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
                         _ => "format=nv12"
                     };
-                    filterQueue.Add(format);
+                    videoFilterQueue.Add(format);
                 }
 
-                filterQueue.Add("setsar=1");
+                videoFilterQueue.Add("setsar=1");
             }
 
-            _padToSize.IfSome(size => filterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
+            _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
 
             if ((_scaleToSize.IsSome || _padToSize.IsSome) && acceleration != HardwareAccelerationKind.None)
             {
@@ -155,19 +162,27 @@ namespace ErsatzTV.Core.FFmpeg
                     HardwareAccelerationKind.Qsv => "hwupload=extra_hw_frames=64",
                     _ => "hwupload"
                 };
-                filterQueue.Add(upload);
+                videoFilterQueue.Add(upload);
             }
 
-            if (filterQueue.Any())
+            bool hasAudioFilters = audioFilterQueue.Any();
+            if (hasAudioFilters)
             {
-                // TODO: any audio filter
-                if (_audioDuration.IsSome)
+                complexFilter.Append($"[{audioLabel}]");
+                complexFilter.Append(string.Join(",", audioFilterQueue));
+                audioLabel = "[a]";
+                complexFilter.Append(audioLabel);
+            }
+
+            if (videoFilterQueue.Any())
+            {
+                if (hasAudioFilters)
                 {
                     complexFilter.Append(';');
                 }
 
                 complexFilter.Append($"[{videoLabel}]");
-                complexFilter.Append(string.Join(",", filterQueue));
+                complexFilter.Append(string.Join(",", videoFilterQueue));
                 videoLabel = "[v]";
                 complexFilter.Append(videoLabel);
             }
