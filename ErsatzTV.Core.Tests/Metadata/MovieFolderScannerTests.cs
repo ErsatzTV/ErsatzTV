@@ -57,7 +57,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     .Returns<string, MediaItem>((_, _) => Right<BaseError, bool>(true).AsTask());
 
                 // fallback metadata adds metadata to a movie, so we need to replicate that here
-                _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<MediaItem>()))
+                _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<Movie>()))
                     .Returns(
                         (MediaItem mediaItem) =>
                         {

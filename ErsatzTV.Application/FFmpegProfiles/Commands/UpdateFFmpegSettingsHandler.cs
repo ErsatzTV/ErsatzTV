@@ -71,87 +71,32 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
 
         private async Task<Unit> ApplyUpdate(UpdateFFmpegSettings request)
         {
-            await _configElementRepository.Get(ConfigElementKey.FFmpegPath).Match(
-                ce =>
-                {
-                    ce.Value = request.Settings.FFmpegPath;
-                    _configElementRepository.Update(ce);
-                },
-                () =>
-                {
-                    var ce = new ConfigElement
-                        { Key = ConfigElementKey.FFmpegPath.Key, Value = request.Settings.FFmpegPath };
-                    _configElementRepository.Add(ce);
-                });
-
-            await _configElementRepository.Get(ConfigElementKey.FFprobePath).Match(
-                ce =>
-                {
-                    ce.Value = request.Settings.FFprobePath;
-                    _configElementRepository.Update(ce);
-                },
-                () =>
-                {
-                    var ce = new ConfigElement
-                        { Key = ConfigElementKey.FFprobePath.Key, Value = request.Settings.FFprobePath };
-                    _configElementRepository.Add(ce);
-                });
-
-            await _configElementRepository.Get(ConfigElementKey.FFmpegDefaultProfileId).Match(
-                ce =>
-                {
-                    ce.Value = request.Settings.DefaultFFmpegProfileId.ToString();
-                    _configElementRepository.Update(ce);
-                },
-                () =>
-                {
-                    var ce = new ConfigElement
-                    {
-                        Key = ConfigElementKey.FFmpegDefaultProfileId.Key,
-                        Value = request.Settings.DefaultFFmpegProfileId.ToString()
-                    };
-                    _configElementRepository.Add(ce);
-                });
-
-            await _configElementRepository.Get(ConfigElementKey.FFmpegSaveReports).Match(
-                ce =>
-                {
-                    ce.Value = request.Settings.SaveReports.ToString();
-                    _configElementRepository.Update(ce);
-                },
-                () =>
-                {
-                    var ce = new ConfigElement
-                    {
-                        Key = ConfigElementKey.FFmpegSaveReports.Key,
-                        Value = request.Settings.SaveReports.ToString()
-                    };
-                    _configElementRepository.Add(ce);
-                });
+            await Upsert(ConfigElementKey.FFmpegPath, request.Settings.FFmpegPath);
+            await Upsert(ConfigElementKey.FFprobePath, request.Settings.FFprobePath);
+            await Upsert(ConfigElementKey.FFmpegDefaultProfileId, request.Settings.DefaultFFmpegProfileId.ToString());
+            await Upsert(ConfigElementKey.FFmpegSaveReports, request.Settings.SaveReports.ToString());
 
             if (request.Settings.SaveReports && !Directory.Exists(FileSystemLayout.FFmpegReportsFolder))
             {
                 Directory.CreateDirectory(FileSystemLayout.FFmpegReportsFolder);
             }
 
-            await _configElementRepository.Get(ConfigElementKey.FFmpegPreferredLanguageCode).Match(
-                ce =>
-                {
-                    ce.Value = request.Settings.PreferredLanguageCode;
-                    _configElementRepository.Update(ce);
-                },
-                () =>
-                {
-                    var ce = new ConfigElement
-                    {
-                        Key = ConfigElementKey.FFmpegPreferredLanguageCode.Key,
-                        Value = request.Settings.PreferredLanguageCode
-                    };
-                    _configElementRepository.Add(ce);
-                });
-
+            await Upsert(ConfigElementKey.FFmpegPreferredLanguageCode, request.Settings.PreferredLanguageCode);
 
             return Unit.Default;
         }
+
+        private Task Upsert(ConfigElementKey key, string value) =>
+            _configElementRepository.Get(key).Match(
+                ce =>
+                {
+                    ce.Value = value;
+                    return _configElementRepository.Update(ce);
+                },
+                () =>
+                {
+                    var ce = new ConfigElement { Key = key.Key, Value = value };
+                    return _configElementRepository.Add(ce);
+                });
     }
 }

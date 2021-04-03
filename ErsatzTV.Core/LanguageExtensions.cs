@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core
 {
+    [SuppressMessage("ReSharper", "VSTHRD003")]
     public static class LanguageExtensions
     {
         public static Either<BaseError, TR> ToEither<TR>(this Validation<BaseError, TR> validation) =>

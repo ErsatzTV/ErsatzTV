@@ -1,10 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Extensions
 {
+    [SuppressMessage("ReSharper", "VSTHRD003")]
     public static class EitherToActionResult
     {
         public static Task<IActionResult> ToActionResult<TL, TR>(this Task<Either<TL, TR>> either) => either.Map(Match);
@@ -16,13 +18,13 @@ namespace ErsatzTV.Extensions
                 Left: l => new BadRequestObjectResult(l),
                 Right: r => new OkObjectResult(r));
 
-        private static async Task<IActionResult> Match(Either<Error, Task> either) =>
-            await either.MatchAsync<IActionResult>(
+        private static Task<IActionResult> Match(Either<Error, Task> either) =>
+            either.Match<Task<IActionResult>>(
                 async t =>
                 {
                     await t;
                     return new OkResult();
                 },
-                e => new BadRequestObjectResult(e));
+                e => Task.FromResult((IActionResult) new BadRequestObjectResult(e)));
     }
 }

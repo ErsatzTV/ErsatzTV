@@ -8,7 +8,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
-using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
@@ -19,15 +18,10 @@ namespace ErsatzTV.Infrastructure.Images
     {
         private static readonly SHA1CryptoServiceProvider Crypto;
         private readonly ILocalFileSystem _localFileSystem;
-        private readonly ILogger<ImageCache> _logger;
 
         static ImageCache() => Crypto = new SHA1CryptoServiceProvider();
 
-        public ImageCache(ILocalFileSystem localFileSystem, ILogger<ImageCache> logger)
-        {
-            _localFileSystem = localFileSystem;
-            _logger = logger;
-        }
+        public ImageCache(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
         public async Task<Either<BaseError, byte[]>> ResizeImage(byte[] imageBuffer, int height)
         {

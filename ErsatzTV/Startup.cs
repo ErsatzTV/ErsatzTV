@@ -30,6 +30,7 @@ using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
+using ErsatzTV.Services.RunOnce;
 using FluentValidation.AspNetCore;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
@@ -90,7 +91,7 @@ namespace ErsatzTV
 
             Log.Logger.Information(
                 "ErsatzTV version {Version}",
-                Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "unknown");
 
             Log.Logger.Warning("This is pre-alpha software and is likely to be unstable");
@@ -220,6 +221,8 @@ namespace ErsatzTV
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
             services.AddScoped<FFmpegProcessService>();
 
+            services.AddHostedService<DatabaseMigratorService>();
+            services.AddHostedService<CacheCleanerService>();
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();
             services.AddHostedService<WorkerService>();

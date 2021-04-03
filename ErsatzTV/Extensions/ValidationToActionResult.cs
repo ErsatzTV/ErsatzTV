@@ -1,10 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using ErsatzTV.Core;
 using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Extensions
 {
+    [SuppressMessage("ReSharper", "VSTHRD003")]
     public static class ValidationToActionResult
     {
         public static IActionResult ToActionResult<T>(this Validation<BaseError, T> validation) =>

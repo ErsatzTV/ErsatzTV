@@ -57,11 +57,11 @@ namespace ErsatzTV.Application.Plex.Commands
             return allExisting;
         }
 
-        private async Task SynchronizeServer(List<PlexMediaSource> allExisting, PlexMediaSource server)
+        private Task SynchronizeServer(List<PlexMediaSource> allExisting, PlexMediaSource server)
         {
             Option<PlexMediaSource> maybeExisting =
                 allExisting.Find(s => s.ClientIdentifier == server.ClientIdentifier);
-            await maybeExisting.Match(
+            return maybeExisting.Match(
                 existing =>
                 {
                     existing.Platform = server.Platform;
@@ -83,16 +83,6 @@ namespace ErsatzTV.Application.Plex.Commands
 
                     await _mediaSourceRepository.Add(server);
                 });
-        }
-
-        private void MergeConnections(
-            List<PlexConnection> existing,
-            List<PlexConnection> incoming)
-        {
-            var toAdd = incoming.Filter(connection => existing.All(c => c.Uri != connection.Uri)).ToList();
-            var toRemove = existing.Filter(connection => incoming.All(c => c.Uri != connection.Uri)).ToList();
-            existing.AddRange(toAdd);
-            toRemove.ForEach(c => existing.Remove(c));
         }
     }
 }
