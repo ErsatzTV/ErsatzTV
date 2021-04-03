@@ -7,22 +7,46 @@
 @inject IMediator Mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (MediaCollectionViewModel card in _data)
-        {
-            <MediaCard Data="@card"
-                       Link="@($"/media/collections/{card.Id}")"
-                       ContainerClass="media-card-episode-container mr-4"
-                       CardClass="media-card-episode"
-                       DeleteClicked="@DeleteMediaCollection"/>
-        }
-    </MudContainer>
-
-    <MudContainer MaxWidth="MaxWidth.False">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
-            Add Collection
-        </MudButton>
-    </MudContainer>
+    <MudTable Hover="true" Items="_data" Dense="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Collections</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col style="width: 120px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<MediaCollectionViewModel, object>(x => x.Name)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Collection">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@($"/media/collections/{context.Id}")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Collection">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteMediaCollection(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
+        Add Collection
+    </MudButton>
 </MudContainer>
 
 @code {
@@ -31,7 +55,7 @@
     protected override Task OnParametersSetAsync() => RefreshData();
 
     private async Task RefreshData() =>
-        _data = await Mediator.Send(new GetAllCollections());
+        _data = await Mediator.Send(new GetAllCollections()).Map(list => list.OrderBy(vm => vm.Name).ToList());
 
     private async Task DeleteMediaCollection(MediaCardViewModel vm)
     {
