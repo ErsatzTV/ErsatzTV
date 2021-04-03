@@ -72,61 +72,61 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
         private async Task<Unit> ApplyUpdate(UpdateFFmpegSettings request)
         {
             await _configElementRepository.Get(ConfigElementKey.FFmpegPath).Match(
-                ce =>
+                async ce =>
                 {
                     ce.Value = request.Settings.FFmpegPath;
-                    _configElementRepository.Update(ce);
+                    await _configElementRepository.Update(ce);
                 },
-                () =>
+                async () =>
                 {
                     var ce = new ConfigElement
                         { Key = ConfigElementKey.FFmpegPath.Key, Value = request.Settings.FFmpegPath };
-                    _configElementRepository.Add(ce);
+                    await _configElementRepository.Add(ce);
                 });
 
             await _configElementRepository.Get(ConfigElementKey.FFprobePath).Match(
-                ce =>
+                async ce =>
                 {
                     ce.Value = request.Settings.FFprobePath;
-                    _configElementRepository.Update(ce);
+                    await _configElementRepository.Update(ce);
                 },
-                () =>
+                async () =>
                 {
                     var ce = new ConfigElement
                         { Key = ConfigElementKey.FFprobePath.Key, Value = request.Settings.FFprobePath };
-                    _configElementRepository.Add(ce);
+                    await _configElementRepository.Add(ce);
                 });
 
             await _configElementRepository.Get(ConfigElementKey.FFmpegDefaultProfileId).Match(
-                ce =>
+                async ce =>
                 {
                     ce.Value = request.Settings.DefaultFFmpegProfileId.ToString();
-                    _configElementRepository.Update(ce);
+                    await _configElementRepository.Update(ce);
                 },
-                () =>
+                async () =>
                 {
                     var ce = new ConfigElement
                     {
                         Key = ConfigElementKey.FFmpegDefaultProfileId.Key,
                         Value = request.Settings.DefaultFFmpegProfileId.ToString()
                     };
-                    _configElementRepository.Add(ce);
+                    await _configElementRepository.Add(ce);
                 });
 
             await _configElementRepository.Get(ConfigElementKey.FFmpegSaveReports).Match(
-                ce =>
+                async ce =>
                 {
                     ce.Value = request.Settings.SaveReports.ToString();
-                    _configElementRepository.Update(ce);
+                    await _configElementRepository.Update(ce);
                 },
-                () =>
+                async () =>
                 {
                     var ce = new ConfigElement
                     {
                         Key = ConfigElementKey.FFmpegSaveReports.Key,
                         Value = request.Settings.SaveReports.ToString()
                     };
-                    _configElementRepository.Add(ce);
+                    await _configElementRepository.Add(ce);
                 });
 
             if (request.Settings.SaveReports && !Directory.Exists(FileSystemLayout.FFmpegReportsFolder))
@@ -135,19 +135,19 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             }
 
             await _configElementRepository.Get(ConfigElementKey.FFmpegPreferredLanguageCode).Match(
-                ce =>
+                async ce =>
                 {
                     ce.Value = request.Settings.PreferredLanguageCode;
-                    _configElementRepository.Update(ce);
+                    await _configElementRepository.Update(ce);
                 },
-                () =>
+                async () =>
                 {
                     var ce = new ConfigElement
                     {
                         Key = ConfigElementKey.FFmpegPreferredLanguageCode.Key,
                         Value = request.Settings.PreferredLanguageCode
                     };
-                    _configElementRepository.Add(ce);
+                    await _configElementRepository.Add(ce);
                 });
 
 

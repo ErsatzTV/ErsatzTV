@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -15,6 +16,7 @@ using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Services
 {
@@ -22,19 +24,23 @@ namespace ErsatzTV.Services
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IEntityLocker _entityLocker;
+        private readonly ILogger<SchedulerService> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private Timer _timer;
 
         public SchedulerService(
             IServiceScopeFactory serviceScopeFactory,
             ChannelWriter<IBackgroundServiceRequest> channel,
-            IEntityLocker entityLocker)
+            IEntityLocker entityLocker,
+            ILogger<SchedulerService> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _channel = channel;
             _entityLocker = entityLocker;
+            _logger = logger;
         }
 
+        [SuppressMessage("ReSharper", "VSTHRD101")]
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _timer = new Timer(
@@ -55,10 +61,17 @@ namespace ErsatzTV.Services
 
         private async Task DoWork(CancellationToken cancellationToken)
         {
-            await RebuildSearchIndex(cancellationToken);
-            await BuildPlayouts(cancellationToken);
-            await ScanLocalMediaSources(cancellationToken);
-            await ScanPlexMediaSources(cancellationToken);
+            try
+            {
+                await RebuildSearchIndex(cancellationToken);
+                await BuildPlayouts(cancellationToken);
+                await ScanLocalMediaSources(cancellationToken);
+                await ScanPlexMediaSources(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error during scheduler run");
+            }
         }
 
         private async Task BuildPlayouts(CancellationToken cancellationToken)

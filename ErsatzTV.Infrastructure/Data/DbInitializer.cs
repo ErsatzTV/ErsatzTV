@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using LanguageExt;
 
@@ -8,7 +10,7 @@ namespace ErsatzTV.Infrastructure.Data
 {
     public static class DbInitializer
     {
-        public static Unit Initialize(TvContext context)
+        public static async Task<Unit> Initialize(TvContext context, CancellationToken cancellationToken)
         {
             if (context.Resolutions.Any())
             {
@@ -22,28 +24,28 @@ namespace ErsatzTV.Infrastructure.Data
                 new() { Id = 3, Name = "1920x1080", Width = 1920, Height = 1080 },
                 new() { Id = 4, Name = "3840x2160", Width = 3840, Height = 2160 }
             };
-            context.Resolutions.AddRange(resolutions);
-            context.SaveChanges();
+            await context.Resolutions.AddRangeAsync(resolutions, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             var resolutionConfig = new ConfigElement
             {
                 Key = ConfigElementKey.FFmpegDefaultResolutionId.Key,
                 Value = "3" // 1920x1080
             };
-            context.ConfigElements.Add(resolutionConfig);
-            context.SaveChanges();
+            await context.ConfigElements.AddAsync(resolutionConfig, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             var defaultProfile = FFmpegProfile.New("1920x1080 x264 ac3", resolutions[2]);
-            context.FFmpegProfiles.Add(defaultProfile);
-            context.SaveChanges();
+            await context.FFmpegProfiles.AddAsync(defaultProfile, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             var profileConfig = new ConfigElement
             {
                 Key = ConfigElementKey.FFmpegDefaultProfileId.Key,
                 Value = defaultProfile.Id.ToString()
             };
-            context.ConfigElements.Add(profileConfig);
-            context.SaveChanges();
+            await context.ConfigElements.AddAsync(profileConfig, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             var defaultChannel = new Channel(Guid.NewGuid())
             {
@@ -52,8 +54,8 @@ namespace ErsatzTV.Infrastructure.Data
                 FFmpegProfile = defaultProfile,
                 StreamingMode = StreamingMode.TransportStream
             };
-            context.Channels.Add(defaultChannel);
-            context.SaveChanges();
+            await context.Channels.AddAsync(defaultChannel, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
 
             // TODO: create looping static image that mentions configuring via web
             return Unit.Default;

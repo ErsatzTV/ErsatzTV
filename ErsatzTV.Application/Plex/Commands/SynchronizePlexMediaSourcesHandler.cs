@@ -84,15 +84,5 @@ namespace ErsatzTV.Application.Plex.Commands
                     await _mediaSourceRepository.Add(server);
                 });
         }
-
-        private void MergeConnections(
-            List<PlexConnection> existing,
-            List<PlexConnection> incoming)
-        {
-            var toAdd = incoming.Filter(connection => existing.All(c => c.Uri != connection.Uri)).ToList();
-            var toRemove = existing.Filter(connection => incoming.All(c => c.Uri != connection.Uri)).ToList();
-            existing.AddRange(toAdd);
-            toRemove.ForEach(c => existing.Remove(c));
-        }
     }
 }

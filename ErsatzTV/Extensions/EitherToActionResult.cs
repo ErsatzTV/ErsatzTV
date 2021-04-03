@@ -1,10 +1,12 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Extensions
 {
+    [SuppressMessage("ReSharper", "VSTHRD003")]
     public static class EitherToActionResult
     {
         public static Task<IActionResult> ToActionResult<TL, TR>(this Task<Either<TL, TR>> either) => either.Map(Match);
