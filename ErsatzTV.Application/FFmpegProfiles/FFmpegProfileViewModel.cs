@@ -17,7 +17,7 @@ namespace ErsatzTV.Application.FFmpegProfiles
         string AudioCodec,
         int AudioBitrate,
         int AudioBufferSize,
-        int AudioVolume,
+        bool NormalizeLoudness,
         int AudioChannels,
         int AudioSampleRate,
         bool NormalizeAudio,
