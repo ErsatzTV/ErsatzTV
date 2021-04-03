@@ -72,6 +72,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
                 .ThenInclude(mv => mv.Streams)
                 .AsNoTracking()
+                .OrderBy(pi => pi.Start)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
 
