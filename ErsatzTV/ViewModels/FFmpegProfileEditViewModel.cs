@@ -18,7 +18,7 @@ namespace ErsatzTV.ViewModels
             AudioChannels = viewModel.AudioChannels;
             AudioCodec = viewModel.AudioCodec;
             AudioSampleRate = viewModel.AudioSampleRate;
-            AudioVolume = viewModel.AudioVolume;
+            NormalizeLoudness = viewModel.NormalizeLoudness;
             Id = viewModel.Id;
             Name = viewModel.Name;
             NormalizeAudio = viewModel.NormalizeAudio;
@@ -38,7 +38,7 @@ namespace ErsatzTV.ViewModels
         public int AudioChannels { get; set; }
         public string AudioCodec { get; set; }
         public int AudioSampleRate { get; set; }
-        public int AudioVolume { get; set; }
+        public bool NormalizeLoudness { get; set; }
         public int Id { get; set; }
         public string Name { get; set; }
         public bool NormalizeAudio { get; set; }
@@ -66,7 +66,7 @@ namespace ErsatzTV.ViewModels
                 AudioCodec,
                 AudioBitrate,
                 AudioBufferSize,
-                AudioVolume,
+                NormalizeLoudness,
                 AudioChannels,
                 AudioSampleRate,
                 NormalizeAudio,
@@ -88,7 +88,7 @@ namespace ErsatzTV.ViewModels
                 AudioCodec,
                 AudioBitrate,
                 AudioBufferSize,
-                AudioVolume,
+                NormalizeLoudness,
                 AudioChannels,
                 AudioSampleRate,
                 NormalizeAudio,

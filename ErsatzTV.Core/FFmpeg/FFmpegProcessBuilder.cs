@@ -324,6 +324,12 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithNormalizeLoudness(bool normalizeLoudness)
+        {
+            _complexFilterBuilder = _complexFilterBuilder.WithNormalizeLoudness(normalizeLoudness);
+            return this;
+        }
+
         public FFmpegProcessBuilder WithFrameRate(Option<string> frameRate)
         {
             _complexFilterBuilder = _complexFilterBuilder.WithFrameRate(frameRate);

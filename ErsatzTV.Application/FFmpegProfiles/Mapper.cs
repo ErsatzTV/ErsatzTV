@@ -20,7 +20,7 @@ namespace ErsatzTV.Application.FFmpegProfiles
                 profile.AudioCodec,
                 profile.AudioBitrate,
                 profile.AudioBufferSize,
-                profile.AudioVolume,
+                profile.NormalizeLoudness,
                 profile.AudioChannels,
                 profile.AudioSampleRate,
                 profile.NormalizeAudio,

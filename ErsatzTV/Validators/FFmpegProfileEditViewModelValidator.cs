@@ -26,7 +26,6 @@ namespace ErsatzTV.Validators
 
                     RuleFor(x => x.AudioCodec).NotEmpty();
                     RuleFor(x => x.AudioBitrate).GreaterThan(0);
-                    RuleFor(x => x.AudioVolume).GreaterThanOrEqualTo(0);
                     RuleFor(x => x.AudioChannels).GreaterThan(0);
                 });
 
