@@ -32,10 +32,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(p => p.Resolution)
                 .ToListAsync();
 
-        public async Task Update(FFmpegProfile ffmpegProfile)
+        public Task Update(FFmpegProfile ffmpegProfile)
         {
             _dbContext.FFmpegProfiles.Update(ffmpegProfile);
-            await _dbContext.SaveChangesAsync();
+            return _dbContext.SaveChangesAsync();
         }
 
         public async Task Delete(int ffmpegProfileId)

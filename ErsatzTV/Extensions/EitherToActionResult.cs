@@ -18,13 +18,13 @@ namespace ErsatzTV.Extensions
                 Left: l => new BadRequestObjectResult(l),
                 Right: r => new OkObjectResult(r));
 
-        private static async Task<IActionResult> Match(Either<Error, Task> either) =>
-            await either.MatchAsync<IActionResult>(
+        private static Task<IActionResult> Match(Either<Error, Task> either) =>
+            either.Match<Task<IActionResult>>(
                 async t =>
                 {
                     await t;
                     return new OkResult();
                 },
-                e => new BadRequestObjectResult(e));
+                e => Task.FromResult((IActionResult) new BadRequestObjectResult(e)));
     }
 }

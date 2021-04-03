@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -20,13 +19,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Services
 {
-    public class SchedulerService : IHostedService
+    public class SchedulerService : BackgroundService
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IEntityLocker _entityLocker;
         private readonly ILogger<SchedulerService> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private Timer _timer;
 
         public SchedulerService(
             IServiceScopeFactory serviceScopeFactory,
@@ -40,23 +38,17 @@ namespace ErsatzTV.Services
             _logger = logger;
         }
 
-        [SuppressMessage("ReSharper", "VSTHRD101")]
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            _timer = new Timer(
-                async _ => await DoWork(cancellationToken),
-                null,
-                TimeSpan.FromSeconds(0), // fire immediately
-                TimeSpan.FromHours(1)); // repeat every hour
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await DoWork(cancellationToken);
+                }
 
-            return Task.CompletedTask;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _timer?.Change(Timeout.Infinite, 0);
-
-            return Task.CompletedTask;
+                await Task.Delay(TimeSpan.FromHours(1), cancellationToken);
+            }
         }
 
         private async Task DoWork(CancellationToken cancellationToken)
@@ -127,7 +119,7 @@ namespace ErsatzTV.Services
             }
         }
 
-        private async Task RebuildSearchIndex(CancellationToken cancellationToken) =>
-            await _channel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
+        private ValueTask RebuildSearchIndex(CancellationToken cancellationToken) =>
+            _channel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
     }
 }

@@ -57,11 +57,11 @@ namespace ErsatzTV.Application.Plex.Commands
             return allExisting;
         }
 
-        private async Task SynchronizeServer(List<PlexMediaSource> allExisting, PlexMediaSource server)
+        private Task SynchronizeServer(List<PlexMediaSource> allExisting, PlexMediaSource server)
         {
             Option<PlexMediaSource> maybeExisting =
                 allExisting.Find(s => s.ClientIdentifier == server.ClientIdentifier);
-            await maybeExisting.Match(
+            return maybeExisting.Match(
                 existing =>
                 {
                     existing.Platform = server.Platform;

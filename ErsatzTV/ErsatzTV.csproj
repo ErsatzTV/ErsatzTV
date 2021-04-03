@@ -12,6 +12,10 @@
 
     <ItemGroup>
       <PackageReference Include="Accelist.FluentValidation.Blazor" Version="4.0.0" />
+      <PackageReference Include="AsyncFixer" Version="1.5.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
       <PackageReference Include="FluentValidation" Version="9.5.3" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="9.5.3" />
       <PackageReference Include="LanguageExt.Core" Version="3.4.15" />
