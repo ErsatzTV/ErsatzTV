@@ -581,7 +581,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetCopyAudioCodec_When_CorrectCodec_ForTransportStream()
+            public void Should_SetDesiredAudioCodec_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
@@ -600,11 +600,11 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
-                actual.AudioCodec.Should().Be("copy");
+                actual.AudioCodec.Should().Be("aac");
             }
 
             [Test]
-            public void Should_SetCopyAudioCodec_When_NotNormalizingVideo_ForTransportStream()
+            public void Should_SetCopyAudioCodec_When_NotNormalizingAudio_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
@@ -627,7 +627,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetDesiredAudioCodec_When_NormalizingVideo_ForTransportStream()
+            public void Should_SetDesiredAudioCodec_When_NormalizingAudio_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
@@ -650,7 +650,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetCopyAudioCodec_When_NormalizingVideo_ForHttpLiveStreaming()
+            public void Should_SetCopyAudioCodec_When_NormalizingAudio_ForHttpLiveStreaming()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
@@ -673,12 +673,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetAudioBitrate_When_NormalizingVideo_ForTransportStream()
+            public void Should_SetAudioBitrate_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
                     NormalizeAudio = true,
-                    AudioBitrate = 2424
+                    AudioBitrate = 2424,
+                    AudioCodec = "ac3"
                 };
 
                 var version = new MediaVersion();
@@ -696,12 +697,13 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetAudioBufferSize_When_NormalizingVideo_ForTransportStream()
+            public void Should_SetAudioBufferSize_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
                     NormalizeAudio = true,
-                    AudioBufferSize = 2424
+                    AudioBufferSize = 2424,
+                    AudioCodec = "ac3"
                 };
 
                 var version = new MediaVersion();
@@ -719,7 +721,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void ShouldNot_SetAudioChannels_When_CorrectCodec_ForTransportStream()
+            public void Should_SetAudioChannels_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
@@ -739,11 +741,11 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
-                actual.AudioChannels.IsNone.Should().BeTrue();
+                actual.AudioChannels.IfNone(0).Should().Be(6);
             }
 
             [Test]
-            public void ShouldNot_SetAudioSampleRate_When_CorrectCodec_ForTransportStream()
+            public void Should_SetAudioSampleRate_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
@@ -763,11 +765,11 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
-                actual.AudioSampleRate.IsNone.Should().BeTrue();
+                actual.AudioSampleRate.IfNone(0).Should().Be(48);
             }
 
             [Test]
-            public void Should_SetAudioChannels_When_NormalizingVideoAndAudio_ForTransportStream()
+            public void Should_SetAudioChannels_When_NormalizingAudio_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
@@ -790,7 +792,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetAudioSampleRate_When_NormalizingVideoAndAudio_ForTransportStream()
+            public void Should_SetAudioSampleRate_When_NormalizingAudio_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
@@ -810,6 +812,30 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     DateTimeOffset.Now);
 
                 actual.AudioSampleRate.IfNone(0).Should().Be(48);
+            }
+
+            [Test]
+            public void Should_SetAudioDuration_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = true,
+                    AudioSampleRate = 48,
+                    AudioCodec = "ac3"
+                };
+
+                var version = new MediaVersion { Duration = TimeSpan.FromMinutes(2) };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.AudioDuration.IfNone(TimeSpan.MinValue).Should().Be(TimeSpan.FromMinutes(2));
             }
         }
 

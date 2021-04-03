@@ -107,22 +107,19 @@ namespace ErsatzTV.Core.FFmpeg
                         result.VideoCodec = "copy";
                     }
 
-                    if (NeedToNormalizeAudioCodec(ffmpegProfile, audioStream))
+                    if (ffmpegProfile.NormalizeAudio)
                     {
                         result.AudioCodec = ffmpegProfile.AudioCodec;
                         result.AudioBitrate = ffmpegProfile.AudioBitrate;
                         result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
 
-                        if (ffmpegProfile.NormalizeAudio)
+                        if (audioStream.Channels != ffmpegProfile.AudioChannels)
                         {
-                            if (audioStream.Channels != ffmpegProfile.AudioChannels)
-                            {
-                                result.AudioChannels = ffmpegProfile.AudioChannels;
-                            }
-
-                            result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
-                            result.AudioDuration = version.Duration;
+                            result.AudioChannels = ffmpegProfile.AudioChannels;
                         }
+
+                        result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
+                        result.AudioDuration = version.Duration;
                     }
                     else
                     {
@@ -169,9 +166,6 @@ namespace ErsatzTV.Core.FFmpeg
 
         private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaStream videoStream) =>
             ffmpegProfile.NormalizeVideo && ffmpegProfile.VideoCodec != videoStream.Codec;
-
-        private static bool NeedToNormalizeAudioCodec(FFmpegProfile ffmpegProfile, MediaStream audioStream) =>
-            ffmpegProfile.NormalizeAudio && ffmpegProfile.AudioCodec != audioStream.Codec;
 
         private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
         {
