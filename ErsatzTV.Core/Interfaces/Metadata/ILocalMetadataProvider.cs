@@ -8,9 +8,12 @@ namespace ErsatzTV.Core.Interfaces.Metadata
     {
         Task<ShowMetadata> GetMetadataForShow(string showFolder);
         Task<Option<MusicVideoMetadata>> GetMetadataForMusicVideo(string filePath);
-        Task<bool> RefreshSidecarMetadata(MediaItem mediaItem, string path);
-        Task<bool> RefreshSidecarMetadata(Show televisionShow, string showFolder);
-        Task<bool> RefreshFallbackMetadata(MediaItem mediaItem);
+        Task<bool> RefreshSidecarMetadata(Movie movie, string nfoFileName);
+        Task<bool> RefreshSidecarMetadata(Show televisionShow, string nfoFileName);
+        Task<bool> RefreshSidecarMetadata(Episode episode, string nfoFileName);
+        Task<bool> RefreshSidecarMetadata(MusicVideo musicVideo, string nfoFileName);
+        Task<bool> RefreshFallbackMetadata(Movie movie);
+        Task<bool> RefreshFallbackMetadata(Episode episode);
         Task<bool> RefreshFallbackMetadata(Show televisionShow, string showFolder);
     }
 }

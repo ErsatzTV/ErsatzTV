@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using LanguageExt;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ErsatzTV.Extensions
 {
+    [SuppressMessage("ReSharper", "VSTHRD003")]
     public static class OptionToActionResult
     {
         public static IActionResult ToActionResult<T>(this Option<T> option) =>

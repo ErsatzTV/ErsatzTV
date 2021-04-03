@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
-using ErsatzTV.Extensions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -12,7 +11,7 @@ namespace ErsatzTV
 {
     public class Program
     {
-        public static IConfiguration Configuration { get; } = new ConfigurationBuilder()
+        private static IConfiguration Configuration { get; } = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json", false, true)
             .AddJsonFile(
@@ -31,11 +30,7 @@ namespace ErsatzTV
 
             try
             {
-                await CreateHostBuilder(args)
-                    .Build()
-                    .SeedDatabase()
-                    .CleanCacheFolder()
-                    .RunAsync();
+                await CreateHostBuilder(args).Build().RunAsync();
                 return 0;
             }
             catch (Exception ex)
@@ -49,7 +44,7 @@ namespace ErsatzTV
             }
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(
                     webBuilder => webBuilder.UseStartup<Startup>()

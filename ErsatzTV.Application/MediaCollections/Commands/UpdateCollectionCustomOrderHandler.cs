@@ -39,7 +39,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 Option<CollectionItem> maybeCollectionItem =
                     c.CollectionItems.FirstOrDefault(ci => ci.MediaItemId == updateItem.MediaItemId);
 
-                maybeCollectionItem.IfSome(ci => ci.CustomIndex = updateItem.CustomIndex);
+                await maybeCollectionItem.IfSomeAsync(ci => ci.CustomIndex = updateItem.CustomIndex);
             }
 
             if (await _mediaCollectionRepository.Update(c))

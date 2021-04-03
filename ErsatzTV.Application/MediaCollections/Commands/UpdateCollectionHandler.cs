@@ -32,7 +32,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         private async Task<Unit> ApplyUpdateRequest(Collection c, UpdateCollection request)
         {
             c.Name = request.Name;
-            request.UseCustomPlaybackOrder.IfSome(
+            await request.UseCustomPlaybackOrder.IfSomeAsync(
                 useCustomPlaybackOrder => c.UseCustomPlaybackOrder = useCustomPlaybackOrder);
             if (await _mediaCollectionRepository.Update(c) && request.UseCustomPlaybackOrder.IsSome)
             {

@@ -57,7 +57,7 @@ namespace ErsatzTV.Core.Scheduling
                         case ProgramScheduleItemCollectionType.Collection:
                             Option<List<MediaItem>> maybeItems =
                                 await _mediaCollectionRepository.GetItems(collectionKey.CollectionId ?? 0);
-                            return Tuple(collectionKey, maybeItems.IfNone(new List<MediaItem>()));
+                            return Tuple(collectionKey, await maybeItems.IfNoneAsync(new List<MediaItem>()));
                         case ProgramScheduleItemCollectionType.TelevisionShow:
                             List<Episode> showItems =
                                 await _televisionRepository.GetShowItems(collectionKey.MediaItemId ?? 0);
@@ -167,7 +167,7 @@ namespace ErsatzTV.Core.Scheduling
                     durationFinish.IsSome);
 
                 IMediaCollectionEnumerator enumerator = collectionEnumerators[CollectionKeyForItem(scheduleItem)];
-                enumerator.Current.IfSome(
+                await enumerator.Current.IfSomeAsync(
                     mediaItem =>
                     {
                         _logger.LogDebug(

@@ -82,7 +82,7 @@ namespace ErsatzTV.Application.Channels.Commands
         private async Task<Validation<BaseError, string>> ValidateNumber(UpdateChannel updateChannel)
         {
             Option<Channel> match = await _channelRepository.GetByNumber(updateChannel.Number);
-            int matchId = match.Map(c => c.Id).IfNone(updateChannel.ChannelId);
+            int matchId = await match.Map(c => c.Id).IfNoneAsync(updateChannel.ChannelId);
             if (matchId == updateChannel.ChannelId)
             {
                 if (Regex.IsMatch(updateChannel.Number, Channel.NumberValidator))

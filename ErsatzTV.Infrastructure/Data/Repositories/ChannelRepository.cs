@@ -64,10 +64,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .ToListAsync();
 
-        public async Task Update(Channel channel)
+        public Task Update(Channel channel)
         {
             _dbContext.Channels.Update(channel);
-            await _dbContext.SaveChangesAsync();
+            return _dbContext.SaveChangesAsync();
         }
 
         public async Task Delete(int channelId)

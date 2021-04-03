@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using ErsatzTV.Extensions;
 using Microsoft.AspNetCore.Components;
@@ -27,7 +28,17 @@ namespace ErsatzTV.Pages
             }
         }
 
-        private async void TryFragmentNavigation(object sender, LocationChangedEventArgs args) =>
-            await NavManager.NavigateToFragmentAsync(JsRuntime);
+        [SuppressMessage("ReSharper", "VSTHRD100")]
+        private async void TryFragmentNavigation(object sender, LocationChangedEventArgs args)
+        {
+            try
+            {
+                await NavManager.NavigateToFragmentAsync(JsRuntime);
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
     }
 }
