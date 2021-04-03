@@ -50,7 +50,9 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithSeek(playbackSettings.StreamSeek)
                 .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec)
                 .WithFrameRate(playbackSettings.FrameRate)
-                .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale);
+                .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
+                .WithAlignedAudio(playbackSettings.AudioDuration)
+                .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);
 
             playbackSettings.ScaledSize.Match(
                 scaledSize =>
@@ -65,7 +67,6 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     builder = builder
-                        .WithAlignedAudio(playbackSettings.AudioDuration)
                         .WithFilterComplex(videoStream.Index, audioStream.Index);
                 },
                 () =>
@@ -75,7 +76,6 @@ namespace ErsatzTV.Core.FFmpeg
                         builder = builder
                             .WithDeinterlace(playbackSettings.Deinterlace)
                             .WithBlackBars(channel.FFmpegProfile.Resolution)
-                            .WithAlignedAudio(playbackSettings.AudioDuration)
                             .WithFilterComplex(videoStream.Index, audioStream.Index);
                     }
                     else if (playbackSettings.Deinterlace)
@@ -87,7 +87,6 @@ namespace ErsatzTV.Core.FFmpeg
                     else
                     {
                         builder = builder
-                            .WithAlignedAudio(playbackSettings.AudioDuration)
                             .WithFilterComplex(videoStream.Index, audioStream.Index);
                     }
                 });

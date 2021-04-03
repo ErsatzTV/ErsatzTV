@@ -44,7 +44,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.AudioCodec = update.AudioCodec;
             p.AudioBitrate = update.AudioBitrate;
             p.AudioBufferSize = update.AudioBufferSize;
-            p.AudioVolume = update.AudioVolume;
+            p.NormalizeLoudness = update.NormalizeLoudness;
             p.AudioChannels = update.AudioChannels;
             p.AudioSampleRate = update.AudioSampleRate;
             p.NormalizeAudio = update.NormalizeAudio;

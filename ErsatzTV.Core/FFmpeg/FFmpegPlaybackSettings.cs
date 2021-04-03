@@ -28,5 +28,6 @@ namespace ErsatzTV.Core.FFmpeg
         public bool Deinterlace { get; set; }
         public Option<string> FrameRate { get; set; }
         public Option<int> VideoTrackTimeScale { get; set; }
+        public bool NormalizeLoudness { get; set; }
     }
 }
