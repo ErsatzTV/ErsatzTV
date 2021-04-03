@@ -23,7 +23,7 @@
         </ColGroup>
         <HeaderContent>
             <MudTh>
-                <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => x.Number)">Number</MudTableSortLabel>
+                <MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<ChannelViewModel, object>(x => decimal.Parse(x.Number))">Number</MudTableSortLabel>
             </MudTh>
             <MudTh>Logo</MudTh>
             <MudTh>
@@ -66,6 +66,9 @@
                 </div>
             </MudTd>
         </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
     </MudTable>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/channels/add" Class="mt-4">
         Add Channel
@@ -97,6 +100,6 @@
     }
 
     private async Task LoadChannelsAsync() => _channels = await Mediator.Send(new GetAllChannels())
-        .Map(list => list.OrderBy(c => c.Number).ToList());
+        .Map(list => list.OrderBy(c => decimal.Parse(c.Number)).ToList());
 
 }

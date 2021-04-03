@@ -16,7 +16,11 @@
             <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
-            <MudTh>Name</MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<ProgramScheduleViewModel, object>(x => x.Name)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
             <MudTh>Collection Playback Order</MudTh>
             <MudTh/>
         </HeaderContent>
@@ -43,6 +47,9 @@
                 </div>
             </MudTd>
         </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
     </MudTable>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/schedules/add" Class="mt-4">
         Add Schedule
@@ -103,6 +110,6 @@
     }
 
     private async Task LoadSchedules() =>
-        _schedules = await Mediator.Send(new GetAllProgramSchedules());
+        _schedules = await Mediator.Send(new GetAllProgramSchedules()).Map(list => list.OrderBy(vm => vm.Name).ToList());
 
 }
