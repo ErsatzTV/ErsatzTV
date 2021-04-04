@@ -36,6 +36,19 @@ namespace ErsatzTV.Core.Metadata
             return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
         }
 
+        public MusicVideoMetadata GetFallbackMetadata(MusicVideo musicVideo)
+        {
+            string path = musicVideo.MediaVersions.Head().MediaFiles.Head().Path;
+            string fileName = Path.GetFileName(path);
+            var metadata = new MusicVideoMetadata
+            {
+                MetadataKind = MetadataKind.Fallback,
+                Title = fileName ?? path
+            };
+
+            return fileName != null ? GetMusicVideoMetadata(fileName, metadata) : metadata;
+        }
+
         public string GetSortTitle(string title)
         {
             if (string.IsNullOrWhiteSpace(title))
@@ -98,6 +111,30 @@ namespace ErsatzTV.Core.Metadata
                     metadata.Title = match.Groups[1].Value;
                     metadata.Year = int.Parse(match.Groups[2].Value);
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
+                    metadata.Genres = new List<Genre>();
+                    metadata.Tags = new List<Tag>();
+                    metadata.Studios = new List<Studio>();
+                    metadata.DateUpdated = DateTime.UtcNow;
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            return metadata;
+        }
+
+        private MusicVideoMetadata GetMusicVideoMetadata(string fileName, MusicVideoMetadata metadata)
+        {
+            try
+            {
+                const string PATTERN = @"^(.*?) - (.*?).\w+$";
+                Match match = Regex.Match(fileName, PATTERN);
+                if (match.Success)
+                {
+                    metadata.Artist = match.Groups[1].Value;
+                    metadata.Title = match.Groups[2].Value;
                     metadata.Genres = new List<Genre>();
                     metadata.Tags = new List<Tag>();
                     metadata.Studios = new List<Studio>();

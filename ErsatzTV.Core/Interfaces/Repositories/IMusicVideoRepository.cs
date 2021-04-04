@@ -8,13 +8,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IMusicVideoRepository
     {
-        Task<Option<MusicVideo>> GetByMetadata(LibraryPath libraryPath, MusicVideoMetadata metadata);
-
-        Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> Add(
-            LibraryPath libraryPath,
-            string filePath,
-            MusicVideoMetadata metadata);
-
+        Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(LibraryPath libraryPath, string path);
         Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath);
         Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
         Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre);
