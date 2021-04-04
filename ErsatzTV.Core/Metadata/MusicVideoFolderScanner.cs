@@ -67,10 +67,7 @@ namespace ErsatzTV.Core.Metadata
             var foldersCompleted = 0;
 
             var folderQueue = new Queue<string>();
-            foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path).OrderBy(identity))
-            {
-                folderQueue.Enqueue(folder);
-            }
+            folderQueue.Enqueue(libraryPath.Path);
 
             while (folderQueue.Count > 0)
             {
@@ -83,20 +80,13 @@ namespace ErsatzTV.Core.Metadata
 
                 var allFiles = _localFileSystem.ListFiles(musicVideoFolder)
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
-                    .Filter(
-                        f => !ExtraFiles.Any(
-                            e => Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase)))
+                    .Filter(f => f.Contains(" - "))
                     .ToList();
 
-                if (allFiles.Count == 0)
+                foreach (string subdirectory in _localFileSystem.ListSubdirectories(musicVideoFolder)
+                    .OrderBy(identity))
                 {
-                    foreach (string subdirectory in _localFileSystem.ListSubdirectories(musicVideoFolder)
-                        .OrderBy(identity))
-                    {
-                        folderQueue.Enqueue(subdirectory);
-                    }
-
-                    continue;
+                    folderQueue.Enqueue(subdirectory);
                 }
 
                 if (_localFileSystem.GetLastWriteTime(musicVideoFolder) < lastScan)
@@ -107,11 +97,11 @@ namespace ErsatzTV.Core.Metadata
                 foreach (string file in allFiles.OrderBy(identity))
                 {
                     // TODO: figure out how to rebuild playouts
-                    Either<BaseError, MediaItemScanResult<MusicVideo>> maybeMusicVideo =
-                        await FindOrCreateMusicVideo(libraryPath, file)
-                            .BindT(musicVideo => UpdateStatistics(musicVideo, ffprobePath))
-                            .BindT(UpdateMetadata)
-                            .BindT(UpdateThumbnail);
+                    Either<BaseError, MediaItemScanResult<MusicVideo>> maybeMusicVideo = await _musicVideoRepository
+                        .GetOrAdd(libraryPath, file)
+                        .BindT(musicVideo => UpdateStatistics(musicVideo, ffprobePath))
+                        .BindT(UpdateMetadata)
+                        .BindT(UpdateThumbnail);
 
                     await maybeMusicVideo.Match(
                         async result =>
@@ -146,34 +136,13 @@ namespace ErsatzTV.Core.Metadata
             return Unit.Default;
         }
 
-        private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> FindOrCreateMusicVideo(
-            LibraryPath libraryPath,
-            string filePath)
-        {
-            Option<MusicVideoMetadata> maybeMetadata = await _localMetadataProvider.GetMetadataForMusicVideo(filePath);
-            return await maybeMetadata.Match(
-                async metadata =>
-                {
-                    Option<MusicVideo> maybeMusicVideo =
-                        await _musicVideoRepository.GetByMetadata(libraryPath, metadata);
-                    return await maybeMusicVideo.Match(
-                        musicVideo =>
-                            Right<BaseError, MediaItemScanResult<MusicVideo>>(
-                                    new MediaItemScanResult<MusicVideo>(musicVideo))
-                                .AsTask(),
-                        async () => await _musicVideoRepository.Add(libraryPath, filePath, metadata));
-                },
-                () => Left<BaseError, MediaItemScanResult<MusicVideo>>(
-                    BaseError.New("Unable to locate metadata for music video")).AsTask());
-        }
-
         private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateMetadata(
             MediaItemScanResult<MusicVideo> result)
         {
             try
             {
                 MusicVideo musicVideo = result.Item;
-                return await LocateNfoFile(musicVideo).Match<Task<Either<BaseError, MediaItemScanResult<MusicVideo>>>>(
+                await LocateNfoFile(musicVideo).Match(
                     async nfoFile =>
                     {
                         bool shouldUpdate = Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone().Match(
@@ -189,11 +158,21 @@ namespace ErsatzTV.Core.Metadata
                                 result.IsUpdated = true;
                             }
                         }
-
-                        return result;
                     },
-                    () => Left<BaseError, MediaItemScanResult<MusicVideo>>(
-                        BaseError.New("Unable to locate metadata for music video")).AsTask());
+                    async () =>
+                    {
+                        if (!Optional(musicVideo.MusicVideoMetadata).Flatten().Any())
+                        {
+                            string path = musicVideo.MediaVersions.Head().MediaFiles.Head().Path;
+                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
+                            if (await _localMetadataProvider.RefreshFallbackMetadata(musicVideo))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+                    });
+
+                return result;
             }
             catch (Exception ex)
             {

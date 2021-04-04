@@ -70,23 +70,6 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
-        public async Task<Option<MusicVideoMetadata>> GetMetadataForMusicVideo(string filePath)
-        {
-            string nfoFileName = Path.ChangeExtension(filePath, "nfo");
-            Option<MusicVideoMetadata> maybeMetadata = None;
-            if (_localFileSystem.FileExists(nfoFileName))
-            {
-                maybeMetadata = await LoadMusicVideoMetadata(nfoFileName);
-            }
-
-            return maybeMetadata.Map(
-                metadata =>
-                {
-                    metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
-                    return metadata;
-                });
-        }
-
         public Task<bool> RefreshSidecarMetadata(Movie movie, string nfoFileName) =>
             LoadMovieMetadata(movie, nfoFileName).Bind(
                 maybeMetadata => maybeMetadata.Match(
@@ -109,13 +92,16 @@ namespace ErsatzTV.Core.Metadata
             LoadMusicVideoMetadata(nfoFileName).Bind(
                 maybeMetadata => maybeMetadata.Match(
                     metadata => ApplyMetadataUpdate(musicVideo, metadata),
-                    () => Task.FromResult(false)));
+                    () => RefreshFallbackMetadata(musicVideo)));
 
         public Task<bool> RefreshFallbackMetadata(Movie movie) =>
             ApplyMetadataUpdate(movie, _fallbackMetadataProvider.GetFallbackMetadata(movie));
 
         public Task<bool> RefreshFallbackMetadata(Episode episode) =>
             ApplyMetadataUpdate(episode, _fallbackMetadataProvider.GetFallbackMetadata(episode));
+
+        public Task<bool> RefreshFallbackMetadata(MusicVideo musicVideo) =>
+            ApplyMetadataUpdate(musicVideo, _fallbackMetadataProvider.GetFallbackMetadata(musicVideo));
 
         public Task<bool> RefreshFallbackMetadata(Show televisionShow, string showFolder) =>
             ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder));

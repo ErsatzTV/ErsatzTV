@@ -25,83 +25,35 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task<Option<MusicVideo>> GetByMetadata(LibraryPath libraryPath, MusicVideoMetadata metadata)
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            Option<int> maybeId = await dbContext.MusicVideoMetadata
-                .Where(s => s.Artist == metadata.Artist && s.Title == metadata.Title && s.Year == metadata.Year)
-                .Where(s => s.MusicVideo.LibraryPathId == libraryPath.Id)
-                .SingleOrDefaultAsync()
-                .Map(Optional)
-                .MapT(sm => sm.MusicVideoId);
-
-            return await maybeId.Match(
-                id =>
-                {
-                    return dbContext.MusicVideos
-                        .AsNoTracking()
-                        .Include(mv => mv.MusicVideoMetadata)
-                        .ThenInclude(mvm => mvm.Artwork)
-                        .Include(mv => mv.MusicVideoMetadata)
-                        .ThenInclude(mvm => mvm.Genres)
-                        .Include(mv => mv.MusicVideoMetadata)
-                        .ThenInclude(mvm => mvm.Tags)
-                        .Include(mv => mv.MusicVideoMetadata)
-                        .ThenInclude(mvm => mvm.Studios)
-                        .Include(mv => mv.LibraryPath)
-                        .ThenInclude(lp => lp.Library)
-                        .Include(mv => mv.MediaVersions)
-                        .ThenInclude(mv => mv.MediaFiles)
-                        .Include(mv => mv.MediaVersions)
-                        .ThenInclude(mv => mv.Streams)
-                        .OrderBy(mv => mv.Id)
-                        .SingleOrDefaultAsync(mv => mv.Id == id)
-                        .Map(Optional);
-                },
-                () => Option<MusicVideo>.None.AsTask());
-        }
-
-        public async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> Add(
+        public async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(
             LibraryPath libraryPath,
-            string filePath,
-            MusicVideoMetadata metadata)
+            string path)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<MusicVideo> maybeExisting = await dbContext.MusicVideos
+                .AsNoTracking()
+                .Include(mv => mv.MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Artwork)
+                .Include(mv => mv.MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Genres)
+                .Include(mv => mv.MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Tags)
+                .Include(mv => mv.MusicVideoMetadata)
+                .ThenInclude(mvm => mvm.Studios)
+                .Include(mv => mv.LibraryPath)
+                .ThenInclude(lp => lp.Library)
+                .Include(mv => mv.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(mv => mv.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
+                .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
-            try
-            {
-                metadata.DateAdded = DateTime.UtcNow;
-                metadata.Genres ??= new List<Genre>();
-                metadata.Tags ??= new List<Tag>();
-                metadata.Studios ??= new List<Studio>();
-                var musicVideo = new MusicVideo
-                {
-                    LibraryPathId = libraryPath.Id,
-                    MusicVideoMetadata = new List<MusicVideoMetadata> { metadata },
-                    MediaVersions = new List<MediaVersion>
-                    {
-                        new()
-                        {
-                            MediaFiles = new List<MediaFile>
-                            {
-                                new() { Path = filePath }
-                            },
-                            Streams = new List<MediaStream>()
-                        }
-                    }
-                };
-
-                await dbContext.MusicVideos.AddAsync(musicVideo);
-                await dbContext.SaveChangesAsync();
-                await dbContext.Entry(musicVideo).Reference(s => s.LibraryPath).LoadAsync();
-                await dbContext.Entry(musicVideo.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-
-                return new MediaItemScanResult<MusicVideo>(musicVideo) { IsAdded = true };
-            }
-            catch (Exception ex)
-            {
-                return BaseError.New(ex.Message);
-            }
+            return await maybeExisting.Match(
+                mediaItem =>
+                    Right<BaseError, MediaItemScanResult<MusicVideo>>(
+                        new MediaItemScanResult<MusicVideo>(mediaItem) { IsAdded = false }).AsTask(),
+                async () => await AddMusicVideo(dbContext, libraryPath.Id, path));
         }
 
         public Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath) =>
@@ -178,6 +130,41 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OrderBy(m => m.Id)
                 .SingleOrDefaultAsync(m => m.Id == musicVideoId)
                 .Map(Optional);
+        }
+
+        private static async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> AddMusicVideo(
+            TvContext dbContext,
+            int libraryPathId,
+            string path)
+        {
+            try
+            {
+                var musicVideo = new MusicVideo
+                {
+                    LibraryPathId = libraryPathId,
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = path }
+                            },
+                            Streams = new List<MediaStream>()
+                        }
+                    }
+                };
+
+                await dbContext.MusicVideos.AddAsync(musicVideo);
+                await dbContext.SaveChangesAsync();
+                await dbContext.Entry(musicVideo).Reference(m => m.LibraryPath).LoadAsync();
+                await dbContext.Entry(musicVideo.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+                return new MediaItemScanResult<MusicVideo>(musicVideo) { IsAdded = true };
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.Message);
+            }
         }
     }
 }
