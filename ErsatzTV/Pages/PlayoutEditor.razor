@@ -40,8 +40,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _channels = await Mediator.Send(new GetAllChannels());
-        _programSchedules = await Mediator.Send(new GetAllProgramSchedules());
+        _channels = await Mediator.Send(new GetAllChannels())
+            .Map(list => list.OrderBy(vm => decimal.Parse(vm.Number)).ToList());
+        _programSchedules = await Mediator.Send(new GetAllProgramSchedules())
+            .Map(list => list.OrderBy(vm => vm.Name).ToList());
     }
 
     protected override void OnInitialized()
