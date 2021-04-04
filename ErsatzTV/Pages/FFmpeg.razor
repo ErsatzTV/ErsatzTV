@@ -2,8 +2,9 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Commands
 @using ErsatzTV.Application.FFmpegProfiles.Queries
-@using Unit = LanguageExt.Unit
+@using ErsatzTV.Application.MediaItems.Queries
 @using System.Globalization
+@using Unit = LanguageExt.Unit
 @inject IDialogService Dialog
 @inject IMediator Mediator
 @inject ILogger<FFmpeg> Logger
@@ -30,9 +31,12 @@
                         }
                     </MudSelect>
                 </MudElement>
-                <MudElement HtmlTag="div" Class="mt-3">
-                    <MudTextField T="string" Label="Preferred Language Code" @bind-Value="_ffmpegSettings.PreferredLanguageCode" Validation="@(new Func<string, string>(ValidateLanguageCode))" Required="true" RequiredError="Preferred Language Code is required!"/>
-                </MudElement>
+                <MudSelect Class="mt-3" Label="Preferred Language" @bind-Value="_ffmpegSettings.PreferredLanguageCode" For="@(() => _ffmpegSettings.PreferredLanguageCode)" Required="true" RequiredError="Preferred Language Code is required!">
+                    @foreach (CultureInfo culture in _availableCultures)
+                    {
+                        <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                    }
+                </MudSelect>
                 <MudElement HtmlTag="div" Class="mt-3">
                     <MudSwitch T="bool"
                                Label="Save troubleshooting reports to disk"
@@ -115,12 +119,14 @@
     private FFmpegSettingsViewModel _ffmpegSettings;
 
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
+    private List<CultureInfo> _availableCultures;
 
     protected override async Task OnParametersSetAsync()
     {
         _ffmpegSettings = await Mediator.Send(new GetFFmpegSettings());
         _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
         await LoadFFmpegProfilesAsync();
+        _availableCultures = await Mediator.Send(new GetAllLanguageCodes());
     }
 
     private async Task SaveSettings()
@@ -136,19 +142,6 @@
     }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
-
-    private static string ValidateLanguageCode(string languageCode)
-    {
-        if (string.IsNullOrWhiteSpace(languageCode))
-        {
-            return null;
-        }
-
-        Option<CultureInfo> culture = CultureInfo.GetCultures(CultureTypes.NeutralCultures)
-            .FirstOrDefault(ci => string.Equals(ci.ThreeLetterISOLanguageName, languageCode, StringComparison.OrdinalIgnoreCase));
-
-        return culture.IsNone ? "Preferred language code is invalid" : null;
-    }
 
     private async Task LoadFFmpegProfilesAsync() =>
         _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());
