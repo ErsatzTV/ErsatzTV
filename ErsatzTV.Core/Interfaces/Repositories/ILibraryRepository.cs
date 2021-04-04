@@ -12,6 +12,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<LocalLibrary>> GetLocal(int libraryId);
         Task<List<Library>> GetAll();
         Task<Unit> UpdateLastScan(Library library);
+        Task<Unit> UpdateLastScan(LibraryPath libraryPath);
         Task<List<LibraryPath>> GetLocalPaths(int libraryId);
         Task<Option<LibraryPath>> GetPath(int libraryPathId);
         Task<int> CountMediaItemsByPath(int libraryPathId);

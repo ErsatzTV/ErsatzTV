@@ -132,7 +132,10 @@
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        List<MediaCardViewModel> GetSortedItems() => _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
+        List<MediaCardViewModel> GetSortedItems()
+        {
+            return _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
+        }
 
         SelectClicked(GetSortedItems, card, e);
     }

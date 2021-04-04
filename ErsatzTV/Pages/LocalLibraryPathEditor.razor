@@ -74,7 +74,7 @@
                 {
                     if (Locker.LockLibrary(_library.Id))
                     {
-                        await Channel.WriteAsync(new ForceRescanLocalLibrary(_library.Id));
+                        await Channel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id));
                         NavigationManager.NavigateTo("/media/libraries");
                     }
                 });

@@ -3,16 +3,21 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Plex
 {
     public abstract class PlexLibraryScanner
     {
+        private readonly ILogger<PlexLibraryScanner> _logger;
         private readonly IMetadataRepository _metadataRepository;
 
-        protected PlexLibraryScanner(IMetadataRepository metadataRepository) =>
+        protected PlexLibraryScanner(IMetadataRepository metadataRepository, ILogger<PlexLibraryScanner> logger)
+        {
             _metadataRepository = metadataRepository;
+            _logger = logger;
+        }
 
         protected async Task<Unit> UpdateArtworkIfNeeded(
             Domain.Metadata existingMetadata,
@@ -27,6 +32,8 @@ namespace ErsatzTV.Core.Plex
                 await maybeIncomingArtwork.Match(
                     async incomingArtwork =>
                     {
+                        _logger.LogDebug("Refreshing Plex {Attribute} from {Path}", artworkKind, incomingArtwork.Path);
+
                         Option<Artwork> maybeExistingArtwork = Optional(existingMetadata.Artwork).Flatten()
                             .Find(a => a.ArtworkKind == artworkKind);
 

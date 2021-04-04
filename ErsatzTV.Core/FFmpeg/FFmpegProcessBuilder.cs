@@ -199,6 +199,7 @@ namespace ErsatzTV.Core.FFmpeg
                 "-c", "copy",
                 "-muxdelay", "0",
                 "-muxpreload", "0"
+                // "-avoid_negative_ts", "make_zero"
             };
             _arguments.AddRange(arguments);
             return this;

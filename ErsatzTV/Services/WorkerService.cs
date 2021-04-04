@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ErsatzTV.Application;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
-using ErsatzTV.Application.Plex.Commands;
 using ErsatzTV.Application.Search.Commands;
 using ErsatzTV.Core;
 using LanguageExt;
@@ -68,19 +67,6 @@ namespace ErsatzTV.Services
                                 error => _logger.LogWarning(
                                     "Unable to scan local library {LibraryId}: {Error}",
                                     scanLocalLibrary.LibraryId,
-                                    error.Value));
-                            break;
-                        case ISynchronizePlexLibraryById synchronizePlexLibraryById:
-                            Either<BaseError, string> result = await mediator.Send(
-                                synchronizePlexLibraryById,
-                                cancellationToken);
-                            result.BiIter(
-                                name => _logger.LogDebug(
-                                    "Done synchronizing plex library {Name}",
-                                    name),
-                                error => _logger.LogWarning(
-                                    "Unable to synchronize plex library {LibraryId}: {Error}",
-                                    synchronizePlexLibraryById.PlexLibraryId,
                                     error.Value));
                             break;
                         case RebuildSearchIndex rebuildSearchIndex:

@@ -7,14 +7,17 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Core.Plex
 {
     public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionLibraryScanner
     {
         private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
+        private readonly IMediator _mediator;
         private readonly IMetadataRepository _metadataRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
         private readonly ISearchIndex _searchIndex;
@@ -25,13 +28,15 @@ namespace ErsatzTV.Core.Plex
             ITelevisionRepository televisionRepository,
             IMetadataRepository metadataRepository,
             ISearchIndex searchIndex,
+            IMediator mediator,
             ILogger<PlexTelevisionLibraryScanner> logger)
-            : base(metadataRepository)
+            : base(metadataRepository, logger)
         {
             _plexServerApiClient = plexServerApiClient;
             _televisionRepository = televisionRepository;
             _metadataRepository = metadataRepository;
             _searchIndex = searchIndex;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -50,6 +55,9 @@ namespace ErsatzTV.Core.Plex
                 {
                     foreach (PlexShow incoming in showEntries)
                     {
+                        decimal percentCompletion = (decimal) showEntries.IndexOf(incoming) / showEntries.Count;
+                        await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, percentCompletion));
+
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, MediaItemScanResult<PlexShow>> maybeShow = await _televisionRepository
                             .GetOrAddPlexShow(plexMediaSourceLibrary, incoming)
@@ -84,6 +92,8 @@ namespace ErsatzTV.Core.Plex
                     List<int> ids =
                         await _televisionRepository.RemoveMissingPlexShows(plexMediaSourceLibrary, showKeys);
                     await _searchIndex.RemoveItems(ids);
+
+                    await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, 0));
 
                     return Unit.Default;
                 },
