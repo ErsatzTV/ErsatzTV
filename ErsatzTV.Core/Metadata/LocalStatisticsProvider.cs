@@ -164,7 +164,9 @@ namespace ErsatzTV.Core.Metadata
                         FFprobeStream videoStream = json.streams.FirstOrDefault(s => s.codec_type == "video");
                         if (videoStream != null)
                         {
-                            version.SampleAspectRatio = videoStream.sample_aspect_ratio;
+                            version.SampleAspectRatio = string.IsNullOrWhiteSpace(videoStream.sample_aspect_ratio)
+                                ? "1:1"
+                                : videoStream.sample_aspect_ratio;
                             version.DisplayAspectRatio = videoStream.display_aspect_ratio;
                             version.Width = videoStream.width;
                             version.Height = videoStream.height;
