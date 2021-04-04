@@ -33,6 +33,7 @@ using ErsatzTV.Services;
 using ErsatzTV.Services.RunOnce;
 using FluentValidation.AspNetCore;
 using MediatR;
+using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Data.Sqlite;
@@ -88,6 +89,7 @@ namespace ErsatzTV
             services.AddServerSideBlazor();
 
             services.AddMudServices();
+            services.AddCourier(Assembly.GetAssembly(typeof(LibraryScanProgress)));
 
             Log.Logger.Information(
                 "ErsatzTV version {Version}",

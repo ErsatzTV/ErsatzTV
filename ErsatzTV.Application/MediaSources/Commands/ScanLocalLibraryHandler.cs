@@ -8,6 +8,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Metadata;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -16,13 +17,13 @@ using Unit = LanguageExt.Unit;
 namespace ErsatzTV.Application.MediaSources.Commands
 {
     public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>,
-        IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>,
-        IRequestHandler<ForceRescanLocalLibrary, Either<BaseError, string>>
+        IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly IEntityLocker _entityLocker;
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<ScanLocalLibraryHandler> _logger;
+        private readonly IMediator _mediator;
         private readonly IMovieFolderScanner _movieFolderScanner;
         private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
         private readonly ITelevisionFolderScanner _televisionFolderScanner;
@@ -34,6 +35,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             ITelevisionFolderScanner televisionFolderScanner,
             IMusicVideoFolderScanner musicVideoFolderScanner,
             IEntityLocker entityLocker,
+            IMediator mediator,
             ILogger<ScanLocalLibraryHandler> logger)
         {
             _libraryRepository = libraryRepository;
@@ -42,12 +44,9 @@ namespace ErsatzTV.Application.MediaSources.Commands
             _televisionFolderScanner = televisionFolderScanner;
             _musicVideoFolderScanner = musicVideoFolderScanner;
             _entityLocker = entityLocker;
+            _mediator = mediator;
             _logger = logger;
         }
-
-        public Task<Either<BaseError, string>> Handle(
-            ForceRescanLocalLibrary request,
-            CancellationToken cancellationToken) => Handle(request);
 
         public Task<Either<BaseError, string>> Handle(
             ForceScanLocalLibrary request,
@@ -65,47 +64,63 @@ namespace ErsatzTV.Application.MediaSources.Commands
 
         private async Task<Unit> PerformScan(RequestParameters parameters)
         {
-            (LocalLibrary localLibrary, string ffprobePath, bool forceScan, bool rescan) = parameters;
+            (LocalLibrary localLibrary, string ffprobePath, bool forceScan) = parameters;
 
-            var lastScan = new DateTimeOffset(localLibrary.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
-            if (forceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
+            var sw = new Stopwatch();
+            sw.Start();
+
+            for (var i = 0; i < localLibrary.Paths.Count; i++)
             {
-                var sw = new Stopwatch();
-                sw.Start();
+                LibraryPath libraryPath = localLibrary.Paths[i];
 
-                DateTimeOffset effectiveLastScan = rescan ? DateTimeOffset.MinValue : lastScan;
+                decimal progressMin = (decimal) i / localLibrary.Paths.Count;
+                decimal progressMax = (decimal) (i + 1) / localLibrary.Paths.Count;
 
-                foreach (LibraryPath libraryPath in localLibrary.Paths)
+                var lastScan = new DateTimeOffset(libraryPath.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
+                if (forceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
                 {
                     switch (localLibrary.MediaKind)
                     {
                         case LibraryMediaKind.Movies:
-                            await _movieFolderScanner.ScanFolder(libraryPath, ffprobePath, effectiveLastScan);
+                            await _movieFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffprobePath,
+                                lastScan,
+                                progressMin,
+                                progressMax);
                             break;
                         case LibraryMediaKind.Shows:
-                            await _televisionFolderScanner.ScanFolder(libraryPath, ffprobePath, effectiveLastScan);
+                            await _televisionFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffprobePath,
+                                lastScan,
+                                progressMin,
+                                progressMax);
                             break;
                         case LibraryMediaKind.MusicVideos:
-                            await _musicVideoFolderScanner.ScanFolder(libraryPath, ffprobePath, effectiveLastScan);
+                            await _musicVideoFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffprobePath,
+                                lastScan,
+                                progressMin,
+                                progressMax);
                             break;
                     }
+
+                    libraryPath.LastScan = DateTime.UtcNow;
+                    await _libraryRepository.UpdateLastScan(libraryPath);
                 }
 
-                localLibrary.LastScan = DateTime.UtcNow;
-                await _libraryRepository.UpdateLastScan(localLibrary);
+                await _mediator.Publish(new LibraryScanProgress(libraryPath.LibraryId, progressMax));
+            }
 
-                sw.Stop();
-                _logger.LogDebug(
-                    "Scan of library {Name} completed in {Duration}",
-                    localLibrary.Name,
-                    TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds));
-            }
-            else
-            {
-                _logger.LogDebug(
-                    "Skipping unforced scan of library {Name}",
-                    localLibrary.Name);
-            }
+            sw.Stop();
+            _logger.LogDebug(
+                "Scan of library {Name} completed in {Duration}",
+                localLibrary.Name,
+                TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds));
+
+            await _mediator.Publish(new LibraryScanProgress(localLibrary.Id, 0));
 
             _entityLocker.UnlockLibrary(localLibrary.Id);
             return Unit.Default;
@@ -117,8 +132,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
                 (library, ffprobePath) => new RequestParameters(
                     library,
                     ffprobePath,
-                    request.ForceScan,
-                    request.Rescan));
+                    request.ForceScan));
 
         private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(
             IScanLocalLibrary request) =>
@@ -133,6 +147,6 @@ namespace ErsatzTV.Application.MediaSources.Commands
                     ffprobePath =>
                         ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
 
-        private record RequestParameters(LocalLibrary LocalLibrary, string FFprobePath, bool ForceScan, bool Rescan);
+        private record RequestParameters(LocalLibrary LocalLibrary, string FFprobePath, bool ForceScan);
     }
 }

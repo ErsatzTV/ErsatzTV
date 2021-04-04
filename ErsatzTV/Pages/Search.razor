@@ -169,10 +169,13 @@
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        List<MediaCardViewModel> GetSortedItems() => _movies.Cards.OrderBy(m => m.SortTitle)
-            .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
-            .Append(_musicVideos.Cards.OrderBy(s => s.SortTitle))
-            .ToList();
+        List<MediaCardViewModel> GetSortedItems()
+        {
+            return _movies.Cards.OrderBy(m => m.SortTitle)
+                .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
+                .Append(_musicVideos.Cards.OrderBy(s => s.SortTitle))
+                .ToList();
+        }
 
         SelectClicked(GetSortedItems, card, e);
     }

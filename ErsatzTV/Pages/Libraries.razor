@@ -1,12 +1,16 @@
 ﻿@page "/media/libraries"
+@using MediatR.Courier
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.Libraries.Queries
 @using ErsatzTV.Application.MediaSources.Commands
 @using ErsatzTV.Application.Plex.Commands
+@using ErsatzTV.Core.Metadata
+@using System.Threading
 @implements IDisposable
 @inject IMediator Mediator
 @inject IEntityLocker Locker
 @inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject ICourier Courier
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_libraries" Dense="true">
@@ -17,7 +21,7 @@
             <col/>
             <col/>
             <col/>
-            <col style="width: 120px;"/>
+            <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Library Kind</MudTh>
@@ -33,12 +37,21 @@
                 <div style="align-items: center; display: flex;">
                     @if (Locker.IsLibraryLocked(context.Id))
                     {
+                        <div style="width: 48px">
+                            @if (_progressByLibrary[context.Id] > 0)
+                            {
+                                <MudText Color="Color.Primary">
+                                    @($"{_progressByLibrary[context.Id]} %")
+                                </MudText>
+                            }
+                        </div>
                         <div style="align-items: center; display: flex; height: 48px; justify-content: center; width: 48px;">
                             <MudProgressCircular Color="Color.Primary" Size="Size.Small" Indeterminate="true"/>
                         </div>
                     }
                     else
                     {
+                        <div style="width: 48px"></div>
                         <MudTooltip Text="Scan Library">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                            Disabled="@Locker.IsLibraryLocked(context.Id)"
@@ -63,14 +76,21 @@
 
 @code {
     private IList<LibraryViewModel> _libraries;
+    private Dictionary<int, int> _progressByLibrary;
 
-    protected override void OnInitialized() =>
+    protected override void OnInitialized()
+    {
         Locker.OnLibraryChanged += LockChanged;
+        Courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
+    }
 
     protected override async Task OnParametersSetAsync() => await LoadLibraries();
 
-    private async Task LoadLibraries() =>
+    private async Task LoadLibraries()
+    {
         _libraries = await Mediator.Send(new GetAllLibraries());
+        _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
+    }
 
     private async Task ScanLibrary(LibraryViewModel library)
     {
@@ -93,6 +113,19 @@
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
 
-    void IDisposable.Dispose() => Locker.OnLibraryChanged -= LockChanged;
+    private async Task HandleScanProgress(LibraryScanProgress libraryScanProgress, CancellationToken cancellationToken)
+    {
+        if (_progressByLibrary != null && _progressByLibrary.ContainsKey(libraryScanProgress.LibraryId))
+        {
+            _progressByLibrary[libraryScanProgress.LibraryId] = (int) (libraryScanProgress.Progress * 100);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        Locker.OnLibraryChanged -= LockChanged;
+        Courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
+    }
 
 }

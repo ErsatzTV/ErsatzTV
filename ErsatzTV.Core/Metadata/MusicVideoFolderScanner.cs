@@ -10,8 +10,10 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Core.Metadata
 {
@@ -20,6 +22,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<MusicVideoFolderScanner> _logger;
+        private readonly IMediator _mediator;
         private readonly IMusicVideoRepository _musicVideoRepository;
         private readonly ISearchIndex _searchIndex;
 
@@ -31,6 +34,7 @@ namespace ErsatzTV.Core.Metadata
             IImageCache imageCache,
             ISearchIndex searchIndex,
             IMusicVideoRepository musicVideoRepository,
+            IMediator mediator,
             ILogger<MusicVideoFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
@@ -42,18 +46,25 @@ namespace ErsatzTV.Core.Metadata
             _localMetadataProvider = localMetadataProvider;
             _searchIndex = searchIndex;
             _musicVideoRepository = musicVideoRepository;
+            _mediator = mediator;
             _logger = logger;
         }
 
         public async Task<Either<BaseError, Unit>> ScanFolder(
             LibraryPath libraryPath,
             string ffprobePath,
-            DateTimeOffset lastScan)
+            DateTimeOffset lastScan,
+            decimal progressMin,
+            decimal progressMax)
         {
+            decimal progressSpread = progressMax - progressMin;
+
             if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
             {
                 return new MediaSourceInaccessible();
             }
+
+            var foldersCompleted = 0;
 
             var folderQueue = new Queue<string>();
             foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path).OrderBy(identity))
@@ -63,9 +74,14 @@ namespace ErsatzTV.Core.Metadata
 
             while (folderQueue.Count > 0)
             {
-                string movieFolder = folderQueue.Dequeue();
+                decimal percentCompletion = (decimal) foldersCompleted / (foldersCompleted + folderQueue.Count);
+                await _mediator.Publish(
+                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
 
-                var allFiles = _localFileSystem.ListFiles(movieFolder)
+                string musicVideoFolder = folderQueue.Dequeue();
+                foldersCompleted++;
+
+                var allFiles = _localFileSystem.ListFiles(musicVideoFolder)
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
                     .Filter(
                         f => !ExtraFiles.Any(
@@ -74,7 +90,8 @@ namespace ErsatzTV.Core.Metadata
 
                 if (allFiles.Count == 0)
                 {
-                    foreach (string subdirectory in _localFileSystem.ListSubdirectories(movieFolder).OrderBy(identity))
+                    foreach (string subdirectory in _localFileSystem.ListSubdirectories(musicVideoFolder)
+                        .OrderBy(identity))
                     {
                         folderQueue.Enqueue(subdirectory);
                     }
@@ -82,7 +99,7 @@ namespace ErsatzTV.Core.Metadata
                     continue;
                 }
 
-                if (_localFileSystem.GetLastWriteTime(movieFolder) < lastScan)
+                if (_localFileSystem.GetLastWriteTime(musicVideoFolder) < lastScan)
                 {
                     continue;
                 }
