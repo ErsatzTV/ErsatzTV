@@ -10,8 +10,10 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Core.Metadata
 {
@@ -20,6 +22,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<TelevisionFolderScanner> _logger;
+        private readonly IMediator _mediator;
         private readonly ISearchIndex _searchIndex;
         private readonly ITelevisionRepository _televisionRepository;
 
@@ -31,6 +34,7 @@ namespace ErsatzTV.Core.Metadata
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
             ISearchIndex searchIndex,
+            IMediator mediator,
             ILogger<TelevisionFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
@@ -42,14 +46,19 @@ namespace ErsatzTV.Core.Metadata
             _televisionRepository = televisionRepository;
             _localMetadataProvider = localMetadataProvider;
             _searchIndex = searchIndex;
+            _mediator = mediator;
             _logger = logger;
         }
 
         public async Task<Either<BaseError, Unit>> ScanFolder(
             LibraryPath libraryPath,
             string ffprobePath,
-            DateTimeOffset lastScan)
+            DateTimeOffset lastScan,
+            decimal progressMin,
+            decimal progressMax)
         {
+            decimal progressSpread = progressMax - progressMin;
+
             if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
             {
                 return new MediaSourceInaccessible();
@@ -62,6 +71,10 @@ namespace ErsatzTV.Core.Metadata
 
             foreach (string showFolder in allShowFolders)
             {
+                decimal percentCompletion = (decimal) allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
+                await _mediator.Publish(
+                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
+
                 Either<BaseError, MediaItemScanResult<Show>> maybeShow =
                     await FindOrCreateShow(libraryPath.Id, showFolder)
                         .BindT(show => UpdateMetadataForShow(show, showFolder))

@@ -52,6 +52,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(lp => lp.Library)
                         .Include(mv => mv.MediaVersions)
                         .ThenInclude(mv => mv.MediaFiles)
+                        .Include(mv => mv.MediaVersions)
+                        .ThenInclude(mv => mv.Streams)
                         .OrderBy(mv => mv.Id)
                         .SingleOrDefaultAsync(mv => mv.Id == id)
                         .Map(Optional);

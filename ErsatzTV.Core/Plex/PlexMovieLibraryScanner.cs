@@ -7,13 +7,16 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
+using MediatR;
 using Microsoft.Extensions.Logging;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Core.Plex
 {
     public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScanner
     {
         private readonly ILogger<PlexMovieLibraryScanner> _logger;
+        private readonly IMediator _mediator;
         private readonly IMetadataRepository _metadataRepository;
         private readonly IMovieRepository _movieRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
@@ -24,13 +27,15 @@ namespace ErsatzTV.Core.Plex
             IMovieRepository movieRepository,
             IMetadataRepository metadataRepository,
             ISearchIndex searchIndex,
+            IMediator mediator,
             ILogger<PlexMovieLibraryScanner> logger)
-            : base(metadataRepository)
+            : base(metadataRepository, logger)
         {
             _plexServerApiClient = plexServerApiClient;
             _movieRepository = movieRepository;
             _metadataRepository = metadataRepository;
             _searchIndex = searchIndex;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -49,6 +54,9 @@ namespace ErsatzTV.Core.Plex
                 {
                     foreach (PlexMovie incoming in movieEntries)
                     {
+                        decimal percentCompletion = (decimal) movieEntries.IndexOf(incoming) / movieEntries.Count;
+                        await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, percentCompletion));
+
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, MediaItemScanResult<PlexMovie>> maybeMovie = await _movieRepository
                             .GetOrAdd(plexMediaSourceLibrary, incoming)
@@ -81,6 +89,8 @@ namespace ErsatzTV.Core.Plex
                     var movieKeys = movieEntries.Map(s => s.Key).ToList();
                     List<int> ids = await _movieRepository.RemoveMissingPlexMovies(plexMediaSourceLibrary, movieKeys);
                     await _searchIndex.RemoveItems(ids);
+
+                    await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, 0));
                 },
                 error =>
                 {
@@ -113,6 +123,11 @@ namespace ErsatzTV.Core.Plex
                 await maybeStatistics.Match(
                     async mediaVersion =>
                     {
+                        _logger.LogDebug(
+                            "Refreshing {Attribute} from {Path}",
+                            "Plex Statistics",
+                            existingVersion.MediaFiles.Head().Path);
+
                         existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
                         existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
                         existingVersion.DateUpdated = mediaVersion.DateUpdated;
@@ -135,6 +150,11 @@ namespace ErsatzTV.Core.Plex
 
             if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
             {
+                _logger.LogDebug(
+                    "Refreshing {Attribute} from {Path}",
+                    "Plex Metadata",
+                    existing.MediaVersions.Head().MediaFiles.Head().Path);
+
                 foreach (Genre genre in existingMetadata.Genres
                     .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
                     .ToList())

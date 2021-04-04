@@ -62,6 +62,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             "UPDATE Library SET LastScan = @LastScan WHERE Id = @Id",
             new { library.LastScan, library.Id }).ToUnit();
 
+        public Task<Unit> UpdateLastScan(LibraryPath libraryPath) => _dbConnection.ExecuteAsync(
+            "UPDATE LibraryPath SET LastScan = @LastScan WHERE Id = @Id",
+            new { libraryPath.LastScan, libraryPath.Id }).ToUnit();
+
         public Task<List<LibraryPath>> GetLocalPaths(int libraryId)
         {
             using TvContext context = _dbContextFactory.CreateDbContext();

@@ -21,19 +21,22 @@ namespace ErsatzTV.Services
 {
     public class SchedulerService : BackgroundService
     {
-        private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IEntityLocker _entityLocker;
         private readonly ILogger<SchedulerService> _logger;
+        private readonly ChannelWriter<IPlexBackgroundServiceRequest> _plexWorkerChannel;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
         public SchedulerService(
             IServiceScopeFactory serviceScopeFactory,
-            ChannelWriter<IBackgroundServiceRequest> channel,
+            ChannelWriter<IBackgroundServiceRequest> workerChannel,
+            ChannelWriter<IPlexBackgroundServiceRequest> plexWorkerChannel,
             IEntityLocker entityLocker,
             ILogger<SchedulerService> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
-            _channel = channel;
+            _workerChannel = workerChannel;
+            _plexWorkerChannel = plexWorkerChannel;
             _entityLocker = entityLocker;
             _logger = logger;
         }
@@ -74,7 +77,7 @@ namespace ErsatzTV.Services
             List<int> playoutIds = await dbContext.Playouts.Map(p => p.Id).ToListAsync(cancellationToken);
             foreach (int playoutId in playoutIds)
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId), cancellationToken);
+                await _workerChannel.WriteAsync(new BuildPlayout(playoutId), cancellationToken);
             }
         }
 
@@ -92,7 +95,7 @@ namespace ErsatzTV.Services
             {
                 if (_entityLocker.LockLibrary(libraryId))
                 {
-                    await _channel.WriteAsync(
+                    await _workerChannel.WriteAsync(
                         new ScanLocalLibraryIfNeeded(libraryId),
                         cancellationToken);
                 }
@@ -112,7 +115,7 @@ namespace ErsatzTV.Services
             {
                 if (_entityLocker.LockLibrary(library.Id))
                 {
-                    await _channel.WriteAsync(
+                    await _plexWorkerChannel.WriteAsync(
                         new SynchronizePlexLibraryByIdIfNeeded(library.Id),
                         cancellationToken);
                 }
@@ -120,6 +123,6 @@ namespace ErsatzTV.Services
         }
 
         private ValueTask RebuildSearchIndex(CancellationToken cancellationToken) =>
-            _channel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
+            _workerChannel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
     }
 }
