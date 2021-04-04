@@ -9,7 +9,8 @@
 @implements IDisposable
 @inject IMediator Mediator
 @inject IEntityLocker Locker
-@inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel
+@inject ChannelWriter<IPlexBackgroundServiceRequest> PlexWorkerChannel
 @inject ICourier Courier
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -99,10 +100,10 @@
             switch (library)
             {
                 case LocalLibraryViewModel:
-                    await Channel.WriteAsync(new ForceScanLocalLibrary(library.Id));
+                    await WorkerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id));
                     break;
                 case PlexLibraryViewModel:
-                    await Channel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id));
+                    await PlexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id));
                     break;
             }
 
@@ -115,10 +116,17 @@
 
     private async Task HandleScanProgress(LibraryScanProgress libraryScanProgress, CancellationToken cancellationToken)
     {
-        if (_progressByLibrary != null && _progressByLibrary.ContainsKey(libraryScanProgress.LibraryId))
+        try
         {
-            _progressByLibrary[libraryScanProgress.LibraryId] = (int) (libraryScanProgress.Progress * 100);
-            await InvokeAsync(StateHasChanged);
+            if (_progressByLibrary != null && _progressByLibrary.ContainsKey(libraryScanProgress.LibraryId))
+            {
+                _progressByLibrary[libraryScanProgress.LibraryId] = (int) (libraryScanProgress.Progress * 100);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception)
+        {
+    // ignore
         }
     }
 
