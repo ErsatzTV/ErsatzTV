@@ -4,6 +4,7 @@
 @using ErsatzTV.Application.Channels.Queries
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Queries
+@using System.Globalization
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
@@ -99,7 +100,25 @@
         }
     }
 
-    private async Task LoadChannelsAsync() => _channels = await Mediator.Send(new GetAllChannels())
-        .Map(list => list.OrderBy(c => decimal.Parse(c.Number)).ToList());
+    private async Task LoadChannelsAsync()
+    {
+        List<ChannelViewModel> channels = await Mediator.Send(new GetAllChannels());
+        IOrderedEnumerable<ChannelViewModel> sorted = channels.OrderBy(c => decimal.Parse(c.Number));
+
+        CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
+        _channels = new List<ChannelViewModel>();
+        foreach (ChannelViewModel channel in sorted)
+        {
+            Option<CultureInfo> maybeCultureInfo = allCultures.Find(
+                ci => string.Equals(
+                    ci.ThreeLetterISOLanguageName,
+                    channel.PreferredLanguageCode,
+                    StringComparison.OrdinalIgnoreCase));
+
+            maybeCultureInfo.Match(
+                cultureInfo => _channels.Add(channel with { PreferredLanguageCode = cultureInfo.EnglishName }),
+                () => _channels.Add(channel));
+        }
+    }
 
 }
