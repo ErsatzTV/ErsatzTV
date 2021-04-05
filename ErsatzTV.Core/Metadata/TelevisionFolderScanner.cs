@@ -8,6 +8,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<TelevisionFolderScanner> _logger;
         private readonly IMediator _mediator;
+        private readonly ISearchIndex _searchIndex;
         private readonly ITelevisionRepository _televisionRepository;
 
         public TelevisionFolderScanner(
@@ -31,6 +33,7 @@ namespace ErsatzTV.Core.Metadata
             ILocalMetadataProvider localMetadataProvider,
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
+            ISearchIndex searchIndex,
             IMediator mediator,
             ILogger<TelevisionFolderScanner> logger) : base(
             localFileSystem,
@@ -42,6 +45,7 @@ namespace ErsatzTV.Core.Metadata
             _localFileSystem = localFileSystem;
             _televisionRepository = televisionRepository;
             _localMetadataProvider = localMetadataProvider;
+            _searchIndex = searchIndex;
             _mediator = mediator;
             _logger = logger;
         }
@@ -51,9 +55,7 @@ namespace ErsatzTV.Core.Metadata
             string ffprobePath,
             DateTimeOffset lastScan,
             decimal progressMin,
-            decimal progressMax,
-            Func<List<MediaItem>, ValueTask> addToSearchIndex,
-            Func<List<int>, ValueTask> removeFromSearchIndex)
+            decimal progressMax)
         {
             decimal progressSpread = progressMax - progressMin;
 
@@ -82,7 +84,15 @@ namespace ErsatzTV.Core.Metadata
                 await maybeShow.Match(
                     async result =>
                     {
-                        await addToSearchIndex(new List<MediaItem> { result.Item });
+                        if (result.IsAdded)
+                        {
+                            await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                        }
+                        else if (result.IsUpdated)
+                        {
+                            await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                        }
+
                         await ScanSeasons(
                             libraryPath,
                             ffprobePath,
@@ -112,7 +122,7 @@ namespace ErsatzTV.Core.Metadata
 
             await _televisionRepository.DeleteEmptySeasons(libraryPath);
             List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);
-            await removeFromSearchIndex(ids);
+            await _searchIndex.RemoveItems(ids);
 
             return Unit.Default;
         }
