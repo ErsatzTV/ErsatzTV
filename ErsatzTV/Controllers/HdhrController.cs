@@ -1,7 +1,9 @@
 ﻿using System.Threading.Tasks;
 using ErsatzTV.Application.Channels.Queries;
+using ErsatzTV.Application.HDHR.Queries;
 using ErsatzTV.Core.Hdhr;
 using ErsatzTV.Extensions;
+using LanguageExt;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,8 +22,10 @@ namespace ErsatzTV.Controllers
             new OkObjectResult(new DeviceXml(Request.Scheme, Request.Host.ToString()));
 
         [HttpGet("discover.json")]
-        public IActionResult Discover() =>
-            new OkObjectResult(new Discover(Request.Scheme, Request.Host.ToString(), 2));
+        [ResponseCache(NoStore = true)]
+        public Task<IActionResult> Discover() =>
+            _mediator.Send(new GetHDHRTunerCount()).Map<int, IActionResult>(
+                tunerCount => new OkObjectResult(new Discover(Request.Scheme, Request.Host.ToString(), tunerCount)));
 
         [HttpGet("lineup_status.json")]
         public IActionResult LineupStatus() =>
