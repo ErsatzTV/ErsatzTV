@@ -9,16 +9,15 @@
         public HardwareAccelerationKind HardwareAcceleration { get; set; }
         public int ResolutionId { get; set; }
         public Resolution Resolution { get; set; }
-        public bool NormalizeResolution { get; set; }
         public string VideoCodec { get; set; }
-        public bool NormalizeVideoCodec { get; set; }
+        public bool NormalizeVideo { get; set; }
         public int VideoBitrate { get; set; }
         public int VideoBufferSize { get; set; }
+        public string FrameRate { get; set; }
         public string AudioCodec { get; set; }
-        public bool NormalizeAudioCodec { get; set; }
         public int AudioBitrate { get; set; }
         public int AudioBufferSize { get; set; }
-        public int AudioVolume { get; set; }
+        public bool NormalizeLoudness { get; set; }
         public int AudioChannels { get; set; }
         public int AudioSampleRate { get; set; }
         public bool NormalizeAudio { get; set; }
@@ -27,7 +26,7 @@
             new()
             {
                 Name = name,
-                ThreadCount = 4,
+                ThreadCount = 0,
                 Transcode = true,
                 ResolutionId = resolution.Id,
                 Resolution = resolution,
@@ -37,12 +36,11 @@
                 VideoBufferSize = 4000,
                 AudioBitrate = 192,
                 AudioBufferSize = 384,
-                AudioVolume = 100,
+                NormalizeLoudness = true,
                 AudioChannels = 2,
                 AudioSampleRate = 48,
-                NormalizeResolution = true,
-                NormalizeVideoCodec = true,
-                NormalizeAudioCodec = true,
+                NormalizeVideo = true,
+                FrameRate = "24",
                 NormalizeAudio = true
             };
     }

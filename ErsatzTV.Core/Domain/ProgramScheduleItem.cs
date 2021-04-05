@@ -9,6 +9,7 @@ namespace ErsatzTV.Core.Domain
         public StartType StartType => StartTime.HasValue ? StartType.Fixed : StartType.Dynamic;
         public TimeSpan? StartTime { get; set; }
         public ProgramScheduleItemCollectionType CollectionType { get; set; }
+        public string CustomTitle { get; set; }
         public int ProgramScheduleId { get; set; }
         public ProgramSchedule ProgramSchedule { get; set; }
         public int? CollectionId { get; set; }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
@@ -15,8 +14,6 @@ namespace ErsatzTV.Core.Metadata
 {
     public abstract class LocalFolderScanner
     {
-        private static readonly SHA1CryptoServiceProvider Crypto;
-
         public static readonly List<string> VideoFileExtensions = new()
         {
             ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
@@ -50,8 +47,6 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILogger _logger;
         private readonly IMetadataRepository _metadataRepository;
 
-        static LocalFolderScanner() => Crypto = new SHA1CryptoServiceProvider();
-
         protected LocalFolderScanner(
             ILocalFileSystem localFileSystem,
             ILocalStatisticsProvider localStatisticsProvider,
@@ -77,12 +72,13 @@ namespace ErsatzTV.Core.Metadata
                 {
                     Movie m => m.MediaVersions.Head(),
                     Episode e => e.MediaVersions.Head(),
+                    MusicVideo mv => mv.MediaVersions.Head(),
                     _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                 };
 
                 string path = version.MediaFiles.Head().Path;
 
-                if (version.DateUpdated < _localFileSystem.GetLastWriteTime(path))
+                if (version.DateUpdated < _localFileSystem.GetLastWriteTime(path) || !version.Streams.Any())
                 {
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", path);
                     Either<BaseError, bool> refreshResult =
@@ -125,30 +121,47 @@ namespace ErsatzTV.Core.Metadata
 
             if (shouldRefresh)
             {
-                _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
-                string cacheName = _imageCache.CopyArtworkToCache(artworkFile, artworkKind);
+                try
+                {
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
+                    Either<BaseError, string> maybeCacheName =
+                        await _imageCache.CopyArtworkToCache(artworkFile, artworkKind);
 
-                await maybeArtwork.Match(
-                    async artwork =>
-                    {
-                        artwork.Path = cacheName;
-                        artwork.DateUpdated = lastWriteTime;
-                        await _metadataRepository.UpdateArtworkPath(artwork);
-                    },
-                    async () =>
-                    {
-                        var artwork = new Artwork
+                    return await maybeCacheName.Match(
+                        async cacheName =>
                         {
-                            Path = cacheName,
-                            DateAdded = DateTime.UtcNow,
-                            DateUpdated = lastWriteTime,
-                            ArtworkKind = artworkKind
-                        };
-                        metadata.Artwork.Add(artwork);
-                        await _metadataRepository.AddArtwork(metadata, artwork);
-                    });
+                            await maybeArtwork.Match(
+                                async artwork =>
+                                {
+                                    artwork.Path = cacheName;
+                                    artwork.DateUpdated = lastWriteTime;
+                                    await _metadataRepository.UpdateArtworkPath(artwork);
+                                },
+                                async () =>
+                                {
+                                    var artwork = new Artwork
+                                    {
+                                        Path = cacheName,
+                                        DateAdded = DateTime.UtcNow,
+                                        DateUpdated = lastWriteTime,
+                                        ArtworkKind = artworkKind
+                                    };
+                                    metadata.Artwork.Add(artwork);
+                                    await _metadataRepository.AddArtwork(metadata, artwork);
+                                });
 
-                return true;
+                            return true;
+                        },
+                        error =>
+                        {
+                            _logger.LogDebug("Failed to cache artwork from {Path}: {Error}", artworkFile, error.Value);
+                            return Task.FromResult(false);
+                        });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error refreshing artwork");
+                }
             }
 
             return false;

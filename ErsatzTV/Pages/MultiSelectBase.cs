@@ -107,7 +107,8 @@ namespace ErsatzTV.Pages
                 var request = new AddItemsToCollection(
                     collection.Id,
                     _selectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
-                    _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList());
+                    _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
+                    _selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList());
 
                 Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(
@@ -144,6 +145,7 @@ namespace ErsatzTV.Pages
                 itemIds.AddRange(_selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId));
                 itemIds.AddRange(_selectedItems.OfType<TelevisionSeasonCardViewModel>().Map(s => s.TelevisionSeasonId));
                 itemIds.AddRange(_selectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId));
+                itemIds.AddRange(_selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId));
 
                 await Mediator.Send(
                     new RemoveItemsFromCollection(collectionId)

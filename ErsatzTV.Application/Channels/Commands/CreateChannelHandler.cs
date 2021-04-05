@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +11,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.Channels.Mapper;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Channels.Commands
 {
@@ -36,9 +39,10 @@ namespace ErsatzTV.Application.Channels.Commands
             _channelRepository.Add(c).Map(ProjectToViewModel);
 
         private async Task<Validation<BaseError, Channel>> Validate(CreateChannel request) =>
-            (ValidateName(request), await ValidateNumber(request), await FFmpegProfileMustExist(request))
+            (ValidateName(request), await ValidateNumber(request), await FFmpegProfileMustExist(request),
+                ValidatePreferredLanguage(request))
             .Apply(
-                (name, number, ffmpegProfileId) =>
+                (name, number, ffmpegProfileId, preferredLanguageCode) =>
                 {
                     var artwork = new List<Artwork>();
                     if (!string.IsNullOrWhiteSpace(request.Logo))
@@ -59,13 +63,21 @@ namespace ErsatzTV.Application.Channels.Commands
                         Number = number,
                         FFmpegProfileId = ffmpegProfileId,
                         StreamingMode = request.StreamingMode,
-                        Artwork = artwork
+                        Artwork = artwork,
+                        PreferredLanguageCode = preferredLanguageCode
                     };
                 });
 
         private Validation<BaseError, string> ValidateName(CreateChannel createChannel) =>
             createChannel.NotEmpty(c => c.Name)
                 .Bind(_ => createChannel.NotLongerThan(50)(c => c.Name));
+
+        private Validation<BaseError, string> ValidatePreferredLanguage(CreateChannel createChannel) =>
+            Optional(createChannel.PreferredLanguageCode ?? string.Empty)
+                .Filter(
+                    lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
+                        ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
+                .ToValidation<BaseError>("Preferred language code is invalid");
 
         private async Task<Validation<BaseError, string>> ValidateNumber(CreateChannel createChannel)
         {

@@ -42,6 +42,7 @@ namespace ErsatzTV.Core.FFmpeg
         private readonly string _ffmpegPath;
         private readonly bool _saveReports;
         private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
+        private bool _isConcat;
 
         public FFmpegProcessBuilder(string ffmpegPath, bool saveReports)
         {
@@ -186,6 +187,8 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithConcat(string concatPlaylist)
         {
+            _isConcat = true;
+
             var arguments = new List<string>
             {
                 "-f", "concat",
@@ -193,11 +196,10 @@ namespace ErsatzTV.Core.FFmpeg
                 "-protocol_whitelist", "file,http,tcp,https,tcp,tls",
                 "-probesize", "32",
                 "-i", concatPlaylist,
-                "-map", "0:v",
-                "-map", "0:a",
                 "-c", "copy",
                 "-muxdelay", "0",
                 "-muxpreload", "0"
+                // "-avoid_negative_ts", "make_zero"
             };
             _arguments.AddRange(arguments);
             return this;
@@ -228,7 +230,7 @@ namespace ErsatzTV.Core.FFmpeg
             const string X = "x=(w-text_w)/2";
             const string Y = "y=(h-text_h)/3*2";
 
-            string fontSize = text.Length > 60 ? "fontsize=40" : "fontsize=60";
+            string fontSize = text.Length > 80 ? "fontsize=30" : text.Length > 60 ? "fontsize=40" : "fontsize=60";
 
             return WithFilterComplex(
                 $"[0:0]scale={desiredResolution.Width}:{desiredResolution.Height},drawtext={FONT_FILE}:{fontSize}:{FONT_COLOR}:{X}:{Y}:text='{text}'[v]",
@@ -323,18 +325,41 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithNormalizeLoudness(bool normalizeLoudness)
+        {
+            _complexFilterBuilder = _complexFilterBuilder.WithNormalizeLoudness(normalizeLoudness);
+            return this;
+        }
+
+        public FFmpegProcessBuilder WithFrameRate(Option<string> frameRate)
+        {
+            _complexFilterBuilder = _complexFilterBuilder.WithFrameRate(frameRate);
+            return this;
+        }
+
+        public FFmpegProcessBuilder WithVideoTrackTimeScale(Option<int> videoTrackTimeScale)
+        {
+            videoTrackTimeScale.IfSome(
+                timeScale =>
+                {
+                    _arguments.Add("-video_track_timescale");
+                    _arguments.Add($"{timeScale}");
+                });
+            return this;
+        }
+
         public FFmpegProcessBuilder WithDeinterlace(bool deinterlace)
         {
             _complexFilterBuilder = _complexFilterBuilder.WithDeinterlace(deinterlace);
             return this;
         }
 
-        public FFmpegProcessBuilder WithFilterComplex()
+        public FFmpegProcessBuilder WithFilterComplex(int videoStreamIndex, int audioStreamIndex)
         {
-            var videoLabel = "0:V";
-            var audioLabel = "0:a";
+            var videoLabel = $"0:{videoStreamIndex}";
+            var audioLabel = $"0:{audioStreamIndex}";
 
-            Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build();
+            Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(videoStreamIndex, audioStreamIndex);
             maybeFilter.IfSome(
                 filter =>
                 {
@@ -373,10 +398,13 @@ namespace ErsatzTV.Core.FFmpeg
 
             if (_saveReports)
             {
-                string fileName = Path.Combine(FileSystemLayout.FFmpegReportsFolder, "%p-%t.log");
+                string fileName = _isConcat
+                    ? Path.Combine(FileSystemLayout.FFmpegReportsFolder, "ffmpeg-%t-concat.log")
+                    : Path.Combine(FileSystemLayout.FFmpegReportsFolder, "ffmpeg-%t-transcode.log");
                 startInfo.EnvironmentVariables.Add("FFREPORT", $"file={fileName}:level=32");
             }
 
+            startInfo.ArgumentList.Add("-nostdin");
             foreach (string argument in _arguments)
             {
                 startInfo.ArgumentList.Add(argument);

@@ -20,6 +20,7 @@ namespace ErsatzTV.Application.Plex.Commands
             IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>
     {
         private readonly IEntityLocker _entityLocker;
+        private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<SynchronizePlexLibraryByIdHandler> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlexMovieLibraryScanner _plexMovieLibraryScanner;
@@ -31,6 +32,7 @@ namespace ErsatzTV.Application.Plex.Commands
             IPlexSecretStore plexSecretStore,
             IPlexMovieLibraryScanner plexMovieLibraryScanner,
             IPlexTelevisionLibraryScanner plexTelevisionLibraryScanner,
+            ILibraryRepository libraryRepository,
             IEntityLocker entityLocker,
             ILogger<SynchronizePlexLibraryByIdHandler> logger)
         {
@@ -38,6 +40,7 @@ namespace ErsatzTV.Application.Plex.Commands
             _plexSecretStore = plexSecretStore;
             _plexMovieLibraryScanner = plexMovieLibraryScanner;
             _plexTelevisionLibraryScanner = plexTelevisionLibraryScanner;
+            _libraryRepository = libraryRepository;
             _entityLocker = entityLocker;
             _logger = logger;
         }
@@ -78,7 +81,7 @@ namespace ErsatzTV.Application.Plex.Commands
                 }
 
                 parameters.Library.LastScan = DateTime.UtcNow;
-                await _mediaSourceRepository.Update(parameters.Library);
+                await _libraryRepository.UpdateLastScan(parameters.Library);
             }
             else
             {

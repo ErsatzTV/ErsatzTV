@@ -52,12 +52,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<Library>> GetAll()
         {
             using TvContext context = _dbContextFactory.CreateDbContext();
-            return context.Libraries.ToListAsync();
+            return context.Libraries
+                .AsNoTracking()
+                .Include(l => l.MediaSource)
+                .ToListAsync();
         }
 
         public Task<Unit> UpdateLastScan(Library library) => _dbConnection.ExecuteAsync(
             "UPDATE Library SET LastScan = @LastScan WHERE Id = @Id",
             new { library.LastScan, library.Id }).ToUnit();
+
+        public Task<Unit> UpdateLastScan(LibraryPath libraryPath) => _dbConnection.ExecuteAsync(
+            "UPDATE LibraryPath SET LastScan = @LastScan WHERE Id = @Id",
+            new { libraryPath.LastScan, libraryPath.Id }).ToUnit();
 
         public Task<List<LibraryPath>> GetLocalPaths(int libraryId)
         {

@@ -4,7 +4,7 @@ using MediatR;
 
 namespace ErsatzTV.Application.Plex.Commands
 {
-    public interface ISynchronizePlexLibraryById : IRequest<Either<BaseError, string>>, IBackgroundServiceRequest
+    public interface ISynchronizePlexLibraryById : IRequest<Either<BaseError, string>>, IPlexBackgroundServiceRequest
     {
         int PlexLibraryId { get; }
         bool ForceScan { get; }

@@ -8,15 +8,11 @@ namespace ErsatzTV.Core.Domain
     {
         public int Id { get; set; }
         public string Name { get; set; }
-
         public List<MediaFile> MediaFiles { get; set; }
-
+        public List<MediaStream> Streams { get; set; }
         public TimeSpan Duration { get; set; }
         public string SampleAspectRatio { get; set; }
         public string DisplayAspectRatio { get; set; }
-        public string VideoCodec { get; set; }
-        public string VideoProfile { get; set; }
-        public string AudioCodec { get; set; }
         public VideoScanKind VideoScanKind { get; set; }
         public DateTime DateAdded { get; set; }
         public DateTime DateUpdated { get; set; }

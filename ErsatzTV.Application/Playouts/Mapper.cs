@@ -24,15 +24,25 @@ namespace ErsatzTV.Application.Playouts
         private static PlayoutProgramScheduleViewModel Project(ProgramSchedule programSchedule) =>
             new(programSchedule.Id, programSchedule.Name);
 
-        private static string GetDisplayTitle(MediaItem mediaItem) =>
-            mediaItem switch
+        private static string GetDisplayTitle(MediaItem mediaItem)
+        {
+            switch (mediaItem)
             {
-                Episode e => e.EpisodeMetadata.HeadOrNone()
-                    .Map(em => $"{em.Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}")
-                    .IfNone("[unknown episode]"),
-                Movie m => m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]"),
-                _ => string.Empty
-            };
+                case Episode e:
+                    string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()
+                        .Map(sm => $"{sm.Title} - ").IfNone(string.Empty);
+                    return e.EpisodeMetadata.HeadOrNone()
+                        .Map(em => $"{showTitle}s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00} - {em.Title}")
+                        .IfNone("[unknown episode]");
+                case Movie m:
+                    return m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]");
+                case MusicVideo mv:
+                    return mv.MusicVideoMetadata.HeadOrNone().Map(mvm => $"{mvm.Artist} - {mvm.Title}")
+                        .IfNone("[unknown music video]");
+                default:
+                    return string.Empty;
+            }
+        }
 
         private static string GetDisplayDuration(MediaItem mediaItem)
         {
@@ -40,6 +50,7 @@ namespace ErsatzTV.Application.Playouts
             {
                 Movie m => m.MediaVersions.Head(),
                 Episode e => e.MediaVersions.Head(),
+                MusicVideo mv => mv.MediaVersions.Head(),
                 _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
             };
 

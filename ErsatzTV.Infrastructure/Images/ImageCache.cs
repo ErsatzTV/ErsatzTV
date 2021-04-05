@@ -75,24 +75,32 @@ namespace ErsatzTV.Infrastructure.Images
             }
         }
 
-        public string CopyArtworkToCache(string path, ArtworkKind artworkKind)
+        public async Task<Either<BaseError, string>> CopyArtworkToCache(string path, ArtworkKind artworkKind)
         {
-            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
-            byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
-            string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
-            string subfolder = hex.Substring(0, 2);
-            string baseFolder = artworkKind switch
+            try
             {
-                ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
-                ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
-                ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
-                ArtworkKind.FanArt => Path.Combine(FileSystemLayout.FanArtCacheFolder, subfolder),
-                _ => FileSystemLayout.LegacyImageCacheFolder
-            };
-            string target = Path.Combine(baseFolder, hex);
-            _localFileSystem.CopyFile(path, target);
-
-            return hex;
+                var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
+                byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
+                string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
+                string subfolder = hex.Substring(0, 2);
+                string baseFolder = artworkKind switch
+                {
+                    ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
+                    ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
+                    ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
+                    ArtworkKind.FanArt => Path.Combine(FileSystemLayout.FanArtCacheFolder, subfolder),
+                    _ => FileSystemLayout.LegacyImageCacheFolder
+                };
+                string target = Path.Combine(baseFolder, hex);
+                Either<BaseError, Unit> maybeResult = await _localFileSystem.CopyFile(path, target);
+                return maybeResult.Match<Either<BaseError, string>>(
+                    _ => hex,
+                    error => error);
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
         }
     }
 }

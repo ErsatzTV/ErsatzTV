@@ -45,6 +45,8 @@ namespace ErsatzTV.Core.FFmpeg
             StreamingMode streamingMode,
             FFmpegProfile ffmpegProfile,
             MediaVersion version,
+            MediaStream videoStream,
+            MediaStream audioStream,
             DateTimeOffset start,
             DateTimeOffset now)
         {
@@ -79,13 +81,22 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(version);
-                    if (ffmpegProfile.NormalizeResolution && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
+                    if (ffmpegProfile.NormalizeVideo && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
                     {
                         result.PadToDesiredResolution = true;
                     }
 
+                    if (ffmpegProfile.NormalizeVideo)
+                    {
+                        result.FrameRate = string.IsNullOrWhiteSpace(ffmpegProfile.FrameRate)
+                            ? None
+                            : Some(ffmpegProfile.FrameRate);
+
+                        result.VideoTrackTimeScale = 90000;
+                    }
+
                     if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
-                        NeedToNormalizeVideoCodec(ffmpegProfile, version))
+                        NeedToNormalizeVideoCodec(ffmpegProfile, videoStream))
                     {
                         result.VideoCodec = ffmpegProfile.VideoCodec;
                         result.VideoBitrate = ffmpegProfile.VideoBitrate;
@@ -96,18 +107,20 @@ namespace ErsatzTV.Core.FFmpeg
                         result.VideoCodec = "copy";
                     }
 
-                    if (NeedToNormalizeAudioCodec(ffmpegProfile, version))
+                    if (ffmpegProfile.NormalizeAudio)
                     {
                         result.AudioCodec = ffmpegProfile.AudioCodec;
                         result.AudioBitrate = ffmpegProfile.AudioBitrate;
                         result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
 
-                        if (ffmpegProfile.NormalizeAudio)
+                        if (audioStream.Channels != ffmpegProfile.AudioChannels)
                         {
                             result.AudioChannels = ffmpegProfile.AudioChannels;
-                            result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
-                            result.AudioDuration = version.Duration;
                         }
+
+                        result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
+                        result.AudioDuration = version.Duration;
+                        result.NormalizeLoudness = ffmpegProfile.NormalizeLoudness;
                     }
                     else
                     {
@@ -135,7 +148,7 @@ namespace ErsatzTV.Core.FFmpeg
             };
 
         private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
-            ffmpegProfile.NormalizeResolution &&
+            ffmpegProfile.NormalizeVideo &&
             IsIncorrectSize(ffmpegProfile.Resolution, version) ||
             IsTooLarge(ffmpegProfile.Resolution, version) ||
             IsOddSize(version);
@@ -152,11 +165,8 @@ namespace ErsatzTV.Core.FFmpeg
         private static bool IsOddSize(MediaVersion version) =>
             version.Height % 2 == 1 || version.Width % 2 == 1;
 
-        private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaVersion version) =>
-            ffmpegProfile.NormalizeVideoCodec && ffmpegProfile.VideoCodec != version.VideoCodec;
-
-        private static bool NeedToNormalizeAudioCodec(FFmpegProfile ffmpegProfile, MediaVersion version) =>
-            ffmpegProfile.NormalizeAudioCodec && ffmpegProfile.AudioCodec != version.AudioCodec;
+        private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaStream videoStream) =>
+            ffmpegProfile.NormalizeVideo && ffmpegProfile.VideoCodec != videoStream.Codec;
 
         private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
         {

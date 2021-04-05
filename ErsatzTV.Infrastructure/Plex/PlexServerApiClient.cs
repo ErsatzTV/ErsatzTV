@@ -38,7 +38,7 @@ namespace ErsatzTV.Infrastructure.Plex
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -56,7 +56,7 @@ namespace ErsatzTV.Infrastructure.Plex
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -74,7 +74,7 @@ namespace ErsatzTV.Infrastructure.Plex
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -93,7 +93,7 @@ namespace ErsatzTV.Infrastructure.Plex
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -112,7 +112,7 @@ namespace ErsatzTV.Infrastructure.Plex
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -133,7 +133,7 @@ namespace ErsatzTV.Infrastructure.Plex
             }
             catch (Exception ex)
             {
-                return BaseError.New(ex.Message);
+                return BaseError.New(ex.ToString());
             }
         }
 
@@ -227,10 +227,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Duration = TimeSpan.FromMilliseconds(media.Duration),
                 Width = media.Width,
                 Height = media.Height,
-                AudioCodec = media.AudioCodec,
-                VideoCodec = media.VideoCodec,
-                VideoProfile = media.VideoProfile,
                 // specifically omit sample aspect ratio
+                DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 MediaFiles = new List<MediaFile>
                 {
@@ -240,7 +238,8 @@ namespace ErsatzTV.Infrastructure.Plex
                         Key = part.Key,
                         Path = part.File
                     }
-                }
+                },
+                Streams = new List<MediaStream>()
             };
 
             var movie = new PlexMovie
@@ -255,18 +254,72 @@ namespace ErsatzTV.Infrastructure.Plex
 
         private Option<MediaVersion> ProjectToMediaVersion(PlexMetadataResponse response)
         {
-            Option<PlexStreamResponse> maybeStream =
-                response.Media.Head().Part.Head().Stream.Find(s => s.StreamType == 1);
-            return maybeStream.Map(
-                stream => new MediaVersion
+            List<PlexStreamResponse> streams = response.Media.Head().Part.Head().Stream;
+            DateTime dateUpdated = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+            Option<PlexStreamResponse> maybeVideoStream = streams.Find(s => s.StreamType == 1);
+            return maybeVideoStream.Map(
+                videoStream =>
                 {
-                    SampleAspectRatio = stream.PixelAspectRatio,
-                    VideoScanKind = stream.ScanType switch
+                    var version = new MediaVersion
                     {
-                        "interlaced" => VideoScanKind.Interlaced,
-                        "progressive" => VideoScanKind.Progressive,
-                        _ => VideoScanKind.Unknown
+                        SampleAspectRatio = videoStream.PixelAspectRatio ?? "1:1",
+                        VideoScanKind = videoStream.ScanType switch
+                        {
+                            "interlaced" => VideoScanKind.Interlaced,
+                            "progressive" => VideoScanKind.Progressive,
+                            _ => VideoScanKind.Unknown
+                        },
+                        Streams = new List<MediaStream>(),
+                        DateUpdated = dateUpdated
+                    };
+
+                    version.Streams.Add(
+                        new MediaStream
+                        {
+                            MediaStreamKind = MediaStreamKind.Video,
+                            Index = videoStream.Index,
+                            Codec = videoStream.Codec,
+                            Profile = (videoStream.Profile ?? string.Empty).ToLowerInvariant(),
+                            Default = videoStream.Default,
+                            Language = videoStream.LanguageCode,
+                            Forced = videoStream.Forced
+                        });
+
+                    foreach (PlexStreamResponse audioStream in streams.Filter(s => s.StreamType == 2))
+                    {
+                        var stream = new MediaStream
+                        {
+                            MediaVersionId = version.Id,
+                            MediaStreamKind = MediaStreamKind.Audio,
+                            Index = audioStream.Index,
+                            Codec = audioStream.Codec,
+                            Profile = (audioStream.Profile ?? string.Empty).ToLowerInvariant(),
+                            Channels = audioStream.Channels,
+                            Default = audioStream.Default,
+                            Forced = audioStream.Forced,
+                            Language = audioStream.LanguageCode
+                        };
+
+                        version.Streams.Add(stream);
                     }
+
+                    foreach (PlexStreamResponse subtitleStream in streams.Filter(s => s.StreamType == 3))
+                    {
+                        var stream = new MediaStream
+                        {
+                            MediaVersionId = version.Id,
+                            MediaStreamKind = MediaStreamKind.Subtitle,
+                            Index = subtitleStream.Index,
+                            Codec = subtitleStream.Codec,
+                            Default = subtitleStream.Default,
+                            Forced = subtitleStream.Forced,
+                            Language = subtitleStream.LanguageCode
+                        };
+
+                        version.Streams.Add(stream);
+                    }
+
+                    return version;
                 });
         }
 
@@ -436,10 +489,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Duration = TimeSpan.FromMilliseconds(media.Duration),
                 Width = media.Width,
                 Height = media.Height,
-                AudioCodec = media.AudioCodec,
-                VideoCodec = media.VideoCodec,
-                VideoProfile = media.VideoProfile,
-                // specifically omit sample aspect ratio
+                DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 MediaFiles = new List<MediaFile>
                 {
@@ -449,7 +499,9 @@ namespace ErsatzTV.Infrastructure.Plex
                         Key = part.Key,
                         Path = part.File
                     }
-                }
+                },
+                // specifically omit stream details
+                Streams = new List<MediaStream>()
             };
 
             var episode = new PlexEpisode

@@ -31,16 +31,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<Option<T>> GetValue<T>(ConfigElementKey key) =>
             Get(key).MapT(ce => (T) Convert.ChangeType(ce.Value, typeof(T)));
 
-        public async Task Update(ConfigElement configElement)
+        public Task Update(ConfigElement configElement)
         {
             _dbContext.ConfigElements.Update(configElement);
-            await _dbContext.SaveChangesAsync();
+            return _dbContext.SaveChangesAsync();
         }
 
-        public async Task Delete(ConfigElement configElement)
+        public Task Delete(ConfigElement configElement)
         {
             _dbContext.ConfigElements.Remove(configElement);
-            await _dbContext.SaveChangesAsync();
+            return _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -14,10 +14,12 @@ using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Tests.Fakes;
 using FluentAssertions;
 using LanguageExt;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using static LanguageExt.Prelude;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Core.Tests.Metadata
 {
@@ -57,7 +59,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     .Returns<string, MediaItem>((_, _) => Right<BaseError, bool>(true).AsTask());
 
                 // fallback metadata adds metadata to a movie, so we need to replicate that here
-                _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<MediaItem>()))
+                _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<Movie>()))
                     .Returns(
                         (MediaItem mediaItem) =>
                         {
@@ -81,7 +83,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Path = BadFakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsLeft.Should().BeTrue();
                 result.IfLeft(error => error.Should().BeOfType<MediaSourceInaccessible>());
@@ -101,7 +108,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -137,7 +149,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -174,7 +191,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -215,7 +237,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -259,7 +286,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -303,7 +335,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -346,7 +383,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -385,7 +427,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -418,7 +465,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -453,7 +505,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -477,7 +534,12 @@ namespace ErsatzTV.Core.Tests.Metadata
                 );
                 var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot };
 
-                Either<BaseError, Unit> result = await service.ScanFolder(libraryPath, FFprobePath);
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    DateTimeOffset.MinValue,
+                    0,
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -495,6 +557,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     new Mock<IMetadataRepository>().Object,
                     _imageCache.Object,
                     new Mock<ISearchIndex>().Object,
+                    new Mock<IMediator>().Object,
                     new Mock<ILogger<MovieFolderScanner>>().Object
                 );
         }

@@ -48,6 +48,9 @@ namespace ErsatzTV.Core.Scheduling
                     Movie m => m.MovieMetadata.HeadOrNone().Match(
                         mm => mm.ReleaseDate ?? DateTime.MaxValue,
                         () => DateTime.MaxValue),
+                    MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
+                        mvm => mvm.ReleaseDate ?? DateTime.MaxValue,
+                        () => DateTime.MaxValue),
                     _ => DateTime.MaxValue
                 };
 
@@ -58,6 +61,9 @@ namespace ErsatzTV.Core.Scheduling
                         () => DateTime.MaxValue),
                     Movie m => m.MovieMetadata.HeadOrNone().Match(
                         mm => mm.ReleaseDate ?? DateTime.MaxValue,
+                        () => DateTime.MaxValue),
+                    MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
+                        mvm => mvm.ReleaseDate ?? DateTime.MaxValue,
                         () => DateTime.MaxValue),
                     _ => DateTime.MaxValue
                 };

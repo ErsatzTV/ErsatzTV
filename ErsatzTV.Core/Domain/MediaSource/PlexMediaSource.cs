@@ -6,6 +6,8 @@ namespace ErsatzTV.Core.Domain
     {
         public string ServerName { get; set; }
         public string ProductVersion { get; set; }
+        public string Platform { get; set; }
+        public string PlatformVersion { get; set; }
         public string ClientIdentifier { get; set; }
 
         // public bool IsOwned { get; set; }

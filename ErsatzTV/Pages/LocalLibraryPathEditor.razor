@@ -70,11 +70,11 @@
                     Logger.LogError("Unexpected error saving local library path: {Error}", error.Value);
                     return Task.CompletedTask;
                 },
-                Right: async vm =>
+                Right: async _ =>
                 {
                     if (Locker.LockLibrary(_library.Id))
                     {
-                        await Channel.WriteAsync(new ForceScanLocalLibrary(_library.Id));
+                        await Channel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id));
                         NavigationManager.NavigateTo("/media/libraries");
                     }
                 });

@@ -10,8 +10,10 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Core.Metadata
 {
@@ -20,6 +22,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<TelevisionFolderScanner> _logger;
+        private readonly IMediator _mediator;
         private readonly ISearchIndex _searchIndex;
         private readonly ITelevisionRepository _televisionRepository;
 
@@ -31,6 +34,7 @@ namespace ErsatzTV.Core.Metadata
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
             ISearchIndex searchIndex,
+            IMediator mediator,
             ILogger<TelevisionFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
@@ -42,11 +46,19 @@ namespace ErsatzTV.Core.Metadata
             _televisionRepository = televisionRepository;
             _localMetadataProvider = localMetadataProvider;
             _searchIndex = searchIndex;
+            _mediator = mediator;
             _logger = logger;
         }
 
-        public async Task<Either<BaseError, Unit>> ScanFolder(LibraryPath libraryPath, string ffprobePath)
+        public async Task<Either<BaseError, Unit>> ScanFolder(
+            LibraryPath libraryPath,
+            string ffprobePath,
+            DateTimeOffset lastScan,
+            decimal progressMin,
+            decimal progressMax)
         {
+            decimal progressSpread = progressMax - progressMin;
+
             if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
             {
                 return new MediaSourceInaccessible();
@@ -59,6 +71,10 @@ namespace ErsatzTV.Core.Metadata
 
             foreach (string showFolder in allShowFolders)
             {
+                decimal percentCompletion = (decimal) allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
+                await _mediator.Publish(
+                    new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
+
                 Either<BaseError, MediaItemScanResult<Show>> maybeShow =
                     await FindOrCreateShow(libraryPath.Id, showFolder)
                         .BindT(show => UpdateMetadataForShow(show, showFolder))
@@ -77,9 +93,22 @@ namespace ErsatzTV.Core.Metadata
                             await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
                         }
 
-                        await ScanSeasons(libraryPath, ffprobePath, result.Item, showFolder);
+                        await ScanSeasons(
+                            libraryPath,
+                            ffprobePath,
+                            result.Item,
+                            showFolder,
+                            // force scanning all folders if we're adding a new show
+                            result.IsAdded ? DateTimeOffset.MinValue : lastScan);
                     },
-                    _ => Task.FromResult(Unit.Default));
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Error processing show in folder {Folder}: {Error}",
+                            showFolder,
+                            error.Value);
+                        return Task.FromResult(Unit.Default);
+                    });
             }
 
             foreach (string path in await _televisionRepository.FindEpisodePaths(libraryPath))
@@ -113,7 +142,8 @@ namespace ErsatzTV.Core.Metadata
             LibraryPath libraryPath,
             string ffprobePath,
             Show show,
-            string showFolder)
+            string showFolder,
+            DateTimeOffset lastScan)
         {
             foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showFolder).Filter(ShouldIncludeFolder)
                 .OrderBy(identity))
@@ -127,8 +157,15 @@ namespace ErsatzTV.Core.Metadata
                             .BindT(season => UpdatePoster(season, seasonFolder));
 
                         await maybeSeason.Match(
-                            season => ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder),
-                            _ => Task.FromResult(Unit.Default));
+                            season => ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder, lastScan),
+                            error =>
+                            {
+                                _logger.LogWarning(
+                                    "Error processing season in folder {Folder}: {Error}",
+                                    seasonFolder,
+                                    error.Value);
+                                return Task.FromResult(Unit.Default);
+                            });
                     });
             }
 
@@ -139,8 +176,14 @@ namespace ErsatzTV.Core.Metadata
             LibraryPath libraryPath,
             string ffprobePath,
             Season season,
-            string seasonPath)
+            string seasonPath,
+            DateTimeOffset lastScan)
         {
+            if (_localFileSystem.GetLastWriteTime(seasonPath) < lastScan)
+            {
+                return Unit.Default;
+            }
+
             foreach (string file in _localFileSystem.ListFiles(seasonPath)
                 .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f))).OrderBy(identity))
             {

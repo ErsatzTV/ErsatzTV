@@ -56,8 +56,8 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
 
-        public Unit CopyFile(string source, string destination) =>
-            Unit.Default;
+        public Task<Either<BaseError, Unit>> CopyFile(string source, string destination) =>
+            Task.FromResult(Right<BaseError, Unit>(Unit.Default));
 
         private static List<DirectoryInfo> Split(DirectoryInfo path)
         {

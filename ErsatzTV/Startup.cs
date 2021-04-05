@@ -14,6 +14,7 @@ using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
@@ -25,11 +26,14 @@ using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
+using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
+using ErsatzTV.Services.RunOnce;
 using FluentValidation.AspNetCore;
 using MediatR;
+using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Data.Sqlite;
@@ -85,10 +89,11 @@ namespace ErsatzTV
             services.AddServerSideBlazor();
 
             services.AddMudServices();
+            services.AddCourier(Assembly.GetAssembly(typeof(LibraryScanProgress)));
 
             Log.Logger.Information(
                 "ErsatzTV version {Version}",
-                Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "unknown");
 
             Log.Logger.Warning("This is pre-alpha software and is likely to be unstable");
@@ -177,7 +182,6 @@ namespace ErsatzTV
         private void CustomServices(IServiceCollection services)
         {
             services.AddSingleton<FFmpegPlaybackSettingsCalculator>();
-            services.AddSingleton<FFmpegProcessService>();
             services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
             services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
             services.AddSingleton<IEntityLocker, EntityLocker>();
@@ -197,6 +201,7 @@ namespace ErsatzTV
             services.AddScoped<ITelevisionRepository, TelevisionRepository>();
             services.AddScoped<ISearchRepository, SearchRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
+            services.AddScoped<IMusicVideoRepository, MusicVideoRepository>();
             services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddScoped<IMetadataRepository, MetadataRepository>();
             services.AddScoped<IFFmpegLocator, FFmpegLocator>();
@@ -208,11 +213,18 @@ namespace ErsatzTV
             services.AddScoped<ILocalFileSystem, LocalFileSystem>();
             services.AddScoped<IMovieFolderScanner, MovieFolderScanner>();
             services.AddScoped<ITelevisionFolderScanner, TelevisionFolderScanner>();
+            services.AddScoped<IMusicVideoFolderScanner, MusicVideoFolderScanner>();
             services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
             services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
             services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
             services.AddScoped<ISearchIndex, SearchIndex>();
+            services.AddScoped<IRuntimeInfo, RuntimeInfo>();
+            services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
+            services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
+            services.AddScoped<FFmpegProcessService>();
 
+            services.AddHostedService<DatabaseMigratorService>();
+            services.AddHostedService<CacheCleanerService>();
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();
             services.AddHostedService<WorkerService>();

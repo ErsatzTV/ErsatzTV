@@ -57,9 +57,22 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mi => (mi as Episode).MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Movie).MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Movie).MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
+                .ThenInclude(mv => mv.Streams)
                 .AsNoTracking()
+                .OrderBy(pi => pi.Start)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
 
@@ -83,6 +96,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Movie).MediaVersions)
                 .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as MusicVideo).MusicVideoMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
+                .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
                 .Include(i => i.MediaItem)
@@ -90,6 +108,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Episode).Season)
                 .ThenInclude(s => s.SeasonMetadata)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).Season.Show)
+                .ThenInclude(s => s.ShowMetadata)
                 .Filter(i => i.PlayoutId == playoutId)
                 .ToListAsync();
         }
@@ -104,10 +125,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task Update(Playout playout)
+        public Task Update(Playout playout)
         {
             _dbContext.Playouts.Update(playout);
-            await _dbContext.SaveChangesAsync();
+            return _dbContext.SaveChangesAsync();
         }
 
         public async Task Delete(int playoutId)

@@ -9,6 +9,7 @@ namespace ErsatzTV.ViewModels
         public string Name { get; set; }
         public string Number { get; set; }
         public int FFmpegProfileId { get; set; }
+        public string PreferredLanguageCode { get; set; }
         public string Logo { get; set; }
         public StreamingMode StreamingMode { get; set; }
 
@@ -19,6 +20,7 @@ namespace ErsatzTV.ViewModels
                 Number,
                 FFmpegProfileId,
                 Logo,
+                PreferredLanguageCode,
                 StreamingMode);
 
         public CreateChannel ToCreate() =>
@@ -27,6 +29,7 @@ namespace ErsatzTV.ViewModels
                 Number,
                 FFmpegProfileId,
                 Logo,
+                PreferredLanguageCode,
                 StreamingMode);
     }
 }

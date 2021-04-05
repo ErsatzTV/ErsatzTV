@@ -43,19 +43,18 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     Transcode = request.Transcode,
                     HardwareAcceleration = request.HardwareAcceleration,
                     ResolutionId = resolutionId,
-                    NormalizeResolution = request.NormalizeResolution,
+                    NormalizeVideo = request.NormalizeVideo,
                     VideoCodec = request.VideoCodec,
-                    NormalizeVideoCodec = request.NormalizeVideoCodec,
                     VideoBitrate = request.VideoBitrate,
                     VideoBufferSize = request.VideoBufferSize,
                     AudioCodec = request.AudioCodec,
-                    NormalizeAudioCodec = request.NormalizeAudioCodec,
                     AudioBitrate = request.AudioBitrate,
                     AudioBufferSize = request.AudioBufferSize,
-                    AudioVolume = request.AudioVolume,
+                    NormalizeLoudness = request.NormalizeLoudness,
                     AudioChannels = request.AudioChannels,
                     AudioSampleRate = request.AudioSampleRate,
-                    NormalizeAudio = request.NormalizeAudio
+                    NormalizeAudio = request.NormalizeAudio,
+                    FrameRate = request.FrameRate
                 });
 
         private Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>
@@ -63,7 +62,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 .Bind(_ => createFFmpegProfile.NotLongerThan(50)(x => x.Name));
 
         private Validation<BaseError, int> ValidateThreadCount(CreateFFmpegProfile createFFmpegProfile) =>
-            createFFmpegProfile.AtLeast(1)(p => p.ThreadCount);
+            createFFmpegProfile.AtLeast(0)(p => p.ThreadCount);
 
         private async Task<Validation<BaseError, int>> ResolutionMustExist(CreateFFmpegProfile createFFmpegProfile) =>
             (await _resolutionRepository.Get(createFFmpegProfile.ResolutionId))

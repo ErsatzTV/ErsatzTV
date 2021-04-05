@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -37,32 +38,22 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await context.MediaItems.ToListAsync();
         }
 
-        public Task<List<MediaItem>> Search(string searchString) =>
-            // TODO: fix this when we need to search
-            // IQueryable<TelevisionEpisodeMediaItem> episodeData =
-            //     from c in _dbContext.TelevisionEpisodeMediaItems.Include(c => c.LibraryPath) select c;
-            //
-            // if (!string.IsNullOrEmpty(searchString))
-            // {
-            //     episodeData = episodeData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
-            // }
-            //
-            // IQueryable<Movie> movieData =
-            //     from c in _dbContext.Movies.Include(c => c.LibraryPath) select c;
-            //
-            // // if (!string.IsNullOrEmpty(searchString))
-            // // {
-            // //     movieData = movieData.Where(c => EF.Functions.Like(c.Metadata.Title, $"%{searchString}%"));
-            // // }
-            //
-            // return episodeData.OfType<MediaItem>().Concat(movieData.OfType<MediaItem>()).ToListAsync();
-            new List<MediaItem>().AsTask();
-
         public async Task<bool> Update(MediaItem mediaItem)
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
             context.MediaItems.Update(mediaItem);
             return await context.SaveChangesAsync() > 0;
         }
+
+        public Task<List<string>> GetAllLanguageCodes() =>
+            _dbConnection.QueryAsync<string>(
+                    @"SELECT LanguageCode FROM
+                    (SELECT Language AS LanguageCode
+                    FROM MediaStream WHERE Language IS NOT NULL
+                    UNION ALL SELECT PreferredLanguageCode AS LanguageCode
+                    FROM Channel WHERE PreferredLanguageCode IS NOT NULL)
+                    GROUP BY LanguageCode
+                    ORDER BY COUNT(LanguageCode) DESC")
+                .Map(result => result.ToList());
     }
 }

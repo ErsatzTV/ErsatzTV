@@ -9,7 +9,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
     {
         Task<Option<MediaItem>> Get(int id);
         Task<List<MediaItem>> GetAll();
-        Task<List<MediaItem>> Search(string searchString);
         Task<bool> Update(MediaItem mediaItem);
+        Task<List<string>> GetAllLanguageCodes();
     }
 }

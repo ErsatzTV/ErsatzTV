@@ -25,6 +25,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -40,6 +42,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -55,6 +59,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -72,6 +78,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -89,6 +97,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -104,6 +114,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -121,6 +133,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     now,
                     now.AddMinutes(5));
 
@@ -139,6 +153,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     now,
                     now.AddMinutes(5));
 
@@ -147,14 +163,16 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void ShouldNot_SetScaledSize_When_NotNormalizingResolution_ForTransportStream()
+            public void ShouldNot_SetScaledSize_When_NotNormalizingVideo_ForTransportStream()
             {
-                FFmpegProfile ffmpegProfile = TestProfile() with { NormalizeResolution = false };
+                FFmpegProfile ffmpegProfile = TestProfile() with { NormalizeVideo = false };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -166,7 +184,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
@@ -177,6 +195,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -188,7 +208,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
@@ -199,6 +219,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -210,7 +232,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
@@ -221,6 +243,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -233,7 +257,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
@@ -244,6 +268,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -256,7 +282,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
@@ -267,6 +293,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -275,11 +303,11 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_NotPadToDesiredResolution_When_NotNormalizingResolution()
+            public void Should_NotPadToDesiredResolution_When_NotNormalizingVideo()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeResolution = false,
+                    NormalizeVideo = false,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
 
@@ -290,6 +318,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -302,9 +332,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = false,
                     VideoCodec = "testCodec"
                 };
 
@@ -315,6 +344,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -325,24 +356,25 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             [Test]
             public void
-                Should_SetDesiredVideoCodec_When_ContentIsCorrectSize_And_NormalizingWrongCodec_ForTransportStream()
+                Should_SetDesiredVideoCodec_When_ContentIsCorrectSize_And_NormalizingVideo_ForTransportStream()
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = true,
                     VideoCodec = "testCodec"
                 };
 
                 // not anamorphic
                 var version = new MediaVersion
-                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream { Codec = "mpeg2video" },
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -353,24 +385,25 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             [Test]
             public void
-                Should_SetCopyVideoCodec_When_ContentIsCorrectSize_And_NormalizingWrongCodec_ForHttpLiveStreaming()
+                Should_SetCopyVideoCodec_When_ContentIsCorrectSize_And_NormalizingVideo_ForHttpLiveStreaming()
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = true,
                     VideoCodec = "testCodec"
                 };
 
                 // not anamorphic
                 var version = new MediaVersion
-                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.HttpLiveStreaming,
                     ffmpegProfile,
                     version,
+                    new MediaStream { Codec = "mpeg2video" },
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -384,20 +417,21 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = true,
                     VideoCodec = "libx264"
                 };
 
                 // not anamorphic
                 var version = new MediaVersion
-                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "libx264" };
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream { Codec = "libx264" },
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -408,24 +442,25 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             [Test]
             public void
-                Should_SetCopyVideoCodec_When_ContentIsCorrectSize_And_NotNormalizingWrongCodec_ForTransportStream()
+                Should_SetCopyVideoCodec_When_ContentIsCorrectSize_And_NotNormalizingVideo_ForTransportStream()
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = false,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = false,
                     VideoCodec = "libx264"
                 };
 
                 // not anamorphic
                 var version = new MediaVersion
-                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream { Codec = "mpeg2video" },
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -439,9 +474,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = false,
                     VideoBitrate = 2525
                 };
 
@@ -452,6 +486,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -461,24 +497,25 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetVideoBitrate_When_ContentIsCorrectSize_And_NormalizingWrongCodec_ForTransportStream()
+            public void Should_SetVideoBitrate_When_ContentIsCorrectSize_And_NormalizingVideo_ForTransportStream()
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = true,
                     VideoBitrate = 2525
                 };
 
                 // not anamorphic
                 var version = new MediaVersion
-                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream { Codec = "mpeg2video" },
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -492,9 +529,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = false,
                     VideoBufferSize = 2525
                 };
 
@@ -505,6 +541,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -515,24 +553,25 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             [Test]
             public void
-                Should_SetVideoBufferSize_When_ContentIsCorrectSize_And_NormalizingWrongCodec_ForTransportStream()
+                Should_SetVideoBufferSize_When_ContentIsCorrectSize_And_NormalizingVideo_ForTransportStream()
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
-                    NormalizeResolution = true,
+                    NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
-                    NormalizeVideoCodec = true,
                     VideoBufferSize = 2525
                 };
 
                 // not anamorphic
                 var version = new MediaVersion
-                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1", VideoCodec = "mpeg2video" };
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream { Codec = "mpeg2video" },
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -542,62 +581,22 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetCopyAudioCodec_When_CorrectCodec_ForTransportStream()
+            public void Should_SetDesiredAudioCodec_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
+                    NormalizeAudio = true,
                     AudioCodec = "aac"
                 };
 
-                var version = new MediaVersion { AudioCodec = "aac" };
+                var version = new MediaVersion();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
-                    DateTimeOffset.Now,
-                    DateTimeOffset.Now);
-
-                actual.AudioCodec.Should().Be("copy");
-            }
-
-            [Test]
-            public void Should_SetCopyAudioCodec_When_NotNormalizingWrongCodec_ForTransportStream()
-            {
-                FFmpegProfile ffmpegProfile = TestProfile() with
-                {
-                    NormalizeAudioCodec = false,
-                    AudioCodec = "aac"
-                };
-
-                var version = new MediaVersion { AudioCodec = "ac3" };
-
-                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.TransportStream,
-                    ffmpegProfile,
-                    version,
-                    DateTimeOffset.Now,
-                    DateTimeOffset.Now);
-
-                actual.AudioCodec.Should().Be("copy");
-            }
-
-            [Test]
-            public void Should_SetDesiredAudioCodec_When_NormalizingWrongCodec_ForTransportStream()
-            {
-                FFmpegProfile ffmpegProfile = TestProfile() with
-                {
-                    NormalizeAudioCodec = true,
-                    AudioCodec = "aac"
-                };
-
-                var version = new MediaVersion { AudioCodec = "ac3" };
-
-                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.TransportStream,
-                    ffmpegProfile,
-                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "aac" },
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -605,20 +604,22 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetCopyAudioCodec_When_NormalizingWrongCodec_ForHttpLiveStreaming()
+            public void Should_SetCopyAudioCodec_When_NotNormalizingAudio_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
+                    NormalizeAudio = false,
                     AudioCodec = "aac"
                 };
 
-                var version = new MediaVersion { AudioCodec = "ac3" };
+                var version = new MediaVersion();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.HttpLiveStreaming,
+                    StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -626,20 +627,69 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetAudioBitrate_When_NormalizingWrongCodec_ForTransportStream()
+            public void Should_SetDesiredAudioCodec_When_NormalizingAudio_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
-                    AudioBitrate = 2424
+                    NormalizeAudio = true,
+                    AudioCodec = "aac"
                 };
 
-                var version = new MediaVersion { AudioCodec = "ac3" };
+                var version = new MediaVersion();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.AudioCodec.Should().Be("aac");
+            }
+
+            [Test]
+            public void Should_SetCopyAudioCodec_When_NormalizingAudio_ForHttpLiveStreaming()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = true,
+                    AudioCodec = "aac"
+                };
+
+                var version = new MediaVersion();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.HttpLiveStreaming,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.AudioCodec.Should().Be("copy");
+            }
+
+            [Test]
+            public void Should_SetAudioBitrate_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = true,
+                    AudioBitrate = 2424,
+                    AudioCodec = "ac3"
+                };
+
+                var version = new MediaVersion();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -647,20 +697,23 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetAudioBufferSize_When_NormalizingWrongCodec_ForTransportStream()
+            public void Should_SetAudioBufferSize_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
-                    AudioBufferSize = 2424
+                    NormalizeAudio = true,
+                    AudioBufferSize = 2424,
+                    AudioCodec = "ac3"
                 };
 
-                var version = new MediaVersion { AudioCodec = "ac3" };
+                var version = new MediaVersion();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -668,67 +721,23 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void ShouldNot_SetAudioChannels_When_CorrectCodec_ForTransportStream()
+            public void Should_SetAudioChannels_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
                     NormalizeAudio = true,
                     AudioCodec = "ac3",
                     AudioChannels = 6
                 };
 
-                var version = new MediaVersion { AudioCodec = "ac3" };
+                var version = new MediaVersion();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
-                    DateTimeOffset.Now,
-                    DateTimeOffset.Now);
-
-                actual.AudioChannels.IsNone.Should().BeTrue();
-            }
-
-            [Test]
-            public void ShouldNot_SetAudioSampleRate_When_CorrectCodec_ForTransportStream()
-            {
-                FFmpegProfile ffmpegProfile = TestProfile() with
-                {
-                    NormalizeAudioCodec = true,
-                    NormalizeAudio = true,
-                    AudioCodec = "ac3",
-                    AudioSampleRate = 48
-                };
-
-                var version = new MediaVersion { AudioCodec = "ac3" };
-
-                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.TransportStream,
-                    ffmpegProfile,
-                    version,
-                    DateTimeOffset.Now,
-                    DateTimeOffset.Now);
-
-                actual.AudioSampleRate.IsNone.Should().BeTrue();
-            }
-
-            [Test]
-            public void Should_SetAudioChannels_When_NormalizingWrongCodecAndAudio_ForTransportStream()
-            {
-                FFmpegProfile ffmpegProfile = TestProfile() with
-                {
-                    NormalizeAudioCodec = true,
-                    NormalizeAudio = true,
-                    AudioChannels = 6
-                };
-
-                var version = new MediaVersion { AudioCodec = "ac3" };
-
-                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.TransportStream,
-                    ffmpegProfile,
-                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
@@ -736,25 +745,143 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void Should_SetAudioSampleRate_When_NormalizingWrongCodecAndAudio_ForTransportStream()
+            public void Should_SetAudioSampleRate_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
-                    NormalizeAudioCodec = true,
                     NormalizeAudio = true,
+                    AudioCodec = "ac3",
                     AudioSampleRate = 48
                 };
 
-                var version = new MediaVersion { AudioCodec = "ac3" };
+                var version = new MediaVersion();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
                 actual.AudioSampleRate.IfNone(0).Should().Be(48);
+            }
+
+            [Test]
+            public void Should_SetAudioChannels_When_NormalizingAudio_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = true,
+                    AudioChannels = 6
+                };
+
+                var version = new MediaVersion();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.AudioChannels.IfNone(0).Should().Be(6);
+            }
+
+            [Test]
+            public void Should_SetAudioSampleRate_When_NormalizingAudio_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = true,
+                    AudioSampleRate = 48
+                };
+
+                var version = new MediaVersion();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.AudioSampleRate.IfNone(0).Should().Be(48);
+            }
+
+            [Test]
+            public void Should_SetAudioDuration_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = true,
+                    AudioSampleRate = 48,
+                    AudioCodec = "ac3"
+                };
+
+                var version = new MediaVersion { Duration = TimeSpan.FromMinutes(2) };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.AudioDuration.IfNone(TimeSpan.MinValue).Should().Be(TimeSpan.FromMinutes(2));
+            }
+
+            [Test]
+            public void Should_SetNormalizeLoudness_When_NormalizingAudio_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = true,
+                    NormalizeLoudness = true
+                };
+
+                var version = new MediaVersion();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.NormalizeLoudness.Should().BeTrue();
+            }
+
+            [Test]
+            public void Should_NotSetNormalizeLoudness_When_NotNormalizingAudio_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeAudio = false,
+                    NormalizeLoudness = true
+                };
+
+                var version = new MediaVersion();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream { Codec = "ac3" },
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.NormalizeLoudness.Should().BeFalse();
             }
         }
 
@@ -775,6 +902,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode.TransportStream,
                     ffmpegProfile,
                     new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 

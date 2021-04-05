@@ -52,17 +52,24 @@ namespace ErsatzTV.Services
             {
                 try
                 {
-                    Task requestTask = request switch
+                    Task requestTask;
+                    switch (request)
                     {
-                        TryCompletePlexPinFlow pinRequest => CompletePinFlow(pinRequest, cancellationToken),
-                        SynchronizePlexMediaSources sourcesRequest => SynchronizeSources(
-                            sourcesRequest,
-                            cancellationToken),
-                        SynchronizePlexLibraries synchronizePlexLibrariesRequest => SynchronizeLibraries(
-                            synchronizePlexLibrariesRequest,
-                            cancellationToken),
-                        _ => throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}")
-                    };
+                        case TryCompletePlexPinFlow pinRequest:
+                            requestTask = CompletePinFlow(pinRequest, cancellationToken);
+                            break;
+                        case SynchronizePlexMediaSources sourcesRequest:
+                            requestTask = SynchronizeSources(sourcesRequest, cancellationToken);
+                            break;
+                        case SynchronizePlexLibraries synchronizePlexLibrariesRequest:
+                            requestTask = SynchronizeLibraries(synchronizePlexLibrariesRequest, cancellationToken);
+                            break;
+                        case ISynchronizePlexLibraryById synchronizePlexLibraryById:
+                            requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, cancellationToken);
+                            break;
+                        default:
+                            throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
+                    }
 
                     await requestTask;
                 }
@@ -109,17 +116,8 @@ namespace ErsatzTV.Services
 
             Either<BaseError, bool> result = await mediator.Send(request, cancellationToken);
             result.BiIter(
-                success =>
-                {
-                    if (success)
-                    {
-                        _logger.LogInformation("Successfully authenticated with plex");
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Plex authentication timeout");
-                    }
-                },
+                success => _logger.LogInformation(
+                    success ? "Successfully authenticated with plex" : "Plex authentication timeout"),
                 error => _logger.LogWarning("Unable to poll plex token: {Error}", error.Value));
         }
 
@@ -136,6 +134,22 @@ namespace ErsatzTV.Services
                 error => _logger.LogWarning(
                     "Unable to synchronize plex libraries for source {MediaSourceId}: {Error}",
                     request.PlexMediaSourceId,
+                    error.Value));
+        }
+
+        private async Task SynchronizePlexLibrary(
+            ISynchronizePlexLibraryById request,
+            CancellationToken cancellationToken)
+        {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+            Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
+            result.BiIter(
+                name => _logger.LogDebug("Done synchronizing plex library {Name}", name),
+                error => _logger.LogWarning(
+                    "Unable to synchronize plex library {LibraryId}: {Error}",
+                    request.PlexLibraryId,
                     error.Value));
         }
     }

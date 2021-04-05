@@ -13,19 +13,18 @@ namespace ErsatzTV.Application.FFmpegProfiles
                 profile.Transcode,
                 profile.HardwareAcceleration,
                 Project(profile.Resolution),
-                profile.NormalizeResolution,
+                profile.NormalizeVideo,
                 profile.VideoCodec,
-                profile.NormalizeVideoCodec,
                 profile.VideoBitrate,
                 profile.VideoBufferSize,
                 profile.AudioCodec,
-                profile.NormalizeAudioCodec,
                 profile.AudioBitrate,
                 profile.AudioBufferSize,
-                profile.AudioVolume,
+                profile.NormalizeLoudness,
                 profile.AudioChannels,
                 profile.AudioSampleRate,
-                profile.NormalizeAudio);
+                profile.NormalizeAudio,
+                profile.FrameRate);
 
         private static ResolutionViewModel Project(Resolution resolution) =>
             new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);

@@ -4,6 +4,8 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Queries
 @using ErsatzTV.Application.Images.Commands
+@using ErsatzTV.Application.MediaItems.Queries
+@using System.Globalization
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Channels.Queries
 @inject NavigationManager NavigationManager
@@ -32,6 +34,13 @@
                         @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
                         {
                             <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="Preferred Language" @bind-Value="_model.PreferredLanguageCode" For="@(() => _model.PreferredLanguageCode)">
+                        <MudSelectItem Value="@((string) null)">(none)</MudSelectItem>
+                        @foreach (CultureInfo culture in _availableCultures)
+                        {
+                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
@@ -73,10 +82,12 @@
     private ValidationMessageStore _messageStore;
 
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
+    private List<CultureInfo> _availableCultures;
 
     protected override async Task OnParametersSetAsync()
     {
         await LoadFFmpegProfilesAsync();
+        _availableCultures = await Mediator.Send(new GetAllLanguageCodes());
 
         if (Id.HasValue)
         {
@@ -90,6 +101,7 @@
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
                     _model.Logo = channelViewModel.Logo;
                     _model.StreamingMode = channelViewModel.StreamingMode;
+                    _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
                 },
                 () => NavigationManager.NavigateTo("404"));
         }

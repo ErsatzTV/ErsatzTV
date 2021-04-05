@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -32,6 +33,7 @@ namespace ErsatzTV.Application.Channels.Commands
             c.Name = update.Name;
             c.Number = update.Number;
             c.FFmpegProfileId = update.FFmpegProfileId;
+            c.PreferredLanguageCode = update.PreferredLanguageCode;
 
             if (!string.IsNullOrWhiteSpace(update.Logo))
             {
@@ -65,8 +67,9 @@ namespace ErsatzTV.Application.Channels.Commands
         }
 
         private async Task<Validation<BaseError, Channel>> Validate(UpdateChannel request) =>
-            (await ChannelMustExist(request), ValidateName(request), await ValidateNumber(request))
-            .Apply((channelToUpdate, _, _) => channelToUpdate);
+            (await ChannelMustExist(request), ValidateName(request), await ValidateNumber(request),
+                ValidatePreferredLanguage(request))
+            .Apply((channelToUpdate, _, _, _) => channelToUpdate);
 
         private Task<Validation<BaseError, Channel>> ChannelMustExist(UpdateChannel updateChannel) =>
             _channelRepository.Get(updateChannel.ChannelId)
@@ -79,7 +82,7 @@ namespace ErsatzTV.Application.Channels.Commands
         private async Task<Validation<BaseError, string>> ValidateNumber(UpdateChannel updateChannel)
         {
             Option<Channel> match = await _channelRepository.GetByNumber(updateChannel.Number);
-            int matchId = match.Map(c => c.Id).IfNone(updateChannel.ChannelId);
+            int matchId = await match.Map(c => c.Id).IfNoneAsync(updateChannel.ChannelId);
             if (matchId == updateChannel.ChannelId)
             {
                 if (Regex.IsMatch(updateChannel.Number, Channel.NumberValidator))
@@ -92,5 +95,12 @@ namespace ErsatzTV.Application.Channels.Commands
 
             return BaseError.New("Channel number must be unique");
         }
+
+        private Validation<BaseError, string> ValidatePreferredLanguage(UpdateChannel updateChannel) =>
+            Optional(updateChannel.PreferredLanguageCode ?? string.Empty)
+                .Filter(
+                    lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
+                        ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
+                .ToValidation<BaseError>("Preferred language code is invalid");
     }
 }

@@ -215,6 +215,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(sm => sm.Genres)
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Tags)
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Studios)
                         .Include(s => s.LibraryPath)
                         .ThenInclude(lp => lp.Library)
                         .OrderBy(s => s.Id)
@@ -236,6 +238,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 metadata.DateAdded = DateTime.UtcNow;
                 metadata.Genres ??= new List<Genre>();
                 metadata.Tags ??= new List<Tag>();
+                metadata.Studios ??= new List<Studio>();
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
@@ -282,6 +285,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(em => em.Artwork)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
@@ -413,6 +418,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -581,7 +588,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             MediaFiles = new List<MediaFile>
                             {
                                 new() { Path = path }
-                            }
+                            },
+                            Streams = new List<MediaStream>()
                         }
                     }
                 };

@@ -37,19 +37,18 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.Transcode = update.Transcode;
             p.HardwareAcceleration = update.HardwareAcceleration;
             p.ResolutionId = update.ResolutionId;
-            p.NormalizeResolution = update.NormalizeResolution;
+            p.NormalizeVideo = update.NormalizeVideo;
             p.VideoCodec = update.VideoCodec;
-            p.NormalizeVideoCodec = update.NormalizeVideoCodec;
             p.VideoBitrate = update.VideoBitrate;
             p.VideoBufferSize = update.VideoBufferSize;
             p.AudioCodec = update.AudioCodec;
-            p.NormalizeAudioCodec = update.NormalizeAudioCodec;
             p.AudioBitrate = update.AudioBitrate;
             p.AudioBufferSize = update.AudioBufferSize;
-            p.AudioVolume = update.AudioVolume;
+            p.NormalizeLoudness = update.NormalizeLoudness;
             p.AudioChannels = update.AudioChannels;
             p.AudioSampleRate = update.AudioSampleRate;
             p.NormalizeAudio = update.NormalizeAudio;
+            p.FrameRate = update.FrameRate;
             await _ffmpegProfileRepository.Update(p);
             return ProjectToViewModel(p);
         }
@@ -69,7 +68,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 .Bind(_ => updateFFmpegProfile.NotLongerThan(50)(x => x.Name));
 
         private Validation<BaseError, int> ValidateThreadCount(UpdateFFmpegProfile updateFFmpegProfile) =>
-            updateFFmpegProfile.AtLeast(1)(p => p.ThreadCount);
+            updateFFmpegProfile.AtLeast(0)(p => p.ThreadCount);
 
         private async Task<Validation<BaseError, int>> ResolutionMustExist(UpdateFFmpegProfile updateFFmpegProfile) =>
             (await _resolutionRepository.Get(updateFFmpegProfile.ResolutionId))

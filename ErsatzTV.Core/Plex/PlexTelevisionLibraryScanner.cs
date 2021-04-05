@@ -7,14 +7,17 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Core.Plex
 {
     public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionLibraryScanner
     {
         private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
+        private readonly IMediator _mediator;
         private readonly IMetadataRepository _metadataRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
         private readonly ISearchIndex _searchIndex;
@@ -25,13 +28,15 @@ namespace ErsatzTV.Core.Plex
             ITelevisionRepository televisionRepository,
             IMetadataRepository metadataRepository,
             ISearchIndex searchIndex,
+            IMediator mediator,
             ILogger<PlexTelevisionLibraryScanner> logger)
-            : base(metadataRepository)
+            : base(metadataRepository, logger)
         {
             _plexServerApiClient = plexServerApiClient;
             _televisionRepository = televisionRepository;
             _metadataRepository = metadataRepository;
             _searchIndex = searchIndex;
+            _mediator = mediator;
             _logger = logger;
         }
 
@@ -50,6 +55,9 @@ namespace ErsatzTV.Core.Plex
                 {
                     foreach (PlexShow incoming in showEntries)
                     {
+                        decimal percentCompletion = (decimal) showEntries.IndexOf(incoming) / showEntries.Count;
+                        await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, percentCompletion));
+
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, MediaItemScanResult<PlexShow>> maybeShow = await _televisionRepository
                             .GetOrAddPlexShow(plexMediaSourceLibrary, incoming)
@@ -84,6 +92,8 @@ namespace ErsatzTV.Core.Plex
                     List<int> ids =
                         await _televisionRepository.RemoveMissingPlexShows(plexMediaSourceLibrary, showKeys);
                     await _searchIndex.RemoveItems(ids);
+
+                    await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, 0));
 
                     return Unit.Default;
                 },
@@ -301,8 +311,7 @@ namespace ErsatzTV.Core.Plex
             MediaVersion existingVersion = existing.MediaVersions.Head();
             MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
-            if (incomingVersion.DateUpdated > existingVersion.DateUpdated ||
-                string.IsNullOrWhiteSpace(existingVersion.SampleAspectRatio))
+            if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
             {
                 Either<BaseError, MediaVersion> maybeStatistics =
                     await _plexServerApiClient.GetStatistics(incoming.Key.Split("/").Last(), connection, token);
@@ -310,11 +319,11 @@ namespace ErsatzTV.Core.Plex
                 await maybeStatistics.Match(
                     async mediaVersion =>
                     {
-                        existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio ?? "1:1";
+                        existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
                         existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
-                        existingVersion.DateUpdated = incomingVersion.DateUpdated;
+                        existingVersion.DateUpdated = mediaVersion.DateUpdated;
 
-                        await _metadataRepository.UpdatePlexStatistics(existingVersion);
+                        await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, mediaVersion);
                     },
                     _ => Task.CompletedTask);
             }

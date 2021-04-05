@@ -12,17 +12,16 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
         bool Transcode,
         HardwareAccelerationKind HardwareAcceleration,
         int ResolutionId,
-        bool NormalizeResolution,
+        bool NormalizeVideo,
         string VideoCodec,
-        bool NormalizeVideoCodec,
         int VideoBitrate,
         int VideoBufferSize,
         string AudioCodec,
-        bool NormalizeAudioCodec,
         int AudioBitrate,
         int AudioBufferSize,
-        int AudioVolume,
+        bool NormalizeLoudness,
         int AudioChannels,
         int AudioSampleRate,
-        bool NormalizeAudio) : IRequest<Either<BaseError, FFmpegProfileViewModel>>;
+        bool NormalizeAudio,
+        string FrameRate) : IRequest<Either<BaseError, FFmpegProfileViewModel>>;
 }

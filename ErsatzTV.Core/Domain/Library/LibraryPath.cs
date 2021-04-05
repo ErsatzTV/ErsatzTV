@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ErsatzTV.Core.Domain
 {
@@ -6,6 +7,7 @@ namespace ErsatzTV.Core.Domain
     {
         public int Id { get; set; }
         public string Path { get; set; }
+        public DateTime? LastScan { get; set; }
 
         public int LibraryId { get; set; }
         public Library Library { get; set; }

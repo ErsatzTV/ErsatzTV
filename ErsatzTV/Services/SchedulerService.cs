@@ -15,50 +15,58 @@ using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Services
 {
-    public class SchedulerService : IHostedService
+    public class SchedulerService : BackgroundService
     {
-        private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IEntityLocker _entityLocker;
+        private readonly ILogger<SchedulerService> _logger;
+        private readonly ChannelWriter<IPlexBackgroundServiceRequest> _plexWorkerChannel;
         private readonly IServiceScopeFactory _serviceScopeFactory;
-        private Timer _timer;
+        private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
         public SchedulerService(
             IServiceScopeFactory serviceScopeFactory,
-            ChannelWriter<IBackgroundServiceRequest> channel,
-            IEntityLocker entityLocker)
+            ChannelWriter<IBackgroundServiceRequest> workerChannel,
+            ChannelWriter<IPlexBackgroundServiceRequest> plexWorkerChannel,
+            IEntityLocker entityLocker,
+            ILogger<SchedulerService> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
-            _channel = channel;
+            _workerChannel = workerChannel;
+            _plexWorkerChannel = plexWorkerChannel;
             _entityLocker = entityLocker;
+            _logger = logger;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            _timer = new Timer(
-                async _ => await DoWork(cancellationToken),
-                null,
-                TimeSpan.FromSeconds(0), // fire immediately
-                TimeSpan.FromHours(1)); // repeat every hour
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    await DoWork(cancellationToken);
+                }
 
-            return Task.CompletedTask;
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            _timer?.Change(Timeout.Infinite, 0);
-
-            return Task.CompletedTask;
+                await Task.Delay(TimeSpan.FromHours(1), cancellationToken);
+            }
         }
 
         private async Task DoWork(CancellationToken cancellationToken)
         {
-            await RebuildSearchIndex(cancellationToken);
-            await BuildPlayouts(cancellationToken);
-            await ScanLocalMediaSources(cancellationToken);
-            await ScanPlexMediaSources(cancellationToken);
+            try
+            {
+                await RebuildSearchIndex(cancellationToken);
+                await BuildPlayouts(cancellationToken);
+                await ScanLocalMediaSources(cancellationToken);
+                await ScanPlexMediaSources(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error during scheduler run");
+            }
         }
 
         private async Task BuildPlayouts(CancellationToken cancellationToken)
@@ -69,7 +77,7 @@ namespace ErsatzTV.Services
             List<int> playoutIds = await dbContext.Playouts.Map(p => p.Id).ToListAsync(cancellationToken);
             foreach (int playoutId in playoutIds)
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId), cancellationToken);
+                await _workerChannel.WriteAsync(new BuildPlayout(playoutId), cancellationToken);
             }
         }
 
@@ -87,7 +95,7 @@ namespace ErsatzTV.Services
             {
                 if (_entityLocker.LockLibrary(libraryId))
                 {
-                    await _channel.WriteAsync(
+                    await _workerChannel.WriteAsync(
                         new ScanLocalLibraryIfNeeded(libraryId),
                         cancellationToken);
                 }
@@ -107,14 +115,14 @@ namespace ErsatzTV.Services
             {
                 if (_entityLocker.LockLibrary(library.Id))
                 {
-                    await _channel.WriteAsync(
+                    await _plexWorkerChannel.WriteAsync(
                         new SynchronizePlexLibraryByIdIfNeeded(library.Id),
                         cancellationToken);
                 }
             }
         }
 
-        private async Task RebuildSearchIndex(CancellationToken cancellationToken) =>
-            await _channel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
+        private ValueTask RebuildSearchIndex(CancellationToken cancellationToken) =>
+            _workerChannel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
     }
 }

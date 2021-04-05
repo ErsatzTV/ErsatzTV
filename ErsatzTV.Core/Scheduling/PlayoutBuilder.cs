@@ -57,7 +57,7 @@ namespace ErsatzTV.Core.Scheduling
                         case ProgramScheduleItemCollectionType.Collection:
                             Option<List<MediaItem>> maybeItems =
                                 await _mediaCollectionRepository.GetItems(collectionKey.CollectionId ?? 0);
-                            return Tuple(collectionKey, maybeItems.IfNone(new List<MediaItem>()));
+                            return Tuple(collectionKey, await maybeItems.IfNoneAsync(new List<MediaItem>()));
                         case ProgramScheduleItemCollectionType.TelevisionShow:
                             List<Episode> showItems =
                                 await _televisionRepository.GetShowItems(collectionKey.MediaItemId ?? 0);
@@ -99,6 +99,8 @@ namespace ErsatzTV.Core.Scheduling
                                    TimeSpan.Zero,
                         Episode e => e.MediaVersions.HeadOrNone().Map(mv => mv.Duration).IfNone(TimeSpan.Zero) ==
                                      TimeSpan.Zero,
+                        MusicVideo mv => mv.MediaVersions.HeadOrNone().Map(v => v.Duration).IfNone(TimeSpan.Zero) ==
+                                         TimeSpan.Zero,
                         _ => true
                     })).Map(c => c.Key);
             if (zeroDurationCollection.IsSome)
@@ -145,8 +147,12 @@ namespace ErsatzTV.Core.Scheduling
             // start with the previously-decided schedule item
             int index = sortedScheduleItems.IndexOf(startAnchor.NextScheduleItem);
 
-            Option<int> multipleRemaining = None;
-            Option<DateTimeOffset> durationFinish = None;
+            // start with the previous multiple/duration states
+            Option<int> multipleRemaining = Optional(startAnchor.MultipleRemaining);
+            Option<DateTimeOffset> durationFinish = startAnchor.DurationFinishOffset;
+
+            bool customGroup = multipleRemaining.IsSome || durationFinish.IsSome;
+
             // loop until we're done filling the desired amount of time
             while (currentTime < playoutFinish)
             {
@@ -161,7 +167,7 @@ namespace ErsatzTV.Core.Scheduling
                     durationFinish.IsSome);
 
                 IMediaCollectionEnumerator enumerator = collectionEnumerators[CollectionKeyForItem(scheduleItem)];
-                enumerator.Current.IfSome(
+                await enumerator.Current.IfSomeAsync(
                     mediaItem =>
                     {
                         _logger.LogDebug(
@@ -176,6 +182,7 @@ namespace ErsatzTV.Core.Scheduling
                         {
                             Movie m => m.MediaVersions.Head(),
                             Episode e => e.MediaVersions.Head(),
+                            MusicVideo mv => mv.MediaVersions.Head(),
                             _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                         };
 
@@ -183,8 +190,14 @@ namespace ErsatzTV.Core.Scheduling
                         {
                             MediaItemId = mediaItem.Id,
                             Start = itemStartTime.UtcDateTime,
-                            Finish = itemStartTime.UtcDateTime + version.Duration
+                            Finish = itemStartTime.UtcDateTime + version.Duration,
+                            CustomGroup = customGroup
                         };
+
+                        if (!string.IsNullOrWhiteSpace(scheduleItem.CustomTitle))
+                        {
+                            playoutItem.CustomTitle = scheduleItem.CustomTitle;
+                        }
 
                         currentTime = itemStartTime + version.Duration;
                         enumerator.MoveNext();
@@ -199,11 +212,13 @@ namespace ErsatzTV.Core.Scheduling
                                     "Advancing to next schedule item after playout mode {PlayoutMode}",
                                     "One");
                                 index++;
+                                customGroup = false;
                                 break;
                             case ProgramScheduleItemMultiple multiple:
                                 if (multipleRemaining.IsNone)
                                 {
                                     multipleRemaining = multiple.Count;
+                                    customGroup = true;
                                 }
 
                                 multipleRemaining = multipleRemaining.Map(i => i - 1);
@@ -214,6 +229,7 @@ namespace ErsatzTV.Core.Scheduling
                                         "Multiple");
                                     index++;
                                     multipleRemaining = None;
+                                    customGroup = false;
                                 }
 
                                 break;
@@ -221,10 +237,13 @@ namespace ErsatzTV.Core.Scheduling
                                 enumerator.Current.Do(
                                     peekMediaItem =>
                                     {
+                                        customGroup = true;
+
                                         MediaVersion peekVersion = peekMediaItem switch
                                         {
                                             Movie m => m.MediaVersions.Head(),
                                             Episode e => e.MediaVersions.Head(),
+                                            MusicVideo mv => mv.MediaVersions.Head(),
                                             _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                                         };
 
@@ -247,6 +266,7 @@ namespace ErsatzTV.Core.Scheduling
                                                 "Advancing to next schedule item after playout mode {PlayoutMode}",
                                                 "Flood");
                                             index++;
+                                            customGroup = false;
                                         }
                                     });
                                 break;
@@ -258,6 +278,7 @@ namespace ErsatzTV.Core.Scheduling
                                         {
                                             Movie m => m.MediaVersions.Head(),
                                             Episode e => e.MediaVersions.Head(),
+                                            MusicVideo mv => mv.MediaVersions.Head(),
                                             _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                                         };
 
@@ -265,6 +286,7 @@ namespace ErsatzTV.Core.Scheduling
                                         if (durationFinish.IsNone)
                                         {
                                             durationFinish = itemStartTime + duration.PlayoutDuration;
+                                            customGroup = true;
                                         }
 
                                         bool willNotFinishInTime =
@@ -277,6 +299,7 @@ namespace ErsatzTV.Core.Scheduling
                                                 "Advancing to next schedule item after playout mode {PlayoutMode}",
                                                 "Duration");
                                             index++;
+                                            customGroup = false;
 
                                             if (duration.OfflineTail)
                                             {
@@ -298,7 +321,9 @@ namespace ErsatzTV.Core.Scheduling
             {
                 NextScheduleItem = nextScheduleItem,
                 NextScheduleItemId = nextScheduleItem.Id,
-                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime).UtcDateTime
+                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime).UtcDateTime,
+                MultipleRemaining = multipleRemaining.IsSome ? multipleRemaining.ValueUnsafe() : null,
+                DurationFinish = durationFinish.IsSome ? durationFinish.ValueUnsafe().UtcDateTime : null
             };
 
             // build program schedule anchors
@@ -459,6 +484,9 @@ namespace ErsatzTV.Core.Scheduling
                 Movie m => m.MovieMetadata.HeadOrNone().Match(
                     mm => mm.Title ?? string.Empty,
                     () => "[unknown movie]"),
+                MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
+                    mvm => $"{mvm.Artist} - {mvm.Title}",
+                    () => "[unknown music video]"),
                 _ => string.Empty
             };
 
