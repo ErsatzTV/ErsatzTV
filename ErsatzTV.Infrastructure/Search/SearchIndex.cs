@@ -23,7 +23,7 @@ using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search
 {
-    public class SearchIndex : ISearchIndex
+    public sealed class SearchIndex : ISearchIndex
     {
         private const LuceneVersion AppLuceneVersion = LuceneVersion.LUCENE_48;
 
@@ -45,65 +45,52 @@ namespace ErsatzTV.Infrastructure.Search
         private const string ShowType = "show";
         private const string MusicVideoType = "music_video";
 
-        private static bool _isRebuilding;
-
-        private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<SearchIndex> _logger;
 
-        private readonly ISearchRepository _searchRepository;
+        private FSDirectory _directory;
+        private IndexWriter _writer;
 
-        public SearchIndex(
-            ILocalFileSystem localFileSystem,
-            ISearchRepository searchRepository,
-            ILogger<SearchIndex> logger)
-        {
-            _localFileSystem = localFileSystem;
-            _searchRepository = searchRepository;
-            _logger = logger;
-        }
+        public SearchIndex(ILogger<SearchIndex> logger) => _logger = logger;
 
         public int Version => 2;
 
-        public Task<bool> Initialize()
+        public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
-            _localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
+            localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
+
+            _directory = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
+            var analyzer = new StandardAnalyzer(AppLuceneVersion);
+            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
+                { OpenMode = OpenMode.CREATE_OR_APPEND };
+            _writer = new IndexWriter(_directory, indexConfig);
+
             return Task.FromResult(true);
         }
 
-        public async Task<Unit> Rebuild(List<int> itemIds)
+        public async Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds)
         {
-            _isRebuilding = true;
-
-            await Initialize();
-
-            using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
-            var analyzer = new StandardAnalyzer(AppLuceneVersion);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.CREATE };
-            using var writer = new IndexWriter(dir, indexConfig);
-
             foreach (int id in itemIds)
             {
-                Option<MediaItem> maybeMediaItem = await _searchRepository.GetItemToIndex(id);
+                Option<MediaItem> maybeMediaItem = await searchRepository.GetItemToIndex(id);
                 if (maybeMediaItem.IsSome)
                 {
                     MediaItem mediaItem = maybeMediaItem.ValueUnsafe();
                     switch (mediaItem)
                     {
                         case Movie movie:
-                            UpdateMovie(movie, writer);
+                            UpdateMovie(movie);
                             break;
                         case Show show:
-                            UpdateShow(show, writer);
+                            UpdateShow(show);
                             break;
                         case MusicVideo musicVideo:
-                            UpdateMusicVideo(musicVideo, writer);
+                            UpdateMusicVideo(musicVideo);
                             break;
                     }
                 }
             }
 
-            _isRebuilding = false;
-
+            _writer.Commit();
             return Unit.Default;
         }
 
@@ -111,23 +98,18 @@ namespace ErsatzTV.Infrastructure.Search
 
         public Task<Unit> UpdateItems(List<MediaItem> items)
         {
-            using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
-            var analyzer = new StandardAnalyzer(AppLuceneVersion);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.APPEND };
-            using var writer = new IndexWriter(dir, indexConfig);
-
             foreach (MediaItem item in items)
             {
                 switch (item)
                 {
                     case Movie movie:
-                        UpdateMovie(movie, writer);
+                        UpdateMovie(movie);
                         break;
                     case Show show:
-                        UpdateShow(show, writer);
+                        UpdateShow(show);
                         break;
                     case MusicVideo musicVideo:
-                        UpdateMusicVideo(musicVideo, writer);
+                        UpdateMusicVideo(musicVideo);
                         break;
                 }
             }
@@ -137,14 +119,9 @@ namespace ErsatzTV.Infrastructure.Search
 
         public Task<Unit> RemoveItems(List<int> ids)
         {
-            using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
-            var analyzer = new StandardAnalyzer(AppLuceneVersion);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer) { OpenMode = OpenMode.APPEND };
-            using var writer = new IndexWriter(dir, indexConfig);
-
             foreach (int id in ids)
             {
-                writer.DeleteDocuments(new Term(IdField, id.ToString()));
+                _writer.DeleteDocuments(new Term(IdField, id.ToString()));
             }
 
             return Task.FromResult(Unit.Default);
@@ -152,14 +129,12 @@ namespace ErsatzTV.Infrastructure.Search
 
         public Task<SearchResult> Search(string searchQuery, int skip, int limit, string searchField = "")
         {
-            if (_isRebuilding ||
-                string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
+            if (string.IsNullOrWhiteSpace(searchQuery.Replace("*", string.Empty).Replace("?", string.Empty)))
             {
                 return new SearchResult(new List<SearchItem>(), 0).AsTask();
             }
 
-            using var dir = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
-            using var reader = DirectoryReader.Open(dir);
+            using DirectoryReader reader = _writer.GetReader(true);
             var searcher = new IndexSearcher(reader);
             int hitsLimit = skip + limit;
             using var analyzer = new StandardAnalyzer(AppLuceneVersion);
@@ -180,6 +155,14 @@ namespace ErsatzTV.Infrastructure.Search
             searchResult.PageMap = GetSearchPageMap(searcher, query, filter, sort, limit);
 
             return searchResult.AsTask();
+        }
+
+        public void Commit() => _writer.Commit();
+
+        public void Dispose()
+        {
+            _writer?.Dispose();
+            _directory?.Dispose();
         }
 
         private static Option<SearchPageMap> GetSearchPageMap(
@@ -228,7 +211,7 @@ namespace ErsatzTV.Infrastructure.Search
             return new SearchPageMap(map);
         }
 
-        private void UpdateMovie(Movie movie, IndexWriter writer)
+        private void UpdateMovie(Movie movie)
         {
             Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
             if (maybeMetadata.IsSome)
@@ -277,7 +260,7 @@ namespace ErsatzTV.Infrastructure.Search
                         doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                     }
 
-                    writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
+                    _writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
                 }
                 catch (Exception ex)
                 {
@@ -287,7 +270,7 @@ namespace ErsatzTV.Infrastructure.Search
             }
         }
 
-        private void UpdateShow(Show show, IndexWriter writer)
+        private void UpdateShow(Show show)
         {
             Option<ShowMetadata> maybeMetadata = show.ShowMetadata.HeadOrNone();
             if (maybeMetadata.IsSome)
@@ -336,7 +319,7 @@ namespace ErsatzTV.Infrastructure.Search
                         doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                     }
 
-                    writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
+                    _writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
                 }
                 catch (Exception ex)
                 {
@@ -346,7 +329,7 @@ namespace ErsatzTV.Infrastructure.Search
             }
         }
 
-        private void UpdateMusicVideo(MusicVideo musicVideo, IndexWriter writer)
+        private void UpdateMusicVideo(MusicVideo musicVideo)
         {
             Option<MusicVideoMetadata> maybeMetadata = musicVideo.MusicVideoMetadata.HeadOrNone();
             if (maybeMetadata.IsSome)
@@ -396,7 +379,7 @@ namespace ErsatzTV.Infrastructure.Search
                         doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                     }
 
-                    writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
+                    _writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
                 }
                 catch (Exception ex)
                 {
