@@ -8,6 +8,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -23,6 +24,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILogger<MusicVideoFolderScanner> _logger;
         private readonly IMediator _mediator;
         private readonly IMusicVideoRepository _musicVideoRepository;
+        private readonly ISearchIndex _searchIndex;
 
         public MusicVideoFolderScanner(
             ILocalFileSystem localFileSystem,
@@ -30,6 +32,7 @@ namespace ErsatzTV.Core.Metadata
             ILocalMetadataProvider localMetadataProvider,
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
+            ISearchIndex searchIndex,
             IMusicVideoRepository musicVideoRepository,
             IMediator mediator,
             ILogger<MusicVideoFolderScanner> logger) : base(
@@ -41,6 +44,7 @@ namespace ErsatzTV.Core.Metadata
         {
             _localFileSystem = localFileSystem;
             _localMetadataProvider = localMetadataProvider;
+            _searchIndex = searchIndex;
             _musicVideoRepository = musicVideoRepository;
             _mediator = mediator;
             _logger = logger;
@@ -51,9 +55,7 @@ namespace ErsatzTV.Core.Metadata
             string ffprobePath,
             DateTimeOffset lastScan,
             decimal progressMin,
-            decimal progressMax,
-            Func<List<MediaItem>, ValueTask> addToSearchIndex,
-            Func<List<int>, ValueTask> removeFromSearchIndex)
+            decimal progressMax)
         {
             decimal progressSpread = progressMax - progressMin;
 
@@ -102,7 +104,17 @@ namespace ErsatzTV.Core.Metadata
                         .BindT(UpdateThumbnail);
 
                     await maybeMusicVideo.Match(
-                        async result => await addToSearchIndex(new List<MediaItem> { result.Item }),
+                        async result =>
+                        {
+                            if (result.IsAdded)
+                            {
+                                await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                            }
+                            else if (result.IsUpdated)
+                            {
+                                await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                            }
+                        },
                         error =>
                         {
                             _logger.LogWarning("Error processing music video at {Path}: {Error}", file, error.Value);
@@ -117,7 +129,7 @@ namespace ErsatzTV.Core.Metadata
                 {
                     _logger.LogInformation("Removing missing music video at {Path}", path);
                     List<int> ids = await _musicVideoRepository.DeleteByPath(libraryPath, path);
-                    await removeFromSearchIndex(ids);
+                    await _searchIndex.RemoveItems(ids);
                 }
             }
 

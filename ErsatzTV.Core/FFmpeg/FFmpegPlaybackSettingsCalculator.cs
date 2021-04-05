@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg
@@ -46,7 +47,7 @@ namespace ErsatzTV.Core.FFmpeg
             FFmpegProfile ffmpegProfile,
             MediaVersion version,
             MediaStream videoStream,
-            MediaStream audioStream,
+            Option<MediaStream> audioStream,
             DateTimeOffset start,
             DateTimeOffset now)
         {
@@ -113,10 +114,14 @@ namespace ErsatzTV.Core.FFmpeg
                         result.AudioBitrate = ffmpegProfile.AudioBitrate;
                         result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
 
-                        if (audioStream.Channels != ffmpegProfile.AudioChannels)
-                        {
-                            result.AudioChannels = ffmpegProfile.AudioChannels;
-                        }
+                        audioStream.IfSome(
+                            stream =>
+                            {
+                                if (stream.Channels != ffmpegProfile.AudioChannels)
+                                {
+                                    result.AudioChannels = ffmpegProfile.AudioChannels;
+                                }
+                            });
 
                         result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
                         result.AudioDuration = version.Duration;
