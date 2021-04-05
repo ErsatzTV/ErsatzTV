@@ -56,8 +56,23 @@
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        @{ var letters = new System.Collections.Generic.HashSet<char>(); }
         @foreach (TelevisionShowCardViewModel card in _data.Cards.OrderBy(s => s.SortTitle))
         {
+            @if (!letters.Contains(card.SortTitle.Head()))
+            {
+                Option<char> maybeLetter = card.SortTitle.ToLowerInvariant().HeadOrNone();
+                if (maybeLetter.IsSome)
+                {
+                    char letter = maybeLetter.ValueUnsafe();
+                    if (letter >= '0' && letter <= '9')
+                    {
+                        letter = '#';
+                    }
+                    letters.Add(letter);
+                    <div id="@($"letter-{letter}")" style="scroll-margin-top: 128px"></div>
+                }
+            }
             <MediaCard Data="@card"
                        Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
                        AddToCollectionClicked="@AddToCollection"
