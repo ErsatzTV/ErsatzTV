@@ -9,6 +9,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Tests.Fakes;
 using FluentAssertions;
@@ -87,9 +88,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
+                    1);
 
                 result.IsLeft.Should().BeTrue();
                 result.IfLeft(error => error.Should().BeOfType<MediaSourceInaccessible>());
@@ -114,9 +113,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -157,10 +154,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -202,10 +196,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -251,10 +242,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -303,10 +291,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -355,10 +340,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -406,10 +388,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -453,10 +432,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -494,10 +470,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -537,9 +510,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -568,10 +539,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     FFprobePath,
                     DateTimeOffset.MinValue,
                     0,
-                    1,
-                    _ => ValueTask.CompletedTask,
-                    _ => ValueTask.CompletedTask);
-
+                    1);
 
                 result.IsRight.Should().BeTrue();
 
@@ -588,6 +556,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     _localMetadataProvider.Object,
                     new Mock<IMetadataRepository>().Object,
                     _imageCache.Object,
+                    new Mock<ISearchIndex>().Object,
                     new Mock<IMediator>().Object,
                     new Mock<ILogger<MovieFolderScanner>>().Object
                 );

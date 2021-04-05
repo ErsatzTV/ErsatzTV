@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
 using MediatR;
@@ -20,12 +20,14 @@ namespace ErsatzTV.Core.Plex
         private readonly IMediator _mediator;
         private readonly IMetadataRepository _metadataRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
+        private readonly ISearchIndex _searchIndex;
         private readonly ITelevisionRepository _televisionRepository;
 
         public PlexTelevisionLibraryScanner(
             IPlexServerApiClient plexServerApiClient,
             ITelevisionRepository televisionRepository,
             IMetadataRepository metadataRepository,
+            ISearchIndex searchIndex,
             IMediator mediator,
             ILogger<PlexTelevisionLibraryScanner> logger)
             : base(metadataRepository, logger)
@@ -33,6 +35,7 @@ namespace ErsatzTV.Core.Plex
             _plexServerApiClient = plexServerApiClient;
             _televisionRepository = televisionRepository;
             _metadataRepository = metadataRepository;
+            _searchIndex = searchIndex;
             _mediator = mediator;
             _logger = logger;
         }
@@ -40,9 +43,7 @@ namespace ErsatzTV.Core.Plex
         public async Task<Either<BaseError, Unit>> ScanLibrary(
             PlexConnection connection,
             PlexServerAuthToken token,
-            PlexLibrary plexMediaSourceLibrary,
-            Func<List<MediaItem>, ValueTask> addToSearchIndex,
-            Func<List<int>, ValueTask> removeFromSearchIndex)
+            PlexLibrary plexMediaSourceLibrary)
         {
             Either<BaseError, List<PlexShow>> entries = await _plexServerApiClient.GetShowLibraryContents(
                 plexMediaSourceLibrary,
@@ -66,7 +67,15 @@ namespace ErsatzTV.Core.Plex
                         await maybeShow.Match(
                             async result =>
                             {
-                                await addToSearchIndex(new List<MediaItem> { result.Item });
+                                if (result.IsAdded)
+                                {
+                                    await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                                }
+                                else if (result.IsUpdated)
+                                {
+                                    await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                                }
+
                                 await ScanSeasons(plexMediaSourceLibrary, result.Item, connection, token);
                             },
                             error =>
@@ -82,7 +91,7 @@ namespace ErsatzTV.Core.Plex
                     var showKeys = showEntries.Map(s => s.Key).ToList();
                     List<int> ids =
                         await _televisionRepository.RemoveMissingPlexShows(plexMediaSourceLibrary, showKeys);
-                    await removeFromSearchIndex(ids);
+                    await _searchIndex.RemoveItems(ids);
 
                     await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, 0));
 
