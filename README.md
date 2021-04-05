@@ -33,11 +33,6 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 
 ![Media Collection](docs/images/media-collection.png)
 
-### Plex Live TV
-
-![Plex Live TV Stream](docs/images/plex-live-tv-stream.png)
-Sintel is © copyright Blender Foundation | durian.blender.org
-
 ## License
 
 This project is inspired by [pseudotv-plex](https://github.com/DEFENDORe/pseudotv) and
