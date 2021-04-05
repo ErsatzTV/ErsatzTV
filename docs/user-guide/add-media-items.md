@@ -3,7 +3,7 @@ Two library kinds are currently supported: [Local](#local-libraries) and [Plex](
 
 ## Local Libraries
 
-ErsatzTV provides two local libraries, one for each supported media kind: `Movies` and `Shows`.
+ErsatzTV provides three local libraries, one for each supported media kind: `Movies`, `Shows` and `Music Videos`.
 
 ### Metadata
 
