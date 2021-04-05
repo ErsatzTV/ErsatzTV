@@ -50,7 +50,7 @@
         {
             uri = QueryHelpers.AddQueryString(uri, "query", Query);
         }
-        return uri;
+        return uri + $"#letter-{letter}";
     }
 
 }
