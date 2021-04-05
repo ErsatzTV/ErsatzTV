@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using ErsatzTV.Application.Search.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
@@ -26,6 +29,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
         private readonly IMediator _mediator;
         private readonly IMovieFolderScanner _movieFolderScanner;
         private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
+        private readonly ChannelWriter<ISearchBackgroundServiceRequest> _searchChannel;
         private readonly ITelevisionFolderScanner _televisionFolderScanner;
 
         public ScanLocalLibraryHandler(
@@ -36,7 +40,8 @@ namespace ErsatzTV.Application.MediaSources.Commands
             IMusicVideoFolderScanner musicVideoFolderScanner,
             IEntityLocker entityLocker,
             IMediator mediator,
-            ILogger<ScanLocalLibraryHandler> logger)
+            ILogger<ScanLocalLibraryHandler> logger,
+            ChannelWriter<ISearchBackgroundServiceRequest> searchChannel)
         {
             _libraryRepository = libraryRepository;
             _configElementRepository = configElementRepository;
@@ -46,6 +51,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             _entityLocker = entityLocker;
             _mediator = mediator;
             _logger = logger;
+            _searchChannel = searchChannel;
         }
 
         public Task<Either<BaseError, string>> Handle(
@@ -87,7 +93,9 @@ namespace ErsatzTV.Application.MediaSources.Commands
                                 ffprobePath,
                                 lastScan,
                                 progressMin,
-                                progressMax);
+                                progressMax,
+                                AddToSearchIndex,
+                                RemoveFromSearchIndex);
                             break;
                         case LibraryMediaKind.Shows:
                             await _televisionFolderScanner.ScanFolder(
@@ -95,7 +103,9 @@ namespace ErsatzTV.Application.MediaSources.Commands
                                 ffprobePath,
                                 lastScan,
                                 progressMin,
-                                progressMax);
+                                progressMax,
+                                AddToSearchIndex,
+                                RemoveFromSearchIndex);
                             break;
                         case LibraryMediaKind.MusicVideos:
                             await _musicVideoFolderScanner.ScanFolder(
@@ -103,7 +113,9 @@ namespace ErsatzTV.Application.MediaSources.Commands
                                 ffprobePath,
                                 lastScan,
                                 progressMin,
-                                progressMax);
+                                progressMax,
+                                AddToSearchIndex,
+                                RemoveFromSearchIndex);
                             break;
                     }
 
@@ -125,6 +137,12 @@ namespace ErsatzTV.Application.MediaSources.Commands
             _entityLocker.UnlockLibrary(localLibrary.Id);
             return Unit.Default;
         }
+
+        private ValueTask AddToSearchIndex(List<MediaItem> mediaItems) =>
+            _searchChannel.WriteAsync(new AddItemsToSearchIndex(mediaItems));
+
+        private ValueTask RemoveFromSearchIndex(List<int> mediaItemIds) =>
+            _searchChannel.WriteAsync(new RemoveItemsFromSearchIndex(mediaItemIds));
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(IScanLocalLibrary request) =>
             (await LocalLibraryMustExist(request), await ValidateFFprobePath())

@@ -8,7 +8,6 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -25,7 +24,6 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILogger<MovieFolderScanner> _logger;
         private readonly IMediator _mediator;
         private readonly IMovieRepository _movieRepository;
-        private readonly ISearchIndex _searchIndex;
 
         public MovieFolderScanner(
             ILocalFileSystem localFileSystem,
@@ -34,7 +32,6 @@ namespace ErsatzTV.Core.Metadata
             ILocalMetadataProvider localMetadataProvider,
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
-            ISearchIndex searchIndex,
             IMediator mediator,
             ILogger<MovieFolderScanner> logger)
             : base(localFileSystem, localStatisticsProvider, metadataRepository, imageCache, logger)
@@ -42,7 +39,6 @@ namespace ErsatzTV.Core.Metadata
             _localFileSystem = localFileSystem;
             _movieRepository = movieRepository;
             _localMetadataProvider = localMetadataProvider;
-            _searchIndex = searchIndex;
             _mediator = mediator;
             _logger = logger;
         }
@@ -52,7 +48,9 @@ namespace ErsatzTV.Core.Metadata
             string ffprobePath,
             DateTimeOffset lastScan,
             decimal progressMin,
-            decimal progressMax)
+            decimal progressMax,
+            Func<List<MediaItem>, ValueTask> addToSearchIndex,
+            Func<List<int>, ValueTask> removeFromSearchIndex)
         {
             decimal progressSpread = progressMax - progressMin;
 
@@ -111,17 +109,7 @@ namespace ErsatzTV.Core.Metadata
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt));
 
                     await maybeMovie.Match(
-                        async result =>
-                        {
-                            if (result.IsAdded)
-                            {
-                                await _searchIndex.AddItems(new List<MediaItem> { result.Item });
-                            }
-                            else if (result.IsUpdated)
-                            {
-                                await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
-                            }
-                        },
+                        async result => await addToSearchIndex(new List<MediaItem> { result.Item }),
                         error =>
                         {
                             _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value);
@@ -136,7 +124,7 @@ namespace ErsatzTV.Core.Metadata
                 {
                     _logger.LogInformation("Removing missing movie at {Path}", path);
                     List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(ids);
+                    await removeFromSearchIndex(ids);
                 }
             }
 

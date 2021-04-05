@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
 using MediatR;
@@ -20,13 +20,11 @@ namespace ErsatzTV.Core.Plex
         private readonly IMetadataRepository _metadataRepository;
         private readonly IMovieRepository _movieRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
-        private readonly ISearchIndex _searchIndex;
 
         public PlexMovieLibraryScanner(
             IPlexServerApiClient plexServerApiClient,
             IMovieRepository movieRepository,
             IMetadataRepository metadataRepository,
-            ISearchIndex searchIndex,
             IMediator mediator,
             ILogger<PlexMovieLibraryScanner> logger)
             : base(metadataRepository, logger)
@@ -34,7 +32,6 @@ namespace ErsatzTV.Core.Plex
             _plexServerApiClient = plexServerApiClient;
             _movieRepository = movieRepository;
             _metadataRepository = metadataRepository;
-            _searchIndex = searchIndex;
             _mediator = mediator;
             _logger = logger;
         }
@@ -42,7 +39,9 @@ namespace ErsatzTV.Core.Plex
         public async Task<Either<BaseError, Unit>> ScanLibrary(
             PlexConnection connection,
             PlexServerAuthToken token,
-            PlexLibrary plexMediaSourceLibrary)
+            PlexLibrary plexMediaSourceLibrary,
+            Func<List<MediaItem>, ValueTask> addToSearchIndex,
+            Func<List<int>, ValueTask> removeFromSearchIndex)
         {
             Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetMovieLibraryContents(
                 plexMediaSourceLibrary,
@@ -65,17 +64,7 @@ namespace ErsatzTV.Core.Plex
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
                         await maybeMovie.Match(
-                            async result =>
-                            {
-                                if (result.IsAdded)
-                                {
-                                    await _searchIndex.AddItems(new List<MediaItem> { result.Item });
-                                }
-                                else if (result.IsUpdated)
-                                {
-                                    await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
-                                }
-                            },
+                            async result => await addToSearchIndex(new List<MediaItem> { result.Item }),
                             error =>
                             {
                                 _logger.LogWarning(
@@ -88,7 +77,7 @@ namespace ErsatzTV.Core.Plex
 
                     var movieKeys = movieEntries.Map(s => s.Key).ToList();
                     List<int> ids = await _movieRepository.RemoveMissingPlexMovies(plexMediaSourceLibrary, movieKeys);
-                    await _searchIndex.RemoveItems(ids);
+                    await removeFromSearchIndex(ids);
 
                     await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, 0));
                 },
