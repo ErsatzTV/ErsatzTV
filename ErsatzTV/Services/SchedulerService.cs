@@ -24,7 +24,6 @@ namespace ErsatzTV.Services
         private readonly IEntityLocker _entityLocker;
         private readonly ILogger<SchedulerService> _logger;
         private readonly ChannelWriter<IPlexBackgroundServiceRequest> _plexWorkerChannel;
-        private readonly ChannelWriter<ISearchBackgroundServiceRequest> _searchWorkerChannel;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
@@ -32,14 +31,12 @@ namespace ErsatzTV.Services
             IServiceScopeFactory serviceScopeFactory,
             ChannelWriter<IBackgroundServiceRequest> workerChannel,
             ChannelWriter<IPlexBackgroundServiceRequest> plexWorkerChannel,
-            ChannelWriter<ISearchBackgroundServiceRequest> searchWorkerChannel,
             IEntityLocker entityLocker,
             ILogger<SchedulerService> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _workerChannel = workerChannel;
             _plexWorkerChannel = plexWorkerChannel;
-            _searchWorkerChannel = searchWorkerChannel;
             _entityLocker = entityLocker;
             _logger = logger;
         }
@@ -126,6 +123,6 @@ namespace ErsatzTV.Services
         }
 
         private ValueTask RebuildSearchIndex(CancellationToken cancellationToken) =>
-            _searchWorkerChannel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
+            _workerChannel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
     }
 }

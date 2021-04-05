@@ -187,7 +187,6 @@ namespace ErsatzTV
             services.AddSingleton<IEntityLocker, EntityLocker>();
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
-            AddChannel<ISearchBackgroundServiceRequest>(services);
 
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IFFmpegProfileRepository, FFmpegProfileRepository>();
