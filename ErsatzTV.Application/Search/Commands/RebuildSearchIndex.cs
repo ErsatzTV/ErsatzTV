@@ -2,5 +2,5 @@
 
 namespace ErsatzTV.Application.Search.Commands
 {
-    public record RebuildSearchIndex : MediatR.IRequest<Unit>, IBackgroundServiceRequest;
+    public record RebuildSearchIndex : MediatR.IRequest<Unit>, ISearchBackgroundServiceRequest;
 }

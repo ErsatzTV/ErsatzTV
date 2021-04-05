@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using ErsatzTV.Application.Search.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
@@ -26,6 +29,7 @@ namespace ErsatzTV.Application.Plex.Commands
         private readonly IPlexMovieLibraryScanner _plexMovieLibraryScanner;
         private readonly IPlexSecretStore _plexSecretStore;
         private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
+        private readonly ChannelWriter<ISearchBackgroundServiceRequest> _searchChannel;
 
         public SynchronizePlexLibraryByIdHandler(
             IMediaSourceRepository mediaSourceRepository,
@@ -34,7 +38,8 @@ namespace ErsatzTV.Application.Plex.Commands
             IPlexTelevisionLibraryScanner plexTelevisionLibraryScanner,
             ILibraryRepository libraryRepository,
             IEntityLocker entityLocker,
-            ILogger<SynchronizePlexLibraryByIdHandler> logger)
+            ILogger<SynchronizePlexLibraryByIdHandler> logger,
+            ChannelWriter<ISearchBackgroundServiceRequest> searchChannel)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _plexSecretStore = plexSecretStore;
@@ -43,6 +48,7 @@ namespace ErsatzTV.Application.Plex.Commands
             _libraryRepository = libraryRepository;
             _entityLocker = entityLocker;
             _logger = logger;
+            _searchChannel = searchChannel;
         }
 
         public Task<Either<BaseError, string>> Handle(
@@ -70,13 +76,17 @@ namespace ErsatzTV.Application.Plex.Commands
                         await _plexMovieLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection,
                             parameters.ConnectionParameters.PlexServerAuthToken,
-                            parameters.Library);
+                            parameters.Library,
+                            AddToSearchIndex,
+                            RemoveFromSearchIndex);
                         break;
                     case LibraryMediaKind.Shows:
                         await _plexTelevisionLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection,
                             parameters.ConnectionParameters.PlexServerAuthToken,
-                            parameters.Library);
+                            parameters.Library,
+                            AddToSearchIndex,
+                            RemoveFromSearchIndex);
                         break;
                 }
 
@@ -93,6 +103,12 @@ namespace ErsatzTV.Application.Plex.Commands
             _entityLocker.UnlockLibrary(parameters.Library.Id);
             return Unit.Default;
         }
+
+        private ValueTask AddToSearchIndex(List<MediaItem> mediaItems) =>
+            _searchChannel.WriteAsync(new AddItemsToSearchIndex(mediaItems));
+
+        private ValueTask RemoveFromSearchIndex(List<int> mediaItemIds) =>
+            _searchChannel.WriteAsync(new RemoveItemsFromSearchIndex(mediaItemIds));
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(ISynchronizePlexLibraryById request) =>
             (await ValidateConnection(request), await PlexLibraryMustExist(request))
