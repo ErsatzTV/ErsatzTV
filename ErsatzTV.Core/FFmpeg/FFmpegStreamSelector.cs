@@ -6,6 +6,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg
 {
@@ -25,8 +26,17 @@ namespace ErsatzTV.Core.FFmpeg
         public Task<MediaStream> SelectVideoStream(Channel channel, MediaVersion version) =>
             version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video).AsTask();
 
-        public async Task<MediaStream> SelectAudioStream(Channel channel, MediaVersion version)
+        public async Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version)
         {
+            if (channel.StreamingMode == StreamingMode.HttpLiveStreaming &&
+                string.IsNullOrWhiteSpace(channel.PreferredLanguageCode))
+            {
+                _logger.LogDebug(
+                    "Channel {Number} is HLS with no preferred language; using all audio streams",
+                    channel.Number);
+                return None;
+            }
+
             var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
 
             string language = (channel.PreferredLanguageCode ?? string.Empty).ToLowerInvariant();
