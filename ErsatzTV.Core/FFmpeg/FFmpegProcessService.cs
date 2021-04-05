@@ -30,14 +30,14 @@ namespace ErsatzTV.Core.FFmpeg
             DateTimeOffset now)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
-            MediaStream audioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
+            Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
 
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
                 channel.StreamingMode,
                 channel.FFmpegProfile,
                 version,
                 videoStream,
-                audioStream,
+                maybeAudioStream,
                 start,
                 now);
 
@@ -67,7 +67,7 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     builder = builder
-                        .WithFilterComplex(videoStream.Index, audioStream.Index);
+                        .WithFilterComplex(videoStream, maybeAudioStream);
                 },
                 () =>
                 {
@@ -76,18 +76,18 @@ namespace ErsatzTV.Core.FFmpeg
                         builder = builder
                             .WithDeinterlace(playbackSettings.Deinterlace)
                             .WithBlackBars(channel.FFmpegProfile.Resolution)
-                            .WithFilterComplex(videoStream.Index, audioStream.Index);
+                            .WithFilterComplex(videoStream, maybeAudioStream);
                     }
                     else if (playbackSettings.Deinterlace)
                     {
                         builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
                             .WithAlignedAudio(playbackSettings.AudioDuration)
-                            .WithFilterComplex(videoStream.Index, audioStream.Index);
+                            .WithFilterComplex(videoStream, maybeAudioStream);
                     }
                     else
                     {
                         builder = builder
-                            .WithFilterComplex(videoStream.Index, audioStream.Index);
+                            .WithFilterComplex(videoStream, maybeAudioStream);
                     }
                 });
 
