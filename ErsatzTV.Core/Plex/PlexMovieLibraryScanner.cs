@@ -102,6 +102,7 @@ namespace ErsatzTV.Core.Plex
                     return Task.CompletedTask;
                 });
 
+            _searchIndex.Commit();
             return Unit.Default;
         }
 

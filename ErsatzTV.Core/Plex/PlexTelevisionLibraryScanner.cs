@@ -95,6 +95,7 @@ namespace ErsatzTV.Core.Plex
 
                     await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, 0));
 
+                    _searchIndex.Commit();
                     return Unit.Default;
                 },
                 error =>
