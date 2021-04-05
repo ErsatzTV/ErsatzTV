@@ -124,6 +124,7 @@ namespace ErsatzTV.Core.Metadata
             List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);
             await _searchIndex.RemoveItems(ids);
 
+            _searchIndex.Commit();
             return Unit.Default;
         }
 
