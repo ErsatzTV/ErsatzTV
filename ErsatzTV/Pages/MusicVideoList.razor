@@ -56,31 +56,15 @@
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @{ var letters = new System.Collections.Generic.HashSet<char>(); }
-        @foreach (MusicVideoCardViewModel card in _data.Cards.Where(m => !string.IsNullOrWhiteSpace(m.Title)).OrderBy(m => m.SortTitle))
-        {
-            @if (!letters.Contains(card.SortTitle.Head()))
-            {
-                Option<char> maybeLetter = card.SortTitle.ToLowerInvariant().HeadOrNone();
-                if (maybeLetter.IsSome)
-                {
-                    char letter = maybeLetter.ValueUnsafe();
-                    if (letter >= '0' && letter <= '9')
-                    {
-                        letter = '#';
-                    }
-                    letters.Add(letter);
-                    <div id="@($"letter-{letter}")" style="scroll-margin-top: 128px"></div>
-                }
-            }
-            <MediaCard Data="@card"
+        <FragmentLetterAnchor TCard="MusicVideoCardViewModel" Cards="@_data.Cards">
+            <MediaCard Data="@context"
                        Link=""
                        ArtworkKind="ArtworkKind.Thumbnail"
                        AddToCollectionClicked="@AddToCollection"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
+                       SelectClicked="@(e => SelectClicked(context, e))"
+                       IsSelected="@IsSelected(context)"
                        IsSelectMode="@IsSelectMode()"/>
-        }
+        </FragmentLetterAnchor>
     </MudContainer>
 </MudContainer>
 @if (_data.PageMap.IsSome)
@@ -147,10 +131,7 @@
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        List<MediaCardViewModel> GetSortedItems()
-        {
-            return _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
-        }
+        List<MediaCardViewModel> GetSortedItems() => _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
 
         SelectClicked(GetSortedItems, card, e);
     }
