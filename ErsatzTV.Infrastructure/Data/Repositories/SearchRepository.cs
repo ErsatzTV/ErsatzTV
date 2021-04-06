@@ -138,5 +138,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .OfType<MediaItem>()
                 .ToListAsync();
         }
+
+        public Task<List<string>> GetLanguagesForShow(Show show) =>
+            _dbConnection.QueryAsync<string>(
+                @"SELECT DISTINCT Language
+                    FROM MediaStream
+                    INNER JOIN MediaVersion MV on MediaStream.MediaVersionId = MV.Id
+                    INNER JOIN Episode E on MV.EpisodeId = E.Id
+                    INNER JOIN Season S on E.SeasonId = S.Id
+                    WHERE S.ShowId = @ShowId",
+                new { ShowId = show.Id }).Map(result => result.ToList());
     }
 }

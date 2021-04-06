@@ -26,6 +26,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly IMediator _mediator;
         private readonly IMovieRepository _movieRepository;
         private readonly ISearchIndex _searchIndex;
+        private readonly ISearchRepository _searchRepository;
 
         public MovieFolderScanner(
             ILocalFileSystem localFileSystem,
@@ -35,6 +36,7 @@ namespace ErsatzTV.Core.Metadata
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
             ISearchIndex searchIndex,
+            ISearchRepository searchRepository,
             IMediator mediator,
             ILogger<MovieFolderScanner> logger)
             : base(localFileSystem, localStatisticsProvider, metadataRepository, imageCache, logger)
@@ -43,6 +45,7 @@ namespace ErsatzTV.Core.Metadata
             _movieRepository = movieRepository;
             _localMetadataProvider = localMetadataProvider;
             _searchIndex = searchIndex;
+            _searchRepository = searchRepository;
             _mediator = mediator;
             _logger = logger;
         }
@@ -115,11 +118,11 @@ namespace ErsatzTV.Core.Metadata
                         {
                             if (result.IsAdded)
                             {
-                                await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
                             }
                             else if (result.IsUpdated)
                             {
-                                await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
                             }
                         },
                         error =>

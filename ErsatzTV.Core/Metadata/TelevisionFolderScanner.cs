@@ -24,6 +24,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILogger<TelevisionFolderScanner> _logger;
         private readonly IMediator _mediator;
         private readonly ISearchIndex _searchIndex;
+        private readonly ISearchRepository _searchRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public TelevisionFolderScanner(
@@ -34,6 +35,7 @@ namespace ErsatzTV.Core.Metadata
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
             ISearchIndex searchIndex,
+            ISearchRepository searchRepository,
             IMediator mediator,
             ILogger<TelevisionFolderScanner> logger) : base(
             localFileSystem,
@@ -46,6 +48,7 @@ namespace ErsatzTV.Core.Metadata
             _televisionRepository = televisionRepository;
             _localMetadataProvider = localMetadataProvider;
             _searchIndex = searchIndex;
+            _searchRepository = searchRepository;
             _mediator = mediator;
             _logger = logger;
         }
@@ -86,11 +89,11 @@ namespace ErsatzTV.Core.Metadata
                     {
                         if (result.IsAdded)
                         {
-                            await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
                         }
                         else if (result.IsUpdated)
                         {
-                            await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
                         }
 
                         await ScanSeasons(
