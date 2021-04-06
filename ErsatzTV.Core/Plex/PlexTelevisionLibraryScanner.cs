@@ -21,6 +21,7 @@ namespace ErsatzTV.Core.Plex
         private readonly IMetadataRepository _metadataRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
         private readonly ISearchIndex _searchIndex;
+        private readonly ISearchRepository _searchRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public PlexTelevisionLibraryScanner(
@@ -28,6 +29,7 @@ namespace ErsatzTV.Core.Plex
             ITelevisionRepository televisionRepository,
             IMetadataRepository metadataRepository,
             ISearchIndex searchIndex,
+            ISearchRepository searchRepository,
             IMediator mediator,
             ILogger<PlexTelevisionLibraryScanner> logger)
             : base(metadataRepository, logger)
@@ -36,6 +38,7 @@ namespace ErsatzTV.Core.Plex
             _televisionRepository = televisionRepository;
             _metadataRepository = metadataRepository;
             _searchIndex = searchIndex;
+            _searchRepository = searchRepository;
             _mediator = mediator;
             _logger = logger;
         }
@@ -69,11 +72,13 @@ namespace ErsatzTV.Core.Plex
                             {
                                 if (result.IsAdded)
                                 {
-                                    await _searchIndex.AddItems(new List<MediaItem> { result.Item });
+                                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
                                 }
                                 else if (result.IsUpdated)
                                 {
-                                    await _searchIndex.UpdateItems(new List<MediaItem> { result.Item });
+                                    await _searchIndex.UpdateItems(
+                                        _searchRepository,
+                                        new List<MediaItem> { result.Item });
                                 }
 
                                 await ScanSeasons(plexMediaSourceLibrary, result.Item, connection, token);

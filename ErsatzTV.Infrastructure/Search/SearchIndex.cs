@@ -53,7 +53,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         public SearchIndex(ILogger<SearchIndex> logger) => _logger = logger;
 
-        public int Version => 3;
+        public int Version => 4;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -82,7 +82,7 @@ namespace ErsatzTV.Infrastructure.Search
                             UpdateMovie(movie);
                             break;
                         case Show show:
-                            UpdateShow(show);
+                            await UpdateShow(searchRepository, show);
                             break;
                         case MusicVideo musicVideo:
                             UpdateMusicVideo(musicVideo);
@@ -95,9 +95,10 @@ namespace ErsatzTV.Infrastructure.Search
             return Unit.Default;
         }
 
-        public Task<Unit> AddItems(List<MediaItem> items) => UpdateItems(items);
+        public Task<Unit> AddItems(ISearchRepository searchRepository, List<MediaItem> items) =>
+            UpdateItems(searchRepository, items);
 
-        public Task<Unit> UpdateItems(List<MediaItem> items)
+        public async Task<Unit> UpdateItems(ISearchRepository searchRepository, List<MediaItem> items)
         {
             foreach (MediaItem item in items)
             {
@@ -107,7 +108,7 @@ namespace ErsatzTV.Infrastructure.Search
                         UpdateMovie(movie);
                         break;
                     case Show show:
-                        UpdateShow(show);
+                        await UpdateShow(searchRepository, show);
                         break;
                     case MusicVideo musicVideo:
                         UpdateMusicVideo(musicVideo);
@@ -115,7 +116,7 @@ namespace ErsatzTV.Infrastructure.Search
                 }
             }
 
-            return Task.FromResult(Unit.Default);
+            return Unit.Default;
         }
 
         public Task<Unit> RemoveItems(List<int> ids)
@@ -287,7 +288,7 @@ namespace ErsatzTV.Infrastructure.Search
             }
         }
 
-        private void UpdateShow(Show show)
+        private async Task UpdateShow(ISearchRepository searchRepository, Show show)
         {
             Option<ShowMetadata> maybeMetadata = show.ShowMetadata.HeadOrNone();
             if (maybeMetadata.IsSome)
@@ -306,6 +307,12 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
+
+                    List<string> languages = await searchRepository.GetLanguagesForShow(show);
+                    foreach (string lang in languages.Distinct().Filter(s => !string.IsNullOrWhiteSpace(s)))
+                    {
+                        doc.Add(new StringField(LanguageField, lang, Field.Store.NO));
+                    }
 
                     if (metadata.ReleaseDate.HasValue)
                     {
