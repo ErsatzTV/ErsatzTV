@@ -132,7 +132,7 @@ namespace ErsatzTV.Core.Metadata
                     await _searchIndex.RemoveItems(ids);
                 }
             }
-            
+
             _searchIndex.Commit();
             return Unit.Default;
         }
