@@ -39,6 +39,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Tags)
                 .Include(mi => (mi as Movie).MovieMetadata)
                 .ThenInclude(mm => mm.Studios)
+                .Include(mi => (mi as Movie).MediaVersions)
+                .ThenInclude(mm => mm.Streams)
                 .Include(mi => (mi as Show).ShowMetadata)
                 .ThenInclude(mm => mm.Genres)
                 .Include(mi => (mi as Show).ShowMetadata)
@@ -51,6 +53,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Tags)
                 .Include(mi => (mi as MusicVideo).MusicVideoMetadata)
                 .ThenInclude(mm => mm.Studios)
+                .Include(mi => (mi as MusicVideo).MediaVersions)
+                .ThenInclude(mm => mm.Streams)
                 .OrderBy(mi => mi.Id)
                 .SingleOrDefaultAsync(mi => mi.Id == id)
                 .Map(Optional);
