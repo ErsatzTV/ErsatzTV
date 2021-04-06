@@ -1,18 +1,18 @@
 site_name: ErsatzTV
 nav:
-    - 'Quick Start': 'index.md'
+  - 'Quick Start':
     - 'Install ErsatzTV': 'user-guide/install.md'
     - 'Add Media Items': 'user-guide/add-media-items.md'
     - 'Create Channels': 'user-guide/create-channels.md'
     - 'Configure Clients': 'user-guide/configure-clients.md'
 theme:
-    name: material
-    palette:
-      - scheme: slate
-    logo: images/ersatztv-square-logo.png
-    favicon: images/favicon-32x32.png
+  name: material
+  palette:
+    scheme: slate
+  logo: images/ersatztv-square-logo.png
+  favicon: images/favicon-32x32.png
 extra_css:
-    - stylesheets/extra.css
+  - stylesheets/extra.css
 copyright: Copyright &copy; 2020 - 2021 Jason Dove
 extra:
   social:

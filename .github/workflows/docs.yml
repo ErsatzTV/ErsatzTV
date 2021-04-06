@@ -2,7 +2,7 @@
 on:
   push:
     branches:
-      - documentation
+      - main
 
 jobs:
   build:
