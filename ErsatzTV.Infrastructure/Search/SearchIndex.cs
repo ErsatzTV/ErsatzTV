@@ -40,6 +40,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string JumpLetterField = "jump_letter";
         private const string ReleaseDateField = "release_date";
         private const string StudioField = "studio";
+        private const string LanguageField = "language";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -52,7 +53,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         public SearchIndex(ILogger<SearchIndex> logger) => _logger = logger;
 
-        public int Version => 2;
+        public int Version => 3;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -231,6 +232,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
 
+                    AddLanguages(doc, movie.MediaVersions);
+
                     if (metadata.ReleaseDate.HasValue)
                     {
                         doc.Add(
@@ -266,6 +269,20 @@ namespace ErsatzTV.Infrastructure.Search
                 {
                     metadata.Movie = null;
                     _logger.LogWarning(ex, "Error indexing movie with metadata {@Metadata}", metadata);
+                }
+            }
+        }
+
+        private void AddLanguages(Document doc, List<MediaVersion> mediaVersions)
+        {
+            Option<MediaVersion> maybeVersion = mediaVersions.HeadOrNone();
+            if (maybeVersion.IsSome)
+            {
+                MediaVersion version = maybeVersion.ValueUnsafe();
+                foreach (string lang in version.Streams.Map(ms => ms.Language).Distinct()
+                    .Filter(s => !string.IsNullOrWhiteSpace(s)))
+                {
+                    doc.Add(new StringField(LanguageField, lang, Field.Store.NO));
                 }
             }
         }
@@ -349,6 +366,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
+
+                    AddLanguages(doc, musicVideo.MediaVersions);
 
                     if (metadata.ReleaseDate.HasValue)
                     {
