@@ -143,10 +143,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.QueryAsync<string>(
                 @"SELECT DISTINCT Language
                     FROM MediaStream
-                    INNER JOIN MediaVersion MV on MediaStream.MediaVersionId = MV.Id
-                    INNER JOIN Episode E on MV.EpisodeId = E.Id
-                    INNER JOIN Season S on E.SeasonId = S.Id
-                    WHERE S.ShowId = @ShowId",
+                    INNER JOIN MediaVersion MV ON MediaStream.MediaVersionId = MV.Id
+                    INNER JOIN Episode E ON MV.EpisodeId = E.Id
+                    INNER JOIN Season S ON E.SeasonId = S.Id
+                    WHERE MediaStreamKind = 2 AND S.ShowId = @ShowId",
                 new { ShowId = show.Id }).Map(result => result.ToList());
     }
 }

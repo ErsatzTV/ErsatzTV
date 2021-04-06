@@ -53,7 +53,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         public SearchIndex(ILogger<SearchIndex> logger) => _logger = logger;
 
-        public int Version => 4;
+        public int Version => 5;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
