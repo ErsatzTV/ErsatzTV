@@ -39,7 +39,7 @@ namespace ErsatzTV.Application.Search.Commands
             bool indexFolderExists = Directory.Exists(FileSystemLayout.SearchIndexFolder);
 
             await _searchIndex.Initialize(_localFileSystem);
-            
+
             if (!indexFolderExists ||
                 await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
                 _searchIndex.Version)
