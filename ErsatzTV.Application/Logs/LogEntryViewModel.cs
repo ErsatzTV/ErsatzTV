@@ -1,12 +1,12 @@
 ﻿using System;
+using Serilog.Events;
 
 namespace ErsatzTV.Application.Logs
 {
     public record LogEntryViewModel(
         int Id,
         DateTime Timestamp,
-        string Level,
+        LogEventLevel Level,
         string Exception,
-        string RenderedMessage,
-        string Properties);
+        string Message);
 }
