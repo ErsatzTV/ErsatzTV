@@ -56,15 +56,14 @@
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        @foreach (TelevisionShowCardViewModel card in _data.Cards.OrderBy(s => s.SortTitle))
-        {
-            <MediaCard Data="@card"
-                       Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
+        <FragmentLetterAnchor TCard="TelevisionShowCardViewModel" Cards="@_data.Cards">
+            <MediaCard Data="@context"
+                       Link="@($"/media/tv/shows/{context.TelevisionShowId}")"
                        AddToCollectionClicked="@AddToCollection"
-                       SelectClicked="@(e => SelectClicked(card, e))"
-                       IsSelected="@IsSelected(card)"
+                       SelectClicked="@(e => SelectClicked(context, e))"
+                       IsSelected="@IsSelected(context)"
                        IsSelectMode="@IsSelectMode()"/>
-        }
+        </FragmentLetterAnchor>
     </MudContainer>
 </MudContainer>
 @if (_data.PageMap.IsSome)

@@ -2,55 +2,13 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Commands
 @using ErsatzTV.Application.FFmpegProfiles.Queries
-@using ErsatzTV.Application.MediaItems.Queries
-@using System.Globalization
-@using Unit = LanguageExt.Unit
 @inject IDialogService Dialog
 @inject IMediator Mediator
 @inject ILogger<FFmpeg> Logger
 @inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudCard>
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudText Typo="Typo.h6">FFmpeg Settings</MudText>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardContent>
-            <MudForm @bind-IsValid="@_success">
-                <MudTextField T="string" Label="FFmpeg Path" @bind-Value="_ffmpegSettings.FFmpegPath" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFmpeg path is required!"/>
-                <MudElement HtmlTag="div" Class="mt-3">
-                    <MudTextField T="string" Label="FFprobe Path" @bind-Value="_ffmpegSettings.FFprobePath" Validation="@(new Func<string, string>(ValidatePathExists))" Required="true" RequiredError="FFprobe path is required!"/>
-                </MudElement>
-                <MudElement HtmlTag="div" Class="mt-3">
-                    <MudSelect Label="Default Profile" @bind-Value="_ffmpegSettings.DefaultFFmpegProfileId" For="@(() => _ffmpegSettings.DefaultFFmpegProfileId)">
-                        @foreach (FFmpegProfileViewModel profile in _ffmpegProfiles)
-                        {
-                            <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudElement>
-                <MudSelect Class="mt-3" Label="Preferred Language" @bind-Value="_ffmpegSettings.PreferredLanguageCode" For="@(() => _ffmpegSettings.PreferredLanguageCode)" Required="true" RequiredError="Preferred Language Code is required!">
-                    @foreach (CultureInfo culture in _availableCultures)
-                    {
-                        <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudElement HtmlTag="div" Class="mt-3">
-                    <MudSwitch T="bool"
-                               Label="Save troubleshooting reports to disk"
-                               Color="Color.Primary"
-                               @bind-Checked="@_ffmpegSettings.SaveReports"/>
-                </MudElement>
-            </MudForm>
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="@(_ => SaveSettings())">Save Settings</MudButton>
-        </MudCardActions>
-    </MudCard>
-
-    <MudTable Hover="true" Items="_ffmpegProfiles" Class="mt-8">
+    <MudTable Hover="true" Items="_ffmpegProfiles">
         <ToolBarContent>
             <MudText Typo="Typo.h6">FFmpeg Profiles</MudText>
             <MudToolBarSpacer></MudToolBarSpacer>
@@ -114,34 +72,9 @@
 </MudContainer>
 
 @code {
-
-    private bool _success;
-    private FFmpegSettingsViewModel _ffmpegSettings;
-
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
-    private List<CultureInfo> _availableCultures;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _ffmpegSettings = await Mediator.Send(new GetFFmpegSettings());
-        _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
-        await LoadFFmpegProfilesAsync();
-        _availableCultures = await Mediator.Send(new GetAllLanguageCodes());
-    }
-
-    private async Task SaveSettings()
-    {
-        Either<BaseError, Unit> result = await Mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings));
-        result.Match(
-            Left: error =>
-            {
-                Snackbar.Add(error.Value, Severity.Error);
-                Logger.LogError("Unexpected error saving FFmpeg settings: {Error}", error.Value);
-            },
-            Right: _ => Snackbar.Add("Successfully saved FFmpeg settings", Severity.Success));
-    }
-
-    private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
+    protected override async Task OnParametersSetAsync() => await LoadFFmpegProfilesAsync();
 
     private async Task LoadFFmpegProfilesAsync() =>
         _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());

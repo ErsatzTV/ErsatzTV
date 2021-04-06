@@ -133,6 +133,7 @@ namespace ErsatzTV.Core.Metadata
                 }
             }
 
+            _searchIndex.Commit();
             return Unit.Default;
         }
 

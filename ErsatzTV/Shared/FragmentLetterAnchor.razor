@@ -1,0 +1,27 @@
+﻿@using LanguageExt.UnsafeValueAccess
+@typeparam TCard
+
+@{ var letters = new System.Collections.Generic.HashSet<char>(); }
+@foreach (TCard card in Cards.Filter(c => !string.IsNullOrWhiteSpace(c.Title)).OrderBy(c => c.SortTitle))
+{
+    @if (!letters.Contains(card.SortTitle.Head()))
+    {
+        Option<char> maybeLetter = card.SortTitle.ToLowerInvariant().HeadOrNone();
+        if (maybeLetter.IsSome)
+        {
+            char letter = maybeLetter.ValueUnsafe();
+            if (letter >= '0' && letter <= '9')
+            {
+                letter = '#';
+            }
+            letters.Add(letter);
+            <div id="@($"letter-{letter}")" style="scroll-margin-top: 128px">
+                @ChildContent(card)
+            </div>
+        }
+    }
+    else
+    {
+        @ChildContent
+    }
+}
