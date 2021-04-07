@@ -133,8 +133,8 @@ namespace ErsatzTV.Core.Metadata
                 Match match = Regex.Match(fileName, PATTERN);
                 if (match.Success)
                 {
-                    metadata.Artist = match.Groups[1].Value;
-                    metadata.Title = match.Groups[2].Value;
+                    metadata.Artist = match.Groups[1].Value.Trim();
+                    metadata.Title = match.Groups[2].Value.Trim();
                     metadata.Genres = new List<Genre>();
                     metadata.Tags = new List<Tag>();
                     metadata.Studios = new List<Studio>();

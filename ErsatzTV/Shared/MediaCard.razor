@@ -1,5 +1,6 @@
 ﻿@using ErsatzTV.Application.MediaCards
 @using Unit = LanguageExt.Unit
+@using static LanguageExt.Prelude
 @inject IMediator Mediator
 
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
@@ -125,8 +126,8 @@
             return Placeholder;
         }
 
-        string first = sortTitle?.Substring(0, 1).ToUpperInvariant() ?? string.Empty;
-        return int.TryParse(first, out _) ? "#" : first;
+        char first = Optional(sortTitle).Map(t => t.ToUpperInvariant().HeadOrNone()).Flatten().Match(head => head, () => ' ');
+        return char.IsDigit(first) || !char.IsLetter(first) ? "#" : first.ToString();
     }
 
     private string ArtworkForItem() => string.IsNullOrWhiteSpace(Data.Poster)
