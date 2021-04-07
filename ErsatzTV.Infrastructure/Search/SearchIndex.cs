@@ -53,7 +53,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         public SearchIndex(ILogger<SearchIndex> logger) => _logger = logger;
 
-        public int Version => 5;
+        public int Version => 6;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -288,7 +288,8 @@ namespace ErsatzTV.Infrastructure.Search
             if (maybeVersion.IsSome)
             {
                 MediaVersion version = maybeVersion.ValueUnsafe();
-                foreach (string lang in version.Streams.Map(ms => ms.Language).Distinct()
+                foreach (string lang in version.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Video)
+                    .Map(ms => ms.Language).Distinct()
                     .Filter(s => !string.IsNullOrWhiteSpace(s)))
                 {
                     doc.Add(new StringField(LanguageField, lang, Field.Store.NO));
