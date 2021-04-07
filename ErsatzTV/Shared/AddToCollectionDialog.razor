@@ -70,7 +70,7 @@
 
         if (MemoryCache.TryGetValue("AddToCollectionDialog.SelectedCollectionId", out int id))
         {
-            _selectedCollection = _collections.SingleOrDefault(c => c.Id == id);
+            _selectedCollection = _collections.SingleOrDefault(c => c.Id == id) ?? _newCollection;
         }
         else
         {
