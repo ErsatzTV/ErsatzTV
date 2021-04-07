@@ -120,7 +120,7 @@ namespace ErsatzTV
             // string xmltvPath = Path.Combine(appDataFolder, "xmltv.xml");
             // Log.Logger.Information("XMLTV is at {XmltvPath}", xmltvPath);
 
-            var connectionString = $"Data Source={FileSystemLayout.DatabasePath}";
+            var connectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
 
             services.AddDbContext<TvContext>(
                 options => options.UseSqlite(
