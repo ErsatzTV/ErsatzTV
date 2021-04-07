@@ -94,21 +94,28 @@ namespace ErsatzTV.Pages
             }
         }
 
-        protected async Task AddSelectionToCollection()
+        protected Task AddSelectionToCollection() => AddItemsToCollection(
+            _selectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
+            _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
+            _selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList());
+
+        protected async Task AddItemsToCollection(
+            List<int> movieIds,
+            List<int> showIds,
+            List<int> musicVideoIds,
+            string entityName = "selected items")
         {
+            int count = movieIds.Count + showIds.Count + musicVideoIds.Count;
+
             var parameters = new DialogParameters
-                { { "EntityType", _selectedItems.Count.ToString() }, { "EntityName", "selected items" } };
+                { { "EntityType", count.ToString() }, { "EntityName", entityName } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
-                var request = new AddItemsToCollection(
-                    collection.Id,
-                    _selectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
-                    _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
-                    _selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList());
+                var request = new AddItemsToCollection(collection.Id, movieIds, showIds, musicVideoIds);
 
                 Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(
@@ -120,7 +127,7 @@ namespace ErsatzTV.Pages
                     Right: _ =>
                     {
                         Snackbar.Add(
-                            $"Added {_selectedItems.Count} items to collection {collection.Name}",
+                            $"Added {count} items to collection {collection.Name}",
                             Severity.Success);
                         ClearSelection();
                     });

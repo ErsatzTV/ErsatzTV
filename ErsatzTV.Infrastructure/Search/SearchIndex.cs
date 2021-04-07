@@ -138,7 +138,7 @@ namespace ErsatzTV.Infrastructure.Search
 
             using DirectoryReader reader = _writer.GetReader(true);
             var searcher = new IndexSearcher(reader);
-            int hitsLimit = skip + limit;
+            int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
             using var analyzer = new StandardAnalyzer(AppLuceneVersion);
             QueryParser parser = !string.IsNullOrWhiteSpace(searchField)
                 ? new QueryParser(AppLuceneVersion, searchField, analyzer)
@@ -148,13 +148,21 @@ namespace ErsatzTV.Infrastructure.Search
             var filter = new DuplicateFilter(TitleAndYearField);
             var sort = new Sort(new SortField(SortTitleField, SortFieldType.STRING));
             TopFieldDocs topDocs = searcher.Search(query, filter, hitsLimit, sort, true, true);
-            IEnumerable<ScoreDoc> selectedHits = topDocs.ScoreDocs.Skip(skip).Take(limit);
+            IEnumerable<ScoreDoc> selectedHits = topDocs.ScoreDocs.Skip(skip);
+
+            if (limit > 0)
+            {
+                selectedHits = selectedHits.Take(limit);
+            }
 
             var searchResult = new SearchResult(
                 selectedHits.Map(d => ProjectToSearchItem(searcher.Doc(d.Doc))).ToList(),
                 topDocs.TotalHits);
 
-            searchResult.PageMap = GetSearchPageMap(searcher, query, filter, sort, limit);
+            if (limit > 0)
+            {
+                searchResult.PageMap = GetSearchPageMap(searcher, query, filter, sort, limit);
+            }
 
             return searchResult.AsTask();
         }
