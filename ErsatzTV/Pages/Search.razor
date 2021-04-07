@@ -2,6 +2,7 @@
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.Search
 @using ErsatzTV.Application.Search.Queries
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.Extensions.Primitives
@@ -33,33 +34,41 @@
         }
         else
         {
-            <MudText>@_query</MudText>
+            <MudText Style="margin-bottom: auto; margin-top: auto">@_query</MudText>
             if (_movies.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")">@_movies.Count Movies</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
             }
             else
             {
-                <MudText Class="ml-4">0 Movies</MudText>
+                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Movies</MudText>
             }
 
             if (_shows.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_shows.Count Shows</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
             }
             else
             {
-                <MudText Class="ml-4">0 Shows</MudText>
+                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Shows</MudText>
             }
 
             if (_musicVideos.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")">@_musicVideos.Count Music Videos</MudLink>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
             }
             else
             {
-                <MudText Class="ml-4">0 Music Videos</MudText>
+                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Music Videos</MudText>
             }
+            <div style="margin-left: auto">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@AddAllToCollection">
+                    Add All To Collection
+                </MudButton>
+            </div>
         }
     </div>
 </MudPaper>
@@ -274,6 +283,12 @@
             uri = QueryHelpers.AddQueryString(uri, "query", _query);
         }
         return uri;
+    }
+
+    private async Task AddAllToCollection(MouseEventArgs _)
+    {
+        SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query));
+        await AddItemsToCollection(results.MovieIds, results.ShowIds, results.MusicVideoIds, "search results");
     }
 
 }
