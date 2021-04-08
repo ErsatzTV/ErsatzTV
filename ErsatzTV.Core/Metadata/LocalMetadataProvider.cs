@@ -156,7 +156,6 @@ namespace ErsatzTV.Core.Metadata
                         MetadataKind = MetadataKind.Sidecar,
                         DateAdded = DateTime.UtcNow,
                         DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
-                        Artist = nfo.Artist,
                         Album = nfo.Album,
                         Title = nfo.Title,
                         Plot = nfo.Plot,
@@ -405,7 +404,6 @@ namespace ErsatzTV.Core.Metadata
             Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone().Match(
                 async existing =>
                 {
-                    existing.Artist = metadata.Artist;
                     existing.Title = metadata.Title;
                     existing.Year = metadata.Year;
                     existing.Plot = metadata.Plot;

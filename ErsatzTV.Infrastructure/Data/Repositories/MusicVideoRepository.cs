@@ -123,6 +123,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await dbContext.MusicVideoMetadata
                 .AsNoTracking()
                 .Filter(mvm => ids.Contains(mvm.MusicVideoId))
+                .Include(mvm => mvm.MusicVideo)
+                .ThenInclude(mv => mv.Artist)
+                .ThenInclude(a => a.ArtistMetadata)
                 .Include(mvm => mvm.Artwork)
                 .OrderBy(mvm => mvm.SortTitle)
                 .ToListAsync();

@@ -39,36 +39,20 @@
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
             }
-            else
-            {
-                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Movies</MudText>
-            }
 
             if (_shows.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
-            }
-            else
-            {
-                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Shows</MudText>
             }
             
             if (_artists.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
             }
-            else
-            {
-                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Artists</MudText>
-            }
 
             if (_musicVideos.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
-            }
-            else
-            {
-                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Music Videos</MudText>
             }
             <div style="margin-left: auto">
                 <MudButton Variant="Variant.Filled"

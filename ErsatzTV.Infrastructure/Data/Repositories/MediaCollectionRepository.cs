@@ -136,6 +136,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
                 .ThenInclude(mvm => mvm.Artwork)
                 .Include(c => c.MediaItems)
+                .ThenInclude(i => (i as MusicVideo).Artist)
+                .ThenInclude(a => a.ArtistMetadata)
+                .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Show).ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
                 .Include(c => c.MediaItems)
@@ -251,6 +254,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { CollectionId = collection.Id });
 
             return await _dbContext.MusicVideos
+                .Include(m => m.Artist)
+                .ThenInclude(a => a.ArtistMetadata)
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
                 .Filter(m => ids.Contains(m.Id))
@@ -271,6 +276,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
                 .Filter(e => ids.Contains(e.Id))
                 .ToListAsync();
         }
@@ -288,6 +295,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
                 .Filter(e => ids.Contains(e.Id))
                 .ToListAsync();
         }
@@ -304,6 +313,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
                 .Filter(e => ids.Contains(e.Id))
                 .ToListAsync();
         }
