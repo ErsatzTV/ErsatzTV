@@ -187,7 +187,7 @@
             @foreach (ArtistCardViewModel card in _data.ArtistCards.OrderBy(e => e.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link=""
+                           Link="@($"/media/music/artists/{card.ArtistId}")"
                            ArtworkKind="ArtworkKind.Thumbnail"
                            DeleteClicked="@RemoveArtistFromCollection"
                            SelectColor="@Color.Error"

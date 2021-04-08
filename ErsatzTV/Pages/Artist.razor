@@ -1,0 +1,112 @@
+﻿@page "/media/music/artists/{ArtistId:int}"
+@using ErsatzTV.Application.Artists
+@using ErsatzTV.Application.Artists.Queries
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@inject IMediator Mediator
+@inject IDialogService Dialog
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
+    <div class="fanart-tint"></div>
+    @if (!string.IsNullOrWhiteSpace(_artist.FanArt))
+    {
+        <img src="@($"/artwork/fanart/{_artist.FanArt}")" alt="fan art"/>
+    }
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
+    <div style="display: flex; flex-direction: row;" class="mb-6">
+        @if (!string.IsNullOrWhiteSpace(_artist.Thumbnail))
+        {
+            <img class="mud-elevation-2 mr-6"
+                 style="border-radius: 4px; flex-shrink: 0; height: 220px; width: 220px"
+                 src="@($"/artwork/thumbnails/{_artist.Thumbnail}")" alt="artist thumnail"/>
+        }
+        <div style="display: flex; flex-direction: column; height: 100%">
+            <MudText Typo="Typo.h2" Class="media-item-title">@_artist.Name</MudText>
+            <MudText Typo="Typo.subtitle1" Class="media-item-subtitle mb-6 mud-text-secondary">@_artist.Disambiguation</MudText>
+            @if (!string.IsNullOrWhiteSpace(_artist.Biography))
+            {
+                <MudCard Elevation="2" Class="mb-6">
+                    <MudCardContent Class="mx-3 my-3" Style="height: 100%">
+                        <MudText Style="flex-grow: 1">
+                            @if (_artist.Biography.Length > 400)
+                            {
+                                @(_artist.Biography.Substring(0, 400) + "...")
+                            }
+                            else
+                            {
+                                @_artist.Biography
+                            }
+                        </MudText>
+                    </MudCardContent>
+                </MudCard>
+            }
+            <div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@AddToCollection">
+                    Add To Collection
+                </MudButton>
+            </div>
+        </div>
+    </div>
+    @if (_artist.Genres.Any())
+    {
+        <MudText GutterBottom="true">Genres</MudText>
+        <div class="mb-2">
+            @foreach (string genre in _artist.Genres.OrderBy(g => g))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2 mb-2" Link="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre.ToLowerInvariant())}%22")"/>
+            }
+        </div>
+    }
+    @if (_artist.Styles.Any())
+    {
+        <MudText GutterBottom="true">Styles</MudText>
+        <div class="mb-2">
+            @foreach (string style in _artist.Styles.OrderBy(g => g))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@style" Class="mr-2 mb-2" Link="@($"/search?query=style%3a%22{Uri.EscapeDataString(style.ToLowerInvariant())}%22")"/>
+            }
+        </div>
+    }
+    @if (_artist.Moods.Any())
+    {
+        <MudText GutterBottom="true">Moods</MudText>
+        <div class="mb-2">
+            @foreach (string mood in _artist.Moods.OrderBy(g => g))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@mood" Class="mr-2 mb-2" Link="@($"/search?query=mood%3a%22{Uri.EscapeDataString(mood.ToLowerInvariant())}%22")"/>
+            }
+        </div>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int ArtistId { get; set; }
+
+    private ArtistViewModel _artist;
+
+    protected override Task OnParametersSetAsync() => RefreshData();
+
+    private async Task RefreshData() => await Mediator.Send(new GetArtistById(ArtistId)).IfSomeAsync(vm => _artist = vm);
+
+    private async Task AddToCollection()
+    {
+        var parameters = new DialogParameters { { "EntityType", "artist" }, { "EntityName", _artist.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+        {
+            await Mediator.Send(new AddArtistToCollection(collection.Id, ArtistId));
+            NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
+        }
+    }
+
+}

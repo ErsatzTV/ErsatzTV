@@ -238,6 +238,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { CollectionId = collection.Id });
 
             return await _dbContext.MusicVideos
+                .Include(m => m.Artist)
+                .ThenInclude(a => a.ArtistMetadata)
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
                 .Filter(m => ids.Contains(m.Id))
