@@ -369,7 +369,7 @@ namespace ErsatzTV.Infrastructure.Search
                 }
             }
         }
-        
+
         private async Task UpdateArtist(ISearchRepository searchRepository, Artist artist)
         {
             Option<ArtistMetadata> maybeMetadata = artist.ArtistMetadata.HeadOrNone();

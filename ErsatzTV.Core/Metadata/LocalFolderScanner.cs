@@ -166,7 +166,7 @@ namespace ErsatzTV.Core.Metadata
 
             return false;
         }
-        
+
         protected bool ShouldIncludeFolder(string folder) =>
             !Path.GetFileName(folder).StartsWith('.') &&
             !_localFileSystem.FileExists(Path.Combine(folder, ".etvignore"));

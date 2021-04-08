@@ -1,6 +1,6 @@
-﻿@using ErsatzTV.Application.MediaCards
+﻿@using static LanguageExt.Prelude
+@using ErsatzTV.Application.MediaCards
 @using Unit = LanguageExt.Unit
-@using static LanguageExt.Prelude
 @inject IMediator Mediator
 
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
