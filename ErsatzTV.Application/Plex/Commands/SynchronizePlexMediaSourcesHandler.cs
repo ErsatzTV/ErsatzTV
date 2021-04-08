@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Plex.Commands
 {
@@ -19,6 +20,7 @@ namespace ErsatzTV.Application.Plex.Commands
     {
         private readonly ChannelWriter<IPlexBackgroundServiceRequest> _channel;
         private readonly IEntityLocker _entityLocker;
+        private readonly ILogger<SynchronizePlexMediaSourcesHandler> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlexTvApiClient _plexTvApiClient;
 
@@ -26,12 +28,14 @@ namespace ErsatzTV.Application.Plex.Commands
             IMediaSourceRepository mediaSourceRepository,
             IPlexTvApiClient plexTvApiClient,
             ChannelWriter<IPlexBackgroundServiceRequest> channel,
-            IEntityLocker entityLocker)
+            IEntityLocker entityLocker,
+            ILogger<SynchronizePlexMediaSourcesHandler> logger)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _plexTvApiClient = plexTvApiClient;
             _channel = channel;
             _entityLocker = entityLocker;
+            _logger = logger;
         }
 
         public Task<Either<BaseError, List<PlexMediaSource>>> Handle(
@@ -45,6 +49,14 @@ namespace ErsatzTV.Application.Plex.Commands
             foreach (PlexMediaSource server in servers)
             {
                 await SynchronizeServer(allExisting, server);
+            }
+
+            // delete removed servers
+            foreach (PlexMediaSource removed in allExisting.Filter(
+                s => servers.All(pms => pms.ClientIdentifier != s.ClientIdentifier)))
+            {
+                _logger.LogWarning("Deleting removed Plex server {ServerName}!", removed.Id.ToString());
+                await _mediaSourceRepository.DeletePlex(removed);
             }
 
             foreach (PlexMediaSource mediaSource in await _mediaSourceRepository.GetAllPlex())
@@ -72,7 +84,7 @@ namespace ErsatzTV.Application.Plex.Commands
                         .Filter(connection => existing.Connections.All(c => c.Uri != connection.Uri)).ToList();
                     var toRemove = existing.Connections
                         .Filter(connection => server.Connections.All(c => c.Uri != connection.Uri)).ToList();
-                    return _mediaSourceRepository.Update(existing, toAdd, toRemove);
+                    return _mediaSourceRepository.Update(existing, server.Connections, toAdd, toRemove);
                 },
                 async () =>
                 {

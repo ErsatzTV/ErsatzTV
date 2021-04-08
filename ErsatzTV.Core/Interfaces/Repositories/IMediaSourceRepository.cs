@@ -20,7 +20,12 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<PlexPathReplacement>> GetPlexPathReplacementsByLibraryId(int plexLibraryPathId);
         Task<int> CountMediaItems(int id);
         Task Update(LocalMediaSource localMediaSource);
-        Task Update(PlexMediaSource plexMediaSource, List<PlexConnection> toAdd, List<PlexConnection> toDelete);
+
+        Task Update(
+            PlexMediaSource plexMediaSource,
+            List<PlexConnection> prioritizedConnections,
+            List<PlexConnection> toAdd,
+            List<PlexConnection> toDelete);
 
         Task<Unit> UpdateLibraries(
             int plexMediaSourceId,
@@ -36,6 +41,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task Update(PlexLibrary plexMediaSourceLibrary);
         Task Delete(int mediaSourceId);
         Task<List<int>> DeleteAllPlex();
+        Task<List<int>> DeletePlex(PlexMediaSource plexMediaSource);
         Task<List<int>> DisablePlexLibrarySync(List<int> libraryIds);
         Task EnablePlexLibrarySync(IEnumerable<int> libraryIds);
     }
