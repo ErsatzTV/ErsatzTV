@@ -202,6 +202,7 @@ namespace ErsatzTV
             services.AddScoped<ITelevisionRepository, TelevisionRepository>();
             services.AddScoped<ISearchRepository, SearchRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
+            services.AddScoped<IArtistRepository, ArtistRepository>();
             services.AddScoped<IMusicVideoRepository, MusicVideoRepository>();
             services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddScoped<IMetadataRepository, MetadataRepository>();

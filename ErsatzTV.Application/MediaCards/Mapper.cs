@@ -60,6 +60,14 @@ namespace ErsatzTV.Application.MediaCards
                 musicVideoMetadata.SortTitle,
                 GetThumbnail(musicVideoMetadata));
 
+        internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>
+            new(
+                artistMetadata.ArtistId,
+                artistMetadata.Title,
+                artistMetadata.Disambiguation,
+                artistMetadata.SortTitle,
+                GetThumbnail(artistMetadata));
+
         internal static CollectionCardResultsViewModel
             ProjectToViewModel(Collection collection) =>
             new(

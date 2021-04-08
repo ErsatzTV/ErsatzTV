@@ -29,7 +29,6 @@ namespace ErsatzTV.Infrastructure.Search
 
         private const string IdField = "id";
         private const string TypeField = "type";
-        private const string ArtistField = "artist";
         private const string TitleField = "title";
         private const string SortTitleField = "sort_title";
         private const string GenreField = "genre";
@@ -41,9 +40,12 @@ namespace ErsatzTV.Infrastructure.Search
         private const string ReleaseDateField = "release_date";
         private const string StudioField = "studio";
         private const string LanguageField = "language";
+        private const string StyleField = "style";
+        private const string MoodField = "mood";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
+        private const string ArtistType = "artist";
         private const string MusicVideoType = "music_video";
 
         private readonly ILogger<SearchIndex> _logger;
@@ -84,6 +86,9 @@ namespace ErsatzTV.Infrastructure.Search
                         case Show show:
                             await UpdateShow(searchRepository, show);
                             break;
+                        case Artist artist:
+                            await UpdateArtist(searchRepository, artist);
+                            break;
                         case MusicVideo musicVideo:
                             UpdateMusicVideo(musicVideo);
                             break;
@@ -109,6 +114,9 @@ namespace ErsatzTV.Infrastructure.Search
                         break;
                     case Show show:
                         await UpdateShow(searchRepository, show);
+                        break;
+                    case Artist artist:
+                        await UpdateArtist(searchRepository, artist);
                         break;
                     case MusicVideo musicVideo:
                         UpdateMusicVideo(musicVideo);
@@ -361,6 +369,57 @@ namespace ErsatzTV.Infrastructure.Search
                 }
             }
         }
+        
+        private async Task UpdateArtist(ISearchRepository searchRepository, Artist artist)
+        {
+            Option<ArtistMetadata> maybeMetadata = artist.ArtistMetadata.HeadOrNone();
+            if (maybeMetadata.IsSome)
+            {
+                ArtistMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                try
+                {
+                    var doc = new Document
+                    {
+                        new StringField(IdField, artist.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, ArtistType, Field.Store.NO),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                        new TextField(LibraryNameField, artist.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    };
+
+                    List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
+                    foreach (string lang in languages.Distinct().Filter(s => !string.IsNullOrWhiteSpace(s)))
+                    {
+                        doc.Add(new StringField(LanguageField, lang, Field.Store.NO));
+                    }
+
+                    foreach (Genre genre in metadata.Genres)
+                    {
+                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    }
+
+                    foreach (Style style in metadata.Styles)
+                    {
+                        doc.Add(new TextField(StyleField, style.Name, Field.Store.NO));
+                    }
+
+                    foreach (Mood mood in metadata.Moods)
+                    {
+                        doc.Add(new TextField(MoodField, mood.Name, Field.Store.NO));
+                    }
+
+                    _writer.UpdateDocument(new Term(IdField, artist.Id.ToString()), doc);
+                }
+                catch (Exception ex)
+                {
+                    metadata.Artist = null;
+                    _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
+                }
+            }
+        }
 
         private void UpdateMusicVideo(MusicVideo musicVideo)
         {
@@ -375,7 +434,6 @@ namespace ErsatzTV.Infrastructure.Search
                     {
                         new StringField(IdField, musicVideo.Id.ToString(), Field.Store.YES),
                         new StringField(TypeField, MusicVideoType, Field.Store.NO),
-                        new TextField(ArtistField, metadata.Artist, Field.Store.NO),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                         new TextField(LibraryNameField, musicVideo.LibraryPath.Library.Name, Field.Store.NO),

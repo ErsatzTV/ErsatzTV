@@ -132,7 +132,7 @@
 
     private string ArtworkForItem() => string.IsNullOrWhiteSpace(Data.Poster)
         ? "position: relative"
-        : $"position: relative; background-image: url(/artwork/{PathForArtwork()}/{Data.Poster}); background-size: cover";
+        : $"position: relative; background-image: url(/artwork/{PathForArtwork()}/{Data.Poster}); background-size: cover; background-position: center";
 
     private string PathForArtwork() => ArtworkKind switch
     {

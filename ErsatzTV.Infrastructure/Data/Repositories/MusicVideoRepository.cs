@@ -26,6 +26,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(
+            Artist artist,
             LibraryPath libraryPath,
             string path)
         {
@@ -50,10 +51,22 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
             return await maybeExisting.Match(
-                mediaItem =>
-                    Right<BaseError, MediaItemScanResult<MusicVideo>>(
-                        new MediaItemScanResult<MusicVideo>(mediaItem) { IsAdded = false }).AsTask(),
-                async () => await AddMusicVideo(dbContext, libraryPath.Id, path));
+                async mediaItem =>
+                {
+                    if (mediaItem.ArtistId != artist.Id)
+                    {
+                        await _dbConnection.ExecuteAsync(
+                            @"UPDATE MusicVideo SET ArtistId = @ArtistId WHERE Id = @Id",
+                            new { mediaItem.Id, ArtistId = artist.Id });
+
+                        mediaItem.ArtistId = artist.Id;
+                        mediaItem.Artist = artist;
+                    }
+
+                    return Right<BaseError, MediaItemScanResult<MusicVideo>>(
+                        new MediaItemScanResult<MusicVideo>(mediaItem) { IsAdded = false });
+                },
+                async () => await AddMusicVideo(dbContext, artist, libraryPath.Id, path));
         }
 
         public Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath) =>
@@ -134,6 +147,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         private static async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> AddMusicVideo(
             TvContext dbContext,
+            Artist artist,
             int libraryPathId,
             string path)
         {
@@ -141,6 +155,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 var musicVideo = new MusicVideo
                 {
+                    ArtistId = artist.Id,
                     LibraryPathId = libraryPathId,
                     MediaVersions = new List<MediaVersion>
                     {

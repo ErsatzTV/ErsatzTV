@@ -18,6 +18,13 @@ namespace ErsatzTV.Core.Metadata
             return GetTelevisionShowMetadata(fileName, metadata);
         }
 
+        public ArtistMetadata GetFallbackMetadataForArtist(string artistFolder)
+        {
+            string fileName = Path.GetFileName(artistFolder);
+            return new ArtistMetadata
+                { MetadataKind = MetadataKind.Fallback, Title = fileName ?? artistFolder };
+        }
+
         public Tuple<EpisodeMetadata, int> GetFallbackMetadata(Episode episode)
         {
             string path = episode.MediaVersions.Head().MediaFiles.Head().Path;

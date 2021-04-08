@@ -56,7 +56,7 @@
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        <FragmentLetterAnchor TCard="MusicVideoCardViewModel" Cards="@_data.Cards">
+        <FragmentLetterAnchor TCard="ArtistCardViewModel" Cards="@_data.Cards">
             <MediaCard Data="@context"
                        Link=""
                        ArtworkKind="ArtworkKind.Thumbnail"
@@ -70,7 +70,7 @@
 @if (_data.PageMap.IsSome)
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
-               BaseUri="/media/music/videos"
+               BaseUri="/media/music/artists"
                Query="@_query"/>
 }
 
@@ -80,7 +80,7 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private MusicVideoCardResultsViewModel _data;
+    private ArtistCardResultsViewModel _data;
     private string _query;
 
     protected override Task OnParametersSetAsync()
@@ -105,13 +105,13 @@
 
     protected override async Task RefreshData()
     {
-        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:music_video" : $"type:music_video AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexMusicVideos(searchQuery, PageNumber, PageSize));
+        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:artist" : $"type:artist AND ({_query})";
+        _data = await Mediator.Send(new QuerySearchIndexArtists(searchQuery, PageNumber, PageSize));
     }
 
     private void PrevPage()
     {
-        var uri = $"/media/music/videos/page/{PageNumber - 1}";
+        var uri = $"/media/music/artists/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             uri = QueryHelpers.AddQueryString(uri, "query", _query);
@@ -121,7 +121,7 @@
 
     private void NextPage()
     {
-        var uri = $"/media/music/videos/page/{PageNumber + 1}";
+        var uri = $"/media/music/artists/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             uri = QueryHelpers.AddQueryString(uri, "query", _query);
@@ -141,24 +141,24 @@
 
     private async Task AddToCollection(MediaCardViewModel card)
     {
-        if (card is MusicVideoCardViewModel musicVideo)
+        if (card is ArtistCardViewModel artist)
         {
-            var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };
+            var parameters = new DialogParameters { { "EntityType", "artist" }, { "EntityName", artist.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
-                var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                addResult.Match(
-                    Left: error =>
-                    {
-                        Snackbar.Add($"Unexpected error adding music video to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding music video to collection: {Error}", error.Value);
-                    },
-                    Right: _ => Snackbar.Add($"Added {musicVideo.Title} to collection {collection.Name}", Severity.Success));
+                // var request = new AddMusicVideoToCollection(collection.Id, artist.ArtistId);
+                // Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                // addResult.Match(
+                //     Left: error =>
+                //     {
+                //         Snackbar.Add($"Unexpected error adding artist to collection: {error.Value}");
+                //         Logger.LogError("Unexpected error adding artist to collection: {Error}", error.Value);
+                //     },
+                //     Right: _ => Snackbar.Add($"Added {artist.Title} to collection {collection.Name}", Severity.Success));
             }
         }
     }

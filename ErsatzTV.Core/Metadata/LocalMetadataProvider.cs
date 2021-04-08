@@ -19,7 +19,9 @@ namespace ErsatzTV.Core.Metadata
         private static readonly XmlSerializer MovieSerializer = new(typeof(MovieNfo));
         private static readonly XmlSerializer EpisodeSerializer = new(typeof(TvShowEpisodeNfo));
         private static readonly XmlSerializer TvShowSerializer = new(typeof(TvShowNfo));
+        private static readonly XmlSerializer ArtistSerializer = new(typeof(ArtistNfo));
         private static readonly XmlSerializer MusicVideoSerializer = new(typeof(MusicVideoNfo));
+        private readonly IArtistRepository _artistRepository;
         private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<LocalMetadataProvider> _logger;
@@ -33,6 +35,7 @@ namespace ErsatzTV.Core.Metadata
             IMetadataRepository metadataRepository,
             IMovieRepository movieRepository,
             ITelevisionRepository televisionRepository,
+            IArtistRepository artistRepository,
             IMusicVideoRepository musicVideoRepository,
             IFallbackMetadataProvider fallbackMetadataProvider,
             ILocalFileSystem localFileSystem,
@@ -41,6 +44,7 @@ namespace ErsatzTV.Core.Metadata
             _metadataRepository = metadataRepository;
             _movieRepository = movieRepository;
             _televisionRepository = televisionRepository;
+            _artistRepository = artistRepository;
             _musicVideoRepository = musicVideoRepository;
             _fallbackMetadataProvider = fallbackMetadataProvider;
             _localFileSystem = localFileSystem;
@@ -70,6 +74,29 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
+        public async Task<ArtistMetadata> GetMetadataForArtist(string artistFolder)
+        {
+            string nfoFileName = Path.Combine(artistFolder, "artist.nfo");
+            Option<ArtistMetadata> maybeMetadata = None;
+            if (_localFileSystem.FileExists(nfoFileName))
+            {
+                maybeMetadata = await LoadArtistMetadata(nfoFileName);
+            }
+
+            return maybeMetadata.Match(
+                metadata =>
+                {
+                    metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    return metadata;
+                },
+                () =>
+                {
+                    ArtistMetadata metadata = _fallbackMetadataProvider.GetFallbackMetadataForArtist(artistFolder);
+                    metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+                    return metadata;
+                });
+        }
+
         public Task<bool> RefreshSidecarMetadata(Movie movie, string nfoFileName) =>
             LoadMovieMetadata(movie, nfoFileName).Bind(
                 maybeMetadata => maybeMetadata.Match(
@@ -88,6 +115,12 @@ namespace ErsatzTV.Core.Metadata
                     metadata => ApplyMetadataUpdate(episode, metadata),
                     () => Task.FromResult(false)));
 
+        public Task<bool> RefreshSidecarMetadata(Artist artist, string nfoFileName) =>
+            LoadArtistMetadata(nfoFileName).Bind(
+                maybeMetadata => maybeMetadata.Match(
+                    metadata => ApplyMetadataUpdate(artist, metadata),
+                    () => Task.FromResult(false)));
+
         public Task<bool> RefreshSidecarMetadata(MusicVideo musicVideo, string nfoFileName) =>
             LoadMusicVideoMetadata(nfoFileName).Bind(
                 maybeMetadata => maybeMetadata.Match(
@@ -99,6 +132,9 @@ namespace ErsatzTV.Core.Metadata
 
         public Task<bool> RefreshFallbackMetadata(Episode episode) =>
             ApplyMetadataUpdate(episode, _fallbackMetadataProvider.GetFallbackMetadata(episode));
+
+        public Task<bool> RefreshFallbackMetadata(Artist artist, string artistFolder) =>
+            ApplyMetadataUpdate(artist, _fallbackMetadataProvider.GetFallbackMetadataForArtist(artistFolder));
 
         public Task<bool> RefreshFallbackMetadata(MusicVideo musicVideo) =>
             ApplyMetadataUpdate(musicVideo, _fallbackMetadataProvider.GetFallbackMetadata(musicVideo));
@@ -269,6 +305,100 @@ namespace ErsatzTV.Core.Metadata
                     return await _metadataRepository.Add(metadata);
                 });
 
+        private Task<bool> ApplyMetadataUpdate(Artist artist, ArtistMetadata metadata) =>
+            Optional(artist.ArtistMetadata).Flatten().HeadOrNone().Match(
+                async existing =>
+                {
+                    existing.Title = metadata.Title;
+                    existing.Disambiguation = metadata.Disambiguation;
+                    existing.Biography = metadata.Biography;
+
+                    if (existing.DateAdded == DateTime.MinValue)
+                    {
+                        existing.DateAdded = metadata.DateAdded;
+                    }
+
+                    existing.DateUpdated = metadata.DateUpdated;
+                    existing.MetadataKind = metadata.MetadataKind;
+                    existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
+
+                    var updated = false;
+
+                    foreach (Genre genre in existing.Genres.Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                        .ToList())
+                    {
+                        existing.Genres.Remove(genre);
+                        if (await _metadataRepository.RemoveGenre(genre))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
+                        .ToList())
+                    {
+                        existing.Genres.Add(genre);
+                        if (await _artistRepository.AddGenre(existing, genre))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Style style in existing.Styles.Filter(s => metadata.Styles.All(s2 => s2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Styles.Remove(style);
+                        if (await _metadataRepository.RemoveStyle(style))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Style style in metadata.Styles.Filter(s => existing.Styles.All(s2 => s2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Styles.Add(style);
+                        if (await _artistRepository.AddStyle(existing, style))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Mood mood in existing.Moods.Filter(m => metadata.Moods.All(m2 => m2.Name != m.Name))
+                        .ToList())
+                    {
+                        existing.Moods.Remove(mood);
+                        if (await _metadataRepository.RemoveMood(mood))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Mood mood in metadata.Moods.Filter(s => existing.Moods.All(m2 => m2.Name != s.Name))
+                        .ToList())
+                    {
+                        existing.Moods.Add(mood);
+                        if (await _artistRepository.AddMood(existing, mood))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    return await _metadataRepository.Update(existing) || updated;
+                },
+                async () =>
+                {
+                    metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
+                    metadata.ArtistId = artist.Id;
+                    artist.ArtistMetadata = new List<ArtistMetadata> { metadata };
+
+                    return await _metadataRepository.Add(metadata);
+                });
+
         private Task<bool> ApplyMetadataUpdate(MusicVideo musicVideo, MusicVideoMetadata metadata) =>
             Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone().Match(
                 async existing =>
@@ -339,6 +469,34 @@ namespace ErsatzTV.Core.Metadata
             catch (Exception ex)
             {
                 _logger.LogInformation(ex, "Failed to read TV show nfo metadata from {Path}", nfoFileName);
+                return None;
+            }
+        }
+
+        private async Task<Option<ArtistMetadata>> LoadArtistMetadata(string nfoFileName)
+        {
+            try
+            {
+                await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
+                Option<ArtistNfo> maybeNfo = ArtistSerializer.Deserialize(fileStream) as ArtistNfo;
+                return maybeNfo.Match<Option<ArtistMetadata>>(
+                    nfo => new ArtistMetadata
+                    {
+                        MetadataKind = MetadataKind.Sidecar,
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
+                        Title = nfo.Name,
+                        Disambiguation = nfo.Disambiguation,
+                        Biography = nfo.Biography,
+                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                        Styles = nfo.Styles.Map(s => new Style { Name = s }).ToList(),
+                        Moods = nfo.Moods.Map(m => new Mood { Name = m }).ToList()
+                    },
+                    None);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex, "Failed to read artist nfo metadata from {Path}", nfoFileName);
                 return None;
             }
         }
