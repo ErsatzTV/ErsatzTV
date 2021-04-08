@@ -137,7 +137,9 @@ namespace ErsatzTV.Core.Metadata
             ApplyMetadataUpdate(artist, _fallbackMetadataProvider.GetFallbackMetadataForArtist(artistFolder));
 
         public Task<bool> RefreshFallbackMetadata(MusicVideo musicVideo) =>
-            ApplyMetadataUpdate(musicVideo, _fallbackMetadataProvider.GetFallbackMetadata(musicVideo));
+            _fallbackMetadataProvider.GetFallbackMetadata(musicVideo).Match(
+                metadata => ApplyMetadataUpdate(musicVideo, metadata),
+                () => Task.FromResult(false));
 
         public Task<bool> RefreshFallbackMetadata(Show televisionShow, string showFolder) =>
             ApplyMetadataUpdate(televisionShow, _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder));

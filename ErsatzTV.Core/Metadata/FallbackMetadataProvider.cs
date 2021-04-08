@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
+using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
@@ -43,7 +44,7 @@ namespace ErsatzTV.Core.Metadata
             return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
         }
 
-        public MusicVideoMetadata GetFallbackMetadata(MusicVideo musicVideo)
+        public Option<MusicVideoMetadata> GetFallbackMetadata(MusicVideo musicVideo)
         {
             string path = musicVideo.MediaVersions.Head().MediaFiles.Head().Path;
             string fileName = Path.GetFileName(path);
@@ -53,7 +54,7 @@ namespace ErsatzTV.Core.Metadata
                 Title = fileName ?? path
             };
 
-            return fileName != null ? GetMusicVideoMetadata(fileName, metadata) : metadata;
+            return GetMusicVideoMetadata(fileName, metadata);
         }
 
         public string GetSortTitle(string title)
@@ -132,7 +133,7 @@ namespace ErsatzTV.Core.Metadata
             return metadata;
         }
 
-        private MusicVideoMetadata GetMusicVideoMetadata(string fileName, MusicVideoMetadata metadata)
+        private Option<MusicVideoMetadata> GetMusicVideoMetadata(string fileName, MusicVideoMetadata metadata)
         {
             try
             {
@@ -146,6 +147,10 @@ namespace ErsatzTV.Core.Metadata
                     metadata.Tags = new List<Tag>();
                     metadata.Studios = new List<Studio>();
                     metadata.DateUpdated = DateTime.UtcNow;
+                }
+                else
+                {
+                    return None;
                 }
             }
             catch (Exception)

@@ -1,5 +1,6 @@
 ﻿using System;
 using ErsatzTV.Core.Domain;
+using LanguageExt;
 
 namespace ErsatzTV.Core.Interfaces.Metadata
 {
@@ -9,7 +10,7 @@ namespace ErsatzTV.Core.Interfaces.Metadata
         ArtistMetadata GetFallbackMetadataForArtist(string artistFolder);
         Tuple<EpisodeMetadata, int> GetFallbackMetadata(Episode episode);
         MovieMetadata GetFallbackMetadata(Movie movie);
-        MusicVideoMetadata GetFallbackMetadata(MusicVideo musicVideo);
+        Option<MusicVideoMetadata> GetFallbackMetadata(MusicVideo musicVideo);
         string GetSortTitle(string title);
     }
 }

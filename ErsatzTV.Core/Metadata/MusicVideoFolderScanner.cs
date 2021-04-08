@@ -78,7 +78,7 @@ namespace ErsatzTV.Core.Metadata
             foreach (string artistFolder in allArtistFolders)
             {
                 // _logger.LogDebug("Scanning artist folder {Folder}", artistFolder);
-                
+
                 decimal percentCompletion = (decimal) allArtistFolders.IndexOf(artistFolder) / allArtistFolders.Count;
                 await _mediator.Publish(
                     new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
@@ -119,7 +119,12 @@ namespace ErsatzTV.Core.Metadata
                     });
             }
 
-            // TODO: find orphan from misnamed video without nfo (i.e. `title.mkv` instead of `artist - title.mkv`)
+            foreach (string path in await _musicVideoRepository.FindOrphanPaths(libraryPath))
+            {
+                _logger.LogInformation("Removing improperly named music video at {Path}", path);
+                List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
+                await _searchIndex.RemoveItems(musicVideoIds);
+            }
 
             foreach (string path in await _musicVideoRepository.FindMusicVideoPaths(libraryPath))
             {
@@ -304,6 +309,8 @@ namespace ErsatzTV.Core.Metadata
                     {
                         if (!Optional(musicVideo.MusicVideoMetadata).Flatten().Any())
                         {
+                            musicVideo.MusicVideoMetadata ??= new List<MusicVideoMetadata>();
+
                             string path = musicVideo.MediaVersions.Head().MediaFiles.Head().Path;
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
                             if (await _localMetadataProvider.RefreshFallbackMetadata(musicVideo))

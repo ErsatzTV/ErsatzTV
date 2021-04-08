@@ -145,6 +145,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(Optional);
         }
 
+        public Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath) =>
+            _dbConnection.QueryAsync<string>(
+                @"SELECT MF.Path
+                FROM MediaFile MF
+                INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
+                INNER JOIN MusicVideo M on MV.MusicVideoId = M.Id
+                INNER JOIN MediaItem MI on M.Id = MI.Id
+                WHERE MI.LibraryPathId = @LibraryPathId
+                  AND NOT EXISTS (SELECT * FROM MusicVideoMetadata WHERE MusicVideoId = M.Id)",
+                new { LibraryPathId = libraryPath.Id });
+
         private static async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> AddMusicVideo(
             TvContext dbContext,
             Artist artist,

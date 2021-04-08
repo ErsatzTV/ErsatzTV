@@ -55,6 +55,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Studios)
                 .Include(mi => (mi as MusicVideo).MediaVersions)
                 .ThenInclude(mm => mm.Streams)
+                .Include(mi => (mi as Artist).ArtistMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(mi => (mi as Artist).ArtistMetadata)
+                .ThenInclude(mm => mm.Styles)
+                .Include(mi => (mi as Artist).ArtistMetadata)
+                .ThenInclude(mm => mm.Moods)
                 .OrderBy(mi => mi.Id)
                 .SingleOrDefaultAsync(mi => mi.Id == id)
                 .Map(Optional);
