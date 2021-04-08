@@ -131,10 +131,7 @@
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
     {
-        List<MediaCardViewModel> GetSortedItems()
-        {
-            return _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
-        }
+        List<MediaCardViewModel> GetSortedItems() => _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
 
         SelectClicked(GetSortedItems, card, e);
     }
@@ -150,15 +147,15 @@
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
-                // var request = new AddMusicVideoToCollection(collection.Id, artist.ArtistId);
-                // Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                // addResult.Match(
-                //     Left: error =>
-                //     {
-                //         Snackbar.Add($"Unexpected error adding artist to collection: {error.Value}");
-                //         Logger.LogError("Unexpected error adding artist to collection: {Error}", error.Value);
-                //     },
-                //     Right: _ => Snackbar.Add($"Added {artist.Title} to collection {collection.Name}", Severity.Success));
+                var request = new AddArtistToCollection(collection.Id, artist.ArtistId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding artist to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding artist to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {artist.Title} to collection {collection.Name}", Severity.Success));
             }
         }
     }

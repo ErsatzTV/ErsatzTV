@@ -103,6 +103,23 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await dbContext.SaveChangesAsync();
             return ids;
         }
+        
+        public async Task<Option<Artist>> GetArtist(int artistId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Artists
+                .Include(m => m.ArtistMetadata)
+                .ThenInclude(m => m.Artwork)
+                .Include(m => m.ArtistMetadata)
+                .ThenInclude(m => m.Genres)
+                .Include(m => m.ArtistMetadata)
+                .ThenInclude(m => m.Styles)
+                .Include(m => m.ArtistMetadata)
+                .ThenInclude(m => m.Moods)
+                .OrderBy(m => m.Id)
+                .SingleOrDefaultAsync(m => m.Id == artistId)
+                .Map(Optional);
+        }
 
         public async Task<List<ArtistMetadata>> GetArtistsForCards(List<int> ids)
         {

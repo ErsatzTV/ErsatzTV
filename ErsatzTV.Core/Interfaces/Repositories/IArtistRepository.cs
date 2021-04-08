@@ -16,6 +16,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
             ArtistMetadata metadata);
 
         Task<List<int>> DeleteEmptyArtists(LibraryPath libraryPath);
+        Task<Option<Artist>> GetArtist(int artistId);
         Task<List<ArtistMetadata>> GetArtistsForCards(List<int> ids);
         Task<bool> AddGenre(ArtistMetadata metadata, Genre genre);
         Task<bool> AddStyle(ArtistMetadata metadata, Style style);

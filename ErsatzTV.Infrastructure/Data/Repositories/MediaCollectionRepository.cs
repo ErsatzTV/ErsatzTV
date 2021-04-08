@@ -130,6 +130,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(i => (i as Movie).MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Include(c => c.MediaItems)
+                .ThenInclude(i => (i as Artist).ArtistMetadata)
+                .ThenInclude(mvm => mvm.Artwork)
+                .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as MusicVideo).MusicVideoMetadata)
                 .ThenInclude(mvm => mvm.Artwork)
                 .Include(c => c.MediaItems)
@@ -201,6 +204,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             result.AddRange(await GetShowItems(collection));
             result.AddRange(await GetSeasonItems(collection));
             result.AddRange(await GetEpisodeItems(collection));
+            result.AddRange(await GetArtistItems(collection));
             result.AddRange(await GetMusicVideoItems(collection));
 
             return result.Distinct().ToList();
@@ -220,6 +224,23 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(m => ids.Contains(m.Id))
                 .ToListAsync();
         }
+        
+        private async Task<List<MusicVideo>> GetArtistItems(Collection collection)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT MusicVideo.Id FROM CollectionItem ci
+            INNER JOIN Artist on Artist.Id = ci.MediaItemId
+            INNER JOIN MusicVideo on Artist.Id = MusicVideo.ArtistId
+            WHERE ci.CollectionId = @CollectionId",
+                new { CollectionId = collection.Id });
+
+            return await _dbContext.MusicVideos
+                .Include(m => m.MusicVideoMetadata)
+                .Include(m => m.MediaVersions)
+                .Filter(m => ids.Contains(m.Id))
+                .ToListAsync();
+        }
+
 
         private async Task<List<MusicVideo>> GetMusicVideoItems(Collection collection)
         {
