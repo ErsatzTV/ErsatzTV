@@ -5,6 +5,8 @@ nav:
     - 'Add Media Items': 'user-guide/add-media-items.md'
     - 'Create Channels': 'user-guide/create-channels.md'
     - 'Configure Clients': 'user-guide/configure-clients.md'
+  - 'Advanced':
+    - 'Local Libraries': 'user-guide/local-libraries.md'
 theme:
   name: material
   palette:
