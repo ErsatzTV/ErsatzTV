@@ -21,5 +21,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids);
         Task<Option<MusicVideo>> GetMusicVideo(int musicVideoId);
         Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath);
+        Task<int> GetMusicVideoCount(int artistId);
+        Task<List<MusicVideoMetadata>> GetPagedMusicVideos(int artistId, int pageNumber, int pageSize);
     }
 }

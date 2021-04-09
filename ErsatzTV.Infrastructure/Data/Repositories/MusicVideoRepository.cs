@@ -159,6 +159,30 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                   AND NOT EXISTS (SELECT * FROM MusicVideoMetadata WHERE MusicVideoId = M.Id)",
                 new { LibraryPathId = libraryPath.Id });
 
+        public Task<int> GetMusicVideoCount(int artistId) =>
+            _dbConnection.QuerySingleAsync<int>(
+                @"SELECT COUNT(*) FROM MusicVideo WHERE ArtistId = @ArtistId",
+                new { ArtistId = artistId });
+
+        public async Task<List<MusicVideoMetadata>> GetPagedMusicVideos(int artistId, int pageNumber, int pageSize)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.MusicVideoMetadata
+                .AsNoTracking()
+                .Include(m => m.Artwork)
+                .Include(m => m.Genres)
+                .Include(m => m.Tags)
+                .Include(m => m.Studios)
+                .Include(m => m.MusicVideo)
+                .ThenInclude(mv => mv.Artist)
+                .ThenInclude(a => a.ArtistMetadata)
+                .Filter(m => m.MusicVideo.ArtistId == artistId)
+                .OrderBy(m => m.SortTitle)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
         private static async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> AddMusicVideo(
             TvContext dbContext,
             Artist artist,

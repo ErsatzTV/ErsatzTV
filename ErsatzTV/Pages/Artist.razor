@@ -1,11 +1,16 @@
 ﻿@page "/media/music/artists/{ArtistId:int}"
 @using ErsatzTV.Application.Artists
 @using ErsatzTV.Application.Artists.Queries
+@using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
+@using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 @inject IDialogService Dialog
 @inject NavigationManager NavigationManager
+@inject ILogger<Artist> Logger
+@inject ISnackbar Snackbar
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
@@ -83,6 +88,35 @@
         </div>
     }
 </MudContainer>
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
+    @foreach (MusicVideoCardViewModel musicVideo in _musicVideos.Cards)
+    {
+        <MudCard Class="mb-6">
+            <div id="@($"music-video-{musicVideo.MusicVideoId}")" style="display: flex; flex-direction: row; scroll-margin-top: 85px">
+                @if (!string.IsNullOrWhiteSpace(musicVideo.Poster))
+                {
+                    <MudPaper style="display: flex; flex-direction: column">
+                        <MudCardMedia Image="@($"/artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                    </MudPaper>
+                }
+                <MudCardContent Class="ml-3">
+                    <div style="display: flex; flex-direction: column; height: 100%">
+                        <MudText Typo="Typo.h4">@musicVideo.Title</MudText>
+                        <MudText Style="flex-grow: 1">@musicVideo.Plot</MudText>
+                        <div class="mt-6">
+                            <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Add"
+                                       OnClick="@(_ => AddMusicVideoToCollection(musicVideo))">
+                                Add To Collection
+                            </MudButton>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </div>
+        </MudCard>
+    }
+</MudContainer>
 
 @code {
 
@@ -90,10 +124,15 @@
     public int ArtistId { get; set; }
 
     private ArtistViewModel _artist;
+    private MusicVideoCardResultsViewModel _musicVideos;
 
     protected override Task OnParametersSetAsync() => RefreshData();
 
-    private async Task RefreshData() => await Mediator.Send(new GetArtistById(ArtistId)).IfSomeAsync(vm => _artist = vm);
+    private async Task RefreshData()
+    {
+        await Mediator.Send(new GetArtistById(ArtistId)).IfSomeAsync(vm => _artist = vm);
+        _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100));
+    }
 
     private async Task AddToCollection()
     {
@@ -106,6 +145,27 @@
         {
             await Mediator.Send(new AddArtistToCollection(collection.Id, ArtistId));
             NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
+        }
+    }
+    
+    private async Task AddMusicVideoToCollection(MusicVideoCardViewModel musicVideo)
+    {
+        var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+        {
+            var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
+            Either<BaseError, Unit> addResult = await Mediator.Send(request);
+            addResult.Match(
+                Left: error =>
+                {
+                    Snackbar.Add($"Unexpected error adding music video to collection: {error.Value}");
+                    Logger.LogError("Unexpected error adding music video to collection: {Error}", error.Value);
+                },
+                Right: _ => Snackbar.Add($"Added {musicVideo.Title} to collection {collection.Name}", Severity.Success));
         }
     }
 
