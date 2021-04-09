@@ -80,3 +80,11 @@ Then, add to a collection by clicking the `Add To Collection` button at the top 
 In the `Add To Collection` dialog, either select an existing collection for the items, or enter a new collection name to create a collection and add all of the selected items in a single step.
 
 ![Add To Collection Dialog](../images/add-to-collection-dialog.png)
+
+---
+
+Big Buck Bunny: (c) copyright 2008, Blender Foundation / [www.bigbuckbunny.org](https://www.bigbuckbunny.org)
+
+Sintel: © copyright Blender Foundation | [www.sintel.org](https://www.sintel.org)
+
+Tears of Steel: (CC) Blender Foundation | [mango.blender.org](https://mango.blender.org)
