@@ -1,13 +1,20 @@
 ﻿@page "/media/collections"
+@using Microsoft.Extensions.Caching.Memory
+@using Blazored.LocalStorage
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
 @using ErsatzTV.Application.MediaCards
 @inject IDialogService Dialog
 @inject IMediator Mediator
+@inject IMemoryCache MemoryCache
+@inject ILocalStorageService LocalStorage
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Items="_data" Dense="true">
+    <MudTable Hover="true"
+              ServerData="@(new Func<TableState, Task<TableData<MediaCollectionViewModel>>>(ServerReload))"
+              Dense="true"
+              @ref="                    _table">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Collections</MudText>
         </ToolBarContent>
@@ -16,11 +23,7 @@
             <col style="width: 120px;"/>
         </ColGroup>
         <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<MediaCollectionViewModel, object>(x => x.Name)">
-                    Name
-                </MudTableSortLabel>
-            </MudTh>
+            <MudTh>Name</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
@@ -50,12 +53,14 @@
 </MudContainer>
 
 @code {
-    private List<MediaCollectionViewModel> _data;
+    private MudTable<MediaCollectionViewModel> _table;
 
-    protected override Task OnParametersSetAsync() => RefreshData();
-
-    private async Task RefreshData() =>
-        _data = await Mediator.Send(new GetAllCollections()).Map(list => list.OrderBy(vm => vm.Name).ToList());
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        int rowsPerPage = await LocalStorage.GetItemAsync<int?>("pages.collections.rows_per_page") ?? 10;
+        _table.RowsPerPage = rowsPerPage;
+        await _table.ReloadServerData();
+    }
 
     private async Task DeleteMediaCollection(MediaCardViewModel vm)
     {
@@ -69,9 +74,18 @@
             if (!result.Cancelled)
             {
                 await Mediator.Send(new DeleteCollection(collection.Id));
-                await RefreshData();
+                await _table.ReloadServerData();
             }
         }
+    }
+
+
+    private async Task<TableData<MediaCollectionViewModel>> ServerReload(TableState state)
+    {
+        await LocalStorage.SetItemAsync<int?>("pages.collections.rows_per_page", state.PageSize);
+
+        PagedMediaCollectionsViewModel data = await Mediator.Send(new GetPagedCollections(state.Page, state.PageSize));
+        return new TableData<MediaCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
 }

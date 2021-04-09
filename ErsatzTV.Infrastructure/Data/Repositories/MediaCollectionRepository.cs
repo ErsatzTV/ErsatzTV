@@ -15,10 +15,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     {
         private readonly IDbConnection _dbConnection;
         private readonly TvContext _dbContext;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public MediaCollectionRepository(TvContext dbContext, IDbConnection dbConnection)
+        public MediaCollectionRepository(
+            TvContext dbContext,
+            IDbContextFactory<TvContext> dbContextFactory,
+            IDbConnection dbConnection)
         {
             _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
             _dbConnection = dbConnection;
         }
 
@@ -28,7 +33,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await _dbContext.SaveChangesAsync();
             return collection;
         }
-
 
         public async Task<bool> AddMediaItem(int collectionId, int mediaItemId)
         {
@@ -168,6 +172,22 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         public Task<List<Collection>> GetAll() =>
             _dbContext.Collections.ToListAsync();
 
+        public Task<int> CountAllCollections() =>
+            _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM Collection");
+
+        public async Task<List<Collection>> GetPagedCollections(int pageNumber, int pageSize)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Collections.FromSqlRaw(
+                    @"SELECT * FROM Collection
+                    ORDER BY Name
+                    LIMIT {0} OFFSET {1}",
+                    pageSize,
+                    (pageNumber - 1) * pageSize)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public Task<Option<List<MediaItem>>> GetItems(int id) =>
             Get(id).MapT(GetItemsForCollection).Bind(x => x.Sequence());
 
@@ -227,7 +247,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(m => ids.Contains(m.Id))
                 .ToListAsync();
         }
-        
+
         private async Task<List<MusicVideo>> GetArtistItems(Collection collection)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(

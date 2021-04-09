@@ -3,6 +3,7 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Threading.Channels;
+using Blazored.LocalStorage;
 using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
@@ -90,6 +91,7 @@ namespace ErsatzTV
 
             services.AddMudServices();
             services.AddCourier(Assembly.GetAssembly(typeof(LibraryScanProgress)));
+            services.AddBlazoredLocalStorage();
 
             Log.Logger.Information(
                 "ErsatzTV version {Version}",
