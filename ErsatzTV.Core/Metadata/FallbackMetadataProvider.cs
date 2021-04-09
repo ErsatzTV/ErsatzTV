@@ -139,25 +139,20 @@ namespace ErsatzTV.Core.Metadata
             {
                 const string PATTERN = @"^(.*?) - (.*?).\w+$";
                 Match match = Regex.Match(fileName, PATTERN);
-                if (match.Success)
-                {
-                    metadata.Title = match.Groups[2].Value.Trim();
-                    metadata.Genres = new List<Genre>();
-                    metadata.Tags = new List<Tag>();
-                    metadata.Studios = new List<Studio>();
-                    metadata.DateUpdated = DateTime.UtcNow;
-                }
-                else
-                {
-                    return None;
-                }
+                metadata.Title = match.Success
+                    ? match.Groups[2].Value.Trim()
+                    : Path.GetFileNameWithoutExtension(fileName);
+                metadata.Genres = new List<Genre>();
+                metadata.Tags = new List<Tag>();
+                metadata.Studios = new List<Studio>();
+                metadata.DateUpdated = DateTime.UtcNow;
+
+                return metadata;
             }
             catch (Exception)
             {
-                // ignored
+                return None;
             }
-
-            return metadata;
         }
 
         private ShowMetadata GetTelevisionShowMetadata(string fileName, ShowMetadata metadata)
