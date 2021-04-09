@@ -17,11 +17,65 @@ namespace ErsatzTV.Infrastructure.Migrations
                 .HasAnnotation("ProductVersion", "5.0.4");
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.ArtistMetadata",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Biography")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateAdded")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Disambiguation")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Formed")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MetadataKind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginalTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReleaseDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SortTitle")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistId");
+
+                    b.ToTable("ArtistMetadata");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Artwork",
                 b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ArtworkKind")
@@ -55,6 +109,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ArtistMetadataId");
 
                     b.HasIndex("ChannelId");
 
@@ -293,6 +349,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ArtistMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("EpisodeMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -312,6 +371,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ArtistMetadataId");
 
                     b.HasIndex("EpisodeMetadataId");
 
@@ -533,6 +594,27 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.Mood",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ArtistMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistMetadataId");
+
+                    b.ToTable("Mood");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.MovieMetadata",
                 b =>
                 {
@@ -592,9 +674,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Album")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Artist")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateAdded")
@@ -967,6 +1046,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ArtistMetadataId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("EpisodeMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -986,6 +1068,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ArtistMetadataId");
 
                     b.HasIndex("EpisodeMetadataId");
 
@@ -1001,11 +1085,35 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.Style",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ArtistMetadataId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArtistMetadataId");
+
+                    b.ToTable("Style");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Tag",
                 b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("EpisodeMetadataId")
@@ -1027,6 +1135,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ArtistMetadataId");
 
                     b.HasIndex("EpisodeMetadataId");
 
@@ -1081,6 +1191,15 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.Artist",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.MediaItem");
+
+                    b.ToTable("Artist");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Episode",
                 b =>
                 {
@@ -1111,6 +1230,11 @@ namespace ErsatzTV.Infrastructure.Migrations
                 b =>
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.MediaItem");
+
+                    b.Property<int>("ArtistId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasIndex("ArtistId");
 
                     b.ToTable("MusicVideo");
                 });
@@ -1268,9 +1392,27 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.ArtistMetadata",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Artist", "Artist")
+                        .WithMany("ArtistMetadata")
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Artist");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Artwork",
                 b =>
                 {
+                    b.HasOne("ErsatzTV.Core.Domain.ArtistMetadata", null)
+                        .WithMany("Artwork")
+                        .HasForeignKey("ArtistMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.Channel", null)
                         .WithMany("Artwork")
                         .HasForeignKey("ChannelId")
@@ -1366,6 +1508,11 @@ namespace ErsatzTV.Infrastructure.Migrations
                 "ErsatzTV.Core.Domain.Genre",
                 b =>
                 {
+                    b.HasOne("ErsatzTV.Core.Domain.ArtistMetadata", null)
+                        .WithMany("Genres")
+                        .HasForeignKey("ArtistMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.EpisodeMetadata", null)
                         .WithMany("Genres")
                         .HasForeignKey("EpisodeMetadataId");
@@ -1472,6 +1619,16 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasOne("ErsatzTV.Core.Domain.MusicVideo", null)
                         .WithMany("MediaVersions")
                         .HasForeignKey("MusicVideoId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.Mood",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.ArtistMetadata", null)
+                        .WithMany("Moods")
+                        .HasForeignKey("ArtistMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
@@ -1725,6 +1882,10 @@ namespace ErsatzTV.Infrastructure.Migrations
                 "ErsatzTV.Core.Domain.Studio",
                 b =>
                 {
+                    b.HasOne("ErsatzTV.Core.Domain.ArtistMetadata", null)
+                        .WithMany("Studios")
+                        .HasForeignKey("ArtistMetadataId");
+
                     b.HasOne("ErsatzTV.Core.Domain.EpisodeMetadata", null)
                         .WithMany("Studios")
                         .HasForeignKey("EpisodeMetadataId");
@@ -1750,9 +1911,23 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.Style",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.ArtistMetadata", null)
+                        .WithMany("Styles")
+                        .HasForeignKey("ArtistMetadataId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Tag",
                 b =>
                 {
+                    b.HasOne("ErsatzTV.Core.Domain.ArtistMetadata", null)
+                        .WithMany("Tags")
+                        .HasForeignKey("ArtistMetadataId");
+
                     b.HasOne("ErsatzTV.Core.Domain.EpisodeMetadata", null)
                         .WithMany("Tags")
                         .HasForeignKey("EpisodeMetadataId");
@@ -1811,6 +1986,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.Artist",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.Artist", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Episode",
                 b =>
                 {
@@ -1844,11 +2030,19 @@ namespace ErsatzTV.Infrastructure.Migrations
                 "ErsatzTV.Core.Domain.MusicVideo",
                 b =>
                 {
+                    b.HasOne("ErsatzTV.Core.Domain.Artist", "Artist")
+                        .WithMany("MusicVideos")
+                        .HasForeignKey("ArtistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("ErsatzTV.Core.Domain.MediaItem", null)
                         .WithOne()
                         .HasForeignKey("ErsatzTV.Core.Domain.MusicVideo", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Artist");
                 });
 
             modelBuilder.Entity(
@@ -1992,6 +2186,23 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.ArtistMetadata",
+                b =>
+                {
+                    b.Navigation("Artwork");
+
+                    b.Navigation("Genres");
+
+                    b.Navigation("Moods");
+
+                    b.Navigation("Studios");
+
+                    b.Navigation("Styles");
+
+                    b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Channel",
                 b =>
                 {
@@ -2100,6 +2311,15 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Studios");
 
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.Artist",
+                b =>
+                {
+                    b.Navigation("ArtistMetadata");
+
+                    b.Navigation("MusicVideos");
                 });
 
             modelBuilder.Entity(

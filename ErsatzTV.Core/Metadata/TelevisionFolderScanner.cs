@@ -87,6 +87,14 @@ namespace ErsatzTV.Core.Metadata
                 await maybeShow.Match(
                     async result =>
                     {
+                        await ScanSeasons(
+                            libraryPath,
+                            ffprobePath,
+                            result.Item,
+                            showFolder,
+                            // force scanning all folders if we're adding a new show
+                            result.IsAdded ? DateTimeOffset.MinValue : lastScan);
+
                         if (result.IsAdded)
                         {
                             await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
@@ -95,14 +103,6 @@ namespace ErsatzTV.Core.Metadata
                         {
                             await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
                         }
-
-                        await ScanSeasons(
-                            libraryPath,
-                            ffprobePath,
-                            result.Item,
-                            showFolder,
-                            // force scanning all folders if we're adding a new show
-                            result.IsAdded ? DateTimeOffset.MinValue : lastScan);
                     },
                     error =>
                     {
@@ -400,10 +400,6 @@ namespace ErsatzTV.Core.Metadata
                 .Filter(f => _localFileSystem.FileExists(f))
                 .HeadOrNone();
         }
-
-        private bool ShouldIncludeFolder(string folder) =>
-            !Path.GetFileName(folder).StartsWith('.') &&
-            !_localFileSystem.FileExists(Path.Combine(folder, ".etvignore"));
 
         private static Option<int> SeasonNumberForFolder(string folder)
         {

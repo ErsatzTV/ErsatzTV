@@ -39,9 +39,13 @@ namespace ErsatzTV.Application.MediaCollections.Commands
 
         private async Task<Unit> ApplyAddItemsRequest(AddItemsToCollection request)
         {
-            if (await _mediaCollectionRepository.AddMediaItems(
-                request.CollectionId,
-                request.MovieIds.Append(request.ShowIds).Append(request.MusicVideoIds).ToList()))
+            var allItems = request.MovieIds
+                .Append(request.ShowIds)
+                .Append(request.ArtistIds)
+                .Append(request.MusicVideoIds)
+                .ToList();
+
+            if (await _mediaCollectionRepository.AddMediaItems(request.CollectionId, allItems))
             {
                 // rebuild all playouts that use this collection
                 foreach (int playoutId in await _mediaCollectionRepository

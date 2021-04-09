@@ -156,6 +156,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
                         parameters)
                     .ToUnit(),
+                ArtistMetadata => _dbConnection.ExecuteAsync(
+                        @"INSERT INTO Artwork (ArtworkKind, ArtistMetadataId, DateAdded, DateUpdated, Path)
+                            Values (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        parameters)
+                    .ToUnit(),
                 MusicVideoMetadata => _dbConnection.ExecuteAsync(
                         @"INSERT INTO Artwork (ArtworkKind, MusicVideoMetadataId, DateAdded, DateUpdated, Path)
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
@@ -196,6 +201,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<bool> RemoveStudio(Studio studio) =>
             _dbConnection.ExecuteAsync("DELETE FROM Studio WHERE Id = @StudioId", new { StudioId = studio.Id })
+                .Map(result => result > 0);
+
+        public Task<bool> RemoveStyle(Style style) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Style WHERE Id = @StyleId", new { StyleId = style.Id })
+                .Map(result => result > 0);
+
+        public Task<bool> RemoveMood(Mood mood) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Mood WHERE Id = @MoodId", new { MoodId = mood.Id })
                 .Map(result => result > 0);
     }
 }

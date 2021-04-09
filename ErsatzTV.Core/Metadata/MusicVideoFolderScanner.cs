@@ -19,6 +19,7 @@ namespace ErsatzTV.Core.Metadata
 {
     public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScanner
     {
+        private readonly IArtistRepository _artistRepository;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<MusicVideoFolderScanner> _logger;
@@ -35,6 +36,7 @@ namespace ErsatzTV.Core.Metadata
             IImageCache imageCache,
             ISearchIndex searchIndex,
             ISearchRepository searchRepository,
+            IArtistRepository artistRepository,
             IMusicVideoRepository musicVideoRepository,
             IMediator mediator,
             ILogger<MusicVideoFolderScanner> logger) : base(
@@ -48,6 +50,7 @@ namespace ErsatzTV.Core.Metadata
             _localMetadataProvider = localMetadataProvider;
             _searchIndex = searchIndex;
             _searchRepository = searchRepository;
+            _artistRepository = artistRepository;
             _musicVideoRepository = musicVideoRepository;
             _mediator = mediator;
             _logger = logger;
@@ -67,23 +70,175 @@ namespace ErsatzTV.Core.Metadata
                 return new MediaSourceInaccessible();
             }
 
-            var foldersCompleted = 0;
+            var allArtistFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
+                .Filter(ShouldIncludeFolder)
+                .OrderBy(identity)
+                .ToList();
 
-            var folderQueue = new Queue<string>();
-            folderQueue.Enqueue(libraryPath.Path);
-
-            while (folderQueue.Count > 0)
+            foreach (string artistFolder in allArtistFolders)
             {
-                decimal percentCompletion = (decimal) foldersCompleted / (foldersCompleted + folderQueue.Count);
+                // _logger.LogDebug("Scanning artist folder {Folder}", artistFolder);
+
+                decimal percentCompletion = (decimal) allArtistFolders.IndexOf(artistFolder) / allArtistFolders.Count;
                 await _mediator.Publish(
                     new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
 
+                Either<BaseError, MediaItemScanResult<Artist>> maybeArtist =
+                    await FindOrCreateArtist(libraryPath.Id, artistFolder)
+                        .BindT(artist => UpdateMetadataForArtist(artist, artistFolder))
+                        .BindT(artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.Thumbnail))
+                        .BindT(artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.FanArt));
+
+                await maybeArtist.Match(
+                    async result =>
+                    {
+                        await ScanMusicVideos(
+                            libraryPath,
+                            ffprobePath,
+                            result.Item,
+                            artistFolder,
+                            // force scanning all folders if we're adding a new artist
+                            result.IsAdded ? DateTimeOffset.MinValue : lastScan);
+
+                        if (result.IsAdded)
+                        {
+                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
+                        }
+                        else if (result.IsUpdated)
+                        {
+                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                        }
+                    },
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Error processing artist in folder {Folder}: {Error}",
+                            artistFolder,
+                            error.Value);
+                        return Task.FromResult(Unit.Default);
+                    });
+            }
+
+            foreach (string path in await _musicVideoRepository.FindOrphanPaths(libraryPath))
+            {
+                _logger.LogInformation("Removing improperly named music video at {Path}", path);
+                List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
+                await _searchIndex.RemoveItems(musicVideoIds);
+            }
+
+            foreach (string path in await _musicVideoRepository.FindMusicVideoPaths(libraryPath))
+            {
+                if (!_localFileSystem.FileExists(path))
+                {
+                    _logger.LogInformation("Removing missing music video at {Path}", path);
+                    List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
+                    await _searchIndex.RemoveItems(musicVideoIds);
+                }
+            }
+
+            List<int> artistIds = await _artistRepository.DeleteEmptyArtists(libraryPath);
+            await _searchIndex.RemoveItems(artistIds);
+
+            _searchIndex.Commit();
+            return Unit.Default;
+        }
+
+        private async Task<Either<BaseError, MediaItemScanResult<Artist>>> FindOrCreateArtist(
+            int libraryPathId,
+            string artistFolder)
+        {
+            ArtistMetadata metadata = await _localMetadataProvider.GetMetadataForArtist(artistFolder);
+            Option<Artist> maybeArtist = await _artistRepository.GetArtistByMetadata(libraryPathId, metadata);
+            return await maybeArtist.Match(
+                artist => Right<BaseError, MediaItemScanResult<Artist>>(new MediaItemScanResult<Artist>(artist))
+                    .AsTask(),
+                async () => await _artistRepository.AddArtist(libraryPathId, artistFolder, metadata));
+        }
+
+        private async Task<Either<BaseError, MediaItemScanResult<Artist>>> UpdateMetadataForArtist(
+            MediaItemScanResult<Artist> result,
+            string artistFolder)
+        {
+            try
+            {
+                Artist artist = result.Item;
+                await LocateNfoFileForArtist(artistFolder).Match(
+                    async nfoFile =>
+                    {
+                        bool shouldUpdate = Optional(artist.ArtistMetadata).Flatten().HeadOrNone().Match(
+                            m => m.MetadataKind == MetadataKind.Fallback ||
+                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                            true);
+
+                        if (shouldUpdate)
+                        {
+                            _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                            if (await _localMetadataProvider.RefreshSidecarMetadata(artist, nfoFile))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+                    },
+                    async () =>
+                    {
+                        if (!Optional(artist.ArtistMetadata).Flatten().Any())
+                        {
+                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", artistFolder);
+                            if (await _localMetadataProvider.RefreshFallbackMetadata(artist, artistFolder))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+                    });
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
+        }
+
+        private async Task<Either<BaseError, MediaItemScanResult<Artist>>> UpdateArtworkForArtist(
+            MediaItemScanResult<Artist> result,
+            string artistFolder,
+            ArtworkKind artworkKind)
+        {
+            try
+            {
+                Artist artist = result.Item;
+                await LocateArtworkForArtist(artistFolder, artworkKind).IfSomeAsync(
+                    async artworkFile =>
+                    {
+                        ArtistMetadata metadata = artist.ArtistMetadata.Head();
+                        await RefreshArtwork(artworkFile, metadata, artworkKind);
+                    });
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
+        }
+
+        public async Task ScanMusicVideos(
+            LibraryPath libraryPath,
+            string ffprobePath,
+            Artist artist,
+            string artistFolder,
+            DateTimeOffset lastScan)
+        {
+            var folderQueue = new Queue<string>();
+            folderQueue.Enqueue(artistFolder);
+
+            while (folderQueue.Count > 0)
+            {
                 string musicVideoFolder = folderQueue.Dequeue();
-                foldersCompleted++;
+                // _logger.LogDebug("Scanning music video folder {Folder}", musicVideoFolder);
 
                 var allFiles = _localFileSystem.ListFiles(musicVideoFolder)
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
-                    .Filter(f => f.Contains(" - "))
                     .ToList();
 
                 foreach (string subdirectory in _localFileSystem.ListSubdirectories(musicVideoFolder)
@@ -101,7 +256,7 @@ namespace ErsatzTV.Core.Metadata
                 {
                     // TODO: figure out how to rebuild playouts
                     Either<BaseError, MediaItemScanResult<MusicVideo>> maybeMusicVideo = await _musicVideoRepository
-                        .GetOrAdd(libraryPath, file)
+                        .GetOrAdd(artist, libraryPath, file)
                         .BindT(musicVideo => UpdateStatistics(musicVideo, ffprobePath))
                         .BindT(UpdateMetadata)
                         .BindT(UpdateThumbnail);
@@ -125,19 +280,6 @@ namespace ErsatzTV.Core.Metadata
                         });
                 }
             }
-
-            foreach (string path in await _musicVideoRepository.FindMusicVideoPaths(libraryPath))
-            {
-                if (!_localFileSystem.FileExists(path))
-                {
-                    _logger.LogInformation("Removing missing music video at {Path}", path);
-                    List<int> ids = await _musicVideoRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(ids);
-                }
-            }
-
-            _searchIndex.Commit();
-            return Unit.Default;
         }
 
         private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateMetadata(
@@ -167,6 +309,8 @@ namespace ErsatzTV.Core.Metadata
                     {
                         if (!Optional(musicVideo.MusicVideoMetadata).Flatten().Any())
                         {
+                            musicVideo.MusicVideoMetadata ??= new List<MusicVideoMetadata>();
+
                             string path = musicVideo.MediaVersions.Head().MediaFiles.Head().Path;
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
                             if (await _localMetadataProvider.RefreshFallbackMetadata(musicVideo))
@@ -182,6 +326,26 @@ namespace ErsatzTV.Core.Metadata
             {
                 return BaseError.New(ex.ToString());
             }
+        }
+
+        private Option<string> LocateNfoFileForArtist(string artistFolder) =>
+            Optional(Path.Combine(artistFolder, "artist.nfo"))
+                .Filter(s => _localFileSystem.FileExists(s));
+
+        private Option<string> LocateArtworkForArtist(string artistFolder, ArtworkKind artworkKind)
+        {
+            string segment = artworkKind switch
+            {
+                ArtworkKind.Thumbnail => "thumb",
+                ArtworkKind.FanArt => "fanart",
+                _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
+            };
+
+            return ImageFileExtensions
+                .Map(ext => $"{segment}.{ext}")
+                .Map(f => Path.Combine(artistFolder, f))
+                .Filter(s => _localFileSystem.FileExists(s))
+                .HeadOrNone();
         }
 
         private Option<string> LocateNfoFile(MusicVideo musicVideo)

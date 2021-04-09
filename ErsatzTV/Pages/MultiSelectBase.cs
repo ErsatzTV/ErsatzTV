@@ -97,15 +97,17 @@ namespace ErsatzTV.Pages
         protected Task AddSelectionToCollection() => AddItemsToCollection(
             _selectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
             _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
+            _selectedItems.OfType<ArtistCardViewModel>().Map(a => a.ArtistId).ToList(),
             _selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList());
 
         protected async Task AddItemsToCollection(
             List<int> movieIds,
             List<int> showIds,
+            List<int> artistIds,
             List<int> musicVideoIds,
             string entityName = "selected items")
         {
-            int count = movieIds.Count + showIds.Count + musicVideoIds.Count;
+            int count = movieIds.Count + showIds.Count + artistIds.Count + musicVideoIds.Count;
 
             var parameters = new DialogParameters
                 { { "EntityType", count.ToString() }, { "EntityName", entityName } };
@@ -115,7 +117,7 @@ namespace ErsatzTV.Pages
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
-                var request = new AddItemsToCollection(collection.Id, movieIds, showIds, musicVideoIds);
+                var request = new AddItemsToCollection(collection.Id, movieIds, showIds, artistIds, musicVideoIds);
 
                 Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(
@@ -147,12 +149,7 @@ namespace ErsatzTV.Pages
             DialogResult result = await dialog.Result;
             if (!result.Cancelled)
             {
-                var itemIds = new List<int>();
-                itemIds.AddRange(_selectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId));
-                itemIds.AddRange(_selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId));
-                itemIds.AddRange(_selectedItems.OfType<TelevisionSeasonCardViewModel>().Map(s => s.TelevisionSeasonId));
-                itemIds.AddRange(_selectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId));
-                itemIds.AddRange(_selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId));
+                var itemIds = _selectedItems.Map(vm => vm.MediaItemId).ToList();
 
                 await Mediator.Send(
                     new RemoveItemsFromCollection(collectionId)
