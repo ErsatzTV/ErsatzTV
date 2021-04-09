@@ -39,27 +39,20 @@
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
             }
-            else
-            {
-                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Movies</MudText>
-            }
 
             if (_shows.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
             }
-            else
+            
+            if (_artists.Count > 0)
             {
-                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Shows</MudText>
+                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
             }
 
             if (_musicVideos.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
-            }
-            else
-            {
-                <MudText Class="ml-4" Style="margin-bottom: auto; margin-top: auto">0 Music Videos</MudText>
             }
             <div style="margin-left: auto">
                 <MudButton Variant="Variant.Filled"
@@ -127,6 +120,34 @@
         </MudContainer>
     }
 
+    @if (_artists.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "artists" } })">
+                Artists
+            </MudText>
+            @if (_artists.Count > 50)
+            {
+                <MudLink Href="@GetArtistsLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (ArtistCardViewModel card in _artists.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"/media/music/artists/{card.ArtistId}")"
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           AddToCollectionClicked="@AddToCollection"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
+
     @if (_musicVideos.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
@@ -135,7 +156,7 @@
                      UserAttributes="@(new Dictionary<string, object> { { "id", "music_videos" } })">
                 Music Videos
             </MudText>
-            @if (_shows.Count > 50)
+            @if (_musicVideos.Count > 50)
             {
                 <MudLink Href="@GetMusicVideosLink()" Class="ml-4">See All >></MudLink>
             }
@@ -161,6 +182,7 @@
     private MovieCardResultsViewModel _movies;
     private TelevisionShowCardResultsViewModel _shows;
     private MusicVideoCardResultsViewModel _musicVideos;
+    private ArtistCardResultsViewModel _artists;
 
     protected override async Task OnInitializedAsync()
     {
@@ -173,6 +195,7 @@
             _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
             _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50));
             _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50));
+            _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50));
         }
     }
 
@@ -182,7 +205,8 @@
         {
             return _movies.Cards.OrderBy(m => m.SortTitle)
                 .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
-                .Append(_musicVideos.Cards.OrderBy(s => s.SortTitle))
+                .Append(_artists.Cards.OrderBy(a => a.SortTitle))
+                .Append(_musicVideos.Cards.OrderBy(mv => mv.SortTitle))
                 .ToList();
         }
 
@@ -232,6 +256,27 @@
                     Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
             }
         }
+        
+        if (card is ArtistCardViewModel artist)
+        {
+            var parameters = new DialogParameters { { "EntityType", "artist" }, { "EntityName", artist.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddArtistToCollection(collection.Id, artist.ArtistId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding artist to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding artist to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {artist.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
 
         if (card is MusicVideoCardViewModel musicVideo)
         {
@@ -274,6 +319,16 @@
         }
         return uri;
     }
+    
+    private string GetArtistsLink()
+    {
+        var uri = "/media/music/artists/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        return uri;
+    }
 
     private string GetMusicVideosLink()
     {
@@ -288,7 +343,7 @@
     private async Task AddAllToCollection(MouseEventArgs _)
     {
         SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query));
-        await AddItemsToCollection(results.MovieIds, results.ShowIds, results.MusicVideoIds, "search results");
+        await AddItemsToCollection(results.MovieIds, results.ShowIds, results.ArtistIds, results.MusicVideoIds, "search results");
     }
 
 }

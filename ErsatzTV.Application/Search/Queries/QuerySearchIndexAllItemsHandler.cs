@@ -23,10 +23,12 @@ namespace ErsatzTV.Application.Search.Queries
                 .Map(result => result.Items.Map(i => i.Id).ToList());
             List<int> showIds = await _searchIndex.Search($"type:show AND ({request.Query})", 0, 0)
                 .Map(result => result.Items.Map(i => i.Id).ToList());
+            List<int> artistIds = await _searchIndex.Search($"type:artist AND ({request.Query})", 0, 0)
+                .Map(result => result.Items.Map(i => i.Id).ToList());
             List<int> musicVideoIds = await _searchIndex.Search($"type:music_video AND ({request.Query})", 0, 0)
                 .Map(result => result.Items.Map(i => i.Id).ToList());
 
-            return new SearchResultAllItemsViewModel(movieIds, showIds, musicVideoIds);
+            return new SearchResultAllItemsViewModel(movieIds, showIds, artistIds, musicVideoIds);
         }
     }
 }

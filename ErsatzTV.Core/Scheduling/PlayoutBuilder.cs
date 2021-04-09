@@ -475,20 +475,28 @@ namespace ErsatzTV.Core.Scheduling
             }
         }
 
-        private static string DisplayTitle(MediaItem mediaItem) =>
-            mediaItem switch
+        private static string DisplayTitle(MediaItem mediaItem)
+        {
+            switch (mediaItem)
             {
-                Episode e => e.EpisodeMetadata.Any() && e.Season != null
-                    ? $"{e.EpisodeMetadata.Head().Title} - s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00}"
-                    : "[unknown episode]",
-                Movie m => m.MovieMetadata.HeadOrNone().Match(
-                    mm => mm.Title ?? string.Empty,
-                    () => "[unknown movie]"),
-                MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
-                    mvm => $"{mvm.Artist} - {mvm.Title}",
-                    () => "[unknown music video]"),
-                _ => string.Empty
-            };
+                case Episode e:
+                    string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()
+                        .Map(sm => $"{sm.Title} - ").IfNone(string.Empty);
+                    return e.EpisodeMetadata.HeadOrNone()
+                        .Map(em => $"{showTitle}s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00} - {em.Title}")
+                        .IfNone("[unknown episode]");
+                case Movie m:
+                    return m.MovieMetadata.HeadOrNone().Match(mm => mm.Title ?? string.Empty, () => "[unknown movie]");
+                case MusicVideo mv:
+                    string artistName = mv.Artist.ArtistMetadata.HeadOrNone()
+                        .Map(am => $"{am.Title} - ").IfNone(string.Empty);
+                    return mv.MusicVideoMetadata.HeadOrNone()
+                        .Map(mvm => $"{artistName}{mvm.Title}")
+                        .IfNone("[unknown music video]");
+                default:
+                    return string.Empty;
+            }
+        }
 
         private static CollectionKey CollectionKeyForItem(ProgramScheduleItem item) =>
             item.CollectionType switch

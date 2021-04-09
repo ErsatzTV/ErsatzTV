@@ -120,7 +120,7 @@ namespace ErsatzTV
             // string xmltvPath = Path.Combine(appDataFolder, "xmltv.xml");
             // Log.Logger.Information("XMLTV is at {XmltvPath}", xmltvPath);
 
-            var connectionString = $"Data Source={FileSystemLayout.DatabasePath}";
+            var connectionString = $"Data Source={FileSystemLayout.DatabasePath};foreign keys=true;";
 
             services.AddDbContext<TvContext>(
                 options => options.UseSqlite(
@@ -202,6 +202,7 @@ namespace ErsatzTV
             services.AddScoped<ITelevisionRepository, TelevisionRepository>();
             services.AddScoped<ISearchRepository, SearchRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
+            services.AddScoped<IArtistRepository, ArtistRepository>();
             services.AddScoped<IMusicVideoRepository, MusicVideoRepository>();
             services.AddScoped<ILibraryRepository, LibraryRepository>();
             services.AddScoped<IMetadataRepository, MetadataRepository>();

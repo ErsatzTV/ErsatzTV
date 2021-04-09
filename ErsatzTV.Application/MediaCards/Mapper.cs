@@ -55,10 +55,19 @@ namespace ErsatzTV.Application.MediaCards
         internal static MusicVideoCardViewModel ProjectToViewModel(MusicVideoMetadata musicVideoMetadata) =>
             new(
                 musicVideoMetadata.MusicVideoId,
-                $"{musicVideoMetadata.Title} ({musicVideoMetadata.Artist})",
-                musicVideoMetadata.Year?.ToString(),
+                musicVideoMetadata.Title,
+                musicVideoMetadata.MusicVideo.Artist.ArtistMetadata.Head().Title,
                 musicVideoMetadata.SortTitle,
+                musicVideoMetadata.Plot,
                 GetThumbnail(musicVideoMetadata));
+
+        internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>
+            new(
+                artistMetadata.ArtistId,
+                artistMetadata.Title,
+                artistMetadata.Disambiguation,
+                artistMetadata.SortTitle,
+                GetThumbnail(artistMetadata));
 
         internal static CollectionCardResultsViewModel
             ProjectToViewModel(Collection collection) =>
@@ -73,6 +82,7 @@ namespace ErsatzTV.Application.MediaCards
                 collection.MediaItems.OfType<Season>().Map(ProjectToViewModel).ToList(),
                 collection.MediaItems.OfType<Episode>().Map(e => ProjectToViewModel(e.EpisodeMetadata.Head()))
                     .ToList(),
+                collection.MediaItems.OfType<Artist>().Map(a  => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
                 collection.MediaItems.OfType<MusicVideo>().Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head()))
                     .ToList()) { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
 

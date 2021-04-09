@@ -26,6 +26,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(
+            Artist artist,
             LibraryPath libraryPath,
             string path)
         {
@@ -50,10 +51,22 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
             return await maybeExisting.Match(
-                mediaItem =>
-                    Right<BaseError, MediaItemScanResult<MusicVideo>>(
-                        new MediaItemScanResult<MusicVideo>(mediaItem) { IsAdded = false }).AsTask(),
-                async () => await AddMusicVideo(dbContext, libraryPath.Id, path));
+                async mediaItem =>
+                {
+                    if (mediaItem.ArtistId != artist.Id)
+                    {
+                        await _dbConnection.ExecuteAsync(
+                            @"UPDATE MusicVideo SET ArtistId = @ArtistId WHERE Id = @Id",
+                            new { mediaItem.Id, ArtistId = artist.Id });
+
+                        mediaItem.ArtistId = artist.Id;
+                        mediaItem.Artist = artist;
+                    }
+
+                    return Right<BaseError, MediaItemScanResult<MusicVideo>>(
+                        new MediaItemScanResult<MusicVideo>(mediaItem) { IsAdded = false });
+                },
+                async () => await AddMusicVideo(dbContext, artist, libraryPath.Id, path));
         }
 
         public Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath) =>
@@ -110,6 +123,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await dbContext.MusicVideoMetadata
                 .AsNoTracking()
                 .Filter(mvm => ids.Contains(mvm.MusicVideoId))
+                .Include(mvm => mvm.MusicVideo)
+                .ThenInclude(mv => mv.Artist)
+                .ThenInclude(a => a.ArtistMetadata)
                 .Include(mvm => mvm.Artwork)
                 .OrderBy(mvm => mvm.SortTitle)
                 .ToListAsync();
@@ -132,8 +148,44 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(Optional);
         }
 
+        public Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath) =>
+            _dbConnection.QueryAsync<string>(
+                @"SELECT MF.Path
+                FROM MediaFile MF
+                INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
+                INNER JOIN MusicVideo M on MV.MusicVideoId = M.Id
+                INNER JOIN MediaItem MI on M.Id = MI.Id
+                WHERE MI.LibraryPathId = @LibraryPathId
+                  AND NOT EXISTS (SELECT * FROM MusicVideoMetadata WHERE MusicVideoId = M.Id)",
+                new { LibraryPathId = libraryPath.Id });
+
+        public Task<int> GetMusicVideoCount(int artistId) =>
+            _dbConnection.QuerySingleAsync<int>(
+                @"SELECT COUNT(*) FROM MusicVideo WHERE ArtistId = @ArtistId",
+                new { ArtistId = artistId });
+
+        public async Task<List<MusicVideoMetadata>> GetPagedMusicVideos(int artistId, int pageNumber, int pageSize)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.MusicVideoMetadata
+                .AsNoTracking()
+                .Include(m => m.Artwork)
+                .Include(m => m.Genres)
+                .Include(m => m.Tags)
+                .Include(m => m.Studios)
+                .Include(m => m.MusicVideo)
+                .ThenInclude(mv => mv.Artist)
+                .ThenInclude(a => a.ArtistMetadata)
+                .Filter(m => m.MusicVideo.ArtistId == artistId)
+                .OrderBy(m => m.SortTitle)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
+
         private static async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> AddMusicVideo(
             TvContext dbContext,
+            Artist artist,
             int libraryPathId,
             string path)
         {
@@ -141,6 +193,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 var musicVideo = new MusicVideo
                 {
+                    ArtistId = artist.Id,
                     LibraryPathId = libraryPathId,
                     MediaVersions = new List<MediaVersion>
                     {

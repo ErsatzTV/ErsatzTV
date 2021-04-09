@@ -55,88 +55,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Studios)
                 .Include(mi => (mi as MusicVideo).MediaVersions)
                 .ThenInclude(mm => mm.Streams)
+                .Include(mi => (mi as Artist).ArtistMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(mi => (mi as Artist).ArtistMetadata)
+                .ThenInclude(mm => mm.Styles)
+                .Include(mi => (mi as Artist).ArtistMetadata)
+                .ThenInclude(mm => mm.Moods)
                 .OrderBy(mi => mi.Id)
                 .SingleOrDefaultAsync(mi => mi.Id == id)
                 .Map(Optional);
-        }
-
-        public async Task<List<MediaItem>> SearchMediaItemsByTitle(string query)
-        {
-            List<int> ids = await _dbConnection.QueryAsync<int>(
-                    @"SELECT M.Id FROM Movie M
-                    INNER JOIN MovieMetadata MM on M.Id = MM.MovieId
-                    WHERE MM.Title LIKE @Query
-                    UNION
-                    SELECT S.Id FROM Show S
-                    INNER JOIN ShowMetadata SM on S.Id = SM.ShowId
-                    WHERE SM.Title LIKE @Query
-                    GROUP BY SM.Title, SM.Year",
-                    new { Query = $"%{query}%" })
-                .Map(results => results.ToList());
-
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            return await context.MediaItems
-                .Filter(m => ids.Contains(m.Id))
-                .Include(m => (m as Movie).MovieMetadata)
-                .ThenInclude(mm => mm.Artwork)
-                .Include(m => (m as Show).ShowMetadata)
-                .ThenInclude(mm => mm.Artwork)
-                .OfType<MediaItem>()
-                .ToListAsync();
-        }
-
-        public async Task<List<MediaItem>> SearchMediaItemsByGenre(string genre)
-        {
-            List<int> ids = await _dbConnection.QueryAsync<int>(
-                    @"SELECT M.Id FROM Movie M
-                    INNER JOIN MovieMetadata MM on M.Id = MM.MovieId
-                    INNER JOIN Genre G on MM.Id = G.MovieMetadataId
-                    WHERE G.Name LIKE @Query
-                    UNION
-                    SELECT S.Id FROM Show S
-                    INNER JOIN ShowMetadata SM on S.Id = SM.ShowId
-                    INNER JOIN Genre G2 on SM.Id = G2.ShowMetadataId
-                    WHERE G2.Name LIKE @Query
-                    GROUP BY SM.Title, SM.Year",
-                    new { Query = genre })
-                .Map(results => results.ToList());
-
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            return await context.MediaItems
-                .Filter(m => ids.Contains(m.Id))
-                .Include(m => (m as Movie).MovieMetadata)
-                .ThenInclude(mm => mm.Artwork)
-                .Include(m => (m as Show).ShowMetadata)
-                .ThenInclude(mm => mm.Artwork)
-                .OfType<MediaItem>()
-                .ToListAsync();
-        }
-
-        public async Task<List<MediaItem>> SearchMediaItemsByTag(string tag)
-        {
-            List<int> ids = await _dbConnection.QueryAsync<int>(
-                    @"SELECT M.Id FROM Movie M
-                    INNER JOIN MovieMetadata MM on M.Id = MM.MovieId
-                    INNER JOIN Tag T on MM.Id = T.MovieMetadataId
-                    WHERE T.Name LIKE @Query
-                    UNION
-                    SELECT S.Id FROM Show S
-                    INNER JOIN ShowMetadata SM on S.Id = SM.ShowId
-                    INNER JOIN Tag T2 on SM.Id = T2.ShowMetadataId
-                    WHERE T2.Name LIKE @Query
-                    GROUP BY SM.Title, SM.Year",
-                    new { Query = tag })
-                .Map(results => results.ToList());
-
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            return await context.MediaItems
-                .Filter(m => ids.Contains(m.Id))
-                .Include(m => (m as Movie).MovieMetadata)
-                .ThenInclude(mm => mm.Artwork)
-                .Include(m => (m as Show).ShowMetadata)
-                .ThenInclude(mm => mm.Artwork)
-                .OfType<MediaItem>()
-                .ToListAsync();
         }
 
         public Task<List<string>> GetLanguagesForShow(Show show) =>
@@ -148,5 +75,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     INNER JOIN Season S ON E.SeasonId = S.Id
                     WHERE MediaStreamKind = 2 AND S.ShowId = @ShowId",
                 new { ShowId = show.Id }).Map(result => result.ToList());
+
+        public Task<List<string>> GetLanguagesForArtist(Artist artist) =>
+            _dbConnection.QueryAsync<string>(
+                @"SELECT DISTINCT Language
+                    FROM MediaStream
+                    INNER JOIN MediaVersion V ON MediaStream.MediaVersionId = V.Id
+                    INNER JOIN MusicVideo MV ON V.MusicVideoId = MV.Id
+                    INNER JOIN Artist A on MV.ArtistId = A.Id
+                    WHERE MediaStreamKind = 2 AND A.Id = @ArtistId",
+                new { ArtistId = artist.Id }).Map(result => result.ToList());
     }
 }

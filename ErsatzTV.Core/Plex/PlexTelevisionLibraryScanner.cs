@@ -70,6 +70,8 @@ namespace ErsatzTV.Core.Plex
                         await maybeShow.Match(
                             async result =>
                             {
+                                await ScanSeasons(plexMediaSourceLibrary, result.Item, connection, token);
+
                                 if (result.IsAdded)
                                 {
                                     await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
@@ -80,8 +82,6 @@ namespace ErsatzTV.Core.Plex
                                         _searchRepository,
                                         new List<MediaItem> { result.Item });
                                 }
-
-                                await ScanSeasons(plexMediaSourceLibrary, result.Item, connection, token);
                             },
                             error =>
                             {

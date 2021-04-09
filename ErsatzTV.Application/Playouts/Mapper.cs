@@ -37,7 +37,10 @@ namespace ErsatzTV.Application.Playouts
                 case Movie m:
                     return m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]");
                 case MusicVideo mv:
-                    return mv.MusicVideoMetadata.HeadOrNone().Map(mvm => $"{mvm.Artist} - {mvm.Title}")
+                    string artistName = mv.Artist.ArtistMetadata.HeadOrNone()
+                        .Map(am => $"{am.Title} - ").IfNone(string.Empty);
+                    return mv.MusicVideoMetadata.HeadOrNone()
+                        .Map(mvm => $"{artistName}{mvm.Title}")
                         .IfNone("[unknown music video]");
                 default:
                     return string.Empty;
