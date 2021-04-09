@@ -96,8 +96,12 @@
                 @if (!string.IsNullOrWhiteSpace(musicVideo.Poster))
                 {
                     <MudPaper style="display: flex; flex-direction: column">
-                        <MudCardMedia Image="@($"/artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                        <MudCardMedia Image="@($"/artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 293px;"/>
                     </MudPaper>
+                }
+                else
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False" Height="220px" Width="293px" />
                 }
                 <MudCardContent Class="ml-3">
                     <div style="display: flex; flex-direction: column; height: 100%">
