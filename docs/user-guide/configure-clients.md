@@ -50,7 +50,7 @@ From the Admin Dashboard in Jellyfin, click `Live TV` and `+` to add a new tuner
 
 ![Jellyfin Add Tuner Device](../images/jellyfin-add-tuner-device.png)
 
-For `Tuner Type` select `HD Homerun`, and for `Tuner IP Address` enter ErsatzTV's IP address and port, like `192.168.1.100:8409` (use your server IP, not necessarily 192.168.1.100).
+For `Tuner Type` select `M3U Tuner`, for `File or URL` enter the `M3U` url from ErsatzTV (see [required urls](#required-urls)), and click `Save`.
 
 ![Jellyfin Live TV Tuner Setup](../images/jellyfin-live-tv-tuner-setup.png)
 
@@ -91,23 +91,11 @@ In Channels DVR Server Settings, click `Add Source` and select `Custom Channels`
 
 - Give your custom channel source a name
 - Select `MPEG-TS` as the stream format
-- Enter the `M3U` url from ErsatzTV (see [required urls](#required-urls))
+- Enter the `M3U` url from ErsatzTV (see [required urls](#required-urls)) as the Source
 - Select `Refresh URL daily`
 - Set a stream limit if desired (not required)
+- Enter the `XMLTV` url from ErsatzTV (see [required urls](#required-urls)) as the XMLTV Guide Data
+- Select a refresh interval based on how often you expect to make changes to playouts
 - Click `Save`
 
 ![Channels Custom Channel Source](../images/channels-custom-channels-source.png)
-
-### Add Guide Data Provider
-
-In Channels DVR Settings, click the gear icon next to the ErsatzTV channel source and select `Set Provider`:
-
-![Channels Guide Data Set Provider](../images/channels-guide-data-set-provider.png)
-
-Click the drop down next to zip code and select `XMLTV > Custom URL`:
-
-![Channels XMLTV Custom URL Dropdown](../images/channels-xmltv-custom-url-dropdown.png)
-
-Enter the `XMLTV` url from ErsatzTV (see [required urls](#required-urls)) and click `Save`.
-
-![Channels XMLTV Custom URL](../images/channels-xmltv-custom-url.png)
