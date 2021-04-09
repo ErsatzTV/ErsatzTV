@@ -26,6 +26,11 @@ namespace ErsatzTV.Core.Tests.Fakes
             throw new NotSupportedException();
 
         public Task<List<Collection>> GetAll() => throw new NotSupportedException();
+        public Task<int> CountAllCollections() => throw new NotSupportedException();
+
+        public Task<List<Collection>> GetPagedCollections(int pageNumber, int pageSize) =>
+            throw new NotSupportedException();
+
         public Task<Option<List<MediaItem>>> GetItems(int id) => Some(_data[id].ToList()).AsTask();
         Task<bool> IMediaCollectionRepository.Update(Collection collection) => throw new NotSupportedException();
         public Task Delete(int collectionId) => throw new NotSupportedException();
