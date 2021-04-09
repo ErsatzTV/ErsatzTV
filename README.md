@@ -23,16 +23,6 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - Run as a Windows service
 - Spots to fill unscheduled gaps
 
-## Screenshots
-
-### Television Show
-
-![Television Show](docs/images/television-show.png)
-
-### Media Collection
-
-![Media Collection](docs/images/media-collection.png)
-
 ## License
 
 This project is inspired by [pseudotv-plex](https://github.com/DEFENDORe/pseudotv) and
