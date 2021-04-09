@@ -78,7 +78,7 @@ https://raw.githubusercontent.com/Squidly271/community.applications/master/plugi
 ### Manual Installation
 
 1. Create a folder `ersatztv` at your preferred install location.
-2. Download and extract the latest version to the `ersatztv` folder.
+2. Download and extract the [latest release from GitHub](https://github.com/jasongdove/ErsatzTV/releases) to the `ersatztv` folder.
 3. Run `ErsatzTV.exe`
 4. Open your browser to `http://[server-ip]:8409`
 
@@ -87,7 +87,7 @@ https://raw.githubusercontent.com/Squidly271/community.applications/master/plugi
 ### Manual Installation
 
 1. Create a folder `ersatztv` at your preferred install location.
-2. Download and extract the latest version to the `ersatztv` folder.
+2. Download and extract the [latest release from GitHub](https://github.com/jasongdove/ErsatzTV/releases) to the `ersatztv` folder.
 3. Run `ErsatzTV`
 4. Open your browser to `http://[server-ip]:8409`
 
@@ -96,6 +96,6 @@ https://raw.githubusercontent.com/Squidly271/community.applications/master/plugi
 ### Manual Installation
 
 1. Create a folder `ersatztv` at your preferred install location.
-2. Download and extract the latest version to the `ersatztv` folder.
+2. Download and extract the [latest release from GitHub](https://github.com/jasongdove/ErsatzTV/releases) to the `ersatztv` folder.
 3. Run `ErsatzTV`
 4. Open your browser to `http://[server-ip]:8409`
