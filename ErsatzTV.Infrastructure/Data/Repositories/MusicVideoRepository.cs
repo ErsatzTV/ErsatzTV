@@ -85,7 +85,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 @"SELECT M.Id
                 FROM MusicVideo M
                 INNER JOIN MediaItem MI on M.Id = MI.Id
-                INNER JOIN MediaVersion MV on M.Id = MV.EpisodeId
+                INNER JOIN MediaVersion MV on M.Id = MV.MusicVideoId
                 INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
                 WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
                 new { LibraryPathId = libraryPath.Id, Path = path }).Map(result => result.ToList());
