@@ -472,6 +472,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
                 .Filter(e => ids.Contains(e.Id))
                 .ToListAsync();
         }
@@ -484,6 +486,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
                 .Filter(e => e.SeasonId == seasonId)
                 .ToListAsync();
         }
