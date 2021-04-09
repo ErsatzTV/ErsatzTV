@@ -50,7 +50,7 @@ From the Admin Dashboard in Jellyfin, click `Live TV` and `+` to add a new tuner
 
 ![Jellyfin Add Tuner Device](../images/jellyfin-add-tuner-device.png)
 
-For `Tuner Type` select `HD Homerun`, and for `Tuner IP Address` enter ErsatzTV's IP address and port, like `192.168.1.100:8409` (use your server IP, not necessarily 192.168.1.100).
+For `Tuner Type` select `M3U Tuner`, for `File or URL` enter the `M3U` url from ErsatzTV (see [required urls](#required-urls)), and click `Save`.
 
 ![Jellyfin Live TV Tuner Setup](../images/jellyfin-live-tv-tuner-setup.png)
 
