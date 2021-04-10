@@ -416,7 +416,7 @@ namespace ErsatzTV.Infrastructure.Search
                 catch (Exception ex)
                 {
                     metadata.Artist = null;
-                    _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
+                    _logger.LogWarning(ex, "Error indexing artist with metadata {@Metadata}", metadata);
                 }
             }
         }
