@@ -82,7 +82,7 @@ namespace ErsatzTV.Application.MediaCards
                 collection.MediaItems.OfType<Season>().Map(ProjectToViewModel).ToList(),
                 collection.MediaItems.OfType<Episode>().Map(e => ProjectToViewModel(e.EpisodeMetadata.Head()))
                     .ToList(),
-                collection.MediaItems.OfType<Artist>().Map(a  => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
+                collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
                 collection.MediaItems.OfType<MusicVideo>().Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head()))
                     .ToList()) { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
 

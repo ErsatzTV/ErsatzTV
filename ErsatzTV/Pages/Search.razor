@@ -44,7 +44,7 @@
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
             }
-            
+
             if (_artists.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
@@ -256,7 +256,7 @@
                     Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
             }
         }
-        
+
         if (card is ArtistCardViewModel artist)
         {
             var parameters = new DialogParameters { { "EntityType", "artist" }, { "EntityName", artist.Title } };
@@ -319,7 +319,7 @@
         }
         return uri;
     }
-    
+
     private string GetArtistsLink()
     {
         var uri = "/media/music/artists/page/1";

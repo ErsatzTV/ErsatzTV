@@ -101,7 +101,7 @@
                 }
                 else
                 {
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False" Height="220px" Width="293px" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False" Height="220px" Width="293px"/>
                 }
                 <MudCardContent Class="ml-3">
                     <div style="display: flex; flex-direction: column; height: 100%">
@@ -151,7 +151,7 @@
             NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }
-    
+
     private async Task AddMusicVideoToCollection(MusicVideoCardViewModel musicVideo)
     {
         var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };

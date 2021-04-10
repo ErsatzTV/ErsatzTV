@@ -103,7 +103,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await dbContext.SaveChangesAsync();
             return ids;
         }
-        
+
         public async Task<Option<Artist>> GetArtist(int artistId)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
