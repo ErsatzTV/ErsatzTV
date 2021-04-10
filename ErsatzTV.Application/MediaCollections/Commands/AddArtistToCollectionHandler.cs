@@ -12,9 +12,9 @@ namespace ErsatzTV.Application.MediaCollections.Commands
     public class
         AddArtistToCollectionHandler : MediatR.IRequestHandler<AddArtistToCollection, Either<BaseError, Unit>>
     {
+        private readonly IArtistRepository _artistRepository;
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
-        private readonly IArtistRepository _artistRepository;
 
         public AddArtistToCollectionHandler(
             IMediaCollectionRepository mediaCollectionRepository,
