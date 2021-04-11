@@ -1,13 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using ErsatzTV.Core.Domain;
+using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Television
 {
     internal static class Mapper
     {
-        internal static TelevisionShowViewModel ProjectToViewModel(Show show) =>
+        internal static TelevisionShowViewModel ProjectToViewModel(Show show, List<string> languages) =>
             new(
                 show.Id,
                 show.ShowMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
@@ -18,7 +21,8 @@ namespace ErsatzTV.Application.Television
                 show.ShowMetadata.HeadOrNone().Map(m => m.Genres.Map(g => g.Name).ToList()).IfNone(new List<string>()),
                 show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Map(g => g.Name).ToList()).IfNone(new List<string>()),
                 show.ShowMetadata.HeadOrNone().Map(m => m.Studios.Map(s => s.Name).ToList())
-                    .IfNone(new List<string>()));
+                    .IfNone(new List<string>()),
+                LanguagesForShow(languages));
 
         internal static TelevisionSeasonViewModel ProjectToViewModel(Season season) =>
             new(
@@ -48,5 +52,19 @@ namespace ErsatzTV.Application.Television
         private static string GetArtwork(Metadata metadata, ArtworkKind artworkKind) =>
             Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
                 .Match(a => a.Path, string.Empty);
+
+        private static List<CultureInfo> LanguagesForShow(List<string> languages)
+        {
+            CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
+
+            return languages
+                .Distinct()
+                .Map(
+                    lang => allCultures.Filter(
+                        ci => string.Equals(ci.ThreeLetterISOLanguageName, lang, StringComparison.OrdinalIgnoreCase)))
+                .Sequence()
+                .Flatten()
+                .ToList();
+        }
     }
 }

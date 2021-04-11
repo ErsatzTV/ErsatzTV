@@ -5,6 +5,7 @@
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
+@using System.Globalization
 @using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 @inject IDialogService Dialog
@@ -57,6 +58,16 @@
             </div>
         </div>
     </div>
+    @if (_artist.Languages.Any())
+    {
+        <MudText GutterBottom="true">Languages</MudText>
+        <div class="mb-2">
+            @foreach (CultureInfo language in _artist.Languages.OrderBy(l => l.EnglishName))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@language.EnglishName" Class="mr-2 mb-2" Link="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")"/>
+            }
+        </div>
+    }
     @if (_artist.Genres.Any())
     {
         <MudText GutterBottom="true">Genres</MudText>
