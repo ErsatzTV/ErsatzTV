@@ -43,6 +43,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(m => m.Tags)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Studios)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
                 .OrderBy(m => m.Id)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);

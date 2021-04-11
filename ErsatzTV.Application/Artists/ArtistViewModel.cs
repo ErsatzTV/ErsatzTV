@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
 
 namespace ErsatzTV.Application.Artists
 {
@@ -10,5 +11,6 @@ namespace ErsatzTV.Application.Artists
         string FanArt,
         List<string> Genres,
         List<string> Styles,
-        List<string> Moods);
+        List<string> Moods,
+        List<CultureInfo> Languages);
 }

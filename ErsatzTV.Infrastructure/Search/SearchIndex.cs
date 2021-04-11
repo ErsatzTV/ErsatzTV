@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -47,15 +48,20 @@ namespace ErsatzTV.Infrastructure.Search
         private const string ShowType = "show";
         private const string ArtistType = "artist";
         private const string MusicVideoType = "music_video";
+        private readonly List<CultureInfo> _cultureInfos;
 
         private readonly ILogger<SearchIndex> _logger;
 
         private FSDirectory _directory;
         private IndexWriter _writer;
 
-        public SearchIndex(ILogger<SearchIndex> logger) => _logger = logger;
+        public SearchIndex(ILogger<SearchIndex> logger)
+        {
+            _logger = logger;
+            _cultureInfos = CultureInfo.GetCultures(CultureTypes.NeutralCultures).ToList();
+        }
 
-        public int Version => 6;
+        public int Version => 7;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -296,11 +302,17 @@ namespace ErsatzTV.Infrastructure.Search
             if (maybeVersion.IsSome)
             {
                 MediaVersion version = maybeVersion.ValueUnsafe();
-                foreach (string lang in version.Streams.Filter(ms => ms.MediaStreamKind == MediaStreamKind.Video)
+                foreach (CultureInfo cultureInfo in version.Streams
+                    .Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio)
                     .Map(ms => ms.Language).Distinct()
-                    .Filter(s => !string.IsNullOrWhiteSpace(s)))
+                    .Filter(s => !string.IsNullOrWhiteSpace(s))
+                    .Map(
+                        l => _cultureInfos.Filter(
+                            c => string.Equals(c.ThreeLetterISOLanguageName, l, StringComparison.OrdinalIgnoreCase)))
+                    .Sequence()
+                    .Flatten())
                 {
-                    doc.Add(new StringField(LanguageField, lang, Field.Store.NO));
+                    doc.Add(new TextField(LanguageField, cultureInfo.EnglishName, Field.Store.NO));
                 }
             }
         }
@@ -326,9 +338,19 @@ namespace ErsatzTV.Infrastructure.Search
                     };
 
                     List<string> languages = await searchRepository.GetLanguagesForShow(show);
-                    foreach (string lang in languages.Distinct().Filter(s => !string.IsNullOrWhiteSpace(s)))
+                    foreach (CultureInfo cultureInfo in languages
+                        .Distinct()
+                        .Filter(s => !string.IsNullOrWhiteSpace(s))
+                        .Map(
+                            l => _cultureInfos.Filter(
+                                c => string.Equals(
+                                    c.ThreeLetterISOLanguageName,
+                                    l,
+                                    StringComparison.OrdinalIgnoreCase)))
+                        .Sequence()
+                        .Flatten())
                     {
-                        doc.Add(new StringField(LanguageField, lang, Field.Store.NO));
+                        doc.Add(new TextField(LanguageField, cultureInfo.EnglishName, Field.Store.NO));
                     }
 
                     if (metadata.ReleaseDate.HasValue)
@@ -391,9 +413,19 @@ namespace ErsatzTV.Infrastructure.Search
                     };
 
                     List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
-                    foreach (string lang in languages.Distinct().Filter(s => !string.IsNullOrWhiteSpace(s)))
+                    foreach (CultureInfo cultureInfo in languages
+                        .Distinct()
+                        .Filter(s => !string.IsNullOrWhiteSpace(s))
+                        .Map(
+                            l => _cultureInfos.Filter(
+                                c => string.Equals(
+                                    c.ThreeLetterISOLanguageName,
+                                    l,
+                                    StringComparison.OrdinalIgnoreCase)))
+                        .Sequence()
+                        .Flatten())
                     {
-                        doc.Add(new StringField(LanguageField, lang, Field.Store.NO));
+                        doc.Add(new TextField(LanguageField, cultureInfo.EnglishName, Field.Store.NO));
                     }
 
                     foreach (Genre genre in metadata.Genres)

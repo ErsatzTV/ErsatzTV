@@ -1,6 +1,7 @@
 ﻿@page "/media/movies/{MovieId:int}"
 @using ErsatzTV.Application.Movies
 @using ErsatzTV.Application.Movies.Queries
+@using System.Globalization
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @inject IMediator Mediator
@@ -43,6 +44,16 @@
             </div>
         </div>
     </div>
+    @if (_movie.Languages.Any())
+    {
+        <MudText GutterBottom="true">Languages</MudText>
+        <div class="mb-2">
+            @foreach (CultureInfo language in _movie.Languages.OrderBy(l => l.EnglishName))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@language.EnglishName" Class="mr-2 mb-2" Link="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")"/>
+            }
+        </div>
+    }
     @if (_movie.Studios.Any())
     {
         <MudText GutterBottom="true">Studios</MudText>
