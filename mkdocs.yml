@@ -7,12 +7,15 @@ nav:
     - 'Configure Clients': 'user-guide/configure-clients.md'
   - 'Advanced':
     - 'Local Libraries': 'user-guide/local-libraries.md'
+    - 'Search': 'user-guide/search.md'
 theme:
   name: material
   palette:
     scheme: slate
   logo: images/ersatztv-square-logo.png
   favicon: images/favicon-32x32.png
+  features:
+    - navigation.expand
 extra_css:
   - stylesheets/extra.css
 copyright: Copyright &copy; 2020 - 2021 Jason Dove
