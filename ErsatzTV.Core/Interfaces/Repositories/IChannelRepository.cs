@@ -14,5 +14,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<Channel>> GetAllForGuide();
         Task Update(Channel channel);
         Task Delete(int channelId);
+        Task<int> CountPlayouts(int channelId);
     }
 }
