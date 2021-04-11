@@ -7,6 +7,7 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
+@using System.Globalization
 @using Unit = LanguageExt.Unit
 @inject IMediator Mediator
 @inject ILogger<TelevisionSeasonList> Logger
@@ -58,6 +59,16 @@
             </div>
         </div>
     </div>
+    @if (_show.Languages.Any())
+    {
+        <MudText GutterBottom="true">Languages</MudText>
+        <div class="mb-2">
+            @foreach (CultureInfo language in _show.Languages.OrderBy(l => l.EnglishName))
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@language.EnglishName" Class="mr-2 mb-2" Link="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")"/>
+            }
+        </div>
+    }
     @if (_show.Studios.Any())
     {
         <MudText GutterBottom="true">Studios</MudText>

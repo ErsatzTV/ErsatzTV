@@ -20,7 +20,7 @@ namespace ErsatzTV.Application.MediaItems.Queries
         {
             var result = new List<CultureInfo>();
 
-            CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+            CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
             List<string> allLanguageCodes = await _mediaItemRepository.GetAllLanguageCodes();
             foreach (string code in allLanguageCodes)
             {
