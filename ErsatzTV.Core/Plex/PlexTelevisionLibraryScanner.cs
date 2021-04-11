@@ -124,52 +124,52 @@ namespace ErsatzTV.Core.Plex
 
             // TODO: this probably doesn't work
             // plex doesn't seem to update genres returned by the main library call
-            if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
+            foreach (Genre genre in existingMetadata.Genres
+                .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                .ToList())
             {
-                foreach (Genre genre in existingMetadata.Genres
-                    .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
-                    .ToList())
+                existingMetadata.Genres.Remove(genre);
+                if (await _metadataRepository.RemoveGenre(genre))
                 {
-                    existingMetadata.Genres.Remove(genre);
-                    if (await _metadataRepository.RemoveGenre(genre))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Genre genre in incomingMetadata.Genres
-                    .Filter(g => existingMetadata.Genres.All(g2 => g2.Name != g.Name))
-                    .ToList())
+            foreach (Genre genre in incomingMetadata.Genres
+                .Filter(g => existingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                .ToList())
+            {
+                existingMetadata.Genres.Add(genre);
+                if (await _televisionRepository.AddGenre(existingMetadata, genre))
                 {
-                    existingMetadata.Genres.Add(genre);
-                    if (await _televisionRepository.AddGenre(existingMetadata, genre))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Studio studio in existingMetadata.Studios
-                    .Filter(s => incomingMetadata.Studios.All(s2 => s2.Name != s.Name))
-                    .ToList())
+            foreach (Studio studio in existingMetadata.Studios
+                .Filter(s => incomingMetadata.Studios.All(s2 => s2.Name != s.Name))
+                .ToList())
+            {
+                existingMetadata.Studios.Remove(studio);
+                if (await _metadataRepository.RemoveStudio(studio))
                 {
-                    existingMetadata.Studios.Remove(studio);
-                    if (await _metadataRepository.RemoveStudio(studio))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Studio studio in incomingMetadata.Studios
-                    .Filter(s => existingMetadata.Studios.All(s2 => s2.Name != s.Name))
-                    .ToList())
+            foreach (Studio studio in incomingMetadata.Studios
+                .Filter(s => existingMetadata.Studios.All(s2 => s2.Name != s.Name))
+                .ToList())
+            {
+                existingMetadata.Studios.Add(studio);
+                if (await _televisionRepository.AddStudio(existingMetadata, studio))
                 {
-                    existingMetadata.Studios.Add(studio);
-                    if (await _televisionRepository.AddStudio(existingMetadata, studio))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
+            if (result.IsUpdated)
+            {
                 await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
             }
 
