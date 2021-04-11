@@ -10,6 +10,7 @@ using ErsatzTV.Application.Channels.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.GitHub;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -24,6 +25,7 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
+using ErsatzTV.Infrastructure.GitHub;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
@@ -33,6 +35,7 @@ using ErsatzTV.Serialization;
 using ErsatzTV.Services;
 using ErsatzTV.Services.RunOnce;
 using FluentValidation.AspNetCore;
+using Ganss.XSS;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
@@ -225,6 +228,14 @@ namespace ErsatzTV
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
             services.AddScoped<FFmpegProcessService>();
+            services.AddScoped<IGitHubApiClient, GitHubApiClient>();
+            services.AddScoped<IHtmlSanitizer, HtmlSanitizer>(
+                _ =>
+                {
+                    var sanitizer = new HtmlSanitizer();
+                    sanitizer.AllowedAttributes.Add("class");
+                    return sanitizer;
+                });
 
             services.AddHostedService<DatabaseMigratorService>();
             services.AddHostedService<CacheCleanerService>();
