@@ -24,11 +24,11 @@ Note that the `title` field is searched by default if no other field is specifie
 
 ## Sample Searches
 
-### Christmas Movies
+### Christmas
 
 `plot:christmas`
 
-### Christmas Movies without Horror
+### Christmas without Horror
 
 `plot:christmas NOT genre:horror`
 
