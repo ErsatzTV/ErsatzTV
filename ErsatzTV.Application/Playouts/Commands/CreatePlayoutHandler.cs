@@ -48,7 +48,7 @@ namespace ErsatzTV.Application.Playouts.Commands
         }
 
         private async Task<Validation<BaseError, Playout>> Validate(CreatePlayout request) =>
-            (await ChannelMustExist(request), await ProgramScheduleMustExist(request), ValidatePlayoutType(request))
+            (await ValidateChannel(request), await ProgramScheduleMustExist(request), ValidatePlayoutType(request))
             .Apply(
                 (channel, programSchedule, playoutType) => new Playout
                 {
@@ -57,9 +57,18 @@ namespace ErsatzTV.Application.Playouts.Commands
                     ProgramSchedulePlayoutType = playoutType
                 });
 
+        private Task<Validation<BaseError, Channel>> ValidateChannel(CreatePlayout createPlayout) =>
+            ChannelMustExist(createPlayout).BindT(ChannelMustNotHavePlayouts);
+
         private async Task<Validation<BaseError, Channel>> ChannelMustExist(CreatePlayout createPlayout) =>
             (await _channelRepository.Get(createPlayout.ChannelId))
             .ToValidation<BaseError>("Channel does not exist.");
+
+        private async Task<Validation<BaseError, Channel>> ChannelMustNotHavePlayouts(Channel channel) =>
+            Optional(await _channelRepository.CountPlayouts(channel.Id))
+            .Filter(count => count == 0)
+            .Map(_ => channel)
+            .ToValidation<BaseError>("Channel already has one playout.");
 
         private async Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
             CreatePlayout createPlayout) =>

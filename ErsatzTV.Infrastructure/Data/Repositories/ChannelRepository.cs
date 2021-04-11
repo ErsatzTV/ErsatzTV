@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -12,8 +14,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     public class ChannelRepository : IChannelRepository
     {
         private readonly TvContext _dbContext;
+        private readonly IDbConnection _dbConnection;
 
-        public ChannelRepository(TvContext dbContext) => _dbContext = dbContext;
+        public ChannelRepository(TvContext dbContext, IDbConnection dbConnection)
+        {
+            _dbContext = dbContext;
+            _dbConnection = dbConnection;
+        }
 
         public async Task<Channel> Add(Channel channel)
         {
@@ -81,5 +88,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.Channels.Remove(channel);
             await _dbContext.SaveChangesAsync();
         }
+
+        public Task<int> CountPlayouts(int channelId) =>
+            _dbConnection.QuerySingleAsync<int>(
+                @"SELECT COUNT(*) FROM Playout WHERE ChannelId = @ChannelId",
+                new { ChannelId = channelId });
     }
 }
