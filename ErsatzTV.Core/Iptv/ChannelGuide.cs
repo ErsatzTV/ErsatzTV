@@ -239,6 +239,9 @@ namespace ErsatzTV.Core.Iptv
                 Episode e => e.EpisodeMetadata.HeadOrNone().Match(
                     em => em.Title ?? string.Empty,
                     () => string.Empty),
+                MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
+                    mvm => mvm.Title ?? string.Empty,
+                    () => string.Empty),
                 _ => string.Empty
             };
         }
