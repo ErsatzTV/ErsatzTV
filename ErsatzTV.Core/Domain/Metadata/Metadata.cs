@@ -18,5 +18,6 @@ namespace ErsatzTV.Core.Domain
         public List<Genre> Genres { get; set; }
         public List<Tag> Tags { get; set; }
         public List<Studio> Studios { get; set; }
+        public List<Actor> Actors { get; set; }
     }
 }

@@ -178,7 +178,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 DateUpdated = lastWriteTime,
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
                 Tags = new List<Tag>(),
-                Studios = new List<Studio>()
+                Studios = new List<Studio>(),
+                Actors = new List<Actor>()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -339,7 +340,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 DateUpdated = lastWriteTime,
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
                 Tags = new List<Tag>(),
-                Studios = new List<Studio>()
+                Studios = new List<Studio>(),
+                Actors = new List<Actor>()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))

@@ -239,6 +239,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 metadata.Genres ??= new List<Genre>();
                 metadata.Tags ??= new List<Tag>();
                 metadata.Studios ??= new List<Studio>();
+                metadata.Actors ??= new List<Actor>();
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
@@ -506,6 +507,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Studio (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
                 new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public Task<bool> AddActor(ShowMetadata metadata, Actor actor) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Actor (Name, Role, \"Order\", ShowMetadataId) VALUES (@Name, @Role, @Order, @MetadataId)",
+                new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public Task<bool> AddActor(EpisodeMetadata metadata, Actor actor) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Actor (Name, Role, \"Order\", EpisodeMetadataId) VALUES (@Name, @Role, @Order, @MetadataId)",
+                new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id }).Map(result => result > 0);
 
         public async Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys)
         {

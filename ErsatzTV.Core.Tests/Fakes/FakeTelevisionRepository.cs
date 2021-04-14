@@ -79,6 +79,9 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<bool> AddTag(ShowMetadata metadata, Tag tag) => throw new NotSupportedException();
 
         public Task<bool> AddStudio(ShowMetadata metadata, Studio studio) => throw new NotSupportedException();
+        public Task<bool> AddActor(ShowMetadata metadata, Actor actor) => throw new NotSupportedException();
+
+        public Task<bool> AddActor(EpisodeMetadata metadata, Actor actor) => throw new NotSupportedException();
 
         public Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys) =>
             throw new NotSupportedException();

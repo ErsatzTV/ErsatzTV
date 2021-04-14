@@ -183,7 +183,7 @@ namespace ErsatzTV.Core.Metadata
             }
 
             await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
-                existing =>
+                async existing =>
                 {
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
@@ -204,9 +204,17 @@ namespace ErsatzTV.Core.Metadata
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                         : metadata.SortTitle;
 
-                    return _metadataRepository.Update(existing);
+                    bool updated = await UpdateMetadataCollections(
+                        existing,
+                        metadata,
+                        (_, _) => Task.FromResult(false),
+                        (_, _) => Task.FromResult(false),
+                        (_, _) => Task.FromResult(false),
+                        _televisionRepository.AddActor);
+
+                    return await _metadataRepository.Update(existing) || updated;
                 },
-                () =>
+                async () =>
                 {
                     metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
@@ -214,7 +222,7 @@ namespace ErsatzTV.Core.Metadata
                     metadata.EpisodeId = episode.Id;
                     episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata };
 
-                    return _metadataRepository.Add(metadata);
+                    return await _metadataRepository.Add(metadata);
                 });
 
             return true;
@@ -248,7 +256,8 @@ namespace ErsatzTV.Core.Metadata
                         metadata,
                         _movieRepository.AddGenre,
                         _movieRepository.AddTag,
-                        _movieRepository.AddStudio);
+                        _movieRepository.AddStudio,
+                        _movieRepository.AddActor);
 
                     return await _metadataRepository.Update(existing) || updated;
                 },
@@ -291,7 +300,8 @@ namespace ErsatzTV.Core.Metadata
                         metadata,
                         _televisionRepository.AddGenre,
                         _televisionRepository.AddTag,
-                        _televisionRepository.AddStudio);
+                        _televisionRepository.AddStudio,
+                        _televisionRepository.AddActor);
 
                     return await _metadataRepository.Update(existing) || updated;
                 },
@@ -427,7 +437,8 @@ namespace ErsatzTV.Core.Metadata
                         metadata,
                         _musicVideoRepository.AddGenre,
                         _musicVideoRepository.AddTag,
-                        _musicVideoRepository.AddStudio);
+                        _musicVideoRepository.AddStudio,
+                        (_, _) => Task.FromResult(false));
 
                     return await _metadataRepository.Update(existing) || updated;
                 },
@@ -462,7 +473,8 @@ namespace ErsatzTV.Core.Metadata
                         ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
                         Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                         Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
+                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                        Actors = nfo.Actors.Map(ProjectToModel).ToList()
                     },
                     None);
             }
@@ -517,7 +529,8 @@ namespace ErsatzTV.Core.Metadata
                             DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
                             Title = nfo.Title,
                             ReleaseDate = GetAired(0, nfo.Aired),
-                            Plot = nfo.Plot
+                            Plot = nfo.Plot,
+                            Actors = nfo.Actors.Map(ProjectToModel).ToList()
                         };
                         return Tuple(metadata, nfo.Episode);
                     },
@@ -550,7 +563,8 @@ namespace ErsatzTV.Core.Metadata
                         Tagline = nfo.Tagline,
                         Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                         Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
+                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                        Actors = nfo.Actors.Map(ProjectToModel).ToList()
                     },
                     None);
             }
@@ -598,7 +612,8 @@ namespace ErsatzTV.Core.Metadata
             T incoming,
             Func<T, Genre, Task<bool>> addGenre,
             Func<T, Tag, Task<bool>> addTag,
-            Func<T, Studio, Task<bool>> addStudio)
+            Func<T, Studio, Task<bool>> addStudio,
+            Func<T, Actor, Task<bool>> addActor)
             where T : Domain.Metadata
         {
             var updated = false;
@@ -665,7 +680,37 @@ namespace ErsatzTV.Core.Metadata
                 }
             }
 
+            foreach (Actor actor in existing.Actors
+                .Filter(a => incoming.Actors.All(a2 => a2.Name != a.Name))
+                .ToList())
+            {
+                existing.Actors.Remove(actor);
+                if (await _metadataRepository.RemoveActor(actor))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Actor actor in incoming.Actors
+                .Filter(a => existing.Actors.All(a2 => a2.Name != a.Name))
+                .ToList())
+            {
+                existing.Actors.Add(actor);
+                if (await addActor(existing, actor))
+                {
+                    updated = true;
+                }
+            }
+
             return updated;
         }
+
+        private Actor ProjectToModel(ActorNfo actorNfo) =>
+            new()
+            {
+                Name = actorNfo.Name,
+                Role = actorNfo.Role,
+                Order = actorNfo.Order
+            };
     }
 }

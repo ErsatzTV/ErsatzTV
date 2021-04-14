@@ -22,6 +22,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
+        public Task<bool> RemoveActor(Actor actor) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Actor WHERE Id = @ActorId", new { ActorId = actor.Id })
+                .Map(result => result > 0);
+
         public async Task<bool> Update(Metadata metadata)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();

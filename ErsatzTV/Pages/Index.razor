@@ -1,7 +1,7 @@
 ﻿@page "/"
+@using Microsoft.Extensions.Caching.Memory
 @using System.Reflection
 @using ErsatzTV.Core.Interfaces.GitHub
-@using Microsoft.Extensions.Caching.Memory
 @inject IGitHubApiClient _gitHubApiClient
 @inject IMemoryCache _memoryCache
 
@@ -60,7 +60,7 @@
                 }
             }
         }
-        catch (Exception ex)
+        catch (Exception _)
         {
     // ignore
         }

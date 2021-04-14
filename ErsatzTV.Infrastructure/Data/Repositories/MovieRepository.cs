@@ -187,6 +187,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "INSERT INTO Studio (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
+        public Task<bool> AddActor(MovieMetadata metadata, Actor actor) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Actor (Name, Role, \"Order\", MovieMetadataId) VALUES (@Name, @Role, @Order, @MetadataId)",
+                new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id }).Map(result => result > 0);
+
         public async Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys)
         {
             List<int> ids = await _dbConnection.QueryAsync<int>(

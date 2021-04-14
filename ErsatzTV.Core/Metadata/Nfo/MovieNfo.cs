@@ -36,5 +36,8 @@ namespace ErsatzTV.Core.Metadata.Nfo
 
         [XmlElement("studio")]
         public List<string> Studios { get; set; }
+
+        [XmlElement("actor")]
+        public List<ActorNfo> Actors { get; set; }
     }
 }
