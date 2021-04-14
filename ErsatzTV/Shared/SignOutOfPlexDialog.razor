@@ -1,16 +1,18 @@
-﻿<MudDialog>
-    <DialogContent>
-        <MudContainer>
-            <MudHighlighter Class="mud-primary-text"
-                            Style="background-color: transparent; font-weight: bold"
-                            Text="Do you really want to sign out of Plex? All synchronized content will be removed."/>
-        </MudContainer>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">Sign out</MudButton>
-    </DialogActions>
-</MudDialog>
+﻿<div @onkeydown="@OnKeyDown">
+    <MudDialog>
+        <DialogContent>
+            <MudContainer>
+                <MudHighlighter Class="mud-primary-text"
+                                Style="background-color: transparent; font-weight: bold"
+                                Text="Do you really want to sign out of Plex? All synchronized content will be removed."/>
+            </MudContainer>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">Sign out</MudButton>
+        </DialogActions>
+    </MudDialog>
+</div>
 
 @code {
 
@@ -21,4 +23,11 @@
 
     private void Cancel() => MudDialog.Cancel();
 
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Code is "Enter" or "NumpadEnter")
+        {
+            Submit();
+        }
+    }
 }
