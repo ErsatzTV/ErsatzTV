@@ -7,34 +7,37 @@
 @inject ISnackbar Snackbar
 @inject ILogger<AddToCollectionDialog> Logger
 
-<MudDialog>
-    <DialogContent>
-        <MudContainer Class="mb-6">
-            <MudHighlighter Class="mud-primary-text"
-                            Style="background-color: transparent; font-weight: bold"
-                            Text="@FormatText()"
-                            HighlightedText="@EntityName"/>
-        </MudContainer>
-        <MudSelect Label="Collection" @bind-Value="_selectedCollection" For="@(() => _selectedCollection)" Class="mb-6 mx-4">
-            @foreach (MediaCollectionViewModel collection in _collections)
-            {
-                <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-            }
-        </MudSelect>
-        <MudTextFieldString Label="New Collection Name"
-                            Disabled="@(_selectedCollection != _newCollection)"
-                            @bind-Text="@_newCollectionName"
-                            Immediate="true"
-                            Class="mb-6 mx-4">
-        </MudTextFieldString>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!CanSubmit())" OnClick="Submit">
-            Add To Collection
-        </MudButton>
-    </DialogActions>
-</MudDialog>
+<div @onkeydown="@OnKeyDown">
+    <MudDialog>
+        <DialogContent>
+                <MudContainer Class="mb-6">
+                    <MudHighlighter Class="mud-primary-text"
+                                    Style="background-color: transparent; font-weight: bold"
+                                    Text="@FormatText()"
+                                    HighlightedText="@EntityName"/>
+                </MudContainer>
+                <MudSelect Label="Collection" @bind-Value="_selectedCollection" For="@(() => _selectedCollection)" Class="mb-6 mx-4">
+                    @foreach (MediaCollectionViewModel collection in _collections)
+                    {
+                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudTextFieldString Label="New Collection Name"
+                                    Disabled="@(_selectedCollection != _newCollection)"
+                                    @bind-Text="@_newCollectionName"
+                                    Immediate="true"
+                                    Class="mb-6 mx-4">
+                </MudTextFieldString>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!CanSubmit())" OnClick="Submit">
+                Add To Collection
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</div>
+
 
 @code {
 
@@ -108,5 +111,13 @@
     }
 
     private void Cancel() => MudDialog.Cancel();
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Code is "Enter" or "NumpadEnter" && CanSubmit())
+        {
+            await Submit();
+        }
+    }
 
 }
