@@ -64,6 +64,16 @@
             }
         </div>
     }
+    @if (_movie.Actors.Any())
+    {
+        <MudText GutterBottom="true">Actors</MudText>
+        <div class="mb-2">
+            @foreach (string actor in _movie.Actors)
+            {
+                <MudFab Color="Color.Info" Size="Size.Small" Label="@actor" Class="mr-2 mb-2" Link="@($"/search?query=actor%3a%22{Uri.EscapeDataString(actor.ToLowerInvariant())}%22")"/>
+            }
+        </div>
+    }
     @if (_movie.Genres.Any())
     {
         <MudText GutterBottom="true">Genres</MudText>

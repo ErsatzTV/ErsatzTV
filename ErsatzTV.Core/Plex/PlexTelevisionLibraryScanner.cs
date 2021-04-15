@@ -168,6 +168,28 @@ namespace ErsatzTV.Core.Plex
                 }
             }
 
+            foreach (Actor actor in existingMetadata.Actors
+                .Filter(a => incomingMetadata.Actors.All(a2 => a2.Name != a.Name))
+                .ToList())
+            {
+                existingMetadata.Actors.Remove(actor);
+                if (await _metadataRepository.RemoveActor(actor))
+                {
+                    result.IsUpdated = true;
+                }
+            }
+
+            foreach (Actor actor in incomingMetadata.Actors
+                .Filter(a => existingMetadata.Actors.All(a2 => a2.Name != a.Name))
+                .ToList())
+            {
+                existingMetadata.Actors.Add(actor);
+                if (await _televisionRepository.AddActor(existingMetadata, actor))
+                {
+                    result.IsUpdated = true;
+                }
+            }
+
             if (result.IsUpdated)
             {
                 await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);

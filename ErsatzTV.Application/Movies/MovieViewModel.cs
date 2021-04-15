@@ -12,5 +12,6 @@ namespace ErsatzTV.Application.Movies
         List<string> Genres,
         List<string> Tags,
         List<string> Studios,
-        List<CultureInfo> Languages);
+        List<CultureInfo> Languages,
+        List<string> Actors);
 }

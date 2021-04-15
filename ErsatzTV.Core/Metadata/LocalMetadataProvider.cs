@@ -618,65 +618,68 @@ namespace ErsatzTV.Core.Metadata
         {
             var updated = false;
 
-            foreach (Genre genre in existing.Genres.Filter(g => incoming.Genres.All(g2 => g2.Name != g.Name))
-                .ToList())
+            if (existing is not EpisodeMetadata)
             {
-                existing.Genres.Remove(genre);
-                if (await _metadataRepository.RemoveGenre(genre))
+                foreach (Genre genre in existing.Genres.Filter(g => incoming.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
                 {
-                    updated = true;
+                    existing.Genres.Remove(genre);
+                    if (await _metadataRepository.RemoveGenre(genre))
+                    {
+                        updated = true;
+                    }
                 }
-            }
 
-            foreach (Genre genre in incoming.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
-                .ToList())
-            {
-                existing.Genres.Add(genre);
-                if (await addGenre(existing, genre))
+                foreach (Genre genre in incoming.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
                 {
-                    updated = true;
+                    existing.Genres.Add(genre);
+                    if (await addGenre(existing, genre))
+                    {
+                        updated = true;
+                    }
                 }
-            }
 
-            foreach (Tag tag in existing.Tags.Filter(t => incoming.Tags.All(t2 => t2.Name != t.Name))
-                .ToList())
-            {
-                existing.Tags.Remove(tag);
-                if (await _metadataRepository.RemoveTag(tag))
+                foreach (Tag tag in existing.Tags.Filter(t => incoming.Tags.All(t2 => t2.Name != t.Name))
+                    .ToList())
                 {
-                    updated = true;
+                    existing.Tags.Remove(tag);
+                    if (await _metadataRepository.RemoveTag(tag))
+                    {
+                        updated = true;
+                    }
                 }
-            }
 
-            foreach (Tag tag in incoming.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
-                .ToList())
-            {
-                existing.Tags.Add(tag);
-                if (await addTag(existing, tag))
+                foreach (Tag tag in incoming.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
+                    .ToList())
                 {
-                    updated = true;
+                    existing.Tags.Add(tag);
+                    if (await addTag(existing, tag))
+                    {
+                        updated = true;
+                    }
                 }
-            }
 
-            foreach (Studio studio in existing.Studios
-                .Filter(s => incoming.Studios.All(s2 => s2.Name != s.Name))
-                .ToList())
-            {
-                existing.Studios.Remove(studio);
-                if (await _metadataRepository.RemoveStudio(studio))
+                foreach (Studio studio in existing.Studios
+                    .Filter(s => incoming.Studios.All(s2 => s2.Name != s.Name))
+                    .ToList())
                 {
-                    updated = true;
+                    existing.Studios.Remove(studio);
+                    if (await _metadataRepository.RemoveStudio(studio))
+                    {
+                        updated = true;
+                    }
                 }
-            }
 
-            foreach (Studio studio in incoming.Studios
-                .Filter(s => existing.Studios.All(s2 => s2.Name != s.Name))
-                .ToList())
-            {
-                existing.Studios.Add(studio);
-                if (await addStudio(existing, studio))
+                foreach (Studio studio in incoming.Studios
+                    .Filter(s => existing.Studios.All(s2 => s2.Name != s.Name))
+                    .ToList())
                 {
-                    updated = true;
+                    existing.Studios.Add(studio);
+                    if (await addStudio(existing, studio))
+                    {
+                        updated = true;
+                    }
                 }
             }
 

@@ -179,7 +179,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
                 Tags = new List<Tag>(),
                 Studios = new List<Studio>(),
-                Actors = new List<Actor>()
+                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag }).ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -341,7 +341,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
                 Tags = new List<Tag>(),
                 Studios = new List<Studio>(),
-                Actors = new List<Actor>()
+                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag }).ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -462,7 +462,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Year = response.Year,
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
-                DateUpdated = lastWriteTime
+                DateUpdated = lastWriteTime,
+                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag }).ToList()
             };
 
             if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))

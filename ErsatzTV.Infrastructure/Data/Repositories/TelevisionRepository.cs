@@ -55,6 +55,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(sm => sm.Tags)
                 .Include(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Studios)
+                .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Actors)
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
@@ -188,6 +190,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Actors)
                 .OrderBy(em => em.Episode.EpisodeNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -217,6 +220,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(sm => sm.Tags)
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Studios)
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Actors)
                         .Include(s => s.LibraryPath)
                         .ThenInclude(lp => lp.Library)
                         .OrderBy(s => s.Id)
@@ -284,6 +289,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<Episode> maybeExisting = await dbContext.Episodes
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(em => em.Actors)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
@@ -383,6 +390,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.ShowMetadata)
                 .ThenInclude(sm => sm.Studios)
                 .Include(i => i.ShowMetadata)
+                .ThenInclude(sm => sm.Actors)
+                .Include(i => i.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
@@ -421,6 +430,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(e => e.EpisodeMetadata)
+                .ThenInclude(em => em.Actors)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
