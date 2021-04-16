@@ -10,21 +10,21 @@
 <MudSnackbarProvider/>
 
 <MudLayout>
-    <MudAppBar Elevation="1">
+    <MudAppBar Elevation="1" Class="app-bar">
         <div style="min-width: 240px">
             <a href="/">
                 <img src="/images/ersatztv.png" alt="ErsatzTV"/>
             </a>
         </div>
-        <MudTextField T="string"
-                      @bind-Value="@_query"
-                      AdornmentIcon="@Icons.Material.Filled.Search"
-                      Adornment="Adornment.Start"
-                      Variant="Variant.Outlined"
-                      Class="search-bar"
-                      OnKeyDown="@OnSearchKeyDown"
-                      Immediate="true">
-        </MudTextField>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => PerformSearch())">
+            <MudTextField T="string"
+                          @bind-Value="@_query"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Adornment="Adornment.Start"
+                          Variant="Variant.Outlined"
+                          Class="search-bar">
+            </MudTextField>
+        </EditForm>
         <MudAppBarSpacer/>
         <MudLink Color="Color.Info" Href="/iptv/channels.m3u" Target="_blank" Underline="Underline.None">M3U</MudLink>
         <MudLink Color="Color.Info" Href="/iptv/xmltv.xml" Target="_blank" Class="mx-4" Underline="Underline.None">XMLTV</MudLink>
@@ -74,6 +74,10 @@
 
     private string _query;
 
+    private record SearchModel;
+
+    private SearchModel _dummyModel = new();
+
     private MudTheme _ersatzTvTheme => new()
     {
         Palette = new Palette
@@ -120,6 +124,13 @@
             NavigationManager.NavigateTo($"/search?query={query}", true);
             StateHasChanged();
         }
+    }
+
+    private void PerformSearch()
+    {
+        string query = HttpUtility.UrlEncode(_query);
+        NavigationManager.NavigateTo($"/search?query={query}", true);
+        StateHasChanged();
     }
 
 }
