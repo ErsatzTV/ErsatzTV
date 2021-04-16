@@ -1,20 +1,19 @@
 ﻿@page "/media/collections"
-@using Microsoft.Extensions.Caching.Memory
-@using Blazored.LocalStorage
+@using ErsatzTV.Application.Configuration.Commands
+@using ErsatzTV.Application.Configuration.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
 @using ErsatzTV.Application.MediaCards
 @inject IDialogService Dialog
 @inject IMediator Mediator
-@inject IMemoryCache MemoryCache
-@inject ILocalStorageService LocalStorage
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true"
+              @bind-RowsPerPage="@_rowsPerPage"
               ServerData="@(new Func<TableState, Task<TableData<MediaCollectionViewModel>>>(ServerReload))"
               Dense="true"
-              @ref="                    _table">
+              @ref="_table">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Collections</MudText>
         </ToolBarContent>
@@ -55,11 +54,12 @@
 @code {
     private MudTable<MediaCollectionViewModel> _table;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private int _rowsPerPage;
+
+    protected override async Task OnParametersSetAsync()
     {
-        int rowsPerPage = await LocalStorage.GetItemAsync<int?>("pages.collections.rows_per_page") ?? 10;
-        _table.RowsPerPage = rowsPerPage;
-        await _table.ReloadServerData();
+        _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
 
     private async Task DeleteMediaCollection(MediaCardViewModel vm)
@@ -82,7 +82,7 @@
 
     private async Task<TableData<MediaCollectionViewModel>> ServerReload(TableState state)
     {
-        await LocalStorage.SetItemAsync<int?>("pages.collections.rows_per_page", state.PageSize);
+        await Mediator.Send(new SaveConfigElementByKey(ConfigElementKey.CollectionsPageSize, state.PageSize.ToString()));
 
         PagedMediaCollectionsViewModel data = await Mediator.Send(new GetPagedCollections(state.Page, state.PageSize));
         return new TableData<MediaCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };

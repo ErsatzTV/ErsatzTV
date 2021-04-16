@@ -183,7 +183,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     ORDER BY Name
                     LIMIT {0} OFFSET {1}",
                     pageSize,
-                    (pageNumber - 1) * pageSize)
+                    pageNumber * pageSize)
                 .AsNoTracking()
                 .ToListAsync();
         }

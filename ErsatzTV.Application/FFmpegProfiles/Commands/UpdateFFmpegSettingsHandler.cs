@@ -86,8 +86,10 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             return Unit.Default;
         }
 
-        private Task Upsert(ConfigElementKey key, string value) =>
-            _configElementRepository.Get(key).Match(
+        private async Task Upsert(ConfigElementKey key, string value)
+        {
+            Option<ConfigElement> maybeElement = await _configElementRepository.Get(key); 
+            await maybeElement.Match(
                 ce =>
                 {
                     ce.Value = value;
@@ -98,5 +100,6 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     var ce = new ConfigElement { Key = key.Key, Value = value };
                     return _configElementRepository.Add(ce);
                 });
+        }
     }
 }
