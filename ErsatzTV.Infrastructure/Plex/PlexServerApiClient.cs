@@ -116,6 +116,48 @@ namespace ErsatzTV.Infrastructure.Plex
             }
         }
 
+        public async Task<Either<BaseError, MovieMetadata>> GetMovieMetadata(
+            PlexLibrary library,
+            string key,
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            try
+            {
+                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
+                return await service.GetMetadata(key, token.AuthToken)
+                    .Map(
+                        r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0)
+                            .HeadOrNone())
+                    .MapT(response => ProjectToMovieMetadata(response, library.MediaSourceId))
+                    .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
+        }
+
+        public async Task<Either<BaseError, ShowMetadata>> GetShowMetadata(
+            PlexLibrary library,
+            string key,
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            try
+            {
+                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
+                return await service.GetMetadata(key, token.AuthToken)
+                    .Map(r => r.MediaContainer.Metadata.HeadOrNone())
+                    .MapT(response => ProjectToShowMetadata(response, library.MediaSourceId))
+                    .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
+        }
+
         public async Task<Either<BaseError, MediaVersion>> GetStatistics(
             string key,
             PlexConnection connection,
@@ -167,6 +209,44 @@ namespace ErsatzTV.Infrastructure.Plex
             DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
+            MovieMetadata metadata = ProjectToMovieMetadata(response, mediaSourceId);
+
+            var version = new MediaVersion
+            {
+                Name = "Main",
+                Duration = TimeSpan.FromMilliseconds(media.Duration),
+                Width = media.Width,
+                Height = media.Height,
+                // specifically omit sample aspect ratio
+                DateAdded = dateAdded,
+                DateUpdated = lastWriteTime,
+                MediaFiles = new List<MediaFile>
+                {
+                    new PlexMediaFile
+                    {
+                        PlexId = part.Id,
+                        Key = part.Key,
+                        Path = part.File
+                    }
+                },
+                Streams = new List<MediaStream>()
+            };
+
+            var movie = new PlexMovie
+            {
+                Key = response.Key,
+                MovieMetadata = new List<MovieMetadata> { metadata },
+                MediaVersions = new List<MediaVersion> { version }
+            };
+
+            return movie;
+        }
+
+        private MovieMetadata ProjectToMovieMetadata(PlexMetadataResponse response, int mediaSourceId)
+        {
+            DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
+            DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+
             var metadata = new MovieMetadata
             {
                 Title = response.Title,
@@ -179,7 +259,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
                 Tags = new List<Tag>(),
                 Studios = new List<Studio>(),
-                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag }).ToList()
+                // TODO: add artwork
+                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag, Role = r.Role }).ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -222,35 +303,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 metadata.Artwork.Add(artwork);
             }
 
-            var version = new MediaVersion
-            {
-                Name = "Main",
-                Duration = TimeSpan.FromMilliseconds(media.Duration),
-                Width = media.Width,
-                Height = media.Height,
-                // specifically omit sample aspect ratio
-                DateAdded = dateAdded,
-                DateUpdated = lastWriteTime,
-                MediaFiles = new List<MediaFile>
-                {
-                    new PlexMediaFile
-                    {
-                        PlexId = part.Id,
-                        Key = part.Key,
-                        Path = part.File
-                    }
-                },
-                Streams = new List<MediaStream>()
-            };
-
-            var movie = new PlexMovie
-            {
-                Key = response.Key,
-                MovieMetadata = new List<MovieMetadata> { metadata },
-                MediaVersions = new List<MediaVersion> { version }
-            };
-
-            return movie;
+            return metadata;
         }
 
         private Option<MediaVersion> ProjectToMediaVersion(PlexMetadataResponse response)
@@ -326,6 +379,19 @@ namespace ErsatzTV.Infrastructure.Plex
 
         private PlexShow ProjectToShow(PlexMetadataResponse response, int mediaSourceId)
         {
+            ShowMetadata metadata = ProjectToShowMetadata(response, mediaSourceId);
+
+            var show = new PlexShow
+            {
+                Key = response.Key,
+                ShowMetadata = new List<ShowMetadata> { metadata }
+            };
+
+            return show;
+        }
+
+        private ShowMetadata ProjectToShowMetadata(PlexMetadataResponse response, int mediaSourceId)
+        {
             DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
@@ -341,7 +407,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
                 Tags = new List<Tag>(),
                 Studios = new List<Studio>(),
-                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag }).ToList()
+                // TODO: add artwork
+                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag, Role = r.Role }).ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -384,13 +451,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 metadata.Artwork.Add(artwork);
             }
 
-            var show = new PlexShow
-            {
-                Key = response.Key,
-                ShowMetadata = new List<ShowMetadata> { metadata }
-            };
-
-            return show;
+            return metadata;
         }
 
         private PlexSeason ProjectToSeason(PlexMetadataResponse response, int mediaSourceId)
@@ -463,7 +524,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
-                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag }).ToList()
+                // TODO: add artwork
+                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag, Role = r.Role }).ToList()
             };
 
             if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))

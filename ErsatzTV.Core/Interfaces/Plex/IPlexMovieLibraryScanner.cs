@@ -10,6 +10,6 @@ namespace ErsatzTV.Core.Interfaces.Plex
         Task<Either<BaseError, Unit>> ScanLibrary(
             PlexConnection connection,
             PlexServerAuthToken token,
-            PlexLibrary plexMediaSourceLibrary);
+            PlexLibrary library);
     }
 }

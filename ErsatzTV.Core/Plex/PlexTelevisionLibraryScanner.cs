@@ -46,10 +46,10 @@ namespace ErsatzTV.Core.Plex
         public async Task<Either<BaseError, Unit>> ScanLibrary(
             PlexConnection connection,
             PlexServerAuthToken token,
-            PlexLibrary plexMediaSourceLibrary)
+            PlexLibrary library)
         {
             Either<BaseError, List<PlexShow>> entries = await _plexServerApiClient.GetShowLibraryContents(
-                plexMediaSourceLibrary,
+                library,
                 connection,
                 token);
 
@@ -59,18 +59,18 @@ namespace ErsatzTV.Core.Plex
                     foreach (PlexShow incoming in showEntries)
                     {
                         decimal percentCompletion = (decimal) showEntries.IndexOf(incoming) / showEntries.Count;
-                        await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, percentCompletion));
+                        await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, MediaItemScanResult<PlexShow>> maybeShow = await _televisionRepository
-                            .GetOrAddPlexShow(plexMediaSourceLibrary, incoming)
-                            .BindT(existing => UpdateMetadata(existing, incoming))
+                            .GetOrAddPlexShow(library, incoming)
+                            .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
                         await maybeShow.Match(
                             async result =>
                             {
-                                await ScanSeasons(plexMediaSourceLibrary, result.Item, connection, token);
+                                await ScanSeasons(library, result.Item, connection, token);
 
                                 if (result.IsAdded)
                                 {
@@ -95,10 +95,10 @@ namespace ErsatzTV.Core.Plex
 
                     var showKeys = showEntries.Map(s => s.Key).ToList();
                     List<int> ids =
-                        await _televisionRepository.RemoveMissingPlexShows(plexMediaSourceLibrary, showKeys);
+                        await _televisionRepository.RemoveMissingPlexShows(library, showKeys);
                     await _searchIndex.RemoveItems(ids);
 
-                    await _mediator.Publish(new LibraryScanProgress(plexMediaSourceLibrary.Id, 0));
+                    await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
 
                     _searchIndex.Commit();
                     return Unit.Default;
@@ -107,7 +107,7 @@ namespace ErsatzTV.Core.Plex
                 {
                     _logger.LogWarning(
                         "Error synchronizing plex library {Path}: {Error}",
-                        plexMediaSourceLibrary.Name,
+                        library.Name,
                         error.Value);
 
                     return Left<BaseError, Unit>(error).AsTask();
@@ -116,83 +116,98 @@ namespace ErsatzTV.Core.Plex
 
         private async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> UpdateMetadata(
             MediaItemScanResult<PlexShow> result,
-            PlexShow incoming)
+            PlexShow incoming,
+            PlexLibrary library,
+            PlexConnection connection,
+            PlexServerAuthToken token)
         {
             PlexShow existing = result.Item;
             ShowMetadata existingMetadata = existing.ShowMetadata.Head();
-            ShowMetadata incomingMetadata = incoming.ShowMetadata.Head();
 
-            // TODO: this probably doesn't work
-            // plex doesn't seem to update genres returned by the main library call
-            foreach (Genre genre in existingMetadata.Genres
-                .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
-                .ToList())
+            if (incoming.ShowMetadata.Head().DateUpdated > existingMetadata.DateUpdated)
             {
-                existingMetadata.Genres.Remove(genre);
-                if (await _metadataRepository.RemoveGenre(genre))
-                {
-                    result.IsUpdated = true;
-                }
-            }
+                Either<BaseError, ShowMetadata> maybeMetadata =
+                    await _plexServerApiClient.GetShowMetadata(
+                        library,
+                        incoming.Key.Replace("/children", string.Empty).Split("/").Last(),
+                        connection,
+                        token);
 
-            foreach (Genre genre in incomingMetadata.Genres
-                .Filter(g => existingMetadata.Genres.All(g2 => g2.Name != g.Name))
-                .ToList())
-            {
-                existingMetadata.Genres.Add(genre);
-                if (await _televisionRepository.AddGenre(existingMetadata, genre))
-                {
-                    result.IsUpdated = true;
-                }
-            }
+                await maybeMetadata.Match(
+                    async fullMetadata =>
+                    {
+                        foreach (Genre genre in existingMetadata.Genres
+                            .Filter(g => fullMetadata.Genres.All(g2 => g2.Name != g.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Genres.Remove(genre);
+                            if (await _metadataRepository.RemoveGenre(genre))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
 
-            foreach (Studio studio in existingMetadata.Studios
-                .Filter(s => incomingMetadata.Studios.All(s2 => s2.Name != s.Name))
-                .ToList())
-            {
-                existingMetadata.Studios.Remove(studio);
-                if (await _metadataRepository.RemoveStudio(studio))
-                {
-                    result.IsUpdated = true;
-                }
-            }
+                        foreach (Genre genre in fullMetadata.Genres
+                            .Filter(g => existingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Genres.Add(genre);
+                            if (await _televisionRepository.AddGenre(existingMetadata, genre))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
 
-            foreach (Studio studio in incomingMetadata.Studios
-                .Filter(s => existingMetadata.Studios.All(s2 => s2.Name != s.Name))
-                .ToList())
-            {
-                existingMetadata.Studios.Add(studio);
-                if (await _televisionRepository.AddStudio(existingMetadata, studio))
-                {
-                    result.IsUpdated = true;
-                }
-            }
+                        foreach (Studio studio in existingMetadata.Studios
+                            .Filter(s => fullMetadata.Studios.All(s2 => s2.Name != s.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Studios.Remove(studio);
+                            if (await _metadataRepository.RemoveStudio(studio))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
 
-            foreach (Actor actor in existingMetadata.Actors
-                .Filter(a => incomingMetadata.Actors.All(a2 => a2.Name != a.Name))
-                .ToList())
-            {
-                existingMetadata.Actors.Remove(actor);
-                if (await _metadataRepository.RemoveActor(actor))
-                {
-                    result.IsUpdated = true;
-                }
-            }
+                        foreach (Studio studio in fullMetadata.Studios
+                            .Filter(s => existingMetadata.Studios.All(s2 => s2.Name != s.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Studios.Add(studio);
+                            if (await _televisionRepository.AddStudio(existingMetadata, studio))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
 
-            foreach (Actor actor in incomingMetadata.Actors
-                .Filter(a => existingMetadata.Actors.All(a2 => a2.Name != a.Name))
-                .ToList())
-            {
-                existingMetadata.Actors.Add(actor);
-                if (await _televisionRepository.AddActor(existingMetadata, actor))
-                {
-                    result.IsUpdated = true;
-                }
-            }
+                        foreach (Actor actor in existingMetadata.Actors
+                            .Filter(a => fullMetadata.Actors.All(a2 => a2.Name != a.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Actors.Remove(actor);
+                            if (await _metadataRepository.RemoveActor(actor))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
 
-            if (result.IsUpdated)
-            {
-                await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
+                        foreach (Actor actor in fullMetadata.Actors
+                            .Filter(a => existingMetadata.Actors.All(a2 => a2.Name != a.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Actors.Add(actor);
+                            if (await _televisionRepository.AddActor(existingMetadata, actor))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
+                        if (result.IsUpdated)
+                        {
+                            await _metadataRepository.MarkAsUpdated(existingMetadata, fullMetadata.DateUpdated);
+                        }
+                    },
+                    _ => Task.CompletedTask);
             }
 
             return result;
