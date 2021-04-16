@@ -7,36 +7,35 @@
 @inject ISnackbar Snackbar
 @inject ILogger<AddToCollectionDialog> Logger
 
-<div @onkeydown="@OnKeyDown">
-    <MudDialog>
-        <DialogContent>
-                <MudContainer Class="mb-6">
-                    <MudHighlighter Class="mud-primary-text"
-                                    Style="background-color: transparent; font-weight: bold"
-                                    Text="@FormatText()"
-                                    HighlightedText="@EntityName"/>
-                </MudContainer>
-                <MudSelect Label="Collection" @bind-Value="_selectedCollection" For="@(() => _selectedCollection)" Class="mb-6 mx-4">
-                    @foreach (MediaCollectionViewModel collection in _collections)
-                    {
-                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudTextFieldString Label="New Collection Name"
-                                    Disabled="@(_selectedCollection != _newCollection)"
-                                    @bind-Text="@_newCollectionName"
-                                    Immediate="true"
-                                    Class="mb-6 mx-4">
-                </MudTextFieldString>
-        </DialogContent>
-        <DialogActions>
-            <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!CanSubmit())" OnClick="Submit">
-                Add To Collection
-            </MudButton>
-        </DialogActions>
-    </MudDialog>
-</div>
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudHighlighter Class="mud-primary-text"
+                                Style="background-color: transparent; font-weight: bold"
+                                Text="@FormatText()"
+                                HighlightedText="@EntityName"/>
+            </MudContainer>
+            <MudSelect Label="Collection" @bind-Value="_selectedCollection" Class="mb-6 mx-4">
+                @foreach (MediaCollectionViewModel collection in _collections)
+                {
+                    <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextFieldString Label="New Collection Name"
+                                Disabled="@(_selectedCollection != _newCollection)"
+                                @bind-Text="@_newCollectionName"
+                                Class="mb-6 mx-4">
+            </MudTextFieldString>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Add To Collection
+        </MudButton>
+    </DialogActions>
+</MudDialog>
 
 
 @code {
@@ -62,6 +61,9 @@
     private List<MediaCollectionViewModel> _collections;
 
     private MediaCollectionViewModel _selectedCollection;
+    
+    private record DummyModel;
+    private DummyModel _dummyModel = new();
 
     private bool CanSubmit() =>
         _selectedCollection != null && (_selectedCollection != _newCollection || !string.IsNullOrWhiteSpace(_newCollectionName));
@@ -85,6 +87,11 @@
 
     private async Task Submit()
     {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
         if (_selectedCollection == _newCollection)
         {
             Either<BaseError, MediaCollectionViewModel> maybeResult =
@@ -110,13 +117,16 @@
         }
     }
 
-    private void Cancel() => MudDialog.Cancel();
-
-    private async Task OnKeyDown(KeyboardEventArgs e)
+    private async Task Cancel(MouseEventArgs e)
     {
-        if (e.Code is "Enter" or "NumpadEnter" && CanSubmit())
+        // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+        if (e.Detail == 0)
         {
             await Submit();
+        }
+        else
+        {
+            MudDialog.Cancel();
         }
     }
 
