@@ -193,10 +193,30 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "INSERT INTO Studio (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
-        public Task<bool> AddActor(MovieMetadata metadata, Actor actor) =>
-            _dbConnection.ExecuteAsync(
-                "INSERT INTO Actor (Name, Role, \"Order\", MovieMetadataId) VALUES (@Name, @Role, @Order, @MetadataId)",
-                new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id }).Map(result => result > 0);
+        public async Task<bool> AddActor(MovieMetadata metadata, Actor actor)
+        {
+            int? artworkId = null;
+
+            if (actor.Artwork != null)
+            {
+                artworkId = await _dbConnection.QuerySingleAsync<int>(
+                    @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
+                      VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
+                      SELECT last_insert_rowid()",
+                    new
+                    {
+                        ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                        actor.Artwork.DateAdded,
+                        actor.Artwork.DateUpdated,
+                        actor.Artwork.Path
+                    });
+            }
+
+            return await _dbConnection.ExecuteAsync(
+                    "INSERT INTO Actor (Name, Role, \"Order\", MovieMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
+                    new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
+                .Map(result => result > 0);
+        }
 
         public async Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys)
         {

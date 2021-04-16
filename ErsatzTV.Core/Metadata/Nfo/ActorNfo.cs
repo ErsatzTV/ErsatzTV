@@ -12,5 +12,8 @@ namespace ErsatzTV.Core.Metadata.Nfo
 
         [XmlElement("order")]
         public int? Order { get; set; }
+
+        [XmlElement("thumb")]
+        public string Thumb { get; set; }
     }
 }

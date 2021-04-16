@@ -61,9 +61,10 @@
     private List<MediaCollectionViewModel> _collections;
 
     private MediaCollectionViewModel _selectedCollection;
-    
+
     private record DummyModel;
-    private DummyModel _dummyModel = new();
+
+    private readonly DummyModel _dummyModel = new();
 
     private bool CanSubmit() =>
         _selectedCollection != null && (_selectedCollection != _newCollection || !string.IsNullOrWhiteSpace(_newCollectionName));
@@ -119,7 +120,7 @@
 
     private async Task Cancel(MouseEventArgs e)
     {
-        // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+    // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
         if (e.Detail == 0)
         {
             await Submit();

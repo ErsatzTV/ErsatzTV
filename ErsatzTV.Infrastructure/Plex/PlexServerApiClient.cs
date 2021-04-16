@@ -259,8 +259,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
                 Tags = new List<Tag>(),
                 Studios = new List<Studio>(),
-                // TODO: add artwork
-                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag, Role = r.Role }).ToList()
+                Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
+                    .ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -407,8 +407,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Genres = Optional(response.Genre).Flatten().Map(g => new Genre { Name = g.Tag }).ToList(),
                 Tags = new List<Tag>(),
                 Studios = new List<Studio>(),
-                // TODO: add artwork
-                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag, Role = r.Role }).ToList()
+                Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
+                    .ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -524,8 +524,8 @@ namespace ErsatzTV.Infrastructure.Plex
                 Tagline = response.Tagline,
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
-                // TODO: add artwork
-                Actors = Optional(response.Role).Flatten().Map(r => new Actor { Name = r.Tag, Role = r.Role }).ToList()
+                Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
+                    .ToList()
             };
 
             if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
@@ -578,6 +578,23 @@ namespace ErsatzTV.Infrastructure.Plex
             };
 
             return episode;
+        }
+
+        private Actor ProjectToModel(PlexRoleResponse role, DateTime dateAdded, DateTime lastWriteTime)
+        {
+            var actor = new Actor { Name = role.Tag, Role = role.Role };
+            if (!string.IsNullOrWhiteSpace(role.Thumb))
+            {
+                actor.Artwork = new Artwork
+                {
+                    Path = role.Thumb,
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+            }
+
+            return actor;
         }
     }
 }

@@ -460,21 +460,27 @@ namespace ErsatzTV.Core.Metadata
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<TvShowNfo> maybeNfo = TvShowSerializer.Deserialize(fileStream) as TvShowNfo;
                 return maybeNfo.Match<Option<ShowMetadata>>(
-                    nfo => new ShowMetadata
+                    nfo =>
                     {
-                        MetadataKind = MetadataKind.Sidecar,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
-                        Title = nfo.Title,
-                        Plot = nfo.Plot,
-                        Outline = nfo.Outline,
-                        Tagline = nfo.Tagline,
-                        Year = GetYear(nfo.Year, nfo.Premiered),
-                        ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
-                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
-                        Actors = nfo.Actors.Map(ProjectToModel).ToList()
+                        DateTime dateAdded = DateTime.UtcNow;
+                        DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
+                        return new ShowMetadata
+                        {
+                            MetadataKind = MetadataKind.Sidecar,
+                            DateAdded = dateAdded,
+                            DateUpdated = dateUpdated,
+                            Title = nfo.Title,
+                            Plot = nfo.Plot,
+                            Outline = nfo.Outline,
+                            Tagline = nfo.Tagline,
+                            Year = GetYear(nfo.Year, nfo.Premiered),
+                            ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
+                            Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                            Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                            Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                            Actors = nfo.Actors.Map(a => ProjectToModel(a, dateAdded, dateUpdated)).ToList()
+                        };
                     },
                     None);
             }
@@ -522,15 +528,18 @@ namespace ErsatzTV.Core.Metadata
                 return maybeNfo.Match<Option<Tuple<EpisodeMetadata, int>>>(
                     nfo =>
                     {
+                        DateTime dateAdded = DateTime.UtcNow;
+                        DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
                         var metadata = new EpisodeMetadata
                         {
                             MetadataKind = MetadataKind.Sidecar,
-                            DateAdded = DateTime.UtcNow,
-                            DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
+                            DateAdded = dateAdded,
+                            DateUpdated = dateUpdated,
                             Title = nfo.Title,
                             ReleaseDate = GetAired(0, nfo.Aired),
                             Plot = nfo.Plot,
-                            Actors = nfo.Actors.Map(ProjectToModel).ToList()
+                            Actors = nfo.Actors.Map(a => ProjectToModel(a, dateAdded, dateUpdated)).ToList()
                         };
                         return Tuple(metadata, nfo.Episode);
                     },
@@ -550,21 +559,27 @@ namespace ErsatzTV.Core.Metadata
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<MovieNfo> maybeNfo = MovieSerializer.Deserialize(fileStream) as MovieNfo;
                 return maybeNfo.Match<Option<MovieMetadata>>(
-                    nfo => new MovieMetadata
+                    nfo =>
                     {
-                        MetadataKind = MetadataKind.Sidecar,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
-                        Title = nfo.Title,
-                        Year = nfo.Year,
-                        ReleaseDate = nfo.Premiered,
-                        Plot = nfo.Plot,
-                        Outline = nfo.Outline,
-                        Tagline = nfo.Tagline,
-                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
-                        Actors = nfo.Actors.Map(ProjectToModel).ToList()
+                        DateTime dateAdded = DateTime.UtcNow;
+                        DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
+                        return new MovieMetadata
+                        {
+                            MetadataKind = MetadataKind.Sidecar,
+                            DateAdded = dateAdded,
+                            DateUpdated = dateUpdated,
+                            Title = nfo.Title,
+                            Year = nfo.Year,
+                            ReleaseDate = nfo.Premiered,
+                            Plot = nfo.Plot,
+                            Outline = nfo.Outline,
+                            Tagline = nfo.Tagline,
+                            Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                            Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                            Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                            Actors = nfo.Actors.Map(a => ProjectToModel(a, dateAdded, dateUpdated)).ToList()
+                        };
                     },
                     None);
             }
@@ -708,12 +723,27 @@ namespace ErsatzTV.Core.Metadata
             return updated;
         }
 
-        private Actor ProjectToModel(ActorNfo actorNfo) =>
-            new()
+        private Actor ProjectToModel(ActorNfo actorNfo, DateTime dateAdded, DateTime dateUpdated)
+        {
+            var actor = new Actor
             {
                 Name = actorNfo.Name,
                 Role = actorNfo.Role,
                 Order = actorNfo.Order
             };
+
+            if (!string.IsNullOrWhiteSpace(actorNfo.Thumb))
+            {
+                actor.Artwork = new Artwork
+                {
+                    Path = actorNfo.Thumb,
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    DateAdded = dateAdded,
+                    DateUpdated = dateUpdated
+                };
+            }
+
+            return actor;
+        }
     }
 }
