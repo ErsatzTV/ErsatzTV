@@ -60,7 +60,6 @@ namespace ErsatzTV.Core.FFmpeg
                     builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
                         .WithScaling(scaledSize);
 
-                    scaledSize = scaledSize.PadToEven();
                     if (NeedToPad(channel.FFmpegProfile.Resolution, scaledSize))
                     {
                         builder = builder.WithBlackBars(channel.FFmpegProfile.Resolution);

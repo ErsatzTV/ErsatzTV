@@ -382,6 +382,7 @@ namespace ErsatzTV.Core.Plex
             if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
             {
                 await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Thumbnail);
+                await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
             }
 
             return existing;

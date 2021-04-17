@@ -222,6 +222,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 @"UPDATE MovieMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
                 new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
+        
+        public Task<Unit> MarkAsUpdated(EpisodeMetadata metadata, DateTime dateUpdated) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE EpisodeMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
+                new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
 
         public Task<bool> RemoveGenre(Genre genre) =>
             _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id })
