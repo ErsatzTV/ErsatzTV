@@ -156,7 +156,7 @@ namespace ErsatzTV.Core.Plex
             PlexMovie existing = result.Item;
             MovieMetadata existingMetadata = existing.MovieMetadata.Head();
 
-            if (incoming.MovieMetadata.Head().DateUpdated > existingMetadata.DateUpdated)
+            if (result.IsAdded || incoming.MovieMetadata.Head().DateUpdated > existingMetadata.DateUpdated)
             {
                 _logger.LogDebug(
                     "Refreshing {Attribute} from {Path}",

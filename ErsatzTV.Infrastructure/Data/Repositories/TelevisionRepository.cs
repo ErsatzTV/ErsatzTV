@@ -192,6 +192,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Actors)
+                .ThenInclude(a => a.Artwork)
                 .OrderBy(em => em.Episode.EpisodeNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -293,6 +294,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(em => em.Artwork)
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Actors)
+                .ThenInclude(a => a.Artwork)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
@@ -393,6 +395,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(sm => sm.Studios)
                 .Include(i => i.ShowMetadata)
                 .ThenInclude(sm => sm.Actors)
+                .ThenInclude(a => a.Artwork)
                 .Include(i => i.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
                 .Include(i => i.LibraryPath)
@@ -402,7 +405,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return await maybeExisting.Match(
                 plexShow => Right<BaseError, MediaItemScanResult<PlexShow>>(
-                    new MediaItemScanResult<PlexShow>(plexShow) { IsAdded = true }).AsTask(),
+                    new MediaItemScanResult<PlexShow>(plexShow) { IsAdded = false }).AsTask(),
                 async () => await AddPlexShow(dbContext, library, item));
         }
 
@@ -434,6 +437,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.Streams)
                 .Include(e => e.EpisodeMetadata)
                 .ThenInclude(em => em.Actors)
+                .ThenInclude(a => a.Artwork)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
