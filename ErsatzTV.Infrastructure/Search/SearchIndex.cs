@@ -43,6 +43,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string LanguageField = "language";
         private const string StyleField = "style";
         private const string MoodField = "mood";
+        private const string ActorField = "actor";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -286,6 +287,11 @@ namespace ErsatzTV.Infrastructure.Search
                         doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                     }
 
+                    foreach (Actor actor in metadata.Actors)
+                    {
+                        doc.Add(new TextField(ActorField, actor.Name, Field.Store.NO));
+                    }
+
                     _writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
                 }
                 catch (Exception ex)
@@ -380,6 +386,11 @@ namespace ErsatzTV.Infrastructure.Search
                     foreach (Studio studio in metadata.Studios)
                     {
                         doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
+                    }
+
+                    foreach (Actor actor in metadata.Actors)
+                    {
+                        doc.Add(new TextField(ActorField, actor.Name, Field.Store.NO));
                     }
 
                     _writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);

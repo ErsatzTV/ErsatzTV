@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
+using ErsatzTV.Application.MediaCards;
 
 namespace ErsatzTV.Application.Movies
 {
@@ -12,5 +13,6 @@ namespace ErsatzTV.Application.Movies
         List<string> Genres,
         List<string> Tags,
         List<string> Studios,
-        List<CultureInfo> Languages);
+        List<CultureInfo> Languages,
+        List<ActorCardViewModel> Actors);
 }

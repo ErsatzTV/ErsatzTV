@@ -20,6 +20,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<bool> AddGenre(MovieMetadata metadata, Genre genre);
         Task<bool> AddTag(MovieMetadata metadata, Tag tag);
         Task<bool> AddStudio(MovieMetadata metadata, Studio studio);
+        Task<bool> AddActor(MovieMetadata metadata, Actor actor);
         Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys);
         Task<bool> UpdateSortTitle(MovieMetadata movieMetadata);
     }

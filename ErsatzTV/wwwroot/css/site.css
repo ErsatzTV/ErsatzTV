@@ -74,9 +74,7 @@
     border-radius: 4px;
 }
 
-.app-bar form {
-    flex-grow: 1;
-}
+.app-bar form { flex-grow: 1; }
 
 .fanart-container {
     position: relative;
@@ -126,18 +124,10 @@
     justify-content: space-around;
 }
 
-.release-notes ul {
-    list-style: unset;
-}
+.release-notes ul { list-style: unset; }
 
-.release-notes > ul {
-    margin-top: 10px;
-}
+.release-notes > ul { margin-top: 10px; }
 
-.release-notes ul > li {
-    margin-left: 30px;
-}
+.release-notes ul > li { margin-left: 30px; }
 
-.release-notes h3 {
-    margin-top: 20px;
-}
+.release-notes h3 { margin-top: 20px; }

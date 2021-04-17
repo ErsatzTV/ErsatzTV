@@ -183,7 +183,7 @@ namespace ErsatzTV.Core.Metadata
             }
 
             await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
-                existing =>
+                async existing =>
                 {
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
@@ -204,9 +204,17 @@ namespace ErsatzTV.Core.Metadata
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                         : metadata.SortTitle;
 
-                    return _metadataRepository.Update(existing);
+                    bool updated = await UpdateMetadataCollections(
+                        existing,
+                        metadata,
+                        (_, _) => Task.FromResult(false),
+                        (_, _) => Task.FromResult(false),
+                        (_, _) => Task.FromResult(false),
+                        _televisionRepository.AddActor);
+
+                    return await _metadataRepository.Update(existing) || updated;
                 },
-                () =>
+                async () =>
                 {
                     metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
                         ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
@@ -214,7 +222,7 @@ namespace ErsatzTV.Core.Metadata
                     metadata.EpisodeId = episode.Id;
                     episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata };
 
-                    return _metadataRepository.Add(metadata);
+                    return await _metadataRepository.Add(metadata);
                 });
 
             return true;
@@ -248,7 +256,8 @@ namespace ErsatzTV.Core.Metadata
                         metadata,
                         _movieRepository.AddGenre,
                         _movieRepository.AddTag,
-                        _movieRepository.AddStudio);
+                        _movieRepository.AddStudio,
+                        _movieRepository.AddActor);
 
                     return await _metadataRepository.Update(existing) || updated;
                 },
@@ -291,7 +300,8 @@ namespace ErsatzTV.Core.Metadata
                         metadata,
                         _televisionRepository.AddGenre,
                         _televisionRepository.AddTag,
-                        _televisionRepository.AddStudio);
+                        _televisionRepository.AddStudio,
+                        _televisionRepository.AddActor);
 
                     return await _metadataRepository.Update(existing) || updated;
                 },
@@ -427,7 +437,8 @@ namespace ErsatzTV.Core.Metadata
                         metadata,
                         _musicVideoRepository.AddGenre,
                         _musicVideoRepository.AddTag,
-                        _musicVideoRepository.AddStudio);
+                        _musicVideoRepository.AddStudio,
+                        (_, _) => Task.FromResult(false));
 
                     return await _metadataRepository.Update(existing) || updated;
                 },
@@ -449,20 +460,27 @@ namespace ErsatzTV.Core.Metadata
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<TvShowNfo> maybeNfo = TvShowSerializer.Deserialize(fileStream) as TvShowNfo;
                 return maybeNfo.Match<Option<ShowMetadata>>(
-                    nfo => new ShowMetadata
+                    nfo =>
                     {
-                        MetadataKind = MetadataKind.Sidecar,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
-                        Title = nfo.Title,
-                        Plot = nfo.Plot,
-                        Outline = nfo.Outline,
-                        Tagline = nfo.Tagline,
-                        Year = GetYear(nfo.Year, nfo.Premiered),
-                        ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
-                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
+                        DateTime dateAdded = DateTime.UtcNow;
+                        DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
+                        return new ShowMetadata
+                        {
+                            MetadataKind = MetadataKind.Sidecar,
+                            DateAdded = dateAdded,
+                            DateUpdated = dateUpdated,
+                            Title = nfo.Title,
+                            Plot = nfo.Plot,
+                            Outline = nfo.Outline,
+                            Tagline = nfo.Tagline,
+                            Year = GetYear(nfo.Year, nfo.Premiered),
+                            ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
+                            Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                            Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                            Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated)
+                        };
                     },
                     None);
             }
@@ -510,14 +528,18 @@ namespace ErsatzTV.Core.Metadata
                 return maybeNfo.Match<Option<Tuple<EpisodeMetadata, int>>>(
                     nfo =>
                     {
+                        DateTime dateAdded = DateTime.UtcNow;
+                        DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
                         var metadata = new EpisodeMetadata
                         {
                             MetadataKind = MetadataKind.Sidecar,
-                            DateAdded = DateTime.UtcNow,
-                            DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
+                            DateAdded = dateAdded,
+                            DateUpdated = dateUpdated,
                             Title = nfo.Title,
                             ReleaseDate = GetAired(0, nfo.Aired),
-                            Plot = nfo.Plot
+                            Plot = nfo.Plot,
+                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated)
                         };
                         return Tuple(metadata, nfo.Episode);
                     },
@@ -537,20 +559,27 @@ namespace ErsatzTV.Core.Metadata
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
                 Option<MovieNfo> maybeNfo = MovieSerializer.Deserialize(fileStream) as MovieNfo;
                 return maybeNfo.Match<Option<MovieMetadata>>(
-                    nfo => new MovieMetadata
+                    nfo =>
                     {
-                        MetadataKind = MetadataKind.Sidecar,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = File.GetLastWriteTimeUtc(nfoFileName),
-                        Title = nfo.Title,
-                        Year = nfo.Year,
-                        ReleaseDate = nfo.Premiered,
-                        Plot = nfo.Plot,
-                        Outline = nfo.Outline,
-                        Tagline = nfo.Tagline,
-                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
+                        DateTime dateAdded = DateTime.UtcNow;
+                        DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
+                        return new MovieMetadata
+                        {
+                            MetadataKind = MetadataKind.Sidecar,
+                            DateAdded = dateAdded,
+                            DateUpdated = dateUpdated,
+                            Title = nfo.Title,
+                            Year = nfo.Year,
+                            ReleaseDate = nfo.Premiered,
+                            Plot = nfo.Plot,
+                            Outline = nfo.Outline,
+                            Tagline = nfo.Tagline,
+                            Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                            Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                            Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated)
+                        };
                     },
                     None);
             }
@@ -598,74 +627,132 @@ namespace ErsatzTV.Core.Metadata
             T incoming,
             Func<T, Genre, Task<bool>> addGenre,
             Func<T, Tag, Task<bool>> addTag,
-            Func<T, Studio, Task<bool>> addStudio)
+            Func<T, Studio, Task<bool>> addStudio,
+            Func<T, Actor, Task<bool>> addActor)
             where T : Domain.Metadata
         {
             var updated = false;
 
-            foreach (Genre genre in existing.Genres.Filter(g => incoming.Genres.All(g2 => g2.Name != g.Name))
+            if (existing is not EpisodeMetadata)
+            {
+                foreach (Genre genre in existing.Genres.Filter(g => incoming.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    existing.Genres.Remove(genre);
+                    if (await _metadataRepository.RemoveGenre(genre))
+                    {
+                        updated = true;
+                    }
+                }
+
+                foreach (Genre genre in incoming.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    existing.Genres.Add(genre);
+                    if (await addGenre(existing, genre))
+                    {
+                        updated = true;
+                    }
+                }
+
+                foreach (Tag tag in existing.Tags.Filter(t => incoming.Tags.All(t2 => t2.Name != t.Name))
+                    .ToList())
+                {
+                    existing.Tags.Remove(tag);
+                    if (await _metadataRepository.RemoveTag(tag))
+                    {
+                        updated = true;
+                    }
+                }
+
+                foreach (Tag tag in incoming.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
+                    .ToList())
+                {
+                    existing.Tags.Add(tag);
+                    if (await addTag(existing, tag))
+                    {
+                        updated = true;
+                    }
+                }
+
+                foreach (Studio studio in existing.Studios
+                    .Filter(s => incoming.Studios.All(s2 => s2.Name != s.Name))
+                    .ToList())
+                {
+                    existing.Studios.Remove(studio);
+                    if (await _metadataRepository.RemoveStudio(studio))
+                    {
+                        updated = true;
+                    }
+                }
+
+                foreach (Studio studio in incoming.Studios
+                    .Filter(s => existing.Studios.All(s2 => s2.Name != s.Name))
+                    .ToList())
+                {
+                    existing.Studios.Add(studio);
+                    if (await addStudio(existing, studio))
+                    {
+                        updated = true;
+                    }
+                }
+            }
+
+            foreach (Actor actor in existing.Actors
+                .Filter(a => incoming.Actors.All(a2 => a2.Name != a.Name))
                 .ToList())
             {
-                existing.Genres.Remove(genre);
-                if (await _metadataRepository.RemoveGenre(genre))
+                existing.Actors.Remove(actor);
+                if (await _metadataRepository.RemoveActor(actor))
                 {
                     updated = true;
                 }
             }
 
-            foreach (Genre genre in incoming.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
+            foreach (Actor actor in incoming.Actors
+                .Filter(a => existing.Actors.All(a2 => a2.Name != a.Name))
                 .ToList())
             {
-                existing.Genres.Add(genre);
-                if (await addGenre(existing, genre))
-                {
-                    updated = true;
-                }
-            }
-
-            foreach (Tag tag in existing.Tags.Filter(t => incoming.Tags.All(t2 => t2.Name != t.Name))
-                .ToList())
-            {
-                existing.Tags.Remove(tag);
-                if (await _metadataRepository.RemoveTag(tag))
-                {
-                    updated = true;
-                }
-            }
-
-            foreach (Tag tag in incoming.Tags.Filter(t => existing.Tags.All(t2 => t2.Name != t.Name))
-                .ToList())
-            {
-                existing.Tags.Add(tag);
-                if (await addTag(existing, tag))
-                {
-                    updated = true;
-                }
-            }
-
-            foreach (Studio studio in existing.Studios
-                .Filter(s => incoming.Studios.All(s2 => s2.Name != s.Name))
-                .ToList())
-            {
-                existing.Studios.Remove(studio);
-                if (await _metadataRepository.RemoveStudio(studio))
-                {
-                    updated = true;
-                }
-            }
-
-            foreach (Studio studio in incoming.Studios
-                .Filter(s => existing.Studios.All(s2 => s2.Name != s.Name))
-                .ToList())
-            {
-                existing.Studios.Add(studio);
-                if (await addStudio(existing, studio))
+                existing.Actors.Add(actor);
+                if (await addActor(existing, actor))
                 {
                     updated = true;
                 }
             }
 
             return updated;
+        }
+
+        private List<Actor> Actors(List<ActorNfo> actorNfos, DateTime dateAdded, DateTime dateUpdated)
+        {
+            var result = new List<Actor>();
+
+            for (var i = 0; i < actorNfos.Count; i++)
+            {
+                ActorNfo actorNfo = actorNfos[i];
+
+                var actor = new Actor
+                {
+                    Name = actorNfo.Name,
+                    Role = actorNfo.Role,
+                    Order = actorNfo.Order ?? i
+                };
+
+                if (!string.IsNullOrWhiteSpace(actorNfo.Thumb))
+                {
+                    actor.Artwork = new Artwork
+                    {
+                        Path = actorNfo.Thumb,
+                        ArtworkKind = ArtworkKind.Thumbnail,
+                        DateAdded = dateAdded,
+                        DateUpdated = dateUpdated
+                    };
+                }
+
+                result.Add(actor);
+            }
+
+            return result;
         }
     }
 }

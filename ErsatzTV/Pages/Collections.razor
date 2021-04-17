@@ -1,10 +1,10 @@
 ﻿@page "/media/collections"
-@using ErsatzTV.Application.Configuration.Commands
-@using ErsatzTV.Application.Configuration.Queries
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
+@using ErsatzTV.Application.Configuration.Queries
 @using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.Configuration.Commands
 @inject IDialogService Dialog
 @inject IMediator Mediator
 
@@ -56,11 +56,8 @@
 
     private int _rowsPerPage;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize))
-            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-    }
+    protected override async Task OnParametersSetAsync() => _rowsPerPage = await Mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize))
+        .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
     private async Task DeleteMediaCollection(MediaCardViewModel vm)
     {

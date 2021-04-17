@@ -42,6 +42,8 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<bool> AddGenre(ShowMetadata metadata, Genre genre);
         Task<bool> AddTag(ShowMetadata metadata, Tag tag);
         Task<bool> AddStudio(ShowMetadata metadata, Studio studio);
+        Task<bool> AddActor(ShowMetadata metadata, Actor actor);
+        Task<bool> AddActor(EpisodeMetadata metadata, Actor actor);
         Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys);
         Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys);
         Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys);
