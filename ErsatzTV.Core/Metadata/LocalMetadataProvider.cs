@@ -698,25 +698,28 @@ namespace ErsatzTV.Core.Metadata
                 }
             }
 
-            foreach (Actor actor in existing.Actors
-                .Filter(a => incoming.Actors.All(a2 => a2.Name != a.Name))
-                .ToList())
+            if (existing is not MusicVideoMetadata)
             {
-                existing.Actors.Remove(actor);
-                if (await _metadataRepository.RemoveActor(actor))
+                foreach (Actor actor in existing.Actors
+                    .Filter(a => incoming.Actors.All(a2 => a2.Name != a.Name))
+                    .ToList())
                 {
-                    updated = true;
+                    existing.Actors.Remove(actor);
+                    if (await _metadataRepository.RemoveActor(actor))
+                    {
+                        updated = true;
+                    }
                 }
-            }
 
-            foreach (Actor actor in incoming.Actors
-                .Filter(a => existing.Actors.All(a2 => a2.Name != a.Name))
-                .ToList())
-            {
-                existing.Actors.Add(actor);
-                if (await addActor(existing, actor))
+                foreach (Actor actor in incoming.Actors
+                    .Filter(a => existing.Actors.All(a2 => a2.Name != a.Name))
+                    .ToList())
                 {
-                    updated = true;
+                    existing.Actors.Add(actor);
+                    if (await addActor(existing, actor))
+                    {
+                        updated = true;
+                    }
                 }
             }
 
