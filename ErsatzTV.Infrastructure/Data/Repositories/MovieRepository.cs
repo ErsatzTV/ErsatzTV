@@ -67,6 +67,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Studios)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Actors)
+                .ThenInclude(a => a.Artwork)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .Include(i => i.MediaVersions)
@@ -98,6 +99,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Studios)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Actors)
+                .ThenInclude(a => a.Artwork)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaVersions)
@@ -112,7 +114,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await maybeExisting.Match(
                 plexMovie =>
                     Right<BaseError, MediaItemScanResult<PlexMovie>>(
-                        new MediaItemScanResult<PlexMovie>(plexMovie) { IsAdded = true }).AsTask(),
+                        new MediaItemScanResult<PlexMovie>(plexMovie) { IsAdded = false }).AsTask(),
                 async () => await AddPlexMovie(context, library, item));
         }
 

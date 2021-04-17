@@ -124,7 +124,7 @@ namespace ErsatzTV.Core.Plex
             PlexShow existing = result.Item;
             ShowMetadata existingMetadata = existing.ShowMetadata.Head();
 
-            if (incoming.ShowMetadata.Head().DateUpdated > existingMetadata.DateUpdated)
+            if (result.IsAdded || incoming.ShowMetadata.Head().DateUpdated > existingMetadata.DateUpdated)
             {
                 Either<BaseError, ShowMetadata> maybeMetadata =
                     await _plexServerApiClient.GetShowMetadata(
