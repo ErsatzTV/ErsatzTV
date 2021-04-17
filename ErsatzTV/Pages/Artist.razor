@@ -58,46 +58,58 @@
             </div>
         </div>
     </div>
-    @if (_artist.Languages.Any())
-    {
-        <MudText GutterBottom="true">Languages</MudText>
-        <div class="mb-2">
-            @foreach (CultureInfo language in _artist.Languages.OrderBy(l => l.EnglishName))
+    <MudCard Class="mb-6">
+        <MudCardContent>
+            @if (_sortedLanguages.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@language.EnglishName" Class="mr-2 mb-2" Link="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Languages:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=language%3a%22{Uri.EscapeDataString(_sortedLanguages.Head().EnglishName.ToLowerInvariant())}%22")">@_sortedLanguages.Head().EnglishName</MudLink>
+                    @foreach (CultureInfo language in _sortedLanguages.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")">@language.EnglishName</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_artist.Genres.Any())
-    {
-        <MudText GutterBottom="true">Genres</MudText>
-        <div class="mb-2">
-            @foreach (string genre in _artist.Genres.OrderBy(g => g))
+            @if (_sortedGenres.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2 mb-2" Link="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Genres:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=genre%3a%22{Uri.EscapeDataString(_sortedGenres.Head())}%22")">@_sortedGenres.Head()</MudLink>
+                    @foreach (string genre in _sortedGenres.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre)}%22")">@genre</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_artist.Styles.Any())
-    {
-        <MudText GutterBottom="true">Styles</MudText>
-        <div class="mb-2">
-            @foreach (string style in _artist.Styles.OrderBy(g => g))
+            @if (_sortedStyles.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@style" Class="mr-2 mb-2" Link="@($"/search?query=style%3a%22{Uri.EscapeDataString(style.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Styles:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=style%3a%22{Uri.EscapeDataString(_sortedStyles.Head())}%22")">@_sortedStyles.Head()</MudLink>
+                    @foreach (string style in _sortedStyles.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=style%3a%22{Uri.EscapeDataString(style)}%22")">@style</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_artist.Moods.Any())
-    {
-        <MudText GutterBottom="true">Moods</MudText>
-        <div class="mb-2">
-            @foreach (string mood in _artist.Moods.OrderBy(g => g))
+            @if (_sortedMoods.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@mood" Class="mr-2 mb-2" Link="@($"/search?query=mood%3a%22{Uri.EscapeDataString(mood.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Moods:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=mood%3a%22{Uri.EscapeDataString(_sortedMoods.Head())}%22")">@_sortedMoods.Head()</MudLink>
+                    @foreach (string mood in _sortedMoods.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=mood%3a%22{Uri.EscapeDataString(mood)}%22")">@mood</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
+        </MudCardContent>
+    </MudCard>
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
     @foreach (MusicVideoCardViewModel musicVideo in _musicVideos.Cards)
@@ -139,13 +151,25 @@
     public int ArtistId { get; set; }
 
     private ArtistViewModel _artist;
+    private List<CultureInfo> _sortedLanguages = new();
+    private List<string> _sortedGenres = new();
+    private List<string> _sortedStyles = new();
+    private List<string> _sortedMoods = new();
     private MusicVideoCardResultsViewModel _musicVideos;
 
     protected override Task OnParametersSetAsync() => RefreshData();
 
     private async Task RefreshData()
     {
-        await Mediator.Send(new GetArtistById(ArtistId)).IfSomeAsync(vm => _artist = vm);
+        await Mediator.Send(new GetArtistById(ArtistId)).IfSomeAsync(vm =>
+        {
+            _artist = vm;
+            _sortedLanguages = _artist.Languages.OrderBy(ci => ci.EnglishName).ToList();
+            _sortedGenres = _artist.Genres.OrderBy(g => g).ToList();
+            _sortedStyles = _artist.Styles.OrderBy(s => s).ToList();
+            _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
+        });
+
         _musicVideos = await Mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100));
     }
 

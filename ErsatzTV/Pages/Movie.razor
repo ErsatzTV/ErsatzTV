@@ -120,10 +120,10 @@
     public int MovieId { get; set; }
 
     private MovieViewModel _movie;
-    private List<CultureInfo> _sortedLanguages;
-    private List<string> _sortedStudios;
-    private List<string> _sortedGenres;
-    private List<string> _sortedTags;
+    private List<CultureInfo> _sortedLanguages = new();
+    private List<string> _sortedStudios = new();
+    private List<string> _sortedGenres = new();
+    private List<string> _sortedTags = new();
 
     protected override Task OnParametersSetAsync() => RefreshData();
 

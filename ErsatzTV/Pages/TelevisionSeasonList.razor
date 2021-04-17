@@ -145,10 +145,10 @@
     public int ShowId { get; set; }
 
     private TelevisionShowViewModel _show;
-    private List<CultureInfo> _sortedLanguages;
-    private List<string> _sortedStudios;
-    private List<string> _sortedGenres;
-    private List<string> _sortedTags;
+    private List<CultureInfo> _sortedLanguages = new();
+    private List<string> _sortedStudios = new();
+    private List<string> _sortedGenres = new();
+    private List<string> _sortedTags = new();
 
     private int _pageSize => 100;
     private readonly int _pageNumber = 1;
