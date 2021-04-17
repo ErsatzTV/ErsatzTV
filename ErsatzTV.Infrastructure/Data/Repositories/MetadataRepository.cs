@@ -37,14 +37,42 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             dbContext.Entry(metadata).State = EntityState.Added;
-            foreach (Genre genre in metadata.Genres)
+            
+            foreach (Genre genre in Optional(metadata.Genres).Flatten())
             {
                 dbContext.Entry(genre).State = EntityState.Added;
             }
 
-            foreach (Tag tag in metadata.Tags)
+            foreach (Tag tag in Optional(metadata.Tags).Flatten())
             {
                 dbContext.Entry(tag).State = EntityState.Added;
+            }
+
+            foreach (Studio studio in Optional(metadata.Studios).Flatten())
+            {
+                dbContext.Entry(studio).State = EntityState.Added;
+            }
+
+            if (metadata is ArtistMetadata artistMetadata)
+            {
+                foreach (Style style in Optional(artistMetadata.Styles).Flatten())
+                {
+                    dbContext.Entry(style).State = EntityState.Added;
+                }
+
+                foreach (Mood mood in Optional(artistMetadata.Moods).Flatten())
+                {
+                    dbContext.Entry(mood).State = EntityState.Added;
+                }
+            }
+
+            foreach (Actor actor in Optional(metadata.Actors).Flatten())
+            {
+                dbContext.Entry(actor).State = EntityState.Added;
+                if (actor.Artwork != null)
+                {
+                    dbContext.Entry(actor.Artwork).State = EntityState.Added;
+                }
             }
 
             return await dbContext.SaveChangesAsync() > 0;

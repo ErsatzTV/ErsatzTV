@@ -479,7 +479,7 @@ namespace ErsatzTV.Core.Metadata
                             Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                             Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                             Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
-                            Actors = nfo.Actors.Map(a => ProjectToModel(a, dateAdded, dateUpdated)).ToList()
+                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated)
                         };
                     },
                     None);
@@ -539,7 +539,7 @@ namespace ErsatzTV.Core.Metadata
                             Title = nfo.Title,
                             ReleaseDate = GetAired(0, nfo.Aired),
                             Plot = nfo.Plot,
-                            Actors = nfo.Actors.Map(a => ProjectToModel(a, dateAdded, dateUpdated)).ToList()
+                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated)
                         };
                         return Tuple(metadata, nfo.Episode);
                     },
@@ -578,7 +578,7 @@ namespace ErsatzTV.Core.Metadata
                             Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                             Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                             Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
-                            Actors = nfo.Actors.Map(a => ProjectToModel(a, dateAdded, dateUpdated)).ToList()
+                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated)
                         };
                     },
                     None);
@@ -723,27 +723,36 @@ namespace ErsatzTV.Core.Metadata
             return updated;
         }
 
-        private Actor ProjectToModel(ActorNfo actorNfo, DateTime dateAdded, DateTime dateUpdated)
+        private List<Actor> Actors(List<ActorNfo> actorNfos, DateTime dateAdded, DateTime dateUpdated)
         {
-            var actor = new Actor
+            var result = new List<Actor>();
+            
+            for (var i = 0; i < actorNfos.Count; i++)
             {
-                Name = actorNfo.Name,
-                Role = actorNfo.Role,
-                Order = actorNfo.Order
-            };
-
-            if (!string.IsNullOrWhiteSpace(actorNfo.Thumb))
-            {
-                actor.Artwork = new Artwork
+                ActorNfo actorNfo = actorNfos[i];
+                
+                var actor = new Actor
                 {
-                    Path = actorNfo.Thumb,
-                    ArtworkKind = ArtworkKind.Thumbnail,
-                    DateAdded = dateAdded,
-                    DateUpdated = dateUpdated
+                    Name = actorNfo.Name,
+                    Role = actorNfo.Role,
+                    Order = actorNfo.Order ?? i
                 };
+
+                if (!string.IsNullOrWhiteSpace(actorNfo.Thumb))
+                {
+                    actor.Artwork = new Artwork
+                    {
+                        Path = actorNfo.Thumb,
+                        ArtworkKind = ArtworkKind.Thumbnail,
+                        DateAdded = dateAdded,
+                        DateUpdated = dateUpdated
+                    };
+                }
+
+                result.Add(actor);
             }
 
-            return actor;
+            return result;
         }
     }
 }
