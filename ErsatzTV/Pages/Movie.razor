@@ -2,6 +2,7 @@
 @using ErsatzTV.Application.Movies
 @using ErsatzTV.Application.Movies.Queries
 @using System.Globalization
+@using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @inject IMediator Mediator
@@ -97,21 +98,21 @@
         </MudCardContent>
     </MudCard>
 </MudContainer>
-    @if (_movie.Actors.Any())
-    {
-        <MudContainer MaxWidth="MaxWidth.Large">
-            <MudText Class="mb-4">Actors</MudText>
-        </MudContainer>
-        <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
-            @foreach (var actor in _movie.Actors)
-            {
-                <MediaCard Data="@actor"
-                           Link="@($"/search?query=actor%3a%22{Uri.EscapeDataString(actor.Name.ToLowerInvariant())}%22")"
-                           IsRemoteArtwork="true"
-                           ArtworkKind="ArtworkKind.Thumbnail"/>
-            }
-        </MudContainer>
-    }
+@if (_movie.Actors.Any())
+{
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudText Class="mb-4">Actors</MudText>
+    </MudContainer>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
+        @foreach (ActorCardViewModel actor in _movie.Actors)
+        {
+            <MediaCard Data="@actor"
+                       Link="@($"/search?query=actor%3a%22{Uri.EscapeDataString(actor.Name.ToLowerInvariant())}%22")"
+                       IsRemoteArtwork="true"
+                       ArtworkKind="ArtworkKind.Thumbnail"/>
+        }
+    </MudContainer>
+}
 
 @code {
 
