@@ -88,7 +88,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
 
         private async Task Upsert(ConfigElementKey key, string value)
         {
-            Option<ConfigElement> maybeElement = await _configElementRepository.Get(key); 
+            Option<ConfigElement> maybeElement = await _configElementRepository.Get(key);
             await maybeElement.Match(
                 ce =>
                 {

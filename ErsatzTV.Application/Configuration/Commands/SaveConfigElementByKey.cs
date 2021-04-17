@@ -1,7 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
-using MediatR;
+using LanguageExt;
 
 namespace ErsatzTV.Application.Configuration.Commands
 {
-    public record SaveConfigElementByKey(ConfigElementKey Key, string Value) : IRequest<LanguageExt.Unit>;
+    public record SaveConfigElementByKey(ConfigElementKey Key, string Value) : MediatR.IRequest<Unit>;
 }

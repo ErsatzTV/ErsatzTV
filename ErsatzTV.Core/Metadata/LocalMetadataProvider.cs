@@ -726,11 +726,11 @@ namespace ErsatzTV.Core.Metadata
         private List<Actor> Actors(List<ActorNfo> actorNfos, DateTime dateAdded, DateTime dateUpdated)
         {
             var result = new List<Actor>();
-            
+
             for (var i = 0; i < actorNfos.Count; i++)
             {
                 ActorNfo actorNfo = actorNfos[i];
-                
+
                 var actor = new Actor
                 {
                     Name = actorNfo.Name,

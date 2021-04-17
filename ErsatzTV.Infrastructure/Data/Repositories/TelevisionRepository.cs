@@ -648,7 +648,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             DateUpdated = DateTime.MinValue,
                             MetadataKind = MetadataKind.Fallback,
                             Actors = new List<Actor>()
-                        },
+                        }
                     },
                     MediaVersions = new List<MediaVersion>
                     {

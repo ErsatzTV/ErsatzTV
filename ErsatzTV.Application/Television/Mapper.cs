@@ -25,7 +25,9 @@ namespace ErsatzTV.Application.Television
                     .IfNone(new List<string>()),
                 LanguagesForShow(languages),
                 show.ShowMetadata.HeadOrNone()
-                    .Map(m => m.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id).Map(MediaCards.Mapper.ProjectToViewModel).ToList())
+                    .Map(
+                        m => m.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id).Map(MediaCards.Mapper.ProjectToViewModel)
+                            .ToList())
                     .IfNone(new List<ActorCardViewModel>()));
 
         internal static TelevisionSeasonViewModel ProjectToViewModel(Season season) =>
