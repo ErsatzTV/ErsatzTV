@@ -97,6 +97,7 @@ namespace ErsatzTV.Core.Metadata
                 {
                     metadata.Title = match.Groups[1].Value;
                     metadata.DateUpdated = DateTime.UtcNow;
+                    metadata.Actors = new List<Actor>();
                     return Tuple(metadata, int.Parse(match.Groups[3].Value));
                 }
             }
@@ -122,6 +123,7 @@ namespace ErsatzTV.Core.Metadata
                     metadata.Genres = new List<Genre>();
                     metadata.Tags = new List<Tag>();
                     metadata.Studios = new List<Studio>();
+                    metadata.Actors = new List<Actor>();
                     metadata.DateUpdated = DateTime.UtcNow;
                 }
             }
@@ -166,6 +168,10 @@ namespace ErsatzTV.Core.Metadata
                     metadata.Title = match.Groups[1].Value;
                     metadata.Year = int.Parse(match.Groups[2].Value);
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
+                    metadata.Genres = new List<Genre>();
+                    metadata.Tags = new List<Tag>();
+                    metadata.Studios = new List<Studio>();
+                    metadata.Actors = new List<Actor>();
                     metadata.DateUpdated = DateTime.UtcNow;
                 }
             }

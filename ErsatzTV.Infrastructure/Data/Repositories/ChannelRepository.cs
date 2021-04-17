@@ -13,8 +13,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 {
     public class ChannelRepository : IChannelRepository
     {
-        private readonly TvContext _dbContext;
         private readonly IDbConnection _dbConnection;
+        private readonly TvContext _dbContext;
 
         public ChannelRepository(TvContext dbContext, IDbConnection dbConnection)
         {

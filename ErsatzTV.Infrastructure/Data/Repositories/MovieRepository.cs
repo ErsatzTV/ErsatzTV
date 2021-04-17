@@ -43,6 +43,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(m => m.Tags)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Studios)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(m => m.Actors)
+                .ThenInclude(a => a.Artwork)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
                 .OrderBy(m => m.Id)
@@ -62,6 +65,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Tags)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Studios)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Actors)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .Include(i => i.MediaVersions)
@@ -91,6 +96,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Tags)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Studios)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Actors)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaVersions)
@@ -186,6 +193,31 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Studio (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public async Task<bool> AddActor(MovieMetadata metadata, Actor actor)
+        {
+            int? artworkId = null;
+
+            if (actor.Artwork != null)
+            {
+                artworkId = await _dbConnection.QuerySingleAsync<int>(
+                    @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
+                      VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
+                      SELECT last_insert_rowid()",
+                    new
+                    {
+                        ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                        actor.Artwork.DateAdded,
+                        actor.Artwork.DateUpdated,
+                        actor.Artwork.Path
+                    });
+            }
+
+            return await _dbConnection.ExecuteAsync(
+                    "INSERT INTO Actor (Name, Role, \"Order\", MovieMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
+                    new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
+                .Map(result => result > 0);
+        }
 
         public async Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys)
         {

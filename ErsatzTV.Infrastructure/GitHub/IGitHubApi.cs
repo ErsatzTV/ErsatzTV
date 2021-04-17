@@ -10,7 +10,7 @@ namespace ErsatzTV.Infrastructure.GitHub
     {
         [Get("/repos/jasongdove/ErsatzTV/releases")]
         public Task<List<GitHubTag>> GetReleases();
-        
+
         [Get("/repos/jasongdove/ErsatzTV/releases/tags/{tag}")]
         public Task<GitHubTag> GetTag(string tag);
     }

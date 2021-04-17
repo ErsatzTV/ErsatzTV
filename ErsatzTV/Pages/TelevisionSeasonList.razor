@@ -59,48 +59,63 @@
             </div>
         </div>
     </div>
-    @if (_show.Languages.Any())
-    {
-        <MudText GutterBottom="true">Languages</MudText>
-        <div class="mb-2">
-            @foreach (CultureInfo language in _show.Languages.OrderBy(l => l.EnglishName))
+    <MudCard Class="mb-6">
+        <MudCardContent>
+            @if (_sortedLanguages.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@language.EnglishName" Class="mr-2 mb-2" Link="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Languages:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=language%3a%22{Uri.EscapeDataString(_sortedLanguages.Head().EnglishName.ToLowerInvariant())}%22")">@_sortedLanguages.Head().EnglishName</MudLink>
+                    @foreach (CultureInfo language in _sortedLanguages.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")">@language.EnglishName</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_show.Studios.Any())
-    {
-        <MudText GutterBottom="true">Studios</MudText>
-        <div class="mb-2">
-            @foreach (string studio in _show.Studios.OrderBy(g => g))
+            @if (_sortedStudios.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@studio" Class="mr-2 mb-2" Link="@($"/search?query=studio%3a%22{Uri.EscapeDataString(studio.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Studios:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=studio%3a%22{Uri.EscapeDataString(_sortedStudios.Head())}%22")">@_sortedStudios.Head()</MudLink>
+                    @foreach (string studio in _sortedStudios.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=studio%3a%22{Uri.EscapeDataString(studio)}%22")">@studio</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_show.Genres.Any())
-    {
-        <MudText GutterBottom="true">Genres</MudText>
-        <div class="mb-2">
-            @foreach (string genre in _show.Genres.OrderBy(g => g))
+            @if (_sortedGenres.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2 mb-2" Link="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Genres:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=genre%3a%22{Uri.EscapeDataString(_sortedGenres.Head())}%22")">@_sortedGenres.Head()</MudLink>
+                    @foreach (string genre in _sortedGenres.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre)}%22")">@genre</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_show.Tags.Any())
-    {
-        <MudText GutterBottom="true">Tags</MudText>
-        <div>
-            @foreach (string tag in _show.Tags.OrderBy(t => t))
+            @if (_sortedTags.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@tag" Class="mr-2 mb-2" Link="@($"/search?query=tag%3a%22{Uri.EscapeDataString(tag.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Tags:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=tag%3a%22{Uri.EscapeDataString(_sortedTags.Head())}%22")">@_sortedTags.Head()</MudLink>
+                    @foreach (string tag in _sortedTags.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=tag%3a%22{Uri.EscapeDataString(tag)}%22")">@tag</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
+        </MudCardContent>
+    </MudCard>
 </MudContainer>
-<MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid mt-8">
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Class="mb-4">Seasons</MudText>
+</MudContainer>
+<MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
     @foreach (TelevisionSeasonCardViewModel card in _data.Cards)
     {
         <MediaCard Data="@card" Placeholder="@card.Placeholder"
@@ -108,6 +123,21 @@
                    AddToCollectionClicked="@AddSeasonToCollection"/>
     }
 </MudContainer>
+@if (_show.Actors.Any())
+{
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudText Class="mb-4">Actors</MudText>
+    </MudContainer>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
+        @foreach (ActorCardViewModel actor in _show.Actors)
+        {
+            <MediaCard Data="@actor"
+                       Link="@($"/search?query=actor%3a%22{Uri.EscapeDataString(actor.Name.ToLowerInvariant())}%22")"
+                       IsRemoteArtwork="true"
+                       ArtworkKind="ArtworkKind.Thumbnail"/>
+        }
+    </MudContainer>
+}
 
 @code {
 
@@ -115,6 +145,10 @@
     public int ShowId { get; set; }
 
     private TelevisionShowViewModel _show;
+    private List<CultureInfo> _sortedLanguages = new();
+    private List<string> _sortedStudios = new();
+    private List<string> _sortedGenres = new();
+    private List<string> _sortedTags = new();
 
     private int _pageSize => 100;
     private readonly int _pageNumber = 1;
@@ -126,7 +160,14 @@
     private async Task RefreshData()
     {
         await Mediator.Send(new GetTelevisionShowById(ShowId))
-            .IfSomeAsync(vm => _show = vm);
+            .IfSomeAsync(vm =>
+            {
+                _show = vm;
+                _sortedLanguages = _show.Languages.OrderBy(ci => ci.EnglishName).ToList();
+                _sortedStudios = _show.Studios.OrderBy(s => s).ToList();
+                _sortedGenres = _show.Genres.OrderBy(g => g).ToList();
+                _sortedTags = _show.Tags.OrderBy(t => t).ToList();
+            });
 
         _data = await Mediator.Send(new GetTelevisionSeasonCards(ShowId, _pageNumber, _pageSize));
     }

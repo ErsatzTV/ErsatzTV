@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using LanguageExt;
 using static LanguageExt.Prelude;
@@ -22,7 +23,12 @@ namespace ErsatzTV.Application.Television
                 show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Map(g => g.Name).ToList()).IfNone(new List<string>()),
                 show.ShowMetadata.HeadOrNone().Map(m => m.Studios.Map(s => s.Name).ToList())
                     .IfNone(new List<string>()),
-                LanguagesForShow(languages));
+                LanguagesForShow(languages),
+                show.ShowMetadata.HeadOrNone()
+                    .Map(
+                        m => m.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id).Map(MediaCards.Mapper.ProjectToViewModel)
+                            .ToList())
+                    .IfNone(new List<ActorCardViewModel>()));
 
         internal static TelevisionSeasonViewModel ProjectToViewModel(Season season) =>
             new(

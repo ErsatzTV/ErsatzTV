@@ -55,6 +55,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(sm => sm.Tags)
                 .Include(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Studios)
+                .Include(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Actors)
+                .ThenInclude(a => a.Artwork)
                 .OrderBy(s => s.Id)
                 .SingleOrDefaultAsync()
                 .Map(Optional);
@@ -188,6 +191,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Actors)
                 .OrderBy(em => em.Episode.EpisodeNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -217,6 +221,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(sm => sm.Tags)
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Studios)
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Actors)
+                        .ThenInclude(a => a.Artwork)
                         .Include(s => s.LibraryPath)
                         .ThenInclude(lp => lp.Library)
                         .OrderBy(s => s.Id)
@@ -239,6 +246,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 metadata.Genres ??= new List<Genre>();
                 metadata.Tags ??= new List<Tag>();
                 metadata.Studios ??= new List<Studio>();
+                metadata.Actors ??= new List<Actor>();
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
@@ -283,6 +291,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<Episode> maybeExisting = await dbContext.Episodes
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(em => em.Actors)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
@@ -382,6 +392,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.ShowMetadata)
                 .ThenInclude(sm => sm.Studios)
                 .Include(i => i.ShowMetadata)
+                .ThenInclude(sm => sm.Actors)
+                .Include(i => i.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
@@ -420,6 +432,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(e => e.EpisodeMetadata)
+                .ThenInclude(em => em.Actors)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -507,6 +521,56 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "INSERT INTO Studio (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
                 new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
+        public async Task<bool> AddActor(ShowMetadata metadata, Actor actor)
+        {
+            int? artworkId = null;
+
+            if (actor.Artwork != null)
+            {
+                artworkId = await _dbConnection.QuerySingleAsync<int>(
+                    @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
+                      VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
+                      SELECT last_insert_rowid()",
+                    new
+                    {
+                        ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                        actor.Artwork.DateAdded,
+                        actor.Artwork.DateUpdated,
+                        actor.Artwork.Path
+                    });
+            }
+
+            return await _dbConnection.ExecuteAsync(
+                    "INSERT INTO Actor (Name, Role, \"Order\", ShowMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
+                    new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
+                .Map(result => result > 0);
+        }
+
+        public async Task<bool> AddActor(EpisodeMetadata metadata, Actor actor)
+        {
+            int? artworkId = null;
+
+            if (actor.Artwork != null)
+            {
+                artworkId = await _dbConnection.QuerySingleAsync<int>(
+                    @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
+                      VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
+                      SELECT last_insert_rowid()",
+                    new
+                    {
+                        ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                        actor.Artwork.DateAdded,
+                        actor.Artwork.DateUpdated,
+                        actor.Artwork.Path
+                    });
+            }
+
+            return await _dbConnection.ExecuteAsync(
+                    "INSERT INTO Actor (Name, Role, \"Order\", EpisodeMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
+                    new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
+                .Map(result => result > 0);
+        }
+
         public async Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys)
         {
             List<int> ids = await _dbConnection.QueryAsync<int>(
@@ -582,7 +646,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         {
                             DateAdded = DateTime.UtcNow,
                             DateUpdated = DateTime.MinValue,
-                            MetadataKind = MetadataKind.Fallback
+                            MetadataKind = MetadataKind.Fallback,
+                            Actors = new List<Actor>()
                         }
                     },
                     MediaVersions = new List<MediaVersion>

@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Collections.Generic;
+using System.Xml.Serialization;
 
 namespace ErsatzTV.Core.Metadata.Nfo
 {
@@ -25,5 +26,8 @@ namespace ErsatzTV.Core.Metadata.Nfo
 
         [XmlElement("plot")]
         public string Plot { get; set; }
+
+        [XmlElement("actor")]
+        public List<ActorNfo> Actors { get; set; }
     }
 }

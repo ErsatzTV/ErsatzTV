@@ -2,6 +2,7 @@
 @using ErsatzTV.Application.Movies
 @using ErsatzTV.Application.Movies.Queries
 @using System.Globalization
+@using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @inject IMediator Mediator
@@ -44,47 +45,74 @@
             </div>
         </div>
     </div>
-    @if (_movie.Languages.Any())
-    {
-        <MudText GutterBottom="true">Languages</MudText>
-        <div class="mb-2">
-            @foreach (CultureInfo language in _movie.Languages.OrderBy(l => l.EnglishName))
+    <MudCard Class="mb-6">
+        <MudCardContent>
+            @if (_sortedLanguages.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@language.EnglishName" Class="mr-2 mb-2" Link="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Languages:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=language%3a%22{Uri.EscapeDataString(_sortedLanguages.Head().EnglishName.ToLowerInvariant())}%22")">@_sortedLanguages.Head().EnglishName</MudLink>
+                    @foreach (CultureInfo language in _sortedLanguages.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")">@language.EnglishName</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_movie.Studios.Any())
-    {
-        <MudText GutterBottom="true">Studios</MudText>
-        <div class="mb-2">
-            @foreach (string studio in _movie.Studios.OrderBy(s => s))
+            @if (_sortedStudios.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@studio" Class="mr-2 mb-2" Link="@($"/search?query=studio%3a%22{Uri.EscapeDataString(studio.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Studios:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=studio%3a%22{Uri.EscapeDataString(_sortedStudios.Head())}%22")">@_sortedStudios.Head()</MudLink>
+                    @foreach (string studio in _sortedStudios.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=studio%3a%22{Uri.EscapeDataString(studio)}%22")">@studio</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_movie.Genres.Any())
-    {
-        <MudText GutterBottom="true">Genres</MudText>
-        <div class="mb-2">
-            @foreach (string genre in _movie.Genres.OrderBy(g => g))
+            @if (_sortedGenres.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@genre" Class="mr-2 mb-2" Link="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Genres:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=genre%3a%22{Uri.EscapeDataString(_sortedGenres.Head())}%22")">@_sortedGenres.Head()</MudLink>
+                    @foreach (string genre in _sortedGenres.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre)}%22")">@genre</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
-    @if (_movie.Tags.Any())
-    {
-        <MudText GutterBottom="true">Tags</MudText>
-        <div>
-            @foreach (string tag in _movie.Tags.OrderBy(t => t))
+            @if (_sortedTags.Any())
             {
-                <MudFab Color="Color.Info" Size="Size.Small" Label="@tag" Class="mr-2 mb-2" Link="@($"/search?query=tag%3a%22{Uri.EscapeDataString(tag.ToLowerInvariant())}%22")"/>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Tags:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=tag%3a%22{Uri.EscapeDataString(_sortedTags.Head())}%22")">@_sortedTags.Head()</MudLink>
+                    @foreach (string tag in _sortedTags.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=tag%3a%22{Uri.EscapeDataString(tag)}%22")">@tag</MudLink>
+                    }
+                </div>
             }
-        </div>
-    }
+        </MudCardContent>
+    </MudCard>
 </MudContainer>
+@if (_movie.Actors.Any())
+{
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudText Class="mb-4">Actors</MudText>
+    </MudContainer>
+    <MudContainer MaxWidth="MaxWidth.Large" Class="media-card-grid">
+        @foreach (ActorCardViewModel actor in _movie.Actors)
+        {
+            <MediaCard Data="@actor"
+                       Link="@($"/search?query=actor%3a%22{Uri.EscapeDataString(actor.Name.ToLowerInvariant())}%22")"
+                       IsRemoteArtwork="true"
+                       ArtworkKind="ArtworkKind.Thumbnail"/>
+        }
+    </MudContainer>
+}
 
 @code {
 
@@ -92,11 +120,22 @@
     public int MovieId { get; set; }
 
     private MovieViewModel _movie;
+    private List<CultureInfo> _sortedLanguages = new();
+    private List<string> _sortedStudios = new();
+    private List<string> _sortedGenres = new();
+    private List<string> _sortedTags = new();
 
     protected override Task OnParametersSetAsync() => RefreshData();
 
     private Task RefreshData() =>
-        Mediator.Send(new GetMovieById(MovieId)).IfSomeAsync(vm => _movie = vm);
+        Mediator.Send(new GetMovieById(MovieId)).IfSomeAsync(vm =>
+        {
+            _movie = vm;
+            _sortedLanguages = _movie.Languages.OrderBy(ci => ci.EnglishName).ToList();
+            _sortedStudios = _movie.Studios.OrderBy(s => s).ToList();
+            _sortedGenres = _movie.Genres.OrderBy(g => g).ToList();
+            _sortedTags = _movie.Tags.OrderBy(t => t).ToList();
+        });
 
     private async Task AddToCollection()
     {
