@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using ErsatzTV.Core.Domain;
 using static LanguageExt.Prelude;
@@ -86,15 +85,13 @@ namespace ErsatzTV.Application.MediaCards
                 collection.MediaItems.OfType<MusicVideo>().Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head()))
                     .ToList()) { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
 
+        internal static ActorCardViewModel ProjectToViewModel(Actor actor) =>
+            new(actor.Id, actor.Name, actor.Role, actor.Artwork?.Path);
+
         private static int GetCustomIndex(Collection collection, int mediaItemId) =>
             Optional(collection.CollectionItems.Find(ci => ci.MediaItemId == mediaItemId))
                 .Map(ci => ci.CustomIndex ?? 0)
                 .IfNone(0);
-
-        internal static SearchCardResultsViewModel ProjectToSearchResults(List<MediaItem> items) =>
-            new(
-                items.OfType<Movie>().Map(m => ProjectToViewModel(m.MovieMetadata.Head())).ToList(),
-                items.OfType<Show>().Map(s => ProjectToViewModel(s.ShowMetadata.Head())).ToList());
 
         private static string GetSeasonName(int number) =>
             number == 0 ? "Specials" : $"Season {number}";

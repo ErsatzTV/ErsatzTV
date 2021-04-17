@@ -23,7 +23,8 @@ namespace ErsatzTV.Application.Movies
                 metadata.Tags.Map(t => t.Name).ToList(),
                 metadata.Studios.Map(s => s.Name).ToList(),
                 LanguagesForMovie(movie),
-                metadata.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id).Map(a => a.Name).ToList());
+                metadata.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id).Map(MediaCards.Mapper.ProjectToViewModel)
+                    .ToList());
         }
 
         private static List<CultureInfo> LanguagesForMovie(Movie movie)

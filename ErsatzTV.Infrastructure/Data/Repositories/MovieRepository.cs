@@ -45,6 +45,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(m => m.Studios)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Actors)
+                .ThenInclude(a => a.Artwork)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
                 .OrderBy(m => m.Id)
