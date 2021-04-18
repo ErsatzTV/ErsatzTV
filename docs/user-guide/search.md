@@ -6,21 +6,58 @@ Movies, Shows, Artists and Music Videos can be searched using the search box nex
 
 ## Search Fields
 
-The following fields are available for searching:
+The `title` field of all media types is searched by default if no other field is specified.
 
-- `title`: The movie, show, artist or music video name/title
-- `genre`: The movie, show, or artist genre
-- `tag`: The movie or show tag (not available with Plex metadata)
+### Movies
+
+The following fields are available for searching movies:
+
+- `title`: The movie title
+- `genre`: The movie genre
+- `tag`: The movie tag (not available with Plex metadata)
+- `plot`: The movie plot
+- `studio`: The movie studio
+- `actor`: An actor from the movie
+- `library_name`: The name of the library that contains the movie
+- `language`: The movie audio stream language
+- `release_date`: The movie release date (YYYYMMDD)
+- `type`: Always `movie`
+
+### Shows
+
+The following fields are available for searching shows:
+
+- `title`: The show title
+- `genre`: The show genre
+- `tag`: The show tag (not available with Plex metadata)
+- `plot`: The show plot
+- `studio`: The show studio
+- `actor`: An actor from the show
+- `library_name`: The name of the library that contains the show
+- `language`: The show audio stream language
+- `release_date`: The show release date (YYYYMMDD)
+- `type`: Always `show`
+
+### Artists
+
+The following fields are available for searching artists:
+
+- `title`: The artist name
+- `genre`: The artist genre
 - `style`: The artist style
 - `mood`: The artist mood
-- `plot`: The movie or show plot
-- `studio`: The movie or show studio
-- `library_name`: The name of the library
-- `language`: The movie, show or music video audio stream language
-- `release_date`: The movie or show release date (YYYYMMDD)
-- `type`: The media item type: `movie`, `show`, `artist` or `music_video`
+- `library_name`: The name of the library that contains the artist
+- `type`: Always `artist`
 
-Note that the `title` field is searched by default if no other field is specified.
+### Music Videos
+
+The following fields are available for searching music videos:
+
+- `title`: The music video title
+- `genre`: The music video genre
+- `library_name`: The name of the library that contains the music video
+- `language`: The music video audio stream language
+- `type`: Always `music_video`
 
 ## Sample Searches
 
