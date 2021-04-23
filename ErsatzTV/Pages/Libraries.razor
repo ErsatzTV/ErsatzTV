@@ -22,7 +22,7 @@
             <col/>
             <col/>
             <col/>
-            <col style="width: 180px;"/>
+            <col style="width: 240px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Library Kind</MudTh>
@@ -60,6 +60,11 @@
                             </MudIconButton>
                         </MudTooltip>
                     }
+                    <MudTooltip Text="Search Library">
+                        <MudIconButton Icon="@Icons.Material.Filled.Search"
+                                       Link="@($"/search?query=library_name%3a%22{Uri.EscapeDataString(context.Name)}%22")">
+                        </MudIconButton>
+                    </MudTooltip>
                     @if (context is LocalLibraryViewModel)
                     {
                         <MudTooltip Text="Edit Library">
