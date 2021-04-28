@@ -98,7 +98,7 @@ namespace ErsatzTV.Core.Metadata
                     continue;
                 }
 
-                if (_localFileSystem.GetLastWriteTime(movieFolder) < lastScan)
+                if (allFiles.All(file => _localFileSystem.GetLastWriteTime(file) < lastScan))
                 {
                     continue;
                 }
