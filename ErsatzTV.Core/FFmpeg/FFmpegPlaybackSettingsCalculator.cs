@@ -68,8 +68,10 @@ namespace ErsatzTV.Core.FFmpeg
                     result.AudioCodec = "copy";
                     result.VideoCodec = "copy";
                     result.Deinterlace = false;
+                    result.RealtimeOutput = false;
                     break;
                 case StreamingMode.TransportStream:
+                    result.RealtimeOutput = true;
                     result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
 
                     if (NeedToScale(ffmpegProfile, version))
