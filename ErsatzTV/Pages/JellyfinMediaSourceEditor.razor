@@ -1,0 +1,63 @@
+﻿@page "/media/jellyfin/edit"
+@using ErsatzTV.Application.Jellyfin.Queries
+@using ErsatzTV.Core.Jellyfin
+@inject IMediator _mediator;
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">Jellyfin Media Source</MudText>
+    <div style="max-width: 400px;">
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Address" @bind-Value="_model.Address" For="@(() => _model.Address)" />
+                    <MudTextField Label="Api Key" @bind-Value="_model.ApiKey" For="@(() => _model.ApiKey)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+                        Save Changes
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
+
+@code {
+    private readonly JellyfinMediaSourceEditViewModel _model = new();
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        JellyfinSecrets secrets = await _mediator.Send(new GetJellyfinSecrets());
+        _model.Address = secrets.Address;
+        _model.ApiKey = secrets.ApiKey;
+    }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            // Seq<BaseError> errorMessage = IsEdit ?
+            //     (await Mediator.Send(new UpdateCollection(Id, _model.Name))).LeftToSeq() :
+            //     (await Mediator.Send(new CreateCollection(_model.Name))).LeftToSeq();
+            //
+            // errorMessage.HeadOrNone().Match(
+            //     error =>
+            //     {
+            //         Snackbar.Add(error.Value, Severity.Error);
+            //         Logger.LogError("Error saving collection: {Error}", error.Value);
+            //     },
+            //     () => NavigationManager.NavigateTo(_model.Id > 0 ? $"/media/collections/{_model.Id}" : "/media/collections"));
+        }
+    }
+
+}

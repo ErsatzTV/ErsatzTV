@@ -12,6 +12,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.GitHub;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -27,6 +28,7 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.GitHub;
 using ErsatzTV.Infrastructure.Images;
+using ErsatzTV.Infrastructure.Jellyfin;
 using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
@@ -236,9 +238,11 @@ namespace ErsatzTV
                     sanitizer.AllowedAttributes.Add("class");
                     return sanitizer;
                 });
+            services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
 
             services.AddHostedService<DatabaseMigratorService>();
             services.AddHostedService<CacheCleanerService>();
+            services.AddHostedService<JellyfinService>();
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();
             services.AddHostedService<WorkerService>();
