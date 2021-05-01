@@ -12,5 +12,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<FFmpegProfile>> GetAll();
         Task Update(FFmpegProfile ffmpegProfile);
         Task Delete(int ffmpegProfileId);
+        Task<FFmpegProfile> Copy(int ffmpegProfileId, string name);
     }
 }
