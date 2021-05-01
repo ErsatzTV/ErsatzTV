@@ -2,10 +2,11 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Commands
 @using ErsatzTV.Application.FFmpegProfiles.Queries
-@inject IDialogService Dialog
-@inject IMediator Mediator
-@inject ILogger<FFmpeg> Logger
-@inject ISnackbar Snackbar
+@inject IDialogService _dialog
+@inject IMediator _mediator
+@inject ILogger<FFmpeg> _logger
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigationManager
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_ffmpegProfiles">
@@ -20,7 +21,7 @@
             <col/>
             <col/>
             <col/>
-            <col style="width: 120px;"/>
+            <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Name</MudTh>
@@ -52,12 +53,17 @@
             </MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Edit Channel">
+                    <MudTooltip Text="Edit Profile">
                         <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                        Link="@($"/ffmpeg/{context.Id}")">
                         </MudIconButton>
                     </MudTooltip>
-                    <MudTooltip Text="Delete Channel">
+                    <MudTooltip Text="Copy Profile">
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="@(_ => CopyProfileAsync(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Profile">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                        OnClick="@(_ => DeleteProfileAsync(context))">
                         </MudIconButton>
@@ -77,19 +83,32 @@
     protected override async Task OnParametersSetAsync() => await LoadFFmpegProfilesAsync();
 
     private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
 
     private async Task DeleteProfileAsync(FFmpegProfileViewModel ffmpegProfile)
     {
         var parameters = new DialogParameters { { "EntityType", "ffmpeg profile" }, { "EntityName", ffmpegProfile.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete FFmpeg Profile", parameters, options);
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete FFmpeg Profile", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await Mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id));
+            await _mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id));
             await LoadFFmpegProfilesAsync();
+        }
+    }
+
+    private async Task CopyProfileAsync(FFmpegProfileViewModel ffmpegProfile)
+    {
+        var parameters = new DialogParameters { { "FFmpegProfileId", ffmpegProfile.Id } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = _dialog.Show<CopyFFmpegProfileDialog>("Copy FFmpeg Profile", parameters, options);
+        DialogResult dialogResult = await dialog.Result;
+        if (!dialogResult.Cancelled && dialogResult.Data is FFmpegProfileViewModel data)
+        {
+            _navigationManager.NavigateTo($"/ffmpeg/{data.Id}");
         }
     }
 

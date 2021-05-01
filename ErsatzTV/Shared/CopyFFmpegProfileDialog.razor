@@ -1,0 +1,70 @@
+﻿@using ErsatzTV.Application.FFmpegProfiles
+@using ErsatzTV.Application.FFmpegProfiles.Commands
+@inject IMediator _mediator
+@inject ISnackbar _snackbar
+@inject ILogger<AddToCollectionDialog> _logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudText>
+                    Enter a name for the new FFmpeg Profile
+                </MudText>
+            </MudContainer>
+            <MudTextFieldString Label="New FFmpeg Profile Name"
+                                @bind-Text="@_newFFmpegProfileName"
+                                Class="mb-6 mx-4">
+            </MudTextFieldString>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Copy Profile
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int FFmpegProfileId { get; set; }
+
+    private record DummyModel;
+    private readonly DummyModel _dummyModel = new();
+    
+    private string _newFFmpegProfileName;
+    
+    private bool CanSubmit() => !string.IsNullOrWhiteSpace(_newFFmpegProfileName);
+    
+    private async Task Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        Either<BaseError, FFmpegProfileViewModel> maybeResult =
+            await _mediator.Send(new CopyFFmpegProfile(FFmpegProfileId, _newFFmpegProfileName));
+
+        maybeResult.Match(
+            ffmpegProfile =>
+            {
+                MudDialog.Close(DialogResult.Ok(ffmpegProfile));
+            },
+            error =>
+            {
+                _snackbar.Add(error.Value, Severity.Error);
+                _logger.LogError("Error copying FFmpeg Profile: {Error}", error.Value);
+                MudDialog.Close(DialogResult.Cancel());
+            });
+    }
+    
+    private void Cancel(MouseEventArgs e)
+    {
+        MudDialog.Cancel();
+    }
+}
