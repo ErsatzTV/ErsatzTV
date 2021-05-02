@@ -67,45 +67,45 @@
 </MudContainer>
 
 @code {
-    private List<JellyfinMediaSourceViewModel> _mediaSources = new();
+    private readonly List<JellyfinMediaSourceViewModel> _mediaSources = new();
 
     private bool _isAuthorized;
-    
+
     protected override async Task OnParametersSetAsync() => await LoadMediaSources();
-    
+
     private async Task LoadMediaSources()
     {
-        // _isAuthorized = await JellyfinSecretStore.GetApiKeys().Map(list => Prelude.Optional(list).Flatten().Any());
-        // _mediaSources = await Mediator.Send(new GetAllJellyfinMediaSources());
+    // _isAuthorized = await JellyfinSecretStore.GetApiKeys().Map(list => Prelude.Optional(list).Flatten().Any());
+    // _mediaSources = await Mediator.Send(new GetAllJellyfinMediaSources());
     }
 
     private async Task DisconnectJellyfin()
     {
-        // var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
-        // IDialogReference dialog = Dialog.Show<SignOutOfPlexDialog>("Sign out of Plex", options);
-        // DialogResult result = await dialog.Result;
-        // if (!result.Cancelled)
-        // {
-        //     if (Locker.LockPlex())
-        //     {
-        //         await Mediator.Send(new SignOutOfPlex());
-        //         await LoadMediaSources();
-        //     }
-        // }
+    // var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+    // IDialogReference dialog = Dialog.Show<SignOutOfPlexDialog>("Sign out of Plex", options);
+    // DialogResult result = await dialog.Result;
+    // if (!result.Cancelled)
+    // {
+    //     if (Locker.LockPlex())
+    //     {
+    //         await Mediator.Send(new SignOutOfPlex());
+    //         await LoadMediaSources();
+    //     }
+    // }
     }
-    
+
     private async Task AddJellyfinMediaSource()
     {
-        // Either<BaseError, string> maybeUrl = await Mediator.Send(new StartPlexPinFlow());
-        // await maybeUrl.Match(
-        //     async url => await JsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" }),
-        //     error =>
-        //     {
-        //         Locker.UnlockPlex();
-        //         Snackbar.Add(error.Value, Severity.Error);
-        //         Logger.LogError("Unexpected error generating plex auth app url: {Error}", error.Value);
-        //         return Task.CompletedTask;
-        //     });
+    // Either<BaseError, string> maybeUrl = await Mediator.Send(new StartPlexPinFlow());
+    // await maybeUrl.Match(
+    //     async url => await JsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" }),
+    //     error =>
+    //     {
+    //         Locker.UnlockPlex();
+    //         Snackbar.Add(error.Value, Severity.Error);
+    //         Logger.LogError("Unexpected error generating plex auth app url: {Error}", error.Value);
+    //         return Task.CompletedTask;
+    //     });
     }
 
 }

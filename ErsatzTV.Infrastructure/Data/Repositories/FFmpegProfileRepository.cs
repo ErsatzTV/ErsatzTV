@@ -66,7 +66,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.SaveChangesAsync();
             await dbContext.Entry(clone).Reference(f => f.Resolution).LoadAsync();
-                
+
             return clone;
         }
     }

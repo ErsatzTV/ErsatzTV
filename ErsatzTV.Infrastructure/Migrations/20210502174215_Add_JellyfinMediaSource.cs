@@ -7,86 +7,86 @@ namespace ErsatzTV.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "JellyfinMediaSource",
-                columns: table => new
+                "JellyfinMediaSource",
+                table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    ServerName = table.Column<string>(type: "TEXT", nullable: true)
+                    ServerName = table.Column<string>("TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_JellyfinMediaSource", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_JellyfinMediaSource_MediaSource_Id",
-                        column: x => x.Id,
-                        principalTable: "MediaSource",
-                        principalColumn: "Id",
+                        "FK_JellyfinMediaSource_MediaSource_Id",
+                        x => x.Id,
+                        "MediaSource",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "JellyfinConnection",
-                columns: table => new
+                "JellyfinConnection",
+                table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Address = table.Column<string>(type: "TEXT", nullable: true),
-                    JellyfinMediaSourceId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Address = table.Column<string>("TEXT", nullable: true),
+                    JellyfinMediaSourceId = table.Column<int>("INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_JellyfinConnection", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_JellyfinConnection_JellyfinMediaSource_JellyfinMediaSourceId",
-                        column: x => x.JellyfinMediaSourceId,
-                        principalTable: "JellyfinMediaSource",
-                        principalColumn: "Id",
+                        "FK_JellyfinConnection_JellyfinMediaSource_JellyfinMediaSourceId",
+                        x => x.JellyfinMediaSourceId,
+                        "JellyfinMediaSource",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "JellyfinPathReplacement",
-                columns: table => new
+                "JellyfinPathReplacement",
+                table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>("INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    JellyfinPath = table.Column<string>(type: "TEXT", nullable: true),
-                    LocalPath = table.Column<string>(type: "TEXT", nullable: true),
-                    JellyfinMediaSourceId = table.Column<int>(type: "INTEGER", nullable: false)
+                    JellyfinPath = table.Column<string>("TEXT", nullable: true),
+                    LocalPath = table.Column<string>("TEXT", nullable: true),
+                    JellyfinMediaSourceId = table.Column<int>("INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_JellyfinPathReplacement", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_JellyfinPathReplacement_JellyfinMediaSource_JellyfinMediaSourceId",
-                        column: x => x.JellyfinMediaSourceId,
-                        principalTable: "JellyfinMediaSource",
-                        principalColumn: "Id",
+                        "FK_JellyfinPathReplacement_JellyfinMediaSource_JellyfinMediaSourceId",
+                        x => x.JellyfinMediaSourceId,
+                        "JellyfinMediaSource",
+                        "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_JellyfinConnection_JellyfinMediaSourceId",
-                table: "JellyfinConnection",
-                column: "JellyfinMediaSourceId");
+                "IX_JellyfinConnection_JellyfinMediaSourceId",
+                "JellyfinConnection",
+                "JellyfinMediaSourceId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_JellyfinPathReplacement_JellyfinMediaSourceId",
-                table: "JellyfinPathReplacement",
-                column: "JellyfinMediaSourceId");
+                "IX_JellyfinPathReplacement_JellyfinMediaSourceId",
+                "JellyfinPathReplacement",
+                "JellyfinMediaSourceId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "JellyfinConnection");
+                "JellyfinConnection");
 
             migrationBuilder.DropTable(
-                name: "JellyfinPathReplacement");
+                "JellyfinPathReplacement");
 
             migrationBuilder.DropTable(
-                name: "JellyfinMediaSource");
+                "JellyfinMediaSource");
         }
     }
 }

@@ -5,6 +5,5 @@ namespace ErsatzTV.Validators
 {
     public class JellyfinMediaSourceEditViewModelValidator : AbstractValidator<JellyfinMediaSourceEditViewModel>
     {
-        
     }
 }
