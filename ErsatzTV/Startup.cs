@@ -195,6 +195,7 @@ namespace ErsatzTV
             services.AddSingleton<ISearchIndex, SearchIndex>();
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
+            AddChannel<IJellyfinBackgroundServiceRequest>(services);
 
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IFFmpegProfileRepository, FFmpegProfileRepository>();

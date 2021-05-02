@@ -233,6 +233,33 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return Unit.Default;
         }
 
+        public async Task<Unit> UpdateLibraries(
+            int jellyfinMediaSourceId,
+            List<JellyfinLibrary> toAdd,
+            List<JellyfinLibrary> toDelete)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            foreach (JellyfinLibrary add in toAdd)
+            {
+                add.MediaSourceId = jellyfinMediaSourceId;
+                dbContext.Entry(add).State = EntityState.Added;
+                foreach (LibraryPath path in add.Paths)
+                {
+                    dbContext.Entry(path).State = EntityState.Added;
+                }
+            }
+
+            foreach (JellyfinLibrary delete in toDelete)
+            {
+                dbContext.Entry(delete).State = EntityState.Deleted;
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return Unit.Default;
+        }
+
         public async Task<Unit> UpdatePathReplacements(
             int plexMediaSourceId,
             List<PlexPathReplacement> toAdd,
@@ -441,6 +468,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return context.JellyfinMediaSources
                 .Include(p => p.Connections)
                 .ToListAsync();
+        }
+
+        public Task<Option<JellyfinMediaSource>> GetJellyfin(int id)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.JellyfinMediaSources
+                .Include(p => p.Connections)
+                .Include(p => p.Libraries)
+                .Include(p => p.PathReplacements)
+                .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
+                .SingleOrDefaultAsync(p => p.Id == id)
+                .Map(Optional);
         }
     }
 }

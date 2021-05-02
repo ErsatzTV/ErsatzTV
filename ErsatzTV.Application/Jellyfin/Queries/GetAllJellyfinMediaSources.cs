@@ -3,5 +3,5 @@ using MediatR;
 
 namespace ErsatzTV.Application.Jellyfin.Queries
 {
-    public record GetAllJellyfinMediaSources :  IRequest<List<JellyfinMediaSourceViewModel>>;
+    public record GetAllJellyfinMediaSources : IRequest<List<JellyfinMediaSourceViewModel>>;
 }

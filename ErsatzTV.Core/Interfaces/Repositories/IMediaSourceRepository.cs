@@ -32,6 +32,11 @@ namespace ErsatzTV.Core.Interfaces.Repositories
             List<PlexLibrary> toAdd,
             List<PlexLibrary> toDelete);
 
+        Task<Unit> UpdateLibraries(
+            int jellyfinMediaSourceId,
+            List<JellyfinLibrary> toAdd,
+            List<JellyfinLibrary> toDelete);
+
         Task<Unit> UpdatePathReplacements(
             int plexMediaSourceId,
             List<PlexPathReplacement> toAdd,
@@ -46,5 +51,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task EnablePlexLibrarySync(IEnumerable<int> libraryIds);
         Task<Unit> UpsertJellyfin(string address, string serverName);
         Task<List<JellyfinMediaSource>> GetAllJellyfin();
+        Task<Option<JellyfinMediaSource>> GetJellyfin(int id);
     }
 }
