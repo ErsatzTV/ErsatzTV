@@ -481,5 +481,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync(p => p.Id == id)
                 .Map(Optional);
         }
+
+        public Task<List<JellyfinLibrary>> GetJellyfinLibraries(int jellyfinMediaSourceId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.JellyfinLibraries
+                .Filter(l => l.MediaSourceId == jellyfinMediaSourceId)
+                .ToListAsync();
+        }
     }
 }

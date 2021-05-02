@@ -9,5 +9,8 @@ namespace ErsatzTV.Application.Jellyfin
                 jellyfinMediaSource.Id,
                 jellyfinMediaSource.ServerName,
                 jellyfinMediaSource.Connections.HeadOrNone().Match(c => c.Address, string.Empty));
+
+        internal static JellyfinLibraryViewModel ProjectToViewModel(JellyfinLibrary library) =>
+            new(library.Id, library.Name, library.MediaKind, library.ShouldSyncItems);
     }
 }

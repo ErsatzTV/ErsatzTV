@@ -52,5 +52,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> UpsertJellyfin(string address, string serverName);
         Task<List<JellyfinMediaSource>> GetAllJellyfin();
         Task<Option<JellyfinMediaSource>> GetJellyfin(int id);
+        Task<List<JellyfinLibrary>> GetJellyfinLibraries(int jellyfinMediaSourceId);
     }
 }
