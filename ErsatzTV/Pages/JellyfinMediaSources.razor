@@ -1,5 +1,9 @@
 ﻿@page "/media/jellyfin"
+@using ErsatzTV.Core.Interfaces.Jellyfin
 @using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Application.Jellyfin.Queries
+@inject IJellyfinSecretStore _jellyfinSecretStore
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Dense="true" Items="_mediaSources">
@@ -67,7 +71,7 @@
 </MudContainer>
 
 @code {
-    private readonly List<JellyfinMediaSourceViewModel> _mediaSources = new();
+    private List<JellyfinMediaSourceViewModel> _mediaSources = new();
 
     private bool _isAuthorized;
 
@@ -75,8 +79,9 @@
 
     private async Task LoadMediaSources()
     {
-    // _isAuthorized = await JellyfinSecretStore.GetApiKeys().Map(list => Prelude.Optional(list).Flatten().Any());
-    // _mediaSources = await Mediator.Send(new GetAllJellyfinMediaSources());
+        _isAuthorized = await _jellyfinSecretStore.ReadSecrets()
+            .Map(secrets => !string.IsNullOrWhiteSpace(secrets.Address) && !string.IsNullOrWhiteSpace(secrets.ApiKey));
+        _mediaSources = await _mediator.Send(new GetAllJellyfinMediaSources());
     }
 
     private async Task DisconnectJellyfin()

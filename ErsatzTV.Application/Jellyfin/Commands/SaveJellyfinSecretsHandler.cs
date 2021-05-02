@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
 
@@ -11,13 +12,16 @@ namespace ErsatzTV.Application.Jellyfin.Commands
     {
         private readonly IJellyfinApiClient _jellyfinApiClient;
         private readonly IJellyfinSecretStore _jellyfinSecretStore;
+        private readonly IMediaSourceRepository _mediaSourceRepository;
 
         public SaveJellyfinSecretsHandler(
             IJellyfinSecretStore jellyfinSecretStore,
-            IJellyfinApiClient jellyfinApiClient)
+            IJellyfinApiClient jellyfinApiClient,
+            IMediaSourceRepository mediaSourceRepository)
         {
             _jellyfinSecretStore = jellyfinSecretStore;
             _jellyfinApiClient = jellyfinApiClient;
+            _mediaSourceRepository = mediaSourceRepository;
         }
 
         public Task<Either<BaseError, Unit>> Handle(SaveJellyfinSecrets request, CancellationToken cancellationToken) =>
@@ -25,16 +29,22 @@ namespace ErsatzTV.Application.Jellyfin.Commands
                 .MapT(PerformSave)
                 .Bind(v => v.ToEitherAsync());
 
-        private async Task<Validation<BaseError, JellyfinSecrets>> Validate(SaveJellyfinSecrets request)
+        private async Task<Validation<BaseError, Parameters>> Validate(SaveJellyfinSecrets request)
         {
-            // TODO: save connection/media source to database
             Either<BaseError, string> maybeServerName = await _jellyfinApiClient.GetServerName(request.Secrets);
             return maybeServerName.Match(
-                _ => Validation<BaseError, JellyfinSecrets>.Success(request.Secrets),
+                serverName => Validation<BaseError, Parameters>.Success(new Parameters(request.Secrets, serverName)),
                 error => error);
         }
 
-        private Task<Unit> PerformSave(JellyfinSecrets jellyfinSecrets) =>
-            _jellyfinSecretStore.SaveSecrets(jellyfinSecrets);
+        private async Task<Unit> PerformSave(Parameters parameters)
+        {
+            await _jellyfinSecretStore.SaveSecrets(parameters.Secrets);
+            await _mediaSourceRepository.UpsertJellyfin(parameters.Secrets.Address, parameters.ServerName);
+
+            return Unit.Default;
+        }
+
+        private record Parameters(JellyfinSecrets Secrets, string ServerName);
     }
 }

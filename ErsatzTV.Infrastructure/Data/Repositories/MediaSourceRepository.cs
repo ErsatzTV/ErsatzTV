@@ -386,5 +386,61 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 "UPDATE PlexLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
                 new { ids = libraryIds });
+
+        public async Task<Unit> UpsertJellyfin(string address, string serverName)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<JellyfinMediaSource> maybeExisting = dbContext.JellyfinMediaSources
+                .Include(ms => ms.Connections)
+                .OrderBy(ms => ms.Id)
+                .HeadOrNone();
+
+            return await maybeExisting.Match(
+                async jellyfinMediaSource =>
+                {
+                    if (!jellyfinMediaSource.Connections.Any())
+                    {
+                        jellyfinMediaSource.Connections.Add(new JellyfinConnection { Address = address });
+                    }
+                    else if (jellyfinMediaSource.Connections.Head().Address != address)
+                    {
+                        jellyfinMediaSource.Connections.Head().Address = address;
+                    }
+
+                    if (jellyfinMediaSource.ServerName != serverName)
+                    {
+                        jellyfinMediaSource.ServerName = serverName;
+                    }
+
+                    await dbContext.SaveChangesAsync();
+
+                    return Unit.Default;
+                },
+                async () =>
+                {
+                    var mediaSource = new JellyfinMediaSource
+                    {
+                        ServerName = serverName,
+                        Connections = new List<JellyfinConnection>
+                        {
+                            new() { Address = address }
+                        },
+                        PathReplacements = new List<JellyfinPathReplacement>()
+                    };
+
+                    await dbContext.AddAsync(mediaSource);
+                    await dbContext.SaveChangesAsync();
+
+                    return Unit.Default;
+                });
+        }
+
+        public Task<List<JellyfinMediaSource>> GetAllJellyfin()
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.JellyfinMediaSources
+                .Include(p => p.Connections)
+                .ToListAsync();
+        }
     }
 }
