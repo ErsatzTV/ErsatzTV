@@ -17,11 +17,13 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<MediaSource> MediaSources { get; set; }
         public DbSet<LocalMediaSource> LocalMediaSources { get; set; }
         public DbSet<PlexMediaSource> PlexMediaSources { get; set; }
+        public DbSet<JellyfinMediaSource> JellyfinMediaSources { get; set; }
         public DbSet<Library> Libraries { get; set; }
         public DbSet<LocalLibrary> LocalLibraries { get; set; }
         public DbSet<LibraryPath> LibraryPaths { get; set; }
         public DbSet<PlexLibrary> PlexLibraries { get; set; }
         public DbSet<PlexPathReplacement> PlexPathReplacements { get; set; }
+        public DbSet<JellyfinPathReplacement> JellyfinPathReplacements { get; set; }
         public DbSet<MediaItem> MediaItems { get; set; }
         public DbSet<MediaVersion> MediaVersions { get; set; }
         public DbSet<MediaFile> MediaFiles { get; set; }
