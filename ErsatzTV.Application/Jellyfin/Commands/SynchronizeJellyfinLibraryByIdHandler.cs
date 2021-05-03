@@ -21,28 +21,28 @@ namespace ErsatzTV.Application.Jellyfin.Commands
             IRequestHandler<SynchronizeJellyfinLibraryByIdIfNeeded, Either<BaseError, string>>
     {
         private readonly IEntityLocker _entityLocker;
+        private readonly IJellyfinMovieLibraryScanner _jellyfinMovieLibraryScanner;
 
-        // private readonly IJellyfinMovieLibraryScanner _jellyfinMovieLibraryScanner;
         private readonly IJellyfinSecretStore _jellyfinSecretStore;
+        private readonly IJellyfinTelevisionLibraryScanner _jellyfinTelevisionLibraryScanner;
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<SynchronizeJellyfinLibraryByIdHandler> _logger;
 
         private readonly IMediaSourceRepository _mediaSourceRepository;
-        // private readonly IJellyfinTelevisionLibraryScanner _jellyfinTelevisionLibraryScanner;
 
         public SynchronizeJellyfinLibraryByIdHandler(
             IMediaSourceRepository mediaSourceRepository,
             IJellyfinSecretStore jellyfinSecretStore,
-            // IJellyfinMovieLibraryScanner jellyfinMovieLibraryScanner,
-            // IJellyfinTelevisionLibraryScanner jellyfinTelevisionLibraryScanner,
+            IJellyfinMovieLibraryScanner jellyfinMovieLibraryScanner,
+            IJellyfinTelevisionLibraryScanner jellyfinTelevisionLibraryScanner,
             ILibraryRepository libraryRepository,
             IEntityLocker entityLocker,
             ILogger<SynchronizeJellyfinLibraryByIdHandler> logger)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _jellyfinSecretStore = jellyfinSecretStore;
-            // _jellyfinMovieLibraryScanner = jellyfinMovieLibraryScanner;
-            // _jellyfinTelevisionLibraryScanner = jellyfinTelevisionLibraryScanner;
+            _jellyfinMovieLibraryScanner = jellyfinMovieLibraryScanner;
+            _jellyfinTelevisionLibraryScanner = jellyfinTelevisionLibraryScanner;
             _libraryRepository = libraryRepository;
             _entityLocker = entityLocker;
             _logger = logger;
@@ -70,16 +70,16 @@ namespace ErsatzTV.Application.Jellyfin.Commands
                 switch (parameters.Library.MediaKind)
                 {
                     case LibraryMediaKind.Movies:
-                        // await _jellyfinMovieLibraryScanner.ScanLibrary(
-                        //     parameters.ConnectionParameters.ActiveConnection,
-                        //     parameters.ConnectionParameters.JellyfinServerAuthToken,
-                        //     parameters.Library);
+                        await _jellyfinMovieLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection.Address,
+                            parameters.ConnectionParameters.ApiKey,
+                            parameters.Library);
                         break;
                     case LibraryMediaKind.Shows:
-                        // await _jellyfinTelevisionLibraryScanner.ScanLibrary(
-                        //     parameters.ConnectionParameters.ActiveConnection,
-                        //     parameters.ConnectionParameters.JellyfinServerAuthToken,
-                        //     parameters.Library);
+                        await _jellyfinTelevisionLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection.Address,
+                            parameters.ConnectionParameters.ApiKey,
+                            parameters.Library);
                         break;
                 }
 
