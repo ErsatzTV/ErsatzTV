@@ -489,5 +489,104 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(l => l.MediaSourceId == jellyfinMediaSourceId)
                 .ToListAsync();
         }
+
+        public Task<Unit> EnableJellyfinLibrarySync(IEnumerable<int> libraryIds) =>
+            _dbConnection.ExecuteAsync(
+                "UPDATE JellyfinLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
+                new { ids = libraryIds }).Map(_ => Unit.Default);
+
+        public async Task<List<int>> DisableJellyfinLibrarySync(List<int> libraryIds)
+        {
+            await _dbConnection.ExecuteAsync(
+                "UPDATE JellyfinLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
+                new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                "UPDATE Library SET LastScan = null WHERE Id IN @ids",
+                new { ids = libraryIds });
+
+            return new List<int>();
+
+            // List<int> movieIds = await _dbConnection.QueryAsync<int>(
+            //     @"SELECT m.Id FROM MediaItem m
+            //     INNER JOIN JellyfinMovie pm ON pm.Id = m.Id
+            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+            //     INNER JOIN Library l ON l.Id = lp.LibraryId
+            //     WHERE l.Id IN @ids",
+            //     new { ids = libraryIds }).Map(result => result.ToList());
+            //
+            // await _dbConnection.ExecuteAsync(
+            //     @"DELETE FROM MediaItem WHERE Id IN
+            //     (SELECT m.Id FROM MediaItem m
+            //     INNER JOIN JellyfinMovie pm ON pm.Id = m.Id
+            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+            //     INNER JOIN Library l ON l.Id = lp.LibraryId
+            //     WHERE l.Id IN @ids)",
+            //     new { ids = libraryIds });
+            //
+            // await _dbConnection.ExecuteAsync(
+            //     @"DELETE FROM MediaItem WHERE Id IN
+            //     (SELECT m.Id FROM MediaItem m
+            //     INNER JOIN JellyfinEpisode pe ON pe.Id = m.Id
+            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+            //     INNER JOIN Library l ON l.Id = lp.LibraryId
+            //     WHERE l.Id IN @ids)",
+            //     new { ids = libraryIds });
+            //
+            // await _dbConnection.ExecuteAsync(
+            //     @"DELETE FROM MediaItem WHERE Id IN
+            //     (SELECT m.Id FROM MediaItem m
+            //     INNER JOIN JellyfinSeason ps ON ps.Id = m.Id
+            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+            //     INNER JOIN Library l ON l.Id = lp.LibraryId
+            //     WHERE l.Id IN @ids)",
+            //     new { ids = libraryIds });
+            //
+            // List<int> showIds = await _dbConnection.QueryAsync<int>(
+            //     @"SELECT m.Id FROM MediaItem m
+            //     INNER JOIN JellyfinShow ps ON ps.Id = m.Id
+            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+            //     INNER JOIN Library l ON l.Id = lp.LibraryId
+            //     WHERE l.Id IN @ids",
+            //     new { ids = libraryIds }).Map(result => result.ToList());
+            //
+            // await _dbConnection.ExecuteAsync(
+            //     @"DELETE FROM MediaItem WHERE Id IN
+            //     (SELECT m.Id FROM MediaItem m
+            //     INNER JOIN JellyfinShow ps ON ps.Id = m.Id
+            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+            //     INNER JOIN Library l ON l.Id = lp.LibraryId
+            //     WHERE l.Id IN @ids)",
+            //     new { ids = libraryIds });
+            //
+            // return movieIds.Append(showIds).ToList();
+        }
+
+        public Task<Option<JellyfinLibrary>> GetJellyfinLibrary(int jellyfinLibraryId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.JellyfinLibraries
+                .Include(l => l.Paths)
+                .OrderBy(l => l.Id) // https://github.com/dotnet/efcore/issues/22579
+                .SingleOrDefaultAsync(l => l.Id == jellyfinLibraryId)
+                .Map(Optional);
+        }
+
+        public async Task<Option<JellyfinMediaSource>> GetJellyfinByLibraryId(int jellyfinLibraryId)
+        {
+            int? id = await _dbConnection.QuerySingleAsync<int?>(
+                @"SELECT L.MediaSourceId FROM Library L
+                INNER JOIN JellyfinLibrary PL on L.Id = PL.Id
+                WHERE L.Id = @JellyfinLibraryId",
+                new { JellyfinLibraryId = jellyfinLibraryId });
+
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            return await context.JellyfinMediaSources
+                .Include(p => p.Connections)
+                .Include(p => p.Libraries)
+                .OrderBy(p => p.Id)
+                .SingleOrDefaultAsync(p => p.Id == id)
+                .Map(Optional);
+        }
     }
 }

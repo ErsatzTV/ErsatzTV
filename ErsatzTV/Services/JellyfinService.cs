@@ -58,9 +58,9 @@ namespace ErsatzTV.Services
                         case SynchronizeJellyfinLibraries synchronizeJellyfinLibrariesRequest:
                             requestTask = SynchronizeLibraries(synchronizeJellyfinLibrariesRequest, cancellationToken);
                             break;
-                        // case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
-                        //     requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
-                        //     break;
+                        case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
+                            requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
+                            break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
                     }
@@ -113,6 +113,22 @@ namespace ErsatzTV.Services
                 error => _logger.LogWarning(
                     "Unable to synchronize Jellyfin libraries for source {MediaSourceId}: {Error}",
                     request.JellyfinMediaSourceId,
+                    error.Value));
+        }
+
+        private async Task SynchronizeJellyfinLibrary(
+            ISynchronizeJellyfinLibraryById request,
+            CancellationToken cancellationToken)
+        {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+            Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
+            result.BiIter(
+                name => _logger.LogDebug("Done synchronizing jellyfin library {Name}", name),
+                error => _logger.LogWarning(
+                    "Unable to synchronize jellyfin library {LibraryId}: {Error}",
+                    request.JellyfinLibraryId,
                     error.Value));
         }
     }

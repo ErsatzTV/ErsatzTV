@@ -82,30 +82,30 @@
 
     private async Task SaveChanges()
     {
-        // var request = new UpdateJellyfinLibraryPreferences(
-        //     _libraries.Map(l => new JellyfinLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
-        //
-        // Seq<BaseError> errorMessages = await _mediator.Send(request).Map(e => e.LeftToSeq());
-        //
-        // await errorMessages.HeadOrNone().Match(
-        //     error =>
-        //     {
-        //         _snackbar.Add($"Unexpected error saving jellyfin libraries: {error.Value}", Severity.Error);
-        //         _logger.LogError("Unexpected error saving jellyfin libraries: {Error}", error.Value);
-        //         return Task.CompletedTask;
-        //     },
-        //     async () =>
-        //     {
-        //         foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
-        //         {
-        //             if (_locker.LockLibrary(id))
-        //             {
-        //                 await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(id));
-        //             }
-        //         }
-        //
-        //         _navigationManager.NavigateTo("/media/jellyfin");
-        //     });
+        var request = new UpdateJellyfinLibraryPreferences(
+            _libraries.Map(l => new JellyfinLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
+        
+        Seq<BaseError> errorMessages = await _mediator.Send(request).Map(e => e.LeftToSeq());
+        
+        await errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                _snackbar.Add($"Unexpected error saving jellyfin libraries: {error.Value}", Severity.Error);
+                _logger.LogError("Unexpected error saving jellyfin libraries: {Error}", error.Value);
+                return Task.CompletedTask;
+            },
+            async () =>
+            {
+                foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
+                {
+                    if (_locker.LockLibrary(id))
+                    {
+                        await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(id));
+                    }
+                }
+        
+                _navigationManager.NavigateTo("/media/jellyfin");
+            });
     }
 
 }

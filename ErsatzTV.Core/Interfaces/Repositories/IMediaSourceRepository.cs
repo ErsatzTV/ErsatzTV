@@ -53,5 +53,9 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<JellyfinMediaSource>> GetAllJellyfin();
         Task<Option<JellyfinMediaSource>> GetJellyfin(int id);
         Task<List<JellyfinLibrary>> GetJellyfinLibraries(int jellyfinMediaSourceId);
+        Task<Unit> EnableJellyfinLibrarySync(IEnumerable<int> libraryIds);
+        Task<List<int>> DisableJellyfinLibrarySync(List<int> libraryIds);
+        Task<Option<JellyfinLibrary>> GetJellyfinLibrary(int jellyfinLibraryId);
+        Task<Option<JellyfinMediaSource>> GetJellyfinByLibraryId(int jellyfinLibraryId);
     }
 }
