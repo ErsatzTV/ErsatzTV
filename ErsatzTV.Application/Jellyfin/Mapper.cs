@@ -12,5 +12,8 @@ namespace ErsatzTV.Application.Jellyfin
 
         internal static JellyfinLibraryViewModel ProjectToViewModel(JellyfinLibrary library) =>
             new(library.Id, library.Name, library.MediaKind, library.ShouldSyncItems);
+
+        internal static JellyfinPathReplacementViewModel ProjectToViewModel(JellyfinPathReplacement pathReplacement) =>
+            new(pathReplacement.Id, pathReplacement.JellyfinPath, pathReplacement.LocalPath);
     }
 }

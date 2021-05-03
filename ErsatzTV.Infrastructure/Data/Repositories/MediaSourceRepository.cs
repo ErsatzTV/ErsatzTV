@@ -588,5 +588,47 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync(p => p.Id == id)
                 .Map(Optional);
         }
+
+        public Task<List<JellyfinPathReplacement>> GetJellyfinPathReplacements(int jellyfinMediaSourceId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.JellyfinPathReplacements
+                .Filter(r => r.JellyfinMediaSourceId == jellyfinMediaSourceId)
+                .ToListAsync();
+        }
+
+        public async Task<Unit> UpdatePathReplacements(
+            int jellyfinMediaSourceId,
+            List<JellyfinPathReplacement> toAdd,
+            List<JellyfinPathReplacement> toUpdate,
+            List<JellyfinPathReplacement> toDelete)
+        {
+            foreach (JellyfinPathReplacement add in toAdd)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"INSERT INTO JellyfinPathReplacement
+                    (JellyfinPath, LocalPath, JellyfinMediaSourceId)
+                    VALUES (@JellyfinPath, @LocalPath, @JellyfinMediaSourceId)",
+                    new { add.JellyfinPath, add.LocalPath, JellyfinMediaSourceId = jellyfinMediaSourceId });
+            }
+
+            foreach (JellyfinPathReplacement update in toUpdate)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"UPDATE JellyfinPathReplacement
+                    SET JellyfinPath = @JellyfinPath, LocalPath = @LocalPath
+                    WHERE Id = @Id",
+                    new { update.JellyfinPath, update.LocalPath, update.Id });
+            }
+
+            foreach (JellyfinPathReplacement delete in toDelete)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"DELETE FROM JellyfinPathReplacement WHERE Id = @Id",
+                    new { delete.Id });
+            }
+
+            return Unit.Default;
+        }
     }
 }

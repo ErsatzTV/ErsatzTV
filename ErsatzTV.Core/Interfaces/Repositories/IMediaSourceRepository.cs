@@ -49,6 +49,8 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<int>> DeletePlex(PlexMediaSource plexMediaSource);
         Task<List<int>> DisablePlexLibrarySync(List<int> libraryIds);
         Task EnablePlexLibrarySync(IEnumerable<int> libraryIds);
+
+
         Task<Unit> UpsertJellyfin(string address, string serverName);
         Task<List<JellyfinMediaSource>> GetAllJellyfin();
         Task<Option<JellyfinMediaSource>> GetJellyfin(int id);
@@ -57,5 +59,12 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<int>> DisableJellyfinLibrarySync(List<int> libraryIds);
         Task<Option<JellyfinLibrary>> GetJellyfinLibrary(int jellyfinLibraryId);
         Task<Option<JellyfinMediaSource>> GetJellyfinByLibraryId(int jellyfinLibraryId);
+        Task<List<JellyfinPathReplacement>> GetJellyfinPathReplacements(int jellyfinMediaSourceId);
+
+        Task<Unit> UpdatePathReplacements(
+            int jellyfinMediaSourceId,
+            List<JellyfinPathReplacement> toAdd,
+            List<JellyfinPathReplacement> toUpdate,
+            List<JellyfinPathReplacement> toDelete);
     }
 }

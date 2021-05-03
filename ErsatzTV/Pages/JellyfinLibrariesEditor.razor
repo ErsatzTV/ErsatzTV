@@ -84,9 +84,9 @@
     {
         var request = new UpdateJellyfinLibraryPreferences(
             _libraries.Map(l => new JellyfinLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
-        
+
         Seq<BaseError> errorMessages = await _mediator.Send(request).Map(e => e.LeftToSeq());
-        
+
         await errorMessages.HeadOrNone().Match(
             error =>
             {
@@ -103,7 +103,7 @@
                         await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(id));
                     }
                 }
-        
+
                 _navigationManager.NavigateTo("/media/jellyfin");
             });
     }
