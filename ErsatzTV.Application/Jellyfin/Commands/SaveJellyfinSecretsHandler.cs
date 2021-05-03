@@ -31,7 +31,10 @@ namespace ErsatzTV.Application.Jellyfin.Commands
 
         private async Task<Validation<BaseError, Parameters>> Validate(SaveJellyfinSecrets request)
         {
-            Either<BaseError, string> maybeServerName = await _jellyfinApiClient.GetServerName(request.Secrets);
+            Either<BaseError, string> maybeServerName = await _jellyfinApiClient.GetServerName(
+                request.Secrets.Address,
+                request.Secrets.ApiKey);
+
             return maybeServerName.Match(
                 serverName => Validation<BaseError, Parameters>.Success(new Parameters(request.Secrets, serverName)),
                 error => error);

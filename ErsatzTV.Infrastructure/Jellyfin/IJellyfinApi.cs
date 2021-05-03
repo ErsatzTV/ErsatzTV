@@ -13,6 +13,11 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Header("X-Emby-Token")]
             string apiKey);
 
+        [Get("/Users")]
+        public Task<List<JellyfinUserResponse>> GetUsers(
+            [Header("X-Emby-Token")]
+            string apiKey);
+
         [Get("/Library/VirtualFolders")]
         public Task<List<JellyfinLibraryResponse>> GetLibraries(
             [Header("X-Emby-Token")]

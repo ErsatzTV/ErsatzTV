@@ -31,6 +31,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
             List<JellyfinMediaSource> mediaSources = await _mediaSourceRepository.GetAllJellyfin();
             foreach (JellyfinMediaSource mediaSource in mediaSources)
             {
+                await _channel.WriteAsync(new SynchronizeJellyfinAdminUserId(mediaSource.Id), cancellationToken);
                 await _channel.WriteAsync(new SynchronizeJellyfinLibraries(mediaSource.Id), cancellationToken);
             }
 

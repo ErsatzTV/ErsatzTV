@@ -55,8 +55,11 @@ namespace ErsatzTV.Services
                     Task requestTask;
                     switch (request)
                     {
-                        case SynchronizeJellyfinLibraries synchronizeJellyfinLibrariesRequest:
-                            requestTask = SynchronizeLibraries(synchronizeJellyfinLibrariesRequest, cancellationToken);
+                        case SynchronizeJellyfinAdminUserId synchronizeJellyfinAdminUserId:
+                            requestTask = SynchronizeAdminUserId(synchronizeJellyfinAdminUserId, cancellationToken);
+                            break;
+                        case SynchronizeJellyfinLibraries synchronizeJellyfinLibraries:
+                            requestTask = SynchronizeLibraries(synchronizeJellyfinLibraries, cancellationToken);
                             break;
                         case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
                             requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
@@ -112,6 +115,24 @@ namespace ErsatzTV.Services
                     request.JellyfinMediaSourceId),
                 error => _logger.LogWarning(
                     "Unable to synchronize Jellyfin libraries for source {MediaSourceId}: {Error}",
+                    request.JellyfinMediaSourceId,
+                    error.Value));
+        }
+
+        private async Task SynchronizeAdminUserId(
+            SynchronizeJellyfinAdminUserId request,
+            CancellationToken cancellationToken)
+        {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+            Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
+            result.BiIter(
+                _ => _logger.LogInformation(
+                    "Successfully synchronized Jellyfin admin user id for source {MediaSourceId}",
+                    request.JellyfinMediaSourceId),
+                error => _logger.LogWarning(
+                    "Unable to synchronize Jellyfin admin user id for source {MediaSourceId}: {Error}",
                     request.JellyfinMediaSourceId,
                     error.Value));
         }

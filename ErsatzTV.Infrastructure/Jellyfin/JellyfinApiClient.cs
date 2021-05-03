@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
-using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -20,12 +19,12 @@ namespace ErsatzTV.Infrastructure.Jellyfin
 
         public JellyfinApiClient(ILogger<JellyfinApiClient> logger) => _logger = logger;
 
-        public async Task<Either<BaseError, string>> GetServerName(JellyfinSecrets secrets)
+        public async Task<Either<BaseError, string>> GetServerName(string address, string apiKey)
         {
             try
             {
-                IJellyfinApi service = RestService.For<IJellyfinApi>(secrets.Address);
-                JellyfinConfigurationResponse config = await service.GetConfiguration(secrets.ApiKey);
+                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                JellyfinConfigurationResponse config = await service.GetConfiguration(apiKey);
                 return config.ServerName;
             }
             catch (Exception ex)
@@ -49,6 +48,26 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting jellyfin libraries");
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        public async Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey)
+        {
+            try
+            {
+                IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                List<JellyfinUserResponse> users = await service.GetUsers(apiKey);
+                Option<string> maybeUserId = users
+                    .Filter(user => user.Policy.IsAdministrator)
+                    .Map(user => user.Id)
+                    .HeadOrNone();
+
+                return maybeUserId.ToEither(BaseError.New("Unable to locate jellyfin admin user"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting jellyfin admin user id");
                 return BaseError.New(ex.Message);
             }
         }
