@@ -9,10 +9,8 @@ namespace ErsatzTV.Core.Jellyfin
     {
         private readonly IJellyfinApiClient _jellyfinApiClient;
 
-        public JellyfinMovieLibraryScanner(IJellyfinApiClient jellyfinApiClient)
-        {
+        public JellyfinMovieLibraryScanner(IJellyfinApiClient jellyfinApiClient) =>
             _jellyfinApiClient = jellyfinApiClient;
-        }
 
         public async Task<Either<BaseError, Unit>> ScanLibrary(string address, string apiKey, JellyfinLibrary library)
         {

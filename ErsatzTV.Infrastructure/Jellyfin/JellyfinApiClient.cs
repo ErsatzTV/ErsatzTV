@@ -88,7 +88,6 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             {
                 if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
                 {
-
                     IJellyfinApi service = RestService.For<IJellyfinApi>(address);
                     JellyfinLibraryItemsResponse items = await service.GetLibraryItems(apiKey, userId, libraryId);
 

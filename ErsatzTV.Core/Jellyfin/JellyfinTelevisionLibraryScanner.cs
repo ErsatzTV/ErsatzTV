@@ -7,9 +7,9 @@ namespace ErsatzTV.Core.Jellyfin
 {
     public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanner
     {
-        public async Task<Either<BaseError, Unit>> ScanLibrary(string address, string apiKey, JellyfinLibrary library)
-        {
-            return Unit.Default;
-        }
+        public async Task<Either<BaseError, Unit>> ScanLibrary(
+            string address,
+            string apiKey,
+            JellyfinLibrary library) => Unit.Default;
     }
 }
