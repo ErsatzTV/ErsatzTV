@@ -55,6 +55,9 @@ namespace ErsatzTV.Services
                     Task requestTask;
                     switch (request)
                     {
+                        case SynchronizeJellyfinMediaSources synchronizeJellyfinMediaSources:
+                            requestTask = SynchronizeSources(synchronizeJellyfinMediaSources, cancellationToken);
+                            break;
                         case SynchronizeJellyfinAdminUserId synchronizeJellyfinAdminUserId:
                             requestTask = SynchronizeAdminUserId(synchronizeJellyfinAdminUserId, cancellationToken);
                             break;

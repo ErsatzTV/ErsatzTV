@@ -630,5 +630,25 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return Unit.Default;
         }
+
+        public async Task<List<int>> DeleteAllJellyfin()
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+
+            List<JellyfinMediaSource> allMediaSources = await context.JellyfinMediaSources.ToListAsync();
+            context.JellyfinMediaSources.RemoveRange(allMediaSources);
+
+            List<JellyfinLibrary> allJellyfinLibraries = await context.JellyfinLibraries.ToListAsync();
+            context.JellyfinLibraries.RemoveRange(allJellyfinLibraries);
+
+            // List<int> movieIds = await context.JellyfinMovies.Map(pm => pm.Id).ToListAsync();
+            // List<int> showIds = await context.JellyfinShows.Map(ps => ps.Id).ToListAsync();
+
+            await context.SaveChangesAsync();
+
+            // return movieIds.Append(showIds).ToList();
+
+            return new List<int>();
+        }
     }
 }

@@ -1,9 +1,12 @@
 ﻿@page "/media/jellyfin"
 @using ErsatzTV.Core.Interfaces.Jellyfin
 @using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Application.Jellyfin.Commands
 @using ErsatzTV.Application.Jellyfin.Queries
 @inject IJellyfinSecretStore _jellyfinSecretStore
 @inject IMediator _mediator
+@inject IDialogService _dialog
+@inject IEntityLocker _locker
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Dense="true" Items="_mediaSources">
@@ -62,7 +65,7 @@
     {
         <MudButton Variant="Variant.Filled"
                    Color="Color.Secondary"
-                   OnClick="@(_ => AddJellyfinMediaSource())"
+                   Link="/media/jellyfin/edit"
                    Class="ml-4 mt-4">
             Fix Jellyfin Credentials
         </MudButton>
@@ -86,31 +89,17 @@
 
     private async Task DisconnectJellyfin()
     {
-    // var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
-    // IDialogReference dialog = Dialog.Show<SignOutOfPlexDialog>("Sign out of Plex", options);
-    // DialogResult result = await dialog.Result;
-    // if (!result.Cancelled)
-    // {
-    //     if (Locker.LockPlex())
-    //     {
-    //         await Mediator.Send(new SignOutOfPlex());
-    //         await LoadMediaSources();
-    //     }
-    // }
-    }
-
-    private async Task AddJellyfinMediaSource()
-    {
-    // Either<BaseError, string> maybeUrl = await Mediator.Send(new StartPlexPinFlow());
-    // await maybeUrl.Match(
-    //     async url => await JsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" }),
-    //     error =>
-    //     {
-    //         Locker.UnlockPlex();
-    //         Snackbar.Add(error.Value, Severity.Error);
-    //         Logger.LogError("Unexpected error generating plex auth app url: {Error}", error.Value);
-    //         return Task.CompletedTask;
-    //     });
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+        IDialogReference dialog = _dialog.Show<DisconnectJellyfinDialog>("DisconnectJellyfin", options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            if (_locker.LockJellyfin())
+            {
+                await _mediator.Send(new DisconnectJellyfin());
+                await LoadMediaSources();
+            }
+        }
     }
 
 }

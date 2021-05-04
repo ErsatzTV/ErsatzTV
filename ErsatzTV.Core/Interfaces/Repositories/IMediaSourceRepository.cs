@@ -66,5 +66,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
             List<JellyfinPathReplacement> toAdd,
             List<JellyfinPathReplacement> toUpdate,
             List<JellyfinPathReplacement> toDelete);
+        
+        Task<List<int>> DeleteAllJellyfin();
     }
 }

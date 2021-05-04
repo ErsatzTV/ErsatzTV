@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Jellyfin;
@@ -10,6 +11,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
 {
     public class SaveJellyfinSecretsHandler : MediatR.IRequestHandler<SaveJellyfinSecrets, Either<BaseError, Unit>>
     {
+        private readonly ChannelWriter<IJellyfinBackgroundServiceRequest> _channel;
         private readonly IJellyfinApiClient _jellyfinApiClient;
         private readonly IJellyfinSecretStore _jellyfinSecretStore;
         private readonly IMediaSourceRepository _mediaSourceRepository;
@@ -17,11 +19,13 @@ namespace ErsatzTV.Application.Jellyfin.Commands
         public SaveJellyfinSecretsHandler(
             IJellyfinSecretStore jellyfinSecretStore,
             IJellyfinApiClient jellyfinApiClient,
-            IMediaSourceRepository mediaSourceRepository)
+            IMediaSourceRepository mediaSourceRepository,
+            ChannelWriter<IJellyfinBackgroundServiceRequest> channel)
         {
             _jellyfinSecretStore = jellyfinSecretStore;
             _jellyfinApiClient = jellyfinApiClient;
             _mediaSourceRepository = mediaSourceRepository;
+            _channel = channel;
         }
 
         public Task<Either<BaseError, Unit>> Handle(SaveJellyfinSecrets request, CancellationToken cancellationToken) =>
@@ -44,6 +48,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
         {
             await _jellyfinSecretStore.SaveSecrets(parameters.Secrets);
             await _mediaSourceRepository.UpsertJellyfin(parameters.Secrets.Address, parameters.ServerName);
+            await _channel.WriteAsync(new SynchronizeJellyfinMediaSources());
 
             return Unit.Default;
         }
