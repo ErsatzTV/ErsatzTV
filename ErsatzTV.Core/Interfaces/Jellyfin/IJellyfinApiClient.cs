@@ -10,5 +10,11 @@ namespace ErsatzTV.Core.Interfaces.Jellyfin
         Task<Either<BaseError, string>> GetServerName(string address, string apiKey);
         Task<Either<BaseError, List<JellyfinLibrary>>> GetLibraries(string address, string apiKey);
         Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey);
+
+        Task<Either<BaseError, List<string>>> GetLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string libraryId);
     }
 }

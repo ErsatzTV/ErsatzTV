@@ -21,6 +21,7 @@ namespace ErsatzTV.Application.Libraries.Queries
                 .Map(
                     list => list.Filter(ShouldIncludeLibrary)
                         .OrderBy(l => l.MediaSource is LocalMediaSource ? 0 : 1)
+                        .ThenBy(l => l.GetType().Name)
                         .ThenBy(l => l.MediaKind)
                         .Map(ProjectToViewModel).ToList());
 
@@ -29,6 +30,7 @@ namespace ErsatzTV.Application.Libraries.Queries
             {
                 LocalLibrary => true,
                 PlexLibrary plex => plex.ShouldSyncItems,
+                JellyfinLibrary jellyfin => jellyfin.ShouldSyncItems,
                 _ => false
             };
     }

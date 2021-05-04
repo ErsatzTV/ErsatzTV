@@ -7,6 +7,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
 using LanguageExt;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Refit;
 using static LanguageExt.Prelude;
@@ -16,8 +17,13 @@ namespace ErsatzTV.Infrastructure.Jellyfin
     public class JellyfinApiClient : IJellyfinApiClient
     {
         private readonly ILogger<JellyfinApiClient> _logger;
+        private readonly IMemoryCache _memoryCache;
 
-        public JellyfinApiClient(ILogger<JellyfinApiClient> logger) => _logger = logger;
+        public JellyfinApiClient(IMemoryCache memoryCache, ILogger<JellyfinApiClient> logger)
+        {
+            _memoryCache = memoryCache;
+            _logger = logger;
+        }
 
         public async Task<Either<BaseError, string>> GetServerName(string address, string apiKey)
         {
@@ -68,6 +74,32 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting jellyfin admin user id");
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        public async Task<Either<BaseError, List<string>>> GetLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string libraryId)
+        {
+            try
+            {
+                if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+                {
+
+                    IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                    JellyfinLibraryItemsResponse items = await service.GetLibraryItems(apiKey, userId, libraryId);
+
+                    return new List<string>();
+                }
+
+                return BaseError.New("Jellyfin admin user id is not available");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting jellyfin library items");
                 return BaseError.New(ex.Message);
             }
         }

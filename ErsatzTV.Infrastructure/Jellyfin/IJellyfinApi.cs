@@ -22,5 +22,18 @@ namespace ErsatzTV.Infrastructure.Jellyfin
         public Task<List<JellyfinLibraryResponse>> GetLibraries(
             [Header("X-Emby-Token")]
             string apiKey);
+
+        [Get("/Items")]
+        public Task<JellyfinLibraryItemsResponse> GetLibraryItems(
+            [Header("X-Emby-Token")]
+            string apiKey,
+            [Query]
+            string userId,
+            [Query]
+            string parentId,
+            [Query]
+            string fields = "Path,MediaStreams,Genres,Tags",
+            [Query]
+            string includeItemTypes = "movie,tvshow");
     }
 }

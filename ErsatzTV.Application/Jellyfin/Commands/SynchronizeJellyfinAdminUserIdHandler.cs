@@ -45,7 +45,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
 
         private async Task<Either<BaseError, Unit>> PerformSync(ConnectionParameters parameters)
         {
-            if (_memoryCache.TryGetValue(parameters.ActiveConnection, out string _))
+            if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{parameters.JellyfinMediaSource.Id}", out string _))
             {
                 return Unit.Default;
             }
@@ -58,7 +58,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
                 userId =>
                 {
                     _logger.LogDebug("Jellyfin admin user id is {UserId}", userId);
-                    _memoryCache.Set(parameters.ActiveConnection, userId);
+                    _memoryCache.Set($"jellyfin_admin_user_id.{parameters.JellyfinMediaSource.Id}", userId);
                     return Unit.Default;
                 },
                 error => error);
