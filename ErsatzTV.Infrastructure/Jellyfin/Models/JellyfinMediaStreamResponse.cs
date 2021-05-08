@@ -9,5 +9,9 @@
         public int? Height { get; set; }
         public int? Width { get; set; }
         public int Index { get; set; }
+        public bool IsDefault { get; set; }
+        public bool IsForced { get; set; }
+        public string Profile { get; set; }
+        public string AspectRatio { get; set; }
     }
 }

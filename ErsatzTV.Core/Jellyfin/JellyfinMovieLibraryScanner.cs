@@ -14,7 +14,7 @@ namespace ErsatzTV.Core.Jellyfin
 
         public async Task<Either<BaseError, Unit>> ScanLibrary(string address, string apiKey, JellyfinLibrary library)
         {
-            await _jellyfinApiClient.GetLibraryItems(address, apiKey, library.MediaSourceId, library.ItemId);
+            await _jellyfinApiClient.GetMovieLibraryItems(address, apiKey, library.MediaSourceId, library.ItemId);
             return Unit.Default;
         }
     }

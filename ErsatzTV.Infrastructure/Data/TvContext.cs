@@ -43,6 +43,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<PlexShow> PlexShows { get; set; }
         public DbSet<PlexSeason> PlexSeasons { get; set; }
         public DbSet<PlexEpisode> PlexEpisodes { get; set; }
+        public DbSet<JellyfinMovie> JellyfinMovies { get; set; }
         public DbSet<Collection> Collections { get; set; }
         public DbSet<CollectionItem> CollectionItems { get; set; }
         public DbSet<ProgramSchedule> ProgramSchedules { get; set; }

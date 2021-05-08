@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ErsatzTV.Infrastructure.Jellyfin.Models
 {
@@ -6,11 +7,18 @@ namespace ErsatzTV.Infrastructure.Jellyfin.Models
     {
         public string Name { get; set; }
         public string Id { get; set; }
+        public string Etag { get; set; }
         public string Path { get; set; }
+        public DateTimeOffset DateCreated { get; set; }
+        public long RunTimeTicks { get; set; }
         public List<string> Genres { get; set; }
         public List<string> Tags { get; set; }
         public int ProductionYear { get; set; }
         public string PremiereDate { get; set; }
         public List<JellyfinMediaStreamResponse> MediaStreams { get; set; }
+        public string LocationType { get; set; }
+        public string Overview { get; set; }
+        public List<string> Taglines { get; set; }
+        public List<JellyfinStudioResponse> Studios { get; set; }
     }
 }

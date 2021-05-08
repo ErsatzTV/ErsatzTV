@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -16,12 +18,17 @@ namespace ErsatzTV.Infrastructure.Jellyfin
 {
     public class JellyfinApiClient : IJellyfinApiClient
     {
+        private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
         private readonly ILogger<JellyfinApiClient> _logger;
         private readonly IMemoryCache _memoryCache;
 
-        public JellyfinApiClient(IMemoryCache memoryCache, ILogger<JellyfinApiClient> logger)
+        public JellyfinApiClient(
+            IMemoryCache memoryCache,
+            IFallbackMetadataProvider fallbackMetadataProvider,
+            ILogger<JellyfinApiClient> logger)
         {
             _memoryCache = memoryCache;
+            _fallbackMetadataProvider = fallbackMetadataProvider;
             _logger = logger;
         }
 
@@ -78,7 +85,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
         }
 
-        public async Task<Either<BaseError, List<string>>> GetLibraryItems(
+        public async Task<Either<BaseError, List<JellyfinMovie>>> GetMovieLibraryItems(
             string address,
             string apiKey,
             int mediaSourceId,
@@ -90,8 +97,10 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 {
                     IJellyfinApi service = RestService.For<IJellyfinApi>(address);
                     JellyfinLibraryItemsResponse items = await service.GetLibraryItems(apiKey, userId, libraryId);
-
-                    return new List<string>();
+                    return items.Items
+                        .Map(i => ProjectToMovie(i, mediaSourceId))
+                        .Somes()
+                        .ToList();
                 }
 
                 return BaseError.New("Jellyfin admin user id is not available");
@@ -125,5 +134,139 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 // TODO: ??? for music libraries
                 _ => None
             };
+
+        private Option<JellyfinMovie> ProjectToMovie(JellyfinLibraryItemResponse item, int mediaSourceId)
+        {
+            try
+            {
+                if (item.LocationType != "FileSystem")
+                {
+                    return None;
+                }
+
+                Option<JellyfinMediaStreamResponse> maybeVideoStream = item.MediaStreams.Find(s => s.Type == "Video");
+                if (maybeVideoStream.IsNone)
+                {
+                    return None;
+                }
+
+                JellyfinMediaStreamResponse videoStreamResponse = maybeVideoStream.ValueUnsafe();
+                var videoStream = new MediaStream
+                {
+                    MediaStreamKind = MediaStreamKind.Video,
+                    Codec = videoStreamResponse.Codec,
+                    Index = videoStreamResponse.Index,
+                    Language = videoStreamResponse.Language,
+                    Default = videoStreamResponse.IsDefault,
+                    Forced = videoStreamResponse.IsForced,
+                    Profile = videoStreamResponse.Profile
+                };
+
+                var version = new MediaVersion
+                {
+                    Name = "Main",
+                    Duration = TimeSpan.FromTicks(item.RunTimeTicks),
+                    Height = videoStreamResponse.Height.Value,
+                    Width = videoStreamResponse.Width.Value,
+                    DateAdded = item.DateCreated.UtcDateTime,
+                    VideoScanKind = videoStreamResponse.IsInterlaced == true
+                        ? VideoScanKind.Interlaced
+                        : VideoScanKind.Progressive,
+                    SampleAspectRatio = videoStreamResponse.AspectRatio,
+                    MediaFiles = new List<MediaFile>
+                    {
+                        new()
+                        {
+                            Path = item.Path
+                        }
+                    },
+                    Streams = new List<MediaStream>
+                    {
+                        videoStream
+                    }
+                };
+
+                videoStream.MediaVersion = version;
+
+                MovieMetadata metadata = ProjectToMovieMetadata(item, mediaSourceId);
+
+                var movie = new JellyfinMovie
+                {
+                    Etag = item.Etag,
+                    MediaVersions = new List<MediaVersion> { version },
+                    MovieMetadata = new List<MovieMetadata> { metadata }
+                };
+
+                return movie;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error projecting Jellyfin movie");
+                return None;
+            }
+        }
+
+        private MovieMetadata ProjectToMovieMetadata(JellyfinLibraryItemResponse item, int mediaSourceId)
+        {
+            DateTime dateAdded = item.DateCreated.UtcDateTime;
+            // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
+
+            var metadata = new MovieMetadata
+            {
+                Title = item.Name,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+                Plot = item.Overview,
+                Year = item.ProductionYear,
+                Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
+                DateAdded = dateAdded,
+                Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
+                Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
+                Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList()
+                // Actors = Optional(item.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
+                //     .ToList()
+            };
+
+            // if (!string.IsNullOrWhiteSpace(item.Studio))
+            // {
+            //     metadata.Studios.Add(new Studio { Name = item.Studio });
+            // }
+
+            if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
+            {
+                metadata.ReleaseDate = releaseDate;
+            }
+
+            // if (!string.IsNullOrWhiteSpace(item.Thumb))
+            // {
+            //     var path = $"plex/{mediaSourceId}{item.Thumb}";
+            //     var artwork = new Artwork
+            //     {
+            //         ArtworkKind = ArtworkKind.Poster,
+            //         Path = path,
+            //         DateAdded = dateAdded,
+            //         DateUpdated = lastWriteTime
+            //     };
+            //
+            //     metadata.Artwork ??= new List<Artwork>();
+            //     metadata.Artwork.Add(artwork);
+            // }
+            //
+            // if (!string.IsNullOrWhiteSpace(item.Art))
+            // {
+            //     var path = $"plex/{mediaSourceId}{item.Art}";
+            //     var artwork = new Artwork
+            //     {
+            //         ArtworkKind = ArtworkKind.FanArt,
+            //         Path = path,
+            //         DateAdded = dateAdded,
+            //         DateUpdated = lastWriteTime
+            //     };
+            //
+            //     metadata.Artwork ??= new List<Artwork>();
+            //     metadata.Artwork.Add(artwork);
+            // }
+
+            return metadata;
+        }
     }
 }
