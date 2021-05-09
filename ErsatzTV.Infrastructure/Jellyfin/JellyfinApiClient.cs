@@ -192,6 +192,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
 
                 var movie = new JellyfinMovie
                 {
+                    ItemId = item.Id,
                     Etag = item.Etag,
                     MediaVersions = new List<MediaVersion> { version },
                     MovieMetadata = new List<MovieMetadata> { metadata }
@@ -224,12 +225,9 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList()
                 // Actors = Optional(item.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
                 //     .ToList()
+                ,
+                Actors = new List<Actor>()
             };
-
-            // if (!string.IsNullOrWhiteSpace(item.Studio))
-            // {
-            //     metadata.Studios.Add(new Studio { Name = item.Studio });
-            // }
 
             if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
             {
@@ -247,7 +245,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             //         DateUpdated = lastWriteTime
             //     };
             //
-            //     metadata.Artwork ??= new List<Artwork>();
+            metadata.Artwork ??= new List<Artwork>();
             //     metadata.Artwork.Add(artwork);
             // }
             //

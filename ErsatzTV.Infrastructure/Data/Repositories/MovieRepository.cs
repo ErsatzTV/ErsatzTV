@@ -7,6 +7,7 @@ using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
@@ -245,6 +246,37 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 @"UPDATE MovieMetadata SET SortTitle = @SortTitle WHERE Id = @Id",
                 new { movieMetadata.SortTitle, movieMetadata.Id }).Map(result => result > 0);
+
+        public Task<List<JellyfinItemEtag>> GetExistingJellyfinMovies(JellyfinLibrary library) =>
+            _dbConnection.QueryAsync<JellyfinItemEtag>("SELECT ItemId, Etag FROM JellyfinMovie")
+                .Map(result => result.ToList());
+
+        public async Task<List<int>> RemoveMissingJellyfinMovies(JellyfinLibrary library, List<string> movieIds)
+        {
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                "SELECT Id FROM JellyfinMovie WHERE ItemId IN @ItemIds",
+                new { ItemIds = movieIds }).Map(result => result.ToList());
+
+            await _dbConnection.ExecuteAsync(
+                "DELETE FROM JellyfinMovie WHERE Id IN @Ids",
+                new { Ids = ids });
+
+            return ids;
+        }
+
+        public async Task<bool> AddJellyfin(JellyfinMovie movie)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await dbContext.AddAsync(movie);
+            if (await dbContext.SaveChangesAsync() <= 0)
+            {
+                return false;
+            }
+
+            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
+            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            return true;
+        }
 
         private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
             TvContext dbContext,
