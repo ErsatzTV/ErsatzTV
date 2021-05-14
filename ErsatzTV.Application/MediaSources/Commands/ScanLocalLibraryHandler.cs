@@ -64,10 +64,12 @@ namespace ErsatzTV.Application.MediaSources.Commands
 
         private async Task<Unit> PerformScan(RequestParameters parameters)
         {
-            (LocalLibrary localLibrary, string ffprobePath, bool forceScan) = parameters;
+            (LocalLibrary localLibrary, string ffprobePath, bool forceScan, int libraryRefreshInterval) = parameters;
 
             var sw = new Stopwatch();
             sw.Start();
+
+            bool scanned = false;
 
             for (var i = 0; i < localLibrary.Paths.Count; i++)
             {
@@ -77,8 +79,11 @@ namespace ErsatzTV.Application.MediaSources.Commands
                 decimal progressMax = (decimal) (i + 1) / localLibrary.Paths.Count;
 
                 var lastScan = new DateTimeOffset(libraryPath.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
-                if (forceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
+                DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
+                if (forceScan || nextScan < DateTimeOffset.Now)
                 {
+                    scanned = true;
+                    
                     switch (localLibrary.MediaKind)
                     {
                         case LibraryMediaKind.Movies:
@@ -115,10 +120,20 @@ namespace ErsatzTV.Application.MediaSources.Commands
             }
 
             sw.Stop();
-            _logger.LogDebug(
-                "Scan of library {Name} completed in {Duration}",
-                localLibrary.Name,
-                TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds));
+
+            if (scanned)
+            {
+                _logger.LogDebug(
+                    "Scan of library {Name} completed in {Duration}",
+                    localLibrary.Name,
+                    TimeSpan.FromMilliseconds(sw.ElapsedMilliseconds));
+            }
+            else
+            {
+                _logger.LogDebug(
+                    "Skipping unforced scan of local media library {Name}",
+                    localLibrary.Name);
+            }
 
             await _mediator.Publish(new LibraryScanProgress(localLibrary.Id, 0));
 
@@ -127,12 +142,13 @@ namespace ErsatzTV.Application.MediaSources.Commands
         }
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(IScanLocalLibrary request) =>
-            (await LocalLibraryMustExist(request), await ValidateFFprobePath())
+            (await LocalLibraryMustExist(request), await ValidateFFprobePath(), await ValidateLibraryRefreshInterval())
             .Apply(
-                (library, ffprobePath) => new RequestParameters(
+                (library, ffprobePath, libraryRefreshInterval) => new RequestParameters(
                     library,
                     ffprobePath,
-                    request.ForceScan));
+                    request.ForceScan,
+                    libraryRefreshInterval));
 
         private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(
             IScanLocalLibrary request) =>
@@ -147,6 +163,15 @@ namespace ErsatzTV.Application.MediaSources.Commands
                     ffprobePath =>
                         ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
 
-        private record RequestParameters(LocalLibrary LocalLibrary, string FFprobePath, bool ForceScan);
+        private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
+            _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+                .FilterT(lri => lri > 0)
+                .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
+
+        private record RequestParameters(
+            LocalLibrary LocalLibrary,
+            string FFprobePath,
+            bool ForceScan,
+            int LibraryRefreshInterval);
     }
 }

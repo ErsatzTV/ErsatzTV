@@ -6,10 +6,12 @@
 @using ErsatzTV.Application.HDHR.Queries
 @using ErsatzTV.Application.MediaItems.Queries
 @using System.Globalization
+@using ErsatzTV.Application.Configuration.Commands
+@using ErsatzTV.Application.Configuration.Queries
 @using Unit = LanguageExt.Unit
-@inject IMediator Mediator
-@inject ISnackbar Snackbar
-@inject ILogger<Settings> Logger
+@inject IMediator _mediator
+@inject ISnackbar _snackbar
+@inject ILogger<Settings> _logger
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="display: flex; flex-direction: row">
     <MudCard Class="mr-6" Style="max-width: 400px">
@@ -50,7 +52,7 @@
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_success)" OnClick="@(_ => SaveFFmpegSettings())">Save Settings</MudButton>
         </MudCardActions>
     </MudCard>
-    <MudCard Style="width: 350px">
+    <MudCard Class="mr-6" Style="width: 350px">
         <MudCardHeader>
             <CardHeaderContent>
                 <MudText Typo="Typo.h6">HDHomeRun Settings</MudText>
@@ -65,56 +67,96 @@
             <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_hdhrSuccess)" OnClick="@(_ => SaveHDHRSettings())">Save Settings</MudButton>
         </MudCardActions>
     </MudCard>
+    <MudCard Style="width: 350px">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Scanner Settings</MudText>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudForm @bind-IsValid="@_scannerSuccess">
+                <MudTextField T="int"
+                              Label="Library Refresh Interval"
+                              @bind-Value="_libraryRefreshInterval"
+                              Validation="@(new Func<int, string>(ValidateLibraryRefreshInterval))"
+                              Required="true"
+                              RequiredError="Library refresh interval is required!"
+                              Adornment="Adornment.End"
+                              AdornmentText="Hours"/>
+            </MudForm>
+        </MudCardContent>
+        <MudCardActions>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@(!_scannerSuccess)" OnClick="@(_ => SaveScannerSettings())">Save Settings</MudButton>
+        </MudCardActions>
+    </MudCard>
 </MudContainer>
 
 @code {
     private bool _success;
     private bool _hdhrSuccess;
+    private bool _scannerSuccess;
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
     private FFmpegSettingsViewModel _ffmpegSettings;
     private List<CultureInfo> _availableCultures;
     private int _tunerCount;
+    private int _libraryRefreshInterval;
 
     protected override async Task OnParametersSetAsync()
     {
         await LoadFFmpegProfilesAsync();
 
-        _ffmpegSettings = await Mediator.Send(new GetFFmpegSettings());
+        _ffmpegSettings = await _mediator.Send(new GetFFmpegSettings());
         _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
-        _availableCultures = await Mediator.Send(new GetAllLanguageCodes());
-        _tunerCount = await Mediator.Send(new GetHDHRTunerCount());
+        _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
+        _tunerCount = await _mediator.Send(new GetHDHRTunerCount());
         _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
+        _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval());
+        _scannerSuccess = _libraryRefreshInterval > 0;
     }
 
     private static string ValidatePathExists(string path) => !File.Exists(path) ? "Path does not exist" : null;
 
     private static string ValidateTunerCount(int tunerCount) => tunerCount <= 0 ? "Tuner count must be greater than zero" : null;
 
+    private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval <= 0 ? "Library refresh interval must be greater than zero" : null;
+
     private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
 
     private async Task SaveFFmpegSettings()
     {
-        Either<BaseError, Unit> result = await Mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings));
         result.Match(
             Left: error =>
             {
-                Snackbar.Add(error.Value, Severity.Error);
-                Logger.LogError("Unexpected error saving FFmpeg settings: {Error}", error.Value);
+                _snackbar.Add(error.Value, Severity.Error);
+                _logger.LogError("Unexpected error saving FFmpeg settings: {Error}", error.Value);
             },
-            Right: _ => Snackbar.Add("Successfully saved FFmpeg settings", Severity.Success));
+            Right: _ => _snackbar.Add("Successfully saved FFmpeg settings", Severity.Success));
     }
 
     private async Task SaveHDHRSettings()
     {
-        Either<BaseError, Unit> result = await Mediator.Send(new UpdateHDHRTunerCount(_tunerCount));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateHDHRTunerCount(_tunerCount));
         result.Match(
             Left: error =>
             {
-                Snackbar.Add(error.Value, Severity.Error);
-                Logger.LogError("Unexpected error saving HDHomeRun settings: {Error}", error.Value);
+                _snackbar.Add(error.Value, Severity.Error);
+                _logger.LogError("Unexpected error saving HDHomeRun settings: {Error}", error.Value);
             },
-            Right: _ => Snackbar.Add("Successfully saved HDHomeRun settings", Severity.Success));
+            Right: _ => _snackbar.Add("Successfully saved HDHomeRun settings", Severity.Success));
+    }
+
+    private async Task SaveScannerSettings()
+    {
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateLibraryRefreshInterval(_libraryRefreshInterval));
+        result.Match(
+            Left: error =>
+            {
+                _snackbar.Add(error.Value, Severity.Error);
+                _logger.LogError("Unexpected error saving scanner settings: {Error}", error.Value);
+            },
+            Right: _ => _snackbar.Add("Successfully saved scanner settings", Severity.Success));
     }
 
 }
