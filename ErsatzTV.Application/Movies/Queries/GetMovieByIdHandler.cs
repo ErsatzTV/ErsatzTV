@@ -55,6 +55,17 @@ namespace ErsatzTV.Application.Movies.Queries
                             actor.Thumb.Replace("jellyfin://", jellyfin.Connections.Head().Address) + "&fillWidth=152");
                         m.Actors.Insert(index, newActor);
                     }
+
+                    if (m.Poster.StartsWith("jellyfin://"))
+                    {
+                        m.Poster = m.Poster.Replace("jellyfin://", jellyfin.Connections.Head().Address) +
+                                   "&fillHeight=440";
+                    }
+
+                    if (m.FanArt.StartsWith("jellyfin://"))
+                    {
+                        m.FanArt = m.FanArt.Replace("jellyfin://", jellyfin.Connections.Head().Address);
+                    }
                 }
             }
 

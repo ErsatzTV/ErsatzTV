@@ -226,7 +226,8 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
                 Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
                 Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
-                Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList()
+                Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList(),
+                Artwork = new List<Artwork>()
             };
             
             // set order on actors
@@ -240,35 +241,27 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 metadata.ReleaseDate = releaseDate;
             }
 
-            // if (!string.IsNullOrWhiteSpace(item.Thumb))
-            // {
-            //     var path = $"plex/{mediaSourceId}{item.Thumb}";
-            //     var artwork = new Artwork
-            //     {
-            //         ArtworkKind = ArtworkKind.Poster,
-            //         Path = path,
-            //         DateAdded = dateAdded,
-            //         DateUpdated = lastWriteTime
-            //     };
-            //
-            metadata.Artwork ??= new List<Artwork>();
-            //     metadata.Artwork.Add(artwork);
-            // }
-            //
-            // if (!string.IsNullOrWhiteSpace(item.Art))
-            // {
-            //     var path = $"plex/{mediaSourceId}{item.Art}";
-            //     var artwork = new Artwork
-            //     {
-            //         ArtworkKind = ArtworkKind.FanArt,
-            //         Path = path,
-            //         DateAdded = dateAdded,
-            //         DateUpdated = lastWriteTime
-            //     };
-            //
-            //     metadata.Artwork ??= new List<Artwork>();
-            //     metadata.Artwork.Add(artwork);
-            // }
+            if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
+            {
+                var poster = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Poster,
+                    Path = $"jellyfin:///Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                    DateAdded = dateAdded
+                };
+                metadata.Artwork.Add(poster);
+            }
+
+            if (item.BackdropImageTags.Any())
+            {
+                var fanArt = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.FanArt,
+                    Path = $"jellyfin:///Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
+                    DateAdded = dateAdded
+                };
+                metadata.Artwork.Add(fanArt);
+            }
 
             return metadata;
         }

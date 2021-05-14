@@ -17,14 +17,16 @@ namespace ErsatzTV.Application.Movies
                 metadata.Title,
                 metadata.Year?.ToString(),
                 metadata.Plot,
-                Artwork(metadata, ArtworkKind.Poster),
-                Artwork(metadata, ArtworkKind.FanArt),
                 metadata.Genres.Map(g => g.Name).ToList(),
                 metadata.Tags.Map(t => t.Name).ToList(),
                 metadata.Studios.Map(s => s.Name).ToList(),
                 LanguagesForMovie(movie),
                 metadata.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id).Map(MediaCards.Mapper.ProjectToViewModel)
-                    .ToList());
+                    .ToList())
+                {
+                    Poster = Artwork(metadata, ArtworkKind.Poster),
+                    FanArt = Artwork(metadata, ArtworkKind.FanArt)
+                };
         }
 
         private static List<CultureInfo> LanguagesForMovie(Movie movie)
