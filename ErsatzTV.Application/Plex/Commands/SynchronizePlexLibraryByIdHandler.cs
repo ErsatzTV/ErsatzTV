@@ -19,6 +19,7 @@ namespace ErsatzTV.Application.Plex.Commands
         SynchronizePlexLibraryByIdHandler : IRequestHandler<ForceSynchronizePlexLibraryById, Either<BaseError, string>>,
             IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>
     {
+        private readonly IConfigElementRepository _configElementRepository;
         private readonly IEntityLocker _entityLocker;
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<SynchronizePlexLibraryByIdHandler> _logger;
@@ -29,6 +30,7 @@ namespace ErsatzTV.Application.Plex.Commands
 
         public SynchronizePlexLibraryByIdHandler(
             IMediaSourceRepository mediaSourceRepository,
+            IConfigElementRepository configElementRepository,
             IPlexSecretStore plexSecretStore,
             IPlexMovieLibraryScanner plexMovieLibraryScanner,
             IPlexTelevisionLibraryScanner plexTelevisionLibraryScanner,
@@ -37,6 +39,7 @@ namespace ErsatzTV.Application.Plex.Commands
             ILogger<SynchronizePlexLibraryByIdHandler> logger)
         {
             _mediaSourceRepository = mediaSourceRepository;
+            _configElementRepository = configElementRepository;
             _plexSecretStore = plexSecretStore;
             _plexMovieLibraryScanner = plexMovieLibraryScanner;
             _plexTelevisionLibraryScanner = plexTelevisionLibraryScanner;
@@ -62,7 +65,8 @@ namespace ErsatzTV.Application.Plex.Commands
         private async Task<Unit> Synchronize(RequestParameters parameters)
         {
             var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
-            if (parameters.ForceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
+            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+            if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
                 switch (parameters.Library.MediaKind)
                 {
@@ -95,12 +99,14 @@ namespace ErsatzTV.Application.Plex.Commands
         }
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(ISynchronizePlexLibraryById request) =>
-            (await ValidateConnection(request), await PlexLibraryMustExist(request))
+            (await ValidateConnection(request), await PlexLibraryMustExist(request),
+                await ValidateLibraryRefreshInterval())
             .Apply(
-                (connectionParameters, plexLibrary) => new RequestParameters(
+                (connectionParameters, plexLibrary, libraryRefreshInterval) => new RequestParameters(
                     connectionParameters,
                     plexLibrary,
-                    request.ForceScan
+                    request.ForceScan,
+                    libraryRefreshInterval
                 ));
 
         private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -139,10 +145,16 @@ namespace ErsatzTV.Application.Plex.Commands
             _mediaSourceRepository.GetPlexLibrary(request.PlexLibraryId)
                 .Map(v => v.ToValidation<BaseError>($"Plex library {request.PlexLibraryId} does not exist."));
 
+        private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
+            _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+                .FilterT(lri => lri > 0)
+                .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
+
         private record RequestParameters(
             ConnectionParameters ConnectionParameters,
             PlexLibrary Library,
-            bool ForceScan);
+            bool ForceScan,
+            int LibraryRefreshInterval);
 
         private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
         {
