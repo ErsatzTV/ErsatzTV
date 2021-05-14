@@ -69,7 +69,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             var sw = new Stopwatch();
             sw.Start();
 
-            bool scanned = false;
+            var scanned = false;
 
             for (var i = 0; i < localLibrary.Paths.Count; i++)
             {
@@ -83,7 +83,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
                 if (forceScan || nextScan < DateTimeOffset.Now)
                 {
                     scanned = true;
-                    
+
                     switch (localLibrary.MediaKind)
                     {
                         case LibraryMediaKind.Movies:

@@ -19,11 +19,11 @@ namespace ErsatzTV.Application.Plex.Commands
         SynchronizePlexLibraryByIdHandler : IRequestHandler<ForceSynchronizePlexLibraryById, Either<BaseError, string>>,
             IRequestHandler<SynchronizePlexLibraryByIdIfNeeded, Either<BaseError, string>>
     {
+        private readonly IConfigElementRepository _configElementRepository;
         private readonly IEntityLocker _entityLocker;
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<SynchronizePlexLibraryByIdHandler> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
-        private readonly IConfigElementRepository _configElementRepository;
         private readonly IPlexMovieLibraryScanner _plexMovieLibraryScanner;
         private readonly IPlexSecretStore _plexSecretStore;
         private readonly IPlexTelevisionLibraryScanner _plexTelevisionLibraryScanner;
@@ -99,7 +99,8 @@ namespace ErsatzTV.Application.Plex.Commands
         }
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(ISynchronizePlexLibraryById request) =>
-            (await ValidateConnection(request), await PlexLibraryMustExist(request), await ValidateLibraryRefreshInterval())
+            (await ValidateConnection(request), await PlexLibraryMustExist(request),
+                await ValidateLibraryRefreshInterval())
             .Apply(
                 (connectionParameters, plexLibrary, libraryRefreshInterval) => new RequestParameters(
                     connectionParameters,
@@ -143,7 +144,7 @@ namespace ErsatzTV.Application.Plex.Commands
             ISynchronizePlexLibraryById request) =>
             _mediaSourceRepository.GetPlexLibrary(request.PlexLibraryId)
                 .Map(v => v.ToValidation<BaseError>($"Plex library {request.PlexLibraryId} does not exist."));
-        
+
         private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
             _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
                 .FilterT(lri => lri > 0)
