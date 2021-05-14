@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using ErsatzTV.Core.Domain;
+using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCards
@@ -13,7 +15,7 @@ namespace ErsatzTV.Application.MediaCards
                 showMetadata.Title,
                 showMetadata.Year?.ToString(),
                 showMetadata.SortTitle,
-                GetPoster(showMetadata));
+                GetPoster(showMetadata, None));
 
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(Season season) =>
             new(
@@ -23,7 +25,7 @@ namespace ErsatzTV.Application.MediaCards
                 GetSeasonName(season.SeasonNumber),
                 string.Empty,
                 GetSeasonName(season.SeasonNumber),
-                season.SeasonMetadata.HeadOrNone().Map(GetPoster).IfNone(string.Empty),
+                season.SeasonMetadata.HeadOrNone().Map(sm => GetPoster(sm, None)).IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString());
 
         internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
@@ -43,13 +45,13 @@ namespace ErsatzTV.Application.MediaCards
                     () => string.Empty),
                 GetThumbnail(episodeMetadata));
 
-        internal static MovieCardViewModel ProjectToViewModel(MovieMetadata movieMetadata) =>
+        internal static MovieCardViewModel ProjectToViewModel(MovieMetadata movieMetadata, Option<JellyfinMediaSource> maybeJellyfin) =>
             new(
                 movieMetadata.MovieId,
                 movieMetadata.Title,
                 movieMetadata.Year?.ToString(),
                 movieMetadata.SortTitle,
-                GetPoster(movieMetadata));
+                GetPoster(movieMetadata, maybeJellyfin));
 
         internal static MusicVideoCardViewModel ProjectToViewModel(MusicVideoMetadata musicVideoMetadata) =>
             new(
@@ -69,11 +71,11 @@ namespace ErsatzTV.Application.MediaCards
                 GetThumbnail(artistMetadata));
 
         internal static CollectionCardResultsViewModel
-            ProjectToViewModel(Collection collection) =>
+            ProjectToViewModel(Collection collection, Option<JellyfinMediaSource> maybeJellyfin) =>
             new(
                 collection.Name,
                 collection.MediaItems.OfType<Movie>().Map(
-                    m => ProjectToViewModel(m.MovieMetadata.Head()) with
+                    m => ProjectToViewModel(m.MovieMetadata.Head(), maybeJellyfin) with
                     {
                         CustomIndex = GetCustomIndex(collection, m.Id)
                     }).ToList(),
@@ -85,8 +87,20 @@ namespace ErsatzTV.Application.MediaCards
                 collection.MediaItems.OfType<MusicVideo>().Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head()))
                     .ToList()) { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
 
-        internal static ActorCardViewModel ProjectToViewModel(Actor actor) =>
-            new(actor.Id, actor.Name, actor.Role, actor.Artwork?.Path);
+        internal static ActorCardViewModel ProjectToViewModel(Actor actor, Option<JellyfinMediaSource> maybeJellyfin)
+        {
+            string artwork = actor.Artwork?.Path ?? string.Empty;
+            
+            if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
+            {
+                string address = maybeJellyfin.Map(ms => ms.Connections.HeadOrNone().Map(c => c.Address))
+                    .Flatten()
+                    .IfNone("jellyfin://");
+                artwork = artwork.Replace("jellyfin://", address) + "&fillheight=440";
+            }
+            
+            return new(actor.Id, actor.Name, actor.Role, artwork);
+        }
 
         private static int GetCustomIndex(Collection collection, int mediaItemId) =>
             Optional(collection.CollectionItems.Find(ci => ci.MediaItemId == mediaItemId))
@@ -96,9 +110,21 @@ namespace ErsatzTV.Application.MediaCards
         private static string GetSeasonName(int number) =>
             number == 0 ? "Specials" : $"Season {number}";
 
-        private static string GetPoster(Metadata metadata) =>
-            Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
+        private static string GetPoster(Metadata metadata, Option<JellyfinMediaSource> maybeJellyfin)
+        {
+            string poster = Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster))
                 .Match(a => a.Path, string.Empty);
+
+            if (maybeJellyfin.IsSome && poster.StartsWith("jellyfin://"))
+            {
+                string address = maybeJellyfin.Map(ms => ms.Connections.HeadOrNone().Map(c => c.Address))
+                    .Flatten()
+                    .IfNone("jellyfin://");
+                poster = poster.Replace("jellyfin://", address) + "&fillHeight=440";
+            }
+
+            return poster;
+        }
 
         private static string GetThumbnail(Metadata metadata) =>
             Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail))

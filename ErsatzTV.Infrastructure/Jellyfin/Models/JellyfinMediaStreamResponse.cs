@@ -13,5 +13,6 @@
         public bool IsForced { get; set; }
         public string Profile { get; set; }
         public string AspectRatio { get; set; }
+        public int? Channels { get; set; }
     }
 }

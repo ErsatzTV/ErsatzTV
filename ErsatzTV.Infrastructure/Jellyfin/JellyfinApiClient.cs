@@ -191,6 +191,27 @@ namespace ErsatzTV.Infrastructure.Jellyfin
 
                 videoStream.MediaVersion = version;
 
+                foreach (JellyfinMediaStreamResponse audioStreamResponse in item.MediaStreams.Where(s => s.Type == "Audio"))
+                {
+                    var audioStream = new MediaStream
+                    {
+                        MediaVersion = version,
+                        Codec = audioStreamResponse.Codec,
+                        Index = audioStreamResponse.Index,
+                        Language = audioStreamResponse.Language,
+                        Default = audioStreamResponse.IsDefault,
+                        Forced = audioStreamResponse.IsForced,
+                        Profile = audioStreamResponse.Profile
+                    };
+
+                    if (audioStreamResponse.Channels.HasValue)
+                    {
+                        audioStream.Channels = audioStreamResponse.Channels.Value;
+                    }
+
+                    version.Streams.Add(audioStream);
+                }
+
                 MovieMetadata metadata = ProjectToMovieMetadata(item, mediaSourceId);
 
                 var movie = new JellyfinMovie
