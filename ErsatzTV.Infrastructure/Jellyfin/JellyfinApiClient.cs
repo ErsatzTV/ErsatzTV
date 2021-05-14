@@ -161,6 +161,9 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                     Forced = videoStreamResponse.IsForced,
                     Profile = videoStreamResponse.Profile
                 };
+                
+                // TODO: audio streams
+                // TODO: subtitle streams
 
                 var version = new MediaVersion
                 {

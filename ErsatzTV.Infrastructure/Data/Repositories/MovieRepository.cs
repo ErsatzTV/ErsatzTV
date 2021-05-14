@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 
@@ -276,6 +277,91 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
             await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             return true;
+        }
+
+        public async Task<Unit> UpdateJellyfin(JellyfinMovie movie)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<JellyfinMovie> maybeExisting = await dbContext.JellyfinMovies
+                .Include(m => m.LibraryPath)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Studios)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Filter(m => m.ItemId == movie.ItemId)
+                .OrderBy(m => m.ItemId)
+                .SingleOrDefaultAsync();
+
+            if (maybeExisting.IsSome)
+            {
+                JellyfinMovie existing = maybeExisting.ValueUnsafe();
+
+                existing.Etag = movie.Etag;
+                
+                // metadata
+                MovieMetadata metadata = existing.MovieMetadata.Head();
+                MovieMetadata incomingMetadata = movie.MovieMetadata.Head();
+                metadata.Title = incomingMetadata.Title;
+                metadata.SortTitle = incomingMetadata.SortTitle;
+                metadata.Plot = incomingMetadata.Plot;
+                metadata.Year = incomingMetadata.Year;
+                metadata.Tagline = incomingMetadata.Tagline;
+                metadata.DateAdded = incomingMetadata.DateAdded;
+                metadata.DateUpdated = DateTime.UtcNow;
+                
+                // TODO: genres
+                // TODO: tags
+                // TODO: studios
+                // TODO: actors
+
+                metadata.ReleaseDate = incomingMetadata.ReleaseDate;
+                
+                // TODO: artwork
+                
+                // version
+                MediaVersion version = existing.MediaVersions.Head();
+                MediaVersion incomingVersion = movie.MediaVersions.Head();
+                version.Name = incomingVersion.Name;
+                version.Duration = incomingVersion.Duration;
+                version.Height = incomingVersion.Height;
+                version.Width = incomingVersion.Width;
+                version.DateAdded = incomingVersion.DateAdded;
+                version.VideoScanKind = incomingVersion.VideoScanKind;
+                version.SampleAspectRatio = incomingVersion.SampleAspectRatio;
+                
+                // media file
+                MediaFile file = version.MediaFiles.Head();
+                MediaFile incomingFile = incomingVersion.MediaFiles.Head();
+                file.Path = incomingFile.Path;
+
+                // video stream
+                MediaStream stream = version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video);
+                MediaStream incomingStream =
+                    incomingVersion.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video);
+                stream.Codec = incomingStream.Codec;
+                stream.Index = incomingStream.Index;
+                stream.Language = incomingStream.Language;
+                stream.Default = incomingStream.Default;
+                stream.Forced = incomingStream.Forced;
+                stream.Profile = incomingStream.Profile;
+
+                // TODO: audio streams
+                // TODO: subtitle streams
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
+
+            return Unit.Default;
         }
 
         private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(

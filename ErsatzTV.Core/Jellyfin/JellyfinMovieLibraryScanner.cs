@@ -72,10 +72,12 @@ namespace ErsatzTV.Core.Jellyfin
 
                                 _logger.LogDebug(
                                     $"UPDATE: Etag has changed for movie {incoming.MovieMetadata.Head().Title}");
-                                // TODO: update
-                                // await _searchIndex.UpdateItems(
-                                //     _searchRepository,
-                                //     new List<MediaItem> { result.Item });
+
+                                incoming.LibraryPathId = library.Paths.Head().Id;
+                                await _movieRepository.UpdateJellyfin(incoming);
+                                await _searchIndex.UpdateItems(
+                                    _searchRepository,
+                                    new List<MediaItem> { incoming });
                             },
                             async () =>
                             {
