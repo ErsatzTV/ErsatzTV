@@ -304,6 +304,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 JellyfinMovie existing = maybeExisting.ValueUnsafe();
 
+                // library path is used for search indexing later
+                movie.LibraryPath = existing.LibraryPath;
+
                 existing.Etag = movie.Etag;
                 
                 // metadata
@@ -358,8 +361,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
 
             await dbContext.SaveChangesAsync();
-
-            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
 
             return Unit.Default;
         }

@@ -225,12 +225,15 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 DateAdded = dateAdded,
                 Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
                 Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
-                Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList()
-                // Actors = Optional(item.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
-                //     .ToList()
-                ,
-                Actors = new List<Actor>()
+                Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
+                Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList()
             };
+            
+            // set order on actors
+            for (int i = 0; i < metadata.Actors.Count; i++)
+            {
+                metadata.Actors[i].Order = i;
+            }
 
             if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
             {
@@ -268,6 +271,22 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             // }
 
             return metadata;
+        }
+        
+        private Actor ProjectToModel(JellyfinPersonResponse person, DateTime dateAdded)
+        {
+            var actor = new Actor { Name = person.Name, Role = person.Role };
+            if (!string.IsNullOrWhiteSpace(person.Id) && !string.IsNullOrWhiteSpace(person.PrimaryImageTag))
+            {
+                actor.Artwork = new Artwork
+                {
+                    Path = $"jellyfin:///Items/{person.Id}/Images/Primary?tag={person.PrimaryImageTag}",
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    DateAdded = dateAdded
+                };
+            }
+
+            return actor;
         }
     }
 }

@@ -20,5 +20,6 @@ namespace ErsatzTV.Infrastructure.Jellyfin.Models
         public string Overview { get; set; }
         public List<string> Taglines { get; set; }
         public List<JellyfinStudioResponse> Studios { get; set; }
+        public List<JellyfinPersonResponse> People { get; set; }
     }
 }

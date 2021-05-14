@@ -505,25 +505,23 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "UPDATE Library SET LastScan = null WHERE Id IN @ids",
                 new { ids = libraryIds });
 
-            return new List<int>();
-
-            // List<int> movieIds = await _dbConnection.QueryAsync<int>(
-            //     @"SELECT m.Id FROM MediaItem m
-            //     INNER JOIN JellyfinMovie pm ON pm.Id = m.Id
-            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-            //     INNER JOIN Library l ON l.Id = lp.LibraryId
-            //     WHERE l.Id IN @ids",
-            //     new { ids = libraryIds }).Map(result => result.ToList());
-            //
-            // await _dbConnection.ExecuteAsync(
-            //     @"DELETE FROM MediaItem WHERE Id IN
-            //     (SELECT m.Id FROM MediaItem m
-            //     INNER JOIN JellyfinMovie pm ON pm.Id = m.Id
-            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-            //     INNER JOIN Library l ON l.Id = lp.LibraryId
-            //     WHERE l.Id IN @ids)",
-            //     new { ids = libraryIds });
-            //
+            List<int> movieIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+            
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+            
             // await _dbConnection.ExecuteAsync(
             //     @"DELETE FROM MediaItem WHERE Id IN
             //     (SELECT m.Id FROM MediaItem m
@@ -560,6 +558,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             //     new { ids = libraryIds });
             //
             // return movieIds.Append(showIds).ToList();
+
+            return movieIds.ToList();
         }
 
         public Task<Option<JellyfinLibrary>> GetJellyfinLibrary(int jellyfinLibraryId)
