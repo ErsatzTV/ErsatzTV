@@ -21,16 +21,32 @@
     <div class="fanart-tint"></div>
     @if (!string.IsNullOrWhiteSpace(_season.FanArt))
     {
-        <img src="@($"/artwork/fanart/{_season.FanArt}")" alt="fan art"/>
+        if (_season.FanArt.StartsWith("http://") || _season.FanArt.StartsWith("https://"))
+        {
+            <img src="@_season.FanArt" alt="fan art"/>
+        }
+        else
+        {
+            <img src="@($"/artwork/fanart/{_season.FanArt}")" alt="fan art"/>
+        }
     }
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
     <div style="display: flex; flex-direction: row;">
         @if (!string.IsNullOrWhiteSpace(_season.Poster))
         {
-            <img class="mud-elevation-2 mr-6"
-                 style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                 src="@($"/artwork/posters/{_season.Poster}")" alt="show poster"/>
+            if (_season.Poster.StartsWith("http://") || _season.Poster.StartsWith("https://"))
+            {
+                <img class="mud-elevation-2 mr-6"
+                     style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
+                     src="@_season.Poster" alt="season poster"/>
+            }
+            else
+            {
+                <img class="mud-elevation-2 mr-6"
+                     style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
+                     src="@($"/artwork/posters/{_season.Poster}")" alt="season poster"/>
+            }
         }
         <div style="display: flex; flex-direction: column; height: 100%">
             <MudLink Href="@($"/media/tv/shows/{_season.ShowId}")">
@@ -62,9 +78,18 @@
             <div id="@($"episode-{episode.EpisodeId}")" style="display: flex; flex-direction: row; scroll-margin-top: 85px">
                 @if (!string.IsNullOrWhiteSpace(episode.Poster))
                 {
-                    <MudPaper style="display: flex; flex-direction: column">
-                        <MudCardMedia Image="@($"/artwork/thumbnails/{episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
-                    </MudPaper>
+                    if (episode.Poster.StartsWith("http://") || episode.Poster.StartsWith("https://"))
+                    {
+                        <MudPaper style="display: flex; flex-direction: column">
+                            <MudCardMedia Image="@episode.Poster" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        <MudPaper style="display: flex; flex-direction: column">
+                            <MudCardMedia Image="@($"/artwork/thumbnails/{episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                        </MudPaper>
+                    }
                 }
                 <MudCardContent Class="ml-3">
                     <div style="display: flex; flex-direction: column; height: 100%">

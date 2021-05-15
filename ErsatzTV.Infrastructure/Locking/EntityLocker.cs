@@ -7,6 +7,7 @@ namespace ErsatzTV.Infrastructure.Locking
     public class EntityLocker : IEntityLocker
     {
         private readonly ConcurrentDictionary<int, byte> _lockedMediaSources;
+        private bool _jellyfin;
         private bool _plex;
 
         public EntityLocker() => _lockedMediaSources = new ConcurrentDictionary<int, byte>();
@@ -14,6 +15,8 @@ namespace ErsatzTV.Infrastructure.Locking
         public event EventHandler OnLibraryChanged;
 
         public event EventHandler OnPlexChanged;
+
+        public event EventHandler OnJellyfinChanged;
 
         public bool LockLibrary(int mediaSourceId)
         {
@@ -65,5 +68,29 @@ namespace ErsatzTV.Infrastructure.Locking
         }
 
         public bool IsPlexLocked() => _plex;
+
+        public bool LockJellyfin()
+        {
+            if (!_jellyfin)
+            {
+                _jellyfin = true;
+                OnJellyfinChanged?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool UnlockJellyfin()
+        {
+            if (_jellyfin)
+            {
+                _jellyfin = false;
+                OnJellyfinChanged?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+
+            return false;
+        }
     }
 }

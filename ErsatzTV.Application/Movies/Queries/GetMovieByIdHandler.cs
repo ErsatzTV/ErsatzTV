@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
@@ -9,14 +10,24 @@ namespace ErsatzTV.Application.Movies.Queries
 {
     public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieViewModel>>
     {
+        private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IMovieRepository _movieRepository;
 
-        public GetMovieByIdHandler(IMovieRepository movieRepository) =>
+        public GetMovieByIdHandler(IMovieRepository movieRepository, IMediaSourceRepository mediaSourceRepository)
+        {
             _movieRepository = movieRepository;
+            _mediaSourceRepository = mediaSourceRepository;
+        }
 
-        public Task<Option<MovieViewModel>> Handle(
+        public async Task<Option<MovieViewModel>> Handle(
             GetMovieById request,
-            CancellationToken cancellationToken) =>
-            _movieRepository.GetMovie(request.Id).MapT(ProjectToViewModel);
+            CancellationToken cancellationToken)
+        {
+            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+                .Map(list => list.HeadOrNone());
+
+            Option<Movie> movie = await _movieRepository.GetMovie(request.Id);
+            return movie.Map(m => ProjectToViewModel(m, maybeJellyfin));
+        }
     }
 }

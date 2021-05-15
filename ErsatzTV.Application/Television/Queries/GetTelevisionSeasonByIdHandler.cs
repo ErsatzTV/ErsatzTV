@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
@@ -10,15 +11,26 @@ namespace ErsatzTV.Application.Television.Queries
     public class
         GetTelevisionSeasonByIdHandler : IRequestHandler<GetTelevisionSeasonById, Option<TelevisionSeasonViewModel>>
     {
+        private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
-        public GetTelevisionSeasonByIdHandler(ITelevisionRepository televisionRepository) =>
+        public GetTelevisionSeasonByIdHandler(
+            ITelevisionRepository televisionRepository,
+            IMediaSourceRepository mediaSourceRepository)
+        {
             _televisionRepository = televisionRepository;
+            _mediaSourceRepository = mediaSourceRepository;
+        }
 
-        public Task<Option<TelevisionSeasonViewModel>> Handle(
+        public async Task<Option<TelevisionSeasonViewModel>> Handle(
             GetTelevisionSeasonById request,
-            CancellationToken cancellationToken) =>
-            _televisionRepository.GetSeason(request.SeasonId)
-                .MapT(ProjectToViewModel);
+            CancellationToken cancellationToken)
+        {
+            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+                .Map(list => list.HeadOrNone());
+
+            return await _televisionRepository.GetSeason(request.SeasonId)
+                .MapT(s => ProjectToViewModel(s, maybeJellyfin));
+        }
     }
 }

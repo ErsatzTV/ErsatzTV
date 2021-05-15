@@ -6,11 +6,14 @@
 @using ErsatzTV.Application.Plex.Commands
 @using ErsatzTV.Core.Metadata
 @using System.Threading
+@using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Application.Jellyfin.Commands
 @implements IDisposable
 @inject IMediator Mediator
 @inject IEntityLocker Locker
 @inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel
 @inject ChannelWriter<IPlexBackgroundServiceRequest> PlexWorkerChannel
+@inject ChannelWriter<IJellyfinBackgroundServiceRequest> JellyfinWorkerChannel
 @inject ICourier Courier
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
@@ -109,6 +112,9 @@
                     break;
                 case PlexLibraryViewModel:
                     await PlexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id));
+                    break;
+                case JellyfinLibraryViewModel:
+                    await JellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id));
                     break;
             }
 
