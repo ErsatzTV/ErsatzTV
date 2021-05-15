@@ -28,6 +28,12 @@ namespace ErsatzTV.Core.Interfaces.Jellyfin
             string address,
             string apiKey,
             int mediaSourceId,
-            string libraryId);
+            string showId);
+
+        Task<Either<BaseError, List<JellyfinEpisode>>> GetEpisodeLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string seasonId);
     }
 }

@@ -78,9 +78,18 @@
             <div id="@($"episode-{episode.EpisodeId}")" style="display: flex; flex-direction: row; scroll-margin-top: 85px">
                 @if (!string.IsNullOrWhiteSpace(episode.Poster))
                 {
-                    <MudPaper style="display: flex; flex-direction: column">
-                        <MudCardMedia Image="@($"/artwork/thumbnails/{episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
-                    </MudPaper>
+                    if (episode.Poster.StartsWith("http://") || episode.Poster.StartsWith("https://"))
+                    {
+                        <MudPaper style="display: flex; flex-direction: column">
+                            <MudCardMedia Image="@episode.Poster" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        <MudPaper style="display: flex; flex-direction: column">
+                            <MudCardMedia Image="@($"/artwork/thumbnails/{episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
+                        </MudPaper>
+                    }
                 }
                 <MudCardContent Class="ml-3">
                     <div style="display: flex; flex-direction: column; height: 100%">

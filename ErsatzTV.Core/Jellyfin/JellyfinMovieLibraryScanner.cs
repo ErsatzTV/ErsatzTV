@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -105,33 +106,58 @@ namespace ErsatzTV.Core.Jellyfin
                         await maybeExisting.Match(
                             async existing =>
                             {
-                                if (existing.Etag == incoming.Etag)
+                                try
                                 {
-                                    // _logger.LogDebug(
-                                    //     $"NOOP: Etag has not changed for movie {incoming.MovieMetadata.Head().Title}");
-                                    return;
+                                    if (existing.Etag == incoming.Etag)
+                                    {
+                                        // _logger.LogDebug(
+                                        //     $"NOOP: Etag has not changed for movie {incoming.MovieMetadata.Head().Title}");
+                                        return;
+                                    }
+
+                                    _logger.LogDebug(
+                                        "UPDATE: Etag has changed for movie {Movie}",
+                                        incoming.MovieMetadata.Head().Title);
+
+                                    updateStatistics = true;
+                                    incoming.LibraryPathId = library.Paths.Head().Id;
+                                    await _movieRepository.UpdateJellyfin(incoming);
+                                    await _searchIndex.UpdateItems(
+                                        _searchRepository,
+                                        new List<MediaItem> { incoming });
                                 }
-
-                                _logger.LogDebug(
-                                    $"UPDATE: Etag has changed for movie {incoming.MovieMetadata.Head().Title}");
-
-                                updateStatistics = true;
-                                incoming.LibraryPathId = library.Paths.Head().Id;
-                                await _movieRepository.UpdateJellyfin(incoming);
-                                await _searchIndex.UpdateItems(
-                                    _searchRepository,
-                                    new List<MediaItem> { incoming });
+                                catch (Exception ex)
+                                {
+                                    updateStatistics = false;
+                                    _logger.LogError(
+                                        ex,
+                                        "Error updating movie {Movie}",
+                                        incoming.MovieMetadata.Head().Title);
+                                }
                             },
                             async () =>
                             {
-                                // _logger.LogDebug(
-                                //     $"INSERT: Item id is new for movie {incoming.MovieMetadata.Head().Title}");
-
-                                updateStatistics = true;
-                                incoming.LibraryPathId = library.Paths.Head().Id;
-                                if (await _movieRepository.AddJellyfin(incoming))
+                                try
                                 {
-                                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                                    // _logger.LogDebug(
+                                    //     $"INSERT: Item id is new for movie {incoming.MovieMetadata.Head().Title}");
+
+                                    updateStatistics = true;
+                                    incoming.LibraryPathId = library.Paths.Head().Id;
+                                    if (await _movieRepository.AddJellyfin(incoming))
+                                    {
+                                        await _searchIndex.AddItems(
+                                            _searchRepository,
+                                            new List<MediaItem> { incoming });
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    updateStatistics = false;
+                                    _logger.LogError(
+                                        ex,
+                                        "Error adding movie {Movie}",
+                                        incoming.MovieMetadata.Head().Title);
                                 }
                             });
 

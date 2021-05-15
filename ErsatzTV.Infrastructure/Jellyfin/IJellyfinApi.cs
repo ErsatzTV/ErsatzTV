@@ -58,8 +58,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            // TODO: fields?
-            string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
+            string fields = "Path,DateCreated,Etag,Taglines",
             [Query]
             string includeItemTypes = "Season");
 
@@ -72,8 +71,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            // TODO: fields?
-            string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
+            string fields = "Path,DateCreated,Etag,Overview",
             [Query]
             string includeItemTypes = "Episode");
     }

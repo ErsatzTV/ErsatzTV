@@ -175,6 +175,9 @@ namespace ErsatzTV.Application.Streaming.Queries
                 JellyfinMovie jellyfinMovie => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
                     jellyfinMovie.LibraryPathId,
                     path),
+                JellyfinEpisode jellyfinEpisode => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
+                    jellyfinEpisode.LibraryPathId,
+                    path),
                 _ => path
             };
         }

@@ -36,12 +36,26 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<JellyfinItemEtag>> GetExistingSeasons(JellyfinLibrary library, string showItemId) =>
             _dbConnection.QueryAsync<JellyfinItemEtag>(
-                    @"SELECT ItemId, Etag FROM JellyfinSeason
+                    @"SELECT JellyfinSeason.ItemId, JellyfinSeason.Etag FROM JellyfinSeason
                       INNER JOIN Season S on JellyfinSeason.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
-                      WHERE LP.LibraryId = @LibraryId",
-                    new { LibraryId = library.Id })
+                      INNER JOIN Show S2 on S.ShowId = S2.Id
+                      INNER JOIN JellyfinShow JS on S2.Id = JS.Id
+                      WHERE LP.LibraryId = @LibraryId AND JS.ItemId = @ShowItemId",
+                    new { LibraryId = library.Id, ShowItemId = showItemId })
+                .Map(result => result.ToList());
+
+        public Task<List<JellyfinItemEtag>> GetExistingEpisodes(JellyfinLibrary library, string seasonItemId) =>
+            _dbConnection.QueryAsync<JellyfinItemEtag>(
+                    @"SELECT JellyfinEpisode.ItemId, JellyfinEpisode.Etag FROM JellyfinEpisode
+                      INNER JOIN Episode E on JellyfinEpisode.Id = E.Id
+                      INNER JOIN MediaItem MI on E.Id = MI.Id
+                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                      INNER JOIN Season S2 on E.SeasonId = S2.Id
+                      INNER JOIN JellyfinSeason JS on S2.Id = JS.Id
+                      WHERE LP.LibraryId = @LibraryId AND JS.ItemId = @SeasonItemId",
+                    new { LibraryId = library.Id, SeasonItemId = seasonItemId })
                 .Map(result => result.ToList());
 
         public async Task<bool> AddShow(JellyfinShow show)
@@ -279,6 +293,90 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     fanArt.DateAdded = incomingFanArt.DateAdded;
                     fanArt.DateUpdated = incomingFanArt.DateUpdated;
                 }
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return Unit.Default;
+        }
+
+        public async Task<bool> AddEpisode(JellyfinEpisode episode)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await dbContext.AddAsync(episode);
+            if (await dbContext.SaveChangesAsync() <= 0)
+            {
+                return false;
+            }
+
+            await dbContext.Entry(episode).Reference(m => m.LibraryPath).LoadAsync();
+            await dbContext.Entry(episode.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            return true;
+        }
+
+        public async Task<Unit> Update(JellyfinEpisode episode)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<JellyfinEpisode> maybeExisting = await dbContext.JellyfinEpisodes
+                .Include(m => m.LibraryPath)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Filter(m => m.ItemId == episode.ItemId)
+                .OrderBy(m => m.ItemId)
+                .SingleOrDefaultAsync();
+
+            if (maybeExisting.IsSome)
+            {
+                JellyfinEpisode existing = maybeExisting.ValueUnsafe();
+
+                // library path is used for search indexing later
+                episode.LibraryPath = existing.LibraryPath;
+
+                existing.Etag = episode.Etag;
+                existing.EpisodeNumber = episode.EpisodeNumber;
+
+                // metadata
+                EpisodeMetadata metadata = existing.EpisodeMetadata.Head();
+                EpisodeMetadata incomingMetadata = episode.EpisodeMetadata.Head();
+                metadata.Title = incomingMetadata.Title;
+                metadata.SortTitle = incomingMetadata.SortTitle;
+                metadata.Plot = incomingMetadata.Plot;
+                metadata.Year = incomingMetadata.Year;
+                metadata.DateAdded = incomingMetadata.DateAdded;
+                metadata.DateUpdated = DateTime.UtcNow;
+                metadata.ReleaseDate = incomingMetadata.ReleaseDate;
+
+                // thumbnail
+                Artwork incomingThumbnail =
+                    incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail);
+                if (incomingThumbnail != null)
+                {
+                    Artwork thumbnail = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail);
+                    if (thumbnail == null)
+                    {
+                        thumbnail = new Artwork { ArtworkKind = ArtworkKind.Thumbnail };
+                        metadata.Artwork.Add(thumbnail);
+                    }
+
+                    thumbnail.Path = incomingThumbnail.Path;
+                    thumbnail.DateAdded = incomingThumbnail.DateAdded;
+                    thumbnail.DateUpdated = incomingThumbnail.DateUpdated;
+                }
+
+                // version
+                MediaVersion version = existing.MediaVersions.Head();
+                MediaVersion incomingVersion = episode.MediaVersions.Head();
+                version.Name = incomingVersion.Name;
+                version.DateAdded = incomingVersion.DateAdded;
+
+                // media file
+                MediaFile file = version.MediaFiles.Head();
+                MediaFile incomingFile = incomingVersion.MediaFiles.Head();
+                file.Path = incomingFile.Path;
             }
 
             await dbContext.SaveChangesAsync();

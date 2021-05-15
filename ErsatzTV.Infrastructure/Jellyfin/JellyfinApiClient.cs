@@ -145,14 +145,14 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             string address,
             string apiKey,
             int mediaSourceId,
-            string libraryId)
+            string showId)
         {
             try
             {
                 if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
                 {
                     IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                    JellyfinLibraryItemsResponse items = await service.GetSeasonLibraryItems(apiKey, userId, libraryId);
+                    JellyfinLibraryItemsResponse items = await service.GetSeasonLibraryItems(apiKey, userId, showId);
                     return items.Items
                         .Map(ProjectToSeason)
                         .Somes()
@@ -164,6 +164,33 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting jellyfin show library items");
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        public async Task<Either<BaseError, List<JellyfinEpisode>>> GetEpisodeLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string seasonId)
+        {
+            try
+            {
+                if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+                {
+                    IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                    JellyfinLibraryItemsResponse items = await service.GetEpisodeLibraryItems(apiKey, userId, seasonId);
+                    return items.Items
+                        .Map(ProjectToEpisode)
+                        .Somes()
+                        .ToList();
+                }
+
+                return BaseError.New("Jellyfin admin user id is not available");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting jellyfin episode library items");
                 return BaseError.New(ex.Message);
             }
         }
@@ -451,6 +478,92 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 _logger.LogWarning(ex, "Error projecting Jellyfin show");
                 return None;
             }
+        }
+
+        private Option<JellyfinEpisode> ProjectToEpisode(JellyfinLibraryItemResponse item)
+        {
+            try
+            {
+                if (item.LocationType != "FileSystem")
+                {
+                    return None;
+                }
+
+                var version = new MediaVersion
+                {
+                    Name = "Main",
+                    Duration = TimeSpan.FromTicks(item.RunTimeTicks),
+                    DateAdded = item.DateCreated.UtcDateTime,
+                    MediaFiles = new List<MediaFile>
+                    {
+                        new()
+                        {
+                            Path = item.Path
+                        }
+                    },
+                    Streams = new List<MediaStream>()
+                };
+
+                EpisodeMetadata metadata = ProjectToEpisodeMetadata(item);
+
+                var episode = new JellyfinEpisode
+                {
+                    ItemId = item.Id,
+                    Etag = item.Etag,
+                    MediaVersions = new List<MediaVersion> { version },
+                    EpisodeMetadata = new List<EpisodeMetadata> { metadata }
+                };
+
+                if (item.IndexNumber.HasValue)
+                {
+                    episode.EpisodeNumber = item.IndexNumber.Value;
+                }
+
+                return episode;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error projecting Jellyfin movie");
+                return None;
+            }
+        }
+
+        private EpisodeMetadata ProjectToEpisodeMetadata(JellyfinLibraryItemResponse item)
+        {
+            DateTime dateAdded = item.DateCreated.UtcDateTime;
+            // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
+
+            var metadata = new EpisodeMetadata
+            {
+                Title = item.Name,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+                Plot = item.Overview,
+                Year = item.ProductionYear,
+                DateAdded = dateAdded,
+                Genres = new List<Genre>(),
+                Tags = new List<Tag>(),
+                Studios = new List<Studio>(),
+                Actors = new List<Actor>(),
+                Artwork = new List<Artwork>()
+            };
+
+            if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
+            {
+                metadata.ReleaseDate = releaseDate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
+            {
+                var thumbnail = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    Path = $"jellyfin:///Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                    DateAdded = dateAdded
+                };
+                metadata.Artwork.Add(thumbnail);
+            }
+
+            return metadata;
         }
     }
 }
