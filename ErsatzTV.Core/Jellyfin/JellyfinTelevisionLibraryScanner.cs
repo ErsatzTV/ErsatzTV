@@ -184,6 +184,8 @@ namespace ErsatzTV.Core.Jellyfin
                                 existingSeasons,
                                 seasons);
 
+                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { incoming });
+
                             var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
                             var seasonIds = existingSeasons
                                 .Filter(i => !incomingSeasonIds.Contains(i.ItemId))

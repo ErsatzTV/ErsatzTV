@@ -77,7 +77,7 @@ namespace ErsatzTV.Core.Jellyfin
                 async movies =>
                 {
                     var validMovies = new List<JellyfinMovie>();
-                    foreach (JellyfinMovie movie in movies)
+                    foreach (JellyfinMovie movie in movies.OrderBy(m => m.MovieMetadata.Head().Title))
                     {
                         string localPath = _pathReplacementService.GetReplacementJellyfinPath(
                             pathReplacements,
@@ -176,13 +176,27 @@ namespace ErsatzTV.Core.Jellyfin
                             Either<BaseError, bool> refreshResult =
                                 await _localStatisticsProvider.RefreshStatistics(ffprobePath, incoming, localPath);
 
-                            refreshResult.Match(
-                                _ => { },
-                                error => _logger.LogWarning(
-                                    "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
-                                    "Statistics",
-                                    localPath,
-                                    error.Value));
+                            await refreshResult.Match(
+                                async _ =>
+                                {
+                                    Option<MediaItem> updated = await _searchRepository.GetItemToIndex(incoming.Id);
+                                    if (updated.IsSome)
+                                    {
+                                        await _searchIndex.UpdateItems(
+                                            _searchRepository,
+                                            new List<MediaItem> { updated.ValueUnsafe() });
+                                    }
+                                },
+                                error =>
+                                {
+                                    _logger.LogWarning(
+                                        "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                                        "Statistics",
+                                        localPath,
+                                        error.Value);
+
+                                    return Task.CompletedTask;
+                                });
                         }
 
                         // TODO: figure out how to rebuild playlists
