@@ -596,6 +596,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(r => r.JellyfinMediaSourceId == jellyfinMediaSourceId)
                 .ToListAsync();
         }
+        
+        public Task<List<JellyfinPathReplacement>> GetJellyfinPathReplacementsByLibraryId(int jellyfinLibraryPathId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.JellyfinPathReplacements
+                .FromSqlRaw(
+                    @"select jpr.* from LibraryPath lp
+                    inner join JellyfinLibrary jl ON jl.Id = lp.LibraryId
+                    inner join Library l ON l.Id = jl.Id
+                    inner join JellyfinPathReplacement jpr on jpr.JellyfinMediaSourceId = l.MediaSourceId
+                    where lp.Id = {0}",
+                    jellyfinLibraryPathId)
+                .Include(jpr => jpr.JellyfinMediaSource)
+                .ToListAsync();
+        }
 
         public async Task<Unit> UpdatePathReplacements(
             int jellyfinMediaSourceId,

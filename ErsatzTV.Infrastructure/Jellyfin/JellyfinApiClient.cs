@@ -161,7 +161,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                     Forced = videoStreamResponse.IsForced,
                     Profile = videoStreamResponse.Profile
                 };
-                
+
                 // TODO: audio streams
                 // TODO: subtitle streams
 
@@ -175,7 +175,6 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                     VideoScanKind = videoStreamResponse.IsInterlaced == true
                         ? VideoScanKind.Interlaced
                         : VideoScanKind.Progressive,
-                    SampleAspectRatio = videoStreamResponse.AspectRatio,
                     MediaFiles = new List<MediaFile>
                     {
                         new()
@@ -189,12 +188,33 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                     }
                 };
 
+                // Jellyfin reports DAR, but we need PAR
+                string[] dar = videoStreamResponse.AspectRatio.Split(":");
+                var darWidth = double.Parse(dar[0]);
+                var darHeight = double.Parse(dar[1]);
+                double sarWidth = version.Width / darWidth;
+                double sarHeight = version.Height / darHeight;
+
+                if (Math.Abs(sarWidth - sarHeight) < double.Epsilon)
+                {
+                    version.SampleAspectRatio = "1:1";
+                }
+                else if (!int.TryParse(dar[0], out int _) || !int.TryParse(dar[1], out int _))
+                {
+                    version.SampleAspectRatio = $"{version.Width}:{version.Height}";
+                }
+                else
+                {
+                    version.SampleAspectRatio = $"{sarWidth}:{sarHeight}";
+                }
+
                 videoStream.MediaVersion = version;
 
                 foreach (JellyfinMediaStreamResponse audioStreamResponse in item.MediaStreams.Where(s => s.Type == "Audio"))
                 {
                     var audioStream = new MediaStream
                     {
+                        MediaStreamKind = MediaStreamKind.Audio,
                         MediaVersion = version,
                         Codec = audioStreamResponse.Codec,
                         Index = audioStreamResponse.Index,

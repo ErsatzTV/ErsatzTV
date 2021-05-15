@@ -233,6 +233,7 @@ namespace ErsatzTV
             services.AddScoped<IJellyfinApiClient, JellyfinApiClient>();
             services.AddScoped<IRuntimeInfo, RuntimeInfo>();
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
+            services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
             services.AddScoped<FFmpegProcessService>();
             services.AddScoped<IGitHubApiClient, GitHubApiClient>();
