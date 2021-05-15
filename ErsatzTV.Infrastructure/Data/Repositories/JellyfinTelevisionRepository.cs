@@ -72,11 +72,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return true;
         }
 
-        public async Task<Unit> Update(JellyfinShow show)
+        public async Task<Option<JellyfinShow>> Update(JellyfinShow show)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<JellyfinShow> maybeExisting = await dbContext.JellyfinShows
                 .Include(m => m.LibraryPath)
+                .ThenInclude(lp => lp.Library)
                 .Include(m => m.ShowMetadata)
                 .ThenInclude(mm => mm.Genres)
                 .Include(m => m.ShowMetadata)
@@ -97,6 +98,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
                 // library path is used for search indexing later
                 show.LibraryPath = existing.LibraryPath;
+                show.Id = existing.Id;
 
                 existing.Etag = show.Etag;
 
@@ -212,7 +214,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return maybeExisting;
         }
 
         public async Task<bool> AddSeason(JellyfinSeason season)
@@ -246,6 +248,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
                 // library path is used for search indexing later
                 season.LibraryPath = existing.LibraryPath;
+                season.Id = existing.Id;
 
                 existing.Etag = season.Etag;
                 existing.SeasonNumber = season.SeasonNumber;
@@ -335,6 +338,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
                 // library path is used for search indexing later
                 episode.LibraryPath = existing.LibraryPath;
+                episode.Id = existing.Id;
 
                 existing.Etag = episode.Etag;
                 existing.EpisodeNumber = episode.EpisodeNumber;

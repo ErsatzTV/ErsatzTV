@@ -9,6 +9,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Unit = LanguageExt.Unit;
@@ -137,17 +138,20 @@ namespace ErsatzTV.Core.Jellyfin
                         changed = true;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
-                        await _televisionRepository.Update(incoming);
-                        await _searchIndex.UpdateItems(
-                            _searchRepository,
-                            new List<MediaItem> { incoming });
+                        Option<JellyfinShow> updated = await _televisionRepository.Update(incoming);
+                        if (updated.IsSome)
+                        {
+                            await _searchIndex.UpdateItems(
+                                _searchRepository,
+                                new List<MediaItem> { updated.ValueUnsafe() });
+                        }
                     },
                     async () =>
                     {
                         changed = true;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
-                        _logger.LogDebug("INSERT: Item id is new for show {Show}", incoming.ShowMetadata.Head().Title);
+                        // _logger.LogDebug("INSERT: Item id is new for show {Show}", incoming.ShowMetadata.Head().Title);
 
                         if (await _televisionRepository.AddShow(incoming))
                         {
@@ -233,9 +237,6 @@ namespace ErsatzTV.Core.Jellyfin
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
                         await _televisionRepository.Update(incoming);
-                        await _searchIndex.UpdateItems(
-                            _searchRepository,
-                            new List<MediaItem> { incoming });
                     },
                     async () =>
                     {
@@ -248,10 +249,7 @@ namespace ErsatzTV.Core.Jellyfin
                             show.ShowMetadata.Head().Title,
                             incoming.SeasonMetadata.Head().Title);
 
-                        if (await _televisionRepository.AddSeason(incoming))
-                        {
-                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
-                        }
+                        await _televisionRepository.AddSeason(incoming);
                     });
 
                 if (changed)
@@ -355,9 +353,6 @@ namespace ErsatzTV.Core.Jellyfin
                             incoming.LibraryPathId = library.Paths.Head().Id;
 
                             await _televisionRepository.Update(incoming);
-                            await _searchIndex.UpdateItems(
-                                _searchRepository,
-                                new List<MediaItem> { incoming });
                         }
                         catch (Exception ex)
                         {
@@ -382,10 +377,7 @@ namespace ErsatzTV.Core.Jellyfin
                                 seasonName,
                                 "EPISODE");
 
-                            if (await _televisionRepository.AddEpisode(incoming))
-                            {
-                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
-                            }
+                            await _televisionRepository.AddEpisode(incoming);
                         }
                         catch (Exception ex)
                         {

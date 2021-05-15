@@ -9,6 +9,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Unit = LanguageExt.Unit;
@@ -121,10 +122,13 @@ namespace ErsatzTV.Core.Jellyfin
 
                                     updateStatistics = true;
                                     incoming.LibraryPathId = library.Paths.Head().Id;
-                                    await _movieRepository.UpdateJellyfin(incoming);
-                                    await _searchIndex.UpdateItems(
-                                        _searchRepository,
-                                        new List<MediaItem> { incoming });
+                                    Option<JellyfinMovie> updated = await _movieRepository.UpdateJellyfin(incoming);
+                                    if (updated.IsSome)
+                                    {
+                                        await _searchIndex.UpdateItems(
+                                            _searchRepository,
+                                            new List<MediaItem> { updated.ValueUnsafe() });
+                                    }
                                 }
                                 catch (Exception ex)
                                 {

@@ -289,11 +289,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return true;
         }
 
-        public async Task<Unit> UpdateJellyfin(JellyfinMovie movie)
+        public async Task<Option<JellyfinMovie>> UpdateJellyfin(JellyfinMovie movie)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<JellyfinMovie> maybeExisting = await dbContext.JellyfinMovies
                 .Include(m => m.LibraryPath)
+                .ThenInclude(lp => lp.Library)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(m => m.MediaVersions)
@@ -318,6 +319,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
                 // library path is used for search indexing later
                 movie.LibraryPath = existing.LibraryPath;
+                movie.Id = existing.Id;
 
                 existing.Etag = movie.Etag;
 
@@ -444,7 +446,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return maybeExisting;
         }
 
         private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(

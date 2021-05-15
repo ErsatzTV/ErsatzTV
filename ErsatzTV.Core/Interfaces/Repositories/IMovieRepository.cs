@@ -27,6 +27,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<JellyfinItemEtag>> GetExistingJellyfinMovies(JellyfinLibrary library);
         Task<List<int>> RemoveMissingJellyfinMovies(JellyfinLibrary library, List<string> movieIds);
         Task<bool> AddJellyfin(JellyfinMovie movie);
-        Task<Unit> UpdateJellyfin(JellyfinMovie movie);
+        Task<Option<JellyfinMovie>> UpdateJellyfin(JellyfinMovie movie);
     }
 }
