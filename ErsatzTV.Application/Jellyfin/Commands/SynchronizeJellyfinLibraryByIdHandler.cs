@@ -83,7 +83,8 @@ namespace ErsatzTV.Application.Jellyfin.Commands
                         await _jellyfinTelevisionLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection.Address,
                             parameters.ConnectionParameters.ApiKey,
-                            parameters.Library);
+                            parameters.Library,
+                            parameters.FFprobePath);
                         break;
                 }
 

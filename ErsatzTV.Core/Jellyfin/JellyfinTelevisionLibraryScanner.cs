@@ -10,6 +10,8 @@ namespace ErsatzTV.Core.Jellyfin
         public async Task<Either<BaseError, Unit>> ScanLibrary(
             string address,
             string apiKey,
-            JellyfinLibrary library) => Unit.Default;
+            JellyfinLibrary library,
+            string ffprobePath) =>
+            Unit.Default;
     }
 }

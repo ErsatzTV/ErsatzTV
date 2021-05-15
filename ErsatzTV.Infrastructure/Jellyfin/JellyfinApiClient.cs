@@ -98,7 +98,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
                 {
                     IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                    JellyfinLibraryItemsResponse items = await service.GetLibraryItems(apiKey, userId, libraryId);
+                    JellyfinLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, userId, libraryId);
                     return items.Items
                         .Map(i => ProjectToMovie(i, mediaSourceId))
                         .Somes()

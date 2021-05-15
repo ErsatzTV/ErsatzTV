@@ -60,6 +60,7 @@ namespace ErsatzTV.Core.Jellyfin
             List<JellyfinItemEtag> existingMovies = await _movieRepository.GetExistingJellyfinMovies(library);
 
             // TODO: maybe get quick list of item ids and etags from api to compare first
+            // TODO: paging?
 
             List<JellyfinPathReplacement> pathReplacements = await _mediaSourceRepository
                 .GetJellyfinPathReplacements(library.MediaSourceId);

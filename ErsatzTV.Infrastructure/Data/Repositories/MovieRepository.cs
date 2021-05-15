@@ -334,7 +334,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     metadata.Genres.Add(genre);
                 }
-                
+
                 // tags
                 foreach (Tag tag in metadata.Tags
                     .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
@@ -364,11 +364,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     metadata.Studios.Add(studio);
                 }
-                
+
                 // actors
                 foreach (Actor actor in metadata.Actors
-                    .Filter(a => incomingMetadata.Actors.All(
-                        a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
+                    .Filter(
+                        a => incomingMetadata.Actors.All(
+                            a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
                     .ToList())
                 {
                     metadata.Actors.Remove(actor);
@@ -384,7 +385,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
 
                 // poster
-                Artwork incomingPoster = incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
+                Artwork incomingPoster =
+                    incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
                 if (incomingPoster != null)
                 {
                     Artwork poster = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
@@ -400,7 +402,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
 
                 // fan art
-                Artwork incomingFanArt = incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);
+                Artwork incomingFanArt =
+                    incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);
                 if (incomingFanArt != null)
                 {
                     Artwork fanArt = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);

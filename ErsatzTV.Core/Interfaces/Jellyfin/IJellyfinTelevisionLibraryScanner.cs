@@ -9,6 +9,7 @@ namespace ErsatzTV.Core.Interfaces.Jellyfin
         Task<Either<BaseError, Unit>> ScanLibrary(
             string address,
             string apiKey,
-            JellyfinLibrary library);
+            JellyfinLibrary library,
+            string ffprobePath);
     }
 }
