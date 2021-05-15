@@ -88,8 +88,7 @@
                            AddToCollectionClicked="@AddToCollection"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
-                           IsSelectMode="@IsSelectMode()"
-                           IsRemoteArtwork="@(card.Poster?.StartsWith("http://") == true || card.Poster?.StartsWith("https://") == true)"/>
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }
@@ -116,8 +115,7 @@
                            AddToCollectionClicked="@AddToCollection"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
-                           IsSelectMode="@IsSelectMode()"
-                           IsRemoteArtwork="@(card.Poster?.StartsWith("http://") == true || card.Poster?.StartsWith("https://") == true)"/>
+                           IsSelectMode="@IsSelectMode()"/>
             }
         </MudContainer>
     }

@@ -11,8 +11,8 @@ namespace ErsatzTV.Application.Television.Queries
 {
     public class GetTelevisionShowByIdHandler : IRequestHandler<GetTelevisionShowById, Option<TelevisionShowViewModel>>
     {
-        private readonly ISearchRepository _searchRepository;
         private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly ISearchRepository _searchRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public GetTelevisionShowByIdHandler(
@@ -35,7 +35,7 @@ namespace ErsatzTV.Application.Television.Queries
                 {
                     Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
                         .Map(list => list.HeadOrNone());
-                    
+
                     List<string> languages = await _searchRepository.GetLanguagesForShow(show);
                     return ProjectToViewModel(show, languages, maybeJellyfin);
                 },

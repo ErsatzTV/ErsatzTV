@@ -17,10 +17,10 @@ namespace ErsatzTV.Core.Jellyfin
         private readonly IJellyfinApiClient _jellyfinApiClient;
         private readonly ILogger<JellyfinTelevisionLibraryScanner> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
-        private readonly IJellyfinTelevisionRepository _televisionRepository;
+        private readonly IMediator _mediator;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
-        private readonly IMediator _mediator;
+        private readonly IJellyfinTelevisionRepository _televisionRepository;
 
         public JellyfinTelevisionLibraryScanner(
             IJellyfinApiClient jellyfinApiClient,
@@ -51,8 +51,8 @@ namespace ErsatzTV.Core.Jellyfin
             // TODO: maybe get quick list of item ids and etags from api to compare first
             // TODO: paging?
 
-            List<JellyfinPathReplacement> pathReplacements = await _mediaSourceRepository
-                .GetJellyfinPathReplacements(library.MediaSourceId);
+            // List<JellyfinPathReplacement> pathReplacements = await _mediaSourceRepository
+            //     .GetJellyfinPathReplacements(library.MediaSourceId);
 
             Either<BaseError, List<JellyfinShow>> maybeShows = await _jellyfinApiClient.GetShowLibraryItems(
                 address,
@@ -61,7 +61,7 @@ namespace ErsatzTV.Core.Jellyfin
                 library.ItemId);
 
             await maybeShows.Match(
-                shows => ProcessShows(existingShows, shows, library),
+                shows => ProcessShows(address, apiKey, library, ffprobePath, existingShows, shows),
                 error =>
                 {
                     _logger.LogWarning(
@@ -76,15 +76,20 @@ namespace ErsatzTV.Core.Jellyfin
         }
 
         private async Task ProcessShows(
+            string address,
+            string apiKey,
+            JellyfinLibrary library,
+            string ffprobePath,
             List<JellyfinItemEtag> existingShows,
-            List<JellyfinShow> shows,
-            JellyfinLibrary library)
+            List<JellyfinShow> shows)
         {
             foreach (JellyfinShow incoming in shows)
             {
                 decimal percentCompletion = (decimal) shows.IndexOf(incoming) / shows.Count;
                 await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
-                
+
+                var changed = false;
+
                 Option<JellyfinItemEtag> maybeExisting = existingShows.Find(ie => ie.ItemId == incoming.ItemId);
                 await maybeExisting.Match(
                     async existing =>
@@ -94,8 +99,13 @@ namespace ErsatzTV.Core.Jellyfin
                             return;
                         }
 
-                        _logger.LogDebug($"UPDATE: Etag has changed for show {incoming.ShowMetadata.Head().Title}");
-                        
+                        _logger.LogDebug(
+                            "UPDATE: Etag has changed for show {Show}",
+                            incoming.ShowMetadata.Head().Title);
+
+                        changed = true;
+                        incoming.LibraryPathId = library.Paths.Head().Id;
+
                         await _televisionRepository.Update(incoming);
                         await _searchIndex.UpdateItems(
                             _searchRepository,
@@ -103,12 +113,99 @@ namespace ErsatzTV.Core.Jellyfin
                     },
                     async () =>
                     {
+                        changed = true;
                         incoming.LibraryPathId = library.Paths.Head().Id;
-                        
-                        _logger.LogDebug(
-                            $"INSERT: Item id is new for show {incoming.ShowMetadata.Head().Title}");
+
+                        _logger.LogDebug("INSERT: Item id is new for show {Show}", incoming.ShowMetadata.Head().Title);
 
                         if (await _televisionRepository.AddShow(incoming))
+                        {
+                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                        }
+                    });
+
+                if (changed)
+                {
+                    List<JellyfinItemEtag> existingSeasons =
+                        await _televisionRepository.GetExistingSeasons(library, incoming.ItemId);
+
+                    Either<BaseError, List<JellyfinSeason>> maybeSeasons =
+                        await _jellyfinApiClient.GetSeasonLibraryItems(
+                            address,
+                            apiKey,
+                            library.MediaSourceId,
+                            incoming.ItemId);
+
+                    await maybeSeasons.Match(
+                        seasons => ProcessSeasons(
+                            address,
+                            apiKey,
+                            library,
+                            ffprobePath,
+                            incoming,
+                            existingSeasons,
+                            seasons),
+                        error =>
+                        {
+                            _logger.LogWarning(
+                                "Error synchronizing jellyfin library {Path}: {Error}",
+                                library.Name,
+                                error.Value);
+
+                            return Task.CompletedTask;
+                        });
+                }
+            }
+        }
+
+        private async Task ProcessSeasons(
+            string address,
+            string apiKey,
+            JellyfinLibrary library,
+            string ffprobePath,
+            JellyfinShow show,
+            List<JellyfinItemEtag> existingSeasons,
+            List<JellyfinSeason> seasons)
+        {
+            foreach (JellyfinSeason incoming in seasons)
+            {
+                var changed = false;
+
+                Option<JellyfinItemEtag> maybeExisting = existingSeasons.Find(ie => ie.ItemId == incoming.ItemId);
+                await maybeExisting.Match(
+                    async existing =>
+                    {
+                        if (existing.Etag == incoming.Etag)
+                        {
+                            return;
+                        }
+
+                        _logger.LogDebug(
+                            "UPDATE: Etag has changed for show {Show} season {Season}",
+                            show.ShowMetadata.Head().Title,
+                            incoming.SeasonMetadata.Head().Title);
+
+                        changed = true;
+                        incoming.ShowId = show.Id;
+                        incoming.LibraryPathId = library.Paths.Head().Id;
+
+                        await _televisionRepository.Update(incoming);
+                        await _searchIndex.UpdateItems(
+                            _searchRepository,
+                            new List<MediaItem> { incoming });
+                    },
+                    async () =>
+                    {
+                        changed = true;
+                        incoming.ShowId = show.Id;
+                        incoming.LibraryPathId = library.Paths.Head().Id;
+
+                        _logger.LogDebug(
+                            "INSERT: Item id is new for show {Show} season {Season}",
+                            show.ShowMetadata.Head().Title,
+                            incoming.SeasonMetadata.Head().Title);
+
+                        if (await _televisionRepository.AddSeason(incoming))
                         {
                             await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
                         }

@@ -34,6 +34,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     new { LibraryId = library.Id })
                 .Map(result => result.ToList());
 
+        public Task<List<JellyfinItemEtag>> GetExistingSeasons(JellyfinLibrary library, string showItemId) =>
+            _dbConnection.QueryAsync<JellyfinItemEtag>(
+                    @"SELECT ItemId, Etag FROM JellyfinSeason
+                      INNER JOIN Season S on JellyfinSeason.Id = S.Id
+                      INNER JOIN MediaItem MI on S.Id = MI.Id
+                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                      WHERE LP.LibraryId = @LibraryId",
+                    new { LibraryId = library.Id })
+                .Map(result => result.ToList());
+
         public async Task<bool> AddShow(JellyfinShow show)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
@@ -149,6 +159,91 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     metadata.Actors.Add(actor);
                 }
 
+                metadata.ReleaseDate = incomingMetadata.ReleaseDate;
+
+                // poster
+                Artwork incomingPoster =
+                    incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
+                if (incomingPoster != null)
+                {
+                    Artwork poster = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
+                    if (poster == null)
+                    {
+                        poster = new Artwork { ArtworkKind = ArtworkKind.Poster };
+                        metadata.Artwork.Add(poster);
+                    }
+
+                    poster.Path = incomingPoster.Path;
+                    poster.DateAdded = incomingPoster.DateAdded;
+                    poster.DateUpdated = incomingPoster.DateUpdated;
+                }
+
+                // fan art
+                Artwork incomingFanArt =
+                    incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);
+                if (incomingFanArt != null)
+                {
+                    Artwork fanArt = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);
+                    if (fanArt == null)
+                    {
+                        fanArt = new Artwork { ArtworkKind = ArtworkKind.FanArt };
+                        metadata.Artwork.Add(fanArt);
+                    }
+
+                    fanArt.Path = incomingFanArt.Path;
+                    fanArt.DateAdded = incomingFanArt.DateAdded;
+                    fanArt.DateUpdated = incomingFanArt.DateUpdated;
+                }
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return Unit.Default;
+        }
+
+        public async Task<bool> AddSeason(JellyfinSeason season)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await dbContext.AddAsync(season);
+            if (await dbContext.SaveChangesAsync() <= 0)
+            {
+                return false;
+            }
+
+            await dbContext.Entry(season).Reference(m => m.LibraryPath).LoadAsync();
+            await dbContext.Entry(season.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            return true;
+        }
+
+        public async Task<Unit> Update(JellyfinSeason season)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<JellyfinSeason> maybeExisting = await dbContext.JellyfinSeasons
+                .Include(m => m.LibraryPath)
+                .Include(m => m.SeasonMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Filter(m => m.ItemId == season.ItemId)
+                .OrderBy(m => m.ItemId)
+                .SingleOrDefaultAsync();
+
+            if (maybeExisting.IsSome)
+            {
+                JellyfinSeason existing = maybeExisting.ValueUnsafe();
+
+                // library path is used for search indexing later
+                season.LibraryPath = existing.LibraryPath;
+
+                existing.Etag = season.Etag;
+                existing.SeasonNumber = season.SeasonNumber;
+
+                // metadata
+                SeasonMetadata metadata = existing.SeasonMetadata.Head();
+                SeasonMetadata incomingMetadata = season.SeasonMetadata.Head();
+                metadata.Title = incomingMetadata.Title;
+                metadata.SortTitle = incomingMetadata.SortTitle;
+                metadata.Year = incomingMetadata.Year;
+                metadata.DateAdded = incomingMetadata.DateAdded;
+                metadata.DateUpdated = DateTime.UtcNow;
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
 
                 // poster

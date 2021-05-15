@@ -18,7 +18,9 @@ namespace ErsatzTV.Application.MediaCards
                 showMetadata.SortTitle,
                 GetPoster(showMetadata, maybeJellyfin));
 
-        internal static TelevisionSeasonCardViewModel ProjectToViewModel(Season season) =>
+        internal static TelevisionSeasonCardViewModel ProjectToViewModel(
+            Season season,
+            Option<JellyfinMediaSource> maybeJellyfin) =>
             new(
                 season.Show.ShowMetadata.HeadOrNone().Match(m => m.Title ?? string.Empty, () => string.Empty),
                 season.Id,
@@ -26,7 +28,7 @@ namespace ErsatzTV.Application.MediaCards
                 GetSeasonName(season.SeasonNumber),
                 string.Empty,
                 GetSeasonName(season.SeasonNumber),
-                season.SeasonMetadata.HeadOrNone().Map(sm => GetPoster(sm, None)).IfNone(string.Empty),
+                season.SeasonMetadata.HeadOrNone().Map(sm => GetPoster(sm, maybeJellyfin)).IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString());
 
         internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
@@ -82,8 +84,9 @@ namespace ErsatzTV.Application.MediaCards
                     {
                         CustomIndex = GetCustomIndex(collection, m.Id)
                     }).ToList(),
-                collection.MediaItems.OfType<Show>().Map(s => ProjectToViewModel(s.ShowMetadata.Head(), maybeJellyfin)).ToList(),
-                collection.MediaItems.OfType<Season>().Map(ProjectToViewModel).ToList(),
+                collection.MediaItems.OfType<Show>().Map(s => ProjectToViewModel(s.ShowMetadata.Head(), maybeJellyfin))
+                    .ToList(),
+                collection.MediaItems.OfType<Season>().Map(s => ProjectToViewModel(s, maybeJellyfin)).ToList(),
                 collection.MediaItems.OfType<Episode>().Map(e => ProjectToViewModel(e.EpisodeMetadata.Head()))
                     .ToList(),
                 collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),

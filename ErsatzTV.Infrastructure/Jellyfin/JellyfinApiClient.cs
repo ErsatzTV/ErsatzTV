@@ -141,6 +141,33 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
         }
 
+        public async Task<Either<BaseError, List<JellyfinSeason>>> GetSeasonLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string libraryId)
+        {
+            try
+            {
+                if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+                {
+                    IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                    JellyfinLibraryItemsResponse items = await service.GetSeasonLibraryItems(apiKey, userId, libraryId);
+                    return items.Items
+                        .Map(ProjectToSeason)
+                        .Somes()
+                        .ToList();
+                }
+
+                return BaseError.New("Jellyfin admin user id is not available");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting jellyfin show library items");
+                return BaseError.New(ex.Message);
+            }
+        }
+
         private static Option<JellyfinLibrary> Project(JellyfinLibraryResponse response) =>
             response.CollectionType.ToLowerInvariant() switch
             {
@@ -360,6 +387,70 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
 
             return metadata;
+        }
+
+        private Option<JellyfinSeason> ProjectToSeason(JellyfinLibraryItemResponse item)
+        {
+            try
+            {
+                if (item.LocationType != "FileSystem")
+                {
+                    return None;
+                }
+
+                DateTime dateAdded = item.DateCreated.UtcDateTime;
+                // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+
+                var metadata = new SeasonMetadata
+                {
+                    Title = item.Name,
+                    SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+                    Year = item.ProductionYear,
+                    DateAdded = dateAdded,
+                    Artwork = new List<Artwork>()
+                };
+
+                if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
+                {
+                    var poster = new Artwork
+                    {
+                        ArtworkKind = ArtworkKind.Poster,
+                        Path = $"jellyfin:///Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                        DateAdded = dateAdded
+                    };
+                    metadata.Artwork.Add(poster);
+                }
+
+                if (item.BackdropImageTags.Any())
+                {
+                    var fanArt = new Artwork
+                    {
+                        ArtworkKind = ArtworkKind.FanArt,
+                        Path = $"jellyfin:///Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
+                        DateAdded = dateAdded
+                    };
+                    metadata.Artwork.Add(fanArt);
+                }
+
+                var season = new JellyfinSeason
+                {
+                    ItemId = item.Id,
+                    Etag = item.Etag,
+                    SeasonMetadata = new List<SeasonMetadata> { metadata }
+                };
+
+                if (item.IndexNumber.HasValue)
+                {
+                    season.SeasonNumber = item.IndexNumber.Value;
+                }
+
+                return season;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error projecting Jellyfin show");
+                return None;
+            }
         }
     }
 }

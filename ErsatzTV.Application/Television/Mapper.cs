@@ -34,15 +34,17 @@ namespace ErsatzTV.Application.Television
                             .ToList())
                     .IfNone(new List<ActorCardViewModel>()));
 
-        internal static TelevisionSeasonViewModel ProjectToViewModel(Season season) =>
+        internal static TelevisionSeasonViewModel ProjectToViewModel(
+            Season season,
+            Option<JellyfinMediaSource> maybeJellyfin) =>
             new(
                 season.Id,
                 season.ShowId,
                 season.Show.ShowMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
                 season.Show.ShowMetadata.HeadOrNone().Map(m => m.Year?.ToString() ?? string.Empty).IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "Specials" : $"Season {season.SeasonNumber}",
-                season.SeasonMetadata.HeadOrNone().Map(m => GetPoster(m, None)).IfNone(string.Empty),
-                season.Show.ShowMetadata.HeadOrNone().Map(m => GetFanArt(m, None)).IfNone(string.Empty));
+                season.SeasonMetadata.HeadOrNone().Map(m => GetPoster(m, maybeJellyfin)).IfNone(string.Empty),
+                season.Show.ShowMetadata.HeadOrNone().Map(m => GetFanArt(m, maybeJellyfin)).IfNone(string.Empty));
 
         internal static TelevisionEpisodeViewModel ProjectToViewModel(Episode episode) =>
             new(
@@ -62,7 +64,10 @@ namespace ErsatzTV.Application.Television
         private static string GetThumbnail(Metadata metadata, Option<JellyfinMediaSource> maybeJellyfin) =>
             GetArtwork(metadata, ArtworkKind.Thumbnail, maybeJellyfin);
 
-        private static string GetArtwork(Metadata metadata, ArtworkKind artworkKind, Option<JellyfinMediaSource> maybeJellyfin)
+        private static string GetArtwork(
+            Metadata metadata,
+            ArtworkKind artworkKind,
+            Option<JellyfinMediaSource> maybeJellyfin)
         {
             string artwork = Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
                 .Match(a => a.Path, string.Empty);
@@ -79,7 +84,7 @@ namespace ErsatzTV.Application.Television
                     artwork += "&fillHeight=440";
                 }
             }
-            
+
             return artwork;
         }
 
