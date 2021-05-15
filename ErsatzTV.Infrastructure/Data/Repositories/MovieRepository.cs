@@ -320,10 +320,66 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 metadata.DateAdded = incomingMetadata.DateAdded;
                 metadata.DateUpdated = DateTime.UtcNow;
 
-                // TODO: genres
-                // TODO: tags
-                // TODO: studios
-                // TODO: actors
+                // genres
+                foreach (Genre genre in metadata.Genres
+                    .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Genres.Remove(genre);
+                }
+
+                foreach (Genre genre in incomingMetadata.Genres
+                    .Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Genres.Add(genre);
+                }
+                
+                // tags
+                foreach (Tag tag in metadata.Tags
+                    .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Tags.Remove(tag);
+                }
+
+                foreach (Tag tag in incomingMetadata.Tags
+                    .Filter(g => metadata.Tags.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Tags.Add(tag);
+                }
+
+                // studios
+                foreach (Studio studio in metadata.Studios
+                    .Filter(g => incomingMetadata.Studios.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Studios.Remove(studio);
+                }
+
+                foreach (Studio studio in incomingMetadata.Studios
+                    .Filter(g => metadata.Studios.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Studios.Add(studio);
+                }
+                
+                // actors
+                foreach (Actor actor in metadata.Actors
+                    .Filter(a => incomingMetadata.Actors.All(
+                        a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
+                    .ToList())
+                {
+                    metadata.Actors.Remove(actor);
+                }
+
+                foreach (Actor actor in incomingMetadata.Actors
+                    .Filter(a => metadata.Actors.All(a2 => a2.Name != a.Name))
+                    .ToList())
+                {
+                    metadata.Actors.Add(actor);
+                }
 
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
 
