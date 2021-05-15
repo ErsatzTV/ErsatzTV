@@ -1,4 +1,5 @@
 ﻿using System;
+using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Libraries
@@ -10,6 +11,7 @@ namespace ErsatzTV.Application.Libraries
             {
                 LocalLibrary l => ProjectToViewModel(l),
                 PlexLibrary p => new PlexLibraryViewModel(p.Id, p.Name, p.MediaKind),
+                JellyfinLibrary j => new JellyfinLibraryViewModel(j.Id, j.Name, j.MediaKind, j.ShouldSyncItems),
                 _ => throw new ArgumentOutOfRangeException(nameof(library))
             };
 

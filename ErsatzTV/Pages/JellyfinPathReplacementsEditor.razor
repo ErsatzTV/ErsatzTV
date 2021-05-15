@@ -1,0 +1,135 @@
+﻿@page "/media/sources/jellyfin/{Id:int}/paths"
+@using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Application.Jellyfin.Commands
+@using ErsatzTV.Application.Jellyfin.Queries
+@inject NavigationManager _navigationManager
+@inject ILogger<ScheduleItemsEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudTable Hover="true" Items="_pathReplacements.OrderBy(r => r.Id)" Dense="true" @bind-SelectedItem="_selectedItem">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6"><b>@_source.Name</b> Path Replacements</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col style="width: 60px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Jellyfin Path</MudTh>
+            <MudTh>Local Path</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Jellyfin Path">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @context.JellyfinPath
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Local Path">
+                <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
+                    @context.LocalPath
+                </MudText>
+            </MudTd>
+            <MudTd>
+                <MudTooltip Text="Delete Path Replacement">
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   OnClick="@(_ => RemovePathReplacement(context))">
+                    </MudIconButton>
+                </MudTooltip>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(_ => AddPathReplacement())" Class="mt-4">
+        Add Path Replacement
+    </MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4 ml-4">
+        Save Changes
+    </MudButton>
+
+    @if (_selectedItem is not null)
+    {
+        <div style="max-width: 400px;">
+            <EditForm Model="_selectedItem">
+                <FluentValidator/>
+                <MudCard Class="mt-6">
+                    <MudCardContent>
+                        <MudTextField Label="Jellyfin Path"
+                                      @bind-Value="@_selectedItem.JellyfinPath"
+                                      For="@(() => _selectedItem.JellyfinPath)"/>
+                        <MudTextField Class="mt-3"
+                                      Label="Local Path"
+                                      @bind-Value="@_selectedItem.LocalPath"
+                                      For="@(() => _selectedItem.LocalPath)"/>
+                    </MudCardContent>
+                </MudCard>
+            </EditForm>
+        </div>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private JellyfinMediaSourceViewModel _source;
+    private List<JellyfinPathReplacementEditViewModel> _pathReplacements;
+
+    private JellyfinPathReplacementEditViewModel _selectedItem;
+
+    protected override Task OnParametersSetAsync() => LoadData();
+
+    private async Task LoadData()
+    {
+        Option<JellyfinMediaSourceViewModel> maybeSource = await _mediator.Send(new GetJellyfinMediaSourceById(Id));
+        await maybeSource.Match(
+            async source =>
+            {
+                _source = source;
+                _pathReplacements = await _mediator.Send(new GetJellyfinPathReplacementsBySourceId(Id))
+                    .Map(list => list.Map(ProjectToEditViewModel).ToList());
+            },
+            () =>
+            {
+                _navigationManager.NavigateTo("404");
+                return Task.CompletedTask;
+            });
+    }
+
+    private JellyfinPathReplacementEditViewModel ProjectToEditViewModel(JellyfinPathReplacementViewModel item) =>
+        new() { Id = item.Id, JellyfinPath = item.JellyfinPath, LocalPath = item.LocalPath };
+
+    private void AddPathReplacement()
+    {
+        var item = new JellyfinPathReplacementEditViewModel();
+        _pathReplacements.Add(item);
+        _selectedItem = item;
+    }
+
+    private void RemovePathReplacement(JellyfinPathReplacementEditViewModel item)
+    {
+        _selectedItem = null;
+        _pathReplacements.Remove(item);
+    }
+
+    private async Task SaveChanges()
+    {
+        var items = _pathReplacements
+            .Map(item => new JellyfinPathReplacementItem(item.Id, item.JellyfinPath, item.LocalPath))
+            .ToList();
+
+        Seq<BaseError> errorMessages = await _mediator.Send(new UpdateJellyfinPathReplacements(Id, items)).Map(e => e.LeftToSeq());
+
+        errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                _snackbar.Add($"Unexpected error saving path replacements: {error.Value}", Severity.Error);
+                _logger.LogError("Unexpected error saving path replacements: {Error}", error.Value);
+            },
+            () => _navigationManager.NavigateTo("/media/jellyfin"));
+    }
+
+}

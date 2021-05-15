@@ -7,8 +7,10 @@ using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 
@@ -245,6 +247,207 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 @"UPDATE MovieMetadata SET SortTitle = @SortTitle WHERE Id = @Id",
                 new { movieMetadata.SortTitle, movieMetadata.Id }).Map(result => result > 0);
+
+        public Task<List<JellyfinItemEtag>> GetExistingJellyfinMovies(JellyfinLibrary library) =>
+            _dbConnection.QueryAsync<JellyfinItemEtag>(
+                    @"SELECT ItemId, Etag FROM JellyfinMovie
+                      INNER JOIN Movie M on JellyfinMovie.Id = M.Id
+                      INNER JOIN MediaItem MI on M.Id = MI.Id
+                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                      WHERE LP.LibraryId = @LibraryId",
+                    new { LibraryId = library.Id })
+                .Map(result => result.ToList());
+
+        public async Task<List<int>> RemoveMissingJellyfinMovies(JellyfinLibrary library, List<string> movieIds)
+        {
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT JellyfinMovie.Id FROM JellyfinMovie
+                  INNER JOIN Movie M on JellyfinMovie.Id = M.Id
+                  INNER JOIN MediaItem MI on M.Id = MI.Id
+                  INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                  WHERE LP.LibraryId = @LibraryId AND ItemId IN @ItemIds",
+                new { LibraryId = library.Id, ItemIds = movieIds }).Map(result => result.ToList());
+
+            await _dbConnection.ExecuteAsync(
+                "DELETE FROM JellyfinMovie WHERE Id IN @Ids",
+                new { Ids = ids });
+
+            return ids;
+        }
+
+        public async Task<bool> AddJellyfin(JellyfinMovie movie)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await dbContext.AddAsync(movie);
+            if (await dbContext.SaveChangesAsync() <= 0)
+            {
+                return false;
+            }
+
+            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
+            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            return true;
+        }
+
+        public async Task<Option<JellyfinMovie>> UpdateJellyfin(JellyfinMovie movie)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<JellyfinMovie> maybeExisting = await dbContext.JellyfinMovies
+                .Include(m => m.LibraryPath)
+                .ThenInclude(lp => lp.Library)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Studios)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Actors)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Filter(m => m.ItemId == movie.ItemId)
+                .OrderBy(m => m.ItemId)
+                .SingleOrDefaultAsync();
+
+            if (maybeExisting.IsSome)
+            {
+                JellyfinMovie existing = maybeExisting.ValueUnsafe();
+
+                // library path is used for search indexing later
+                movie.LibraryPath = existing.LibraryPath;
+                movie.Id = existing.Id;
+
+                existing.Etag = movie.Etag;
+
+                // metadata
+                MovieMetadata metadata = existing.MovieMetadata.Head();
+                MovieMetadata incomingMetadata = movie.MovieMetadata.Head();
+                metadata.Title = incomingMetadata.Title;
+                metadata.SortTitle = incomingMetadata.SortTitle;
+                metadata.Plot = incomingMetadata.Plot;
+                metadata.Year = incomingMetadata.Year;
+                metadata.Tagline = incomingMetadata.Tagline;
+                metadata.DateAdded = incomingMetadata.DateAdded;
+                metadata.DateUpdated = DateTime.UtcNow;
+
+                // genres
+                foreach (Genre genre in metadata.Genres
+                    .Filter(g => incomingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Genres.Remove(genre);
+                }
+
+                foreach (Genre genre in incomingMetadata.Genres
+                    .Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Genres.Add(genre);
+                }
+
+                // tags
+                foreach (Tag tag in metadata.Tags
+                    .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Tags.Remove(tag);
+                }
+
+                foreach (Tag tag in incomingMetadata.Tags
+                    .Filter(g => metadata.Tags.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Tags.Add(tag);
+                }
+
+                // studios
+                foreach (Studio studio in metadata.Studios
+                    .Filter(g => incomingMetadata.Studios.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Studios.Remove(studio);
+                }
+
+                foreach (Studio studio in incomingMetadata.Studios
+                    .Filter(g => metadata.Studios.All(g2 => g2.Name != g.Name))
+                    .ToList())
+                {
+                    metadata.Studios.Add(studio);
+                }
+
+                // actors
+                foreach (Actor actor in metadata.Actors
+                    .Filter(
+                        a => incomingMetadata.Actors.All(
+                            a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
+                    .ToList())
+                {
+                    metadata.Actors.Remove(actor);
+                }
+
+                foreach (Actor actor in incomingMetadata.Actors
+                    .Filter(a => metadata.Actors.All(a2 => a2.Name != a.Name))
+                    .ToList())
+                {
+                    metadata.Actors.Add(actor);
+                }
+
+                metadata.ReleaseDate = incomingMetadata.ReleaseDate;
+
+                // poster
+                Artwork incomingPoster =
+                    incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
+                if (incomingPoster != null)
+                {
+                    Artwork poster = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
+                    if (poster == null)
+                    {
+                        poster = new Artwork { ArtworkKind = ArtworkKind.Poster };
+                        metadata.Artwork.Add(poster);
+                    }
+
+                    poster.Path = incomingPoster.Path;
+                    poster.DateAdded = incomingPoster.DateAdded;
+                    poster.DateUpdated = incomingPoster.DateUpdated;
+                }
+
+                // fan art
+                Artwork incomingFanArt =
+                    incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);
+                if (incomingFanArt != null)
+                {
+                    Artwork fanArt = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);
+                    if (fanArt == null)
+                    {
+                        fanArt = new Artwork { ArtworkKind = ArtworkKind.FanArt };
+                        metadata.Artwork.Add(fanArt);
+                    }
+
+                    fanArt.Path = incomingFanArt.Path;
+                    fanArt.DateAdded = incomingFanArt.DateAdded;
+                    fanArt.DateUpdated = incomingFanArt.DateUpdated;
+                }
+
+                // version
+                MediaVersion version = existing.MediaVersions.Head();
+                MediaVersion incomingVersion = movie.MediaVersions.Head();
+                version.Name = incomingVersion.Name;
+                version.DateAdded = incomingVersion.DateAdded;
+
+                // media file
+                MediaFile file = version.MediaFiles.Head();
+                MediaFile incomingFile = incomingVersion.MediaFiles.Head();
+                file.Path = incomingFile.Path;
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return maybeExisting;
+        }
 
         private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
             TvContext dbContext,

@@ -27,6 +27,7 @@
 </MudDialog>
 
 @code {
+
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
 
@@ -34,12 +35,13 @@
     public int FFmpegProfileId { get; set; }
 
     private record DummyModel;
+
     private readonly DummyModel _dummyModel = new();
-    
+
     private string _newFFmpegProfileName;
-    
+
     private bool CanSubmit() => !string.IsNullOrWhiteSpace(_newFFmpegProfileName);
-    
+
     private async Task Submit()
     {
         if (!CanSubmit())
@@ -51,10 +53,7 @@
             await _mediator.Send(new CopyFFmpegProfile(FFmpegProfileId, _newFFmpegProfileName));
 
         maybeResult.Match(
-            ffmpegProfile =>
-            {
-                MudDialog.Close(DialogResult.Ok(ffmpegProfile));
-            },
+            ffmpegProfile => { MudDialog.Close(DialogResult.Ok(ffmpegProfile)); },
             error =>
             {
                 _snackbar.Add(error.Value, Severity.Error);
@@ -62,9 +61,6 @@
                 MudDialog.Close(DialogResult.Cancel());
             });
     }
-    
-    private void Cancel(MouseEventArgs e)
-    {
-        MudDialog.Cancel();
-    }
+
+    private void Cancel(MouseEventArgs e) => MudDialog.Cancel();
 }

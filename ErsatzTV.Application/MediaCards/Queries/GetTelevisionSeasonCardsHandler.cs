@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
@@ -10,13 +11,19 @@ using static ErsatzTV.Application.MediaCards.Mapper;
 namespace ErsatzTV.Application.MediaCards.Queries
 {
     public class
-        GetTelevisionSeasonCardsHandler : IRequestHandler<GetTelevisionSeasonCards, TelevisionSeasonCardResultsViewModel
-        >
+        GetTelevisionSeasonCardsHandler : IRequestHandler<GetTelevisionSeasonCards,
+            TelevisionSeasonCardResultsViewModel>
     {
+        private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
-        public GetTelevisionSeasonCardsHandler(ITelevisionRepository televisionRepository) =>
+        public GetTelevisionSeasonCardsHandler(
+            ITelevisionRepository televisionRepository,
+            IMediaSourceRepository mediaSourceRepository)
+        {
             _televisionRepository = televisionRepository;
+            _mediaSourceRepository = mediaSourceRepository;
+        }
 
         public async Task<TelevisionSeasonCardResultsViewModel> Handle(
             GetTelevisionSeasonCards request,
@@ -24,9 +31,12 @@ namespace ErsatzTV.Application.MediaCards.Queries
         {
             int count = await _televisionRepository.GetSeasonCount(request.TelevisionShowId);
 
+            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+                .Map(list => list.HeadOrNone());
+
             List<TelevisionSeasonCardViewModel> results = await _televisionRepository
                 .GetPagedSeasons(request.TelevisionShowId, request.PageNumber, request.PageSize)
-                .Map(list => list.Map(ProjectToViewModel).ToList());
+                .Map(list => list.Map(s => ProjectToViewModel(s, maybeJellyfin)).ToList());
 
             return new TelevisionSeasonCardResultsViewModel(count, results);
         }

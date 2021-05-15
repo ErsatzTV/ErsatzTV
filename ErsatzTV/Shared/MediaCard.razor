@@ -135,7 +135,7 @@
 
     private string ArtworkForItem()
     {
-        if (IsRemoteArtwork)
+        if (IsRemoteArtwork || Data.Poster?.StartsWith("http://") == true || Data.Poster?.StartsWith("https://") == true)
         {
             return $"position: relative; background-image: url({Data.Poster}); background-size: cover; background-position: center";
         }

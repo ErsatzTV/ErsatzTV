@@ -446,6 +446,51 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinConnection",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("JellyfinMediaSourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JellyfinMediaSourceId");
+
+                    b.ToTable("JellyfinConnection");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinPathReplacement",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("JellyfinMediaSourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("JellyfinPath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LocalPath")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("JellyfinMediaSourceId");
+
+                    b.ToTable("JellyfinPathReplacement");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Library",
                 b =>
                 {
@@ -1210,6 +1255,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinLibrary",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Library");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ShouldSyncItems")
+                        .HasColumnType("INTEGER");
+
+                    b.ToTable("JellyfinLibrary");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.LocalLibrary",
                 b =>
                 {
@@ -1324,6 +1384,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinMediaSource",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.MediaSource");
+
+                    b.Property<string>("OperatingSystem")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ServerName")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("JellyfinMediaSource");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.LocalMediaSource",
                 b =>
                 {
@@ -1402,6 +1477,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinEpisode",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Episode");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("JellyfinEpisode");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.PlexEpisode",
                 b =>
                 {
@@ -1411,6 +1501,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.ToTable("PlexEpisode");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinMovie",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Movie");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("JellyfinMovie");
                 });
 
             modelBuilder.Entity(
@@ -1426,6 +1531,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinSeason",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Season");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("JellyfinSeason");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.PlexSeason",
                 b =>
                 {
@@ -1435,6 +1555,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.ToTable("PlexSeason");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinShow",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Show");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("JellyfinShow");
                 });
 
             modelBuilder.Entity(
@@ -1632,6 +1767,32 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .WithMany("Genres")
                         .HasForeignKey("ShowMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinConnection",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.JellyfinMediaSource", "JellyfinMediaSource")
+                        .WithMany("Connections")
+                        .HasForeignKey("JellyfinMediaSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JellyfinMediaSource");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinPathReplacement",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.JellyfinMediaSource", "JellyfinMediaSource")
+                        .WithMany("PathReplacements")
+                        .HasForeignKey("JellyfinMediaSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("JellyfinMediaSource");
                 });
 
             modelBuilder.Entity(
@@ -2050,6 +2211,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinLibrary",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Library", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.JellyfinLibrary", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.LocalLibrary",
                 b =>
                 {
@@ -2173,6 +2345,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinMediaSource",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaSource", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.JellyfinMediaSource", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.LocalMediaSource",
                 b =>
                 {
@@ -2239,12 +2422,34 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinEpisode",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Episode", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.JellyfinEpisode", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.PlexEpisode",
                 b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Episode", null)
                         .WithOne()
                         .HasForeignKey("ErsatzTV.Core.Domain.PlexEpisode", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinMovie",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Movie", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.JellyfinMovie", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2261,12 +2466,34 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinSeason",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Season", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.JellyfinSeason", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.PlexSeason",
                 b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.Season", null)
                         .WithOne()
                         .HasForeignKey("ErsatzTV.Core.Domain.PlexSeason", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinShow",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Show", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.JellyfinShow", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2474,6 +2701,15 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Seasons");
 
                     b.Navigation("ShowMetadata");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.JellyfinMediaSource",
+                b =>
+                {
+                    b.Navigation("Connections");
+
+                    b.Navigation("PathReplacements");
                 });
 
             modelBuilder.Entity(

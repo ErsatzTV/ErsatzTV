@@ -10,21 +10,24 @@ namespace ErsatzTV.Application.Movies
 {
     internal static class Mapper
     {
-        internal static MovieViewModel ProjectToViewModel(Movie movie)
+        internal static MovieViewModel ProjectToViewModel(Movie movie, Option<JellyfinMediaSource> maybeJellyfin)
         {
             MovieMetadata metadata = Optional(movie.MovieMetadata).Flatten().Head();
             return new MovieViewModel(
                 metadata.Title,
                 metadata.Year?.ToString(),
                 metadata.Plot,
-                Artwork(metadata, ArtworkKind.Poster),
-                Artwork(metadata, ArtworkKind.FanArt),
                 metadata.Genres.Map(g => g.Name).ToList(),
                 metadata.Tags.Map(t => t.Name).ToList(),
                 metadata.Studios.Map(s => s.Name).ToList(),
                 LanguagesForMovie(movie),
-                metadata.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id).Map(MediaCards.Mapper.ProjectToViewModel)
-                    .ToList());
+                metadata.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id)
+                    .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin))
+                    .ToList())
+            {
+                Poster = Artwork(metadata, ArtworkKind.Poster, maybeJellyfin),
+                FanArt = Artwork(metadata, ArtworkKind.FanArt, maybeJellyfin)
+            };
         }
 
         private static List<CultureInfo> LanguagesForMovie(Movie movie)
@@ -43,8 +46,28 @@ namespace ErsatzTV.Application.Movies
                 .ToList();
         }
 
-        private static string Artwork(Metadata metadata, ArtworkKind artworkKind) =>
-            Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
+        private static string Artwork(
+            Metadata metadata,
+            ArtworkKind artworkKind,
+            Option<JellyfinMediaSource> maybeJellyfin)
+        {
+            string artwork = Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
                 .Match(a => a.Path, string.Empty);
+
+            if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
+            {
+                string address = maybeJellyfin.Map(ms => ms.Connections.HeadOrNone().Map(c => c.Address))
+                    .Flatten()
+                    .IfNone("jellyfin://");
+                artwork = artwork.Replace("jellyfin://", address);
+
+                if (artworkKind is ArtworkKind.Poster or ArtworkKind.Thumbnail)
+                {
+                    artwork += "&fillHeight=440";
+                }
+            }
+
+            return artwork;
+        }
     }
 }

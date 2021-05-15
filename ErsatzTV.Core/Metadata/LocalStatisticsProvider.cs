@@ -41,12 +41,28 @@ namespace ErsatzTV.Core.Metadata
                     _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                 };
 
-                Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, filePath);
+                return await RefreshStatistics(ffprobePath, mediaItem, filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        public async Task<Either<BaseError, bool>> RefreshStatistics(
+            string ffprobePath,
+            MediaItem mediaItem,
+            string mediaItemPath)
+        {
+            try
+            {
+                Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, mediaItemPath);
                 return await maybeProbe.Match(
                     async ffprobe =>
                     {
-                        MediaVersion version = ProjectToMediaVersion(filePath, ffprobe);
-                        bool result = await ApplyVersionUpdate(mediaItem, version, filePath);
+                        MediaVersion version = ProjectToMediaVersion(mediaItemPath, ffprobe);
+                        bool result = await ApplyVersionUpdate(mediaItem, version, mediaItemPath);
                         return Right<BaseError, bool>(result);
                     },
                     error => Task.FromResult(Left<BaseError, bool>(error)));

@@ -1,0 +1,111 @@
+﻿@page "/media/sources/jellyfin/{Id:int}/libraries"
+@using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Application.Jellyfin.Commands
+@using ErsatzTV.Application.Jellyfin.Queries
+@inject IMediator _mediator
+@inject NavigationManager _navigationManager
+@inject ILogger<JellyfinLibrariesEditor> _logger
+@inject ISnackbar _snackbar
+@inject ChannelWriter<IJellyfinBackgroundServiceRequest> _channel
+@inject IEntityLocker _locker
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudTable Hover="true" Items="_libraries" Dense="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6"><b>@_source.Name</b> Libraries</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col style="width: 100px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<JellyfinMediaSourceLibraryEditViewModel, object>(x => x.Name)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<JellyfinMediaSourceLibraryEditViewModel, object>(x => x.MediaKind)">
+                    Media Kind
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>Synchronize</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="MediaType">@context.MediaKind</MudTd>
+            <MudTd DataLabel="Synchronize">
+                <MudSwitch T="bool" @bind-Checked="@context.ShouldSyncItems" Color="Color.Primary"/>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
+        Save Changes
+    </MudButton>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private JellyfinMediaSourceViewModel _source;
+    private List<JellyfinMediaSourceLibraryEditViewModel> _libraries;
+
+    protected override Task OnParametersSetAsync() => LoadData();
+
+    private async Task LoadData()
+    {
+        Option<JellyfinMediaSourceViewModel> maybeSource = await _mediator.Send(new GetJellyfinMediaSourceById(Id));
+        await maybeSource.Match(
+            async source =>
+            {
+                _source = source;
+                _libraries = await _mediator.Send(new GetJellyfinLibrariesBySourceId(Id))
+                    .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
+            },
+            () =>
+            {
+                _navigationManager.NavigateTo("404");
+                return Task.CompletedTask;
+            });
+    }
+
+    private JellyfinMediaSourceLibraryEditViewModel ProjectToEditViewModel(JellyfinLibraryViewModel library) => new()
+    {
+        Id = library.Id,
+        Name = library.Name,
+        MediaKind = library.MediaKind,
+        ShouldSyncItems = library.ShouldSyncItems
+    };
+
+    private async Task SaveChanges()
+    {
+        var request = new UpdateJellyfinLibraryPreferences(
+            _libraries.Map(l => new JellyfinLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
+
+        Seq<BaseError> errorMessages = await _mediator.Send(request).Map(e => e.LeftToSeq());
+
+        await errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                _snackbar.Add($"Unexpected error saving jellyfin libraries: {error.Value}", Severity.Error);
+                _logger.LogError("Unexpected error saving jellyfin libraries: {Error}", error.Value);
+                return Task.CompletedTask;
+            },
+            async () =>
+            {
+                foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
+                {
+                    if (_locker.LockLibrary(id))
+                    {
+                        await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(id));
+                    }
+                }
+
+                _navigationManager.NavigateTo("/media/jellyfin");
+            });
+    }
+
+}

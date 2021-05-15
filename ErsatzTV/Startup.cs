@@ -12,6 +12,7 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.GitHub;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -19,6 +20,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
@@ -27,6 +29,7 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.GitHub;
 using ErsatzTV.Infrastructure.Images;
+using ErsatzTV.Infrastructure.Jellyfin;
 using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
@@ -193,6 +196,7 @@ namespace ErsatzTV
             services.AddSingleton<ISearchIndex, SearchIndex>();
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
+            AddChannel<IJellyfinBackgroundServiceRequest>(services);
 
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IFFmpegProfileRepository, FFmpegProfileRepository>();
@@ -224,6 +228,11 @@ namespace ErsatzTV
             services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
             services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
             services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
+            services.AddScoped<IJellyfinMovieLibraryScanner, JellyfinMovieLibraryScanner>();
+            services.AddScoped<IJellyfinTelevisionLibraryScanner, JellyfinTelevisionLibraryScanner>();
+            services.AddScoped<IJellyfinApiClient, JellyfinApiClient>();
+            services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
+            services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
             services.AddScoped<IRuntimeInfo, RuntimeInfo>();
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
@@ -236,9 +245,11 @@ namespace ErsatzTV
                     sanitizer.AllowedAttributes.Add("class");
                     return sanitizer;
                 });
+            services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
 
             services.AddHostedService<DatabaseMigratorService>();
             services.AddHostedService<CacheCleanerService>();
+            services.AddHostedService<JellyfinService>();
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();
             services.AddHostedService<WorkerService>();

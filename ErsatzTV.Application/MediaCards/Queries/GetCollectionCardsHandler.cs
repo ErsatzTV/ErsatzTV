@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
@@ -12,15 +13,27 @@ namespace ErsatzTV.Application.MediaCards.Queries
         Either<BaseError, CollectionCardResultsViewModel>>
     {
         private readonly IMediaCollectionRepository _collectionRepository;
+        private readonly IMediaSourceRepository _mediaSourceRepository;
 
-        public GetCollectionCardsHandler(IMediaCollectionRepository collectionRepository) =>
+        public GetCollectionCardsHandler(
+            IMediaCollectionRepository collectionRepository,
+            IMediaSourceRepository mediaSourceRepository)
+        {
             _collectionRepository = collectionRepository;
+            _mediaSourceRepository = mediaSourceRepository;
+        }
 
-        public Task<Either<BaseError, CollectionCardResultsViewModel>> Handle(
+        public async Task<Either<BaseError, CollectionCardResultsViewModel>> Handle(
             GetCollectionCards request,
-            CancellationToken cancellationToken) =>
-            _collectionRepository.GetCollectionWithItemsUntracked(request.Id)
+            CancellationToken cancellationToken)
+        {
+            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+                .Map(list => list.HeadOrNone());
+
+            return await _collectionRepository
+                .GetCollectionWithItemsUntracked(request.Id)
                 .Map(c => c.ToEither(BaseError.New("Unable to load collection")))
-                .MapT(ProjectToViewModel);
+                .MapT(c => ProjectToViewModel(c, maybeJellyfin));
+        }
     }
 }

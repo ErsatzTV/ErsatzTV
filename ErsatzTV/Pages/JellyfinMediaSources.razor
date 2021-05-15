@@ -1,0 +1,105 @@
+﻿@page "/media/jellyfin"
+@using ErsatzTV.Core.Interfaces.Jellyfin
+@using ErsatzTV.Application.Jellyfin
+@using ErsatzTV.Application.Jellyfin.Commands
+@using ErsatzTV.Application.Jellyfin.Queries
+@inject IJellyfinSecretStore _jellyfinSecretStore
+@inject IMediator _mediator
+@inject IDialogService _dialog
+@inject IEntityLocker _locker
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudTable Hover="true" Dense="true" Items="_mediaSources">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Jellyfin Media Source</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col style="width: 120px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Address</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Address">@context.Address</MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Libraries">
+                        <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
+                                       Link="@($"/media/sources/jellyfin/{context.Id}/libraries")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Edit Path Replacements">
+                        <MudIconButton Icon="@Icons.Material.Filled.Folder"
+                                       Link="@($"/media/sources/jellyfin/{context.Id}/paths")">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    @if (_mediaSources.Any())
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Error"
+                   OnClick="@(_ => DisconnectJellyfin())"
+                   Class="mt-4">
+            Disconnect Jellyfin
+        </MudButton>
+    }
+    else
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Link="/media/jellyfin/edit"
+                   Class="mt-4">
+            Connect Jellyfin
+        </MudButton>
+    }
+
+    @if (_mediaSources.Any() && !_isAuthorized)
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Secondary"
+                   Link="/media/jellyfin/edit"
+                   Class="ml-4 mt-4">
+            Fix Jellyfin Credentials
+        </MudButton>
+    }
+
+</MudContainer>
+
+@code {
+    private List<JellyfinMediaSourceViewModel> _mediaSources = new();
+
+    private bool _isAuthorized;
+
+    protected override async Task OnParametersSetAsync() => await LoadMediaSources();
+
+    private async Task LoadMediaSources()
+    {
+        _isAuthorized = await _jellyfinSecretStore.ReadSecrets()
+            .Map(secrets => !string.IsNullOrWhiteSpace(secrets.Address) && !string.IsNullOrWhiteSpace(secrets.ApiKey));
+        _mediaSources = await _mediator.Send(new GetAllJellyfinMediaSources());
+    }
+
+    private async Task DisconnectJellyfin()
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+        IDialogReference dialog = _dialog.Show<DisconnectJellyfinDialog>("DisconnectJellyfin", options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            if (_locker.LockJellyfin())
+            {
+                await _mediator.Send(new DisconnectJellyfin());
+                await LoadMediaSources();
+            }
+        }
+    }
+
+}
