@@ -15,11 +15,11 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - Powerful scheduling options such as chronological collection playback throughout the day or over multiple days
 - [Hardware-accelerated transcoding](#Hardware-Transcoding) options (QSV, NVENC, VAAPI)
 - [Plex](https://www.plex.tv/) media and metadata
+- [Jellyfin](https://jellyfin.org/) media and metadata
 - Music video libraries
 
 ## Planned Features
 
-- [Jellyfin](https://jellyfin.org/) media and metadata 
 - Run as a Windows service
 - Spots to fill unscheduled gaps
 
