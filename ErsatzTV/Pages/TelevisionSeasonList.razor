@@ -20,16 +20,32 @@
     <div class="fanart-tint"></div>
     @if (!string.IsNullOrWhiteSpace(_show.FanArt))
     {
-        <img src="@($"/artwork/fanart/{_show.FanArt}")" alt="fan art"/>
+        if (_show.FanArt.StartsWith("http://") || _show.FanArt.StartsWith("https://"))
+        {
+            <img src="@_show.FanArt" alt="fan art"/>
+        }
+        else
+        {
+            <img src="@($"/artwork/fanart/{_show.FanArt}")" alt="fan art"/>
+        }
     }
 </MudContainer>
 <MudContainer MaxWidth="MaxWidth.Large" Style="margin-top: 200px">
     <div style="display: flex; flex-direction: row;" class="mb-6">
         @if (!string.IsNullOrWhiteSpace(_show.Poster))
         {
-            <img class="mud-elevation-2 mr-6"
-                 style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                 src="@($"/artwork/posters/{_show.Poster}")" alt="show poster"/>
+            if (_show.Poster.StartsWith("http://") || _show.Poster.StartsWith("https://"))
+            {
+                <img class="mud-elevation-2 mr-6"
+                     style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
+                     src="@_show.Poster" alt="movie poster"/>
+            }
+            else
+            {
+                <img class="mud-elevation-2 mr-6"
+                     style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
+                     src="@($"/artwork/posters/{_show.Poster}")" alt="movie poster"/>
+            }
         }
         <div style="display: flex; flex-direction: column; height: 100%">
             <MudText Typo="Typo.h2" Class="media-item-title">@_show.Title</MudText>

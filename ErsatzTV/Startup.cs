@@ -231,9 +231,10 @@ namespace ErsatzTV
             services.AddScoped<IJellyfinMovieLibraryScanner, JellyfinMovieLibraryScanner>();
             services.AddScoped<IJellyfinTelevisionLibraryScanner, JellyfinTelevisionLibraryScanner>();
             services.AddScoped<IJellyfinApiClient, JellyfinApiClient>();
+            services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
+            services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
             services.AddScoped<IRuntimeInfo, RuntimeInfo>();
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
-            services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
             services.AddScoped<FFmpegProcessService>();
             services.AddScoped<IGitHubApiClient, GitHubApiClient>();

@@ -249,14 +249,24 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { movieMetadata.SortTitle, movieMetadata.Id }).Map(result => result > 0);
 
         public Task<List<JellyfinItemEtag>> GetExistingJellyfinMovies(JellyfinLibrary library) =>
-            _dbConnection.QueryAsync<JellyfinItemEtag>("SELECT ItemId, Etag FROM JellyfinMovie")
+            _dbConnection.QueryAsync<JellyfinItemEtag>(
+                    @"SELECT ItemId, Etag FROM JellyfinMovie
+                      INNER JOIN Movie M on JellyfinMovie.Id = M.Id
+                      INNER JOIN MediaItem MI on M.Id = MI.Id
+                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                      WHERE LP.LibraryId = @LibraryId",
+                    new { LibraryId = library.Id })
                 .Map(result => result.ToList());
 
         public async Task<List<int>> RemoveMissingJellyfinMovies(JellyfinLibrary library, List<string> movieIds)
         {
             List<int> ids = await _dbConnection.QueryAsync<int>(
-                "SELECT Id FROM JellyfinMovie WHERE ItemId IN @ItemIds",
-                new { ItemIds = movieIds }).Map(result => result.ToList());
+                @"SELECT JellyfinMovie.Id FROM JellyfinMovie
+                  INNER JOIN Movie M on JellyfinMovie.Id = M.Id
+                  INNER JOIN MediaItem MI on M.Id = MI.Id
+                  INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                  WHERE LP.LibraryId = @LibraryId AND ItemId IN @ItemIds",
+                new { LibraryId = library.Id, ItemIds = movieIds }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
                 "DELETE FROM JellyfinMovie WHERE Id IN @Ids",
@@ -294,6 +304,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Tags)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Studios)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Actors)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Filter(m => m.ItemId == movie.ItemId)

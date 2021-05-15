@@ -100,7 +100,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                     IJellyfinApi service = RestService.For<IJellyfinApi>(address);
                     JellyfinLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, userId, libraryId);
                     return items.Items
-                        .Map(i => ProjectToMovie(i, mediaSourceId))
+                        .Map(ProjectToMovie)
                         .Somes()
                         .ToList();
                 }
@@ -109,7 +109,34 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting jellyfin library items");
+                _logger.LogError(ex, "Error getting jellyfin movie library items");
+                return BaseError.New(ex.Message);
+            }
+        }
+
+        public async Task<Either<BaseError, List<JellyfinShow>>> GetShowLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string libraryId)
+        {
+            try
+            {
+                if (_memoryCache.TryGetValue($"jellyfin_admin_user_id.{mediaSourceId}", out string userId))
+                {
+                    IJellyfinApi service = RestService.For<IJellyfinApi>(address);
+                    JellyfinLibraryItemsResponse items = await service.GetShowLibraryItems(apiKey, userId, libraryId);
+                    return items.Items
+                        .Map(ProjectToShow)
+                        .Somes()
+                        .ToList();
+                }
+
+                return BaseError.New("Jellyfin admin user id is not available");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting jellyfin show library items");
                 return BaseError.New(ex.Message);
             }
         }
@@ -137,7 +164,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 _ => None
             };
 
-        private Option<JellyfinMovie> ProjectToMovie(JellyfinLibraryItemResponse item, int mediaSourceId)
+        private Option<JellyfinMovie> ProjectToMovie(JellyfinLibraryItemResponse item)
         {
             try
             {
@@ -161,7 +188,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                     Streams = new List<MediaStream>()
                 };
 
-                MovieMetadata metadata = ProjectToMovieMetadata(item, mediaSourceId);
+                MovieMetadata metadata = ProjectToMovieMetadata(item);
 
                 var movie = new JellyfinMovie
                 {
@@ -180,7 +207,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
         }
 
-        private MovieMetadata ProjectToMovieMetadata(JellyfinLibraryItemResponse item, int mediaSourceId)
+        private MovieMetadata ProjectToMovieMetadata(JellyfinLibraryItemResponse item)
         {
             DateTime dateAdded = item.DateCreated.UtcDateTime;
             // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
@@ -250,6 +277,89 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
 
             return actor;
+        }
+
+        private Option<JellyfinShow> ProjectToShow(JellyfinLibraryItemResponse item)
+        {
+            try
+            {
+                if (item.LocationType != "FileSystem")
+                {
+                    return None;
+                }
+
+                ShowMetadata metadata = ProjectToShowMetadata(item);
+
+                var show = new JellyfinShow
+                {
+                    ItemId = item.Id,
+                    Etag = item.Etag,
+                    ShowMetadata = new List<ShowMetadata> { metadata }
+                };
+
+                return show;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error projecting Jellyfin show");
+                return None;
+            }
+        }
+
+        private ShowMetadata ProjectToShowMetadata(JellyfinLibraryItemResponse item)
+        {
+            DateTime dateAdded = item.DateCreated.UtcDateTime;
+            // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
+
+            var metadata = new ShowMetadata
+            {
+                Title = item.Name,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+                Plot = item.Overview,
+                Year = item.ProductionYear,
+                Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
+                DateAdded = dateAdded,
+                Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
+                Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
+                Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
+                Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList(),
+                Artwork = new List<Artwork>()
+            };
+
+            // set order on actors
+            for (var i = 0; i < metadata.Actors.Count; i++)
+            {
+                metadata.Actors[i].Order = i;
+            }
+
+            if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
+            {
+                metadata.ReleaseDate = releaseDate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
+            {
+                var poster = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Poster,
+                    Path = $"jellyfin:///Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                    DateAdded = dateAdded
+                };
+                metadata.Artwork.Add(poster);
+            }
+
+            if (item.BackdropImageTags.Any())
+            {
+                var fanArt = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.FanArt,
+                    Path = $"jellyfin:///Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
+                    DateAdded = dateAdded
+                };
+                metadata.Artwork.Add(fanArt);
+            }
+
+            return metadata;
         }
     }
 }

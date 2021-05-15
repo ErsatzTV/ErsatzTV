@@ -8,13 +8,15 @@ namespace ErsatzTV.Application.MediaCards
 {
     internal static class Mapper
     {
-        internal static TelevisionShowCardViewModel ProjectToViewModel(ShowMetadata showMetadata) =>
+        internal static TelevisionShowCardViewModel ProjectToViewModel(
+            ShowMetadata showMetadata,
+            Option<JellyfinMediaSource> maybeJellyfin) =>
             new(
                 showMetadata.ShowId,
                 showMetadata.Title,
                 showMetadata.Year?.ToString(),
                 showMetadata.SortTitle,
-                GetPoster(showMetadata, None));
+                GetPoster(showMetadata, maybeJellyfin));
 
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(Season season) =>
             new(
@@ -80,7 +82,7 @@ namespace ErsatzTV.Application.MediaCards
                     {
                         CustomIndex = GetCustomIndex(collection, m.Id)
                     }).ToList(),
-                collection.MediaItems.OfType<Show>().Map(s => ProjectToViewModel(s.ShowMetadata.Head())).ToList(),
+                collection.MediaItems.OfType<Show>().Map(s => ProjectToViewModel(s.ShowMetadata.Head(), maybeJellyfin)).ToList(),
                 collection.MediaItems.OfType<Season>().Map(ProjectToViewModel).ToList(),
                 collection.MediaItems.OfType<Episode>().Map(e => ProjectToViewModel(e.EpisodeMetadata.Head()))
                     .ToList(),

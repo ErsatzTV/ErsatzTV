@@ -117,7 +117,8 @@
                            SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
-                           IsSelectMode="@IsSelectMode()"/>
+                           IsSelectMode="@IsSelectMode()"
+                           IsRemoteArtwork="@(card.Poster?.StartsWith("http://") == true || card.Poster?.StartsWith("https://") == true)"/>
             }
         </MudContainer>
     }

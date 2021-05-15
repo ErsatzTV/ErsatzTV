@@ -62,7 +62,8 @@
                        AddToCollectionClicked="@AddToCollection"
                        SelectClicked="@(e => SelectClicked(context, e))"
                        IsSelected="@IsSelected(context)"
-                       IsSelectMode="@IsSelectMode()"/>
+                       IsSelectMode="@IsSelectMode()"
+                       IsRemoteArtwork="@(context.Poster?.StartsWith("http://") == true || context.Poster?.StartsWith("https://") == true)"/>
         </FragmentLetterAnchor>
     </MudContainer>
 </MudContainer>

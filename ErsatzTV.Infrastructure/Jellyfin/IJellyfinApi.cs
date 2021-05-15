@@ -45,7 +45,6 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            // TODO: fields?
             string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
             [Query]
             string includeItemTypes = "Series");
@@ -63,5 +62,19 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
             [Query]
             string includeItemTypes = "Season");
+
+        [Get("/Items")]
+        public Task<JellyfinLibraryItemsResponse> GetEpisodeLibraryItems(
+            [Header("X-Emby-Token")]
+            string apiKey,
+            [Query]
+            string userId,
+            [Query]
+            string parentId,
+            [Query]
+            // TODO: fields?
+            string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
+            [Query]
+            string includeItemTypes = "Episode");
     }
 }

@@ -528,44 +528,42 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
 
-            // await _dbConnection.ExecuteAsync(
-            //     @"DELETE FROM MediaItem WHERE Id IN
-            //     (SELECT m.Id FROM MediaItem m
-            //     INNER JOIN JellyfinEpisode pe ON pe.Id = m.Id
-            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-            //     INNER JOIN Library l ON l.Id = lp.LibraryId
-            //     WHERE l.Id IN @ids)",
-            //     new { ids = libraryIds });
-            //
-            // await _dbConnection.ExecuteAsync(
-            //     @"DELETE FROM MediaItem WHERE Id IN
-            //     (SELECT m.Id FROM MediaItem m
-            //     INNER JOIN JellyfinSeason ps ON ps.Id = m.Id
-            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-            //     INNER JOIN Library l ON l.Id = lp.LibraryId
-            //     WHERE l.Id IN @ids)",
-            //     new { ids = libraryIds });
-            //
-            // List<int> showIds = await _dbConnection.QueryAsync<int>(
-            //     @"SELECT m.Id FROM MediaItem m
-            //     INNER JOIN JellyfinShow ps ON ps.Id = m.Id
-            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-            //     INNER JOIN Library l ON l.Id = lp.LibraryId
-            //     WHERE l.Id IN @ids",
-            //     new { ids = libraryIds }).Map(result => result.ToList());
-            //
-            // await _dbConnection.ExecuteAsync(
-            //     @"DELETE FROM MediaItem WHERE Id IN
-            //     (SELECT m.Id FROM MediaItem m
-            //     INNER JOIN JellyfinShow ps ON ps.Id = m.Id
-            //     INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-            //     INNER JOIN Library l ON l.Id = lp.LibraryId
-            //     WHERE l.Id IN @ids)",
-            //     new { ids = libraryIds });
-            //
-            // return movieIds.Append(showIds).ToList();
-
-            return movieIds.ToList();
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinEpisode pe ON pe.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+            
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinSeason ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+            
+            List<int> showIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+            
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+            
+            return movieIds.Append(showIds).ToList();
         }
 
         public Task<Option<JellyfinLibrary>> GetJellyfinLibrary(int jellyfinLibraryId)
@@ -663,14 +661,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             List<JellyfinLibrary> allJellyfinLibraries = await context.JellyfinLibraries.ToListAsync();
             context.JellyfinLibraries.RemoveRange(allJellyfinLibraries);
 
-            // List<int> movieIds = await context.JellyfinMovies.Map(pm => pm.Id).ToListAsync();
-            // List<int> showIds = await context.JellyfinShows.Map(ps => ps.Id).ToListAsync();
+            List<int> movieIds = await context.JellyfinMovies.Map(pm => pm.Id).ToListAsync();
+            List<int> showIds = await context.JellyfinShows.Map(ps => ps.Id).ToListAsync();
 
             await context.SaveChangesAsync();
 
-            // return movieIds.Append(showIds).ToList();
-
-            return new List<int>();
+            return movieIds.Append(showIds).ToList();
         }
     }
 }
