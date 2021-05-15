@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
@@ -21,6 +22,9 @@ namespace ErsatzTV.Core.Jellyfin
         private readonly IMovieRepository _movieRepository;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
+        private readonly IJellyfinPathReplacementService _pathReplacementService;
+        private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly ILocalFileSystem _localFileSystem;
 
         public JellyfinMovieLibraryScanner(
             IJellyfinApiClient jellyfinApiClient,
@@ -28,6 +32,9 @@ namespace ErsatzTV.Core.Jellyfin
             IMediator mediator,
             IMovieRepository movieRepository,
             ISearchRepository searchRepository,
+            IJellyfinPathReplacementService pathReplacementService,
+            IMediaSourceRepository mediaSourceRepository,
+            ILocalFileSystem localFileSystem,
             ILogger<JellyfinMovieLibraryScanner> logger)
         {
             _jellyfinApiClient = jellyfinApiClient;
@@ -35,6 +42,9 @@ namespace ErsatzTV.Core.Jellyfin
             _mediator = mediator;
             _movieRepository = movieRepository;
             _searchRepository = searchRepository;
+            _pathReplacementService = pathReplacementService;
+            _mediaSourceRepository = mediaSourceRepository;
+            _localFileSystem = localFileSystem;
             _logger = logger;
         }
 
@@ -43,6 +53,9 @@ namespace ErsatzTV.Core.Jellyfin
             List<JellyfinItemEtag> existingMovies = await _movieRepository.GetExistingJellyfinMovies(library);
 
             // TODO: maybe get quick list of item ids and etags from api to compare first
+
+            List<JellyfinPathReplacement> pathReplacements = await _mediaSourceRepository
+                .GetJellyfinPathReplacements(library.MediaSourceId);
 
             Either<BaseError, List<JellyfinMovie>> maybeMovies = await _jellyfinApiClient.GetMovieLibraryItems(
                 address,
@@ -53,9 +66,26 @@ namespace ErsatzTV.Core.Jellyfin
             await maybeMovies.Match(
                 async movies =>
                 {
-                    foreach (JellyfinMovie incoming in movies)
+                    var validMovies = new List<JellyfinMovie>();
+                    foreach (JellyfinMovie movie in movies)
                     {
-                        decimal percentCompletion = (decimal) movies.IndexOf(incoming) / movies.Count;
+                        string localPath = _pathReplacementService.GetReplacementJellyfinPath(
+                            pathReplacements,
+                            movie.MediaVersions.Head().MediaFiles.Head().Path);
+                        
+                        if (!_localFileSystem.FileExists(localPath))
+                        {
+                            _logger.LogWarning($"Skipping jellyfin movie that does not exist at {localPath}");
+                        }
+                        else
+                        {
+                            validMovies.Add(movie);
+                        }
+                    }
+                    
+                    foreach (JellyfinMovie incoming in validMovies)
+                    {
+                        decimal percentCompletion = (decimal) validMovies.IndexOf(incoming) / validMovies.Count;
                         await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
                         Option<JellyfinItemEtag> maybeExisting =
@@ -104,7 +134,7 @@ namespace ErsatzTV.Core.Jellyfin
                         //     error.Value);
                     }
 
-                    var incomingMovieIds = movies.Map(s => s.ItemId).ToList();
+                    var incomingMovieIds = validMovies.Map(s => s.ItemId).ToList();
                     var movieIds = existingMovies
                         .Filter(i => !incomingMovieIds.Contains(i.ItemId))
                         .Map(m => m.ItemId)

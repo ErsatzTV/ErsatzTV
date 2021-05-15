@@ -31,7 +31,13 @@ namespace ErsatzTV.Core.Jellyfin
         {
             List<JellyfinPathReplacement> replacements =
                 await _mediaSourceRepository.GetJellyfinPathReplacementsByLibraryId(libraryPathId);
-            Option<JellyfinPathReplacement> maybeReplacement = replacements
+
+            return GetReplacementJellyfinPath(replacements, path);
+        }
+
+        public string GetReplacementJellyfinPath(List<JellyfinPathReplacement> pathReplacements, string path)
+        {
+            Option<JellyfinPathReplacement> maybeReplacement = pathReplacements
                 .SingleOrDefault(
                     r =>
                     {
@@ -39,6 +45,7 @@ namespace ErsatzTV.Core.Jellyfin
                         string prefix = r.JellyfinPath.EndsWith(separatorChar) ? r.JellyfinPath : r.JellyfinPath + separatorChar;
                         return path.StartsWith(prefix);
                     });
+
             return maybeReplacement.Match(
                 replacement =>
                 {
@@ -52,7 +59,7 @@ namespace ErsatzTV.Core.Jellyfin
                         finalPath = finalPath.Replace(@"/", @"\");
                     }
 
-                    _logger.LogInformation(
+                    _logger.LogDebug(
                         "Replacing jellyfin path {JellyfinPath} with {LocalPath} resulting in {FinalPath}",
                         replacement.JellyfinPath,
                         replacement.LocalPath,
