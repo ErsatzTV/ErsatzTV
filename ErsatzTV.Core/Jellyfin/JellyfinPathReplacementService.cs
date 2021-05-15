@@ -35,14 +35,19 @@ namespace ErsatzTV.Core.Jellyfin
             return GetReplacementJellyfinPath(replacements, path);
         }
 
-        public string GetReplacementJellyfinPath(List<JellyfinPathReplacement> pathReplacements, string path, bool log = true)
+        public string GetReplacementJellyfinPath(
+            List<JellyfinPathReplacement> pathReplacements,
+            string path,
+            bool log = true)
         {
             Option<JellyfinPathReplacement> maybeReplacement = pathReplacements
                 .SingleOrDefault(
                     r =>
                     {
                         string separatorChar = IsWindows(r.JellyfinMediaSource) ? @"\" : @"/";
-                        string prefix = r.JellyfinPath.EndsWith(separatorChar) ? r.JellyfinPath : r.JellyfinPath + separatorChar;
+                        string prefix = r.JellyfinPath.EndsWith(separatorChar)
+                            ? r.JellyfinPath
+                            : r.JellyfinPath + separatorChar;
                         return path.StartsWith(prefix);
                     });
 
@@ -54,7 +59,8 @@ namespace ErsatzTV.Core.Jellyfin
                     {
                         finalPath = finalPath.Replace(@"\", @"/");
                     }
-                    else if (!IsWindows(replacement.JellyfinMediaSource) && _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+                    else if (!IsWindows(replacement.JellyfinMediaSource) &&
+                             _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
                     {
                         finalPath = finalPath.Replace(@"/", @"\");
                     }

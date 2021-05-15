@@ -8,7 +8,6 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
 using LanguageExt;
-using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Refit;
@@ -197,9 +196,9 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList(),
                 Artwork = new List<Artwork>()
             };
-            
+
             // set order on actors
-            for (int i = 0; i < metadata.Actors.Count; i++)
+            for (var i = 0; i < metadata.Actors.Count; i++)
             {
                 metadata.Actors[i].Order = i;
             }
@@ -233,7 +232,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
 
             return metadata;
         }
-        
+
         private Actor ProjectToModel(JellyfinPersonResponse person, DateTime dateAdded)
         {
             var actor = new Actor { Name = person.Name, Role = person.Role };

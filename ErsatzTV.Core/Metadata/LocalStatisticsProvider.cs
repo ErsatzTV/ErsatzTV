@@ -49,8 +49,11 @@ namespace ErsatzTV.Core.Metadata
                 return BaseError.New(ex.Message);
             }
         }
-        
-        public async Task<Either<BaseError, bool>> RefreshStatistics(string ffprobePath, MediaItem mediaItem, string mediaItemPath)
+
+        public async Task<Either<BaseError, bool>> RefreshStatistics(
+            string ffprobePath,
+            MediaItem mediaItem,
+            string mediaItemPath)
         {
             try
             {

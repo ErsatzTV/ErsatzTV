@@ -26,7 +26,8 @@ namespace ErsatzTV.Application.Television
                 LanguagesForShow(languages),
                 show.ShowMetadata.HeadOrNone()
                     .Map(
-                        m => m.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id).Map(a => MediaCards.Mapper.ProjectToViewModel(a, None))
+                        m => m.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id)
+                            .Map(a => MediaCards.Mapper.ProjectToViewModel(a, None))
                             .ToList())
                     .IfNone(new List<ActorCardViewModel>()));
 

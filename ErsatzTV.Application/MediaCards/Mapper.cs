@@ -2,7 +2,6 @@
 using System.Linq;
 using ErsatzTV.Core.Domain;
 using LanguageExt;
-using LanguageExt.UnsafeValueAccess;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCards
@@ -45,7 +44,9 @@ namespace ErsatzTV.Application.MediaCards
                     () => string.Empty),
                 GetThumbnail(episodeMetadata));
 
-        internal static MovieCardViewModel ProjectToViewModel(MovieMetadata movieMetadata, Option<JellyfinMediaSource> maybeJellyfin) =>
+        internal static MovieCardViewModel ProjectToViewModel(
+            MovieMetadata movieMetadata,
+            Option<JellyfinMediaSource> maybeJellyfin) =>
             new(
                 movieMetadata.MovieId,
                 movieMetadata.Title,
@@ -90,7 +91,7 @@ namespace ErsatzTV.Application.MediaCards
         internal static ActorCardViewModel ProjectToViewModel(Actor actor, Option<JellyfinMediaSource> maybeJellyfin)
         {
             string artwork = actor.Artwork?.Path ?? string.Empty;
-            
+
             if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
             {
                 string address = maybeJellyfin.Map(ms => ms.Connections.HeadOrNone().Map(c => c.Address))
@@ -98,8 +99,8 @@ namespace ErsatzTV.Application.MediaCards
                     .IfNone("jellyfin://");
                 artwork = artwork.Replace("jellyfin://", address) + "&fillheight=440";
             }
-            
-            return new(actor.Id, actor.Name, actor.Role, artwork);
+
+            return new ActorCardViewModel(actor.Id, actor.Name, actor.Role, artwork);
         }
 
         private static int GetCustomIndex(Collection collection, int mediaItemId) =>

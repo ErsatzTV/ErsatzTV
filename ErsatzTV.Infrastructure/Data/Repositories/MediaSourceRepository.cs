@@ -512,7 +512,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN Library l ON l.Id = lp.LibraryId
                 WHERE l.Id IN @ids",
                 new { ids = libraryIds }).Map(result => result.ToList());
-            
+
             await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
@@ -521,7 +521,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN Library l ON l.Id = lp.LibraryId
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
-            
+
             // await _dbConnection.ExecuteAsync(
             //     @"DELETE FROM MediaItem WHERE Id IN
             //     (SELECT m.Id FROM MediaItem m
@@ -596,7 +596,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(r => r.JellyfinMediaSourceId == jellyfinMediaSourceId)
                 .ToListAsync();
         }
-        
+
         public Task<List<JellyfinPathReplacement>> GetJellyfinPathReplacementsByLibraryId(int jellyfinLibraryPathId)
         {
             using TvContext context = _dbContextFactory.CreateDbContext();

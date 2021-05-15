@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
-using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
-using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using static ErsatzTV.Application.Movies.Mapper;
 
@@ -14,8 +10,8 @@ namespace ErsatzTV.Application.Movies.Queries
 {
     public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieViewModel>>
     {
-        private readonly IMovieRepository _movieRepository;
         private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly IMovieRepository _movieRepository;
 
         public GetMovieByIdHandler(IMovieRepository movieRepository, IMediaSourceRepository mediaSourceRepository)
         {

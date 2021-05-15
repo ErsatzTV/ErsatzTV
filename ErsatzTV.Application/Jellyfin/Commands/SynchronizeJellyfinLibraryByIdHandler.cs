@@ -17,8 +17,8 @@ using Unit = LanguageExt.Unit;
 namespace ErsatzTV.Application.Jellyfin.Commands
 {
     public class SynchronizeJellyfinLibraryByIdHandler :
-            IRequestHandler<ForceSynchronizeJellyfinLibraryById, Either<BaseError, string>>,
-            IRequestHandler<SynchronizeJellyfinLibraryByIdIfNeeded, Either<BaseError, string>>
+        IRequestHandler<ForceSynchronizeJellyfinLibraryById, Either<BaseError, string>>,
+        IRequestHandler<SynchronizeJellyfinLibraryByIdIfNeeded, Either<BaseError, string>>
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly IEntityLocker _entityLocker;
