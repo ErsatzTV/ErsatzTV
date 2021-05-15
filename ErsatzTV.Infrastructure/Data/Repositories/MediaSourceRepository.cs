@@ -414,7 +414,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "UPDATE PlexLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
                 new { ids = libraryIds });
 
-        public async Task<Unit> UpsertJellyfin(string address, string serverName)
+        public async Task<Unit> UpsertJellyfin(string address, string serverName, string operatingSystem)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<JellyfinMediaSource> maybeExisting = dbContext.JellyfinMediaSources
@@ -439,6 +439,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         jellyfinMediaSource.ServerName = serverName;
                     }
 
+                    if (jellyfinMediaSource.OperatingSystem != operatingSystem)
+                    {
+                        jellyfinMediaSource.OperatingSystem = operatingSystem;
+                    }
+
                     await dbContext.SaveChangesAsync();
 
                     return Unit.Default;
@@ -448,6 +453,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     var mediaSource = new JellyfinMediaSource
                     {
                         ServerName = serverName,
+                        OperatingSystem = operatingSystem,
                         Connections = new List<JellyfinConnection>
                         {
                             new() { Address = address }

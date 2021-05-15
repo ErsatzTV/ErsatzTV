@@ -35,24 +35,26 @@ namespace ErsatzTV.Application.Jellyfin.Commands
 
         private async Task<Validation<BaseError, Parameters>> Validate(SaveJellyfinSecrets request)
         {
-            Either<BaseError, string> maybeServerName = await _jellyfinApiClient.GetServerName(
-                request.Secrets.Address,
-                request.Secrets.ApiKey);
+            Either<BaseError, JellyfinServerInformation> maybeServerInformation = await _jellyfinApiClient
+                .GetServerInformation(request.Secrets.Address, request.Secrets.ApiKey);
 
-            return maybeServerName.Match(
-                serverName => Validation<BaseError, Parameters>.Success(new Parameters(request.Secrets, serverName)),
+            return maybeServerInformation.Match(
+                info => Validation<BaseError, Parameters>.Success(new Parameters(request.Secrets, info)),
                 error => error);
         }
 
         private async Task<Unit> PerformSave(Parameters parameters)
         {
             await _jellyfinSecretStore.SaveSecrets(parameters.Secrets);
-            await _mediaSourceRepository.UpsertJellyfin(parameters.Secrets.Address, parameters.ServerName);
+            await _mediaSourceRepository.UpsertJellyfin(
+                parameters.Secrets.Address,
+                parameters.ServerInformation.ServerName,
+                parameters.ServerInformation.OperatingSystem);
             await _channel.WriteAsync(new SynchronizeJellyfinMediaSources());
 
             return Unit.Default;
         }
 
-        private record Parameters(JellyfinSecrets Secrets, string ServerName);
+        private record Parameters(JellyfinSecrets Secrets, JellyfinServerInformation ServerInformation);
     }
 }

@@ -50,7 +50,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<int>> DisablePlexLibrarySync(List<int> libraryIds);
         Task EnablePlexLibrarySync(IEnumerable<int> libraryIds);
 
-        Task<Unit> UpsertJellyfin(string address, string serverName);
+        Task<Unit> UpsertJellyfin(string address, string serverName, string operatingSystem);
         Task<List<JellyfinMediaSource>> GetAllJellyfin();
         Task<Option<JellyfinMediaSource>> GetJellyfin(int id);
         Task<List<JellyfinLibrary>> GetJellyfinLibraries(int jellyfinMediaSourceId);

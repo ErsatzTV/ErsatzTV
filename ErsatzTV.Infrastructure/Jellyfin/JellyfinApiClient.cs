@@ -6,6 +6,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
 using LanguageExt;
 using Microsoft.Extensions.Caching.Memory;
@@ -31,13 +32,15 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             _logger = logger;
         }
 
-        public async Task<Either<BaseError, string>> GetServerName(string address, string apiKey)
+        public async Task<Either<BaseError, JellyfinServerInformation>> GetServerInformation(
+            string address,
+            string apiKey)
         {
             try
             {
                 IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                JellyfinConfigurationResponse config = await service.GetConfiguration(apiKey);
-                return config.ServerName;
+                return await service.GetSystemInformation(apiKey)
+                    .Map(response => new JellyfinServerInformation(response.ServerName, response.OperatingSystem));
             }
             catch (Exception ex)
             {

@@ -80,7 +80,6 @@ namespace ErsatzTV.Core.Jellyfin
         }
 
         private static bool IsWindows(JellyfinMediaSource jellyfinMediaSource) =>
-            // TODO: jellyfinMediaSource.Platform.ToLowerInvariant() == "windows";
-            false;
+            jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
     }
 }

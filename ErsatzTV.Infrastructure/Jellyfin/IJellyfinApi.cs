@@ -8,8 +8,8 @@ namespace ErsatzTV.Infrastructure.Jellyfin
     [Headers("Accept: application/json")]
     public interface IJellyfinApi
     {
-        [Get("/System/Configuration")]
-        public Task<JellyfinConfigurationResponse> GetConfiguration(
+        [Get("/System/Info")]
+        public Task<JellyfinSystemInformationResponse> GetSystemInformation(
             [Header("X-Emby-Token")]
             string apiKey);
 
