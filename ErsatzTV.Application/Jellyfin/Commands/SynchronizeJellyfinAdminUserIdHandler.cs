@@ -54,14 +54,24 @@ namespace ErsatzTV.Application.Jellyfin.Commands
                 parameters.ActiveConnection.Address,
                 parameters.ApiKey);
 
-            return maybeUserId.Match<Either<BaseError, Unit>>(
+            return await maybeUserId.Match(
                 userId =>
                 {
                     _logger.LogDebug("Jellyfin admin user id is {UserId}", userId);
                     _memoryCache.Set($"jellyfin_admin_user_id.{parameters.JellyfinMediaSource.Id}", userId);
-                    return Unit.Default;
+                    return Task.FromResult<Either<BaseError, Unit>>(Unit.Default);
                 },
-                error => error);
+                async error =>
+                {
+                    // clear api key if unable to sync with jellyfin
+                    if (error.Value.Contains("Unauthorized"))
+                    {
+                        await _jellyfinSecretStore.SaveSecrets(
+                            new JellyfinSecrets { Address = parameters.ActiveConnection.Address, ApiKey = null });
+                    }
+
+                    return Left<BaseError, Unit>(error);
+                });
         }
 
         private Task<Validation<BaseError, ConnectionParameters>> Validate(SynchronizeJellyfinAdminUserId request) =>
