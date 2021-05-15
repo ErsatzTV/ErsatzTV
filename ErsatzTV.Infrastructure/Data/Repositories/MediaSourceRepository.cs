@@ -600,6 +600,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             using TvContext context = _dbContextFactory.CreateDbContext();
             return context.JellyfinPathReplacements
                 .Filter(r => r.JellyfinMediaSourceId == jellyfinMediaSourceId)
+                .Include(jpr => jpr.JellyfinMediaSource)
                 .ToListAsync();
         }
 

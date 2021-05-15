@@ -383,7 +383,37 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
 
-                // TODO: artwork
+                // poster
+                Artwork incomingPoster = incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
+                if (incomingPoster != null)
+                {
+                    Artwork poster = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Poster);
+                    if (poster == null)
+                    {
+                        poster = new Artwork { ArtworkKind = ArtworkKind.Poster };
+                        metadata.Artwork.Add(poster);
+                    }
+
+                    poster.Path = incomingPoster.Path;
+                    poster.DateAdded = incomingPoster.DateAdded;
+                    poster.DateUpdated = incomingPoster.DateUpdated;
+                }
+
+                // fan art
+                Artwork incomingFanArt = incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);
+                if (incomingFanArt != null)
+                {
+                    Artwork fanArt = metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.FanArt);
+                    if (fanArt == null)
+                    {
+                        fanArt = new Artwork { ArtworkKind = ArtworkKind.FanArt };
+                        metadata.Artwork.Add(fanArt);
+                    }
+
+                    fanArt.Path = incomingFanArt.Path;
+                    fanArt.DateAdded = incomingFanArt.DateAdded;
+                    fanArt.DateUpdated = incomingFanArt.DateUpdated;
+                }
 
                 // version
                 MediaVersion version = existing.MediaVersions.Head();
