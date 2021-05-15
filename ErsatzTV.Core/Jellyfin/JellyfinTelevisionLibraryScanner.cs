@@ -76,16 +76,18 @@ namespace ErsatzTV.Core.Jellyfin
                 async shows =>
                 {
                     await ProcessShows(address, apiKey, library, ffprobePath, pathReplacements, existingShows, shows);
-                    
+
                     var incomingShowIds = shows.Map(s => s.ItemId).ToList();
                     var showIds = existingShows
                         .Filter(i => !incomingShowIds.Contains(i.ItemId))
                         .Map(m => m.ItemId)
                         .ToList();
-                    List<int> ids = await _televisionRepository.RemoveMissingShows(library, showIds);
-                    await _searchIndex.RemoveItems(ids);
-                    
-                    // TODO: delete empty seasons, delete empty shows
+                    List<int> missingShowIds = await _televisionRepository.RemoveMissingShows(library, showIds);
+                    await _searchIndex.RemoveItems(missingShowIds);
+
+                    await _televisionRepository.DeleteEmptySeasons(library);
+                    List<int> emptyShowIds = await _televisionRepository.DeleteEmptyShows(library);
+                    await _searchIndex.RemoveItems(emptyShowIds);
 
                     await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
                     _searchIndex.Commit();
@@ -112,7 +114,7 @@ namespace ErsatzTV.Core.Jellyfin
             List<JellyfinItemEtag> existingShows,
             List<JellyfinShow> shows)
         {
-            foreach (JellyfinShow incoming in shows)
+            foreach (JellyfinShow incoming in shows.OrderBy(s => s.ShowMetadata.Head().Title))
             {
                 decimal percentCompletion = (decimal) shows.IndexOf(incoming) / shows.Count;
                 await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
@@ -177,7 +179,7 @@ namespace ErsatzTV.Core.Jellyfin
                                 incoming,
                                 existingSeasons,
                                 seasons);
-                            
+
                             var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
                             var seasonIds = existingSeasons
                                 .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
@@ -296,7 +298,7 @@ namespace ErsatzTV.Core.Jellyfin
                                 incoming,
                                 existingEpisodes,
                                 validEpisodes);
-                            
+
                             var incomingEpisodeIds = episodes.Map(s => s.ItemId).ToList();
                             var episodeIds = existingEpisodes
                                 .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))

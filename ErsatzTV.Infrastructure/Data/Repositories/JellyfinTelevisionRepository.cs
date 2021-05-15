@@ -421,5 +421,30 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN LibraryPath LP on m.LibraryPathId = LP.Id
                 WHERE LP.LibraryId = @LibraryId AND je.ItemId IN @EpisodeIds)",
                 new { LibraryId = library.Id, EpisodeIds = episodeIds }).ToUnit();
+
+        public async Task<Unit> DeleteEmptySeasons(JellyfinLibrary library)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            List<JellyfinSeason> seasons = await dbContext.JellyfinSeasons
+                .Filter(s => s.LibraryPath.LibraryId == library.Id)
+                .Filter(s => s.Episodes.Count == 0)
+                .ToListAsync();
+            dbContext.Seasons.RemoveRange(seasons);
+            await dbContext.SaveChangesAsync();
+            return Unit.Default;
+        }
+
+        public async Task<List<int>> DeleteEmptyShows(JellyfinLibrary library)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            List<JellyfinShow> shows = await dbContext.JellyfinShows
+                .Filter(s => s.LibraryPath.LibraryId == library.Id)
+                .Filter(s => s.Seasons.Count == 0)
+                .ToListAsync();
+            var ids = shows.Map(s => s.Id).ToList();
+            dbContext.Shows.RemoveRange(shows);
+            await dbContext.SaveChangesAsync();
+            return ids;
+        }
     }
 }

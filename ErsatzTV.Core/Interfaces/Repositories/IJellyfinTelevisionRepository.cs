@@ -20,5 +20,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<int>> RemoveMissingShows(JellyfinLibrary library, List<string> showIds);
         Task<Unit> RemoveMissingSeasons(JellyfinLibrary library, List<string> seasonIds);
         Task<Unit> RemoveMissingEpisodes(JellyfinLibrary library, List<string> episodeIds);
+        Task<Unit> DeleteEmptySeasons(JellyfinLibrary library);
+        Task<List<int>> DeleteEmptyShows(JellyfinLibrary library);
     }
 }
