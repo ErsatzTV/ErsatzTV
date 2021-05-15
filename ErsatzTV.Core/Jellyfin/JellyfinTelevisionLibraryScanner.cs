@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
@@ -72,7 +73,23 @@ namespace ErsatzTV.Core.Jellyfin
                 library.ItemId);
 
             await maybeShows.Match(
-                shows => ProcessShows(address, apiKey, library, ffprobePath, pathReplacements, existingShows, shows),
+                async shows =>
+                {
+                    await ProcessShows(address, apiKey, library, ffprobePath, pathReplacements, existingShows, shows);
+                    
+                    var incomingShowIds = shows.Map(s => s.ItemId).ToList();
+                    var showIds = existingShows
+                        .Filter(i => !incomingShowIds.Contains(i.ItemId))
+                        .Map(m => m.ItemId)
+                        .ToList();
+                    List<int> ids = await _televisionRepository.RemoveMissingShows(library, showIds);
+                    await _searchIndex.RemoveItems(ids);
+                    
+                    // TODO: delete empty seasons, delete empty shows
+
+                    await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
+                    _searchIndex.Commit();
+                },
                 error =>
                 {
                     _logger.LogWarning(
@@ -136,8 +153,6 @@ namespace ErsatzTV.Core.Jellyfin
                         }
                     });
 
-                // TODO: delete removed shows
-
                 if (changed)
                 {
                     List<JellyfinItemEtag> existingSeasons =
@@ -151,15 +166,25 @@ namespace ErsatzTV.Core.Jellyfin
                             incoming.ItemId);
 
                     await maybeSeasons.Match(
-                        seasons => ProcessSeasons(
-                            address,
-                            apiKey,
-                            library,
-                            ffprobePath,
-                            pathReplacements,
-                            incoming,
-                            existingSeasons,
-                            seasons),
+                        async seasons =>
+                        {
+                            await ProcessSeasons(
+                                address,
+                                apiKey,
+                                library,
+                                ffprobePath,
+                                pathReplacements,
+                                incoming,
+                                existingSeasons,
+                                seasons);
+                            
+                            var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
+                            var seasonIds = existingSeasons
+                                .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
+                                .Map(m => m.ItemId)
+                                .ToList();
+                            await _televisionRepository.RemoveMissingSeasons(library, seasonIds);
+                        },
                         error =>
                         {
                             _logger.LogWarning(
@@ -227,8 +252,6 @@ namespace ErsatzTV.Core.Jellyfin
                         }
                     });
 
-                // TODO: delete removed seasons
-
                 if (changed)
                 {
                     List<JellyfinItemEtag> existingEpisodes =
@@ -242,7 +265,7 @@ namespace ErsatzTV.Core.Jellyfin
                             incoming.ItemId);
 
                     await maybeEpisodes.Match(
-                        episodes =>
+                        async episodes =>
                         {
                             var validEpisodes = new List<JellyfinEpisode>();
                             foreach (JellyfinEpisode episode in episodes)
@@ -264,7 +287,7 @@ namespace ErsatzTV.Core.Jellyfin
                                 }
                             }
 
-                            return ProcessEpisodes(
+                            await ProcessEpisodes(
                                 show.ShowMetadata.Head().Title,
                                 incoming.SeasonMetadata.Head().Title,
                                 library,
@@ -273,6 +296,13 @@ namespace ErsatzTV.Core.Jellyfin
                                 incoming,
                                 existingEpisodes,
                                 validEpisodes);
+                            
+                            var incomingEpisodeIds = episodes.Map(s => s.ItemId).ToList();
+                            var episodeIds = existingEpisodes
+                                .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))
+                                .Map(m => m.ItemId)
+                                .ToList();
+                            await _televisionRepository.RemoveMissingEpisodes(library, episodeIds);
                         },
                         error =>
                         {
@@ -385,8 +415,6 @@ namespace ErsatzTV.Core.Jellyfin
                             error.Value));
                 }
             }
-
-            // TODO: delete removed episodes
         }
     }
 }

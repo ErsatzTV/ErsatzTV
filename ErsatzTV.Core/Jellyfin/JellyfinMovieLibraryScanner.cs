@@ -193,6 +193,7 @@ namespace ErsatzTV.Core.Jellyfin
                     await _searchIndex.RemoveItems(ids);
 
                     await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
+                    _searchIndex.Commit();
                 },
                 error =>
                 {

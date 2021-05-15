@@ -383,5 +383,43 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return Unit.Default;
         }
+
+        public async Task<List<int>> RemoveMissingShows(JellyfinLibrary library, List<string> showIds)
+        {
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinShow js ON js.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                WHERE lp.LibraryId = @LibraryId AND js.ItemId IN @ShowIds",
+                new { LibraryId = library.Id, ShowIds = showIds }).Map(result => result.ToList());
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinShow js ON js.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                WHERE lp.LibraryId = @LibraryId AND js.ItemId IN @ShowIds)",
+                new { LibraryId = library.Id, ShowIds = showIds });
+
+            return ids;
+        }
+
+        public Task<Unit> RemoveMissingSeasons(JellyfinLibrary library, List<string> seasonIds) =>
+            _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinSeason js ON js.Id = m.Id
+                INNER JOIN LibraryPath LP on m.LibraryPathId = LP.Id
+                WHERE LP.LibraryId = @LibraryId AND js.ItemId IN @SeasonIds)",
+                new { LibraryId = library.Id, SeasonIds = seasonIds }).ToUnit();
+
+        public Task<Unit> RemoveMissingEpisodes(JellyfinLibrary library, List<string> episodeIds) =>
+            _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinEpisode je ON je.Id = m.Id
+                INNER JOIN LibraryPath LP on m.LibraryPathId = LP.Id
+                WHERE LP.LibraryId = @LibraryId AND je.ItemId IN @EpisodeIds)",
+                new { LibraryId = library.Id, EpisodeIds = episodeIds }).ToUnit();
     }
 }
