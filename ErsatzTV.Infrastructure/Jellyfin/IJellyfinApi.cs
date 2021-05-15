@@ -32,7 +32,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            string fields = "Path,MediaStreams,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
+            string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
             [Query]
             string includeItemTypes = "movie,tvshow");
     }

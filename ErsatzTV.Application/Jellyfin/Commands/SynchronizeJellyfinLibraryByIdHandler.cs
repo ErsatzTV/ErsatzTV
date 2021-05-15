@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -15,11 +16,11 @@ using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.Jellyfin.Commands
 {
-    public class
-        SynchronizeJellyfinLibraryByIdHandler :
+    public class SynchronizeJellyfinLibraryByIdHandler :
             IRequestHandler<ForceSynchronizeJellyfinLibraryById, Either<BaseError, string>>,
             IRequestHandler<SynchronizeJellyfinLibraryByIdIfNeeded, Either<BaseError, string>>
     {
+        private readonly IConfigElementRepository _configElementRepository;
         private readonly IEntityLocker _entityLocker;
         private readonly IJellyfinMovieLibraryScanner _jellyfinMovieLibraryScanner;
 
@@ -37,6 +38,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
             IJellyfinTelevisionLibraryScanner jellyfinTelevisionLibraryScanner,
             ILibraryRepository libraryRepository,
             IEntityLocker entityLocker,
+            IConfigElementRepository configElementRepository,
             ILogger<SynchronizeJellyfinLibraryByIdHandler> logger)
         {
             _mediaSourceRepository = mediaSourceRepository;
@@ -45,6 +47,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
             _jellyfinTelevisionLibraryScanner = jellyfinTelevisionLibraryScanner;
             _libraryRepository = libraryRepository;
             _entityLocker = entityLocker;
+            _configElementRepository = configElementRepository;
             _logger = logger;
         }
 
@@ -73,7 +76,8 @@ namespace ErsatzTV.Application.Jellyfin.Commands
                         await _jellyfinMovieLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection.Address,
                             parameters.ConnectionParameters.ApiKey,
-                            parameters.Library);
+                            parameters.Library,
+                            parameters.FFprobePath);
                         break;
                     case LibraryMediaKind.Shows:
                         await _jellyfinTelevisionLibraryScanner.ScanLibrary(
@@ -99,12 +103,13 @@ namespace ErsatzTV.Application.Jellyfin.Commands
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(
             ISynchronizeJellyfinLibraryById request) =>
-            (await ValidateConnection(request), await JellyfinLibraryMustExist(request))
+            (await ValidateConnection(request), await JellyfinLibraryMustExist(request), await ValidateFFprobePath())
             .Apply(
-                (connectionParameters, jellyfinLibrary) => new RequestParameters(
+                (connectionParameters, jellyfinLibrary, ffprobePath) => new RequestParameters(
                     connectionParameters,
                     jellyfinLibrary,
-                    request.ForceScan
+                    request.ForceScan,
+                    ffprobePath
                 ));
 
         private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -143,10 +148,18 @@ namespace ErsatzTV.Application.Jellyfin.Commands
             _mediaSourceRepository.GetJellyfinLibrary(request.JellyfinLibraryId)
                 .Map(v => v.ToValidation<BaseError>($"Jellyfin library {request.JellyfinLibraryId} does not exist."));
 
+        private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
+            _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
+                .FilterT(File.Exists)
+                .Map(
+                    ffprobePath =>
+                        ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
+
         private record RequestParameters(
             ConnectionParameters ConnectionParameters,
             JellyfinLibrary Library,
-            bool ForceScan);
+            bool ForceScan,
+            string FFprobePath);
 
         private record ConnectionParameters(
             JellyfinMediaSource JellyfinMediaSource,

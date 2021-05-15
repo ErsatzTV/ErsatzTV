@@ -35,7 +35,7 @@ namespace ErsatzTV.Core.Jellyfin
             return GetReplacementJellyfinPath(replacements, path);
         }
 
-        public string GetReplacementJellyfinPath(List<JellyfinPathReplacement> pathReplacements, string path)
+        public string GetReplacementJellyfinPath(List<JellyfinPathReplacement> pathReplacements, string path, bool log = true)
         {
             Option<JellyfinPathReplacement> maybeReplacement = pathReplacements
                 .SingleOrDefault(
@@ -59,11 +59,15 @@ namespace ErsatzTV.Core.Jellyfin
                         finalPath = finalPath.Replace(@"/", @"\");
                     }
 
-                    _logger.LogDebug(
-                        "Replacing jellyfin path {JellyfinPath} with {LocalPath} resulting in {FinalPath}",
-                        replacement.JellyfinPath,
-                        replacement.LocalPath,
-                        finalPath);
+                    if (log)
+                    {
+                        _logger.LogDebug(
+                            "Replacing jellyfin path {JellyfinPath} with {LocalPath} resulting in {FinalPath}",
+                            replacement.JellyfinPath,
+                            replacement.LocalPath,
+                            finalPath);
+                    }
+
                     return finalPath;
                 },
                 () => path);

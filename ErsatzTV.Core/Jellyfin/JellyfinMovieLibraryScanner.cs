@@ -17,14 +17,15 @@ namespace ErsatzTV.Core.Jellyfin
     public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
     {
         private readonly IJellyfinApiClient _jellyfinApiClient;
+        private readonly ILocalFileSystem _localFileSystem;
+        private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly ILogger<JellyfinMovieLibraryScanner> _logger;
+        private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IMediator _mediator;
         private readonly IMovieRepository _movieRepository;
+        private readonly IJellyfinPathReplacementService _pathReplacementService;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
-        private readonly IJellyfinPathReplacementService _pathReplacementService;
-        private readonly IMediaSourceRepository _mediaSourceRepository;
-        private readonly ILocalFileSystem _localFileSystem;
 
         public JellyfinMovieLibraryScanner(
             IJellyfinApiClient jellyfinApiClient,
@@ -35,6 +36,7 @@ namespace ErsatzTV.Core.Jellyfin
             IJellyfinPathReplacementService pathReplacementService,
             IMediaSourceRepository mediaSourceRepository,
             ILocalFileSystem localFileSystem,
+            ILocalStatisticsProvider localStatisticsProvider,
             ILogger<JellyfinMovieLibraryScanner> logger)
         {
             _jellyfinApiClient = jellyfinApiClient;
@@ -45,10 +47,15 @@ namespace ErsatzTV.Core.Jellyfin
             _pathReplacementService = pathReplacementService;
             _mediaSourceRepository = mediaSourceRepository;
             _localFileSystem = localFileSystem;
+            _localStatisticsProvider = localStatisticsProvider;
             _logger = logger;
         }
 
-        public async Task<Either<BaseError, Unit>> ScanLibrary(string address, string apiKey, JellyfinLibrary library)
+        public async Task<Either<BaseError, Unit>> ScanLibrary(
+            string address,
+            string apiKey,
+            JellyfinLibrary library,
+            string ffprobePath)
         {
             List<JellyfinItemEtag> existingMovies = await _movieRepository.GetExistingJellyfinMovies(library);
 
@@ -71,8 +78,9 @@ namespace ErsatzTV.Core.Jellyfin
                     {
                         string localPath = _pathReplacementService.GetReplacementJellyfinPath(
                             pathReplacements,
-                            movie.MediaVersions.Head().MediaFiles.Head().Path);
-                        
+                            movie.MediaVersions.Head().MediaFiles.Head().Path,
+                            false);
+
                         if (!_localFileSystem.FileExists(localPath))
                         {
                             _logger.LogWarning($"Skipping jellyfin movie that does not exist at {localPath}");
@@ -82,7 +90,7 @@ namespace ErsatzTV.Core.Jellyfin
                             validMovies.Add(movie);
                         }
                     }
-                    
+
                     foreach (JellyfinMovie incoming in validMovies)
                     {
                         decimal percentCompletion = (decimal) validMovies.IndexOf(incoming) / validMovies.Count;
@@ -90,19 +98,23 @@ namespace ErsatzTV.Core.Jellyfin
 
                         Option<JellyfinItemEtag> maybeExisting =
                             existingMovies.Find(ie => ie.ItemId == incoming.ItemId);
+
+                        var updateStatistics = false;
+
                         await maybeExisting.Match(
                             async existing =>
                             {
                                 if (existing.Etag == incoming.Etag)
                                 {
-                                    _logger.LogDebug(
-                                        $"NOOP: Etag has not changed for movie {incoming.MovieMetadata.Head().Title}");
+                                    // _logger.LogDebug(
+                                    //     $"NOOP: Etag has not changed for movie {incoming.MovieMetadata.Head().Title}");
                                     return;
                                 }
 
                                 _logger.LogDebug(
                                     $"UPDATE: Etag has changed for movie {incoming.MovieMetadata.Head().Title}");
 
+                                updateStatistics = true;
                                 incoming.LibraryPathId = library.Paths.Head().Id;
                                 await _movieRepository.UpdateJellyfin(incoming);
                                 await _searchIndex.UpdateItems(
@@ -111,9 +123,10 @@ namespace ErsatzTV.Core.Jellyfin
                             },
                             async () =>
                             {
-                                _logger.LogDebug(
-                                    $"INSERT: Item id is new for movie {incoming.MovieMetadata.Head().Title}");
+                                // _logger.LogDebug(
+                                //     $"INSERT: Item id is new for movie {incoming.MovieMetadata.Head().Title}");
 
+                                updateStatistics = true;
                                 incoming.LibraryPathId = library.Paths.Head().Id;
                                 if (await _movieRepository.AddJellyfin(incoming))
                                 {
@@ -121,17 +134,27 @@ namespace ErsatzTV.Core.Jellyfin
                                 }
                             });
 
-                        // TODO: figure out how to rebuild playlists
-                        // Either<BaseError, MediaItemScanResult<PlexMovie>> maybeMovie = await _movieRepository
-                        //     .GetOrAdd(library, incoming)
-                        //     .BindT(existing => UpdateStatistics(existing, incoming, connection, token))
-                        //     .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
-                        //     .BindT(existing => UpdateArtwork(existing, incoming));
+                        if (updateStatistics)
+                        {
+                            string localPath = _pathReplacementService.GetReplacementJellyfinPath(
+                                pathReplacements,
+                                incoming.MediaVersions.Head().MediaFiles.Head().Path,
+                                false);
 
-                        // _logger.LogWarning(
-                        //     "Error processing plex movie at {Key}: {Error}",
-                        //     incoming.Key,
-                        //     error.Value);
+                            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
+                            Either<BaseError, bool> refreshResult =
+                                await _localStatisticsProvider.RefreshStatistics(ffprobePath, incoming, localPath);
+
+                            refreshResult.Match(
+                                _ => { },
+                                error => _logger.LogWarning(
+                                    "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                                    "Statistics",
+                                    localPath,
+                                    error.Value));
+                        }
+
+                        // TODO: figure out how to rebuild playlists
                     }
 
                     var incomingMovieIds = validMovies.Map(s => s.ItemId).ToList();
