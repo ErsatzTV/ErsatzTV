@@ -1,6 +1,7 @@
 ﻿using System;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -274,6 +275,32 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     DateTimeOffset.Now);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
+                actual.PadToDesiredResolution.Should().BeTrue();
+            }
+            
+            [Test]
+            public void Should_ScaleToEvenDimensions_ForTransportStream()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile() with
+                {
+                    NormalizeVideo = true,
+                    Resolution = new Resolution { Width = 1280, Height = 720 }
+                };
+
+                var version = new MediaVersion { Width = 706, Height = 362, SampleAspectRatio = "32:27" };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream(),
+                    new MediaStream(),
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
+                scaledSize.Width.Should().Be(1280);
+                scaledSize.Height.Should().Be(554);
                 actual.PadToDesiredResolution.Should().BeTrue();
             }
 
