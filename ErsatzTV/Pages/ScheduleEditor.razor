@@ -22,6 +22,12 @@
                             <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
                         }
                     </MudSelect>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudCheckBox Label="Keep Multi-Part Episodes Together"
+                                     @bind-Checked="@_model.KeepMultiPartEpisodesTogether"
+                                     Disabled="@(_model.MediaCollectionPlaybackOrder == PlaybackOrder.Chronological)"
+                                     For="@(() => _model.KeepMultiPartEpisodesTogether)"/>
+                    </MudElement>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -53,6 +59,7 @@
                     _model.Id = viewModel.Id;
                     _model.Name = viewModel.Name;
                     _model.MediaCollectionPlaybackOrder = viewModel.MediaCollectionPlaybackOrder;
+                    _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
                 },
                 () => NavigationManager.NavigateTo("404"));
         }

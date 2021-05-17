@@ -43,6 +43,9 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
 
             programSchedule.Name = update.Name;
             programSchedule.MediaCollectionPlaybackOrder = update.MediaCollectionPlaybackOrder;
+            programSchedule.KeepMultiPartEpisodesTogether =
+                update.MediaCollectionPlaybackOrder != PlaybackOrder.Chronological &&
+                update.KeepMultiPartEpisodesTogether;
             await _programScheduleRepository.Update(programSchedule);
 
             if (needToRebuildPlayout)
