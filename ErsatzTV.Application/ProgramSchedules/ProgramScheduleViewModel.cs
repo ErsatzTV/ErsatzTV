@@ -2,5 +2,9 @@
 
 namespace ErsatzTV.Application.ProgramSchedules
 {
-    public record ProgramScheduleViewModel(int Id, string Name, PlaybackOrder MediaCollectionPlaybackOrder);
+    public record ProgramScheduleViewModel(
+        int Id,
+        string Name,
+        PlaybackOrder MediaCollectionPlaybackOrder,
+        bool KeepMultiPartEpisodesTogether);
 }

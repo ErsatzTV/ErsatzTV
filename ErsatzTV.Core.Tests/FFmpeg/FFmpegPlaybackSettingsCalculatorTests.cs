@@ -277,7 +277,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeTrue();
             }
-            
+
             [Test]
             public void Should_ScaleToEvenDimensions_ForTransportStream()
             {

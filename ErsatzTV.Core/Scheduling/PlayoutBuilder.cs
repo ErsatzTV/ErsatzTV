@@ -468,7 +468,10 @@ namespace ErsatzTV.Core.Scheduling
                 case PlaybackOrder.Random:
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
                 case PlaybackOrder.Shuffle:
-                    return new ShuffledMediaCollectionEnumerator(mediaItems, state);
+                    return new ShuffledMediaCollectionEnumerator(
+                        mediaItems,
+                        state,
+                        playout.ProgramSchedule.KeepMultiPartEpisodesTogether);
                 default:
                     // TODO: handle this error case differently?
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);

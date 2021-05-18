@@ -79,9 +79,9 @@ namespace ErsatzTV.Core.FFmpeg
                         IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, version);
                         if (!scaledSize.IsSameSizeAs(version))
                         {
-                            int fixedHeight = scaledSize.Height + (scaledSize.Height % 2);
-                            int fixedWidth = scaledSize.Width + (scaledSize.Width % 2);
-                            result.ScaledSize = Some((IDisplaySize)new DisplaySize(fixedWidth, fixedHeight));
+                            int fixedHeight = scaledSize.Height + scaledSize.Height % 2;
+                            int fixedWidth = scaledSize.Width + scaledSize.Width % 2;
+                            result.ScaledSize = Some((IDisplaySize) new DisplaySize(fixedWidth, fixedHeight));
                         }
                     }
 
