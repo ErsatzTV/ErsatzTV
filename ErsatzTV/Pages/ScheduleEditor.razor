@@ -25,7 +25,7 @@
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudCheckBox Label="Keep Multi-Part Episodes Together"
                                      @bind-Checked="@_model.KeepMultiPartEpisodesTogether"
-                                     Disabled="@(_model.MediaCollectionPlaybackOrder == PlaybackOrder.Chronological)"
+                                     Disabled="@(_model.MediaCollectionPlaybackOrder != PlaybackOrder.Shuffle)"
                                      For="@(() => _model.KeepMultiPartEpisodesTogether)"/>
                     </MudElement>
                 </MudCardContent>

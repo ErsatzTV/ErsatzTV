@@ -39,7 +39,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                         Name = name,
                         MediaCollectionPlaybackOrder = request.MediaCollectionPlaybackOrder,
                         KeepMultiPartEpisodesTogether =
-                            request.MediaCollectionPlaybackOrder != PlaybackOrder.Chronological &&
+                            request.MediaCollectionPlaybackOrder == PlaybackOrder.Shuffle &&
                             request.KeepMultiPartEpisodesTogether
                     });
 
