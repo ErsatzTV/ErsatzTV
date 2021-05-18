@@ -19,7 +19,7 @@ namespace ErsatzTV.Core.Scheduling
             {
                 if (item is Episode e)
                 {
-                    const string PATTERN = @"^.*\((\d+)\)$";
+                    const string PATTERN = @"^.*\((\d+)\)( - .*)?$";
                     Match match = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN);
                     if (match.Success)
                     {
