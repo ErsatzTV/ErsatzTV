@@ -6,7 +6,11 @@ namespace ErsatzTV.Application.ProgramSchedules
     internal static class Mapper
     {
         internal static ProgramScheduleViewModel ProjectToViewModel(ProgramSchedule programSchedule) =>
-            new(programSchedule.Id, programSchedule.Name, programSchedule.MediaCollectionPlaybackOrder);
+            new(
+                programSchedule.Id,
+                programSchedule.Name,
+                programSchedule.MediaCollectionPlaybackOrder,
+                programSchedule.KeepMultiPartEpisodesTogether);
 
         internal static ProgramScheduleItemViewModel ProjectToViewModel(ProgramScheduleItem programScheduleItem) =>
             programScheduleItem switch

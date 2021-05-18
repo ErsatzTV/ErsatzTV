@@ -10,14 +10,22 @@ namespace ErsatzTV.Core.Scheduling
 {
     public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
     {
-        private readonly IList<MediaItem> _mediaItems;
+        private readonly int _mediaItemCount;
+        private readonly IList<GroupedMediaItem> _mediaItems;
         private Random _random;
         private IList<MediaItem> _shuffled;
 
-
-        public ShuffledMediaCollectionEnumerator(IList<MediaItem> mediaItems, CollectionEnumeratorState state)
+        public ShuffledMediaCollectionEnumerator(
+            IList<MediaItem> mediaItems,
+            CollectionEnumeratorState state,
+            bool keepMultiPartEpisodesTogether)
         {
-            _mediaItems = mediaItems;
+            _mediaItemCount = mediaItems.Count;
+
+            _mediaItems = keepMultiPartEpisodesTogether
+                ? MultiPartEpisodeGrouper.GroupMediaItems(mediaItems)
+                : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+
             _random = new Random(state.Seed);
             _shuffled = Shuffle(_mediaItems, _random);
 
@@ -30,7 +38,7 @@ namespace ErsatzTV.Core.Scheduling
 
         public CollectionEnumeratorState State { get; }
 
-        public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItems.Count] : None;
+        public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
 
         public void MoveNext()
         {
@@ -54,21 +62,21 @@ namespace ErsatzTV.Core.Scheduling
             State.Index %= _shuffled.Count;
         }
 
-        private static IList<T> Shuffle<T>(IEnumerable<T> list, Random random)
+        private IList<MediaItem> Shuffle(IEnumerable<GroupedMediaItem> list, Random random)
         {
-            T[] copy = list.ToArray();
+            GroupedMediaItem[] copy = list.ToArray();
 
             int n = copy.Length;
             while (n > 1)
             {
                 n--;
                 int k = random.Next(n + 1);
-                T value = copy[k];
+                GroupedMediaItem value = copy[k];
                 copy[k] = copy[n];
                 copy[n] = value;
             }
 
-            return copy;
+            return MultiPartEpisodeGrouper.FlattenGroups(copy, _mediaItemCount);
         }
     }
 }

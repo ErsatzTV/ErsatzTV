@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ErsatzTV.Core.Domain
 {
+    [DebuggerDisplay("{EpisodeMetadata[0].Title}")]
     public class Episode : MediaItem
     {
         public int EpisodeNumber { get; set; }
