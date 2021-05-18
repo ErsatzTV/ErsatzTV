@@ -24,6 +24,13 @@ namespace ErsatzTV.Core.Scheduling
                     if (match.Success)
                     {
                         var number = int.Parse(match.Groups[1].Value);
+                        if (number <= lastNumber && group != null)
+                        {
+                            groups.Add(group);
+                            group = null;
+                            lastNumber = 0;
+                        }
+
                         if (number == lastNumber + 1)
                         {
                             if (lastNumber == 0)
@@ -45,6 +52,11 @@ namespace ErsatzTV.Core.Scheduling
                             }
 
                             lastNumber = number;
+                        }
+                        else
+                        {
+                            // this should never happen
+                            throw new InvalidOperationException($"Bad shuffle state; unexpected number {number} after {lastNumber}");
                         }
                     }
                     else
