@@ -65,6 +65,11 @@ namespace ErsatzTV.Core.Scheduling
                 }
             }
 
+            if (group != null && lastNumber != 0)
+            {
+                groups.Add(group);
+            }
+
             return groups;
         }
 
