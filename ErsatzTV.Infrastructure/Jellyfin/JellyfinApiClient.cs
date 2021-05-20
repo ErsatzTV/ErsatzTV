@@ -196,7 +196,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
         }
 
         private static Option<JellyfinLibrary> Project(JellyfinLibraryResponse response) =>
-            response.CollectionType.ToLowerInvariant() switch
+            response.CollectionType?.ToLowerInvariant() switch
             {
                 "tvshows" => new JellyfinLibrary
                 {
