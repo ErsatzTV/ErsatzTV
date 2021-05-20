@@ -57,7 +57,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
             return await maybeUserId.Match(
                 userId =>
                 {
-                    _logger.LogDebug("Jellyfin admin user id is {UserId}", userId);
+                    // _logger.LogDebug("Jellyfin admin user id is {UserId}", userId);
                     _memoryCache.Set($"jellyfin_admin_user_id.{parameters.JellyfinMediaSource.Id}", userId);
                     return Task.FromResult<Either<BaseError, Unit>>(Unit.Default);
                 },
