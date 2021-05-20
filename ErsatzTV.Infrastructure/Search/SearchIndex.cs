@@ -56,26 +56,32 @@ namespace ErsatzTV.Infrastructure.Search
 
         private FSDirectory _directory;
         private IndexWriter _writer;
+        private bool _initialized;
 
         public SearchIndex(ILogger<SearchIndex> logger)
         {
             _logger = logger;
             _cultureInfos = CultureInfo.GetCultures(CultureTypes.NeutralCultures).ToList();
+            _initialized = false;
         }
 
         public int Version => 9;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
-            localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
+            if (!_initialized)
+            {
+                localFileSystem.EnsureFolderExists(FileSystemLayout.SearchIndexFolder);
 
-            _directory = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
-            var analyzer = new StandardAnalyzer(AppLuceneVersion);
-            var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
-                { OpenMode = OpenMode.CREATE_OR_APPEND };
-            _writer = new IndexWriter(_directory, indexConfig);
+                _directory = FSDirectory.Open(FileSystemLayout.SearchIndexFolder);
+                var analyzer = new StandardAnalyzer(AppLuceneVersion);
+                var indexConfig = new IndexWriterConfig(AppLuceneVersion, analyzer)
+                    { OpenMode = OpenMode.CREATE_OR_APPEND };
+                _writer = new IndexWriter(_directory, indexConfig);
+                _initialized = true;
+            }
 
-            return Task.FromResult(true);
+            return Task.FromResult(_initialized);
         }
 
         public async Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds)
