@@ -20,6 +20,7 @@ namespace ErsatzTV.Core.Metadata
 {
     public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     {
+        private readonly ILibraryRepository _libraryRepository;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<MovieFolderScanner> _logger;
@@ -37,6 +38,7 @@ namespace ErsatzTV.Core.Metadata
             IImageCache imageCache,
             ISearchIndex searchIndex,
             ISearchRepository searchRepository,
+            ILibraryRepository libraryRepository,
             IMediator mediator,
             ILogger<MovieFolderScanner> logger)
             : base(localFileSystem, localStatisticsProvider, metadataRepository, imageCache, logger)
@@ -46,6 +48,7 @@ namespace ErsatzTV.Core.Metadata
             _localMetadataProvider = localMetadataProvider;
             _searchIndex = searchIndex;
             _searchRepository = searchRepository;
+            _libraryRepository = libraryRepository;
             _mediator = mediator;
             _logger = logger;
         }
@@ -53,7 +56,6 @@ namespace ErsatzTV.Core.Metadata
         public async Task<Either<BaseError, Unit>> ScanFolder(
             LibraryPath libraryPath,
             string ffprobePath,
-            DateTimeOffset lastScan,
             decimal progressMin,
             decimal progressMax)
         {
@@ -81,7 +83,9 @@ namespace ErsatzTV.Core.Metadata
                 string movieFolder = folderQueue.Dequeue();
                 foldersCompleted++;
 
-                var allFiles = _localFileSystem.ListFiles(movieFolder)
+                var filesForEtag = _localFileSystem.ListFiles(movieFolder).ToList();
+
+                var allFiles = filesForEtag
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
                     .Filter(
                         f => !ExtraFiles.Any(
@@ -98,10 +102,20 @@ namespace ErsatzTV.Core.Metadata
                     continue;
                 }
 
-                if (allFiles.All(file => _localFileSystem.GetLastWriteTime(file) < lastScan))
+                string etag = FolderEtag.Calculate(movieFolder, _localFileSystem);
+                Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
+                    .Filter(f => f.Path == movieFolder)
+                    .HeadOrNone();
+
+                // skip folder if etag matches
+                if (await knownFolder.Map(f => f.Etag).IfNoneAsync(string.Empty) == etag)
                 {
                     continue;
                 }
+
+                _logger.LogDebug(
+                    "UPDATE: Etag has changed for folder {Folder}",
+                    movieFolder);
 
                 foreach (string file in allFiles.OrderBy(identity))
                 {
@@ -124,6 +138,8 @@ namespace ErsatzTV.Core.Metadata
                             {
                                 await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
                             }
+
+                            await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);
                         },
                         error =>
                         {
@@ -158,7 +174,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         bool shouldUpdate = Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
-                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                                 m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
                             true);
 
                         if (shouldUpdate)

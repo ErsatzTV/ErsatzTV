@@ -14,6 +14,11 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .WithOne(i => i.LibraryPath)
                 .HasForeignKey(i => i.LibraryPathId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasMany(p => p.LibraryFolders)
+                .WithOne(f => f.LibraryPath)
+                .HasForeignKey(f => f.LibraryPathId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
