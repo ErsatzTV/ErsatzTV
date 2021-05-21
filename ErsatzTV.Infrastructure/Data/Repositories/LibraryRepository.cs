@@ -35,6 +35,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             using TvContext context = _dbContextFactory.CreateDbContext();
             return context.Libraries
                 .Include(l => l.Paths)
+                .ThenInclude(p => p.LibraryFolders)
                 .OrderBy(l => l.Id)
                 .SingleOrDefaultAsync(l => l.Id == libraryId)
                 .Map(Optional);
@@ -104,5 +105,30 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             context.LibraryPaths.Remove(libraryPath);
             await context.SaveChangesAsync();
         }
+
+        public Task<Unit> SetEtag(
+            LibraryPath libraryPath,
+            Option<LibraryFolder> knownFolder,
+            string path,
+            string etag) =>
+            knownFolder.Match(
+                async folder =>
+                {
+                    await _dbConnection.ExecuteAsync(
+                        "UPDATE LibraryFolder SET Etag = @Etag WHERE Id = @Id",
+                        new { folder.Id, Etag = etag });
+                },
+                async () =>
+                {
+                    await using TvContext context = _dbContextFactory.CreateDbContext();
+                    await context.LibraryFolders.AddAsync(
+                        new LibraryFolder
+                        {
+                            Path = path,
+                            Etag = etag,
+                            LibraryPathId = libraryPath.Id
+                        });
+                    await context.SaveChangesAsync();
+                }).ToUnit();
     }
 }

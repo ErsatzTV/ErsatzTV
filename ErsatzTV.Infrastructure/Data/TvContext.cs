@@ -21,6 +21,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<Library> Libraries { get; set; }
         public DbSet<LocalLibrary> LocalLibraries { get; set; }
         public DbSet<LibraryPath> LibraryPaths { get; set; }
+        public DbSet<LibraryFolder> LibraryFolders { get; set; }
         public DbSet<PlexLibrary> PlexLibraries { get; set; }
         public DbSet<JellyfinLibrary> JellyfinLibraries { get; set; }
         public DbSet<PlexPathReplacement> PlexPathReplacements { get; set; }
