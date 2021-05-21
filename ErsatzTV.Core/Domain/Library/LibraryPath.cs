@@ -13,5 +13,6 @@ namespace ErsatzTV.Core.Domain
         public Library Library { get; set; }
 
         public List<MediaItem> MediaItems { get; set; }
+        public List<LibraryFolder> LibraryFolders { get; set; }
     }
 }
