@@ -110,11 +110,6 @@ namespace ErsatzTV
                 "https://github.com/jasongdove/ErsatzTV",
                 "https://discord.gg/hHaJm3yGy6");
 
-            Log.Logger.Information(
-                "Server will listen on port {Port} - try UI at {UI}",
-                8409,
-                "http://localhost:8409");
-
             if (!Directory.Exists(FileSystemLayout.AppDataFolder))
             {
                 Directory.CreateDirectory(FileSystemLayout.AppDataFolder);
@@ -247,6 +242,7 @@ namespace ErsatzTV
                 });
             services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
 
+            services.AddHostedService<EndpointValidatorService>();
             services.AddHostedService<DatabaseMigratorService>();
             services.AddHostedService<CacheCleanerService>();
             services.AddHostedService<JellyfinService>();

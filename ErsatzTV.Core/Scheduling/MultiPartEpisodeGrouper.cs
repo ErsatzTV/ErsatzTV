@@ -56,7 +56,8 @@ namespace ErsatzTV.Core.Scheduling
                         else
                         {
                             // this should never happen
-                            throw new InvalidOperationException($"Bad shuffle state; unexpected number {number} after {lastNumber}");
+                            throw new InvalidOperationException(
+                                $"Bad shuffle state; unexpected number {number} after {lastNumber}");
                         }
                     }
                     else
