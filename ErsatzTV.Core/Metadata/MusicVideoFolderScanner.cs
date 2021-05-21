@@ -20,12 +20,12 @@ namespace ErsatzTV.Core.Metadata
     public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScanner
     {
         private readonly IArtistRepository _artistRepository;
+        private readonly ILibraryRepository _libraryRepository;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<MusicVideoFolderScanner> _logger;
         private readonly IMediator _mediator;
         private readonly IMusicVideoRepository _musicVideoRepository;
-        private readonly ILibraryRepository _libraryRepository;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
 
@@ -245,12 +245,12 @@ namespace ErsatzTV.Core.Metadata
                 {
                     folderQueue.Enqueue(subdirectory);
                 }
-                
+
                 string etag = FolderEtag.Calculate(musicVideoFolder, _localFileSystem);
                 Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
                     .Filter(f => f.Path == musicVideoFolder)
                     .HeadOrNone();
-                
+
                 // skip folder if etag matches
                 if (await knownFolder.Map(f => f.Etag).IfNoneAsync(string.Empty) == etag)
                 {
@@ -277,7 +277,7 @@ namespace ErsatzTV.Core.Metadata
                             {
                                 await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
                             }
-                            
+
                             await _libraryRepository.SetEtag(libraryPath, knownFolder, musicVideoFolder, etag);
                         },
                         error =>

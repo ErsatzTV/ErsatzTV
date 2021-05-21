@@ -105,7 +105,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                 MovieFolderScanner service = GetService(
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -145,7 +146,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(metadataPath)
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -186,7 +188,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(metadataPath)
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -231,7 +234,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now }
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -279,7 +283,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now }
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -327,7 +332,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
                     new FakeFileEntry(posterPath) { LastWriteTime = DateTime.Now }
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -374,7 +380,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                             Path.GetDirectoryName(moviePath) ?? string.Empty,
                             $"Movie (2020)-{extraFile}{videoExtension}"))
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -417,7 +424,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                             Path.GetDirectoryName(moviePath) ?? string.Empty,
                             Path.Combine(extraFolder, $"Movie (2020){videoExtension}")))
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -454,7 +462,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                 MovieFolderScanner service = GetService(
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -493,7 +502,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                 MovieFolderScanner service = GetService(
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,
@@ -521,7 +531,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                 MovieFolderScanner service = GetService(
                     new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
                 );
-                var libraryPath = new LibraryPath { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
 
                 Either<BaseError, Unit> result = await service.ScanFolder(
                     libraryPath,

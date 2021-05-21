@@ -19,13 +19,13 @@ namespace ErsatzTV.Core.Metadata
 {
     public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
     {
+        private readonly ILibraryRepository _libraryRepository;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<TelevisionFolderScanner> _logger;
         private readonly IMediator _mediator;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
-        private readonly ILibraryRepository _libraryRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public TelevisionFolderScanner(
@@ -155,7 +155,7 @@ namespace ErsatzTV.Core.Metadata
                 Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
                     .Filter(f => f.Path == seasonFolder)
                     .HeadOrNone();
-                
+
                 // skip folder if etag matches
                 if (await knownFolder.Map(f => f.Etag).IfNoneAsync(string.Empty) == etag)
                 {
