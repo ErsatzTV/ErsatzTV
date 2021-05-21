@@ -55,8 +55,8 @@ namespace ErsatzTV.Infrastructure.Search
         private readonly ILogger<SearchIndex> _logger;
 
         private FSDirectory _directory;
-        private IndexWriter _writer;
         private bool _initialized;
+        private IndexWriter _writer;
 
         public SearchIndex(ILogger<SearchIndex> logger)
         {

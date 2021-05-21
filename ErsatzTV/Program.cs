@@ -48,7 +48,7 @@ namespace ErsatzTV
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(
                     webBuilder => webBuilder.UseStartup<Startup>()
-                        .UseUrls("http://+:8409")
+                        .UseConfiguration(Configuration)
                         .UseKestrel(options => options.AddServerHeader = false))
                 .UseSerilog();
     }

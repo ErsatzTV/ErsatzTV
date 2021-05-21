@@ -16,7 +16,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NamedEpisode("Episode 1"),
                 NamedEpisode("Episode 2 (1)"),
                 NamedEpisode("Episode 3 (2)"),
-                NamedEpisode("Episode 4"),
+                NamedEpisode("Episode 4")
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
@@ -35,7 +35,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 NamedEpisode("Episode 1 (1)"),
                 NamedEpisode("Episode 2 (2)"),
-                NamedEpisode("Episode 3"),
+                NamedEpisode("Episode 3")
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
@@ -55,7 +55,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NamedEpisode("Episode 2 (2)"),
                 NamedEpisode("Episode 3"),
                 NamedEpisode("Episode 4 (1)"),
-                NamedEpisode("Episode 5 (2)"),
+                NamedEpisode("Episode 5 (2)")
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
@@ -76,7 +76,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NamedEpisode("Episode 1 (1)"),
                 NamedEpisode("Episode 2 (2)"),
                 NamedEpisode("Episode 3 (1)"),
-                NamedEpisode("Episode 4 (2)"),
+                NamedEpisode("Episode 4 (2)")
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);

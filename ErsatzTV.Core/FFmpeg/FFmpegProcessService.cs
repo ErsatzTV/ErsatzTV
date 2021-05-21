@@ -134,7 +134,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithInfiniteLoop()
-                .WithConcat($"http://localhost:8409/ffmpeg/concat/{channel.Number}")
+                .WithConcat($"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}")
                 .WithMetadata(channel)
                 .WithFormat("mpegts")
                 .WithPipe()
