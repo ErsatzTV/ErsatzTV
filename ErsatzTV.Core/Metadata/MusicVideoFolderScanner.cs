@@ -25,6 +25,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILogger<MusicVideoFolderScanner> _logger;
         private readonly IMediator _mediator;
         private readonly IMusicVideoRepository _musicVideoRepository;
+        private readonly ILibraryRepository _libraryRepository;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
 
@@ -38,6 +39,7 @@ namespace ErsatzTV.Core.Metadata
             ISearchRepository searchRepository,
             IArtistRepository artistRepository,
             IMusicVideoRepository musicVideoRepository,
+            ILibraryRepository libraryRepository,
             IMediator mediator,
             ILogger<MusicVideoFolderScanner> logger) : base(
             localFileSystem,
@@ -52,6 +54,7 @@ namespace ErsatzTV.Core.Metadata
             _searchRepository = searchRepository;
             _artistRepository = artistRepository;
             _musicVideoRepository = musicVideoRepository;
+            _libraryRepository = libraryRepository;
             _mediator = mediator;
             _logger = logger;
         }
@@ -59,7 +62,6 @@ namespace ErsatzTV.Core.Metadata
         public async Task<Either<BaseError, Unit>> ScanFolder(
             LibraryPath libraryPath,
             string ffprobePath,
-            DateTimeOffset lastScan,
             decimal progressMin,
             decimal progressMax)
         {
@@ -96,9 +98,7 @@ namespace ErsatzTV.Core.Metadata
                             libraryPath,
                             ffprobePath,
                             result.Item,
-                            artistFolder,
-                            // force scanning all folders if we're adding a new artist
-                            result.IsAdded ? DateTimeOffset.MinValue : lastScan);
+                            artistFolder);
 
                         if (result.IsAdded)
                         {
@@ -167,7 +167,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         bool shouldUpdate = Optional(artist.ArtistMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
-                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                                 m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
                             true);
 
                         if (shouldUpdate)
@@ -222,12 +222,11 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        public async Task ScanMusicVideos(
+        private async Task ScanMusicVideos(
             LibraryPath libraryPath,
             string ffprobePath,
             Artist artist,
-            string artistFolder,
-            DateTimeOffset lastScan)
+            string artistFolder)
         {
             var folderQueue = new Queue<string>();
             folderQueue.Enqueue(artistFolder);
@@ -246,8 +245,14 @@ namespace ErsatzTV.Core.Metadata
                 {
                     folderQueue.Enqueue(subdirectory);
                 }
-
-                if (_localFileSystem.GetLastWriteTime(musicVideoFolder) < lastScan)
+                
+                string etag = FolderEtag.Calculate(musicVideoFolder, _localFileSystem);
+                Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
+                    .Filter(f => f.Path == musicVideoFolder)
+                    .HeadOrNone();
+                
+                // skip folder if etag matches
+                if (await knownFolder.Map(f => f.Etag).IfNoneAsync(string.Empty) == etag)
                 {
                     continue;
                 }
@@ -272,6 +277,8 @@ namespace ErsatzTV.Core.Metadata
                             {
                                 await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
                             }
+                            
+                            await _libraryRepository.SetEtag(libraryPath, knownFolder, musicVideoFolder, etag);
                         },
                         error =>
                         {
@@ -293,7 +300,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         bool shouldUpdate = Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
-                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                                 m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
                             true);
 
                         if (shouldUpdate)

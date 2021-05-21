@@ -157,7 +157,7 @@ namespace ErsatzTV.Core.Metadata
                     .HeadOrNone();
                 
                 // skip folder if etag matches
-                if (await knownFolder.Map(f => f.Etag).IfNoneAsync("not-a-real-etag") == etag)
+                if (await knownFolder.Map(f => f.Etag).IfNoneAsync(string.Empty) == etag)
                 {
                     continue;
                 }
@@ -227,7 +227,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         bool shouldUpdate = Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
-                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                                 m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
                             true);
 
                         if (shouldUpdate)
@@ -269,7 +269,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
                             m => m.MetadataKind == MetadataKind.Fallback ||
-                                 m.DateUpdated < _localFileSystem.GetLastWriteTime(nfoFile),
+                                 m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
                             true);
 
                         if (shouldUpdate)

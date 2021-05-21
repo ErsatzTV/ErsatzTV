@@ -104,7 +104,6 @@ namespace ErsatzTV.Application.MediaSources.Commands
                             await _musicVideoFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffprobePath,
-                                lastScan,
                                 progressMin,
                                 progressMax);
                             break;
