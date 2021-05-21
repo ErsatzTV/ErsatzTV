@@ -26,7 +26,6 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
         private readonly ILogger<MovieFolderScanner> _logger;
-        private readonly MD5CryptoServiceProvider _md5 = new();
         private readonly IMediator _mediator;
         private readonly IMovieRepository _movieRepository;
         private readonly ISearchIndex _searchIndex;
@@ -59,7 +58,6 @@ namespace ErsatzTV.Core.Metadata
         public async Task<Either<BaseError, Unit>> ScanFolder(
             LibraryPath libraryPath,
             string ffprobePath,
-            DateTimeOffset lastScan,
             decimal progressMin,
             decimal progressMax)
         {
@@ -106,22 +104,7 @@ namespace ErsatzTV.Core.Metadata
                     continue;
                 }
 
-                // determine etag
-                var sb = new StringBuilder();
-                foreach (string file in filesForEtag.OrderBy(identity))
-                {
-                    sb.Append(file);
-                    sb.Append(_localFileSystem.GetLastWriteTime(file).Ticks);
-                }
-
-                var hash = new StringBuilder();
-                byte[] bytes = _md5.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
-                foreach (byte t in bytes)
-                {
-                    hash.Append(t.ToString("x2"));
-                }
-                var etag = hash.ToString();
-
+                string etag = FolderEtag.Calculate(movieFolder, _localFileSystem);
                 Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
                     .Filter(f => f.Path == movieFolder)
                     .HeadOrNone();
@@ -129,9 +112,6 @@ namespace ErsatzTV.Core.Metadata
                 // skip folder if etag matches
                 if (await knownFolder.Map(f => f.Etag).IfNoneAsync("not-a-real-etag") == etag)
                 {
-                    // _logger.LogDebug("Skipping {Folder} because etag {Etag} matches",
-                    //     movieFolder,
-                    //     etag);
                     continue;
                 }
 

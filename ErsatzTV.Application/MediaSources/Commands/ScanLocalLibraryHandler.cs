@@ -90,7 +90,6 @@ namespace ErsatzTV.Application.MediaSources.Commands
                             await _movieFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffprobePath,
-                                lastScan,
                                 progressMin,
                                 progressMax);
                             break;
@@ -98,7 +97,6 @@ namespace ErsatzTV.Application.MediaSources.Commands
                             await _televisionFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffprobePath,
-                                lastScan,
                                 progressMin,
                                 progressMax);
                             break;
