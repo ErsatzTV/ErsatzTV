@@ -1,0 +1,112 @@
+﻿@using ErsatzTV.Application.MediaSources
+@using Unit = LanguageExt.Unit
+@inject IMediator _mediator
+@inject NavigationManager _navigationManager
+@inject ILogger<RemoteMediaSourceLibrariesEditor> _logger
+@inject ISnackbar _snackbar
+@inject IEntityLocker _locker
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudTable Hover="true" Items="_libraries" Dense="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6"><b>@_source.Name</b> Libraries</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col style="width: 100px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<RemoteMediaSourceLibraryEditViewModel, object>(x => x.Name)">
+                    Name
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<RemoteMediaSourceLibraryEditViewModel, object>(x => x.MediaKind)">
+                    Media Kind
+                </MudTableSortLabel>
+            </MudTh>
+            <MudTh>Synchronize</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="MediaType">@context.MediaKind</MudTd>
+            <MudTd DataLabel="Synchronize">
+                <MudSwitch T="bool" @bind-Checked="@context.ShouldSyncItems" Color="Color.Primary"/>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
+        Save Changes
+    </MudButton>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [Parameter]
+    public string Name { get; set; }
+
+    [Parameter]
+    public Func<int, Task<Option<RemoteMediaSourceViewModel>>> GetMediaSourceById { get; set; }
+
+    [Parameter]
+    public Func<int, Task<List<RemoteMediaSourceLibraryEditViewModel>>> GetLibrariesBySourceId { get; set; }
+
+    [Parameter]
+    public Func<List<RemoteMediaSourceLibraryEditViewModel>, IRequest<Either<BaseError, Unit>>> GetUpdateLibraryRequest { get; set; }
+
+    [Parameter]
+    public Func<int, Task<Unit>> SynchronizeLibraryByIdIfNeeded { get; set; }
+
+    private RemoteMediaSourceViewModel _source;
+    private List<RemoteMediaSourceLibraryEditViewModel> _libraries;
+
+    protected override Task OnParametersSetAsync() => LoadData();
+
+    private async Task LoadData()
+    {
+        Option<RemoteMediaSourceViewModel> maybeSource = await GetMediaSourceById(Id);
+        await maybeSource.Match(
+            async source =>
+            {
+                _source = source;
+                _libraries = await GetLibrariesBySourceId(Id);
+            },
+            () =>
+            {
+                _navigationManager.NavigateTo("404");
+                return Task.CompletedTask;
+            });
+    }
+
+    private async Task SaveChanges()
+    {
+        IRequest<Either<BaseError, Unit>> request = GetUpdateLibraryRequest(_libraries);
+        Seq<BaseError> errorMessages = await _mediator.Send(request).Map(e => e.LeftToSeq());
+
+        await errorMessages.HeadOrNone().Match(
+            error =>
+            {
+                _snackbar.Add($"Unexpected error saving {Name.ToLowerInvariant()} libraries: {error.Value}", Severity.Error);
+                _logger.LogError("Unexpected error saving {MediaSource} libraries: {Error}", Name, error.Value);
+                return Task.CompletedTask;
+            },
+            async () =>
+            {
+                foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
+                {
+                    if (_locker.LockLibrary(id))
+                    {
+                        await SynchronizeLibraryByIdIfNeeded(id);
+                    }
+                }
+
+                _navigationManager.NavigateTo($"/media/{Name.ToLowerInvariant()}");
+            });
+    }
+
+}

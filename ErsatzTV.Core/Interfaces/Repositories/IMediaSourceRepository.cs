@@ -77,6 +77,11 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> UpsertEmby(string address, string serverName, string operatingSystem);
         Task<List<EmbyMediaSource>> GetAllEmby();
         Task<Option<EmbyMediaSource>> GetEmby(int id);
+        Task<Option<EmbyMediaSource>> GetEmbyByLibraryId(int embyLibraryId);
+        Task<Option<EmbyLibrary>> GetEmbyLibrary(int embyLibraryId);
+        Task<List<EmbyLibrary>> GetEmbyLibraries(int embyMediaSourceId);
         Task<List<int>> DeleteAllEmby();
+        Task<Unit> EnableEmbyLibrarySync(IEnumerable<int> libraryIds);
+        Task<List<int>> DisableEmbyLibrarySync(List<int> libraryIds);
     }
 }

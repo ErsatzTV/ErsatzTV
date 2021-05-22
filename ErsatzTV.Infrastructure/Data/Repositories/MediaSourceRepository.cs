@@ -778,6 +778,40 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(Optional);
         }
 
+        public async Task<Option<EmbyMediaSource>> GetEmbyByLibraryId(int embyLibraryId)
+        {
+            int? id = await _dbConnection.QuerySingleAsync<int?>(
+                @"SELECT L.MediaSourceId FROM Library L
+                INNER JOIN EmbyLibrary PL on L.Id = PL.Id
+                WHERE L.Id = @EmbyLibraryId",
+                new { EmbyLibraryId = embyLibraryId });
+
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+            return await context.EmbyMediaSources
+                .Include(p => p.Connections)
+                .Include(p => p.Libraries)
+                .OrderBy(p => p.Id)
+                .SingleOrDefaultAsync(p => p.Id == id)
+                .Map(Optional);
+        }
+        public Task<Option<EmbyLibrary>> GetEmbyLibrary(int embyLibraryId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.EmbyLibraries
+                .Include(l => l.Paths)
+                .OrderBy(l => l.Id) // https://github.com/dotnet/efcore/issues/22579
+                .SingleOrDefaultAsync(l => l.Id == embyLibraryId)
+                .Map(Optional);
+        }
+
+        public Task<List<EmbyLibrary>> GetEmbyLibraries(int embyMediaSourceId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.EmbyLibraries
+                .Filter(l => l.MediaSourceId == embyMediaSourceId)
+                .ToListAsync();
+        }
+
         public async Task<List<int>> DeleteAllEmby()
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
@@ -803,6 +837,76 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
 
             await context.SaveChangesAsync();
+
+            return movieIds.Append(showIds).ToList();
+        }
+
+        public Task<Unit> EnableEmbyLibrarySync(IEnumerable<int> libraryIds) =>
+            _dbConnection.ExecuteAsync(
+                "UPDATE EmbyLibrary SET ShouldSyncItems = 1 WHERE Id IN @ids",
+                new { ids = libraryIds }).Map(_ => Unit.Default);
+
+        public async Task<List<int>> DisableEmbyLibrarySync(List<int> libraryIds)
+        {
+            await _dbConnection.ExecuteAsync(
+                "UPDATE EmbyLibrary SET ShouldSyncItems = 0 WHERE Id IN @ids",
+                new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                "UPDATE Library SET LastScan = null WHERE Id IN @ids",
+                new { ids = libraryIds });
+
+            List<int> movieIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbySeason ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
+
+            List<int> showIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+
+            await _dbConnection.ExecuteAsync(
+                @"DELETE FROM MediaItem WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids)",
+                new { ids = libraryIds });
 
             return movieIds.Append(showIds).ToList();
         }

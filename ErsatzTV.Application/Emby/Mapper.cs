@@ -10,9 +10,9 @@ namespace ErsatzTV.Application.Emby
                 embyMediaSource.ServerName,
                 embyMediaSource.Connections.HeadOrNone().Match(c => c.Address, string.Empty));
 
-        // internal static EmbyLibraryViewModel ProjectToViewModel(EmbyLibrary library) =>
-        //     new(library.Id, library.Name, library.MediaKind, library.ShouldSyncItems);
-        //
+        internal static EmbyLibraryViewModel ProjectToViewModel(EmbyLibrary library) =>
+            new(library.Id, library.Name, library.MediaKind, library.ShouldSyncItems);
+        
         // internal static EmbyPathReplacementViewModel ProjectToViewModel(EmbyPathReplacement pathReplacement) =>
         //     new(pathReplacement.Id, pathReplacement.EmbyPath, pathReplacement.LocalPath);
     }

@@ -1,15 +1,15 @@
-﻿@page "/media/sources/plex/{Id:int}/libraries"
+﻿@page "/media/sources/emby/{Id:int}/libraries"
 @using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Plex.Commands
-@using ErsatzTV.Application.Plex.Queries
+@using ErsatzTV.Application.Emby.Commands
+@using ErsatzTV.Application.Emby.Queries
 @using ErsatzTV.Application.MediaSources
-@using ErsatzTV.Application.Plex
+@using ErsatzTV.Application.Emby
 @inject IMediator _mediator
-@inject ChannelWriter<IPlexBackgroundServiceRequest> _channel
+@inject ChannelWriter<IEmbyBackgroundServiceRequest> _channel
 
 <RemoteMediaSourceLibrariesEditor
     Id="@Id"
-    Name="Plex"
+    Name="Emby"
     GetUpdateLibraryRequest="GetUpdateLibraryRequest"
     GetLibrariesBySourceId="GetLibrariesBySourceId"
     GetMediaSourceById="GetMediaSourceById"
@@ -21,18 +21,18 @@
     public int Id { get; set; }
 
     private IRequest<Either<BaseError, Unit>> GetUpdateLibraryRequest(List<RemoteMediaSourceLibraryEditViewModel> libraries) =>
-        new UpdatePlexLibraryPreferences(
-            libraries.Map(l => new PlexLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
+        new UpdateEmbyLibraryPreferences(
+            libraries.Map(l => new EmbyLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
 
     private Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
-        _mediator.Send(new GetPlexLibrariesBySourceId(Id))
+        _mediator.Send(new GetEmbyLibrariesBySourceId(Id))
             .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
 
     private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
-        _mediator.Send(new GetPlexMediaSourceById(Id))
+        _mediator.Send(new GetEmbyMediaSourceById(Id))
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
-    private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(PlexLibraryViewModel library) => new()
+    private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(EmbyLibraryViewModel library) => new()
     {
         Id = library.Id,
         Name = library.Name,
@@ -42,7 +42,7 @@
 
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
     {
-        await _channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(libraryId));
+        await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(libraryId));
         return Unit.Default;
     }
 

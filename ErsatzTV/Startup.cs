@@ -8,6 +8,7 @@ using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -232,6 +233,8 @@ namespace ErsatzTV
             services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
             services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
             services.AddScoped<IEmbyApiClient, EmbyApiClient>();
+            services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
+            services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
             services.AddScoped<IRuntimeInfo, RuntimeInfo>();
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
