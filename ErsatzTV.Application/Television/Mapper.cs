@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Linq;
 using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Jellyfin;
+using Flurl;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -74,15 +76,13 @@ namespace ErsatzTV.Application.Television
 
             if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
             {
-                string address = maybeJellyfin.Map(ms => ms.Connections.HeadOrNone().Map(c => c.Address))
-                    .Flatten()
-                    .IfNone("jellyfin://");
-                artwork = artwork.Replace("jellyfin://", address);
-
+                Url url = JellyfinUrl.ForArtwork(maybeJellyfin, artwork);
                 if (artworkKind == ArtworkKind.Poster)
                 {
-                    artwork += "&fillHeight=440";
+                    url.SetQueryParam("fillHeight", 440);
                 }
+
+                artwork = url;
             }
 
             return artwork;

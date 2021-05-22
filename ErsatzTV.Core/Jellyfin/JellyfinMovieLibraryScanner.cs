@@ -86,7 +86,7 @@ namespace ErsatzTV.Core.Jellyfin
 
                         if (!_localFileSystem.FileExists(localPath))
                         {
-                            _logger.LogWarning($"Skipping jellyfin movie that does not exist at {localPath}");
+                            _logger.LogWarning("Skipping jellyfin movie that does not exist at {Path}", localPath);
                         }
                         else
                         {

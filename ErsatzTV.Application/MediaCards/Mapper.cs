@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -101,10 +102,8 @@ namespace ErsatzTV.Application.MediaCards
 
             if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
             {
-                string address = maybeJellyfin.Map(ms => ms.Connections.HeadOrNone().Map(c => c.Address))
-                    .Flatten()
-                    .IfNone("jellyfin://");
-                artwork = artwork.Replace("jellyfin://", address) + "&fillheight=440";
+                artwork = JellyfinUrl.ForArtwork(maybeJellyfin, artwork)
+                    .SetQueryParam("fillHeight", 440);
             }
 
             return new ActorCardViewModel(actor.Id, actor.Name, actor.Role, artwork);
@@ -125,10 +124,8 @@ namespace ErsatzTV.Application.MediaCards
 
             if (maybeJellyfin.IsSome && poster.StartsWith("jellyfin://"))
             {
-                string address = maybeJellyfin.Map(ms => ms.Connections.HeadOrNone().Map(c => c.Address))
-                    .Flatten()
-                    .IfNone("jellyfin://");
-                poster = poster.Replace("jellyfin://", address) + "&fillHeight=440";
+                poster = JellyfinUrl.ForArtwork(maybeJellyfin, poster)
+                    .SetQueryParam("fillHeight", 440);
             }
 
             return poster;
@@ -141,11 +138,8 @@ namespace ErsatzTV.Application.MediaCards
 
             if (maybeJellyfin.IsSome && thumb.StartsWith("jellyfin://"))
             {
-                string address = maybeJellyfin.Map(ms => ms.Connections.HeadOrNone().Map(c => c.Address))
-                    .Flatten()
-                    .IfNone("jellyfin://");
-                thumb = thumb.Replace("jellyfin://", address) +
-                        "&fillHeight=220"; // TODO: this height is optimized for episode
+                thumb = JellyfinUrl.ForArtwork(maybeJellyfin, thumb)
+                    .SetQueryParam("fillHeight", 220);
             }
 
             return thumb;
