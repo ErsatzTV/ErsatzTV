@@ -12,8 +12,8 @@ namespace ErsatzTV.Application.Emby
 
         internal static EmbyLibraryViewModel ProjectToViewModel(EmbyLibrary library) =>
             new(library.Id, library.Name, library.MediaKind, library.ShouldSyncItems);
-        
-        // internal static EmbyPathReplacementViewModel ProjectToViewModel(EmbyPathReplacement pathReplacement) =>
-        //     new(pathReplacement.Id, pathReplacement.EmbyPath, pathReplacement.LocalPath);
+
+        internal static EmbyPathReplacementViewModel ProjectToViewModel(EmbyPathReplacement pathReplacement) =>
+            new(pathReplacement.Id, pathReplacement.EmbyPath, pathReplacement.LocalPath);
     }
 }

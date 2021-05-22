@@ -812,6 +812,49 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public Task<List<EmbyPathReplacement>> GetEmbyPathReplacements(int embyMediaSourceId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.EmbyPathReplacements
+                .Filter(r => r.EmbyMediaSourceId == embyMediaSourceId)
+                .Include(jpr => jpr.EmbyMediaSource)
+                .ToListAsync();
+        }
+
+        public async Task<Unit> UpdatePathReplacements(
+            int embyMediaSourceId,
+            List<EmbyPathReplacement> toAdd,
+            List<EmbyPathReplacement> toUpdate,
+            List<EmbyPathReplacement> toDelete)
+        {
+            foreach (EmbyPathReplacement add in toAdd)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"INSERT INTO EmbyPathReplacement
+                    (EmbyPath, LocalPath, EmbyMediaSourceId)
+                    VALUES (@EmbyPath, @LocalPath, @EmbyMediaSourceId)",
+                    new { add.EmbyPath, add.LocalPath, EmbyMediaSourceId = embyMediaSourceId });
+            }
+
+            foreach (EmbyPathReplacement update in toUpdate)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"UPDATE EmbyPathReplacement
+                    SET EmbyPath = @EmbyPath, LocalPath = @LocalPath
+                    WHERE Id = @Id",
+                    new { update.EmbyPath, update.LocalPath, update.Id });
+            }
+
+            foreach (EmbyPathReplacement delete in toDelete)
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"DELETE FROM EmbyPathReplacement WHERE Id = @Id",
+                    new { delete.Id });
+            }
+
+            return Unit.Default;
+        }
+
         public async Task<List<int>> DeleteAllEmby()
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
