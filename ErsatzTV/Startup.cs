@@ -235,6 +235,7 @@ namespace ErsatzTV
             services.AddScoped<IEmbyApiClient, EmbyApiClient>();
             services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
             services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
+            services.AddScoped<IEmbyPathReplacementService, EmbyPathReplacementService>();
             services.AddScoped<IRuntimeInfo, RuntimeInfo>();
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();

@@ -81,6 +81,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<EmbyLibrary>> GetEmbyLibrary(int embyLibraryId);
         Task<List<EmbyLibrary>> GetEmbyLibraries(int embyMediaSourceId);
         Task<List<EmbyPathReplacement>> GetEmbyPathReplacements(int embyMediaSourceId);
+        Task<List<EmbyPathReplacement>> GetEmbyPathReplacementsByLibraryId(int embyLibraryPathId);
         Task<Unit> UpdatePathReplacements(
             int embyMediaSourceId,
             List<EmbyPathReplacement> toAdd,

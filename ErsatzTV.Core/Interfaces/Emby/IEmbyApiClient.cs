@@ -12,12 +12,12 @@ namespace ErsatzTV.Core.Interfaces.Emby
         Task<Either<BaseError, List<EmbyLibrary>>> GetLibraries(string address, string apiKey);
         // Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey);
         //
-        // Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
-        //     string address,
-        //     string apiKey,
-        //     int mediaSourceId,
-        //     string libraryId);
-        //
+        Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string libraryId);
+        
         // Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
         //     string address,
         //     string apiKey,

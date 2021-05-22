@@ -20,14 +20,9 @@ namespace ErsatzTV.Infrastructure.Emby
     {
         private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
         private readonly ILogger<EmbyApiClient> _logger;
-        private readonly IMemoryCache _memoryCache;
 
-        public EmbyApiClient(
-            IMemoryCache memoryCache,
-            IFallbackMetadataProvider fallbackMetadataProvider,
-            ILogger<EmbyApiClient> logger)
+        public EmbyApiClient(IFallbackMetadataProvider fallbackMetadataProvider, ILogger<EmbyApiClient> logger)
         {
-            _memoryCache = memoryCache;
             _fallbackMetadataProvider = fallbackMetadataProvider;
             _logger = logger;
         }
@@ -87,33 +82,28 @@ namespace ErsatzTV.Infrastructure.Emby
         //     }
         // }
         //
-        // public async Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
-        //     string address,
-        //     string apiKey,
-        //     int mediaSourceId,
-        //     string libraryId)
-        // {
-        //     try
-        //     {
-        //         if (_memoryCache.TryGetValue($"emby_admin_user_id.{mediaSourceId}", out string userId))
-        //         {
-        //             IEmbyApi service = RestService.For<IEmbyApi>(address);
-        //             EmbyLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, userId, libraryId);
-        //             return items.Items
-        //                 .Map(ProjectToMovie)
-        //                 .Somes()
-        //                 .ToList();
-        //         }
-        //
-        //         return BaseError.New("Emby admin user id is not available");
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogError(ex, "Error getting emby movie library items");
-        //         return BaseError.New(ex.Message);
-        //     }
-        // }
-        //
+        public async Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string libraryId)
+        {
+            try
+            {
+                IEmbyApi service = RestService.For<IEmbyApi>(address);
+                EmbyLibraryItemsResponse items = await service.GetMovieLibraryItems(apiKey, libraryId);
+                return items.Items
+                    .Map(ProjectToMovie)
+                    .Somes()
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting emby movie library items");
+                return BaseError.New(ex.Message);
+            }
+        }
+        
         // public async Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
         //     string address,
         //     string apiKey,
@@ -218,121 +208,121 @@ namespace ErsatzTV.Infrastructure.Emby
                 _ => None
             };
         
-        // private Option<EmbyMovie> ProjectToMovie(EmbyLibraryItemResponse item)
-        // {
-        //     try
-        //     {
-        //         if (item.LocationType != "FileSystem")
-        //         {
-        //             return None;
-        //         }
-        //
-        //         var version = new MediaVersion
-        //         {
-        //             Name = "Main",
-        //             Duration = TimeSpan.FromTicks(item.RunTimeTicks),
-        //             DateAdded = item.DateCreated.UtcDateTime,
-        //             MediaFiles = new List<MediaFile>
-        //             {
-        //                 new()
-        //                 {
-        //                     Path = item.Path
-        //                 }
-        //             },
-        //             Streams = new List<MediaStream>()
-        //         };
-        //
-        //         MovieMetadata metadata = ProjectToMovieMetadata(item);
-        //
-        //         var movie = new EmbyMovie
-        //         {
-        //             ItemId = item.Id,
-        //             Etag = item.Etag,
-        //             MediaVersions = new List<MediaVersion> { version },
-        //             MovieMetadata = new List<MovieMetadata> { metadata }
-        //         };
-        //
-        //         return movie;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogWarning(ex, "Error projecting Emby movie");
-        //         return None;
-        //     }
-        // }
-        //
-        // private MovieMetadata ProjectToMovieMetadata(EmbyLibraryItemResponse item)
-        // {
-        //     DateTime dateAdded = item.DateCreated.UtcDateTime;
-        //     // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
-        //
-        //     var metadata = new MovieMetadata
-        //     {
-        //         Title = item.Name,
-        //         SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
-        //         Plot = item.Overview,
-        //         Year = item.ProductionYear,
-        //         Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
-        //         DateAdded = dateAdded,
-        //         Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
-        //         Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
-        //         Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
-        //         Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList(),
-        //         Artwork = new List<Artwork>()
-        //     };
-        //
-        //     // set order on actors
-        //     for (var i = 0; i < metadata.Actors.Count; i++)
-        //     {
-        //         metadata.Actors[i].Order = i;
-        //     }
-        //
-        //     if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
-        //     {
-        //         metadata.ReleaseDate = releaseDate;
-        //     }
-        //
-        //     if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
-        //     {
-        //         var poster = new Artwork
-        //         {
-        //             ArtworkKind = ArtworkKind.Poster,
-        //             Path = $"emby://Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
-        //             DateAdded = dateAdded
-        //         };
-        //         metadata.Artwork.Add(poster);
-        //     }
-        //
-        //     if (item.BackdropImageTags.Any())
-        //     {
-        //         var fanArt = new Artwork
-        //         {
-        //             ArtworkKind = ArtworkKind.FanArt,
-        //             Path = $"emby://Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
-        //             DateAdded = dateAdded
-        //         };
-        //         metadata.Artwork.Add(fanArt);
-        //     }
-        //
-        //     return metadata;
-        // }
-        //
-        // private Actor ProjectToModel(EmbyPersonResponse person, DateTime dateAdded)
-        // {
-        //     var actor = new Actor { Name = person.Name, Role = person.Role };
-        //     if (!string.IsNullOrWhiteSpace(person.Id) && !string.IsNullOrWhiteSpace(person.PrimaryImageTag))
-        //     {
-        //         actor.Artwork = new Artwork
-        //         {
-        //             Path = $"emby://Items/{person.Id}/Images/Primary?tag={person.PrimaryImageTag}",
-        //             ArtworkKind = ArtworkKind.Thumbnail,
-        //             DateAdded = dateAdded
-        //         };
-        //     }
-        //
-        //     return actor;
-        // }
-        //
+        private Option<EmbyMovie> ProjectToMovie(EmbyLibraryItemResponse item)
+        {
+            try
+            {
+                if (item.MediaSources.Any(ms => ms.Protocol != "File"))
+                {
+                    return None;
+                }
+
+                var version = new MediaVersion
+                {
+                    Name = "Main",
+                    Duration = TimeSpan.FromTicks(item.RunTimeTicks),
+                    DateAdded = item.DateCreated.UtcDateTime,
+                    MediaFiles = new List<MediaFile>
+                    {
+                        new()
+                        {
+                            Path = item.Path
+                        }
+                    },
+                    Streams = new List<MediaStream>()
+                };
+        
+                MovieMetadata metadata = ProjectToMovieMetadata(item);
+        
+                var movie = new EmbyMovie
+                {
+                    ItemId = item.Id,
+                    Etag = item.Etag,
+                    MediaVersions = new List<MediaVersion> { version },
+                    MovieMetadata = new List<MovieMetadata> { metadata }
+                };
+        
+                return movie;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error projecting Emby movie");
+                return None;
+            }
+        }
+        
+        private MovieMetadata ProjectToMovieMetadata(EmbyLibraryItemResponse item)
+        {
+            DateTime dateAdded = item.DateCreated.UtcDateTime;
+            // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(item.UpdatedAt).DateTime;
+        
+            var metadata = new MovieMetadata
+            {
+                Title = item.Name,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
+                Plot = item.Overview,
+                Year = item.ProductionYear,
+                Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
+                DateAdded = dateAdded,
+                Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
+                Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
+                Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
+                Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList(),
+                Artwork = new List<Artwork>()
+            };
+        
+            // set order on actors
+            for (var i = 0; i < metadata.Actors.Count; i++)
+            {
+                metadata.Actors[i].Order = i;
+            }
+        
+            if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
+            {
+                metadata.ReleaseDate = releaseDate;
+            }
+        
+            if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
+            {
+                var poster = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Poster,
+                    Path = $"emby://Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                    DateAdded = dateAdded
+                };
+                metadata.Artwork.Add(poster);
+            }
+        
+            if (item.BackdropImageTags.Any())
+            {
+                var fanArt = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.FanArt,
+                    Path = $"emby://Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
+                    DateAdded = dateAdded
+                };
+                metadata.Artwork.Add(fanArt);
+            }
+        
+            return metadata;
+        }
+        
+        private Actor ProjectToModel(EmbyPersonResponse person, DateTime dateAdded)
+        {
+            var actor = new Actor { Name = person.Name, Role = person.Role };
+            if (!string.IsNullOrWhiteSpace(person.Id) && !string.IsNullOrWhiteSpace(person.PrimaryImageTag))
+            {
+                actor.Artwork = new Artwork
+                {
+                    Path = $"emby://Items/{person.Id}/Images/Primary?tag={person.PrimaryImageTag}",
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    DateAdded = dateAdded
+                };
+            }
+        
+            return actor;
+        }
+        
         // private Option<EmbyShow> ProjectToShow(EmbyLibraryItemResponse item)
         // {
         //     try

@@ -1,0 +1,28 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace ErsatzTV.Infrastructure.Emby.Models
+{
+    public class EmbyLibraryItemResponse
+    {
+        public string Name { get; set; }
+        public string Id { get; set; }
+        public string Etag { get; set; }
+        public string Path { get; set; }
+        public DateTimeOffset DateCreated { get; set; }
+        public long RunTimeTicks { get; set; }
+        public List<string> Genres { get; set; }
+        public List<string> Tags { get; set; }
+        public int ProductionYear { get; set; }
+        public string PremiereDate { get; set; }
+        public List<EmbyMediaStreamResponse> MediaStreams { get; set; }
+        public List<EmbyMediaSourceResponse> MediaSources { get; set; }
+        public string Overview { get; set; }
+        public List<string> Taglines { get; set; }
+        public List<EmbyStudioResponse> Studios { get; set; }
+        public List<EmbyPersonResponse> People { get; set; }
+        public EmbyImageTagsResponse ImageTags { get; set; }
+        public List<string> BackdropImageTags { get; set; }
+        public int? IndexNumber { get; set; }
+    }
+}

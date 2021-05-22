@@ -64,9 +64,9 @@ namespace ErsatzTV.Services
                         case SynchronizeEmbyLibraries synchronizeEmbyLibraries:
                             requestTask = SynchronizeLibraries(synchronizeEmbyLibraries, cancellationToken);
                             break;
-                        // case ISynchronizeEmbyLibraryById synchronizeEmbyLibraryById:
-                        //     requestTask = SynchronizeEmbyLibrary(synchronizeEmbyLibraryById, cancellationToken);
-                        //     break;
+                        case ISynchronizeEmbyLibraryById synchronizeEmbyLibraryById:
+                            requestTask = SynchronizeEmbyLibrary(synchronizeEmbyLibraryById, cancellationToken);
+                            break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
                     }
@@ -139,21 +139,21 @@ namespace ErsatzTV.Services
         //             request.EmbyMediaSourceId,
         //             error.Value));
         // }
-        //
-        // private async Task SynchronizeEmbyLibrary(
-        //     ISynchronizeEmbyLibraryById request,
-        //     CancellationToken cancellationToken)
-        // {
-        //     using IServiceScope scope = _serviceScopeFactory.CreateScope();
-        //     IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-        //
-        //     Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
-        //     result.BiIter(
-        //         name => _logger.LogDebug("Done synchronizing emby library {Name}", name),
-        //         error => _logger.LogWarning(
-        //             "Unable to synchronize emby library {LibraryId}: {Error}",
-        //             request.EmbyLibraryId,
-        //             error.Value));
-        // }
+        
+        private async Task SynchronizeEmbyLibrary(
+            ISynchronizeEmbyLibraryById request,
+            CancellationToken cancellationToken)
+        {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        
+            Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
+            result.BiIter(
+                name => _logger.LogDebug("Done synchronizing emby library {Name}", name),
+                error => _logger.LogWarning(
+                    "Unable to synchronize emby library {LibraryId}: {Error}",
+                    request.EmbyLibraryId,
+                    error.Value));
+        }
     }
 }

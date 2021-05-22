@@ -821,6 +821,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public Task<List<EmbyPathReplacement>> GetEmbyPathReplacementsByLibraryId(int embyLibraryPathId)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.EmbyPathReplacements
+                .FromSqlRaw(
+                    @"select epr.* from LibraryPath lp
+                    inner join EmbyLibrary el ON el.Id = lp.LibraryId
+                    inner join Library l ON l.Id = el.Id
+                    inner join EmbyPathReplacement epr on epr.EmbyMediaSourceId = l.MediaSourceId
+                    where lp.Id = {0}",
+                    embyLibraryPathId)
+                .Include(jpr => jpr.EmbyMediaSource)
+                .ToListAsync();
+        }
+
         public async Task<Unit> UpdatePathReplacements(
             int embyMediaSourceId,
             List<EmbyPathReplacement> toAdd,

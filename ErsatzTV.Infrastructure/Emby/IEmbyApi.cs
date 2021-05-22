@@ -23,19 +23,17 @@ namespace ErsatzTV.Infrastructure.Emby
             [Header("X-Emby-Token")]
             string apiKey);
         
-        // [Get("/Items")]
-        // public Task<EmbyLibraryItemsResponse> GetMovieLibraryItems(
-        //     [Header("X-Emby-Token")]
-        //     string apiKey,
-        //     [Query]
-        //     string userId,
-        //     [Query]
-        //     string parentId,
-        //     [Query]
-        //     string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
-        //     [Query]
-        //     string includeItemTypes = "Movie");
-        //
+        [Get("/Items")]
+        public Task<EmbyLibraryItemsResponse> GetMovieLibraryItems(
+            [Header("X-Emby-Token")]
+            string apiKey,
+            [Query]
+            string parentId,
+            [Query]
+            string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources",
+            [Query]
+            string includeItemTypes = "Movie");
+        
         // [Get("/Items")]
         // public Task<EmbyLibraryItemsResponse> GetShowLibraryItems(
         //     [Header("X-Emby-Token")]
