@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
 using Flurl;
 using LanguageExt;
@@ -12,7 +13,10 @@ namespace ErsatzTV.Application.Movies
 {
     internal static class Mapper
     {
-        internal static MovieViewModel ProjectToViewModel(Movie movie, Option<JellyfinMediaSource> maybeJellyfin)
+        internal static MovieViewModel ProjectToViewModel(
+            Movie movie,
+            Option<JellyfinMediaSource> maybeJellyfin,
+            Option<EmbyMediaSource> maybeEmby)
         {
             MovieMetadata metadata = Optional(movie.MovieMetadata).Flatten().Head();
             return new MovieViewModel(
@@ -24,11 +28,11 @@ namespace ErsatzTV.Application.Movies
                 metadata.Studios.Map(s => s.Name).ToList(),
                 LanguagesForMovie(movie),
                 metadata.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id)
-                    .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin))
+                    .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin, maybeEmby))
                     .ToList())
             {
-                Poster = Artwork(metadata, ArtworkKind.Poster, maybeJellyfin),
-                FanArt = Artwork(metadata, ArtworkKind.FanArt, maybeJellyfin)
+                Poster = Artwork(metadata, ArtworkKind.Poster, maybeJellyfin, maybeEmby),
+                FanArt = Artwork(metadata, ArtworkKind.FanArt, maybeJellyfin, maybeEmby)
             };
         }
 
@@ -51,7 +55,8 @@ namespace ErsatzTV.Application.Movies
         private static string Artwork(
             Metadata metadata,
             ArtworkKind artworkKind,
-            Option<JellyfinMediaSource> maybeJellyfin)
+            Option<JellyfinMediaSource> maybeJellyfin,
+            Option<EmbyMediaSource> maybeEmby)
         {
             string artwork = Optional(metadata.Artwork.FirstOrDefault(a => a.ArtworkKind == artworkKind))
                 .Match(a => a.Path, string.Empty);
@@ -59,6 +64,16 @@ namespace ErsatzTV.Application.Movies
             if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
             {
                 Url url = JellyfinUrl.ForArtwork(maybeJellyfin, artwork);
+                if (artworkKind is ArtworkKind.Poster or ArtworkKind.Thumbnail)
+                {
+                    url.SetQueryParam("fillHeight", 440);
+                }
+
+                artwork = url;
+            }
+            else if (maybeEmby.IsSome && artwork.StartsWith("emby://"))
+            {
+                Url url = EmbyUrl.ForArtwork(maybeEmby, artwork);
                 if (artworkKind is ArtworkKind.Poster or ArtworkKind.Thumbnail)
                 {
                     url.SetQueryParam("fillHeight", 440);

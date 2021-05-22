@@ -41,9 +41,12 @@ namespace ErsatzTV.Application.Search.Queries
             Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
                 .Map(list => list.HeadOrNone());
 
+            Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
+                .Map(list => list.HeadOrNone());
+
             List<MovieCardViewModel> items = await _movieRepository
                 .GetMoviesForCards(searchResult.Items.Map(i => i.Id).ToList())
-                .Map(list => list.Map(m => ProjectToViewModel(m, maybeJellyfin)).ToList());
+                .Map(list => list.Map(m => ProjectToViewModel(m, maybeJellyfin, maybeEmby)).ToList());
 
             return new MovieCardResultsViewModel(searchResult.TotalCount, items, searchResult.PageMap);
         }
