@@ -679,5 +679,42 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return movieIds.Append(showIds).ToList();
         }
+
+        public Task<List<EmbyMediaSource>> GetAllEmby()
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.EmbyMediaSources
+                .Include(p => p.Connections)
+                .ToListAsync();
+        }
+
+        public async Task<List<int>> DeleteAllEmby()
+        {
+            await using TvContext context = _dbContextFactory.CreateDbContext();
+
+            List<EmbyMediaSource> allMediaSources = await context.EmbyMediaSources.ToListAsync();
+            var mediaSourceIds = allMediaSources.Map(ms => ms.Id).ToList();
+            context.EmbyMediaSources.RemoveRange(allMediaSources);
+
+            List<EmbyLibrary> allEmbyLibraries = await context.EmbyLibraries
+                .Where(l => mediaSourceIds.Contains(l.MediaSourceId))
+                .ToListAsync();
+            var libraryIds = allEmbyLibraries.Map(l => l.Id).ToList();
+            context.EmbyLibraries.RemoveRange(allEmbyLibraries);
+
+            List<int> movieIds = await context.EmbyMovies
+                .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
+                .Map(pm => pm.Id)
+                .ToListAsync();
+
+            List<int> showIds = await context.EmbyShows
+                .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
+                .Map(ps => ps.Id)
+                .ToListAsync();
+
+            await context.SaveChangesAsync();
+
+            return movieIds.Append(showIds).ToList();
+        }
     }
 }

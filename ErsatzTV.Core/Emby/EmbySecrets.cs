@@ -1,8 +1,8 @@
-﻿namespace ErsatzTV.Core.Emby
+﻿using ErsatzTV.Core.MediaSources;
+
+namespace ErsatzTV.Core.Emby
 {
-    public class EmbySecrets
+    public class EmbySecrets : RemoteMediaSourceSecrets
     {
-        public string Address { get; set; }
-        public string ApiKey { get; set; }
     }
 }

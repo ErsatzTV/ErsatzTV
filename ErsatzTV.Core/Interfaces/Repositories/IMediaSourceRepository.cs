@@ -68,5 +68,8 @@ namespace ErsatzTV.Core.Interfaces.Repositories
             List<JellyfinPathReplacement> toDelete);
 
         Task<List<int>> DeleteAllJellyfin();
+
+        Task<List<EmbyMediaSource>> GetAllEmby();
+        Task<List<int>> DeleteAllEmby();
     }
 }

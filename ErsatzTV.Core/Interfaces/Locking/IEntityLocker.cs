@@ -6,14 +6,14 @@ namespace ErsatzTV.Core.Interfaces.Locking
     {
         event EventHandler OnLibraryChanged;
         event EventHandler OnPlexChanged;
-        event EventHandler OnJellyfinChanged;
+        event EventHandler<Type> OnRemoteMediaSourceChanged;
         bool LockLibrary(int libraryId);
         bool UnlockLibrary(int libraryId);
         bool IsLibraryLocked(int libraryId);
         bool LockPlex();
         bool UnlockPlex();
         bool IsPlexLocked();
-        bool LockJellyfin();
-        bool UnlockJellyfin();
+        bool LockRemoteMediaSource<TMediaSource>();
+        bool UnlockRemoteMediaSource<TMediaSource>();
     }
 }
