@@ -49,24 +49,24 @@ namespace ErsatzTV.Infrastructure.Emby
             }
         }
 
-        // public async Task<Either<BaseError, List<EmbyLibrary>>> GetLibraries(string address, string apiKey)
-        // {
-        //     try
-        //     {
-        //         IEmbyApi service = RestService.For<IEmbyApi>(address);
-        //         List<EmbyLibraryResponse> libraries = await service.GetLibraries(apiKey);
-        //         return libraries
-        //             .Map(Project)
-        //             .Somes()
-        //             .ToList();
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         _logger.LogError(ex, "Error getting emby libraries");
-        //         return BaseError.New(ex.Message);
-        //     }
-        // }
-        //
+        public async Task<Either<BaseError, List<EmbyLibrary>>> GetLibraries(string address, string apiKey)
+        {
+            try
+            {
+                IEmbyApi service = RestService.For<IEmbyApi>(address);
+                List<EmbyLibraryResponse> libraries = await service.GetLibraries(apiKey);
+                return libraries
+                    .Map(Project)
+                    .Somes()
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting emby libraries");
+                return BaseError.New(ex.Message);
+            }
+        }
+        
         // public async Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey)
         // {
         //     try
@@ -195,29 +195,29 @@ namespace ErsatzTV.Infrastructure.Emby
         //     }
         // }
         //
-        // private static Option<EmbyLibrary> Project(EmbyLibraryResponse response) =>
-        //     response.CollectionType?.ToLowerInvariant() switch
-        //     {
-        //         "tvshows" => new EmbyLibrary
-        //         {
-        //             ItemId = response.ItemId,
-        //             Name = response.Name,
-        //             MediaKind = LibraryMediaKind.Shows,
-        //             ShouldSyncItems = false,
-        //             Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } }
-        //         },
-        //         "movies" => new EmbyLibrary
-        //         {
-        //             ItemId = response.ItemId,
-        //             Name = response.Name,
-        //             MediaKind = LibraryMediaKind.Movies,
-        //             ShouldSyncItems = false,
-        //             Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } }
-        //         },
-        //         // TODO: ??? for music libraries
-        //         _ => None
-        //     };
-        //
+        private static Option<EmbyLibrary> Project(EmbyLibraryResponse response) =>
+            response.CollectionType?.ToLowerInvariant() switch
+            {
+                "tvshows" => new EmbyLibrary
+                {
+                    ItemId = response.ItemId,
+                    Name = response.Name,
+                    MediaKind = LibraryMediaKind.Shows,
+                    ShouldSyncItems = false,
+                    Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } }
+                },
+                "movies" => new EmbyLibrary
+                {
+                    ItemId = response.ItemId,
+                    Name = response.Name,
+                    MediaKind = LibraryMediaKind.Movies,
+                    ShouldSyncItems = false,
+                    Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } }
+                },
+                // TODO: ??? for music libraries
+                _ => None
+            };
+        
         // private Option<EmbyMovie> ProjectToMovie(EmbyLibraryItemResponse item)
         // {
         //     try

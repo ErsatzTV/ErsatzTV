@@ -18,11 +18,11 @@ namespace ErsatzTV.Infrastructure.Emby
         //     [Header("X-Emby-Token")]
         //     string apiKey);
         //
-        // [Get("/Library/VirtualFolders")]
-        // public Task<List<EmbyLibraryResponse>> GetLibraries(
-        //     [Header("X-Emby-Token")]
-        //     string apiKey);
-        //
+        [Get("/Library/VirtualFolders")]
+        public Task<List<EmbyLibraryResponse>> GetLibraries(
+            [Header("X-Emby-Token")]
+            string apiKey);
+        
         // [Get("/Items")]
         // public Task<EmbyLibraryItemsResponse> GetMovieLibraryItems(
         //     [Header("X-Emby-Token")]

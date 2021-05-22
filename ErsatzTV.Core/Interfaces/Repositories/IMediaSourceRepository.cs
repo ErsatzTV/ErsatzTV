@@ -36,6 +36,11 @@ namespace ErsatzTV.Core.Interfaces.Repositories
             int jellyfinMediaSourceId,
             List<JellyfinLibrary> toAdd,
             List<JellyfinLibrary> toDelete);
+        
+        Task<Unit> UpdateLibraries(
+            int embyMediaSourceId,
+            List<EmbyLibrary> toAdd,
+            List<EmbyLibrary> toDelete);
 
         Task<Unit> UpdatePathReplacements(
             int plexMediaSourceId,
@@ -71,6 +76,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 
         Task<Unit> UpsertEmby(string address, string serverName, string operatingSystem);
         Task<List<EmbyMediaSource>> GetAllEmby();
+        Task<Option<EmbyMediaSource>> GetEmby(int id);
         Task<List<int>> DeleteAllEmby();
     }
 }

@@ -260,6 +260,30 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return Unit.Default;
         }
 
+        public async Task<Unit> UpdateLibraries(int embyMediaSourceId, List<EmbyLibrary> toAdd, List<EmbyLibrary> toDelete)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            foreach (EmbyLibrary add in toAdd)
+            {
+                add.MediaSourceId = embyMediaSourceId;
+                dbContext.Entry(add).State = EntityState.Added;
+                foreach (LibraryPath path in add.Paths)
+                {
+                    dbContext.Entry(path).State = EntityState.Added;
+                }
+            }
+
+            foreach (EmbyLibrary delete in toDelete)
+            {
+                dbContext.Entry(delete).State = EntityState.Deleted;
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return Unit.Default;
+        }
+
         public async Task<Unit> UpdatePathReplacements(
             int plexMediaSourceId,
             List<PlexPathReplacement> toAdd,
@@ -740,6 +764,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return context.EmbyMediaSources
                 .Include(p => p.Connections)
                 .ToListAsync();
+        }
+
+        public Task<Option<EmbyMediaSource>> GetEmby(int id)
+        {
+            using TvContext context = _dbContextFactory.CreateDbContext();
+            return context.EmbyMediaSources
+                .Include(p => p.Connections)
+                .Include(p => p.Libraries)
+                .Include(p => p.PathReplacements)
+                .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
+                .SingleOrDefaultAsync(p => p.Id == id)
+                .Map(Optional);
         }
 
         public async Task<List<int>> DeleteAllEmby()

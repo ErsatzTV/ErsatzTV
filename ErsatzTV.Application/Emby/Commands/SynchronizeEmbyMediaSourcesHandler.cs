@@ -32,7 +32,7 @@ namespace ErsatzTV.Application.Emby.Commands
             foreach (EmbyMediaSource mediaSource in mediaSources)
             {
                 // await _channel.WriteAsync(new SynchronizeEmbyAdminUserId(mediaSource.Id), cancellationToken);
-                // await _channel.WriteAsync(new SynchronizeEmbyLibraries(mediaSource.Id), cancellationToken);
+                await _channel.WriteAsync(new SynchronizeEmbyLibraries(mediaSource.Id), cancellationToken);
             }
 
             return mediaSources;
