@@ -11,16 +11,16 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Dapper" Version="2.0.78" />
+      <PackageReference Include="Dapper" Version="2.0.90" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00013" />
       <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00013" />
       <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00013" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.4" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.4">
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.6" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.6">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.4" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.6" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.9.60">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

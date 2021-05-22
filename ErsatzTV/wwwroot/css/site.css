@@ -131,3 +131,5 @@
 .release-notes ul > li { margin-left: 30px; }
 
 .release-notes h3 { margin-top: 20px; }
+
+.mud-table-container { overflow-x: unset; }
