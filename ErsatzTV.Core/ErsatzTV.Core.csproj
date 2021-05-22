@@ -10,6 +10,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Flurl" Version="3.0.2" />
       <PackageReference Include="LanguageExt.Core" Version="3.4.15" />
       <PackageReference Include="MediatR" Version="9.0.0" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />

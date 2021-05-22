@@ -297,7 +297,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 var poster = new Artwork
                 {
                     ArtworkKind = ArtworkKind.Poster,
-                    Path = $"jellyfin:///Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                    Path = $"jellyfin://Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
                     DateAdded = dateAdded
                 };
                 metadata.Artwork.Add(poster);
@@ -308,7 +308,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 var fanArt = new Artwork
                 {
                     ArtworkKind = ArtworkKind.FanArt,
-                    Path = $"jellyfin:///Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
+                    Path = $"jellyfin://Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
                     DateAdded = dateAdded
                 };
                 metadata.Artwork.Add(fanArt);
@@ -324,7 +324,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             {
                 actor.Artwork = new Artwork
                 {
-                    Path = $"jellyfin:///Items/{person.Id}/Images/Primary?tag={person.PrimaryImageTag}",
+                    Path = $"jellyfin://Items/{person.Id}/Images/Primary?tag={person.PrimaryImageTag}",
                     ArtworkKind = ArtworkKind.Thumbnail,
                     DateAdded = dateAdded
                 };
@@ -396,7 +396,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 var poster = new Artwork
                 {
                     ArtworkKind = ArtworkKind.Poster,
-                    Path = $"jellyfin:///Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                    Path = $"jellyfin://Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
                     DateAdded = dateAdded
                 };
                 metadata.Artwork.Add(poster);
@@ -407,7 +407,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 var fanArt = new Artwork
                 {
                     ArtworkKind = ArtworkKind.FanArt,
-                    Path = $"jellyfin:///Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
+                    Path = $"jellyfin://Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
                     DateAdded = dateAdded
                 };
                 metadata.Artwork.Add(fanArt);
@@ -442,7 +442,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                     var poster = new Artwork
                     {
                         ArtworkKind = ArtworkKind.Poster,
-                        Path = $"jellyfin:///Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                        Path = $"jellyfin://Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
                         DateAdded = dateAdded
                     };
                     metadata.Artwork.Add(poster);
@@ -453,7 +453,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                     var fanArt = new Artwork
                     {
                         ArtworkKind = ArtworkKind.FanArt,
-                        Path = $"jellyfin:///Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
+                        Path = $"jellyfin://Items/{item.Id}/Images/Backdrop?tag={item.BackdropImageTags.Head()}",
                         DateAdded = dateAdded
                     };
                     metadata.Artwork.Add(fanArt);
@@ -557,7 +557,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 var thumbnail = new Artwork
                 {
                     ArtworkKind = ArtworkKind.Thumbnail,
-                    Path = $"jellyfin:///Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
+                    Path = $"jellyfin://Items/{item.Id}/Images/Primary?tag={item.ImageTags.Primary}",
                     DateAdded = dateAdded
                 };
                 metadata.Artwork.Add(thumbnail);

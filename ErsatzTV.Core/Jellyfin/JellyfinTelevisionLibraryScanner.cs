@@ -348,7 +348,7 @@ namespace ErsatzTV.Core.Jellyfin
                                 "UPDATE: Etag has changed for show {Show} season {Season} episode {Episode}",
                                 showName,
                                 seasonName,
-                                "EPISODE");
+                                incoming.EpisodeNumber);
 
                             updateStatistics = true;
                             incoming.SeasonId = season.Id;
@@ -377,7 +377,7 @@ namespace ErsatzTV.Core.Jellyfin
                                 "INSERT: Item id is new for show {Show} season {Season} episode {Episode}",
                                 showName,
                                 seasonName,
-                                "EPISODE");
+                                incoming.EpisodeNumber);
 
                             await _televisionRepository.AddEpisode(incoming);
                         }
