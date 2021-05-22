@@ -680,6 +680,60 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return movieIds.Append(showIds).ToList();
         }
 
+        public async Task<Unit> UpsertEmby(string address, string serverName, string operatingSystem)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<EmbyMediaSource> maybeExisting = dbContext.EmbyMediaSources
+                .Include(ms => ms.Connections)
+                .OrderBy(ms => ms.Id)
+                .HeadOrNone();
+
+            return await maybeExisting.Match(
+                async embyMediaSource =>
+                {
+                    if (!embyMediaSource.Connections.Any())
+                    {
+                        embyMediaSource.Connections.Add(new EmbyConnection { Address = address });
+                    }
+                    else if (embyMediaSource.Connections.Head().Address != address)
+                    {
+                        embyMediaSource.Connections.Head().Address = address;
+                    }
+
+                    if (embyMediaSource.ServerName != serverName)
+                    {
+                        embyMediaSource.ServerName = serverName;
+                    }
+
+                    if (embyMediaSource.OperatingSystem != operatingSystem)
+                    {
+                        embyMediaSource.OperatingSystem = operatingSystem;
+                    }
+
+                    await dbContext.SaveChangesAsync();
+
+                    return Unit.Default;
+                },
+                async () =>
+                {
+                    var mediaSource = new EmbyMediaSource
+                    {
+                        ServerName = serverName,
+                        OperatingSystem = operatingSystem,
+                        Connections = new List<EmbyConnection>
+                        {
+                            new() { Address = address }
+                        },
+                        PathReplacements = new List<EmbyPathReplacement>()
+                    };
+
+                    await dbContext.AddAsync(mediaSource);
+                    await dbContext.SaveChangesAsync();
+
+                    return Unit.Default;
+                });
+        }
+
         public Task<List<EmbyMediaSource>> GetAllEmby()
         {
             using TvContext context = _dbContextFactory.CreateDbContext();

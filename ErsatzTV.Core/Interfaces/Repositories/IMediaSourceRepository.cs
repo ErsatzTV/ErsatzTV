@@ -69,6 +69,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 
         Task<List<int>> DeleteAllJellyfin();
 
+        Task<Unit> UpsertEmby(string address, string serverName, string operatingSystem);
         Task<List<EmbyMediaSource>> GetAllEmby();
         Task<List<int>> DeleteAllEmby();
     }

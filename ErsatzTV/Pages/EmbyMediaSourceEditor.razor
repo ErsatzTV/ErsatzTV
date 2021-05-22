@@ -1,15 +1,15 @@
-﻿@page "/media/jellyfin/edit"
+﻿@page "/media/emby/edit"
 @using Unit = LanguageExt.Unit
-@using ErsatzTV.Core.Jellyfin
-@using ErsatzTV.Application.Jellyfin.Queries
-@using ErsatzTV.Application.Jellyfin.Commands
+@using ErsatzTV.Core.Emby
+@using ErsatzTV.Application.Emby.Queries
+@using ErsatzTV.Application.Emby.Commands
 @inject IMediator _mediator
 @inject NavigationManager _navigationManager
 @inject ISnackbar _snackbar
-@inject ILogger<JellyfinMediaSourceEditor> _logger
+@inject ILogger<EmbyMediaSourceEditor> _logger
 
 <RemoteMediaSourceEditor
-    Name="Jellyfin"
+    Name="Emby"
     LoadSecrets="LoadSecrets"
     SaveSecrets="SaveSecrets"/>
 
@@ -17,7 +17,7 @@
 
     private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
-        JellyfinSecrets secrets = await _mediator.Send(new GetJellyfinSecrets());
+        EmbySecrets secrets = await _mediator.Send(new GetEmbySecrets());
         viewModel.Address = secrets.Address;
         viewModel.ApiKey = secrets.ApiKey;
         return Unit.Default;
@@ -25,8 +25,8 @@
 
     private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
-        var secrets = new JellyfinSecrets { Address = viewModel.Address, ApiKey = viewModel.ApiKey };
-        return await _mediator.Send(new SaveJellyfinSecrets(secrets));
+        var secrets = new EmbySecrets { Address = viewModel.Address, ApiKey = viewModel.ApiKey };
+        return await _mediator.Send(new SaveEmbySecrets(secrets));
     }
 
 }
