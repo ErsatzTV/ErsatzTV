@@ -656,13 +656,24 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await using TvContext context = _dbContextFactory.CreateDbContext();
 
             List<JellyfinMediaSource> allMediaSources = await context.JellyfinMediaSources.ToListAsync();
+            var mediaSourceIds = allMediaSources.Map(ms => ms.Id).ToList();
             context.JellyfinMediaSources.RemoveRange(allMediaSources);
 
-            List<JellyfinLibrary> allJellyfinLibraries = await context.JellyfinLibraries.ToListAsync();
+            List<JellyfinLibrary> allJellyfinLibraries = await context.JellyfinLibraries
+                .Where(l => mediaSourceIds.Contains(l.MediaSourceId))
+                .ToListAsync();
+            var libraryIds = allJellyfinLibraries.Map(l => l.Id).ToList();
             context.JellyfinLibraries.RemoveRange(allJellyfinLibraries);
 
-            List<int> movieIds = await context.JellyfinMovies.Map(pm => pm.Id).ToListAsync();
-            List<int> showIds = await context.JellyfinShows.Map(ps => ps.Id).ToListAsync();
+            List<int> movieIds = await context.JellyfinMovies
+                .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
+                .Map(pm => pm.Id)
+                .ToListAsync();
+
+            List<int> showIds = await context.JellyfinShows
+                .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
+                .Map(ps => ps.Id)
+                .ToListAsync();
 
             await context.SaveChangesAsync();
 
