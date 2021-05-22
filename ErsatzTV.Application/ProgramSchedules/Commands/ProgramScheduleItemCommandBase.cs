@@ -132,11 +132,14 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MediaItemId = item.MediaItemId,
-                    PlayoutDuration = item.PlayoutDuration.GetValueOrDefault(),
+                    PlayoutDuration = FixDuration(item.PlayoutDuration.GetValueOrDefault()),
                     OfflineTail = item.OfflineTail.GetValueOrDefault(),
                     CustomTitle = item.CustomTitle
                 },
                 _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
             };
+
+        private static TimeSpan FixDuration(TimeSpan duration) =>
+            duration > TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
     }
 }
