@@ -36,7 +36,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
             int jellyfinMediaSourceId,
             List<JellyfinLibrary> toAdd,
             List<JellyfinLibrary> toDelete);
-        
+
         Task<Unit> UpdateLibraries(
             int embyMediaSourceId,
             List<EmbyLibrary> toAdd,
@@ -82,11 +82,13 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<EmbyLibrary>> GetEmbyLibraries(int embyMediaSourceId);
         Task<List<EmbyPathReplacement>> GetEmbyPathReplacements(int embyMediaSourceId);
         Task<List<EmbyPathReplacement>> GetEmbyPathReplacementsByLibraryId(int embyLibraryPathId);
+
         Task<Unit> UpdatePathReplacements(
             int embyMediaSourceId,
             List<EmbyPathReplacement> toAdd,
             List<EmbyPathReplacement> toUpdate,
             List<EmbyPathReplacement> toDelete);
+
         Task<List<int>> DeleteAllEmby();
         Task<Unit> EnableEmbyLibrarySync(IEnumerable<int> libraryIds);
         Task<List<int>> DisableEmbyLibrarySync(List<int> libraryIds);

@@ -1,7 +1,4 @@
-﻿@using ErsatzTV.Core.Jellyfin
-@using ErsatzTV.Application.Jellyfin.Queries
-@using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Jellyfin.Commands
+﻿@using Unit = LanguageExt.Unit
 @inject IMediator _mediator
 @inject NavigationManager _navigationManager
 @inject ISnackbar _snackbar
@@ -28,6 +25,7 @@
 </MudContainer>
 
 @code {
+
     [Parameter]
     public string Name { get; set; }
 
@@ -41,13 +39,7 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
-    protected override async Task OnParametersSetAsync()
-    {
-        await LoadSecrets(_model);
-        // JellyfinSecrets secrets = await _mediator.Send(new GetJellyfinSecrets());
-        // _model.Address = secrets.Address;
-        // _model.ApiKey = secrets.ApiKey;
-    }
+    protected override async Task OnParametersSetAsync() => await LoadSecrets(_model);
 
     protected override void OnInitialized()
     {
@@ -60,8 +52,6 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            // var secrets = new JellyfinSecrets { Address = _model.Address, ApiKey = _model.ApiKey };
-            // return await _mediator.Send(new SaveJellyfinSecrets(secrets));
             Either<BaseError, Unit> result = await SaveSecrets(_model);
             result.Match(
                 _ => _navigationManager.NavigateTo($"/media/{Name.ToLowerInvariant()}"),

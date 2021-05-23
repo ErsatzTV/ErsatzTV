@@ -75,13 +75,13 @@
 
     [Parameter]
     public string Name { get; set; }
-    
+
     [Parameter]
     public Func<int, Task<Option<RemoteMediaSourceViewModel>>> GetMediaSourceById { get; set; }
 
     [Parameter]
     public Func<int, Task<List<RemoteMediaSourcePathReplacementEditViewModel>>> GetPathReplacementsBySourceId { get; set; }
-    
+
     [Parameter]
     public Func<List<RemoteMediaSourcePathReplacementEditViewModel>, IRequest<Either<BaseError, Unit>>> GetUpdatePathReplacementsRequest { get; set; }
 

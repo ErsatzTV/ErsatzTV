@@ -2,9 +2,9 @@
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Emby;
 using LanguageExt;
 
 namespace ErsatzTV.Application.Emby.Commands

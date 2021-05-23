@@ -1,8 +1,8 @@
 ﻿@page "/media/sources/plex/{Id:int}/paths"
+@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
 @using ErsatzTV.Application.Plex.Commands
 @using ErsatzTV.Application.Plex.Queries
-@using ErsatzTV.Application.MediaSources
 @using Unit = LanguageExt.Unit
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger
@@ -28,7 +28,7 @@
     private Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId) =>
         _mediator.Send(new GetPlexPathReplacementsBySourceId(Id))
             .Map(list => list.Map(ProjectToEditViewModel).ToList());
-    
+
     private RemoteMediaSourcePathReplacementEditViewModel ProjectToEditViewModel(PlexPathReplacementViewModel item) =>
         new() { Id = item.Id, RemotePath = item.PlexPath, LocalPath = item.LocalPath };
 

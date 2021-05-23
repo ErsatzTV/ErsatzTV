@@ -47,7 +47,7 @@ namespace ErsatzTV.Services
 
             // synchronize sources on startup
             await SynchronizeSources(new SynchronizeEmbyMediaSources(), cancellationToken);
-            
+
             await foreach (IEmbyBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
             {
                 try
@@ -70,7 +70,7 @@ namespace ErsatzTV.Services
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
                     }
-            
+
                     await requestTask;
                 }
                 catch (Exception ex)
@@ -86,7 +86,7 @@ namespace ErsatzTV.Services
         {
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-        
+
             Either<BaseError, List<EmbyMediaSource>> result = await mediator.Send(request, cancellationToken);
             result.Match(
                 sources =>
@@ -103,14 +103,14 @@ namespace ErsatzTV.Services
                         error.Value);
                 });
         }
-        
+
         private async Task SynchronizeLibraries(
             SynchronizeEmbyLibraries request,
             CancellationToken cancellationToken)
         {
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-        
+
             Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
             result.BiIter(
                 _ => _logger.LogInformation(
@@ -121,7 +121,7 @@ namespace ErsatzTV.Services
                     request.EmbyMediaSourceId,
                     error.Value));
         }
-        
+
         // private async Task SynchronizeAdminUserId(
         //     SynchronizeEmbyAdminUserId request,
         //     CancellationToken cancellationToken)
@@ -139,14 +139,14 @@ namespace ErsatzTV.Services
         //             request.EmbyMediaSourceId,
         //             error.Value));
         // }
-        
+
         private async Task SynchronizeEmbyLibrary(
             ISynchronizeEmbyLibraryById request,
             CancellationToken cancellationToken)
         {
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-        
+
             Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
             result.BiIter(
                 name => _logger.LogDebug("Done synchronizing emby library {Name}", name),

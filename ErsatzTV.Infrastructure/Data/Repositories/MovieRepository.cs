@@ -449,7 +449,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return maybeExisting;
         }
-        
+
         public Task<List<EmbyItemEtag>> GetExistingEmbyMovies(EmbyLibrary library) =>
             _dbConnection.QueryAsync<EmbyItemEtag>(
                     @"SELECT ItemId, Etag FROM EmbyMovie

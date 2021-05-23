@@ -260,7 +260,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return Unit.Default;
         }
 
-        public async Task<Unit> UpdateLibraries(int embyMediaSourceId, List<EmbyLibrary> toAdd, List<EmbyLibrary> toDelete)
+        public async Task<Unit> UpdateLibraries(
+            int embyMediaSourceId,
+            List<EmbyLibrary> toAdd,
+            List<EmbyLibrary> toDelete)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
@@ -794,6 +797,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .SingleOrDefaultAsync(p => p.Id == id)
                 .Map(Optional);
         }
+
         public Task<Option<EmbyLibrary>> GetEmbyLibrary(int embyLibraryId)
         {
             using TvContext context = _dbContextFactory.CreateDbContext();

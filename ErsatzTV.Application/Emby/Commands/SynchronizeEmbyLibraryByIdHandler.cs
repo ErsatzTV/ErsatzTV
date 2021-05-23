@@ -4,10 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Emby;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -21,11 +21,11 @@ namespace ErsatzTV.Application.Emby.Commands
         IRequestHandler<SynchronizeEmbyLibraryByIdIfNeeded, Either<BaseError, string>>
     {
         private readonly IConfigElementRepository _configElementRepository;
-        private readonly IEntityLocker _entityLocker;
         private readonly IEmbyMovieLibraryScanner _embyMovieLibraryScanner;
 
         private readonly IEmbySecretStore _embySecretStore;
         private readonly IEmbyTelevisionLibraryScanner _embyTelevisionLibraryScanner;
+        private readonly IEntityLocker _entityLocker;
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILogger<SynchronizeEmbyLibraryByIdHandler> _logger;
 
