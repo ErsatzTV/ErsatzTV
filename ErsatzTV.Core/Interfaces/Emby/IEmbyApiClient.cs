@@ -10,30 +10,29 @@ namespace ErsatzTV.Core.Interfaces.Emby
     {
         Task<Either<BaseError, EmbyServerInformation>> GetServerInformation(string address, string apiKey);
         Task<Either<BaseError, List<EmbyLibrary>>> GetLibraries(string address, string apiKey);
-        // Task<Either<BaseError, string>> GetAdminUserId(string address, string apiKey);
-        //
+
         Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
             string address,
             string apiKey,
             int mediaSourceId,
             string libraryId);
-        
-        // Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
-        //     string address,
-        //     string apiKey,
-        //     int mediaSourceId,
-        //     string libraryId);
-        //
-        // Task<Either<BaseError, List<EmbySeason>>> GetSeasonLibraryItems(
-        //     string address,
-        //     string apiKey,
-        //     int mediaSourceId,
-        //     string showId);
-        //
-        // Task<Either<BaseError, List<EmbyEpisode>>> GetEpisodeLibraryItems(
-        //     string address,
-        //     string apiKey,
-        //     int mediaSourceId,
-        //     string seasonId);
+
+        Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string libraryId);
+
+        Task<Either<BaseError, List<EmbySeason>>> GetSeasonLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string showId);
+
+        Task<Either<BaseError, List<EmbyEpisode>>> GetEpisodeLibraryItems(
+            string address,
+            string apiKey,
+            int mediaSourceId,
+            string seasonId);
     }
 }

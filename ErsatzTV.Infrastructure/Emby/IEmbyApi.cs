@@ -13,11 +13,6 @@ namespace ErsatzTV.Infrastructure.Emby
             [Header("X-Emby-Token")]
             string apiKey);
 
-        // [Get("/Users")]
-        // public Task<List<EmbyUserResponse>> GetUsers(
-        //     [Header("X-Emby-Token")]
-        //     string apiKey);
-        //
         [Get("/Library/VirtualFolders")]
         public Task<List<EmbyLibraryResponse>> GetLibraries(
             [Header("X-Emby-Token")]
@@ -34,43 +29,37 @@ namespace ErsatzTV.Infrastructure.Emby
             [Query]
             string includeItemTypes = "Movie");
         
-        // [Get("/Items")]
-        // public Task<EmbyLibraryItemsResponse> GetShowLibraryItems(
-        //     [Header("X-Emby-Token")]
-        //     string apiKey,
-        //     [Query]
-        //     string userId,
-        //     [Query]
-        //     string parentId,
-        //     [Query]
-        //     string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People",
-        //     [Query]
-        //     string includeItemTypes = "Series");
-        //
-        // [Get("/Items")]
-        // public Task<EmbyLibraryItemsResponse> GetSeasonLibraryItems(
-        //     [Header("X-Emby-Token")]
-        //     string apiKey,
-        //     [Query]
-        //     string userId,
-        //     [Query]
-        //     string parentId,
-        //     [Query]
-        //     string fields = "Path,DateCreated,Etag,Taglines",
-        //     [Query]
-        //     string includeItemTypes = "Season");
-        //
-        // [Get("/Items")]
-        // public Task<EmbyLibraryItemsResponse> GetEpisodeLibraryItems(
-        //     [Header("X-Emby-Token")]
-        //     string apiKey,
-        //     [Query]
-        //     string userId,
-        //     [Query]
-        //     string parentId,
-        //     [Query]
-        //     string fields = "Path,DateCreated,Etag,Overview",
-        //     [Query]
-        //     string includeItemTypes = "Episode");
+        [Get("/Items")]
+        public Task<EmbyLibraryItemsResponse> GetShowLibraryItems(
+            [Header("X-Emby-Token")]
+            string apiKey,
+            [Query]
+            string parentId,
+            [Query]
+            string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources",
+            [Query]
+            string includeItemTypes = "Series");
+        
+        [Get("/Items")]
+        public Task<EmbyLibraryItemsResponse> GetSeasonLibraryItems(
+            [Header("X-Emby-Token")]
+            string apiKey,
+            [Query]
+            string parentId,
+            [Query]
+            string fields = "Path,DateCreated,Etag,Taglines",
+            [Query]
+            string includeItemTypes = "Season");
+        
+        [Get("/Items")]
+        public Task<EmbyLibraryItemsResponse> GetEpisodeLibraryItems(
+            [Header("X-Emby-Token")]
+            string apiKey,
+            [Query]
+            string parentId,
+            [Query]
+            string fields = "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType",
+            [Query]
+            string includeItemTypes = "Episode");
     }
 }

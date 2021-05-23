@@ -1,0 +1,26 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
+using LanguageExt;
+
+namespace ErsatzTV.Core.Interfaces.Repositories
+{
+    public interface IEmbyTelevisionRepository
+    {
+        Task<List<EmbyItemEtag>> GetExistingShows(EmbyLibrary library);
+        Task<List<EmbyItemEtag>> GetExistingSeasons(EmbyLibrary library, string showItemId);
+        Task<List<EmbyItemEtag>> GetExistingEpisodes(EmbyLibrary library, string seasonItemId);
+        Task<bool> AddShow(EmbyShow show);
+        Task<Option<EmbyShow>> Update(EmbyShow show);
+        Task<bool> AddSeason(EmbySeason season);
+        Task<Unit> Update(EmbySeason season);
+        Task<bool> AddEpisode(EmbyEpisode episode);
+        Task<Unit> Update(EmbyEpisode episode);
+        Task<List<int>> RemoveMissingShows(EmbyLibrary library, List<string> showIds);
+        Task<Unit> RemoveMissingSeasons(EmbyLibrary library, List<string> seasonIds);
+        Task<Unit> RemoveMissingEpisodes(EmbyLibrary library, List<string> episodeIds);
+        Task<Unit> DeleteEmptySeasons(EmbyLibrary library);
+        Task<List<int>> DeleteEmptyShows(EmbyLibrary library);
+    }
+}
