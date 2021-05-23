@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Infrastructure.Emby.Models;
 using Refit;
@@ -11,7 +12,8 @@ namespace ErsatzTV.Infrastructure.Emby
         [Get("/System/Info")]
         public Task<EmbySystemInformationResponse> GetSystemInformation(
             [Header("X-Emby-Token")]
-            string apiKey);
+            string apiKey,
+            CancellationToken cancellationToken);
 
         [Get("/Library/VirtualFolders")]
         public Task<List<EmbyLibraryResponse>> GetLibraries(

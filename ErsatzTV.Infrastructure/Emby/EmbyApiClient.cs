@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -33,8 +34,15 @@ namespace ErsatzTV.Infrastructure.Emby
             try
             {
                 IEmbyApi service = RestService.For<IEmbyApi>(address);
-                return await service.GetSystemInformation(apiKey)
+                var cts = new CancellationTokenSource();
+                cts.CancelAfter(TimeSpan.FromSeconds(5));
+                return await service.GetSystemInformation(apiKey, cts.Token)
                     .Map(response => new EmbyServerInformation(response.ServerName, response.OperatingSystem));
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogError(ex, "Timeout getting emby server name");
+                return BaseError.New("Emby did not respond in time");
             }
             catch (Exception ex)
             {
