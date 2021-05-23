@@ -90,7 +90,11 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithRealtimeOutput(bool realtimeOutput)
         {
-            _complexFilterBuilder = _complexFilterBuilder.WithRealtime(realtimeOutput);
+            if (realtimeOutput)
+            {
+                _arguments.Add("-re");
+            }
+
             return this;
         }
 
@@ -389,7 +393,7 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 FileName = _ffmpegPath,
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
+                RedirectStandardError = false,
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 StandardOutputEncoding = Encoding.UTF8
