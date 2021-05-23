@@ -11,7 +11,7 @@
             <FluentValidator/>
             <MudCard>
                 <MudCardContent>
-                    <MudTextField Label="Address" @bind-Value="_model.Address" For="@(() => _model.Address)"/>
+                    <MudTextField Label="Address" @bind-Value="_model.Address" For="@(() => _model.Address)" Placeholder="http://192.168.1.100:8096"/>
                     <MudTextField Label="Api Key" @bind-Value="_model.ApiKey" For="@(() => _model.ApiKey)"/>
                 </MudCardContent>
                 <MudCardActions>
