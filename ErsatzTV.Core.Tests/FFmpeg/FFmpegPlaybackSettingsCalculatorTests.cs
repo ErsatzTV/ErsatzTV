@@ -107,7 +107,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            public void ShouldNot_SetRealtime_ForHttpLiveStreaming()
+            public void Should_SetRealtime_ForHttpLiveStreaming()
             {
                 FFmpegProfile ffmpegProfile = TestProfile();
 
@@ -120,7 +120,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     DateTimeOffset.Now,
                     DateTimeOffset.Now);
 
-                actual.RealtimeOutput.Should().BeFalse();
+                actual.RealtimeOutput.Should().BeTrue();
             }
 
             [Test]
