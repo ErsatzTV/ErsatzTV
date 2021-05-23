@@ -9,13 +9,13 @@
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using Unit = LanguageExt.Unit
-@inject IMediator Mediator
-@inject ILogger<TelevisionEpisodeList> Logger
-@inject ISnackbar Snackbar
-@inject IDialogService Dialog
-@inject NavigationManager NavigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> Channel
-@inject IJSRuntime JsRuntime
+@inject IMediator _mediator
+@inject ILogger<TelevisionEpisodeList> _logger
+@inject ISnackbar _snackbar
+@inject IDialogService _dialog
+@inject NavigationManager _navigationManager
+@inject ChannelWriter<IBackgroundServiceRequest> _channel
+@inject IJSRuntime _jsRuntime
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
@@ -126,7 +126,7 @@
     {
         if (firstRender)
         {
-            await NavigationManager.NavigateToFragmentAsync(JsRuntime);
+            await _navigationManager.NavigateToFragmentAsync(_jsRuntime);
         }
     }
 
@@ -134,10 +134,10 @@
 
     private async Task RefreshData()
     {
-        await Mediator.Send(new GetTelevisionSeasonById(SeasonId))
+        await _mediator.Send(new GetTelevisionSeasonById(SeasonId))
             .IfSomeAsync(vm => _season = vm);
 
-        _data = await Mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize));
+        _data = await _mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize));
     }
 
     private async Task AddToCollection()
@@ -145,12 +145,12 @@
         var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Name}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        IDialogReference dialog = _dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await Mediator.Send(new AddSeasonToCollection(collection.Id, SeasonId));
-            NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
+            await _mediator.Send(new AddSeasonToCollection(collection.Id, SeasonId));
+            _navigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }
 
@@ -160,12 +160,12 @@
         var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", $"{_season.Title} - {_season.Name}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<AddToScheduleDialog>("Add To Schedule", parameters, options);
+        IDialogReference dialog = _dialog.Show<AddToScheduleDialog>("Add To Schedule", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await Mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, SeasonId, null, null, null, null));
-            NavigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
+            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, SeasonId, null, null, null, null));
+            _navigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }
 
@@ -174,19 +174,19 @@
         var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        IDialogReference dialog = _dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
             var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
-            Either<BaseError, Unit> addResult = await Mediator.Send(request);
+            Either<BaseError, Unit> addResult = await _mediator.Send(request);
             addResult.Match(
                 Left: error =>
                 {
-                    Snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
-                    Logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
+                    _snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
+                    _logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
                 },
-                Right: _ => Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
+                Right: _ => _snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
         }
     }
 

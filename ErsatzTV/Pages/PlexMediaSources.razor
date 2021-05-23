@@ -4,13 +4,13 @@
 @using ErsatzTV.Application.Plex.Commands
 @using ErsatzTV.Application.Plex.Queries
 @implements IDisposable
-@inject IDialogService Dialog
-@inject IMediator Mediator
-@inject IEntityLocker Locker
-@inject ISnackbar Snackbar
-@inject ILogger<PlexMediaSources> Logger
-@inject IJSRuntime JsRuntime
-@inject IPlexSecretStore PlexSecretStore
+@inject IDialogService _dialog
+@inject IMediator _mediator
+@inject IEntityLocker _locker
+@inject ISnackbar _snackbar
+@inject ILogger<PlexMediaSources> _logger
+@inject IJSRuntime _jsRuntime
+@inject IPlexSecretStore _plexSecretStore
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Dense="true" Items="_mediaSources">
@@ -51,7 +51,7 @@
         <MudButton Variant="Variant.Filled"
                    Color="Color.Error"
                    OnClick="@(_ => SignOutOfPlex())"
-                   Disabled="@Locker.IsPlexLocked()"
+                   Disabled="@_locker.IsPlexLocked()"
                    Class="mt-4">
             Sign out of plex
         </MudButton>
@@ -61,7 +61,7 @@
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
                    OnClick="@(_ => AddPlexMediaSource())"
-                   Disabled="@Locker.IsPlexLocked()"
+                   Disabled="@_locker.IsPlexLocked()"
                    Class="mt-4">
             Sign in to plex
         </MudButton>
@@ -72,7 +72,7 @@
         <MudButton Variant="Variant.Filled"
                    Color="Color.Secondary"
                    OnClick="@(_ => AddPlexMediaSource())"
-                   Disabled="@Locker.IsPlexLocked()"
+                   Disabled="@_locker.IsPlexLocked()"
                    Class="ml-4 mt-4">
             Fix Plex Credentials
         </MudButton>
@@ -88,24 +88,24 @@
     protected override async Task OnParametersSetAsync() => await LoadMediaSources();
 
     protected override void OnInitialized() =>
-        Locker.OnPlexChanged += PlexChanged;
+        _locker.OnPlexChanged += PlexChanged;
 
     private async Task LoadMediaSources()
     {
-        _isAuthorized = await PlexSecretStore.GetUserAuthTokens().Map(list => Prelude.Optional(list).Flatten().Any());
-        _mediaSources = await Mediator.Send(new GetAllPlexMediaSources());
+        _isAuthorized = await _plexSecretStore.GetUserAuthTokens().Map(list => Prelude.Optional(list).Flatten().Any());
+        _mediaSources = await _mediator.Send(new GetAllPlexMediaSources());
     }
 
     private async Task SignOutOfPlex()
     {
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
-        IDialogReference dialog = Dialog.Show<SignOutOfPlexDialog>("Sign out of Plex", options);
+        IDialogReference dialog = _dialog.Show<SignOutOfPlexDialog>("Sign out of Plex", options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            if (Locker.LockPlex())
+            if (_locker.LockPlex())
             {
-                await Mediator.Send(new SignOutOfPlex());
+                await _mediator.Send(new SignOutOfPlex());
                 await LoadMediaSources();
             }
         }
@@ -113,16 +113,16 @@
 
     private async Task AddPlexMediaSource()
     {
-        if (Locker.LockPlex())
+        if (_locker.LockPlex())
         {
-            Either<BaseError, string> maybeUrl = await Mediator.Send(new StartPlexPinFlow());
+            Either<BaseError, string> maybeUrl = await _mediator.Send(new StartPlexPinFlow());
             await maybeUrl.Match(
-                async url => await JsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" }),
+                async url => await _jsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" }),
                 error =>
                 {
-                    Locker.UnlockPlex();
-                    Snackbar.Add(error.Value, Severity.Error);
-                    Logger.LogError("Unexpected error generating plex auth app url: {Error}", error.Value);
+                    _locker.UnlockPlex();
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Unexpected error generating plex auth app url: {Error}", error.Value);
                     return Task.CompletedTask;
                 });
         }
@@ -134,6 +134,6 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    void IDisposable.Dispose() => Locker.OnPlexChanged -= PlexChanged;
+    void IDisposable.Dispose() => _locker.OnPlexChanged -= PlexChanged;
 
 }

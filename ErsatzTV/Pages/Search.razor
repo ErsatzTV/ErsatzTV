@@ -8,8 +8,8 @@
 @using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<Search>
-@inject NavigationManager NavigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject NavigationManager _navigationManager
+@inject ChannelWriter<IBackgroundServiceRequest> _channel
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
@@ -37,22 +37,22 @@
             <MudText Style="margin-bottom: auto; margin-top: auto">@_query</MudText>
             if (_movies.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
             }
 
             if (_shows.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
             }
 
             if (_artists.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
             }
 
             if (_musicVideos.Count > 0)
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
             }
             <div style="margin-left: auto">
                 <MudButton Variant="Variant.Filled"
@@ -186,7 +186,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        string query = new Uri(NavigationManager.Uri).Query;
+        string query = new Uri(_navigationManager.Uri).Query;
 
         if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
         {

@@ -9,8 +9,8 @@
 @using ErsatzTV.Application.Search.Queries
 @using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<MovieList>
-@inject NavigationManager NavigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject NavigationManager _navigationManager
+@inject ChannelWriter<IBackgroundServiceRequest> _channel
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
@@ -89,7 +89,7 @@
             PageNumber = 1;
         }
 
-        string query = new Uri(NavigationManager.Uri).Query;
+        string query = new Uri(_navigationManager.Uri).Query;
         if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
         {
             _query = value;
@@ -115,7 +115,7 @@
         {
             uri = QueryHelpers.AddQueryString(uri, "query", _query);
         }
-        NavigationManager.NavigateTo(uri);
+        _navigationManager.NavigateTo(uri);
     }
 
     private void NextPage()
@@ -125,7 +125,7 @@
         {
             uri = QueryHelpers.AddQueryString(uri, "query", _query);
         }
-        NavigationManager.NavigateTo(uri);
+        _navigationManager.NavigateTo(uri);
     }
 
     private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)

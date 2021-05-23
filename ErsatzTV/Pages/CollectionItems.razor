@@ -3,9 +3,9 @@
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections.Commands
 @inherits MultiSelectBase<CollectionItems>
-@inject NavigationManager NavigationManager
-@inject ChannelWriter<IBackgroundServiceRequest> Channel
-@inject IJSRuntime JsRuntime
+@inject NavigationManager _navigationManager
+@inject ChannelWriter<IBackgroundServiceRequest> _channel
+@inject IJSRuntime _jsRuntime
 
 <MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
     <div style="align-items: center; display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%;" class="ml-6 mr-6">
@@ -38,27 +38,27 @@
             </div>
             @if (_data.MovieCards.Any())
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#movies")">@_data.MovieCards.Count Movies</MudLink>
             }
             @if (_data.ShowCards.Any())
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#shows")">@_data.ShowCards.Count Shows</MudLink>
             }
             @if (_data.SeasonCards.Any())
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#seasons")">@_data.SeasonCards.Count Seasons</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#seasons")">@_data.SeasonCards.Count Seasons</MudLink>
             }
             @if (_data.EpisodeCards.Any())
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#episodes")">@_data.EpisodeCards.Count Episodes</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#episodes")">@_data.EpisodeCards.Count Episodes</MudLink>
             }
             @if (_data.ArtistCards.Any())
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#artists")">@_data.ArtistCards.Count Artists</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#artists")">@_data.ArtistCards.Count Artists</MudLink>
             }
             @if (_data.MusicVideoCards.Any())
             {
-                <MudLink Class="ml-4" Href="@(NavigationManager.Uri.Split("#").Head() + "#music_videos")">@_data.MusicVideoCards.Count Music Videos</MudLink>
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")">@_data.MusicVideoCards.Count Music Videos</MudLink>
             }
             @if (SupportsCustomOrdering())
             {
@@ -242,7 +242,7 @@
 
         maybeResult.Match(
             result => _data = result,
-            error => NavigationManager.NavigateTo("404"));
+            error => _navigationManager.NavigateTo("404"));
     }
 
     private IOrderedEnumerable<MovieCardViewModel> OrderMovies(List<MovieCardViewModel> movies)
@@ -257,14 +257,14 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await JsRuntime.InvokeVoidAsync("sortableCollection", Id);
+        await _jsRuntime.InvokeVoidAsync("sortableCollection", Id);
         if (_data.UseCustomPlaybackOrder)
         {
-            await JsRuntime.InvokeVoidAsync("enableSorting");
+            await _jsRuntime.InvokeVoidAsync("enableSorting");
         }
         else
         {
-            await JsRuntime.InvokeVoidAsync("disableSorting");
+            await _jsRuntime.InvokeVoidAsync("disableSorting");
         }
         await base.OnAfterRenderAsync(firstRender);
     }

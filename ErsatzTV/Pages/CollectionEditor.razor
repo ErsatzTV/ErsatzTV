@@ -3,10 +3,10 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
-@inject NavigationManager NavigationManager
-@inject ILogger<CollectionEditor> Logger
-@inject ISnackbar Snackbar
-@inject IMediator Mediator
+@inject NavigationManager _navigationManager
+@inject ILogger<CollectionEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
@@ -41,7 +41,7 @@
     {
         if (IsEdit)
         {
-            Option<MediaCollectionViewModel> maybeCollection = await Mediator.Send(new GetCollectionById(Id));
+            Option<MediaCollectionViewModel> maybeCollection = await _mediator.Send(new GetCollectionById(Id));
             maybeCollection.IfSome(collection =>
             {
                 _model.Id = collection.Id;
@@ -68,16 +68,16 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await Mediator.Send(new UpdateCollection(Id, _model.Name))).LeftToSeq() :
-                (await Mediator.Send(new CreateCollection(_model.Name))).LeftToSeq();
+                (await _mediator.Send(new UpdateCollection(Id, _model.Name))).LeftToSeq() :
+                (await _mediator.Send(new CreateCollection(_model.Name))).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    Snackbar.Add(error.Value, Severity.Error);
-                    Logger.LogError("Error saving collection: {Error}", error.Value);
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Error saving collection: {Error}", error.Value);
                 },
-                () => NavigationManager.NavigateTo(_model.Id > 0 ? $"/media/collections/{_model.Id}" : "/media/collections"));
+                () => _navigationManager.NavigateTo(_model.Id > 0 ? $"/media/collections/{_model.Id}" : "/media/collections"));
         }
     }
 

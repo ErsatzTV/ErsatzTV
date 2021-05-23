@@ -1,7 +1,7 @@
 ﻿@using static LanguageExt.Prelude
 @using ErsatzTV.Application.MediaCards
 @using Unit = LanguageExt.Unit
-@inject IMediator Mediator
+@inject IMediator _mediator
 
 <div class="@((ContainerClass ?? "media-card-container mr-6") + " pb-3")" id="@($"item_{Data.MediaItemId}")">
     @if (SelectClicked.HasDelegate || !string.IsNullOrWhiteSpace(Link))

@@ -2,10 +2,10 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
-@inject IMediator Mediator
-@inject IMemoryCache MemoryCache
-@inject ISnackbar Snackbar
-@inject ILogger<AddToCollectionDialog> Logger
+@inject IMediator _mediator
+@inject IMemoryCache _memoryCache
+@inject ISnackbar _snackbar
+@inject ILogger<AddToCollectionDialog> _logger
 
 <MudDialog>
     <DialogContent>
@@ -71,10 +71,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _collections = await Mediator.Send(new GetAllCollections())
+        _collections = await _mediator.Send(new GetAllCollections())
             .Map(list => new[] { _newCollection }.Append(list).ToList());
 
-        if (MemoryCache.TryGetValue("AddToCollectionDialog.SelectedCollectionId", out int id))
+        if (_memoryCache.TryGetValue("AddToCollectionDialog.SelectedCollectionId", out int id))
         {
             _selectedCollection = _collections.SingleOrDefault(c => c.Id == id) ?? _newCollection;
         }
@@ -96,24 +96,24 @@
         if (_selectedCollection == _newCollection)
         {
             Either<BaseError, MediaCollectionViewModel> maybeResult =
-                await Mediator.Send(new CreateCollection(_newCollectionName));
+                await _mediator.Send(new CreateCollection(_newCollectionName));
 
             maybeResult.Match(
                 collection =>
                 {
-                    MemoryCache.Set("AddToCollectionDialog.SelectedCollectionId", collection.Id);
+                    _memoryCache.Set("AddToCollectionDialog.SelectedCollectionId", collection.Id);
                     MudDialog.Close(DialogResult.Ok(collection));
                 },
                 error =>
                 {
-                    Snackbar.Add(error.Value, Severity.Error);
-                    Logger.LogError("Error creating new collection: {Error}", error.Value);
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Error creating new collection: {Error}", error.Value);
                     MudDialog.Close(DialogResult.Cancel());
                 });
         }
         else
         {
-            MemoryCache.Set("AddToCollectionDialog.SelectedCollectionId", _selectedCollection.Id);
+            _memoryCache.Set("AddToCollectionDialog.SelectedCollectionId", _selectedCollection.Id);
             MudDialog.Close(DialogResult.Ok(_selectedCollection));
         }
     }

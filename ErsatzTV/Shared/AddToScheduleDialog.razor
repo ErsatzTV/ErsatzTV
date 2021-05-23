@@ -1,6 +1,6 @@
 ﻿@using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Queries
-@inject IMediator Mediator
+@inject IMediator _mediator
 
 <div @onkeydown="@OnKeyDown">
     <MudDialog>
@@ -49,7 +49,7 @@
     private ProgramScheduleViewModel _selectedSchedule;
 
     protected override async Task OnParametersSetAsync() =>
-        _schedules = await Mediator.Send(new GetAllProgramSchedules());
+        _schedules = await _mediator.Send(new GetAllProgramSchedules());
 
     private string FormatText() => $"Select the schedule to add the {EntityType} {EntityName}";
 
