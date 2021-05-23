@@ -16,6 +16,7 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - [Hardware-accelerated transcoding](#Hardware-Transcoding) options (QSV, NVENC, VAAPI)
 - [Plex](https://www.plex.tv/) media and metadata
 - [Jellyfin](https://jellyfin.org/) media and metadata
+- [Emby](https://emby.media/) media and metadata
 - Music video libraries
 
 ## Planned Features
