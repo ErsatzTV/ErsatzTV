@@ -17,7 +17,5 @@ namespace ErsatzTV.Application.MediaCards
         Title,
         $"Episode {Episode}",
         $"Episode {Episode}",
-        Poster)
-    {
-    }
+        Poster);
 }

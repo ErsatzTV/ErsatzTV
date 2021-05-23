@@ -6,10 +6,10 @@
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using ErsatzTV.Application.ProgramSchedules.Queries
 @using ErsatzTV.Application.Television.Queries
-@inject NavigationManager NavigationManager
-@inject ILogger<ScheduleItemsEditor> Logger
-@inject ISnackbar Snackbar
-@inject IMediator Mediator
+@inject NavigationManager _navigationManager
+@inject ILogger<ScheduleItemsEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_schedule.Items.OrderBy(i => i.Index)" Dense="true" @bind-SelectedItem="_selectedItem">
@@ -184,15 +184,15 @@
 
     private async Task LoadScheduleItems()
     {
-        _mediaCollections = await Mediator.Send(new GetAllCollections());
-        _televisionShows = await Mediator.Send(new GetAllTelevisionShows());
-        _televisionSeasons = await Mediator.Send(new GetAllTelevisionSeasons());
+        _mediaCollections = await _mediator.Send(new GetAllCollections());
+        _televisionShows = await _mediator.Send(new GetAllTelevisionShows());
+        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons());
 
         string name = string.Empty;
-        Option<ProgramScheduleViewModel> maybeSchedule = await Mediator.Send(new GetProgramScheduleById(Id));
+        Option<ProgramScheduleViewModel> maybeSchedule = await _mediator.Send(new GetProgramScheduleById(Id));
         maybeSchedule.IfSome(vm => name = vm.Name);
 
-        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await Mediator.Send(new GetProgramScheduleItems(Id));
+        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await _mediator.Send(new GetProgramScheduleItems(Id));
         maybeResults.IfSome(items => _schedule = new ProgramScheduleItemsEditViewModel
         {
             Name = name,
@@ -291,15 +291,15 @@
             item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null,
             item.CustomTitle)).ToList();
 
-        Seq<BaseError> errorMessages = await Mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
+        Seq<BaseError> errorMessages = await _mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(
             error =>
             {
-                Snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
-                Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
+                _snackbar.Add($"Unexpected error saving schedule: {error.Value}", Severity.Error);
+                _logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
             },
-            () => NavigationManager.NavigateTo("/schedules"));
+            () => _navigationManager.NavigateTo("/schedules"));
     }
 
 }

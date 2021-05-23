@@ -39,8 +39,6 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
-    private bool _isValid;
-
     protected override async Task OnParametersSetAsync() => await LoadSecrets(_model);
 
     protected override void OnInitialized()

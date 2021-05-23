@@ -2,8 +2,8 @@
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using ErsatzTV.Application.ProgramSchedules.Queries
-@inject IDialogService Dialog
-@inject IMediator Mediator
+@inject IDialogService _dialog
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_schedules" Dense="true" SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))">
@@ -91,7 +91,7 @@
     private async Task ScheduleSelected(ProgramScheduleViewModel schedule)
     {
         _selectedSchedule = schedule;
-        await Mediator.Send(new GetProgramScheduleItems(schedule.Id))
+        await _mediator.Send(new GetProgramScheduleItems(schedule.Id))
             .IterT(results => _selectedScheduleItems = results.OrderBy(x => x.Name).ToList());
     }
 
@@ -100,16 +100,16 @@
         var parameters = new DialogParameters { { "EntityType", "schedule" }, { "EntityName", programSchedule.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Schedule", parameters, options);
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Schedule", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await Mediator.Send(new DeleteProgramSchedule(programSchedule.Id));
+            await _mediator.Send(new DeleteProgramSchedule(programSchedule.Id));
             await LoadSchedules();
         }
     }
 
     private async Task LoadSchedules() =>
-        _schedules = await Mediator.Send(new GetAllProgramSchedules()).Map(list => list.OrderBy(vm => vm.Name).ToList());
+        _schedules = await _mediator.Send(new GetAllProgramSchedules()).Map(list => list.OrderBy(vm => vm.Name).ToList());
 
 }

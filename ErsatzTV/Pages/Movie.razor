@@ -5,9 +5,9 @@
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
-@inject IMediator Mediator
-@inject IDialogService Dialog
-@inject NavigationManager NavigationManager
+@inject IMediator _mediator
+@inject IDialogService _dialog
+@inject NavigationManager _navigationManager
 
 <MudContainer MaxWidth="MaxWidth.False" Style="padding: 0" Class="fanart-container">
     <div class="fanart-tint"></div>
@@ -144,7 +144,7 @@
     protected override Task OnParametersSetAsync() => RefreshData();
 
     private Task RefreshData() =>
-        Mediator.Send(new GetMovieById(MovieId)).IfSomeAsync(vm =>
+        _mediator.Send(new GetMovieById(MovieId)).IfSomeAsync(vm =>
         {
             _movie = vm;
             _sortedLanguages = _movie.Languages.OrderBy(ci => ci.EnglishName).ToList();
@@ -158,12 +158,12 @@
         var parameters = new DialogParameters { { "EntityType", "movie" }, { "EntityName", _movie.Title } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+        IDialogReference dialog = _dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await Mediator.Send(new AddMovieToCollection(collection.Id, MovieId));
-            NavigationManager.NavigateTo($"/media/collections/{collection.Id}");
+            await _mediator.Send(new AddMovieToCollection(collection.Id, MovieId));
+            _navigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }
 

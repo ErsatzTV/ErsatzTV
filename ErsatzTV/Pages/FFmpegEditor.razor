@@ -5,10 +5,10 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Commands
 @using ErsatzTV.Application.FFmpegProfiles.Queries
-@inject NavigationManager NavigationManager
-@inject ILogger<FFmpegEditor> Logger
-@inject ISnackbar Snackbar
-@inject IMediator Mediator
+@inject NavigationManager _navigationManager
+@inject ILogger<FFmpegEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
@@ -113,18 +113,18 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _resolutions = await Mediator.Send(new GetAllResolutions());
+        _resolutions = await _mediator.Send(new GetAllResolutions());
 
         if (IsEdit)
         {
-            Option<FFmpegProfileViewModel> profile = await Mediator.Send(new GetFFmpegProfileById(Id));
+            Option<FFmpegProfileViewModel> profile = await _mediator.Send(new GetFFmpegProfileById(Id));
             profile.Match(
                 ffmpegProfileViewModel => _model = new FFmpegProfileEditViewModel(ffmpegProfileViewModel),
-                () => NavigationManager.NavigateTo("404"));
+                () => _navigationManager.NavigateTo("404"));
         }
         else
         {
-            _model = new FFmpegProfileEditViewModel(await Mediator.Send(new NewFFmpegProfile()));
+            _model = new FFmpegProfileEditViewModel(await _mediator.Send(new NewFFmpegProfile()));
         }
 
         _editContext = new EditContext(_model);
@@ -139,16 +139,16 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await Mediator.Send(_model.ToUpdate())).LeftToSeq() :
-                (await Mediator.Send(_model.ToCreate())).LeftToSeq();
+                (await _mediator.Send(_model.ToUpdate())).LeftToSeq() :
+                (await _mediator.Send(_model.ToCreate())).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    Snackbar.Add("Unexpected error saving ffmpeg profile");
-                    Logger.LogError("Unexpected error saving ffmpeg profile: {Error}", error.Value);
+                    _snackbar.Add("Unexpected error saving ffmpeg profile");
+                    _logger.LogError("Unexpected error saving ffmpeg profile: {Error}", error.Value);
                 },
-                () => NavigationManager.NavigateTo("/ffmpeg"));
+                () => _navigationManager.NavigateTo("/ffmpeg"));
         }
     }
 

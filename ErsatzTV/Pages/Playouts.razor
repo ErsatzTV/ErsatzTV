@@ -2,8 +2,8 @@
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Playouts.Commands
 @using ErsatzTV.Application.Playouts.Queries
-@inject IDialogService Dialog
-@inject IMediator Mediator
+@inject IDialogService _dialog
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Dense="true" Items="_playouts" SelectedItemChanged="@(async (PlayoutViewModel x) => await PlayoutSelected(x))">
@@ -90,7 +90,7 @@
     private async Task PlayoutSelected(PlayoutViewModel playout)
     {
         _selectedPlayoutId = playout.Id;
-        _selectedPlayoutItems = await Mediator.Send(new GetPlayoutItemsById(playout.Id));
+        _selectedPlayoutItems = await _mediator.Send(new GetPlayoutItemsById(playout.Id));
     }
 
     private async Task DeletePlayout(PlayoutViewModel playout)
@@ -98,18 +98,18 @@
         var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ProgramSchedule.Name} on {playout.Channel.Number} - {playout.Channel.Name}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Playout", parameters, options);
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Playout", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await Mediator.Send(new DeletePlayout(playout.Id));
+            await _mediator.Send(new DeletePlayout(playout.Id));
             await LoadAllPlayouts();
         }
     }
 
     private async Task RebuildPlayout(PlayoutViewModel playout)
     {
-        await Mediator.Send(new BuildPlayout(playout.Id, true));
+        await _mediator.Send(new BuildPlayout(playout.Id, true));
         await LoadAllPlayouts();
         if (_selectedPlayoutId == playout.Id)
         {
@@ -118,7 +118,7 @@
     }
 
     private async Task LoadAllPlayouts() =>
-        _playouts = await Mediator.Send(new GetAllPlayouts())
+        _playouts = await _mediator.Send(new GetAllPlayouts())
             .Map(list => list.OrderBy(x => decimal.Parse(x.Channel.Number)).ToList());
 
 

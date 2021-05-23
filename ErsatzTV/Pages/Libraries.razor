@@ -11,13 +11,13 @@
 @using ErsatzTV.Application.Emby
 @using ErsatzTV.Application.Emby.Commands
 @implements IDisposable
-@inject IMediator Mediator
-@inject IEntityLocker Locker
-@inject ChannelWriter<IBackgroundServiceRequest> WorkerChannel
-@inject ChannelWriter<IPlexBackgroundServiceRequest> PlexWorkerChannel
-@inject ChannelWriter<IJellyfinBackgroundServiceRequest> JellyfinWorkerChannel
-@inject ChannelWriter<IEmbyBackgroundServiceRequest> EmbyWorkerChannel
-@inject ICourier Courier
+@inject IMediator _mediator
+@inject IEntityLocker _locker
+@inject ChannelWriter<IBackgroundServiceRequest> _workerChannel
+@inject ChannelWriter<IPlexBackgroundServiceRequest> _plexWorkerChannel
+@inject ChannelWriter<IJellyfinBackgroundServiceRequest> _jellyfinWorkerChannel
+@inject ChannelWriter<IEmbyBackgroundServiceRequest> _embyWorkerChannel
+@inject ICourier _courier
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_libraries" Dense="true">
@@ -42,7 +42,7 @@
             <MudTd DataLabel="Media Kind">@context.MediaKind</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
-                    @if (Locker.IsLibraryLocked(context.Id))
+                    @if (_locker.IsLibraryLocked(context.Id))
                     {
                         <div style="width: 48px">
                             @if (_progressByLibrary[context.Id] > 0)
@@ -61,7 +61,7 @@
                         <div style="width: 48px"></div>
                         <MudTooltip Text="Scan Library">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                           Disabled="@Locker.IsLibraryLocked(context.Id)"
+                                           Disabled="@_locker.IsLibraryLocked(context.Id)"
                                            OnClick="@(_ => ScanLibrary(context))">
                             </MudIconButton>
                         </MudTooltip>
@@ -75,7 +75,7 @@
                     {
                         <MudTooltip Text="Edit Library">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                           Disabled="@Locker.IsLibraryLocked(context.Id)"
+                                           Disabled="@_locker.IsLibraryLocked(context.Id)"
                                            Link="@($"/media/libraries/local/{context.Id}")">
                             </MudIconButton>
                         </MudTooltip>
@@ -92,35 +92,35 @@
 
     protected override void OnInitialized()
     {
-        Locker.OnLibraryChanged += LockChanged;
-        Courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
+        _locker.OnLibraryChanged += LockChanged;
+        _courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
     protected override async Task OnParametersSetAsync() => await LoadLibraries();
 
     private async Task LoadLibraries()
     {
-        _libraries = await Mediator.Send(new GetAllLibraries());
+        _libraries = await _mediator.Send(new GetAllLibraries());
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }
 
     private async Task ScanLibrary(LibraryViewModel library)
     {
-        if (Locker.LockLibrary(library.Id))
+        if (_locker.LockLibrary(library.Id))
         {
             switch (library)
             {
                 case LocalLibraryViewModel:
-                    await WorkerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id));
+                    await _workerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id));
                     break;
                 case PlexLibraryViewModel:
-                    await PlexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id));
+                    await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id));
                     break;
                 case JellyfinLibraryViewModel:
-                    await JellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id));
+                    await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id));
                     break;
                 case EmbyLibraryViewModel:
-                    await EmbyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id));
+                    await _embyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id));
                     break;
             }
 
@@ -149,8 +149,8 @@
 
     void IDisposable.Dispose()
     {
-        Locker.OnLibraryChanged -= LockChanged;
-        Courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
+        _locker.OnLibraryChanged -= LockChanged;
+        _courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
 }

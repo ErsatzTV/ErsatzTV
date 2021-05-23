@@ -2,10 +2,10 @@
 @page "/schedules/add"
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Queries
-@inject NavigationManager NavigationManager
-@inject ILogger<ScheduleEditor> Logger
-@inject ISnackbar Snackbar
-@inject IMediator Mediator
+@inject NavigationManager _navigationManager
+@inject ILogger<ScheduleEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
@@ -52,7 +52,7 @@
     {
         if (IsEdit)
         {
-            Option<ProgramScheduleViewModel> maybeProgramSchedule = await Mediator.Send(new GetProgramScheduleById(Id));
+            Option<ProgramScheduleViewModel> maybeProgramSchedule = await _mediator.Send(new GetProgramScheduleById(Id));
             maybeProgramSchedule.Match(
                 viewModel =>
                 {
@@ -61,7 +61,7 @@
                     _model.MediaCollectionPlaybackOrder = viewModel.MediaCollectionPlaybackOrder;
                     _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
                 },
-                () => NavigationManager.NavigateTo("404"));
+                () => _navigationManager.NavigateTo("404"));
         }
         else
         {
@@ -84,19 +84,19 @@
         if (_editContext.Validate())
         {
             Either<BaseError, ProgramScheduleViewModel> result = IsEdit ?
-                await Mediator.Send(_model.ToUpdate()) :
-                await Mediator.Send(_model.ToCreate());
+                await _mediator.Send(_model.ToUpdate()) :
+                await _mediator.Send(_model.ToCreate());
 
             result.Match(
                 programSchedule =>
                 {
                     string destination = IsEdit ? "/schedules" : $"/schedules/{programSchedule.Id}/items";
-                    NavigationManager.NavigateTo(destination);
+                    _navigationManager.NavigateTo(destination);
                 },
                 error =>
                 {
-                    Snackbar.Add(error.Value, Severity.Error);
-                    Logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Unexpected error saving schedule: {Error}", error.Value);
                 });
         }
     }

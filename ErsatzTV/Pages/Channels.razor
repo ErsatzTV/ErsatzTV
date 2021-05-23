@@ -5,8 +5,8 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Queries
 @using System.Globalization
-@inject IDialogService Dialog
-@inject IMediator Mediator
+@inject IDialogService _dialog
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_channels">
@@ -82,7 +82,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
         await LoadChannelsAsync();
     }
 
@@ -91,18 +91,18 @@
         var parameters = new DialogParameters { { "EntityType", "channel" }, { "EntityName", channel.Name } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Channel", parameters, options);
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Channel", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await Mediator.Send(new DeleteChannel(channel.Id));
+            await _mediator.Send(new DeleteChannel(channel.Id));
             await LoadChannelsAsync();
         }
     }
 
     private async Task LoadChannelsAsync()
     {
-        List<ChannelViewModel> channels = await Mediator.Send(new GetAllChannels());
+        List<ChannelViewModel> channels = await _mediator.Send(new GetAllChannels());
         IOrderedEnumerable<ChannelViewModel> sorted = channels.OrderBy(c => decimal.Parse(c.Number));
 
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);

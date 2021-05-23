@@ -8,10 +8,10 @@
 @using System.Globalization
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Channels.Queries
-@inject NavigationManager NavigationManager
-@inject ILogger<ChannelEditor> Logger
-@inject ISnackbar Snackbar
-@inject IMediator Mediator
+@inject NavigationManager _navigationManager
+@inject ILogger<ChannelEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
@@ -87,11 +87,11 @@
     protected override async Task OnParametersSetAsync()
     {
         await LoadFFmpegProfilesAsync();
-        _availableCultures = await Mediator.Send(new GetAllLanguageCodes());
+        _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
 
         if (Id.HasValue)
         {
-            Option<ChannelViewModel> maybeChannel = await Mediator.Send(new GetChannelById(Id.Value));
+            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelById(Id.Value));
             maybeChannel.Match(
                 channelViewModel =>
                 {
@@ -103,14 +103,14 @@
                     _model.StreamingMode = channelViewModel.StreamingMode;
                     _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
                 },
-                () => NavigationManager.NavigateTo("404"));
+                () => _navigationManager.NavigateTo("404"));
         }
         else
         {
-            FFmpegSettingsViewModel ffmpegSettings = await Mediator.Send(new GetFFmpegSettings());
+            FFmpegSettingsViewModel ffmpegSettings = await _mediator.Send(new GetFFmpegSettings());
 
     // TODO: command for new channel
-            IEnumerable<int> channelNumbers = await Mediator.Send(new GetAllChannels())
+            IEnumerable<int> channelNumbers = await _mediator.Send(new GetAllChannels())
                 .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
             int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
             _model.Number = (maxNumber + 1).ToString();
@@ -129,7 +129,7 @@
     private bool IsEdit => Id.HasValue;
 
     private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await Mediator.Send(new GetAllFFmpegProfiles());
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
 
     private async Task HandleSubmitAsync()
     {
@@ -137,16 +137,16 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await Mediator.Send(_model.ToUpdate())).LeftToSeq() :
-                (await Mediator.Send(_model.ToCreate())).LeftToSeq();
+                (await _mediator.Send(_model.ToUpdate())).LeftToSeq() :
+                (await _mediator.Send(_model.ToCreate())).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
                 {
-                    Snackbar.Add(error.Value, Severity.Error);
-                    Logger.LogError("Unexpected error saving channel: {Error}", error.Value);
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Unexpected error saving channel: {Error}", error.Value);
                 },
-                () => NavigationManager.NavigateTo("/channels"));
+                () => _navigationManager.NavigateTo("/channels"));
         }
     }
 
@@ -154,7 +154,7 @@
     {
         var buffer = new byte[e.File.Size];
         await e.File.OpenReadStream().ReadAsync(buffer);
-        Either<BaseError, string> maybeCacheFileName = await Mediator.Send(new SaveArtworkToDisk(buffer, ArtworkKind.Logo));
+        Either<BaseError, string> maybeCacheFileName = await _mediator.Send(new SaveArtworkToDisk(buffer, ArtworkKind.Logo));
         maybeCacheFileName.Match(
             relativeFileName =>
             {
@@ -163,8 +163,8 @@
             },
             error =>
             {
-                Snackbar.Add($"Unexpected error saving channel logo: {error.Value}", Severity.Error);
-                Logger.LogError("Unexpected error saving channel logo: {Error}", error.Value);
+                _snackbar.Add($"Unexpected error saving channel logo: {error.Value}", Severity.Error);
+                _logger.LogError("Unexpected error saving channel logo: {Error}", error.Value);
             });
     }
 

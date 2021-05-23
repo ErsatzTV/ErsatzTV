@@ -1,7 +1,7 @@
 ﻿@page "/system/logs"
 @using ErsatzTV.Application.Logs
 @using ErsatzTV.Application.Logs.Queries
-@inject IMediator Mediator
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable FixedHeader="true" Dense="true" Items="_logEntries">
@@ -32,6 +32,6 @@
 @code {
     private List<LogEntryViewModel> _logEntries;
 
-    protected override async Task OnInitializedAsync() => _logEntries = await Mediator.Send(new GetRecentLogEntries());
+    protected override async Task OnInitializedAsync() => _logEntries = await _mediator.Send(new GetRecentLogEntries());
 
 }

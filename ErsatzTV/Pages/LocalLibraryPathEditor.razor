@@ -3,12 +3,12 @@
 @using ErsatzTV.Application.Libraries.Commands
 @using ErsatzTV.Application.Libraries.Queries
 @using ErsatzTV.Application.MediaSources.Commands
-@inject NavigationManager NavigationManager
-@inject ILogger<LocalLibraryPathEditor> Logger
-@inject ISnackbar Snackbar
-@inject IMediator Mediator
-@inject IEntityLocker Locker
-@inject ChannelWriter<IBackgroundServiceRequest> Channel
+@inject NavigationManager _navigationManager
+@inject ILogger<LocalLibraryPathEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
+@inject IEntityLocker _locker
+@inject ChannelWriter<IBackgroundServiceRequest> _channel
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudText Typo="Typo.h4" Class="mb-4">@_library.Name - Add Local Library Path</MudText>
@@ -44,10 +44,10 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        Option<LocalLibraryViewModel> maybeLibrary = await Mediator.Send(new GetLocalLibraryById(Id));
+        Option<LocalLibraryViewModel> maybeLibrary = await _mediator.Send(new GetLocalLibraryById(Id));
         maybeLibrary.Match(
             library => _library = library,
-            () => NavigationManager.NavigateTo("404"));
+            () => _navigationManager.NavigateTo("404"));
     }
 
     protected override void OnInitialized()
@@ -62,20 +62,20 @@
         if (_editContext.Validate())
         {
             var command = new CreateLocalLibraryPath(_library.Id, _model.Path);
-            Either<BaseError, LocalLibraryPathViewModel> result = await Mediator.Send(command);
+            Either<BaseError, LocalLibraryPathViewModel> result = await _mediator.Send(command);
             await result.Match(
                 Left: error =>
                 {
-                    Snackbar.Add(error.Value, Severity.Error);
-                    Logger.LogError("Unexpected error saving local library path: {Error}", error.Value);
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Unexpected error saving local library path: {Error}", error.Value);
                     return Task.CompletedTask;
                 },
                 Right: async _ =>
                 {
-                    if (Locker.LockLibrary(_library.Id))
+                    if (_locker.LockLibrary(_library.Id))
                     {
-                        await Channel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id));
-                        NavigationManager.NavigateTo("/media/libraries");
+                        await _channel.WriteAsync(new ScanLocalLibraryIfNeeded(_library.Id));
+                        _navigationManager.NavigateTo("/media/libraries");
                     }
                 });
         }

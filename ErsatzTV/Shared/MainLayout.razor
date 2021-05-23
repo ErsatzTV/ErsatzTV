@@ -3,7 +3,7 @@
 @using Microsoft.Extensions.Primitives
 @using System.Web
 @inherits LayoutComponentBase
-@inject NavigationManager NavigationManager
+@inject NavigationManager _navigationManager
 
 <MudThemeProvider Theme="_ersatzTvTheme"/>
 <MudDialogProvider DisableBackdropClick="true"/>
@@ -107,7 +107,7 @@
     {
         await base.OnParametersSetAsync();
 
-        string query = new Uri(NavigationManager.Uri).Query;
+        string query = new Uri(_navigationManager.Uri).Query;
         if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
         {
             _query = value;
@@ -118,20 +118,10 @@
         }
     }
 
-    private void OnSearchKeyDown(KeyboardEventArgs args)
-    {
-        if (args.Code == "Enter")
-        {
-            string query = HttpUtility.UrlEncode(_query);
-            NavigationManager.NavigateTo($"/search?query={query}", true);
-            StateHasChanged();
-        }
-    }
-
     private void PerformSearch()
     {
         string query = HttpUtility.UrlEncode(_query);
-        NavigationManager.NavigateTo($"/search?query={query}", true);
+        _navigationManager.NavigateTo($"/search?query={query}", true);
         StateHasChanged();
     }
 

@@ -14,7 +14,5 @@
         Title,
         Subtitle,
         SortTitle,
-        Poster)
-    {
-    }
+        Poster);
 }

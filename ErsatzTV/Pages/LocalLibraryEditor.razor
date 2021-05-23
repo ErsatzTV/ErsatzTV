@@ -2,8 +2,8 @@
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.Libraries.Commands
 @using ErsatzTV.Application.Libraries.Queries
-@inject IDialogService Dialog
-@inject IMediator Mediator
+@inject IDialogService _dialog
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Items="_libraryPaths" Dense="true">
@@ -47,11 +47,11 @@
     protected override async Task OnParametersSetAsync() => await LoadLibraryPaths();
 
     private async Task LoadLibraryPaths() =>
-        _libraryPaths = await Mediator.Send(new GetLocalLibraryPaths(Id));
+        _libraryPaths = await _mediator.Send(new GetLocalLibraryPaths(Id));
 
     private async Task DeleteLibraryPath(LocalLibraryPathViewModel libraryPath)
     {
-        int count = await Mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id));
+        int count = await _mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id));
 
         var parameters = new DialogParameters
         {
@@ -62,11 +62,11 @@
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<DeleteDialog>("Delete Library Path", parameters, options);
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Library Path", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await Mediator.Send(new DeleteLocalLibraryPath(libraryPath.Id));
+            await _mediator.Send(new DeleteLocalLibraryPath(libraryPath.Id));
             await LoadLibraryPaths();
         }
     }
