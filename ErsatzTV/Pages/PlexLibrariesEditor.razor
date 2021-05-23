@@ -1,78 +1,38 @@
 ﻿@page "/media/sources/plex/{Id:int}/libraries"
-@using ErsatzTV.Application.Plex
+@using Unit = LanguageExt.Unit
 @using ErsatzTV.Application.Plex.Commands
 @using ErsatzTV.Application.Plex.Queries
-@inject IMediator Mediator
-@inject NavigationManager NavigationManager
-@inject ILogger<PlexLibrariesEditor> Logger
-@inject ISnackbar Snackbar
-@inject ChannelWriter<IPlexBackgroundServiceRequest> Channel
-@inject IEntityLocker Locker
+@using ErsatzTV.Application.MediaSources
+@using ErsatzTV.Application.Plex
+@inject IMediator _mediator
+@inject ChannelWriter<IPlexBackgroundServiceRequest> _channel
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Items="_libraries" Dense="true">
-        <ToolBarContent>
-            <MudText Typo="Typo.h6"><b>@_source.Name</b> Libraries</MudText>
-        </ToolBarContent>
-        <ColGroup>
-            <col/>
-            <col/>
-            <col style="width: 100px;"/>
-        </ColGroup>
-        <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<PlexMediaSourceLibraryEditViewModel, object>(x => x.Name)">
-                    Name
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>
-                <MudTableSortLabel SortBy="new Func<PlexMediaSourceLibraryEditViewModel, object>(x => x.MediaKind)">
-                    Media Kind
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>Synchronize</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="MediaType">@context.MediaKind</MudTd>
-            <MudTd DataLabel="Synchronize">
-                <MudSwitch T="bool" @bind-Checked="@context.ShouldSyncItems" Color="Color.Primary"/>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(_ => SaveChanges())" Class="mt-4">
-        Save Changes
-    </MudButton>
-</MudContainer>
+<RemoteMediaSourceLibrariesEditor
+    Id="@Id"
+    Name="Plex"
+    GetUpdateLibraryRequest="GetUpdateLibraryRequest"
+    GetLibrariesBySourceId="GetLibrariesBySourceId"
+    GetMediaSourceById="GetMediaSourceById"
+    SynchronizeLibraryByIdIfNeeded="SynchronizeLibraryByIdIfNeeded"/>
 
 @code {
 
     [Parameter]
     public int Id { get; set; }
 
-    private PlexMediaSourceViewModel _source;
-    private List<PlexMediaSourceLibraryEditViewModel> _libraries;
+    private IRequest<Either<BaseError, Unit>> GetUpdateLibraryRequest(List<RemoteMediaSourceLibraryEditViewModel> libraries) =>
+        new UpdatePlexLibraryPreferences(
+            libraries.Map(l => new PlexLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
 
-    protected override Task OnParametersSetAsync() => LoadData();
+    private Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
+        _mediator.Send(new GetPlexLibrariesBySourceId(Id))
+            .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
 
-    private async Task LoadData()
-    {
-        Option<PlexMediaSourceViewModel> maybeSource = await Mediator.Send(new GetPlexMediaSourceById(Id));
-        await maybeSource.Match(
-            async source =>
-            {
-                _source = source;
-                _libraries = await Mediator.Send(new GetPlexLibrariesBySourceId(Id))
-                    .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
-            },
-            () =>
-            {
-                NavigationManager.NavigateTo("404");
-                return Task.CompletedTask;
-            });
-    }
+    private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
+        _mediator.Send(new GetPlexMediaSourceById(Id))
+            .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
-    private PlexMediaSourceLibraryEditViewModel ProjectToEditViewModel(PlexLibraryViewModel library) => new()
+    private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(PlexLibraryViewModel library) => new()
     {
         Id = library.Id,
         Name = library.Name,
@@ -80,32 +40,10 @@
         ShouldSyncItems = library.ShouldSyncItems
     };
 
-    private async Task SaveChanges()
+    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
     {
-        var request = new UpdatePlexLibraryPreferences(
-            _libraries.Map(l => new PlexLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
-
-        Seq<BaseError> errorMessages = await Mediator.Send(request).Map(e => e.LeftToSeq());
-
-        await errorMessages.HeadOrNone().Match(
-            error =>
-            {
-                Snackbar.Add($"Unexpected error saving plex libraries: {error.Value}", Severity.Error);
-                Logger.LogError("Unexpected error saving plex libraries: {Error}", error.Value);
-                return Task.CompletedTask;
-            },
-            async () =>
-            {
-                foreach (int id in _libraries.Filter(l => l.ShouldSyncItems).Map(l => l.Id))
-                {
-                    if (Locker.LockLibrary(id))
-                    {
-                        await Channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(id));
-                    }
-                }
-
-                NavigationManager.NavigateTo("/media/plex");
-            });
+        await _channel.WriteAsync(new SynchronizePlexLibraryByIdIfNeeded(libraryId));
+        return Unit.Default;
     }
 
 }

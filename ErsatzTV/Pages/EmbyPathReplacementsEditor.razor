@@ -1,0 +1,44 @@
+﻿@page "/media/sources/emby/{Id:int}/paths"
+@using ErsatzTV.Application.MediaSources
+@using ErsatzTV.Application.Emby.Queries
+@using ErsatzTV.Application.Emby
+@using ErsatzTV.Application.Emby.Commands
+@using Unit = LanguageExt.Unit
+@inject NavigationManager _navigationManager
+@inject ILogger<ScheduleItemsEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
+
+<RemoteMediaSourcePathReplacementsEditor
+    Id="@Id"
+    Name="Emby"
+    GetMediaSourceById="GetMediaSourceById"
+    GetUpdatePathReplacementsRequest="GetUpdatePathReplacementsRequest"
+    GetPathReplacementsBySourceId="GetPathReplacementsBySourceId"/>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int id) =>
+        _mediator.Send(new GetEmbyMediaSourceById(Id))
+            .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
+
+    private Task<List<RemoteMediaSourcePathReplacementEditViewModel>> GetPathReplacementsBySourceId(int mediaSourceId) =>
+        _mediator.Send(new GetEmbyPathReplacementsBySourceId(Id))
+            .Map(list => list.Map(ProjectToEditViewModel).ToList());
+
+    private RemoteMediaSourcePathReplacementEditViewModel ProjectToEditViewModel(EmbyPathReplacementViewModel item) =>
+        new() { Id = item.Id, RemotePath = item.EmbyPath, LocalPath = item.LocalPath };
+
+    private IRequest<Either<BaseError, Unit>> GetUpdatePathReplacementsRequest(List<RemoteMediaSourcePathReplacementEditViewModel> pathReplacements)
+    {
+        var items = pathReplacements
+            .Map(item => new EmbyPathReplacementItem(item.Id, item.RemotePath, item.LocalPath))
+            .ToList();
+
+        return new UpdateEmbyPathReplacements(Id, items);
+    }
+
+}

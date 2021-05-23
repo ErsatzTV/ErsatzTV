@@ -8,7 +8,9 @@ using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.GitHub;
 using ErsatzTV.Core.Interfaces.Images;
@@ -27,6 +29,7 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
+using ErsatzTV.Infrastructure.Emby;
 using ErsatzTV.Infrastructure.GitHub;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Jellyfin;
@@ -192,6 +195,7 @@ namespace ErsatzTV
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
             AddChannel<IJellyfinBackgroundServiceRequest>(services);
+            AddChannel<IEmbyBackgroundServiceRequest>(services);
 
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IFFmpegProfileRepository, FFmpegProfileRepository>();
@@ -228,6 +232,11 @@ namespace ErsatzTV
             services.AddScoped<IJellyfinApiClient, JellyfinApiClient>();
             services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
             services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
+            services.AddScoped<IEmbyApiClient, EmbyApiClient>();
+            services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
+            services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
+            services.AddScoped<IEmbyPathReplacementService, EmbyPathReplacementService>();
+            services.AddScoped<IEmbyTelevisionRepository, EmbyTelevisionRepository>();
             services.AddScoped<IRuntimeInfo, RuntimeInfo>();
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
@@ -241,10 +250,12 @@ namespace ErsatzTV
                     return sanitizer;
                 });
             services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
+            services.AddScoped<IEmbySecretStore, EmbySecretStore>();
 
             services.AddHostedService<EndpointValidatorService>();
             services.AddHostedService<DatabaseMigratorService>();
             services.AddHostedService<CacheCleanerService>();
+            services.AddHostedService<EmbyService>();
             services.AddHostedService<JellyfinService>();
             services.AddHostedService<PlexService>();
             services.AddHostedService<FFmpegLocatorService>();

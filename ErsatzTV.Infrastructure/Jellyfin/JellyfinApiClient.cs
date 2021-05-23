@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -39,8 +40,15 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             try
             {
                 IJellyfinApi service = RestService.For<IJellyfinApi>(address);
-                return await service.GetSystemInformation(apiKey)
+                var cts = new CancellationTokenSource();
+                cts.CancelAfter(TimeSpan.FromSeconds(5));
+                return await service.GetSystemInformation(apiKey, cts.Token)
                     .Map(response => new JellyfinServerInformation(response.ServerName, response.OperatingSystem));
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogError(ex, "Timeout getting jellyfin server name");
+                return BaseError.New("Jellyfin did not respond in time");
             }
             catch (Exception ex)
             {

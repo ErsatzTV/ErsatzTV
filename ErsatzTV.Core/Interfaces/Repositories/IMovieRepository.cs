@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
@@ -28,5 +29,9 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<int>> RemoveMissingJellyfinMovies(JellyfinLibrary library, List<string> movieIds);
         Task<bool> AddJellyfin(JellyfinMovie movie);
         Task<Option<JellyfinMovie>> UpdateJellyfin(JellyfinMovie movie);
+        Task<List<EmbyItemEtag>> GetExistingEmbyMovies(EmbyLibrary library);
+        Task<List<int>> RemoveMissingEmbyMovies(EmbyLibrary library, List<string> movieIds);
+        Task<bool> AddEmby(EmbyMovie movie);
+        Task<Option<EmbyMovie>> UpdateEmby(EmbyMovie movie);
     }
 }

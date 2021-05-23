@@ -1,0 +1,68 @@
+﻿@using Unit = LanguageExt.Unit
+@inject IMediator _mediator
+@inject NavigationManager _navigationManager
+@inject ISnackbar _snackbar
+@inject ILogger<RemoteMediaSourceEditor> _logger
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudText Typo="Typo.h4" Class="mb-4">@Name Media Source</MudText>
+    <div style="max-width: 400px;">
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Label="Address" @bind-Value="_model.Address" For="@(() => _model.Address)" Placeholder="http://192.168.1.100:8096"/>
+                    <MudTextField Label="Api Key" @bind-Value="_model.ApiKey" For="@(() => _model.ApiKey)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+                        Save Changes
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public string Name { get; set; }
+
+    [Parameter]
+    public Func<RemoteMediaSourceEditViewModel, Task<Unit>> LoadSecrets { get; set; }
+
+    [Parameter]
+    public Func<RemoteMediaSourceEditViewModel, Task<Either<BaseError, Unit>>> SaveSecrets { get; set; }
+
+    private readonly RemoteMediaSourceEditViewModel _model = new();
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
+
+    private bool _isValid;
+
+    protected override async Task OnParametersSetAsync() => await LoadSecrets(_model);
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private async Task HandleSubmitAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            Either<BaseError, Unit> result = await SaveSecrets(_model);
+            result.Match(
+                _ => _navigationManager.NavigateTo($"/media/{Name.ToLowerInvariant()}"),
+                error =>
+                {
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Error saving {MediaSource} secrets: {Error}", Name, error.Value);
+                });
+        }
+    }
+
+}

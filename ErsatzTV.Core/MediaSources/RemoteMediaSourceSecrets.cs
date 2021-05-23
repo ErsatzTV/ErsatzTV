@@ -1,6 +1,6 @@
-﻿namespace ErsatzTV.ViewModels
+﻿namespace ErsatzTV.Core.MediaSources
 {
-    public class JellyfinMediaSourceEditViewModel
+    public class RemoteMediaSourceSecrets
     {
         public string Address { get; set; }
         public string ApiKey { get; set; }

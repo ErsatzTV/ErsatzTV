@@ -14,7 +14,7 @@ namespace ErsatzTV.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "5.0.4");
+                .HasAnnotation("ProductVersion", "5.0.6");
 
             modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.Actor",
@@ -280,6 +280,51 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("ConfigElement");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyConnection",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmbyMediaSourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmbyMediaSourceId");
+
+                    b.ToTable("EmbyConnection");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyPathReplacement",
+                b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EmbyMediaSourceId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("EmbyPath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LocalPath")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmbyMediaSourceId");
+
+                    b.ToTable("EmbyPathReplacement");
                 });
 
             modelBuilder.Entity(
@@ -1282,6 +1327,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyLibrary",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Library");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("ShouldSyncItems")
+                        .HasColumnType("INTEGER");
+
+                    b.ToTable("EmbyLibrary");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.JellyfinLibrary",
                 b =>
                 {
@@ -1411,6 +1471,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyMediaSource",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.MediaSource");
+
+                    b.Property<string>("OperatingSystem")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ServerName")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("EmbyMediaSource");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.JellyfinMediaSource",
                 b =>
                 {
@@ -1504,6 +1579,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyEpisode",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Episode");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("EmbyEpisode");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.JellyfinEpisode",
                 b =>
                 {
@@ -1528,6 +1618,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.ToTable("PlexEpisode");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyMovie",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Movie");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("EmbyMovie");
                 });
 
             modelBuilder.Entity(
@@ -1558,6 +1663,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbySeason",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Season");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("EmbySeason");
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.JellyfinSeason",
                 b =>
                 {
@@ -1582,6 +1702,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.ToTable("PlexSeason");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyShow",
+                b =>
+                {
+                    b.HasBaseType("ErsatzTV.Core.Domain.Show");
+
+                    b.Property<string>("Etag")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("TEXT");
+
+                    b.ToTable("EmbyShow");
                 });
 
             modelBuilder.Entity(
@@ -1735,6 +1870,32 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Collection");
 
                     b.Navigation("MediaItem");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyConnection",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.EmbyMediaSource", "EmbyMediaSource")
+                        .WithMany("Connections")
+                        .HasForeignKey("EmbyMediaSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmbyMediaSource");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyPathReplacement",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.EmbyMediaSource", "EmbyMediaSource")
+                        .WithMany("PathReplacements")
+                        .HasForeignKey("EmbyMediaSourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmbyMediaSource");
                 });
 
             modelBuilder.Entity(
@@ -2251,6 +2412,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyLibrary",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Library", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.EmbyLibrary", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.JellyfinLibrary",
                 b =>
                 {
@@ -2385,6 +2557,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyMediaSource",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaSource", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.EmbyMediaSource", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.JellyfinMediaSource",
                 b =>
                 {
@@ -2462,6 +2645,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyEpisode",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Episode", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.EmbyEpisode", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.JellyfinEpisode",
                 b =>
                 {
@@ -2479,6 +2673,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasOne("ErsatzTV.Core.Domain.Episode", null)
                         .WithOne()
                         .HasForeignKey("ErsatzTV.Core.Domain.PlexEpisode", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyMovie",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Movie", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.EmbyMovie", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2506,6 +2711,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                 });
 
             modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbySeason",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Season", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.EmbySeason", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
                 "ErsatzTV.Core.Domain.JellyfinSeason",
                 b =>
                 {
@@ -2523,6 +2739,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasOne("ErsatzTV.Core.Domain.Season", null)
                         .WithOne()
                         .HasForeignKey("ErsatzTV.Core.Domain.PlexSeason", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyShow",
+                b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.Show", null)
+                        .WithOne()
+                        .HasForeignKey("ErsatzTV.Core.Domain.EmbyShow", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -2748,6 +2975,15 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Seasons");
 
                     b.Navigation("ShowMetadata");
+                });
+
+            modelBuilder.Entity(
+                "ErsatzTV.Core.Domain.EmbyMediaSource",
+                b =>
+                {
+                    b.Navigation("Connections");
+
+                    b.Navigation("PathReplacements");
                 });
 
             modelBuilder.Entity(

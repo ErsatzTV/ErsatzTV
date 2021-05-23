@@ -1,9 +1,9 @@
 ﻿namespace ErsatzTV.ViewModels
 {
-    public class JellyfinPathReplacementEditViewModel
+    public class RemoteMediaSourcePathReplacementEditViewModel
     {
         public int Id { get; set; }
-        public string JellyfinPath { get; set; }
+        public string RemotePath { get; set; }
         public string LocalPath { get; set; }
     }
 }

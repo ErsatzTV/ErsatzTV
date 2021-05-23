@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -36,7 +37,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
             List<int> ids = await _mediaSourceRepository.DeleteAllJellyfin();
             await _searchIndex.RemoveItems(ids);
             await _jellyfinSecretStore.DeleteAll();
-            _entityLocker.UnlockJellyfin();
+            _entityLocker.UnlockRemoteMediaSource<JellyfinMediaSource>();
 
             return Unit.Default;
         }

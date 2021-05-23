@@ -1,0 +1,14 @@
+﻿@page "/media/emby"
+@using ErsatzTV.Core.Interfaces.Emby
+@using ErsatzTV.Application.Emby.Queries
+@using ErsatzTV.Application.Emby.Commands
+@inject IEmbySecretStore _embySecretStore
+
+<RemoteMediaSources
+    TViewModel="ErsatzTV.Application.Emby.EmbyMediaSourceViewModel"
+    TSecrets="ErsatzTV.Core.Emby.EmbySecrets"
+    TMediaSource="EmbyMediaSource"
+    Name="Emby"
+    GetAllMediaSourcesCommand="@(new GetAllEmbyMediaSources())"
+    DisconnectCommand="@(new DisconnectEmby())"
+    SecretStore="@_embySecretStore"/>

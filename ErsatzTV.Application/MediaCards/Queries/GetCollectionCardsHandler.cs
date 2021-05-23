@@ -30,10 +30,13 @@ namespace ErsatzTV.Application.MediaCards.Queries
             Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
                 .Map(list => list.HeadOrNone());
 
+            Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
+                .Map(list => list.HeadOrNone());
+
             return await _collectionRepository
                 .GetCollectionWithItemsUntracked(request.Id)
                 .Map(c => c.ToEither(BaseError.New("Unable to load collection")))
-                .MapT(c => ProjectToViewModel(c, maybeJellyfin));
+                .MapT(c => ProjectToViewModel(c, maybeJellyfin, maybeEmby));
         }
     }
 }

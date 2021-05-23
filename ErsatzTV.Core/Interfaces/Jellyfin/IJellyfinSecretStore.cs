@@ -1,13 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using ErsatzTV.Core.Interfaces.MediaSources;
 using ErsatzTV.Core.Jellyfin;
-using LanguageExt;
 
 namespace ErsatzTV.Core.Interfaces.Jellyfin
 {
-    public interface IJellyfinSecretStore
+    public interface IJellyfinSecretStore : IRemoteMediaSourceSecretStore<JellyfinSecrets>
     {
-        Task<Unit> DeleteAll();
-        Task<JellyfinSecrets> ReadSecrets();
-        Task<Unit> SaveSecrets(JellyfinSecrets jellyfinSecrets);
     }
 }
