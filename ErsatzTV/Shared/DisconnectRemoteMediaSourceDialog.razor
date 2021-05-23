@@ -4,7 +4,7 @@
             <MudContainer>
                 <MudHighlighter Class="mud-primary-text"
                                 Style="background-color: transparent; font-weight: bold"
-                                Text="Do you really want to disconnect Jellyfin? All synchronized content will be removed."/>
+                                Text="@($"Do you really want to disconnect {Name}? All synchronized content will be removed.")"/>
             </MudContainer>
         </DialogContent>
         <DialogActions>
@@ -15,6 +15,9 @@
 </div>
 
 @code {
+
+    [Parameter]
+    public string Name { get; set; }
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }

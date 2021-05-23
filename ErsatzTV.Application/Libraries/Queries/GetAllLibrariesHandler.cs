@@ -31,6 +31,7 @@ namespace ErsatzTV.Application.Libraries.Queries
                 LocalLibrary => true,
                 PlexLibrary plex => plex.ShouldSyncItems,
                 JellyfinLibrary jellyfin => jellyfin.ShouldSyncItems,
+                EmbyLibrary emby => emby.ShouldSyncItems,
                 _ => false
             };
     }

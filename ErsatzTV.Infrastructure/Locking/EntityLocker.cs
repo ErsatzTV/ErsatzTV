@@ -6,21 +6,23 @@ namespace ErsatzTV.Infrastructure.Locking
 {
     public class EntityLocker : IEntityLocker
     {
-        private readonly ConcurrentDictionary<int, byte> _lockedMediaSources;
-        private bool _jellyfin;
+        private readonly ConcurrentDictionary<int, byte> _lockedLibraries;
+        private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes;
         private bool _plex;
 
-        public EntityLocker() => _lockedMediaSources = new ConcurrentDictionary<int, byte>();
+        public EntityLocker()
+        {
+            _lockedLibraries = new ConcurrentDictionary<int, byte>();
+            _lockedRemoteMediaSourceTypes = new ConcurrentDictionary<Type, byte>();
+        }
 
         public event EventHandler OnLibraryChanged;
-
         public event EventHandler OnPlexChanged;
+        public event EventHandler<Type> OnRemoteMediaSourceChanged;
 
-        public event EventHandler OnJellyfinChanged;
-
-        public bool LockLibrary(int mediaSourceId)
+        public bool LockLibrary(int libraryId)
         {
-            if (!_lockedMediaSources.ContainsKey(mediaSourceId) && _lockedMediaSources.TryAdd(mediaSourceId, 0))
+            if (!_lockedLibraries.ContainsKey(libraryId) && _lockedLibraries.TryAdd(libraryId, 0))
             {
                 OnLibraryChanged?.Invoke(this, EventArgs.Empty);
                 return true;
@@ -29,9 +31,9 @@ namespace ErsatzTV.Infrastructure.Locking
             return false;
         }
 
-        public bool UnlockLibrary(int mediaSourceId)
+        public bool UnlockLibrary(int libraryId)
         {
-            if (_lockedMediaSources.TryRemove(mediaSourceId, out byte _))
+            if (_lockedLibraries.TryRemove(libraryId, out byte _))
             {
                 OnLibraryChanged?.Invoke(this, EventArgs.Empty);
                 return true;
@@ -40,8 +42,8 @@ namespace ErsatzTV.Infrastructure.Locking
             return false;
         }
 
-        public bool IsLibraryLocked(int mediaSourceId) =>
-            _lockedMediaSources.ContainsKey(mediaSourceId);
+        public bool IsLibraryLocked(int libraryId) =>
+            _lockedLibraries.ContainsKey(libraryId);
 
         public bool LockPlex()
         {
@@ -69,24 +71,27 @@ namespace ErsatzTV.Infrastructure.Locking
 
         public bool IsPlexLocked() => _plex;
 
-        public bool LockJellyfin()
+        public bool LockRemoteMediaSource<TMediaSource>()
         {
-            if (!_jellyfin)
+            Type mediaSourceType = typeof(TMediaSource);
+
+            if (!_lockedRemoteMediaSourceTypes.ContainsKey(mediaSourceType) &&
+                _lockedRemoteMediaSourceTypes.TryAdd(mediaSourceType, 0))
             {
-                _jellyfin = true;
-                OnJellyfinChanged?.Invoke(this, EventArgs.Empty);
+                OnRemoteMediaSourceChanged?.Invoke(this, mediaSourceType);
                 return true;
             }
 
             return false;
         }
 
-        public bool UnlockJellyfin()
+        public bool UnlockRemoteMediaSource<TMediaSource>()
         {
-            if (_jellyfin)
+            Type mediaSourceType = typeof(TMediaSource);
+
+            if (_lockedRemoteMediaSourceTypes.TryRemove(mediaSourceType, out byte _))
             {
-                _jellyfin = false;
-                OnJellyfinChanged?.Invoke(this, EventArgs.Empty);
+                OnRemoteMediaSourceChanged?.Invoke(this, mediaSourceType);
                 return true;
             }
 

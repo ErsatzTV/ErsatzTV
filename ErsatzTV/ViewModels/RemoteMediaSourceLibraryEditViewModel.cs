@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.ViewModels
 {
-    public class PlexMediaSourceLibraryEditViewModel
+    public class RemoteMediaSourceLibraryEditViewModel
     {
         public int Id { get; set; }
         public string Name { get; set; }

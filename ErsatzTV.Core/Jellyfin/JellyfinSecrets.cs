@@ -1,8 +1,8 @@
-﻿namespace ErsatzTV.Core.Jellyfin
+﻿using ErsatzTV.Core.MediaSources;
+
+namespace ErsatzTV.Core.Jellyfin
 {
-    public class JellyfinSecrets
+    public class JellyfinSecrets : RemoteMediaSourceSecrets
     {
-        public string Address { get; set; }
-        public string ApiKey { get; set; }
     }
 }

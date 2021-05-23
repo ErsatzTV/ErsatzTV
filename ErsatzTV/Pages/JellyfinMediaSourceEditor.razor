@@ -1,66 +1,32 @@
 ﻿@page "/media/jellyfin/edit"
+@using Unit = LanguageExt.Unit
 @using ErsatzTV.Core.Jellyfin
 @using ErsatzTV.Application.Jellyfin.Queries
-@using Unit = LanguageExt.Unit
 @using ErsatzTV.Application.Jellyfin.Commands
 @inject IMediator _mediator
 @inject NavigationManager _navigationManager
 @inject ISnackbar _snackbar
 @inject ILogger<JellyfinMediaSourceEditor> _logger
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudText Typo="Typo.h4" Class="mb-4">Jellyfin Media Source</MudText>
-    <div style="max-width: 400px;">
-        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
-            <FluentValidator/>
-            <MudCard>
-                <MudCardContent>
-                    <MudTextField Label="Address" @bind-Value="_model.Address" For="@(() => _model.Address)"/>
-                    <MudTextField Label="Api Key" @bind-Value="_model.ApiKey" For="@(() => _model.ApiKey)"/>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
-                        Save Changes
-                    </MudButton>
-                </MudCardActions>
-            </MudCard>
-        </EditForm>
-    </div>
-</MudContainer>
+<RemoteMediaSourceEditor
+    Name="Jellyfin"
+    LoadSecrets="LoadSecrets"
+    SaveSecrets="SaveSecrets"/>
 
 @code {
-    private readonly JellyfinMediaSourceEditViewModel _model = new();
-    private EditContext _editContext;
-    private ValidationMessageStore _messageStore;
 
-    protected override async Task OnParametersSetAsync()
+    private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
         JellyfinSecrets secrets = await _mediator.Send(new GetJellyfinSecrets());
-        _model.Address = secrets.Address;
-        _model.ApiKey = secrets.ApiKey;
+        viewModel.Address = secrets.Address;
+        viewModel.ApiKey = secrets.ApiKey;
+        return Unit.Default;
     }
 
-    protected override void OnInitialized()
+    private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
-        _editContext = new EditContext(_model);
-        _messageStore = new ValidationMessageStore(_editContext);
-    }
-
-    private async Task HandleSubmitAsync()
-    {
-        _messageStore.Clear();
-        if (_editContext.Validate())
-        {
-            var secrets = new JellyfinSecrets { Address = _model.Address, ApiKey = _model.ApiKey };
-            Either<BaseError, Unit> result = await _mediator.Send(new SaveJellyfinSecrets(secrets));
-            result.Match(
-                _ => _navigationManager.NavigateTo("/media/jellyfin"),
-                error =>
-                {
-                    _snackbar.Add(error.Value, Severity.Error);
-                    _logger.LogError("Error saving jellyfin secrets: {Error}", error.Value);
-                });
-        }
+        var secrets = new JellyfinSecrets { Address = viewModel.Address, ApiKey = viewModel.ApiKey };
+        return await _mediator.Send(new SaveJellyfinSecrets(secrets));
     }
 
 }

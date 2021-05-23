@@ -1,0 +1,49 @@
+﻿@page "/media/sources/emby/{Id:int}/libraries"
+@using Unit = LanguageExt.Unit
+@using ErsatzTV.Application.Emby.Commands
+@using ErsatzTV.Application.Emby.Queries
+@using ErsatzTV.Application.MediaSources
+@using ErsatzTV.Application.Emby
+@inject IMediator _mediator
+@inject ChannelWriter<IEmbyBackgroundServiceRequest> _channel
+
+<RemoteMediaSourceLibrariesEditor
+    Id="@Id"
+    Name="Emby"
+    GetUpdateLibraryRequest="GetUpdateLibraryRequest"
+    GetLibrariesBySourceId="GetLibrariesBySourceId"
+    GetMediaSourceById="GetMediaSourceById"
+    SynchronizeLibraryByIdIfNeeded="SynchronizeLibraryByIdIfNeeded"/>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private IRequest<Either<BaseError, Unit>> GetUpdateLibraryRequest(List<RemoteMediaSourceLibraryEditViewModel> libraries) =>
+        new UpdateEmbyLibraryPreferences(
+            libraries.Map(l => new EmbyLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
+
+    private Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
+        _mediator.Send(new GetEmbyLibrariesBySourceId(Id))
+            .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
+
+    private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
+        _mediator.Send(new GetEmbyMediaSourceById(Id))
+            .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
+
+    private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(EmbyLibraryViewModel library) => new()
+    {
+        Id = library.Id,
+        Name = library.Name,
+        MediaKind = library.MediaKind,
+        ShouldSyncItems = library.ShouldSyncItems
+    };
+
+    private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
+    {
+        await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(libraryId));
+        return Unit.Default;
+    }
+
+}

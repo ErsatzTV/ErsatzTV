@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
 using Refit;
@@ -11,7 +12,8 @@ namespace ErsatzTV.Infrastructure.Jellyfin
         [Get("/System/Info")]
         public Task<JellyfinSystemInformationResponse> GetSystemInformation(
             [Header("X-Emby-Token")]
-            string apiKey);
+            string apiKey,
+            CancellationToken cancellationToken);
 
         [Get("/Users")]
         public Task<List<JellyfinUserResponse>> GetUsers(
