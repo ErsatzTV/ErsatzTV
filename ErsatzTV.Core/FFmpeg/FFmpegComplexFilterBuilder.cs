@@ -18,18 +18,11 @@ namespace ErsatzTV.Core.FFmpeg
         private string _inputCodec;
         private bool _normalizeLoudness;
         private Option<IDisplaySize> _padToSize = None;
-        private bool _realtime;
         private Option<IDisplaySize> _scaleToSize = None;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
             _hardwareAccelerationKind = Some(hardwareAccelerationKind);
-            return this;
-        }
-
-        public FFmpegComplexFilterBuilder WithRealtime(bool realtime)
-        {
-            _realtime = realtime;
             return this;
         }
 
@@ -101,11 +94,6 @@ namespace ErsatzTV.Core.FFmpeg
 
             _audioDuration.IfSome(
                 audioDuration => audioFilterQueue.Add($"apad=whole_dur={audioDuration.TotalMilliseconds}ms"));
-
-            if (_realtime)
-            {
-                videoFilterQueue.Add("realtime");
-            }
 
             bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None && !isHardwareDecode &&
                                        (_deinterlace || _scaleToSize.IsSome);
