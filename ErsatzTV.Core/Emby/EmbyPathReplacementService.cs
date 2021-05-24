@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -44,7 +45,7 @@ namespace ErsatzTV.Core.Emby
                 .SingleOrDefault(
                     r =>
                     {
-                        string separatorChar = IsWindows(r.EmbyMediaSource) ? @"\" : @"/";
+                        string separatorChar = IsWindows(r.EmbyMediaSource, path) ? @"\" : @"/";
                         string prefix = r.EmbyPath.EndsWith(separatorChar)
                             ? r.EmbyPath
                             : r.EmbyPath + separatorChar;
@@ -55,11 +56,11 @@ namespace ErsatzTV.Core.Emby
                 replacement =>
                 {
                     string finalPath = path.Replace(replacement.EmbyPath, replacement.LocalPath);
-                    if (IsWindows(replacement.EmbyMediaSource) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+                    if (IsWindows(replacement.EmbyMediaSource, path) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
                     {
                         finalPath = finalPath.Replace(@"\", @"/");
                     }
-                    else if (!IsWindows(replacement.EmbyMediaSource) &&
+                    else if (!IsWindows(replacement.EmbyMediaSource, path) &&
                              _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
                     {
                         finalPath = finalPath.Replace(@"/", @"\");
@@ -79,7 +80,10 @@ namespace ErsatzTV.Core.Emby
                 () => path);
         }
 
-        private static bool IsWindows(EmbyMediaSource embyMediaSource) =>
-            embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        private static bool IsWindows(EmbyMediaSource embyMediaSource, string path)
+        {
+            bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
+            return isUnc || embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        }
     }
 }
