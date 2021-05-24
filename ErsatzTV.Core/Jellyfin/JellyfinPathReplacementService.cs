@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -44,7 +45,7 @@ namespace ErsatzTV.Core.Jellyfin
                 .SingleOrDefault(
                     r =>
                     {
-                        string separatorChar = IsWindows(r.JellyfinMediaSource) ? @"\" : @"/";
+                        string separatorChar = IsWindows(r.JellyfinMediaSource, path) ? @"\" : @"/";
                         string prefix = r.JellyfinPath.EndsWith(separatorChar)
                             ? r.JellyfinPath
                             : r.JellyfinPath + separatorChar;
@@ -55,11 +56,11 @@ namespace ErsatzTV.Core.Jellyfin
                 replacement =>
                 {
                     string finalPath = path.Replace(replacement.JellyfinPath, replacement.LocalPath);
-                    if (IsWindows(replacement.JellyfinMediaSource) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+                    if (IsWindows(replacement.JellyfinMediaSource, path) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
                     {
                         finalPath = finalPath.Replace(@"\", @"/");
                     }
-                    else if (!IsWindows(replacement.JellyfinMediaSource) &&
+                    else if (!IsWindows(replacement.JellyfinMediaSource, path) &&
                              _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
                     {
                         finalPath = finalPath.Replace(@"/", @"\");
@@ -79,7 +80,10 @@ namespace ErsatzTV.Core.Jellyfin
                 () => path);
         }
 
-        private static bool IsWindows(JellyfinMediaSource jellyfinMediaSource) =>
-            jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        private static bool IsWindows(JellyfinMediaSource jellyfinMediaSource, string path)
+        {
+            bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
+            return isUnc || jellyfinMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
+        }
     }
 }
