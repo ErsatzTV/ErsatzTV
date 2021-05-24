@@ -5,6 +5,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -20,6 +21,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly IConfigElementRepository _configElementRepository;
         private readonly FFmpegProcessService _ffmpegProcessService;
         private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
+        private readonly IEmbyPathReplacementService _embyPathReplacementService;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly IPlayoutRepository _playoutRepository;
         private readonly IPlexPathReplacementService _plexPathReplacementService;
@@ -31,7 +33,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             FFmpegProcessService ffmpegProcessService,
             ILocalFileSystem localFileSystem,
             IPlexPathReplacementService plexPathReplacementService,
-            IJellyfinPathReplacementService jellyfinPathReplacementService)
+            IJellyfinPathReplacementService jellyfinPathReplacementService,
+            IEmbyPathReplacementService embyPathReplacementService)
             : base(channelRepository, configElementRepository)
         {
             _configElementRepository = configElementRepository;
@@ -40,6 +43,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             _localFileSystem = localFileSystem;
             _plexPathReplacementService = plexPathReplacementService;
             _jellyfinPathReplacementService = jellyfinPathReplacementService;
+            _embyPathReplacementService = embyPathReplacementService;
         }
 
         protected override async Task<Either<BaseError, Process>> GetProcess(
@@ -177,6 +181,12 @@ namespace ErsatzTV.Application.Streaming.Queries
                     path),
                 JellyfinEpisode jellyfinEpisode => await _jellyfinPathReplacementService.GetReplacementJellyfinPath(
                     jellyfinEpisode.LibraryPathId,
+                    path),
+                EmbyMovie embyMovie => await _embyPathReplacementService.GetReplacementEmbyPath(
+                    embyMovie.LibraryPathId,
+                    path),
+                EmbyEpisode embyEpisode => await _embyPathReplacementService.GetReplacementEmbyPath(
+                    embyEpisode.LibraryPathId,
                     path),
                 _ => path
             };
