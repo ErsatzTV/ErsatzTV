@@ -466,9 +466,10 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 actual.PadToDesiredResolution.Should().BeFalse();
                 actual.VideoCodec.Should().Be("copy");
             }
-            
+
             [Test]
-            public void Should_SetCorrectVideoCodec_When_ContentIsCorrectSize_And_CorrectCodec_And_Framerate_ForTransportStream()
+            public void
+                Should_SetCorrectVideoCodec_When_ContentIsCorrectSize_And_CorrectCodec_And_Framerate_ForTransportStream()
             {
                 var ffmpegProfile = new FFmpegProfile
                 {

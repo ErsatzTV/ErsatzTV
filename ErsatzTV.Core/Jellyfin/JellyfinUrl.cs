@@ -21,11 +21,41 @@ namespace ErsatzTV.Core.Jellyfin
             string pathSegment = split[0];
             QueryParamCollection query = Url.ParseQueryParams(split[1]);
 
-            Url x = Url.Parse(address)
+            return Url.Parse(address)
                 .AppendPathSegment(pathSegment)
                 .SetQueryParams(query);
+        }
 
-            return x;
+        public static Url ForArtwork(string address, string artwork)
+        {
+            string[] split = artwork.Replace("jellyfin://", string.Empty).Split('?');
+            if (split.Length != 2)
+            {
+                return artwork;
+            }
+
+            string pathSegment = split[0];
+            QueryParamCollection query = Url.ParseQueryParams(split[1]);
+
+            return Url.Parse(address)
+                .AppendPathSegment(pathSegment)
+                .SetQueryParams(query);
+        }
+
+        public static Url ProxyForArtwork(string scheme, string host, string artwork)
+        {
+            string[] split = artwork.Replace("jellyfin://", string.Empty).Split('?');
+            if (split.Length != 2)
+            {
+                return artwork;
+            }
+
+            string pathSegment = split[0];
+            QueryParamCollection query = Url.ParseQueryParams(split[1]);
+
+            return Url.Parse($"{scheme}://{host}/iptv/artwork/posters/jellyfin")
+                .AppendPathSegment(pathSegment)
+                .SetQueryParams(query);
         }
     }
 }
