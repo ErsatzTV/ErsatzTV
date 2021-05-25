@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
+using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using static LanguageExt.Prelude;
@@ -108,9 +110,7 @@ namespace ErsatzTV.Core.Iptv
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
-                                .Match(
-                                    artwork => $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}",
-                                    () => string.Empty);
+                                .Match(GetPoster, () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
                             {
@@ -147,9 +147,7 @@ namespace ErsatzTV.Core.Iptv
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
-                                .Match(
-                                    artwork => $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}",
-                                    () => string.Empty);
+                                .Match(GetPoster, () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
                             {
@@ -206,6 +204,28 @@ namespace ErsatzTV.Core.Iptv
 
             xml.Flush();
             return Encoding.UTF8.GetString(ms.ToArray());
+        }
+
+        private string GetPoster(Artwork artwork)
+        {
+            string poster = artwork.Path;
+
+            if (poster.StartsWith("jellyfin://"))
+            {
+                poster = JellyfinUrl.ProxyForArtwork(_scheme, _host, poster)
+                    .SetQueryParam("fillHeight", 440);
+            }
+            else if (poster.StartsWith("emby://"))
+            {
+                poster = EmbyUrl.ProxyForArtwork(_scheme, _host, poster)
+                    .SetQueryParam("maxHeight", 440);
+            }
+            else
+            {
+                poster = $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}";
+            }
+
+            return poster;
         }
 
         private static string GetTitle(PlayoutItem playoutItem)

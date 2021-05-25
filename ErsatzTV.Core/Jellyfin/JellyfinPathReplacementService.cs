@@ -56,7 +56,8 @@ namespace ErsatzTV.Core.Jellyfin
                 replacement =>
                 {
                     string finalPath = path.Replace(replacement.JellyfinPath, replacement.LocalPath);
-                    if (IsWindows(replacement.JellyfinMediaSource, path) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+                    if (IsWindows(replacement.JellyfinMediaSource, path) &&
+                        !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
                     {
                         finalPath = finalPath.Replace(@"\", @"/");
                     }

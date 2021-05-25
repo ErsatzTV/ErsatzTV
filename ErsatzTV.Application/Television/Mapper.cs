@@ -104,7 +104,7 @@ namespace ErsatzTV.Application.Television
                 Url url = EmbyUrl.ForArtwork(maybeEmby, artwork);
                 if (artworkKind == ArtworkKind.Poster)
                 {
-                    url.SetQueryParam("fillHeight", 440);
+                    url.SetQueryParam("maxHeight", 440);
                 }
 
                 artwork = url;

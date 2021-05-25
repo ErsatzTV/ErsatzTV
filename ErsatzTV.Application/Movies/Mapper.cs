@@ -76,7 +76,7 @@ namespace ErsatzTV.Application.Movies
                 Url url = EmbyUrl.ForArtwork(maybeEmby, artwork);
                 if (artworkKind is ArtworkKind.Poster or ArtworkKind.Thumbnail)
                 {
-                    url.SetQueryParam("fillHeight", 440);
+                    url.SetQueryParam("maxHeight", 440);
                 }
 
                 artwork = url;
