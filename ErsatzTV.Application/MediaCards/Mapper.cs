@@ -122,7 +122,7 @@ namespace ErsatzTV.Application.MediaCards
             else if (maybeEmby.IsSome && artwork.StartsWith("emby://"))
             {
                 artwork = EmbyUrl.ForArtwork(maybeEmby, artwork)
-                    .SetQueryParam("fillHeight", 440);
+                    .SetQueryParam("maxHeight", 440);
             }
 
             return new ActorCardViewModel(actor.Id, actor.Name, actor.Role, artwork);
@@ -152,7 +152,7 @@ namespace ErsatzTV.Application.MediaCards
             else if (maybeEmby.IsSome && poster.StartsWith("emby://"))
             {
                 poster = EmbyUrl.ForArtwork(maybeEmby, poster)
-                    .SetQueryParam("fillHeight", 440);
+                    .SetQueryParam("maxHeight", 440);
             }
 
             return poster;
@@ -174,7 +174,7 @@ namespace ErsatzTV.Application.MediaCards
             else if (maybeEmby.IsSome && thumb.StartsWith("emby://"))
             {
                 thumb = EmbyUrl.ForArtwork(maybeEmby, thumb)
-                    .SetQueryParam("fillHeight", 220);
+                    .SetQueryParam("maxHeight", 220);
             }
 
             return thumb;

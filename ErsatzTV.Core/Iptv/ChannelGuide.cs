@@ -25,7 +25,7 @@ namespace ErsatzTV.Core.Iptv
             _channels = channels;
         }
 
-        public string ToXml(Option<JellyfinMediaSource> maybeJellyfin, Option<EmbyMediaSource> maybeEmby)
+        public string ToXml()
         {
             using var ms = new MemoryStream();
             using var xml = XmlWriter.Create(ms);
@@ -110,7 +110,7 @@ namespace ErsatzTV.Core.Iptv
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
-                                .Match(artwork => GetPoster(artwork, maybeJellyfin, maybeEmby), () => string.Empty);
+                                .Match(GetPoster, () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
                             {
@@ -147,7 +147,7 @@ namespace ErsatzTV.Core.Iptv
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
-                                .Match(artwork => GetPoster(artwork, maybeJellyfin, maybeEmby), () => string.Empty);
+                                .Match(GetPoster, () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
                             {
@@ -206,19 +206,19 @@ namespace ErsatzTV.Core.Iptv
             return Encoding.UTF8.GetString(ms.ToArray());
         }
 
-        private string GetPoster(Artwork artwork, Option<JellyfinMediaSource> maybeJellyfin, Option<EmbyMediaSource> maybeEmby)
+        private string GetPoster(Artwork artwork)
         {
-            var poster = artwork.Path;
+            string poster = artwork.Path;
 
-            if (maybeJellyfin.IsSome && poster.StartsWith("jellyfin://"))
+            if (poster.StartsWith("jellyfin://"))
             {
-                poster = JellyfinUrl.ForArtwork(maybeJellyfin, poster)
+                poster = JellyfinUrl.ProxyForArtwork(_scheme, _host, poster)
                     .SetQueryParam("fillHeight", 440);
             }
-            else if (maybeEmby.IsSome && poster.StartsWith("emby://"))
+            else if (poster.StartsWith("emby://"))
             {
-                poster = EmbyUrl.ForArtwork(maybeEmby, poster)
-                    .SetQueryParam("fillHeight", 440);
+                poster = EmbyUrl.ProxyForArtwork(_scheme, _host, poster)
+                    .SetQueryParam("maxHeight", 440);
             }
             else
             {
