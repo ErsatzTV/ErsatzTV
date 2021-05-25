@@ -467,35 +467,35 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 actual.VideoCodec.Should().Be("copy");
             }
             
-            // disabled while frame rate normalization is unused
-            // [Test]
-            // public void ShouldNot_SetCopyVideoCodec_When_ContentIsCorrectSize_And_CorrectCodec_And_Framerate_ForTransportStream()
-            // {
-            //     var ffmpegProfile = new FFmpegProfile
-            //     {
-            //         NormalizeVideo = true,
-            //         Resolution = new Resolution { Width = 1920, Height = 1080 },
-            //         VideoCodec = "libx264",
-            //         FrameRate = "24"
-            //     };
-            //
-            //     // not anamorphic
-            //     var version = new MediaVersion
-            //         { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
-            //
-            //     FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-            //         StreamingMode.TransportStream,
-            //         ffmpegProfile,
-            //         version,
-            //         new MediaStream { Codec = "libx264" },
-            //         new MediaStream(),
-            //         DateTimeOffset.Now,
-            //         DateTimeOffset.Now);
-            //
-            //     actual.ScaledSize.IsNone.Should().BeTrue();
-            //     actual.PadToDesiredResolution.Should().BeFalse();
-            //     actual.VideoCodec.Should().NotBe("copy");
-            // }
+            [Test]
+            public void ShouldNot_SetCopyVideoCodec_When_ContentIsCorrectSize_And_CorrectCodec_And_Framerate_ForTransportStream()
+            {
+                var ffmpegProfile = new FFmpegProfile
+                {
+                    NormalizeVideo = true,
+                    Resolution = new Resolution { Width = 1920, Height = 1080 },
+                    VideoCodec = "libx264",
+                    FrameRate = "24"
+                };
+
+                // not anamorphic
+                var version = new MediaVersion
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream { Codec = "libx264" },
+                    new MediaStream(),
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.ScaledSize.IsNone.Should().BeTrue();
+                actual.PadToDesiredResolution.Should().BeFalse();
+                actual.VideoCodec.Should().NotBe("copy");
+            }
+
 
             [Test]
             public void

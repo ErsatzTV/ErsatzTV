@@ -91,9 +91,9 @@ namespace ErsatzTV.Core.FFmpeg
 
                     if (ffmpegProfile.NormalizeVideo)
                     {
-                        // result.FrameRate = string.IsNullOrWhiteSpace(ffmpegProfile.FrameRate)
-                        //     ? None
-                        //     : Some(ffmpegProfile.FrameRate);
+                        result.FrameRate = string.IsNullOrWhiteSpace(ffmpegProfile.FrameRate)
+                            ? None
+                            : Some(ffmpegProfile.FrameRate);
 
                         result.VideoTrackTimeScale = 90000;
                     }
