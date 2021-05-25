@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
+using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using static LanguageExt.Prelude;
@@ -23,7 +25,7 @@ namespace ErsatzTV.Core.Iptv
             _channels = channels;
         }
 
-        public string ToXml()
+        public string ToXml(Option<JellyfinMediaSource> maybeJellyfin, Option<EmbyMediaSource> maybeEmby)
         {
             using var ms = new MemoryStream();
             using var xml = XmlWriter.Create(ms);
@@ -108,9 +110,7 @@ namespace ErsatzTV.Core.Iptv
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
-                                .Match(
-                                    artwork => $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}",
-                                    () => string.Empty);
+                                .Match(artwork => GetPoster(artwork, maybeJellyfin, maybeEmby), () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
                             {
@@ -147,9 +147,7 @@ namespace ErsatzTV.Core.Iptv
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
-                                .Match(
-                                    artwork => $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}",
-                                    () => string.Empty);
+                                .Match(artwork => GetPoster(artwork, maybeJellyfin, maybeEmby), () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
                             {
@@ -206,6 +204,28 @@ namespace ErsatzTV.Core.Iptv
 
             xml.Flush();
             return Encoding.UTF8.GetString(ms.ToArray());
+        }
+
+        private string GetPoster(Artwork artwork, Option<JellyfinMediaSource> maybeJellyfin, Option<EmbyMediaSource> maybeEmby)
+        {
+            var poster = artwork.Path;
+
+            if (maybeJellyfin.IsSome && poster.StartsWith("jellyfin://"))
+            {
+                poster = JellyfinUrl.ForArtwork(maybeJellyfin, poster)
+                    .SetQueryParam("fillHeight", 440);
+            }
+            else if (maybeEmby.IsSome && poster.StartsWith("emby://"))
+            {
+                poster = EmbyUrl.ForArtwork(maybeEmby, poster)
+                    .SetQueryParam("fillHeight", 440);
+            }
+            else
+            {
+                poster = $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}";
+            }
+
+            return poster;
         }
 
         private static string GetTitle(PlayoutItem playoutItem)
