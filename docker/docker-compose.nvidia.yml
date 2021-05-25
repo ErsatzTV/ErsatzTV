@@ -2,6 +2,7 @@
 
 services:
     ersatztv:
+        privileged: true
         build:
             context: ..
             dockerfile: docker/nvidia/Dockerfile
