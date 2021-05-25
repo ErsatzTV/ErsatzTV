@@ -2,9 +2,14 @@
 
 services:
     ersatztv:
-        privileged: true
+        build:
+            context: ..
+            dockerfile: docker/nvidia/Dockerfile
+        environment:
+            NVIDIA_VISIBLE_DEVICES: all
+            NVIDIA_DRIVER_CAPABILITIES: compute,utility,video
         deploy:
             resources:
                 reservations:
                     devices:
-                        - capabilities: [ gpu ]
+                        -   capabilities: [ gpu ]
