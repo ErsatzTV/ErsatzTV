@@ -1,6 +1,6 @@
 ﻿FROM mcr.microsoft.com/dotnet/aspnet:5.0-focal-amd64 AS dotnet-runtime
 
-FROM jrottenberg/ffmpeg:4.3-ubuntu2004 AS runtime-base
+FROM linuxserver/ffmpeg:amd64-latest AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev tzdata
 
@@ -37,4 +37,5 @@ FROM runtime-base
 WORKDIR /app
 EXPOSE 8409
 COPY --from=build /app ./
-ENTRYPOINT ["./ErsatzTV"]
+RUN usermod -a -G root abc
+ENTRYPOINT ["/app/ErsatzTV"]
