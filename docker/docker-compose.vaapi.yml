@@ -2,5 +2,7 @@
 
 services:
     ersatztv:
+        build:
+            dockerfile: docker/vaapi/Dockerfile
         devices:
             - /dev/dri/renderD128:/dev/dri/renderD128
