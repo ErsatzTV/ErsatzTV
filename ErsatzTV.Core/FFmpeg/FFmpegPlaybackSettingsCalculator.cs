@@ -99,7 +99,7 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
-                        NeedToNormalizeVideoCodec(ffmpegProfile, videoStream))
+                        NeedToNormalizeVideoCodec(ffmpegProfile, videoStream) || result.FrameRate.IsSome)
                     {
                         result.VideoCodec = ffmpegProfile.VideoCodec;
                         result.VideoBitrate = ffmpegProfile.VideoBitrate;
