@@ -255,6 +255,7 @@ namespace ErsatzTV
             services.AddHostedService<EndpointValidatorService>();
             services.AddHostedService<DatabaseMigratorService>();
             services.AddHostedService<CacheCleanerService>();
+            services.AddHostedService<ResourceExtractorService>();
             services.AddHostedService<EmbyService>();
             services.AddHostedService<JellyfinService>();
             services.AddHostedService<PlexService>();

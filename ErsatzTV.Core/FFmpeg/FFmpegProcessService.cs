@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -110,7 +111,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
-                .WithLoopedImage("Resources/background.png")
+                .WithLoopedImage(Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png"))
                 .WithLibavfilter()
                 .WithInput("anullsrc")
                 .WithErrorText(desiredResolution, errorMessage)

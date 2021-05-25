@@ -51,12 +51,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="Resources\background.png">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Resources\Roboto-Regular.ttf">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
+      <EmbeddedResource Include="Resources\background.png" />
+      <EmbeddedResource Include="Resources\ErsatzTV.png" />
+      <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
     </ItemGroup>
 
 </Project>
