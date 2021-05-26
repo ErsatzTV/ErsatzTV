@@ -409,6 +409,17 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 };
                 metadata.Artwork.Add(poster);
             }
+            
+            if (!string.IsNullOrWhiteSpace(item.ImageTags.Thumb))
+            {
+                var thumb = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    Path = $"jellyfin://Items/{item.Id}/Images/Thumb?tag={item.ImageTags.Thumb}",
+                    DateAdded = dateAdded
+                };
+                metadata.Artwork.Add(thumb);
+            }
 
             if (item.BackdropImageTags.Any())
             {

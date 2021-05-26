@@ -110,7 +110,7 @@ namespace ErsatzTV.Core.Iptv
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
-                                .Match(GetPoster, () => string.Empty);
+                                .Match(a => GetArtworkUrl(a, ArtworkKind.Poster), () => string.Empty);
 
                             if (!string.IsNullOrWhiteSpace(poster))
                             {
@@ -144,15 +144,24 @@ namespace ErsatzTV.Core.Iptv
                         if (maybeMetadata.IsSome)
                         {
                             ShowMetadata metadata = maybeMetadata.ValueUnsafe();
-                            string poster = Optional(metadata.Artwork).Flatten()
-                                .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
+                            string artwork = Optional(metadata.Artwork).Flatten()
+                                .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
                                 .HeadOrNone()
-                                .Match(GetPoster, () => string.Empty);
+                                .Match(a => GetArtworkUrl(a, ArtworkKind.Thumbnail), () => string.Empty);
 
-                            if (!string.IsNullOrWhiteSpace(poster))
+                            // fall back to poster
+                            if (string.IsNullOrWhiteSpace(artwork))
+                            {
+                                artwork = Optional(metadata.Artwork).Flatten()
+                                    .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
+                                    .HeadOrNone()
+                                    .Match(a => GetArtworkUrl(a, ArtworkKind.Poster), () => string.Empty);
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(artwork))
                             {
                                 xml.WriteStartElement("icon");
-                                xml.WriteAttributeString("src", poster);
+                                xml.WriteAttributeString("src", artwork);
                                 xml.WriteEndElement(); // icon
                             }
                         }
@@ -206,26 +215,38 @@ namespace ErsatzTV.Core.Iptv
             return Encoding.UTF8.GetString(ms.ToArray());
         }
 
-        private string GetPoster(Artwork artwork)
+        private string GetArtworkUrl(Artwork artwork, ArtworkKind artworkKind)
         {
-            string poster = artwork.Path;
+            string artworkPath = artwork.Path;
 
-            if (poster.StartsWith("jellyfin://"))
+            int height = artworkKind switch
             {
-                poster = JellyfinUrl.ProxyForArtwork(_scheme, _host, poster)
-                    .SetQueryParam("fillHeight", 440);
+                ArtworkKind.Thumbnail => 220,
+                _ => 440
+            };
+            
+            if (artworkPath.StartsWith("jellyfin://"))
+            {
+                artworkPath = JellyfinUrl.ProxyForArtwork(_scheme, _host, artworkPath, artworkKind)
+                    .SetQueryParam("fillHeight", height);
             }
-            else if (poster.StartsWith("emby://"))
+            else if (artworkPath.StartsWith("emby://"))
             {
-                poster = EmbyUrl.ProxyForArtwork(_scheme, _host, poster)
-                    .SetQueryParam("maxHeight", 440);
+                artworkPath = EmbyUrl.ProxyForArtwork(_scheme, _host, artworkPath, artworkKind)
+                    .SetQueryParam("maxHeight", height);
             }
             else
             {
-                poster = $"{_scheme}://{_host}/iptv/artwork/posters/{artwork.Path}";
+                string artworkFolder = artworkKind switch
+                {
+                    ArtworkKind.Thumbnail => "thumbnails",
+                    _ => "posters"
+                };
+
+                artworkPath = $"{_scheme}://{_host}/iptv/artwork/{artworkFolder}/{artwork.Path}";
             }
 
-            return poster;
+            return artworkPath;
         }
 
         private static string GetTitle(PlayoutItem playoutItem)

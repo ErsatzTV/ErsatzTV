@@ -42,7 +42,7 @@ namespace ErsatzTV.Core.Jellyfin
                 .SetQueryParams(query);
         }
 
-        public static Url ProxyForArtwork(string scheme, string host, string artwork)
+        public static Url ProxyForArtwork(string scheme, string host, string artwork, ArtworkKind artworkKind)
         {
             string[] split = artwork.Replace("jellyfin://", string.Empty).Split('?');
             if (split.Length != 2)
@@ -53,7 +53,13 @@ namespace ErsatzTV.Core.Jellyfin
             string pathSegment = split[0];
             QueryParamCollection query = Url.ParseQueryParams(split[1]);
 
-            return Url.Parse($"{scheme}://{host}/iptv/artwork/posters/jellyfin")
+            string artworkFolder = artworkKind switch
+            {
+                ArtworkKind.Thumbnail => "thumbnails",
+                _ => "posters"
+            };
+
+            return Url.Parse($"{scheme}://{host}/iptv/artwork/{artworkFolder}/jellyfin")
                 .AppendPathSegment(pathSegment)
                 .SetQueryParams(query);
         }

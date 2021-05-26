@@ -84,7 +84,8 @@ namespace ErsatzTV.Core.Metadata
                     await FindOrCreateShow(libraryPath.Id, showFolder)
                         .BindT(show => UpdateMetadataForShow(show, showFolder))
                         .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Poster))
-                        .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt));
+                        .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt))
+                        .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Thumbnail));
 
                 await maybeShow.Match(
                     async result =>
@@ -309,10 +310,10 @@ namespace ErsatzTV.Core.Metadata
             {
                 Show show = result.Item;
                 await LocateArtworkForShow(showFolder, artworkKind).IfSomeAsync(
-                    async posterFile =>
+                    async artworkFile =>
                     {
                         ShowMetadata metadata = show.ShowMetadata.Head();
-                        await RefreshArtwork(posterFile, metadata, artworkKind);
+                        await RefreshArtwork(artworkFile, metadata, artworkKind);
                     });
 
                 return result;
@@ -378,6 +379,7 @@ namespace ErsatzTV.Core.Metadata
             {
                 ArtworkKind.Poster => new[] { "poster", "folder" },
                 ArtworkKind.FanArt => new[] { "fanart" },
+                ArtworkKind.Thumbnail => new[] { "thumb" },
                 _ => throw new ArgumentOutOfRangeException(nameof(artworkKind))
             };
 
