@@ -193,7 +193,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     poster.DateAdded = incomingPoster.DateAdded;
                     poster.DateUpdated = incomingPoster.DateUpdated;
                 }
-                
+
                 // thumbnail
                 Artwork incomingThumbnail =
                     incomingMetadata.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Thumbnail);
@@ -319,7 +319,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     fanArt.DateAdded = incomingFanArt.DateAdded;
                     fanArt.DateUpdated = incomingFanArt.DateUpdated;
                 }
-                
+
                 var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();
                 foreach (Artwork artworkToRemove in metadata.Artwork.Filter(a => !paths.Contains(a.Path)))
                 {
@@ -399,7 +399,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     thumbnail.DateAdded = incomingThumbnail.DateAdded;
                     thumbnail.DateUpdated = incomingThumbnail.DateUpdated;
                 }
-                
+
                 var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();
                 foreach (Artwork artworkToRemove in metadata.Artwork.Filter(a => !paths.Contains(a.Path)))
                 {

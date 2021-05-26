@@ -17,16 +17,13 @@ namespace ErsatzTV.Services.RunOnce
             }
 
             Assembly assembly = typeof(ResourceExtractorService).GetTypeInfo().Assembly;
-            
+
             await ExtractResource(assembly, "background.png", cancellationToken);
             await ExtractResource(assembly, "ErsatzTV.png", cancellationToken);
             await ExtractResource(assembly, "Roboto-Regular.ttf", cancellationToken);
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask;
-        }
+        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         private async Task ExtractResource(Assembly assembly, string name, CancellationToken cancellationToken)
         {

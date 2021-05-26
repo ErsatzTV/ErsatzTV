@@ -358,7 +358,7 @@ namespace ErsatzTV.Infrastructure.Emby
                 };
                 metadata.Artwork.Add(poster);
             }
-            
+
             if (!string.IsNullOrWhiteSpace(item.ImageTags.Thumb))
             {
                 var thumb = new Artwork

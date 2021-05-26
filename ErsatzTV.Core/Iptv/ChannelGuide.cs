@@ -224,7 +224,7 @@ namespace ErsatzTV.Core.Iptv
                 ArtworkKind.Thumbnail => 220,
                 _ => 440
             };
-            
+
             if (artworkPath.StartsWith("jellyfin://"))
             {
                 artworkPath = JellyfinUrl.ProxyForArtwork(_scheme, _host, artworkPath, artworkKind)
