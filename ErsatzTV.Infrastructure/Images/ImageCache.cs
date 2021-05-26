@@ -50,7 +50,7 @@ namespace ErsatzTV.Infrastructure.Images
             {
                 byte[] hash = Crypto.ComputeHash(imageBuffer);
                 string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
-                string subfolder = hex.Substring(0, 2);
+                string subfolder = hex[..2];
                 string baseFolder = artworkKind switch
                 {
                     ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
@@ -82,7 +82,7 @@ namespace ErsatzTV.Infrastructure.Images
                 var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
                 byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
                 string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
-                string subfolder = hex.Substring(0, 2);
+                string subfolder = hex[..2];
                 string baseFolder = artworkKind switch
                 {
                     ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
@@ -101,6 +101,24 @@ namespace ErsatzTV.Infrastructure.Images
             {
                 return BaseError.New(ex.ToString());
             }
+        }
+
+        public string GetPathForImage(string fileName, ArtworkKind artworkKind, Option<int> maybeMaxHeight)
+        {
+            string subfolder = maybeMaxHeight.Match(
+                maxHeight => Path.Combine(maxHeight.ToString(), fileName[..2]),
+                () => fileName[..2]);
+
+            string baseFolder = artworkKind switch
+            {
+                ArtworkKind.Poster => Path.Combine(FileSystemLayout.PosterCacheFolder, subfolder),
+                ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
+                ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
+                ArtworkKind.FanArt => Path.Combine(FileSystemLayout.FanArtCacheFolder, subfolder),
+                _ => FileSystemLayout.LegacyImageCacheFolder
+            };
+
+            return Path.Combine(baseFolder, fileName);
         }
     }
 }
