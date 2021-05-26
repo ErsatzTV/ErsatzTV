@@ -11,7 +11,7 @@
                                 Text="@FormatText()"
                                 HighlightedText="@EntityName"/>
             </MudContainer>
-            <MudSelect Label="Schedule" @bind-Value="_selectedSchedule" For="@(() => _selectedSchedule)" Class="mb-6 mx-4">
+            <MudSelect T="ProgramScheduleViewModel" Label="Schedule" @bind-Value="_selectedSchedule" Class="mb-6 mx-4">
                 @foreach (ProgramScheduleViewModel schedule in _schedules)
                 {
                     <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
