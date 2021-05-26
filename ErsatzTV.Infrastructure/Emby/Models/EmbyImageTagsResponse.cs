@@ -3,5 +3,6 @@
     public class EmbyImageTagsResponse
     {
         public string Primary { get; set; }
+        public string Thumb { get; set; }
     }
 }
