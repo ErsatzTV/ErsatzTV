@@ -56,9 +56,12 @@ namespace ErsatzTV.Controllers
                 Right: r => new FileContentResult(r.Contents, r.MimeType));
         }
 
+
         [HttpGet("/iptv/artwork/posters/jellyfin/{*path}")]
         [HttpGet("/artwork/posters/jellyfin/{*path}")]
-        public Task<IActionResult> GetJellyfinPoster(string path)
+        [HttpGet("/iptv/artwork/thumbnails/jellyfin/{*path}")]
+        [HttpGet("/artwork/thumbnails/jellyfin/{*path}")]
+        public Task<IActionResult> GetJellyfin(string path)
         {
             if (Request.QueryString.HasValue)
             {
@@ -70,7 +73,9 @@ namespace ErsatzTV.Controllers
 
         [HttpGet("/iptv/artwork/posters/emby/{*path}")]
         [HttpGet("/artwork/posters/emby/{*path}")]
-        public Task<IActionResult> GetEmbyPoster(string path)
+        [HttpGet("/iptv/artwork/thumbnails/emby/{*path}")]
+        [HttpGet("/artwork/thumbnails/emby/{*path}")]
+        public Task<IActionResult> GetEmby(string path)
         {
             if (Request.QueryString.HasValue)
             {
@@ -99,6 +104,7 @@ namespace ErsatzTV.Controllers
                 plexMediaSourceId,
                 $"photo/:/transcode?url=/{path}&height=220&width=392&minSize=1&upscale=0");
 
+        [HttpGet("/iptv/artwork/thumbnails/{fileName}")]
         [HttpGet("/artwork/thumbnails/{fileName}")]
         public async Task<IActionResult> GetThumbnail(string fileName)
         {

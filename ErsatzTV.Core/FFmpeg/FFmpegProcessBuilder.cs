@@ -225,7 +225,7 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithErrorText(IDisplaySize desiredResolution, string text)
         {
-            string fontPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "Roboto-Regular.ttf");            
+            string fontPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "Roboto-Regular.ttf");
             var fontFile = $"fontfile={fontPath}";
             const string FONT_COLOR = "fontcolor=white";
             const string X = "x=(w-text_w)/2";
