@@ -72,6 +72,19 @@ namespace ErsatzTV.Core.Iptv
                         finishIndex++;
                     }
 
+                    int customShowId = -1;
+                    if (sorted[i].MediaItem is Episode ep)
+                    {
+                        customShowId = ep.Season.ShowId;
+                    }
+
+                    bool isSameCustomShow = hasCustomTitle;
+                    for (int x = i; x <= finishIndex; x++)
+                    {
+                        isSameCustomShow = isSameCustomShow && sorted[x].MediaItem is Episode e &&
+                                           customShowId == e.Season.ShowId;
+                    }
+
                     PlayoutItem finishItem = sorted[finishIndex];
                     i = finishIndex;
 
@@ -137,7 +150,7 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteStartElement("previously-shown");
                     xml.WriteEndElement(); // previously-shown
 
-                    if (!hasCustomTitle && startItem.MediaItem is Episode episode)
+                    if (startItem.MediaItem is Episode episode && (!hasCustomTitle || isSameCustomShow))
                     {
                         Option<ShowMetadata> maybeMetadata =
                             Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten();
@@ -166,30 +179,34 @@ namespace ErsatzTV.Core.Iptv
                             }
                         }
 
-                        int s = Optional(episode.Season?.SeasonNumber).IfNone(0);
-                        int e = episode.EpisodeNumber;
-                        if (s > 0 && e > 0)
+                        if (!isSameCustomShow)
                         {
-                            xml.WriteStartElement("episode-num");
-                            xml.WriteAttributeString("system", "onscreen");
-                            xml.WriteString($"S{s:00}E{e:00}");
-                            xml.WriteEndElement(); // episode-num
+                            int s = Optional(episode.Season?.SeasonNumber).IfNone(0);
+                            int e = episode.EpisodeNumber;
+                            if (s > 0 && e > 0)
+                            {
+                                xml.WriteStartElement("episode-num");
+                                xml.WriteAttributeString("system", "onscreen");
+                                xml.WriteString($"S{s:00}E{e:00}");
+                                xml.WriteEndElement(); // episode-num
 
-                            xml.WriteStartElement("episode-num");
-                            xml.WriteAttributeString("system", "xmltv_ns");
-                            xml.WriteString($"{s - 1}.{e - 1}.0/1");
-                            xml.WriteEndElement(); // episode-num
+                                xml.WriteStartElement("episode-num");
+                                xml.WriteAttributeString("system", "xmltv_ns");
+                                xml.WriteString($"{s - 1}.{e - 1}.0/1");
+                                xml.WriteEndElement(); // episode-num
+                            }
                         }
                     }
 
-                    // sb.AppendLine("<icon src=\"\"/>");
-
-                    if (!string.IsNullOrWhiteSpace(description))
+                    if (!isSameCustomShow)
                     {
-                        xml.WriteStartElement("desc");
-                        xml.WriteAttributeString("lang", "en");
-                        xml.WriteString(description);
-                        xml.WriteEndElement(); // desc
+                        if (!string.IsNullOrWhiteSpace(description))
+                        {
+                            xml.WriteStartElement("desc");
+                            xml.WriteAttributeString("lang", "en");
+                            xml.WriteString(description);
+                            xml.WriteEndElement(); // desc
+                        }
                     }
 
                     if (!string.IsNullOrWhiteSpace(contentRating))
