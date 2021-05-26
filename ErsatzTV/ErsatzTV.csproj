@@ -4,6 +4,7 @@
         <TargetFramework>net5.0</TargetFramework>
         <NoWarn>VSTHRD200</NoWarn>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <ItemGroup>
