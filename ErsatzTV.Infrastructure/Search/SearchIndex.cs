@@ -292,7 +292,7 @@ namespace ErsatzTV.Infrastructure.Search
                                 metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                                 Field.Store.NO));
                     }
-                    
+
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
                     {
                         doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
@@ -385,7 +385,7 @@ namespace ErsatzTV.Infrastructure.Search
                     {
                         doc.Add(new TextField(LanguageField, cultureInfo.EnglishName, Field.Store.NO));
                     }
-                    
+
                     if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                     {
                         foreach (string contentRating in (metadata.ContentRating ?? string.Empty).Split("/")

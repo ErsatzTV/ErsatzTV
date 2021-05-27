@@ -24,27 +24,27 @@ namespace ErsatzTV.Infrastructure.Migrations
             migrationBuilder.Sql("UPDATE JellyfinShow SET Etag = NULL");
 
             migrationBuilder.AddColumn<string>(
-                name: "ContentRating",
-                table: "ShowMetadata",
-                type: "TEXT",
+                "ContentRating",
+                "ShowMetadata",
+                "TEXT",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "ContentRating",
-                table: "MovieMetadata",
-                type: "TEXT",
+                "ContentRating",
+                "MovieMetadata",
+                "TEXT",
                 nullable: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "ContentRating",
-                table: "ShowMetadata");
+                "ContentRating",
+                "ShowMetadata");
 
             migrationBuilder.DropColumn(
-                name: "ContentRating",
-                table: "MovieMetadata");
+                "ContentRating",
+                "MovieMetadata");
         }
     }
 }
