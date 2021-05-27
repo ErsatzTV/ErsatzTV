@@ -148,12 +148,15 @@ namespace ErsatzTV.Core.Plex
                     {
                         if (existingMetadata.MetadataKind != MetadataKind.External)
                         {
+                            existingMetadata.MetadataKind = MetadataKind.External;
                             await _metadataRepository.MarkAsExternal(existingMetadata);
                         }
 
                         if (existingMetadata.ContentRating != fullMetadata.ContentRating)
                         {
+                            existingMetadata.ContentRating = fullMetadata.ContentRating;
                             await _metadataRepository.SetContentRating(existingMetadata, fullMetadata.ContentRating);
+                            result.IsUpdated = true;
                         }
 
                         foreach (Genre genre in existingMetadata.Genres

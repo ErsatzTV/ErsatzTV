@@ -108,7 +108,7 @@ namespace ErsatzTV.Core.Metadata
                     .HeadOrNone();
 
                 // skip folder if etag matches
-                if (await knownFolder.Map(f => f.Etag).IfNoneAsync(string.Empty) == etag)
+                if (await knownFolder.Map(f => f.Etag ?? string.Empty).IfNoneAsync(string.Empty) == etag)
                 {
                     continue;
                 }
