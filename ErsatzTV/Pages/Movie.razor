@@ -63,6 +63,18 @@
     </div>
     <MudCard Class="mb-6">
         <MudCardContent>
+            @if (_sortedContentRatings.Any())
+            {
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Content Ratings:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=content_rating%3a%22{Uri.EscapeDataString(_sortedContentRatings.Head())}%22")">@_sortedContentRatings.Head()</MudLink>
+                    @foreach (string contentRating in _sortedContentRatings.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=content_rating%3a%22{Uri.EscapeDataString(contentRating)}%22")">@contentRating</MudLink>
+                    }
+                </div>
+            }
             @if (_sortedLanguages.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
@@ -136,6 +148,7 @@
     public int MovieId { get; set; }
 
     private MovieViewModel _movie;
+    private List<string> _sortedContentRatings = new();
     private List<CultureInfo> _sortedLanguages = new();
     private List<string> _sortedStudios = new();
     private List<string> _sortedGenres = new();
@@ -147,6 +160,7 @@
         _mediator.Send(new GetMovieById(MovieId)).IfSomeAsync(vm =>
         {
             _movie = vm;
+            _sortedContentRatings = _movie.ContentRatings.OrderBy(cr => cr).ToList();
             _sortedLanguages = _movie.Languages.OrderBy(ci => ci.EnglishName).ToList();
             _sortedStudios = _movie.Studios.OrderBy(s => s).ToList();
             _sortedGenres = _movie.Genres.OrderBy(g => g).ToList();

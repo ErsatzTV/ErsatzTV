@@ -9,6 +9,7 @@ namespace ErsatzTV.Infrastructure.Emby.Models
         public string Id { get; set; }
         public string Etag { get; set; }
         public string Path { get; set; }
+        public string OfficialRating { get; set; }
         public DateTimeOffset DateCreated { get; set; }
         public long RunTimeTicks { get; set; }
         public List<string> Genres { get; set; }

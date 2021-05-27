@@ -6,6 +6,7 @@ namespace ErsatzTV.Infrastructure.Plex.Models
     {
         public string Key { get; set; }
         public string Title { get; set; }
+        public string ContentRating { get; set; }
         public string Summary { get; set; }
         public int Year { get; set; }
         public string Tagline { get; set; }

@@ -232,6 +232,7 @@ namespace ErsatzTV.Core.Metadata
             Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
                 async existing =>
                 {
+                    existing.ContentRating = metadata.ContentRating;
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
                     existing.Tagline = metadata.Tagline;
@@ -276,6 +277,7 @@ namespace ErsatzTV.Core.Metadata
             Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
                 async existing =>
                 {
+                    existing.ContentRating = metadata.ContentRating;
                     existing.Outline = metadata.Outline;
                     existing.Plot = metadata.Plot;
                     existing.Tagline = metadata.Tagline;
@@ -474,6 +476,7 @@ namespace ErsatzTV.Core.Metadata
                             Plot = nfo.Plot,
                             Outline = nfo.Outline,
                             Tagline = nfo.Tagline,
+                            ContentRating = nfo.ContentRating,
                             Year = GetYear(nfo.Year, nfo.Premiered),
                             ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
                             Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
@@ -571,6 +574,7 @@ namespace ErsatzTV.Core.Metadata
                             DateUpdated = dateUpdated,
                             Title = nfo.Title,
                             Year = nfo.Year,
+                            ContentRating = nfo.ContentRating,
                             ReleaseDate = nfo.Premiered,
                             Plot = nfo.Plot,
                             Outline = nfo.Outline,

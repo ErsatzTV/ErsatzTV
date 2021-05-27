@@ -28,7 +28,7 @@ namespace ErsatzTV.Infrastructure.Emby
             string parentId,
             [Query]
             string fields =
-                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources",
+                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating",
             [Query]
             string includeItemTypes = "Movie");
 
@@ -40,7 +40,7 @@ namespace ErsatzTV.Infrastructure.Emby
             string parentId,
             [Query]
             string fields =
-                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources",
+                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating",
             [Query]
             string includeItemTypes = "Series");
 

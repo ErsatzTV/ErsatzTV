@@ -228,6 +228,26 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 @"UPDATE EpisodeMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
                 new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
 
+        public Task<Unit> MarkAsExternal(ShowMetadata metadata) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE ShowMetadata SET MetadataKind = @Kind WHERE Id = @Id",
+                new { metadata.Id, Kind = (int) MetadataKind.External }).ToUnit();
+
+        public Task<Unit> SetContentRating(ShowMetadata metadata, string contentRating) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE ShowMetadata SET ContentRating = @ContentRating WHERE Id = @Id",
+                new { metadata.Id, ContentRating = contentRating }).ToUnit();
+
+        public Task<Unit> MarkAsExternal(MovieMetadata metadata) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE MovieMetadata SET MetadataKind = @Kind WHERE Id = @Id",
+                new { metadata.Id, Kind = (int) MetadataKind.External }).ToUnit();
+
+        public Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE MovieMetadata SET ContentRating = @ContentRating WHERE Id = @Id",
+                new { metadata.Id, ContentRating = contentRating }).ToUnit();
+
         public Task<bool> RemoveGenre(Genre genre) =>
             _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id })
                 .Map(result => result > 0);

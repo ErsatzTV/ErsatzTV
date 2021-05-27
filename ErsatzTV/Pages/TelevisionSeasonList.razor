@@ -77,6 +77,18 @@
     </div>
     <MudCard Class="mb-6">
         <MudCardContent>
+            @if (_sortedContentRatings.Any())
+            {
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Content Ratings:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=content_rating%3a%22{Uri.EscapeDataString(_sortedContentRatings.Head())}%22")">@_sortedContentRatings.Head()</MudLink>
+                    @foreach (string contentRating in _sortedContentRatings.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=content_rating%3a%22{Uri.EscapeDataString(contentRating)}%22")">@contentRating</MudLink>
+                    }
+                </div>
+            }
             @if (_sortedLanguages.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
@@ -161,6 +173,7 @@
     public int ShowId { get; set; }
 
     private TelevisionShowViewModel _show;
+    private List<string> _sortedContentRatings = new();
     private List<CultureInfo> _sortedLanguages = new();
     private List<string> _sortedStudios = new();
     private List<string> _sortedGenres = new();
@@ -179,6 +192,7 @@
             .IfSomeAsync(vm =>
             {
                 _show = vm;
+                _sortedContentRatings = _show.ContentRatings.OrderBy(cr => cr).ToList();
                 _sortedLanguages = _show.Languages.OrderBy(ci => ci.EnglishName).ToList();
                 _sortedStudios = _show.Studios.OrderBy(s => s).ToList();
                 _sortedGenres = _show.Genres.OrderBy(g => g).ToList();

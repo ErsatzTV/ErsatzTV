@@ -11,6 +11,9 @@ using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Lucene.Net.Analysis;
+using Lucene.Net.Analysis.Core;
+using Lucene.Net.Analysis.Miscellaneous;
 using Lucene.Net.Analysis.Standard;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
@@ -45,6 +48,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string StyleField = "style";
         private const string MoodField = "mood";
         private const string ActorField = "actor";
+        private const string ContentRatingField = "content_rating";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -65,7 +69,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 9;
+        public int Version => 10;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -162,9 +166,14 @@ namespace ErsatzTV.Infrastructure.Search
             var searcher = new IndexSearcher(reader);
             int hitsLimit = limit == 0 ? searcher.IndexReader.MaxDoc : skip + limit;
             using var analyzer = new StandardAnalyzer(AppLuceneVersion);
+            var customAnalyzers = new Dictionary<string, Analyzer>
+            {
+                { ContentRatingField, new KeywordAnalyzer() }
+            };
+            using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
             QueryParser parser = !string.IsNullOrWhiteSpace(searchField)
-                ? new QueryParser(AppLuceneVersion, searchField, analyzer)
-                : new MultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzer);
+                ? new QueryParser(AppLuceneVersion, searchField, analyzerWrapper)
+                : new MultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
             parser.AllowLeadingWildcard = true;
             Query query = ParseQuery(searchQuery, parser);
             var filter = new DuplicateFilter(TitleAndYearField);
@@ -266,6 +275,15 @@ namespace ErsatzTV.Infrastructure.Search
 
                     AddLanguages(doc, movie.MediaVersions);
 
+                    if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
+                    {
+                        foreach (string contentRating in (metadata.ContentRating ?? string.Empty).Split("/")
+                            .Map(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)))
+                        {
+                            doc.Add(new StringField(ContentRatingField, contentRating, Field.Store.NO));
+                        }
+                    }
+
                     if (metadata.ReleaseDate.HasValue)
                     {
                         doc.Add(
@@ -366,6 +384,15 @@ namespace ErsatzTV.Infrastructure.Search
                         .Flatten())
                     {
                         doc.Add(new TextField(LanguageField, cultureInfo.EnglishName, Field.Store.NO));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
+                    {
+                        foreach (string contentRating in (metadata.ContentRating ?? string.Empty).Split("/")
+                            .Map(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)))
+                        {
+                            doc.Add(new StringField(ContentRatingField, contentRating, Field.Store.NO));
+                        }
                     }
 
                     if (metadata.ReleaseDate.HasValue)

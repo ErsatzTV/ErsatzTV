@@ -327,6 +327,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 // metadata
                 MovieMetadata metadata = existing.MovieMetadata.Head();
                 MovieMetadata incomingMetadata = movie.MovieMetadata.Head();
+                metadata.MetadataKind = incomingMetadata.MetadataKind;
+                metadata.ContentRating = incomingMetadata.ContentRating;
                 metadata.Title = incomingMetadata.Title;
                 metadata.SortTitle = incomingMetadata.SortTitle;
                 metadata.Plot = incomingMetadata.Plot;
@@ -528,6 +530,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 // metadata
                 MovieMetadata metadata = existing.MovieMetadata.Head();
                 MovieMetadata incomingMetadata = movie.MovieMetadata.Head();
+                metadata.MetadataKind = incomingMetadata.MetadataKind;
+                metadata.ContentRating = incomingMetadata.ContentRating;
                 metadata.Title = incomingMetadata.Title;
                 metadata.SortTitle = incomingMetadata.SortTitle;
                 metadata.Plot = incomingMetadata.Plot;

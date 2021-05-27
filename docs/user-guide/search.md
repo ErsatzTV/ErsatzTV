@@ -19,6 +19,7 @@ The following fields are available for searching movies:
 - `studio`: The movie studio
 - `actor`: An actor from the movie
 - `library_name`: The name of the library that contains the movie
+- `content_rating`: The movie content rating (case-sensitive) 
 - `language`: The movie audio stream language
 - `release_date`: The movie release date (YYYYMMDD)
 - `type`: Always `movie`
@@ -34,6 +35,7 @@ The following fields are available for searching shows:
 - `studio`: The show studio
 - `actor`: An actor from the show
 - `library_name`: The name of the library that contains the show
+- `content_rating`: The movie content rating (case-sensitive)
 - `language`: The show audio stream language
 - `release_date`: The show release date (YYYYMMDD)
 - `type`: Always `show`
