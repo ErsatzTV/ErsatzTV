@@ -283,6 +283,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 Year = item.ProductionYear,
                 Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
                 DateAdded = dateAdded,
+                ContentRating = item.OfficialRating,
                 Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
                 Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
                 Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
@@ -383,6 +384,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 Year = item.ProductionYear,
                 Tagline = Optional(item.Taglines).Flatten().HeadOrNone().IfNone(string.Empty),
                 DateAdded = dateAdded,
+                ContentRating = item.OfficialRating,
                 Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
                 Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
                 Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
@@ -497,7 +499,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error projecting Jellyfin show");
+                _logger.LogWarning(ex, "Error projecting Jellyfin season");
                 return None;
             }
         }
@@ -545,7 +547,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error projecting Jellyfin movie");
+                _logger.LogWarning(ex, "Error projecting Jellyfin episode");
                 return None;
             }
         }
