@@ -67,11 +67,11 @@ namespace ErsatzTV.Controllers
         [HttpGet("iptv/logos/{fileName}")]
         public async Task<IActionResult> GetImage(string fileName)
         {
-            Either<BaseError, ImageViewModel> imageContents =
-                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Logo));
-            return imageContents.Match<IActionResult>(
+            Either<BaseError, CachedImagePathViewModel> cachedImagePath =
+                await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Logo));
+            return cachedImagePath.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
-                Right: r => new FileContentResult(r.Contents, r.MimeType));
+                Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
         }
     }
 }

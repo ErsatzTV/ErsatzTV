@@ -39,21 +39,21 @@ namespace ErsatzTV.Controllers
         [HttpGet("/artwork/posters/{fileName}")]
         public async Task<IActionResult> GetPoster(string fileName)
         {
-            Either<BaseError, ImageViewModel> imageContents =
-                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Poster, 440));
-            return imageContents.Match<IActionResult>(
+            Either<BaseError, CachedImagePathViewModel> cachedImagePath =
+                await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Poster, 440));
+            return cachedImagePath.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
-                Right: r => new FileContentResult(r.Contents, r.MimeType));
+                Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
         }
 
         [HttpGet("/artwork/fanart/{fileName}")]
         public async Task<IActionResult> GetFanArt(string fileName)
         {
-            Either<BaseError, ImageViewModel> imageContents =
-                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.FanArt));
-            return imageContents.Match<IActionResult>(
+            Either<BaseError, CachedImagePathViewModel> cachedImagePath =
+                await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.FanArt));
+            return cachedImagePath.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
-                Right: r => new FileContentResult(r.Contents, r.MimeType));
+                Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
         }
 
 
@@ -108,11 +108,11 @@ namespace ErsatzTV.Controllers
         [HttpGet("/artwork/thumbnails/{fileName}")]
         public async Task<IActionResult> GetThumbnail(string fileName)
         {
-            Either<BaseError, ImageViewModel> imageContents =
-                await _mediator.Send(new GetImageContents(fileName, ArtworkKind.Thumbnail, 220));
-            return imageContents.Match<IActionResult>(
+            Either<BaseError, CachedImagePathViewModel> cachedImagePath =
+                await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Thumbnail, 220));
+            return cachedImagePath.Match<IActionResult>(
                 Left: _ => new NotFoundResult(),
-                Right: r => new FileContentResult(r.Contents, r.MimeType));
+                Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
         }
 
         private async Task<IActionResult> GetPlexArtwork(int plexMediaSourceId, string transcodePath)
