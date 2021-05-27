@@ -20,5 +20,7 @@ namespace ErsatzTV.Infrastructure.Plex.Models
         public List<PlexMediaResponse> Media { get; set; }
         public List<PlexGenreResponse> Genre { get; set; }
         public List<PlexRoleResponse> Role { get; set; }
+        public List<PlexDirectorResponse> Director { get; set; }
+        public List<PlexWriterResponse> Writer { get; set; }
     }
 }

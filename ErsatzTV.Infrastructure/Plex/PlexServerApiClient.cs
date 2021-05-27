@@ -263,7 +263,9 @@ namespace ErsatzTV.Infrastructure.Plex
                 Tags = new List<Tag>(),
                 Studios = new List<Studio>(),
                 Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
-                    .ToList()
+                    .ToList(),
+                Directors = Optional(response.Director).Flatten().Map(d => new Director { Name = d.Tag }).ToList(),
+                Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList()
             };
 
             if (!string.IsNullOrWhiteSpace(response.Studio))

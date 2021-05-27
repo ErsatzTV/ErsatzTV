@@ -75,6 +75,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
             }
 
+            if (metadata is MovieMetadata movieMetadata)
+            {
+                foreach (Director director in Optional(movieMetadata.Directors).Flatten())
+                {
+                    dbContext.Entry(director).State = EntityState.Added;
+                }
+
+                foreach (Writer writer in Optional(movieMetadata.Writers).Flatten())
+                {
+                    dbContext.Entry(writer).State = EntityState.Added;
+                }
+            }
+
             return await dbContext.SaveChangesAsync() > 0;
         }
 
