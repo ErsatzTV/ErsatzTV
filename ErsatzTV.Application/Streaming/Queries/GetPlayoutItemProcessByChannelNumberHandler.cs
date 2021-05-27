@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -10,6 +11,7 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Runtime;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -20,6 +22,7 @@ namespace ErsatzTV.Application.Streaming.Queries
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly IEmbyPathReplacementService _embyPathReplacementService;
+        private readonly IRuntimeInfo _runtimeInfo;
         private readonly FFmpegProcessService _ffmpegProcessService;
         private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
         private readonly ILocalFileSystem _localFileSystem;
@@ -34,7 +37,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             ILocalFileSystem localFileSystem,
             IPlexPathReplacementService plexPathReplacementService,
             IJellyfinPathReplacementService jellyfinPathReplacementService,
-            IEmbyPathReplacementService embyPathReplacementService)
+            IEmbyPathReplacementService embyPathReplacementService,
+            IRuntimeInfo runtimeInfo)
             : base(channelRepository, configElementRepository)
         {
             _configElementRepository = configElementRepository;
@@ -44,6 +48,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             _plexPathReplacementService = plexPathReplacementService;
             _jellyfinPathReplacementService = jellyfinPathReplacementService;
             _embyPathReplacementService = embyPathReplacementService;
+            _runtimeInfo = runtimeInfo;
         }
 
         protected override async Task<Either<BaseError, Process>> GetProcess(
@@ -68,7 +73,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                         _ => throw new ArgumentOutOfRangeException(nameof(playoutItemWithPath))
                     };
 
-                    bool saveReports = await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
+                    bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await _configElementRepository
+                        .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                         .Map(result => result.IfNone(false));
 
                     return Right<BaseError, Process>(
@@ -147,7 +153,6 @@ namespace ErsatzTV.Application.Streaming.Queries
         {
             string path = await GetPlayoutItemPath(playoutItem);
 
-            // TODO: this won't work with url streaming from plex
             if (_localFileSystem.FileExists(path))
             {
                 return new PlayoutItemWithPath(playoutItem, path);
