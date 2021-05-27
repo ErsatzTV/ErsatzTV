@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿using System.Collections.Generic;
+
+namespace ErsatzTV.Core.Domain
 {
     public class MovieMetadata : Metadata
     {
@@ -8,5 +10,7 @@
         public string Tagline { get; set; }
         public int MovieId { get; set; }
         public Movie Movie { get; set; }
+        public List<Director> Directors { get; set; }
+        public List<Writer> Writers { get; set; }
     }
 }

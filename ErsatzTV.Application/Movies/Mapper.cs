@@ -31,7 +31,9 @@ namespace ErsatzTV.Application.Movies
                 LanguagesForMovie(movie),
                 metadata.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id)
                     .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin, maybeEmby))
-                    .ToList())
+                    .ToList(),
+                metadata.Directors.Map(d => d.Name).ToList(),
+                metadata.Writers.Map(w => w.Name).ToList())
             {
                 Poster = Artwork(metadata, ArtworkKind.Poster, maybeJellyfin, maybeEmby),
                 FanArt = Artwork(metadata, ArtworkKind.FanArt, maybeJellyfin, maybeEmby)

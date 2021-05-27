@@ -33,5 +33,9 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<int>> RemoveMissingEmbyMovies(EmbyLibrary library, List<string> movieIds);
         Task<bool> AddEmby(EmbyMovie movie);
         Task<Option<EmbyMovie>> UpdateEmby(EmbyMovie movie);
+        Task<bool> RemoveDirector(Director director);
+        Task<bool> AddDirector(MovieMetadata metadata, Director director);
+        Task<bool> RemoveWriter(Writer writer);
+        Task<bool> AddWriter(MovieMetadata metadata, Writer writer);
     }
 }

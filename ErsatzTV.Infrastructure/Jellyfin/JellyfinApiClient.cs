@@ -287,7 +287,9 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
                 Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
                 Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
-                Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList(),
+                Actors = Optional(item.People).Flatten().Collect(r => ProjectToActor(r, dateAdded)).ToList(),
+                Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
+                Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList(),
                 Artwork = new List<Artwork>()
             };
 
@@ -327,8 +329,13 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             return metadata;
         }
 
-        private Actor ProjectToModel(JellyfinPersonResponse person, DateTime dateAdded)
+        private static Option<Actor> ProjectToActor(JellyfinPersonResponse person, DateTime dateAdded)
         {
+            if (person.Type?.ToLowerInvariant() != "actor")
+            {
+                return None;
+            }
+
             var actor = new Actor { Name = person.Name, Role = person.Role };
             if (!string.IsNullOrWhiteSpace(person.Id) && !string.IsNullOrWhiteSpace(person.PrimaryImageTag))
             {
@@ -341,6 +348,26 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             }
 
             return actor;
+        }
+
+        private static Option<Director> ProjectToDirector(JellyfinPersonResponse person)
+        {
+            if (person.Type?.ToLowerInvariant() != "director")
+            {
+                return None;
+            }
+
+            return new Director { Name = person.Name };
+        }
+
+        private static Option<Writer> ProjectToWriter(JellyfinPersonResponse person)
+        {
+            if (person.Type?.ToLowerInvariant() != "writer")
+            {
+                return None;
+            }
+
+            return new Writer { Name = person.Name };
         }
 
         private Option<JellyfinShow> ProjectToShow(JellyfinLibraryItemResponse item)
@@ -388,7 +415,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
                 Genres = Optional(item.Genres).Flatten().Map(g => new Genre { Name = g }).ToList(),
                 Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
                 Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
-                Actors = Optional(item.People).Flatten().Map(r => ProjectToModel(r, dateAdded)).ToList(),
+                Actors = Optional(item.People).Flatten().Collect(r => ProjectToActor(r, dateAdded)).ToList(),
                 Artwork = new List<Artwork>()
             };
 
