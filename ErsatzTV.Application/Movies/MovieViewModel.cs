@@ -13,7 +13,9 @@ namespace ErsatzTV.Application.Movies
         List<string> Studios,
         List<string> ContentRatings,
         List<CultureInfo> Languages,
-        List<ActorCardViewModel> Actors)
+        List<ActorCardViewModel> Actors,
+        List<string> Directors,
+        List<string> Writers)
     {
         public string Poster { get; set; }
         public string FanArt { get; set; }

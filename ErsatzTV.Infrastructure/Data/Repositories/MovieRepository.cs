@@ -49,6 +49,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(m => m.Actors)
                 .ThenInclude(a => a.Artwork)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Writers)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
                 .OrderBy(m => m.Id)
@@ -70,7 +74,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Studios)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Actors)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Actors)
                 .ThenInclude(a => a.Artwork)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Writers)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .Include(i => i.MediaVersions)
@@ -105,6 +115,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(a => a.Artwork)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Writers)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
@@ -310,6 +324,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Actors)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Writers)
                 .Filter(m => m.ItemId == movie.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -397,6 +415,36 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     .ToList())
                 {
                     metadata.Actors.Add(actor);
+                }
+
+                // directors
+                foreach (Director director in metadata.Directors
+                    .Filter(d => incomingMetadata.Directors.All(d2 => d2.Name != d.Name))
+                    .ToList())
+                {
+                    metadata.Directors.Remove(director);
+                }
+
+                foreach (Director director in incomingMetadata.Directors
+                    .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name))
+                    .ToList())
+                {
+                    metadata.Directors.Add(director);
+                }
+
+                // writers
+                foreach (Writer writer in metadata.Writers
+                    .Filter(w => incomingMetadata.Writers.All(w2 => w2.Name != w.Name))
+                    .ToList())
+                {
+                    metadata.Writers.Remove(writer);
+                }
+
+                foreach (Writer writer in incomingMetadata.Writers
+                    .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name))
+                    .ToList())
+                {
+                    metadata.Writers.Add(writer);
                 }
 
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
@@ -512,6 +560,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Actors)
                 .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Writers)
+                .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Filter(m => m.ItemId == movie.ItemId)
                 .OrderBy(m => m.ItemId)
@@ -602,6 +654,36 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     metadata.Actors.Add(actor);
                 }
 
+                // directors
+                foreach (Director director in metadata.Directors
+                    .Filter(d => incomingMetadata.Directors.All(d2 => d2.Name != d.Name))
+                    .ToList())
+                {
+                    metadata.Directors.Remove(director);
+                }
+
+                foreach (Director director in incomingMetadata.Directors
+                    .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name))
+                    .ToList())
+                {
+                    metadata.Directors.Add(director);
+                }
+
+                // writers
+                foreach (Writer writer in metadata.Writers
+                    .Filter(w => incomingMetadata.Writers.All(w2 => w2.Name != w.Name))
+                    .ToList())
+                {
+                    metadata.Writers.Remove(writer);
+                }
+
+                foreach (Writer writer in incomingMetadata.Writers
+                    .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name))
+                    .ToList())
+                {
+                    metadata.Writers.Add(writer);
+                }
+
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
 
                 // poster
@@ -654,6 +736,24 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             return maybeExisting;
         }
+
+        public Task<bool> RemoveDirector(Director director) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Director WHERE Id = @DirectorId", new { DirectorId = director.Id })
+                .Map(result => result > 0);
+
+        public Task<bool> AddDirector(MovieMetadata metadata, Director director) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Director (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
+                new { director.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public Task<bool> RemoveWriter(Writer writer) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Writer WHERE Id = @WriterId", new { WriterId = writer.Id })
+                .Map(result => result > 0);
+
+        public Task<bool> AddWriter(MovieMetadata metadata, Writer writer) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Writer (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
+                new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
         private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
             TvContext dbContext,

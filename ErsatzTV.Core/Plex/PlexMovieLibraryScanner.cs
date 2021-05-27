@@ -254,6 +254,50 @@ namespace ErsatzTV.Core.Plex
                             }
                         }
 
+                        foreach (Director director in existingMetadata.Directors
+                            .Filter(g => fullMetadata.Directors.All(g2 => g2.Name != g.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Directors.Remove(director);
+                            if (await _movieRepository.RemoveDirector(director))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
+                        foreach (Director director in fullMetadata.Directors
+                            .Filter(g => existingMetadata.Directors.All(g2 => g2.Name != g.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Directors.Add(director);
+                            if (await _movieRepository.AddDirector(existingMetadata, director))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
+                        foreach (Writer writer in existingMetadata.Writers
+                            .Filter(g => fullMetadata.Writers.All(g2 => g2.Name != g.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Writers.Remove(writer);
+                            if (await _movieRepository.RemoveWriter(writer))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
+                        foreach (Writer writer in fullMetadata.Writers
+                            .Filter(g => existingMetadata.Writers.All(g2 => g2.Name != g.Name))
+                            .ToList())
+                        {
+                            existingMetadata.Writers.Add(writer);
+                            if (await _movieRepository.AddWriter(existingMetadata, writer))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
                         if (fullMetadata.SortTitle != existingMetadata.SortTitle)
                         {
                             existingMetadata.SortTitle = fullMetadata.SortTitle;

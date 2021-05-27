@@ -99,6 +99,30 @@
                     }
                 </div>
             }
+            @if (_sortedDirectors.Any())
+            {
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Directors:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=director%3a%22{Uri.EscapeDataString(_sortedDirectors.Head())}%22")">@_sortedDirectors.Head()</MudLink>
+                    @foreach (string director in _sortedDirectors.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=director%3a%22{Uri.EscapeDataString(director)}%22")">@director</MudLink>
+                    }
+                </div>
+            }
+            @if (_sortedWriters.Any())
+            {
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Writers:&nbsp;</MudText>
+                    <MudLink Href="@($"/search?query=writer%3a%22{Uri.EscapeDataString(_sortedWriters.Head())}%22")">@_sortedWriters.Head()</MudLink>
+                    @foreach (string writer in _sortedWriters.Skip(1))
+                    {
+                        <MudText>,&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=writer%3a%22{Uri.EscapeDataString(writer)}%22")">@writer</MudLink>
+                    }
+                </div>
+            }
             @if (_sortedGenres.Any())
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
@@ -150,6 +174,8 @@
     private MovieViewModel _movie;
     private List<string> _sortedContentRatings = new();
     private List<CultureInfo> _sortedLanguages = new();
+    private List<string> _sortedDirectors = new();
+    private List<string> _sortedWriters = new();
     private List<string> _sortedStudios = new();
     private List<string> _sortedGenres = new();
     private List<string> _sortedTags = new();
@@ -165,6 +191,8 @@
             _sortedStudios = _movie.Studios.OrderBy(s => s).ToList();
             _sortedGenres = _movie.Genres.OrderBy(g => g).ToList();
             _sortedTags = _movie.Tags.OrderBy(t => t).ToList();
+            _sortedDirectors = _movie.Directors.OrderBy(d => d).ToList();
+            _sortedWriters = _movie.Writers.OrderBy(w => w).ToList();
         });
 
     private async Task AddToCollection()

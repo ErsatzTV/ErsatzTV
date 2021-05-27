@@ -49,6 +49,8 @@ namespace ErsatzTV.Infrastructure.Search
         private const string MoodField = "mood";
         private const string ActorField = "actor";
         private const string ContentRatingField = "content_rating";
+        private const string DirectorField = "director";
+        private const string WriterField = "writer";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -69,7 +71,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 10;
+        public int Version => 11;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -316,6 +318,16 @@ namespace ErsatzTV.Infrastructure.Search
                     foreach (Actor actor in metadata.Actors)
                     {
                         doc.Add(new TextField(ActorField, actor.Name, Field.Store.NO));
+                    }
+
+                    foreach (Director director in metadata.Directors)
+                    {
+                        doc.Add(new TextField(DirectorField, director.Name, Field.Store.NO));
+                    }
+
+                    foreach (Writer writer in metadata.Writers)
+                    {
+                        doc.Add(new TextField(WriterField, writer.Name, Field.Store.NO));
                     }
 
                     _writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
