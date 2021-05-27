@@ -30,6 +30,10 @@ namespace ErsatzTV.Application.Television
                 show.ShowMetadata.HeadOrNone().Map(m => m.Tags.Map(g => g.Name).ToList()).IfNone(new List<string>()),
                 show.ShowMetadata.HeadOrNone().Map(m => m.Studios.Map(s => s.Name).ToList())
                     .IfNone(new List<string>()),
+                show.ShowMetadata.HeadOrNone()
+                    .Map(
+                        m => (m.ContentRating ?? string.Empty).Split("/").Map(s => s.Trim())
+                            .Where(x => !string.IsNullOrWhiteSpace(x)).ToList()).IfNone(new List<string>()),
                 LanguagesForShow(languages),
                 show.ShowMetadata.HeadOrNone()
                     .Map(
