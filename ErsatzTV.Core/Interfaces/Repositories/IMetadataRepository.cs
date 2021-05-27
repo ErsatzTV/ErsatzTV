@@ -24,5 +24,9 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> MarkAsUpdated(SeasonMetadata metadata, DateTime dateUpdated);
         Task<Unit> MarkAsUpdated(MovieMetadata metadata, DateTime dateUpdated);
         Task<Unit> MarkAsUpdated(EpisodeMetadata metadata, DateTime dateUpdated);
+        Task<Unit> MarkAsExternal(ShowMetadata metadata);
+        Task<Unit> SetContentRating(ShowMetadata metadata, string contentRating);
+        Task<Unit> MarkAsExternal(MovieMetadata metadata);
+        Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating);
     }
 }

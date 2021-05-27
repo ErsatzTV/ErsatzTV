@@ -146,6 +146,19 @@ namespace ErsatzTV.Core.Plex
                 await maybeMetadata.Match(
                     async fullMetadata =>
                     {
+                        if (existingMetadata.MetadataKind != MetadataKind.External)
+                        {
+                            existingMetadata.MetadataKind = MetadataKind.External;
+                            await _metadataRepository.MarkAsExternal(existingMetadata);
+                        }
+
+                        if (existingMetadata.ContentRating != fullMetadata.ContentRating)
+                        {
+                            existingMetadata.ContentRating = fullMetadata.ContentRating;
+                            await _metadataRepository.SetContentRating(existingMetadata, fullMetadata.ContentRating);
+                            result.IsUpdated = true;
+                        }
+
                         foreach (Genre genre in existingMetadata.Genres
                             .Filter(g => fullMetadata.Genres.All(g2 => g2.Name != g.Name))
                             .ToList())

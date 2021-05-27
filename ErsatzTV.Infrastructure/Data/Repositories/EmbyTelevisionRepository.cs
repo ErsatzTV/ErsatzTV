@@ -105,6 +105,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 // metadata
                 ShowMetadata metadata = existing.ShowMetadata.Head();
                 ShowMetadata incomingMetadata = show.ShowMetadata.Head();
+                metadata.MetadataKind = incomingMetadata.MetadataKind;
+                metadata.ContentRating = incomingMetadata.ContentRating;
                 metadata.Title = incomingMetadata.Title;
                 metadata.SortTitle = incomingMetadata.SortTitle;
                 metadata.Plot = incomingMetadata.Plot;
