@@ -26,7 +26,7 @@ namespace ErsatzTV.Infrastructure.Images
         public async Task<Either<BaseError, byte[]>> ResizeImage(byte[] imageBuffer, int height)
         {
             await using var inStream = new MemoryStream(imageBuffer);
-            using var image = await Image.LoadAsync(inStream);
+            using Image image = await Image.LoadAsync(inStream);
 
             var size = new Size { Height = height };
 

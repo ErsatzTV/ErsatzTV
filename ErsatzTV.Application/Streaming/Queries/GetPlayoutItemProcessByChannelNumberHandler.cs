@@ -22,12 +22,12 @@ namespace ErsatzTV.Application.Streaming.Queries
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly IEmbyPathReplacementService _embyPathReplacementService;
-        private readonly IRuntimeInfo _runtimeInfo;
         private readonly FFmpegProcessService _ffmpegProcessService;
         private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly IPlayoutRepository _playoutRepository;
         private readonly IPlexPathReplacementService _plexPathReplacementService;
+        private readonly IRuntimeInfo _runtimeInfo;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
             IChannelRepository channelRepository,
