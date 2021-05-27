@@ -20,6 +20,9 @@ namespace ErsatzTV.Core.Metadata.Nfo
 
         [XmlElement("tagline")]
         public string Tagline { get; set; }
+        
+        [XmlElement("mpaa")]
+        public string ContentRating { get; set; }
 
         [XmlElement("premiered")]
         public string Premiered { get; set; }

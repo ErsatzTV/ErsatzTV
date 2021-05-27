@@ -230,6 +230,7 @@ namespace ErsatzTV.Infrastructure.Emby
 
             var metadata = new MovieMetadata
             {
+                MetadataKind = MetadataKind.External,
                 Title = item.Name,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
                 Plot = item.Overview,
@@ -324,6 +325,7 @@ namespace ErsatzTV.Infrastructure.Emby
 
             var metadata = new ShowMetadata
             {
+                MetadataKind = MetadataKind.External,
                 Title = item.Name,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
                 Plot = item.Overview,
@@ -393,6 +395,7 @@ namespace ErsatzTV.Infrastructure.Emby
 
                 var metadata = new SeasonMetadata
                 {
+                    MetadataKind = MetadataKind.External,
                     Title = item.Name,
                     SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
                     Year = item.ProductionYear,
@@ -498,6 +501,7 @@ namespace ErsatzTV.Infrastructure.Emby
 
             var metadata = new EpisodeMetadata
             {
+                MetadataKind = MetadataKind.External,
                 Title = item.Name,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
                 Plot = item.Overview,

@@ -4,6 +4,6 @@
     {
         Fallback = 0,
         Sidecar = 1,
-        External
+        External = 2
     }
 }

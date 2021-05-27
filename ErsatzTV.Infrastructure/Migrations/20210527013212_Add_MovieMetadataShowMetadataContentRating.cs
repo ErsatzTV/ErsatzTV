@@ -6,6 +6,9 @@ namespace ErsatzTV.Infrastructure.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("UPDATE MovieMetadata SET DateUpdated = '0001-01-01 00:00:00' WHERE MetadataKind = 1");
+            migrationBuilder.Sql("UPDATE ShowMetadata SET DateUpdated = '0001-01-01 00:00:00' WHERE MetadataKind = 1");
+
             migrationBuilder.AddColumn<string>(
                 name: "ContentRating",
                 table: "ShowMetadata",

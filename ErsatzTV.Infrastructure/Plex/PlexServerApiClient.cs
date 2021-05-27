@@ -250,6 +250,7 @@ namespace ErsatzTV.Infrastructure.Plex
 
             var metadata = new MovieMetadata
             {
+                MetadataKind = MetadataKind.External,
                 Title = response.Title,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
                 Plot = response.Summary,
@@ -398,6 +399,7 @@ namespace ErsatzTV.Infrastructure.Plex
 
             var metadata = new ShowMetadata
             {
+                MetadataKind = MetadataKind.External,
                 Title = response.Title,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
                 Plot = response.Summary,
@@ -462,6 +464,7 @@ namespace ErsatzTV.Infrastructure.Plex
 
             var metadata = new SeasonMetadata
             {
+                MetadataKind = MetadataKind.External,
                 Title = response.Title,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
                 Year = response.Year,
@@ -518,6 +521,7 @@ namespace ErsatzTV.Infrastructure.Plex
 
             var metadata = new EpisodeMetadata
             {
+                MetadataKind = MetadataKind.External,
                 Title = response.Title,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
                 Plot = response.Summary,
