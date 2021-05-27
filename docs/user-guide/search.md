@@ -18,6 +18,8 @@ The following fields are available for searching movies:
 - `plot`: The movie plot
 - `studio`: The movie studio
 - `actor`: An actor from the movie
+- `director`: A director from the movie
+- `writer`: A writer from the movie
 - `library_name`: The name of the library that contains the movie
 - `content_rating`: The movie content rating (case-sensitive) 
 - `language`: The movie audio stream language

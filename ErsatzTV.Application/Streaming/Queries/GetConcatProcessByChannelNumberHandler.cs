@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Runtime;
 using LanguageExt;
 
 namespace ErsatzTV.Application.Streaming.Queries
@@ -12,15 +14,18 @@ namespace ErsatzTV.Application.Streaming.Queries
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly FFmpegProcessService _ffmpegProcessService;
+        private readonly IRuntimeInfo _runtimeInfo;
 
         public GetConcatProcessByChannelNumberHandler(
             IChannelRepository channelRepository,
             IConfigElementRepository configElementRepository,
-            FFmpegProcessService ffmpegProcessService)
+            FFmpegProcessService ffmpegProcessService,
+            IRuntimeInfo runtimeInfo)
             : base(channelRepository, configElementRepository)
         {
             _configElementRepository = configElementRepository;
             _ffmpegProcessService = ffmpegProcessService;
+            _runtimeInfo = runtimeInfo;
         }
 
         protected override async Task<Either<BaseError, Process>> GetProcess(
@@ -28,7 +33,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             Channel channel,
             string ffmpegPath)
         {
-            bool saveReports = await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
+            bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await _configElementRepository
+                .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
             return _ffmpegProcessService.ConcatChannel(
