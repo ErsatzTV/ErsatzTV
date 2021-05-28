@@ -27,6 +27,12 @@
             <MudTd DataLabel="Address">@context.Address</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Refresh Libraries">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                       Disabled="@(_locker.IsRemoteMediaSourceLocked<TMediaSource>())"
+                                       OnClick="@(_ => RefreshLibraries(context.Id))">
+                        </MudIconButton>
+                    </MudTooltip>
                     <MudTooltip Text="Edit Libraries">
                         <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
                                        Link="@($"/media/sources/{Name.ToLowerInvariant()}/{context.Id}/libraries")">
@@ -84,6 +90,9 @@
     public IRequest<Either<BaseError, Unit>> DisconnectCommand { get; set; }
 
     [Parameter]
+    public Func<int, Task> RefreshLibrariesCommand { get; set; }
+
+    [Parameter]
     public IRemoteMediaSourceSecretStore<TSecrets> SecretStore { get; set; }
 
     private List<TViewModel> _mediaSources = new();
@@ -114,5 +123,7 @@
             }
         }
     }
+
+    private async Task RefreshLibraries(int mediaSourceId) => await RefreshLibrariesCommand(mediaSourceId);
 
 }

@@ -6,6 +6,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Plex;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -19,17 +20,20 @@ namespace ErsatzTV.Application.Plex.Commands
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlexSecretStore _plexSecretStore;
         private readonly IPlexServerApiClient _plexServerApiClient;
+        private readonly ISearchIndex _searchIndex;
 
         public SynchronizePlexLibrariesHandler(
             IMediaSourceRepository mediaSourceRepository,
             IPlexSecretStore plexSecretStore,
             IPlexServerApiClient plexServerApiClient,
-            ILogger<SynchronizePlexLibrariesHandler> logger)
+            ILogger<SynchronizePlexLibrariesHandler> logger,
+            ISearchIndex searchIndex)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _plexSecretStore = plexSecretStore;
             _plexServerApiClient = plexServerApiClient;
             _logger = logger;
+            _searchIndex = searchIndex;
         }
 
         public Task<Either<BaseError, Unit>> Handle(
@@ -73,15 +77,20 @@ namespace ErsatzTV.Application.Plex.Commands
                 connectionParameters.PlexServerAuthToken);
 
             await maybeLibraries.Match(
-                libraries =>
+                async libraries =>
                 {
                     var existing = connectionParameters.PlexMediaSource.Libraries.OfType<PlexLibrary>().ToList();
                     var toAdd = libraries.Filter(library => existing.All(l => l.Key != library.Key)).ToList();
                     var toRemove = existing.Filter(library => libraries.All(l => l.Key != library.Key)).ToList();
-                    return _mediaSourceRepository.UpdateLibraries(
+                    List<int> ids = await _mediaSourceRepository.UpdateLibraries(
                         connectionParameters.PlexMediaSource.Id,
                         toAdd,
                         toRemove);
+                    if (ids.Any())
+                    {
+                        await _searchIndex.RemoveItems(ids);
+                        _searchIndex.Commit();
+                    }
                 },
                 error =>
                 {
