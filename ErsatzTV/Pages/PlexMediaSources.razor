@@ -141,10 +141,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    private async Task RefreshLibraries(int mediaSourceId)
-    {
-        await _channel.WriteAsync(new SynchronizePlexLibraries(mediaSourceId));
-    }
+    private async Task RefreshLibraries(int mediaSourceId) => await _channel.WriteAsync(new SynchronizePlexLibraries(mediaSourceId));
 
     void IDisposable.Dispose() => _locker.OnPlexChanged -= PlexChanged;
 

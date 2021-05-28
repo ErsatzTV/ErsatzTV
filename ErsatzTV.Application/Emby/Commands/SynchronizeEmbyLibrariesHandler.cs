@@ -20,8 +20,8 @@ namespace ErsatzTV.Application.Emby.Commands
         private readonly IEmbyApiClient _embyApiClient;
         private readonly IEmbySecretStore _embySecretStore;
         private readonly ILogger<SynchronizeEmbyLibrariesHandler> _logger;
-        private readonly ISearchIndex _searchIndex;
         private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly ISearchIndex _searchIndex;
 
         public SynchronizeEmbyLibrariesHandler(
             IMediaSourceRepository mediaSourceRepository,

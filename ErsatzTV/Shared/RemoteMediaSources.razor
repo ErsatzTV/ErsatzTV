@@ -124,9 +124,6 @@
         }
     }
 
-    private async Task RefreshLibraries(int mediaSourceId)
-    {
-        await RefreshLibrariesCommand(mediaSourceId);
-    }
+    private async Task RefreshLibraries(int mediaSourceId) => await RefreshLibrariesCommand(mediaSourceId);
 
 }

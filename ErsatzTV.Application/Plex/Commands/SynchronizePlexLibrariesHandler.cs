@@ -17,10 +17,10 @@ namespace ErsatzTV.Application.Plex.Commands
         SynchronizePlexLibrariesHandler : MediatR.IRequestHandler<SynchronizePlexLibraries, Either<BaseError, Unit>>
     {
         private readonly ILogger<SynchronizePlexLibrariesHandler> _logger;
-        private readonly ISearchIndex _searchIndex;
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IPlexSecretStore _plexSecretStore;
         private readonly IPlexServerApiClient _plexServerApiClient;
+        private readonly ISearchIndex _searchIndex;
 
         public SynchronizePlexLibrariesHandler(
             IMediaSourceRepository mediaSourceRepository,

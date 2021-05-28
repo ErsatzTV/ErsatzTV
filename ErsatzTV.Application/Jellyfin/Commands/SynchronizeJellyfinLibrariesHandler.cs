@@ -22,8 +22,8 @@ namespace ErsatzTV.Application.Jellyfin.Commands
         private readonly IJellyfinApiClient _jellyfinApiClient;
         private readonly IJellyfinSecretStore _jellyfinSecretStore;
         private readonly ILogger<SynchronizeJellyfinLibrariesHandler> _logger;
-        private readonly ISearchIndex _searchIndex;
         private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly ISearchIndex _searchIndex;
 
         public SynchronizeJellyfinLibrariesHandler(
             IMediaSourceRepository mediaSourceRepository,

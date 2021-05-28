@@ -256,7 +256,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 dbContext.Entry(delete).State = EntityState.Deleted;
             }
-            
+
             List<int> ids = await DisableJellyfinLibrarySync(toDelete.Map(l => l.Id).ToList());
 
             await dbContext.SaveChangesAsync();
@@ -285,7 +285,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 dbContext.Entry(delete).State = EntityState.Deleted;
             }
-            
+
             List<int> ids = await DisableEmbyLibrarySync(toDelete.Map(l => l.Id).ToList());
 
             await dbContext.SaveChangesAsync();
