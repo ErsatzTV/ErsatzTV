@@ -398,6 +398,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(a => a.Artwork)
                 .Include(i => i.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
+                .Include(i => i.ShowMetadata)
+                .ThenInclude(sm => sm.Guids)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .OrderBy(i => i.Key)
@@ -415,7 +417,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<PlexSeason> maybeExisting = await dbContext.PlexSeasons
                 .AsNoTracking()
                 .Include(i => i.SeasonMetadata)
-                .ThenInclude(mm => mm.Artwork)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(i => i.SeasonMetadata)
+                .ThenInclude(sm => sm.Guids)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -438,6 +442,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .ThenInclude(em => em.Actors)
                 .ThenInclude(a => a.Artwork)
+                .Include(e => e.EpisodeMetadata)
+                .ThenInclude(em => em.Guids)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 

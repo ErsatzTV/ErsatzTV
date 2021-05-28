@@ -28,5 +28,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> SetContentRating(ShowMetadata metadata, string contentRating);
         Task<Unit> MarkAsExternal(MovieMetadata metadata);
         Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating);
+        Task<bool> RemoveGuid(MetadataGuid guid);
+        Task<bool> AddGuid(Domain.Metadata metadata, MetadataGuid guid);
     }
 }

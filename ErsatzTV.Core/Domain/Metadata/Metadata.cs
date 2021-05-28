@@ -19,5 +19,6 @@ namespace ErsatzTV.Core.Domain
         public List<Tag> Tags { get; set; }
         public List<Studio> Studios { get; set; }
         public List<Actor> Actors { get; set; }
+        public List<MetadataGuid> Guids { get; set; }
     }
 }

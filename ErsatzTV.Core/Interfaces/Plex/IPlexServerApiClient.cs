@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Plex;
@@ -46,7 +47,14 @@ namespace ErsatzTV.Core.Interfaces.Plex
             PlexConnection connection,
             PlexServerAuthToken token);
 
-        Task<Either<BaseError, MediaVersion>> GetStatistics(
+        Task<Either<BaseError, Tuple<MovieMetadata, MediaVersion>>> GetMovieMetadataAndStatistics(
+            PlexLibrary library,
+            string key,
+            PlexConnection connection,
+            PlexServerAuthToken token);
+
+        Task<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>> GetEpisodeMetadataAndStatistics(
+            PlexLibrary library,
             string key,
             PlexConnection connection,
             PlexServerAuthToken token);
