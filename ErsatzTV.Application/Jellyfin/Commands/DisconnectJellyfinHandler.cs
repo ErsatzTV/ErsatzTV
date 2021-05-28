@@ -36,6 +36,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
         {
             List<int> ids = await _mediaSourceRepository.DeleteAllJellyfin();
             await _searchIndex.RemoveItems(ids);
+            _searchIndex.Commit();
             await _jellyfinSecretStore.DeleteAll();
             _entityLocker.UnlockRemoteMediaSource<JellyfinMediaSource>();
 

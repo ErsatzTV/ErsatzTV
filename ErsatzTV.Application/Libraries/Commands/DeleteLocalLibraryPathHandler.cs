@@ -32,6 +32,7 @@ namespace ErsatzTV.Application.Libraries.Commands
         {
             List<int> ids = await _libraryRepository.GetMediaIdsByLocalPath(libraryPath.Id);
             await _searchIndex.RemoveItems(ids);
+            _searchIndex.Commit();
             await _libraryRepository.DeleteLocalPath(libraryPath.Id);
             return Unit.Default;
         }
