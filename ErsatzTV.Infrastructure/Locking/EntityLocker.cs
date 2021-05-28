@@ -71,6 +71,9 @@ namespace ErsatzTV.Infrastructure.Locking
 
         public bool IsPlexLocked() => _plex;
 
+        public bool IsRemoteMediaSourceLocked<TMediaSource>() =>
+            _lockedRemoteMediaSourceTypes.ContainsKey(typeof(TMediaSource));
+
         public bool LockRemoteMediaSource<TMediaSource>()
         {
             Type mediaSourceType = typeof(TMediaSource);
