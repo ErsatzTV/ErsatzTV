@@ -212,7 +212,9 @@ namespace ErsatzTV.Infrastructure.Plex
                     {
                         Option<MediaVersion> maybeVersion = ProjectToMediaVersion(response.Metadata);
                         return maybeVersion.Match<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>>(
-                            version => Tuple(ProjectToEpisodeMetadata(response.Metadata, library.MediaSourceId), version),
+                            version => Tuple(
+                                ProjectToEpisodeMetadata(response.Metadata, library.MediaSourceId),
+                                version),
                             () => BaseError.New("Unable to locate metadata"));
                     },
                     () => BaseError.New("Unable to locate metadata"));
@@ -679,7 +681,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
                     .ToList()
             };
-            
+
             if (response is PlexXmlMetadataResponse xml)
             {
                 metadata.Guids = Optional(xml.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
@@ -753,7 +755,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 string strip2 = strip1.Split("?").Head();
                 return $"tvdb://{strip2}";
             }
-            
+
             if (guid.StartsWith("com.plexapp.agents.themoviedb"))
             {
                 string strip1 = guid.Replace("com.plexapp.agents.themoviedb://", string.Empty);

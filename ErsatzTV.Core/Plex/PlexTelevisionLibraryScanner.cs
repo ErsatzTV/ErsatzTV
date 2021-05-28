@@ -385,7 +385,13 @@ namespace ErsatzTV.Core.Plex
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexEpisode> maybeEpisode = await _televisionRepository
                             .GetOrAddPlexEpisode(plexMediaSourceLibrary, incoming)
-                            .BindT(existing => UpdateMetadataAndStatistics(existing, incoming, plexMediaSourceLibrary, connection, token))
+                            .BindT(
+                                existing => UpdateMetadataAndStatistics(
+                                    existing,
+                                    incoming,
+                                    plexMediaSourceLibrary,
+                                    connection,
+                                    token))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
                         maybeEpisode.IfLeft(
@@ -420,7 +426,7 @@ namespace ErsatzTV.Core.Plex
         {
             MediaVersion existingVersion = existing.MediaVersions.Head();
             MediaVersion incomingVersion = incoming.MediaVersions.Head();
-            
+
             if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
             {
                 Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeStatistics =
@@ -434,8 +440,8 @@ namespace ErsatzTV.Core.Plex
                     async tuple =>
                     {
                         (EpisodeMetadata incomingMetadata, MediaVersion mediaVersion) = tuple;
-                        
-                        EpisodeMetadata existingMetadata = existing.EpisodeMetadata.Head(); 
+
+                        EpisodeMetadata existingMetadata = existing.EpisodeMetadata.Head();
 
                         foreach (MetadataGuid guid in existingMetadata.Guids
                             .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))

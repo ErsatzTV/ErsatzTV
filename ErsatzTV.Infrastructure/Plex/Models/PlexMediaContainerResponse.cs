@@ -31,7 +31,7 @@ namespace ErsatzTV.Infrastructure.Plex.Models
         [XmlElement("Directory")]
         public PlexXmlMetadataResponse Metadata { get; set; }
     }
-    
+
     [XmlRoot("MediaContainer", Namespace = null)]
     public class PlexXmlSeasonsMetadataResponseContainer
     {
