@@ -17,16 +17,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<Artwork>> GetOrphanedArtwork() =>
             _dbConnection.QueryAsync<Artwork>(
-                    @"SELECT Artwork.Id, Artwork.Path FROM Artwork
-                    LEFT OUTER JOIN Actor A on Artwork.Id = A.ArtworkId
-                    LEFT OUTER JOIN ArtistMetadata AM on A.ArtistMetadataId = AM.Id
-                    LEFT OUTER JOIN EpisodeMetadata EM on A.EpisodeMetadataId = EM.Id
-                    LEFT OUTER JOIN SeasonMetadata SM on A.SeasonMetadataId = SM.Id
-                    LEFT OUTER JOIN ShowMetadata S on A.ShowMetadataId = S.Id
-                    LEFT OUTER JOIN MovieMetadata MM on A.MovieMetadataId = MM.Id
-                    LEFT OUTER JOIN MusicVideoMetadata MVM on A.MusicVideoMetadataId = MVM.Id
-                    WHERE A.Id IS NULL AND AM.Id IS NULL AND EM.Id IS NULL AND SM.Id IS NULL
-                      AND S.Id IS NULL AND MM.Id IS NULL AND MVM.Id IS NULL")
+                    @"SELECT A.Id, A.Path FROM Artwork A
+                      WHERE A.ArtistMetadataId IS NULL AND A.EpisodeMetadataId IS NULL
+                      AND A.SeasonMetadataId IS NULL AND A.ShowMetadataId IS NULL
+                      AND A.MovieMetadataId IS NULL AND A.MusicVideoMetadataId IS NULL
+                      AND NOT EXISTS (SELECT * FROM Actor WHERE Actor.ArtworkId = A.Id)")
                 .Map(result => result.ToList());
 
         public async Task<Unit> Delete(List<Artwork> artwork)

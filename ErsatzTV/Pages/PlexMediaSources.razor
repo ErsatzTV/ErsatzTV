@@ -11,6 +11,7 @@
 @inject ILogger<PlexMediaSources> _logger
 @inject IJSRuntime _jsRuntime
 @inject IPlexSecretStore _plexSecretStore
+@inject ChannelWriter<IPlexBackgroundServiceRequest> _channel
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudTable Hover="true" Dense="true" Items="_mediaSources">
@@ -32,6 +33,12 @@
             <MudTd DataLabel="Address">@context.Address</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Refresh Libraries">
+                        <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                       Disabled="@(_locker.IsPlexLocked())"
+                                       OnClick="@(_ => RefreshLibraries(context.Id))">
+                        </MudIconButton>
+                    </MudTooltip>
                     <MudTooltip Text="Edit Libraries">
                         <MudIconButton Icon="@Icons.Material.Filled.VideoLibrary"
                                        Link="@($"/media/sources/plex/{context.Id}/libraries")">
@@ -133,6 +140,8 @@
         await InvokeAsync(LoadMediaSources);
         await InvokeAsync(StateHasChanged);
     }
+
+    private async Task RefreshLibraries(int mediaSourceId) => await _channel.WriteAsync(new SynchronizePlexLibraries(mediaSourceId));
 
     void IDisposable.Dispose() => _locker.OnPlexChanged -= PlexChanged;
 

@@ -1,8 +1,9 @@
 ﻿@page "/media/jellyfin"
 @using ErsatzTV.Core.Interfaces.Jellyfin
-@using ErsatzTV.Application.Jellyfin.Queries
 @using ErsatzTV.Application.Jellyfin.Commands
+@using ErsatzTV.Application.Jellyfin.Queries
 @inject IJellyfinSecretStore _jellyfinSecretStore
+@inject ChannelWriter<IJellyfinBackgroundServiceRequest> _channel
 
 <RemoteMediaSources
     TViewModel="ErsatzTV.Application.Jellyfin.JellyfinMediaSourceViewModel"
@@ -11,4 +12,12 @@
     Name="Jellyfin"
     GetAllMediaSourcesCommand="@(new GetAllJellyfinMediaSources())"
     DisconnectCommand="@(new DisconnectJellyfin())"
+    RefreshLibrariesCommand="@(mediaSourceId => RefreshLibraries(mediaSourceId))"
     SecretStore="@_jellyfinSecretStore"/>
+
+@code {
+
+    private async Task RefreshLibraries(int mediaSourceId) =>
+        await _channel.WriteAsync(new SynchronizeJellyfinLibraries(mediaSourceId));
+
+}
