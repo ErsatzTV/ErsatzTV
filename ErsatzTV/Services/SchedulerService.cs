@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application;
+using ErsatzTV.Application.Maintenance.Commands;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Application.Plex.Commands;
@@ -58,6 +59,7 @@ namespace ErsatzTV.Services
         {
             try
             {
+                await DeleteOrphanedArtwork(cancellationToken);
                 await RebuildSearchIndex(cancellationToken);
                 await BuildPlayouts(cancellationToken);
                 await ScanLocalMediaSources(cancellationToken);
@@ -124,5 +126,8 @@ namespace ErsatzTV.Services
 
         private ValueTask RebuildSearchIndex(CancellationToken cancellationToken) =>
             _workerChannel.WriteAsync(new RebuildSearchIndex(), cancellationToken);
+
+        private ValueTask DeleteOrphanedArtwork(CancellationToken cancellationToken) =>
+            _workerChannel.WriteAsync(new DeleteOrphanedArtwork(), cancellationToken);
     }
 }
