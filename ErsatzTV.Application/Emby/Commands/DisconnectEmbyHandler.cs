@@ -36,6 +36,7 @@ namespace ErsatzTV.Application.Emby.Commands
         {
             List<int> ids = await _mediaSourceRepository.DeleteAllEmby();
             await _searchIndex.RemoveItems(ids);
+            _searchIndex.Commit();
             await _embySecretStore.DeleteAll();
             _entityLocker.UnlockRemoteMediaSource<EmbyMediaSource>();
 

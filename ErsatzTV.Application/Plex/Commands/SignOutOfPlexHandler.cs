@@ -33,6 +33,7 @@ namespace ErsatzTV.Application.Plex.Commands
         {
             List<int> ids = await _mediaSourceRepository.DeleteAllPlex();
             await _searchIndex.RemoveItems(ids);
+            _searchIndex.Commit();
             await _plexSecretStore.DeleteAll();
             _entityLocker.UnlockPlex();
 

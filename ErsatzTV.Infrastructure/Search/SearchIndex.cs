@@ -71,7 +71,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 11;
+        public int Version => 12;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -92,6 +92,8 @@ namespace ErsatzTV.Infrastructure.Search
 
         public async Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds)
         {
+            _writer.DeleteAll();
+
             foreach (int id in itemIds)
             {
                 Option<MediaItem> maybeMediaItem = await searchRepository.GetItemToIndex(id);
