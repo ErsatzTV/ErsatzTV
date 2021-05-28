@@ -38,5 +38,8 @@ namespace ErsatzTV.Core.Metadata.Nfo
 
         [XmlElement("actor")]
         public List<ActorNfo> Actors { get; set; }
+
+        [XmlElement("uniqueid")]
+        public List<UniqueIdNfo> UniqueIds { get; set; }
     }
 }

@@ -45,5 +45,8 @@ namespace ErsatzTV.Core.Metadata.Nfo
 
         [XmlElement("director")]
         public List<string> Directors { get; set; }
+
+        [XmlElement("uniqueid")]
+        public List<UniqueIdNfo> UniqueIds { get; set; }
     }
 }
