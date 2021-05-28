@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application;
+using ErsatzTV.Application.Maintenance.Commands;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Application.Search.Commands;
@@ -71,6 +72,10 @@ namespace ErsatzTV.Services
                             break;
                         case RebuildSearchIndex rebuildSearchIndex:
                             await mediator.Send(rebuildSearchIndex, cancellationToken);
+                            break;
+                        case DeleteOrphanedArtwork deleteOrphanedArtwork:
+                            _logger.LogInformation("Deleting orphaned artwork from the database");
+                            await mediator.Send(deleteOrphanedArtwork, cancellationToken);
                             break;
                     }
                 }
