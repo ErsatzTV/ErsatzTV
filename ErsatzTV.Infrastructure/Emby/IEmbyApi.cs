@@ -30,7 +30,9 @@ namespace ErsatzTV.Infrastructure.Emby
             string fields =
                 "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating",
             [Query]
-            string includeItemTypes = "Movie");
+            string includeItemTypes = "Movie",
+            [Query]
+            bool recursive = true);
 
         [Get("/Items")]
         public Task<EmbyLibraryItemsResponse> GetShowLibraryItems(
@@ -42,7 +44,9 @@ namespace ErsatzTV.Infrastructure.Emby
             string fields =
                 "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating",
             [Query]
-            string includeItemTypes = "Series");
+            string includeItemTypes = "Series",
+            [Query]
+            bool recursive = true);
 
         [Get("/Items")]
         public Task<EmbyLibraryItemsResponse> GetSeasonLibraryItems(
@@ -53,7 +57,9 @@ namespace ErsatzTV.Infrastructure.Emby
             [Query]
             string fields = "Path,DateCreated,Etag,Taglines",
             [Query]
-            string includeItemTypes = "Season");
+            string includeItemTypes = "Season",
+            [Query]
+            bool recursive = true);
 
         [Get("/Items")]
         public Task<EmbyLibraryItemsResponse> GetEpisodeLibraryItems(
@@ -64,6 +70,8 @@ namespace ErsatzTV.Infrastructure.Emby
             [Query]
             string fields = "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType",
             [Query]
-            string includeItemTypes = "Episode");
+            string includeItemTypes = "Episode",
+            [Query]
+            bool recursive = true);
     }
 }
