@@ -31,6 +31,7 @@ namespace ErsatzTV.Application.Emby.Commands
             var toDisable = request.Preferences.Filter(p => p.ShouldSyncItems == false).Map(p => p.Id).ToList();
             List<int> ids = await _mediaSourceRepository.DisableEmbyLibrarySync(toDisable);
             await _searchIndex.RemoveItems(ids);
+            _searchIndex.Commit();
 
             IEnumerable<int> toEnable = request.Preferences.Filter(p => p.ShouldSyncItems).Map(p => p.Id);
             await _mediaSourceRepository.EnableEmbyLibrarySync(toEnable);
