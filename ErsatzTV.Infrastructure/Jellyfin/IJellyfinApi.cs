@@ -36,7 +36,9 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating",
             [Query]
-            string includeItemTypes = "Movie");
+            string includeItemTypes = "Movie",
+            [Query]
+            bool recursive = true);
 
         [Get("/Items")]
         public Task<JellyfinLibraryItemsResponse> GetShowLibraryItems(
@@ -49,7 +51,9 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating",
             [Query]
-            string includeItemTypes = "Series");
+            string includeItemTypes = "Series",
+            [Query]
+            bool recursive = true);
 
         [Get("/Items")]
         public Task<JellyfinLibraryItemsResponse> GetSeasonLibraryItems(
@@ -62,7 +66,9 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string fields = "Path,DateCreated,Etag,Taglines",
             [Query]
-            string includeItemTypes = "Season");
+            string includeItemTypes = "Season",
+            [Query]
+            bool recursive = true);
 
         [Get("/Items")]
         public Task<JellyfinLibraryItemsResponse> GetEpisodeLibraryItems(
@@ -75,6 +81,8 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string fields = "Path,DateCreated,Etag,Overview",
             [Query]
-            string includeItemTypes = "Episode");
+            string includeItemTypes = "Episode",
+            [Query]
+            bool recursive = true);
     }
 }
