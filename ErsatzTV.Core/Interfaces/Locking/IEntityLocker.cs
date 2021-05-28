@@ -13,6 +13,7 @@ namespace ErsatzTV.Core.Interfaces.Locking
         bool LockPlex();
         bool UnlockPlex();
         bool IsPlexLocked();
+        bool IsRemoteMediaSourceLocked<TMediaSource>();
         bool LockRemoteMediaSource<TMediaSource>();
         bool UnlockRemoteMediaSource<TMediaSource>();
     }

@@ -27,17 +27,17 @@ namespace ErsatzTV.Core.Interfaces.Repositories
             List<PlexConnection> toAdd,
             List<PlexConnection> toDelete);
 
-        Task<Unit> UpdateLibraries(
+        Task<List<int>> UpdateLibraries(
             int plexMediaSourceId,
             List<PlexLibrary> toAdd,
             List<PlexLibrary> toDelete);
 
-        Task<Unit> UpdateLibraries(
+        Task<List<int>> UpdateLibraries(
             int jellyfinMediaSourceId,
             List<JellyfinLibrary> toAdd,
             List<JellyfinLibrary> toDelete);
 
-        Task<Unit> UpdateLibraries(
+        Task<List<int>> UpdateLibraries(
             int embyMediaSourceId,
             List<EmbyLibrary> toAdd,
             List<EmbyLibrary> toDelete);

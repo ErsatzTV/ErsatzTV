@@ -7,6 +7,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -19,18 +20,21 @@ namespace ErsatzTV.Application.Emby.Commands
         private readonly IEmbyApiClient _embyApiClient;
         private readonly IEmbySecretStore _embySecretStore;
         private readonly ILogger<SynchronizeEmbyLibrariesHandler> _logger;
+        private readonly ISearchIndex _searchIndex;
         private readonly IMediaSourceRepository _mediaSourceRepository;
 
         public SynchronizeEmbyLibrariesHandler(
             IMediaSourceRepository mediaSourceRepository,
             IEmbySecretStore embySecretStore,
             IEmbyApiClient embyApiClient,
-            ILogger<SynchronizeEmbyLibrariesHandler> logger)
+            ILogger<SynchronizeEmbyLibrariesHandler> logger,
+            ISearchIndex searchIndex)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _embySecretStore = embySecretStore;
             _embyApiClient = embyApiClient;
             _logger = logger;
+            _searchIndex = searchIndex;
         }
 
         public Task<Either<BaseError, Unit>> Handle(
@@ -75,16 +79,21 @@ namespace ErsatzTV.Application.Emby.Commands
                 connectionParameters.ApiKey);
 
             await maybeLibraries.Match(
-                libraries =>
+                async libraries =>
                 {
                     var existing = connectionParameters.EmbyMediaSource.Libraries.OfType<EmbyLibrary>()
                         .ToList();
                     var toAdd = libraries.Filter(library => existing.All(l => l.ItemId != library.ItemId)).ToList();
                     var toRemove = existing.Filter(library => libraries.All(l => l.ItemId != library.ItemId)).ToList();
-                    return _mediaSourceRepository.UpdateLibraries(
+                    List<int> ids = await _mediaSourceRepository.UpdateLibraries(
                         connectionParameters.EmbyMediaSource.Id,
                         toAdd,
                         toRemove);
+                    if (ids.Any())
+                    {
+                        await _searchIndex.RemoveItems(ids);
+                        _searchIndex.Commit();
+                    }
                 },
                 error =>
                 {

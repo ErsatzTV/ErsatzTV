@@ -6,6 +6,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -21,18 +22,21 @@ namespace ErsatzTV.Application.Jellyfin.Commands
         private readonly IJellyfinApiClient _jellyfinApiClient;
         private readonly IJellyfinSecretStore _jellyfinSecretStore;
         private readonly ILogger<SynchronizeJellyfinLibrariesHandler> _logger;
+        private readonly ISearchIndex _searchIndex;
         private readonly IMediaSourceRepository _mediaSourceRepository;
 
         public SynchronizeJellyfinLibrariesHandler(
             IMediaSourceRepository mediaSourceRepository,
             IJellyfinSecretStore jellyfinSecretStore,
             IJellyfinApiClient jellyfinApiClient,
-            ILogger<SynchronizeJellyfinLibrariesHandler> logger)
+            ILogger<SynchronizeJellyfinLibrariesHandler> logger,
+            ISearchIndex searchIndex)
         {
             _mediaSourceRepository = mediaSourceRepository;
             _jellyfinSecretStore = jellyfinSecretStore;
             _jellyfinApiClient = jellyfinApiClient;
             _logger = logger;
+            _searchIndex = searchIndex;
         }
 
         public Task<Either<BaseError, Unit>> Handle(
@@ -77,16 +81,21 @@ namespace ErsatzTV.Application.Jellyfin.Commands
                 connectionParameters.ApiKey);
 
             await maybeLibraries.Match(
-                libraries =>
+                async libraries =>
                 {
                     var existing = connectionParameters.JellyfinMediaSource.Libraries.OfType<JellyfinLibrary>()
                         .ToList();
                     var toAdd = libraries.Filter(library => existing.All(l => l.ItemId != library.ItemId)).ToList();
                     var toRemove = existing.Filter(library => libraries.All(l => l.ItemId != library.ItemId)).ToList();
-                    return _mediaSourceRepository.UpdateLibraries(
+                    List<int> ids = await _mediaSourceRepository.UpdateLibraries(
                         connectionParameters.JellyfinMediaSource.Id,
                         toAdd,
                         toRemove);
+                    if (ids.Any())
+                    {
+                        await _searchIndex.RemoveItems(ids);
+                        _searchIndex.Commit();
+                    }
                 },
                 error =>
                 {

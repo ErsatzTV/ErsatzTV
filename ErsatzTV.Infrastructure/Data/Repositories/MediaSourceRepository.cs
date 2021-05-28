@@ -206,7 +206,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        public async Task<Unit> UpdateLibraries(
+        public async Task<List<int>> UpdateLibraries(
             int plexMediaSourceId,
             List<PlexLibrary> toAdd,
             List<PlexLibrary> toDelete)
@@ -228,12 +228,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 dbContext.Entry(delete).State = EntityState.Deleted;
             }
 
+            List<int> ids = await DisablePlexLibrarySync(toDelete.Map(l => l.Id).ToList());
+
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return ids;
         }
 
-        public async Task<Unit> UpdateLibraries(
+        public async Task<List<int>> UpdateLibraries(
             int jellyfinMediaSourceId,
             List<JellyfinLibrary> toAdd,
             List<JellyfinLibrary> toDelete)
@@ -254,13 +256,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 dbContext.Entry(delete).State = EntityState.Deleted;
             }
+            
+            List<int> ids = await DisableJellyfinLibrarySync(toDelete.Map(l => l.Id).ToList());
 
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return ids;
         }
 
-        public async Task<Unit> UpdateLibraries(
+        public async Task<List<int>> UpdateLibraries(
             int embyMediaSourceId,
             List<EmbyLibrary> toAdd,
             List<EmbyLibrary> toDelete)
@@ -281,10 +285,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             {
                 dbContext.Entry(delete).State = EntityState.Deleted;
             }
+            
+            List<int> ids = await DisableEmbyLibrarySync(toDelete.Map(l => l.Id).ToList());
 
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return ids;
         }
 
         public async Task<Unit> UpdatePathReplacements(
