@@ -30,5 +30,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating);
         Task<bool> RemoveGuid(MetadataGuid guid);
         Task<bool> AddGuid(Domain.Metadata metadata, MetadataGuid guid);
+        Task<bool> RemoveDirector(Director director);
+        Task<bool> RemoveWriter(Writer writer);
     }
 }

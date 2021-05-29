@@ -395,6 +395,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Guids)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Writers)
                 .Filter(m => m.ItemId == episode.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -436,6 +440,36 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     thumbnail.Path = incomingThumbnail.Path;
                     thumbnail.DateAdded = incomingThumbnail.DateAdded;
                     thumbnail.DateUpdated = incomingThumbnail.DateUpdated;
+                }
+                
+                // directors
+                foreach (Director director in metadata.Directors
+                    .Filter(d => incomingMetadata.Directors.All(d2 => d2.Name != d.Name))
+                    .ToList())
+                {
+                    metadata.Directors.Remove(director);
+                }
+
+                foreach (Director director in incomingMetadata.Directors
+                    .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name))
+                    .ToList())
+                {
+                    metadata.Directors.Add(director);
+                }
+
+                // writers
+                foreach (Writer writer in metadata.Writers
+                    .Filter(w => incomingMetadata.Writers.All(w2 => w2.Name != w.Name))
+                    .ToList())
+                {
+                    metadata.Writers.Remove(writer);
+                }
+
+                foreach (Writer writer in incomingMetadata.Writers
+                    .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name))
+                    .ToList())
+                {
+                    metadata.Writers.Add(writer);
                 }
 
                 // guids

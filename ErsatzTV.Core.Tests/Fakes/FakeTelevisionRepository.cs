@@ -93,6 +93,9 @@ namespace ErsatzTV.Core.Tests.Fakes
             throw new NotSupportedException();
 
         public Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber) => throw new NotSupportedException();
+        public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) => throw new NotSupportedException();
+
+        public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) => throw new NotSupportedException();
 
         public Task<bool> Update(Show show) => throw new NotSupportedException();
 

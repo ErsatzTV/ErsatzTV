@@ -302,6 +302,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(a => a.Artwork)
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Guids)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(mm => mm.Writers)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
@@ -442,6 +446,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .AsNoTracking()
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(mm => mm.Writers)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
@@ -487,6 +495,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { EpisodeNumber = episodeNumber, episode.Id });
             return Unit.Default;
         }
+
+        public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Director (Name, EpisodeMetadataId) VALUES (@Name, @MetadataId)",
+                new { director.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Writer (Name, EpisodeMetadataId) VALUES (@Name, @MetadataId)",
+                new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
         public async Task<List<Episode>> GetShowItems(int showId)
         {
@@ -666,7 +684,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             DateUpdated = DateTime.MinValue,
                             MetadataKind = MetadataKind.Fallback,
                             Actors = new List<Actor>(),
-                            Guids = new List<MetadataGuid>()
+                            Guids = new List<MetadataGuid>(),
+                            Writers = new List<Writer>(),
+                            Directors = new List<Director>()
                         }
                     },
                     MediaVersions = new List<MediaVersion>

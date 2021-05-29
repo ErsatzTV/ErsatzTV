@@ -69,7 +69,7 @@ namespace ErsatzTV.Infrastructure.Emby
             string parentId,
             [Query]
             string fields =
-                "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds",
+                "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds,People",
             [Query]
             string includeItemTypes = "Episode",
             [Query]

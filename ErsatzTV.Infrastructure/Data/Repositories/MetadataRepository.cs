@@ -92,6 +92,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     dbContext.Entry(writer).State = EntityState.Added;
                 }
             }
+            
+            if (metadata is EpisodeMetadata episodeMetadata)
+            {
+                foreach (Director director in Optional(episodeMetadata.Directors).Flatten())
+                {
+                    dbContext.Entry(director).State = EntityState.Added;
+                }
+
+                foreach (Writer writer in Optional(episodeMetadata.Writers).Flatten())
+                {
+                    dbContext.Entry(writer).State = EntityState.Added;
+                }
+            }
 
             return await dbContext.SaveChangesAsync() > 0;
         }
@@ -295,6 +308,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
                 _ => throw new NotSupportedException()
             };
+
+        public Task<bool> RemoveDirector(Director director) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Director WHERE Id = @DirectorId", new { DirectorId = director.Id })
+                .Map(result => result > 0);
+
+        public Task<bool> RemoveWriter(Writer writer) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Writer WHERE Id = @WriterId", new { WriterId = writer.Id })
+                .Map(result => result > 0);
 
         public Task<bool> RemoveGenre(Genre genre) =>
             _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id })

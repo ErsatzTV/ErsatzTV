@@ -679,7 +679,9 @@ namespace ErsatzTV.Infrastructure.Plex
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime,
                 Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
-                    .ToList()
+                    .ToList(),
+                Directors = Optional(response.Director).Flatten().Map(d => new Director { Name = d.Tag }).ToList(),
+                Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList()
             };
 
             if (response is PlexXmlMetadataResponse xml)

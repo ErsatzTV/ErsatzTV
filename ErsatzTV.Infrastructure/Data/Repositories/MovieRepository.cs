@@ -773,18 +773,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return maybeExisting;
         }
 
-        public Task<bool> RemoveDirector(Director director) =>
-            _dbConnection.ExecuteAsync("DELETE FROM Director WHERE Id = @DirectorId", new { DirectorId = director.Id })
-                .Map(result => result > 0);
-
         public Task<bool> AddDirector(MovieMetadata metadata, Director director) =>
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Director (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { director.Name, MetadataId = metadata.Id }).Map(result => result > 0);
-
-        public Task<bool> RemoveWriter(Writer writer) =>
-            _dbConnection.ExecuteAsync("DELETE FROM Writer WHERE Id = @WriterId", new { WriterId = writer.Id })
-                .Map(result => result > 0);
 
         public Task<bool> AddWriter(MovieMetadata metadata, Writer writer) =>
             _dbConnection.ExecuteAsync(
