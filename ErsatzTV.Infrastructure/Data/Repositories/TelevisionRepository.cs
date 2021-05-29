@@ -187,6 +187,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .AsNoTracking()
                 .Filter(em => em.Episode.SeasonId == seasonId)
                 .Include(em => em.Artwork)
+                .Include(em => em.Directors)
+                .Include(em => em.Writers)
                 .Include(em => em.Episode)
                 .ThenInclude(e => e.Season)
                 .ThenInclude(s => s.Show)

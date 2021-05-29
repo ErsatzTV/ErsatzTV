@@ -106,6 +106,39 @@
                     </div>
                 </MudCardContent>
             </div>
+            <div class="pl-3 pt-3">
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudText GutterBottom="true">Released: @episode.Aired.ToShortDateString()</MudText>
+                </div>
+                @if (episode.Directors.Any())
+                {
+                    var sorted = episode.Directors.OrderBy(w => w).ToList();
+
+                    <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                        <MudText GutterBottom="true">Directors:&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=director%3a%22{Uri.EscapeDataString(sorted.Head())}%22")">@sorted.Head()</MudLink>
+                        @foreach (string director in sorted.Skip(1))
+                        {
+                            <MudText>,&nbsp;</MudText>
+                            <MudLink Href="@($"/search?query=director%3a%22{Uri.EscapeDataString(director)}%22")">@director</MudLink>
+                        }
+                    </div>
+                }
+                @if (episode.Writers.Any())
+                {
+                    var sorted = episode.Writers.OrderBy(w => w).ToList();
+
+                    <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                        <MudText GutterBottom="true">Writers:&nbsp;</MudText>
+                        <MudLink Href="@($"/search?query=writer%3a%22{Uri.EscapeDataString(sorted.Head())}%22")">@sorted.Head()</MudLink>
+                        @foreach (string writer in sorted.Skip(1))
+                        {
+                            <MudText>,&nbsp;</MudText>
+                            <MudLink Href="@($"/search?query=writer%3a%22{Uri.EscapeDataString(writer)}%22")">@writer</MudLink>
+                        }
+                    </div>
+                }
+            </div>
         </MudCard>
     }
 </MudContainer>

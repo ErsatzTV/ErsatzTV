@@ -53,7 +53,9 @@ namespace ErsatzTV.Application.MediaCards
                 episodeMetadata.Episode.EpisodeMetadata.HeadOrNone().Match(
                     em => em.Plot ?? string.Empty,
                     () => string.Empty),
-                GetThumbnail(episodeMetadata, maybeJellyfin, maybeEmby));
+                GetThumbnail(episodeMetadata, maybeJellyfin, maybeEmby),
+                episodeMetadata.Directors.Map(d => d.Name).ToList(),
+                episodeMetadata.Writers.Map(w => w.Name).ToList());
 
         internal static MovieCardViewModel ProjectToViewModel(
             MovieMetadata movieMetadata,
