@@ -88,6 +88,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Actors)
                 .Include(m => m.ShowMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.ShowMetadata)
+                .ThenInclude(mm => mm.Guids)
                 .Filter(m => m.ItemId == show.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -177,6 +179,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     metadata.Actors.Add(actor);
                 }
 
+                // guids
+                foreach (MetadataGuid guid in metadata.Guids
+                    .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Remove(guid);
+                }
+
+                foreach (MetadataGuid guid in incomingMetadata.Guids
+                    .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Add(guid);
+                }
+
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
 
                 // poster
@@ -263,6 +280,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.LibraryPath)
                 .Include(m => m.SeasonMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.SeasonMetadata)
+                .ThenInclude(mm => mm.Guids)
                 .Filter(m => m.ItemId == season.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -322,6 +341,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     fanArt.DateUpdated = incomingFanArt.DateUpdated;
                 }
 
+                // guids
+                foreach (MetadataGuid guid in metadata.Guids
+                    .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Remove(guid);
+                }
+
+                foreach (MetadataGuid guid in incomingMetadata.Guids
+                    .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Add(guid);
+                }
+
                 var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();
                 foreach (Artwork artworkToRemove in metadata.Artwork.Filter(a => !paths.Contains(a.Path)))
                 {
@@ -359,6 +393,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.Streams)
                 .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Guids)
                 .Filter(m => m.ItemId == episode.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -400,6 +436,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     thumbnail.Path = incomingThumbnail.Path;
                     thumbnail.DateAdded = incomingThumbnail.DateAdded;
                     thumbnail.DateUpdated = incomingThumbnail.DateUpdated;
+                }
+
+                // guids
+                foreach (MetadataGuid guid in metadata.Guids
+                    .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Remove(guid);
+                }
+
+                foreach (MetadataGuid guid in incomingMetadata.Guids
+                    .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Add(guid);
                 }
 
                 var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();

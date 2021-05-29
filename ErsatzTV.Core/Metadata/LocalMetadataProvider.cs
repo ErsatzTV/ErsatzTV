@@ -211,7 +211,7 @@ namespace ErsatzTV.Core.Metadata
                         (_, _) => Task.FromResult(false),
                         (_, _) => Task.FromResult(false),
                         _televisionRepository.AddActor);
-                    
+
                     foreach (MetadataGuid guid in existing.Guids
                         .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
                     {
@@ -319,7 +319,7 @@ namespace ErsatzTV.Core.Metadata
                             updated = true;
                         }
                     }
-                    
+
                     foreach (MetadataGuid guid in existing.Guids
                         .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
                     {
@@ -384,7 +384,7 @@ namespace ErsatzTV.Core.Metadata
                         _televisionRepository.AddTag,
                         _televisionRepository.AddStudio,
                         _televisionRepository.AddActor);
-                    
+
                     foreach (MetadataGuid guid in existing.Guids
                         .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
                     {

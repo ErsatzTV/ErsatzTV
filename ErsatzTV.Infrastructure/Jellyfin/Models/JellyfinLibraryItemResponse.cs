@@ -15,6 +15,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin.Models
         public List<string> Genres { get; set; }
         public List<string> Tags { get; set; }
         public int ProductionYear { get; set; }
+        public JellyfinProviderIdsResponse ProviderIds { get; set; }
         public string PremiereDate { get; set; }
         public List<JellyfinMediaStreamResponse> MediaStreams { get; set; }
         public string LocationType { get; set; }

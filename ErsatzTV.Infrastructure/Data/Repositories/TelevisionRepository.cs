@@ -628,7 +628,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         {
                             DateAdded = DateTime.UtcNow,
                             Guids = new List<MetadataGuid>()
-                        },
+                        }
                     }
                 };
                 await dbContext.Seasons.AddAsync(season);

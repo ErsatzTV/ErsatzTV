@@ -330,6 +330,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Directors)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Writers)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Guids)
                 .Filter(m => m.ItemId == movie.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -447,6 +449,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     .ToList())
                 {
                     metadata.Writers.Add(writer);
+                }
+
+                // guids
+                foreach (MetadataGuid guid in metadata.Guids
+                    .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Remove(guid);
+                }
+
+                foreach (MetadataGuid guid in incomingMetadata.Guids
+                    .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Add(guid);
                 }
 
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
@@ -567,6 +584,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Writers)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Guids)
                 .Filter(m => m.ItemId == movie.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -684,6 +703,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     .ToList())
                 {
                     metadata.Writers.Add(writer);
+                }
+
+                // guids
+                foreach (MetadataGuid guid in metadata.Guids
+                    .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Remove(guid);
+                }
+
+                foreach (MetadataGuid guid in incomingMetadata.Guids
+                    .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Add(guid);
                 }
 
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
