@@ -59,6 +59,8 @@ namespace ErsatzTV.Infrastructure.Emby
             [Query]
             string includeItemTypes = "Season",
             [Query]
+            string excludeLocationTypes = "Virtual",
+            [Query]
             bool recursive = true);
 
         [Get("/Items")]
@@ -72,6 +74,8 @@ namespace ErsatzTV.Infrastructure.Emby
                 "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds,People",
             [Query]
             string includeItemTypes = "Episode",
+            [Query]
+            string excludeLocationTypes = "Virtual",
             [Query]
             bool recursive = true);
     }

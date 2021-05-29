@@ -388,6 +388,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<JellyfinEpisode> maybeExisting = await dbContext.JellyfinEpisodes
                 .Include(m => m.LibraryPath)
+                .ThenInclude(lp => lp.Library)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(m => m.MediaVersions)
@@ -397,9 +398,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Guids)
                 .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Studios)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Actors)
+                .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Directors)
                 .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Writers)
+                .Include(m => m.Season)
                 .Filter(m => m.ItemId == episode.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();

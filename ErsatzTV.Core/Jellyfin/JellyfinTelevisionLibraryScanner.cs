@@ -120,8 +120,6 @@ namespace ErsatzTV.Core.Jellyfin
                 decimal percentCompletion = (decimal) shows.IndexOf(incoming) / shows.Count;
                 await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
-                var changed = false;
-
                 Option<JellyfinItemEtag> maybeExisting = existingShows.Find(ie => ie.ItemId == incoming.ItemId);
                 await maybeExisting.Match(
                     async existing =>
@@ -135,7 +133,6 @@ namespace ErsatzTV.Core.Jellyfin
                             "UPDATE: Etag has changed for show {Show}",
                             incoming.ShowMetadata.Head().Title);
 
-                        changed = true;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
                         Option<JellyfinShow> updated = await _televisionRepository.Update(incoming);
@@ -148,7 +145,6 @@ namespace ErsatzTV.Core.Jellyfin
                     },
                     async () =>
                     {
-                        changed = true;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
                         // _logger.LogDebug("INSERT: Item id is new for show {Show}", incoming.ShowMetadata.Head().Title);
@@ -159,50 +155,45 @@ namespace ErsatzTV.Core.Jellyfin
                         }
                     });
 
-                if (changed)
-                {
-                    List<JellyfinItemEtag> existingSeasons =
-                        await _televisionRepository.GetExistingSeasons(library, incoming.ItemId);
+                List<JellyfinItemEtag> existingSeasons =
+                    await _televisionRepository.GetExistingSeasons(library, incoming.ItemId);
 
-                    Either<BaseError, List<JellyfinSeason>> maybeSeasons =
-                        await _jellyfinApiClient.GetSeasonLibraryItems(
+                Either<BaseError, List<JellyfinSeason>> maybeSeasons =
+                    await _jellyfinApiClient.GetSeasonLibraryItems(
+                        address,
+                        apiKey,
+                        library.MediaSourceId,
+                        incoming.ItemId);
+
+                await maybeSeasons.Match(
+                    async seasons =>
+                    {
+                        await ProcessSeasons(
                             address,
                             apiKey,
-                            library.MediaSourceId,
-                            incoming.ItemId);
+                            library,
+                            ffprobePath,
+                            pathReplacements,
+                            incoming,
+                            existingSeasons,
+                            seasons);
 
-                    await maybeSeasons.Match(
-                        async seasons =>
-                        {
-                            await ProcessSeasons(
-                                address,
-                                apiKey,
-                                library,
-                                ffprobePath,
-                                pathReplacements,
-                                incoming,
-                                existingSeasons,
-                                seasons);
+                        var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
+                        var seasonIds = existingSeasons
+                            .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
+                            .Map(m => m.ItemId)
+                            .ToList();
+                        await _televisionRepository.RemoveMissingSeasons(library, seasonIds);
+                    },
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Error synchronizing jellyfin library {Path}: {Error}",
+                            library.Name,
+                            error.Value);
 
-                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { incoming });
-
-                            var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
-                            var seasonIds = existingSeasons
-                                .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
-                                .Map(m => m.ItemId)
-                                .ToList();
-                            await _televisionRepository.RemoveMissingSeasons(library, seasonIds);
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error synchronizing jellyfin library {Path}: {Error}",
-                                library.Name,
-                                error.Value);
-
-                            return Task.CompletedTask;
-                        });
-                }
+                        return Task.CompletedTask;
+                    });
             }
         }
 
@@ -218,8 +209,6 @@ namespace ErsatzTV.Core.Jellyfin
         {
             foreach (JellyfinSeason incoming in seasons)
             {
-                var changed = false;
-
                 Option<JellyfinItemEtag> maybeExisting = existingSeasons.Find(ie => ie.ItemId == incoming.ItemId);
                 await maybeExisting.Match(
                     async existing =>
@@ -234,7 +223,6 @@ namespace ErsatzTV.Core.Jellyfin
                             show.ShowMetadata.Head().Title,
                             incoming.SeasonMetadata.Head().Title);
 
-                        changed = true;
                         incoming.ShowId = show.Id;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
@@ -242,7 +230,6 @@ namespace ErsatzTV.Core.Jellyfin
                     },
                     async () =>
                     {
-                        changed = true;
                         incoming.ShowId = show.Id;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
@@ -254,72 +241,69 @@ namespace ErsatzTV.Core.Jellyfin
                         await _televisionRepository.AddSeason(incoming);
                     });
 
-                if (changed)
-                {
-                    List<JellyfinItemEtag> existingEpisodes =
-                        await _televisionRepository.GetExistingEpisodes(library, incoming.ItemId);
+                List<JellyfinItemEtag> existingEpisodes =
+                    await _televisionRepository.GetExistingEpisodes(library, incoming.ItemId);
 
-                    Either<BaseError, List<JellyfinEpisode>> maybeEpisodes =
-                        await _jellyfinApiClient.GetEpisodeLibraryItems(
-                            address,
-                            apiKey,
-                            library.MediaSourceId,
-                            incoming.ItemId);
+                Either<BaseError, List<JellyfinEpisode>> maybeEpisodes =
+                    await _jellyfinApiClient.GetEpisodeLibraryItems(
+                        address,
+                        apiKey,
+                        library.MediaSourceId,
+                        incoming.ItemId);
 
-                    await maybeEpisodes.Match(
-                        async episodes =>
+                await maybeEpisodes.Match(
+                    async episodes =>
+                    {
+                        var validEpisodes = new List<JellyfinEpisode>();
+                        foreach (JellyfinEpisode episode in episodes)
                         {
-                            var validEpisodes = new List<JellyfinEpisode>();
-                            foreach (JellyfinEpisode episode in episodes)
-                            {
-                                string localPath = _pathReplacementService.GetReplacementJellyfinPath(
-                                    pathReplacements,
-                                    episode.MediaVersions.Head().MediaFiles.Head().Path,
-                                    false);
-
-                                if (!_localFileSystem.FileExists(localPath))
-                                {
-                                    _logger.LogWarning(
-                                        "Skipping jellyfin episode that does not exist at {Path}",
-                                        localPath);
-                                }
-                                else
-                                {
-                                    validEpisodes.Add(episode);
-                                }
-                            }
-
-                            await ProcessEpisodes(
-                                show.ShowMetadata.Head().Title,
-                                incoming.SeasonMetadata.Head().Title,
-                                library,
-                                ffprobePath,
+                            string localPath = _pathReplacementService.GetReplacementJellyfinPath(
                                 pathReplacements,
-                                incoming,
-                                existingEpisodes,
-                                validEpisodes);
+                                episode.MediaVersions.Head().MediaFiles.Head().Path,
+                                false);
 
-                            var incomingEpisodeIds = episodes.Map(s => s.ItemId).ToList();
-                            var episodeIds = existingEpisodes
-                                .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))
-                                .Map(m => m.ItemId)
-                                .ToList();
+                            if (!_localFileSystem.FileExists(localPath))
+                            {
+                                _logger.LogWarning(
+                                    "Skipping jellyfin episode that does not exist at {Path}",
+                                    localPath);
+                            }
+                            else
+                            {
+                                validEpisodes.Add(episode);
+                            }
+                        }
 
-                            List<int> missingEpisodeIds =
-                                await _televisionRepository.RemoveMissingEpisodes(library, episodeIds);
-                            await _searchIndex.RemoveItems(missingEpisodeIds);
-                            _searchIndex.Commit();
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error synchronizing jellyfin library {Path}: {Error}",
-                                library.Name,
-                                error.Value);
+                        await ProcessEpisodes(
+                            show.ShowMetadata.Head().Title,
+                            incoming.SeasonMetadata.Head().Title,
+                            library,
+                            ffprobePath,
+                            pathReplacements,
+                            incoming,
+                            existingEpisodes,
+                            validEpisodes);
 
-                            return Task.CompletedTask;
-                        });
-                }
+                        var incomingEpisodeIds = episodes.Map(s => s.ItemId).ToList();
+                        var episodeIds = existingEpisodes
+                            .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))
+                            .Map(m => m.ItemId)
+                            .ToList();
+
+                        List<int> missingEpisodeIds =
+                            await _televisionRepository.RemoveMissingEpisodes(library, episodeIds);
+                        await _searchIndex.RemoveItems(missingEpisodeIds);
+                        _searchIndex.Commit();
+                    },
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Error synchronizing jellyfin library {Path}: {Error}",
+                            library.Name,
+                            error.Value);
+
+                        return Task.CompletedTask;
+                    });
             }
         }
 
