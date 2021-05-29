@@ -71,17 +71,7 @@ namespace ErsatzTV.Core.Plex
                         await maybeShow.Match(
                             async result =>
                             {
-                                if (result.IsAdded || incoming.ShowMetadata.Head().DateUpdated >
-                                    result.Item.ShowMetadata.Head().DateUpdated)
-                                {
-                                    await ScanSeasons(library, result.Item, connection, token);
-                                }
-                                else
-                                {
-                                    _logger.LogDebug(
-                                        "Skipping Plex show that has not been updated: {Show}",
-                                        incoming.ShowMetadata.Head().Title);
-                                }
+                                await ScanSeasons(library, result.Item, connection, token);
 
                                 if (result.IsAdded)
                                 {
