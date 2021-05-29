@@ -89,7 +89,7 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys) =>
             throw new NotSupportedException();
 
-        public Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
+        public Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
             throw new NotSupportedException();
 
         public Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber) => throw new NotSupportedException();

@@ -213,6 +213,8 @@ namespace ErsatzTV.Core.Metadata
                     error => _logger.LogWarning("Error processing episode at {Path}: {Error}", file, error.Value));
             }
 
+            // TODO: remove missing episodes?
+
             return Unit.Default;
         }
 

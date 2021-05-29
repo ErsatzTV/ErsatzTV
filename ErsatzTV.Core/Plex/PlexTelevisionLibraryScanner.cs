@@ -402,7 +402,10 @@ namespace ErsatzTV.Core.Plex
                     }
 
                     var episodeKeys = episodeEntries.Map(s => s.Key).ToList();
-                    await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
+                    List<int> ids = await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
+                    await _searchIndex.RemoveItems(ids);
+                    _searchIndex.Commit();
+
 
                     return Unit.Default;
                 },

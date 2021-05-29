@@ -211,7 +211,7 @@ namespace ErsatzTV.Core.Metadata
                         (_, _) => Task.FromResult(false),
                         (_, _) => Task.FromResult(false),
                         _televisionRepository.AddActor);
-                    
+
                     foreach (Director director in existing.Directors
                         .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
                     {

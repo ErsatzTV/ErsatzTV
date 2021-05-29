@@ -304,7 +304,11 @@ namespace ErsatzTV.Core.Jellyfin
                                 .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))
                                 .Map(m => m.ItemId)
                                 .ToList();
-                            await _televisionRepository.RemoveMissingEpisodes(library, episodeIds);
+
+                            List<int> missingEpisodeIds =
+                                await _televisionRepository.RemoveMissingEpisodes(library, episodeIds);
+                            await _searchIndex.RemoveItems(missingEpisodeIds);
+                            _searchIndex.Commit();
                         },
                         error =>
                         {

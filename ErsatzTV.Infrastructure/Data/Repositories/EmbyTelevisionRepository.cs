@@ -441,7 +441,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     thumbnail.DateAdded = incomingThumbnail.DateAdded;
                     thumbnail.DateUpdated = incomingThumbnail.DateUpdated;
                 }
-                
+
                 // directors
                 foreach (Director director in metadata.Directors
                     .Filter(d => incomingMetadata.Directors.All(d2 => d2.Name != d.Name))
@@ -539,14 +539,25 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE LP.LibraryId = @LibraryId AND js.ItemId IN @SeasonIds)",
                 new { LibraryId = library.Id, SeasonIds = seasonIds }).ToUnit();
 
-        public Task<Unit> RemoveMissingEpisodes(EmbyLibrary library, List<string> episodeIds) =>
-            _dbConnection.ExecuteAsync(
+        public async Task<List<int>> RemoveMissingEpisodes(EmbyLibrary library, List<string> episodeIds)
+        {
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyEpisode ee ON ee.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                WHERE lp.LibraryId = @LibraryId AND ee.ItemId IN @EpisodeIds",
+                new { LibraryId = library.Id, EpisodeIds = episodeIds }).Map(result => result.ToList());
+
+            await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyEpisode je ON je.Id = m.Id
+                INNER JOIN EmbyEpisode ee ON ee.Id = m.Id
                 INNER JOIN LibraryPath LP on m.LibraryPathId = LP.Id
-                WHERE LP.LibraryId = @LibraryId AND je.ItemId IN @EpisodeIds)",
-                new { LibraryId = library.Id, EpisodeIds = episodeIds }).ToUnit();
+                WHERE LP.LibraryId = @LibraryId AND ee.ItemId IN @EpisodeIds)",
+                new { LibraryId = library.Id, EpisodeIds = episodeIds });
+
+            return ids;
+        }
 
         public async Task<Unit> DeleteEmptySeasons(EmbyLibrary library)
         {

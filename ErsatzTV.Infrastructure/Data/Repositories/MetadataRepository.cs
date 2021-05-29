@@ -92,7 +92,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     dbContext.Entry(writer).State = EntityState.Added;
                 }
             }
-            
+
             if (metadata is EpisodeMetadata episodeMetadata)
             {
                 foreach (Director director in Optional(episodeMetadata.Directors).Flatten())

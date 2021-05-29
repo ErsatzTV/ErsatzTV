@@ -479,15 +479,27 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE P.Key = @ShowKey AND ps.Key not in @Keys)",
                 new { ShowKey = showKey, Keys = seasonKeys }).ToUnit();
 
-        public Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
-            _dbConnection.ExecuteAsync(
+        public async Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys)
+        {
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN Episode e ON m.Id = e.Id
+                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
+                INNER JOIN PlexSeason P on P.Id = e.SeasonId
+                WHERE P.Key = @SeasonKey AND pe.Key not in @Keys",
+                new { SeasonKey = seasonKey, Keys = episodeKeys }).Map(result => result.ToList());
+
+            await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
                 INNER JOIN Episode e ON m.Id = e.Id
                 INNER JOIN PlexEpisode pe ON pe.Id = m.Id
                 INNER JOIN PlexSeason P on P.Id = e.SeasonId
                 WHERE P.Key = @SeasonKey AND pe.Key not in @Keys)",
-                new { SeasonKey = seasonKey, Keys = episodeKeys }).ToUnit();
+                new { SeasonKey = seasonKey, Keys = episodeKeys });
+
+            return ids;
+        }
 
         public async Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber)
         {
