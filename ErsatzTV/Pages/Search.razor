@@ -133,7 +133,7 @@
                      UserAttributes="@(new Dictionary<string, object> { { "id", "episodes" } })">
                 Episodes
             </MudText>
-            @if (_shows.Count > 50)
+            @if (_episodes.Count > 50)
             {
                 <MudLink Href="@GetEpisodesLink()" Class="ml-4">See All >></MudLink>
             }

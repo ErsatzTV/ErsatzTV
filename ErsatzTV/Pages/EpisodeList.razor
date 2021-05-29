@@ -1,0 +1,166 @@
+﻿@page "/media/tv/episodes"
+@page "/media/tv/episodes/page/{PageNumber:int}"
+@using LanguageExt.UnsafeValueAccess
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.Extensions.Primitives
+@using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.Search.Queries
+@using Unit = LanguageExt.Unit
+@inherits MultiSelectBase<EpisodeList>
+@inject NavigationManager _navigationManager
+@inject ChannelWriter<IBackgroundServiceRequest> _channel
+
+<MudPaper Square="true" Style="display: flex; height: 64px; left: 240px; padding: 0; position: fixed; right: 0; z-index: 100;">
+    <div style="display: flex; flex-direction: row; margin-bottom: auto; margin-top: auto; width: 100%" class="ml-6 mr-6">
+        @if (IsSelectMode())
+        {
+            <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
+            <div style="margin-left: auto">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="@(_ => AddSelectionToCollection())">
+                    Add To Collection
+                </MudButton>
+                <MudButton Class="ml-3"
+                           Variant="Variant.Filled"
+                           Color="Color.Secondary"
+                           StartIcon="@Icons.Material.Filled.Check"
+                           OnClick="@(_ => ClearSelection())">
+                    Clear Selection
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <MudText Style="margin-bottom: auto; margin-top: auto; width: 33%">@_query</MudText>
+            <div style="max-width: 300px; width: 33%;">
+                <MudPaper Style="align-items: center; display: flex; justify-content: center;">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronLeft"
+                                   OnClick="@PrevPage"
+                                   Disabled="@(PageNumber <= 1)">
+                    </MudIconButton>
+                    <MudText Style="flex-grow: 1"
+                             Align="Align.Center">
+                        @Math.Min((PageNumber - 1) * PageSize + 1, _data.Count)-@Math.Min(_data.Count, PageNumber * PageSize) of @_data.Count
+                    </MudText>
+                    <MudIconButton Icon="@Icons.Material.Outlined.ChevronRight"
+                                   OnClick="@NextPage" Disabled="@(PageNumber * PageSize >= _data.Count)">
+                    </MudIconButton>
+                </MudPaper>
+            </div>
+        }
+    </div>
+</MudPaper>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
+    <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+        <FragmentLetterAnchor TCard="TelevisionEpisodeCardViewModel" Cards="@_data.Cards">
+            <MediaCard Data="@context"
+                       Link="@($"/media/tv/seasons/{context.SeasonId}#episode-{context.EpisodeId}")"
+                       Subtitle="@($"{context.ShowTitle} - S{context.Season} E{context.Episode}")"
+                       AddToCollectionClicked="@AddToCollection"
+                       SelectClicked="@(e => SelectClicked(context, e))"
+                       IsSelected="@IsSelected(context)"
+                       IsSelectMode="@IsSelectMode()"/>
+        </FragmentLetterAnchor>
+    </MudContainer>
+</MudContainer>
+@if (_data.PageMap.IsSome)
+{
+    <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
+               BaseUri="/media/tv/episodes"
+               Query="@_query"/>
+}
+
+@code {
+    private static int PageSize => 100;
+
+    [Parameter]
+    public int PageNumber { get; set; }
+
+    private TelevisionEpisodeCardResultsViewModel _data;
+    private string _query;
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (PageNumber == 0)
+        {
+            PageNumber = 1;
+        }
+
+        string query = new Uri(_navigationManager.Uri).Query;
+        if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
+        {
+            _query = value;
+        }
+        else
+        {
+            _query = null;
+        }
+
+        return RefreshData();
+    }
+
+    protected override async Task RefreshData()
+    {
+        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:episode" : $"type:episode AND ({_query})";
+        _data = await Mediator.Send(new QuerySearchIndexEpisodes(searchQuery, PageNumber, PageSize));
+    }
+
+    private void PrevPage()
+    {
+        var uri = $"/media/tv/episodes/page/{PageNumber - 1}";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        _navigationManager.NavigateTo(uri);
+    }
+
+    private void NextPage()
+    {
+        var uri = $"/media/tv/episodes/page/{PageNumber + 1}";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        _navigationManager.NavigateTo(uri);
+    }
+
+    private void SelectClicked(MediaCardViewModel card, MouseEventArgs e)
+    {
+        List<MediaCardViewModel> GetSortedItems()
+        {
+            return _data.Cards.OrderBy(m => m.SortTitle).ToList<MediaCardViewModel>();
+        }
+
+        SelectClicked(GetSortedItems, card, e);
+    }
+
+    private async Task AddToCollection(MediaCardViewModel card)
+    {
+        if (card is TelevisionEpisodeCardViewModel episode)
+        {
+            var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
+    }
+
+}

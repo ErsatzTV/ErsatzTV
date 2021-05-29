@@ -31,6 +31,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     new { ShowIds = showIds })
                 .Map(c => c == showIds.Count);
 
+        public Task<bool> AllEpisodesExist(List<int> episodeIds) =>
+            _dbConnection.QuerySingleAsync<int>(
+                    "SELECT COUNT(*) FROM Episode WHERE Id in @EpisodeIds",
+                    new { EpisodeIds = episodeIds })
+                .Map(c => c == episodeIds.Count);
+
         public async Task<List<Show>> GetAllShows()
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
