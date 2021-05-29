@@ -16,7 +16,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<bool> AddSeason(EmbySeason season);
         Task<Unit> Update(EmbySeason season);
         Task<bool> AddEpisode(EmbyEpisode episode);
-        Task<Unit> Update(EmbyEpisode episode);
+        Task<Option<EmbyEpisode>> Update(EmbyEpisode episode);
         Task<List<int>> RemoveMissingShows(EmbyLibrary library, List<string> showIds);
         Task<Unit> RemoveMissingSeasons(EmbyLibrary library, List<string> seasonIds);
         Task<List<int>> RemoveMissingEpisodes(EmbyLibrary library, List<string> episodeIds);

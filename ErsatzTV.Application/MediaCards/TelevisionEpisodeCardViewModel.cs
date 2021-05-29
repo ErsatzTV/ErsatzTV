@@ -10,8 +10,10 @@ namespace ErsatzTV.Application.MediaCards
         string ShowTitle,
         int ShowId,
         int SeasonId,
+        int Season,
         int Episode,
         string Title,
+        string SortTitle,
         string Plot,
         string Poster,
         List<string> Directors,
@@ -19,6 +21,6 @@ namespace ErsatzTV.Application.MediaCards
         EpisodeId,
         Title,
         $"Episode {Episode}",
-        $"Episode {Episode}",
+        SortTitle,
         Poster);
 }

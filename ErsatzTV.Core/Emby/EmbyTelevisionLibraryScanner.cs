@@ -357,7 +357,13 @@ namespace ErsatzTV.Core.Emby
                             incoming.SeasonId = season.Id;
                             incoming.LibraryPathId = library.Paths.Head().Id;
 
-                            await _televisionRepository.Update(incoming);
+                            Option<EmbyEpisode> updated = await _televisionRepository.Update(incoming);
+                            if (updated.IsSome)
+                            {
+                                await _searchIndex.UpdateItems(
+                                    _searchRepository,
+                                    new List<MediaItem> { updated.ValueUnsafe() });
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -382,7 +388,10 @@ namespace ErsatzTV.Core.Emby
                                 seasonName,
                                 incoming.EpisodeNumber);
 
-                            await _televisionRepository.AddEpisode(incoming);
+                            if (await _televisionRepository.AddEpisode(incoming))
+                            {
+                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                            }
                         }
                         catch (Exception ex)
                         {

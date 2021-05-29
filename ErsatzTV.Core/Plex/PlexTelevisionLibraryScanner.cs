@@ -394,18 +394,25 @@ namespace ErsatzTV.Core.Plex
                                     token))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
-                        maybeEpisode.IfLeft(
-                            error => _logger.LogWarning(
-                                "Error processing plex episode at {Key}: {Error}",
-                                incoming.Key,
-                                error.Value));
+                        await maybeEpisode.Match(
+                            async episode =>
+                            {
+                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
+                            },
+                            error =>
+                            {
+                                _logger.LogWarning(
+                                    "Error processing plex episode at {Key}: {Error}",
+                                    incoming.Key,
+                                    error.Value);
+                                return Task.CompletedTask;
+                            });
                     }
 
                     var episodeKeys = episodeEntries.Map(s => s.Key).ToList();
                     List<int> ids = await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
                     await _searchIndex.RemoveItems(ids);
                     _searchIndex.Commit();
-
 
                     return Unit.Default;
                 },

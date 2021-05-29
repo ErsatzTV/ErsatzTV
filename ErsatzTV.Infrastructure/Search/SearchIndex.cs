@@ -51,8 +51,6 @@ namespace ErsatzTV.Infrastructure.Search
         private const string ContentRatingField = "content_rating";
         private const string DirectorField = "director";
         private const string WriterField = "writer";
-        private const string SeasonNumberField = "season_number";
-        private const string EpisodeNumberField = "episode_number";
 
         private const string MovieType = "movie";
         private const string ShowType = "show";
@@ -603,10 +601,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                         new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO),
                         new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
-                        // new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
-                        new StringField(SeasonNumberField, episode.Season.SeasonNumber.ToString(), Field.Store.NO),
-                        new StringField(EpisodeNumberField, episode.EpisodeNumber.ToString(), Field.Store.NO)
                     };
 
                     AddLanguages(doc, episode.MediaVersions);
@@ -683,7 +679,13 @@ namespace ErsatzTV.Infrastructure.Search
         }
 
         private static string GetTitleAndYear(Metadata metadata) =>
-            $"{metadata.Title}_{metadata.Year}".ToLowerInvariant();
+            metadata switch
+            {
+                EpisodeMetadata em =>
+                    $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.Episode.EpisodeNumber}"
+                        .ToLowerInvariant(),
+                _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
+            };
 
         private static string GetJumpLetter(Metadata metadata)
         {

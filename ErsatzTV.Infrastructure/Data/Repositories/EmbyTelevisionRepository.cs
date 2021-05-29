@@ -379,10 +379,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.Entry(episode).Reference(m => m.LibraryPath).LoadAsync();
             await dbContext.Entry(episode.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(episode).Reference(e => e.Season).LoadAsync();
             return true;
         }
 
-        public async Task<Unit> Update(EmbyEpisode episode)
+        public async Task<Option<EmbyEpisode>> Update(EmbyEpisode episode)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<EmbyEpisode> maybeExisting = await dbContext.EmbyEpisodes
@@ -507,7 +508,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return maybeExisting;
         }
 
         public async Task<List<int>> RemoveMissingShows(EmbyLibrary library, List<string> showIds)

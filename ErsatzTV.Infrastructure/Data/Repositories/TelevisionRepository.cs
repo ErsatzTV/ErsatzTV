@@ -63,31 +63,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(Optional);
         }
 
-        public async Task<int> GetShowCount()
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            return await dbContext.ShowMetadata
-                .AsNoTracking()
-                .GroupBy(sm => new { sm.Title, sm.Year })
-                .CountAsync();
-        }
-
-        public async Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize)
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            return await dbContext.ShowMetadata.FromSqlRaw(
-                    @"SELECT * FROM ShowMetadata WHERE Id IN
-            (SELECT MIN(Id) FROM ShowMetadata GROUP BY Title, Year, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
-            ORDER BY SortTitle
-            LIMIT {0} OFFSET {1}",
-                    pageSize,
-                    (pageNumber - 1) * pageSize)
-                .AsNoTracking()
-                .Include(mm => mm.Artwork)
-                .OrderBy(mm => mm.SortTitle)
-                .ToListAsync();
-        }
-
         public async Task<List<ShowMetadata>> GetShowsForCards(List<int> ids)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
@@ -96,6 +71,27 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(sm => ids.Contains(sm.ShowId))
                 .Include(sm => sm.Artwork)
                 .OrderBy(sm => sm.SortTitle)
+                .ToListAsync();
+        }
+
+        public async Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.EpisodeMetadata
+                .AsNoTracking()
+                .Filter(em => ids.Contains(em.EpisodeId))
+                .Include(em => em.Artwork)
+                .Include(em => em.Directors)
+                .Include(em => em.Writers)
+                .Include(em => em.Episode)
+                .ThenInclude(e => e.Season)
+                .ThenInclude(s => s.SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(em => em.Episode)
+                .ThenInclude(e => e.Season)
+                .ThenInclude(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .OrderBy(em => em.SortTitle)
                 .ToListAsync();
         }
 
@@ -300,6 +296,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Artwork)
                 .Include(i => i.EpisodeMetadata)
+                .ThenInclude(em => em.Genres)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(em => em.Tags)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(em => em.Studios)
+                .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Actors)
                 .ThenInclude(a => a.Artwork)
                 .Include(i => i.EpisodeMetadata)
@@ -312,6 +314,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(i => i.LibraryPath)
+                .ThenInclude(lp => lp.Library)
+                .Include(i => i.Season)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
@@ -461,6 +466,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(a => a.Artwork)
                 .Include(e => e.EpisodeMetadata)
                 .ThenInclude(em => em.Guids)
+                .Include(e => e.Season)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -700,7 +706,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             Actors = new List<Actor>(),
                             Guids = new List<MetadataGuid>(),
                             Writers = new List<Writer>(),
-                            Directors = new List<Director>()
+                            Directors = new List<Director>(),
+                            Genres = new List<Genre>(),
+                            Tags = new List<Tag>(),
+                            Studios = new List<Studio>()
                         }
                     },
                     MediaVersions = new List<MediaVersion>
@@ -717,6 +726,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 };
                 await dbContext.Episodes.AddAsync(episode);
                 await dbContext.SaveChangesAsync();
+                await dbContext.Entry(episode).Reference(i => i.LibraryPath).LoadAsync();
+                await dbContext.Entry(episode.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+                await dbContext.Entry(episode).Reference(e => e.Season).LoadAsync();
                 return episode;
             }
             catch (Exception ex)
@@ -779,10 +791,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
 
                 item.LibraryPathId = library.Paths.Head().Id;
+                EpisodeMetadata metadata = item.EpisodeMetadata.Head();
+                metadata.Genres ??= new List<Genre>();
+                metadata.Tags ??= new List<Tag>();
+                metadata.Studios ??= new List<Studio>();
+                metadata.Actors ??= new List<Actor>();
+                metadata.Directors ??= new List<Director>();
+                metadata.Writers ??= new List<Writer>();
 
                 await dbContext.PlexEpisodes.AddAsync(item);
                 await dbContext.SaveChangesAsync();
                 await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
+                await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+                await dbContext.Entry(item).Reference(e => e.Season).LoadAsync();
                 return item;
             }
             catch (Exception ex)

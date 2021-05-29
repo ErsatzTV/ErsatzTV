@@ -97,17 +97,19 @@ namespace ErsatzTV.Pages
         protected Task AddSelectionToCollection() => AddItemsToCollection(
             _selectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
             _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
+            _selectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId).ToList(),
             _selectedItems.OfType<ArtistCardViewModel>().Map(a => a.ArtistId).ToList(),
             _selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList());
 
         protected async Task AddItemsToCollection(
             List<int> movieIds,
             List<int> showIds,
+            List<int> episodeIds,
             List<int> artistIds,
             List<int> musicVideoIds,
             string entityName = "selected items")
         {
-            int count = movieIds.Count + showIds.Count + artistIds.Count + musicVideoIds.Count;
+            int count = movieIds.Count + showIds.Count + episodeIds.Count + artistIds.Count + musicVideoIds.Count;
 
             var parameters = new DialogParameters
                 { { "EntityType", count.ToString() }, { "EntityName", entityName } };
@@ -117,7 +119,7 @@ namespace ErsatzTV.Pages
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
-                var request = new AddItemsToCollection(collection.Id, movieIds, showIds, artistIds, musicVideoIds);
+                var request = new AddItemsToCollection(collection.Id, movieIds, showIds, episodeIds, artistIds, musicVideoIds);
 
                 Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(
