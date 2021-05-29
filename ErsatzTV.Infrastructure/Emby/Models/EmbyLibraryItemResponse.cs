@@ -15,6 +15,7 @@ namespace ErsatzTV.Infrastructure.Emby.Models
         public List<string> Genres { get; set; }
         public List<string> Tags { get; set; }
         public int ProductionYear { get; set; }
+        public EmbyProviderIdsResponse ProviderIds { get; set; }
         public string PremiereDate { get; set; }
         public List<EmbyMediaStreamResponse> MediaStreams { get; set; }
         public List<EmbyMediaSourceResponse> MediaSources { get; set; }

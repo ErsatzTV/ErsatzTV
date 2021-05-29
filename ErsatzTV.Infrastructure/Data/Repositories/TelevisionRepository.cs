@@ -225,6 +225,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .Include(s => s.ShowMetadata)
                         .ThenInclude(sm => sm.Actors)
                         .ThenInclude(a => a.Artwork)
+                        .Include(s => s.ShowMetadata)
+                        .ThenInclude(sm => sm.Guids)
                         .Include(s => s.LibraryPath)
                         .ThenInclude(lp => lp.Library)
                         .OrderBy(s => s.Id)
@@ -248,6 +250,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 metadata.Tags ??= new List<Tag>();
                 metadata.Studios ??= new List<Studio>();
                 metadata.Actors ??= new List<Actor>();
+                metadata.Guids ??= new List<MetadataGuid>();
                 var show = new Show
                 {
                     LibraryPathId = libraryPathId,
@@ -274,6 +277,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<Season> maybeExisting = await dbContext.Seasons
                 .Include(s => s.SeasonMetadata)
                 .ThenInclude(sm => sm.Artwork)
+                .Include(s => s.SeasonMetadata)
+                .ThenInclude(sm => sm.Guids)
                 .OrderBy(s => s.ShowId)
                 .ThenBy(s => s.SeasonNumber)
                 .SingleOrDefaultAsync(s => s.ShowId == show.Id && s.SeasonNumber == seasonNumber);
@@ -295,6 +300,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.EpisodeMetadata)
                 .ThenInclude(em => em.Actors)
                 .ThenInclude(a => a.Artwork)
+                .Include(i => i.EpisodeMetadata)
+                .ThenInclude(em => em.Guids)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
@@ -398,6 +405,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(a => a.Artwork)
                 .Include(i => i.ShowMetadata)
                 .ThenInclude(sm => sm.Artwork)
+                .Include(i => i.ShowMetadata)
+                .ThenInclude(sm => sm.Guids)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .OrderBy(i => i.Key)
@@ -415,7 +424,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             Option<PlexSeason> maybeExisting = await dbContext.PlexSeasons
                 .AsNoTracking()
                 .Include(i => i.SeasonMetadata)
-                .ThenInclude(mm => mm.Artwork)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(i => i.SeasonMetadata)
+                .ThenInclude(sm => sm.Guids)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -438,6 +449,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .ThenInclude(em => em.Actors)
                 .ThenInclude(a => a.Artwork)
+                .Include(e => e.EpisodeMetadata)
+                .ThenInclude(em => em.Guids)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -613,7 +626,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     {
                         new()
                         {
-                            DateAdded = DateTime.UtcNow
+                            DateAdded = DateTime.UtcNow,
+                            Guids = new List<MetadataGuid>()
                         }
                     }
                 };
@@ -651,7 +665,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             DateAdded = DateTime.UtcNow,
                             DateUpdated = DateTime.MinValue,
                             MetadataKind = MetadataKind.Fallback,
-                            Actors = new List<Actor>()
+                            Actors = new List<Actor>(),
+                            Guids = new List<MetadataGuid>()
                         }
                     },
                     MediaVersions = new List<MediaVersion>

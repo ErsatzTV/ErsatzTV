@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -63,7 +64,7 @@ namespace ErsatzTV.Core.Plex
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, MediaItemScanResult<PlexMovie>> maybeMovie = await _movieRepository
                             .GetOrAdd(library, incoming)
-                            .BindT(existing => UpdateStatistics(existing, incoming, connection, token))
+                            .BindT(existing => UpdateStatistics(existing, incoming, library, connection, token))
                             .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
@@ -114,6 +115,7 @@ namespace ErsatzTV.Core.Plex
         private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateStatistics(
             MediaItemScanResult<PlexMovie> result,
             PlexMovie incoming,
+            PlexLibrary library,
             PlexConnection connection,
             PlexServerAuthToken token)
         {
@@ -123,12 +125,18 @@ namespace ErsatzTV.Core.Plex
 
             if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
             {
-                Either<BaseError, MediaVersion> maybeStatistics =
-                    await _plexServerApiClient.GetStatistics(incoming.Key.Split("/").Last(), connection, token);
+                Either<BaseError, Tuple<MovieMetadata, MediaVersion>> maybeStatistics =
+                    await _plexServerApiClient.GetMovieMetadataAndStatistics(
+                        library,
+                        incoming.Key.Split("/").Last(),
+                        connection,
+                        token);
 
                 await maybeStatistics.Match(
-                    async mediaVersion =>
+                    async tuple =>
                     {
+                        (MovieMetadata _, MediaVersion mediaVersion) = tuple;
+
                         _logger.LogDebug(
                             "Refreshing {Attribute} from {Path}",
                             "Plex Statistics",
@@ -293,6 +301,28 @@ namespace ErsatzTV.Core.Plex
                         {
                             existingMetadata.Writers.Add(writer);
                             if (await _movieRepository.AddWriter(existingMetadata, writer))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
+                        foreach (MetadataGuid guid in existingMetadata.Guids
+                            .Filter(g => fullMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                            .ToList())
+                        {
+                            existingMetadata.Guids.Remove(guid);
+                            if (await _metadataRepository.RemoveGuid(guid))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
+                        foreach (MetadataGuid guid in fullMetadata.Guids
+                            .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                            .ToList())
+                        {
+                            existingMetadata.Guids.Add(guid);
+                            if (await _metadataRepository.AddGuid(existingMetadata, guid))
                             {
                                 result.IsUpdated = true;
                             }

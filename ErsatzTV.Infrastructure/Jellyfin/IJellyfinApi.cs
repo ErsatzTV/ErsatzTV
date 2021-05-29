@@ -34,7 +34,8 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating",
+            string fields =
+                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating,ProviderIds",
             [Query]
             string includeItemTypes = "Movie",
             [Query]
@@ -49,7 +50,8 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            string fields = "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating",
+            string fields =
+                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,OfficialRating,ProviderIds",
             [Query]
             string includeItemTypes = "Series",
             [Query]
@@ -64,7 +66,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            string fields = "Path,DateCreated,Etag,Taglines",
+            string fields = "Path,DateCreated,Etag,Taglines,ProviderIds",
             [Query]
             string includeItemTypes = "Season",
             [Query]
@@ -79,7 +81,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            string fields = "Path,DateCreated,Etag,Overview",
+            string fields = "Path,DateCreated,Etag,Overview,ProviderIds",
             [Query]
             string includeItemTypes = "Episode",
             [Query]
