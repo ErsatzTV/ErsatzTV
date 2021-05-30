@@ -1,6 +1,6 @@
 ﻿## Search Box
 
-Movies, Shows, Artists and Music Videos can be searched using the search box next to the ErsatzTV logo.
+Movies, Shows, Episodes, Artists and Music Videos can be searched using the search box next to the ErsatzTV logo.
 
 ![Search Box](../images/search-box.png)
 
@@ -37,10 +37,23 @@ The following fields are available for searching shows:
 - `studio`: The show studio
 - `actor`: An actor from the show
 - `library_name`: The name of the library that contains the show
-- `content_rating`: The movie content rating (case-sensitive)
+- `content_rating`: The show content rating (case-sensitive)
 - `language`: The show audio stream language
 - `release_date`: The show release date (YYYYMMDD)
 - `type`: Always `show`
+
+### Episodes
+
+The following fields are available for searching episodes:
+
+- `title`: The episode title
+- `plot`: The episode plot
+- `director`: A director from the episode
+- `writer`: A writer from the episode
+- `library_name`: The name of the library that contains the episode
+- `language`: The episode audio stream language
+- `release_date`: The episode release date (YYYYMMDD)
+- `type`: Always `episode`
 
 ### Artists
 
