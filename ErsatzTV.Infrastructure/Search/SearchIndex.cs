@@ -56,6 +56,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string ShowType = "show";
         private const string ArtistType = "artist";
         private const string MusicVideoType = "music_video";
+        private const string EpisodeType = "episode";
         private readonly List<CultureInfo> _cultureInfos;
 
         private readonly ILogger<SearchIndex> _logger;
@@ -71,7 +72,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 12;
+        public int Version => 13;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -114,6 +115,9 @@ namespace ErsatzTV.Infrastructure.Search
                         case MusicVideo musicVideo:
                             UpdateMusicVideo(musicVideo);
                             break;
+                        case Episode episode:
+                            UpdateEpisode(episode);
+                            break;
                     }
                 }
             }
@@ -142,6 +146,9 @@ namespace ErsatzTV.Infrastructure.Search
                         break;
                     case MusicVideo musicVideo:
                         UpdateMusicVideo(musicVideo);
+                        break;
+                    case Episode episode:
+                        UpdateEpisode(episode);
                         break;
                 }
             }
@@ -577,6 +584,83 @@ namespace ErsatzTV.Infrastructure.Search
             }
         }
 
+        private void UpdateEpisode(Episode episode)
+        {
+            Option<EpisodeMetadata> maybeMetadata = episode.EpisodeMetadata.HeadOrNone();
+            if (maybeMetadata.IsSome)
+            {
+                EpisodeMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                try
+                {
+                    var doc = new Document
+                    {
+                        new StringField(IdField, episode.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, EpisodeType, Field.Store.NO),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                        new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    };
+
+                    AddLanguages(doc, episode.MediaVersions);
+
+                    if (metadata.ReleaseDate.HasValue)
+                    {
+                        doc.Add(
+                            new StringField(
+                                ReleaseDateField,
+                                metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                                Field.Store.NO));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(metadata.Plot))
+                    {
+                        doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
+                    }
+
+                    foreach (Genre genre in metadata.Genres)
+                    {
+                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    }
+
+                    foreach (Tag tag in metadata.Tags)
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    foreach (Studio studio in metadata.Studios)
+                    {
+                        doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
+                    }
+
+                    foreach (Actor actor in metadata.Actors)
+                    {
+                        doc.Add(new TextField(ActorField, actor.Name, Field.Store.NO));
+                    }
+
+                    foreach (Director director in metadata.Directors)
+                    {
+                        doc.Add(new TextField(DirectorField, director.Name, Field.Store.NO));
+                    }
+
+                    foreach (Writer writer in metadata.Writers)
+                    {
+                        doc.Add(new TextField(WriterField, writer.Name, Field.Store.NO));
+                    }
+
+                    _writer.UpdateDocument(new Term(IdField, episode.Id.ToString()), doc);
+                }
+                catch (Exception ex)
+                {
+                    metadata.Episode = null;
+                    _logger.LogWarning(ex, "Error indexing episode with metadata {@Metadata}", metadata);
+                }
+            }
+        }
+
         private SearchItem ProjectToSearchItem(Document doc) => new(Convert.ToInt32(doc.Get(IdField)));
 
         private Query ParseQuery(string searchQuery, QueryParser parser)
@@ -595,7 +679,13 @@ namespace ErsatzTV.Infrastructure.Search
         }
 
         private static string GetTitleAndYear(Metadata metadata) =>
-            $"{metadata.Title}_{metadata.Year}".ToLowerInvariant();
+            metadata switch
+            {
+                EpisodeMetadata em =>
+                    $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.Episode.EpisodeNumber}"
+                        .ToLowerInvariant(),
+                _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
+            };
 
         private static string GetJumpLetter(Metadata metadata)
         {

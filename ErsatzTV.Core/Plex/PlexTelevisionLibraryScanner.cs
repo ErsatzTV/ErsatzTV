@@ -71,17 +71,7 @@ namespace ErsatzTV.Core.Plex
                         await maybeShow.Match(
                             async result =>
                             {
-                                if (result.IsAdded || incoming.ShowMetadata.Head().DateUpdated >
-                                    result.Item.ShowMetadata.Head().DateUpdated)
-                                {
-                                    await ScanSeasons(library, result.Item, connection, token);
-                                }
-                                else
-                                {
-                                    _logger.LogDebug(
-                                        "Skipping Plex show that has not been updated: {Show}",
-                                        incoming.ShowMetadata.Head().Title);
-                                }
+                                await ScanSeasons(library, result.Item, connection, token);
 
                                 if (result.IsAdded)
                                 {
@@ -394,15 +384,25 @@ namespace ErsatzTV.Core.Plex
                                     token))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
-                        maybeEpisode.IfLeft(
-                            error => _logger.LogWarning(
-                                "Error processing plex episode at {Key}: {Error}",
-                                incoming.Key,
-                                error.Value));
+                        await maybeEpisode.Match(
+                            async episode =>
+                            {
+                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
+                            },
+                            error =>
+                            {
+                                _logger.LogWarning(
+                                    "Error processing plex episode at {Key}: {Error}",
+                                    incoming.Key,
+                                    error.Value);
+                                return Task.CompletedTask;
+                            });
                     }
 
                     var episodeKeys = episodeEntries.Map(s => s.Key).ToList();
-                    await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
+                    List<int> ids = await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
+                    await _searchIndex.RemoveItems(ids);
+                    _searchIndex.Commit();
 
                     return Unit.Default;
                 },

@@ -267,7 +267,7 @@ namespace ErsatzTV.Core.Plex
                             .ToList())
                         {
                             existingMetadata.Directors.Remove(director);
-                            if (await _movieRepository.RemoveDirector(director))
+                            if (await _metadataRepository.RemoveDirector(director))
                             {
                                 result.IsUpdated = true;
                             }
@@ -289,7 +289,7 @@ namespace ErsatzTV.Core.Plex
                             .ToList())
                         {
                             existingMetadata.Writers.Remove(writer);
-                            if (await _movieRepository.RemoveWriter(writer))
+                            if (await _metadataRepository.RemoveWriter(writer))
                             {
                                 result.IsUpdated = true;
                             }

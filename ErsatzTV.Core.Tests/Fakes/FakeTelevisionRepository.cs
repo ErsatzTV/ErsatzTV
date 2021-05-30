@@ -11,17 +11,14 @@ namespace ErsatzTV.Core.Tests.Fakes
     public class FakeTelevisionRepository : ITelevisionRepository
     {
         public Task<bool> AllShowsExist(List<int> showIds) => throw new NotSupportedException();
+        public Task<bool> AllEpisodesExist(List<int> episodeIds) => throw new NotSupportedException();
 
         public Task<List<Show>> GetAllShows() => throw new NotSupportedException();
 
         public Task<Option<Show>> GetShow(int showId) => throw new NotSupportedException();
 
-        public Task<int> GetShowCount() => throw new NotSupportedException();
-
-        public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
-            throw new NotSupportedException();
-
         public Task<List<ShowMetadata>> GetShowsForCards(List<int> ids) => throw new NotSupportedException();
+        public Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids) => throw new NotSupportedException();
 
         public Task<List<Episode>> GetShowItems(int showId) => throw new NotSupportedException();
 
@@ -89,10 +86,18 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys) =>
             throw new NotSupportedException();
 
-        public Task<Unit> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
+        public Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
             throw new NotSupportedException();
 
         public Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber) => throw new NotSupportedException();
+        public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) => throw new NotSupportedException();
+
+        public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) => throw new NotSupportedException();
+
+        public Task<int> GetShowCount() => throw new NotSupportedException();
+
+        public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
+            throw new NotSupportedException();
 
         public Task<bool> Update(Show show) => throw new NotSupportedException();
 

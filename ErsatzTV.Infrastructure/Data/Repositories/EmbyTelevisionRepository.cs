@@ -379,14 +379,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.Entry(episode).Reference(m => m.LibraryPath).LoadAsync();
             await dbContext.Entry(episode.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            await dbContext.Entry(episode).Reference(e => e.Season).LoadAsync();
             return true;
         }
 
-        public async Task<Unit> Update(EmbyEpisode episode)
+        public async Task<Option<EmbyEpisode>> Update(EmbyEpisode episode)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<EmbyEpisode> maybeExisting = await dbContext.EmbyEpisodes
                 .Include(m => m.LibraryPath)
+                .ThenInclude(lp => lp.Library)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(m => m.MediaVersions)
@@ -395,6 +397,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Guids)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Genres)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Studios)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Actors)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Directors)
+                .Include(m => m.EpisodeMetadata)
+                .ThenInclude(mm => mm.Writers)
+                .Include(m => m.Season)
                 .Filter(m => m.ItemId == episode.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -438,6 +453,36 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     thumbnail.DateUpdated = incomingThumbnail.DateUpdated;
                 }
 
+                // directors
+                foreach (Director director in metadata.Directors
+                    .Filter(d => incomingMetadata.Directors.All(d2 => d2.Name != d.Name))
+                    .ToList())
+                {
+                    metadata.Directors.Remove(director);
+                }
+
+                foreach (Director director in incomingMetadata.Directors
+                    .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name))
+                    .ToList())
+                {
+                    metadata.Directors.Add(director);
+                }
+
+                // writers
+                foreach (Writer writer in metadata.Writers
+                    .Filter(w => incomingMetadata.Writers.All(w2 => w2.Name != w.Name))
+                    .ToList())
+                {
+                    metadata.Writers.Remove(writer);
+                }
+
+                foreach (Writer writer in incomingMetadata.Writers
+                    .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name))
+                    .ToList())
+                {
+                    metadata.Writers.Add(writer);
+                }
+
                 // guids
                 foreach (MetadataGuid guid in metadata.Guids
                     .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
@@ -473,7 +518,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return maybeExisting;
         }
 
         public async Task<List<int>> RemoveMissingShows(EmbyLibrary library, List<string> showIds)
@@ -505,14 +550,25 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE LP.LibraryId = @LibraryId AND js.ItemId IN @SeasonIds)",
                 new { LibraryId = library.Id, SeasonIds = seasonIds }).ToUnit();
 
-        public Task<Unit> RemoveMissingEpisodes(EmbyLibrary library, List<string> episodeIds) =>
-            _dbConnection.ExecuteAsync(
+        public async Task<List<int>> RemoveMissingEpisodes(EmbyLibrary library, List<string> episodeIds)
+        {
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyEpisode ee ON ee.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                WHERE lp.LibraryId = @LibraryId AND ee.ItemId IN @EpisodeIds",
+                new { LibraryId = library.Id, EpisodeIds = episodeIds }).Map(result => result.ToList());
+
+            await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbyEpisode je ON je.Id = m.Id
+                INNER JOIN EmbyEpisode ee ON ee.Id = m.Id
                 INNER JOIN LibraryPath LP on m.LibraryPathId = LP.Id
-                WHERE LP.LibraryId = @LibraryId AND je.ItemId IN @EpisodeIds)",
-                new { LibraryId = library.Id, EpisodeIds = episodeIds }).ToUnit();
+                WHERE LP.LibraryId = @LibraryId AND ee.ItemId IN @EpisodeIds)",
+                new { LibraryId = library.Id, EpisodeIds = episodeIds });
+
+            return ids;
+        }
 
         public async Task<Unit> DeleteEmptySeasons(EmbyLibrary library)
         {

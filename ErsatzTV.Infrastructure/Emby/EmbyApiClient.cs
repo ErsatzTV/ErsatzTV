@@ -544,7 +544,9 @@ namespace ErsatzTV.Infrastructure.Emby
                 Studios = new List<Studio>(),
                 Actors = new List<Actor>(),
                 Artwork = new List<Artwork>(),
-                Guids = GuidsFromProviderIds(item.ProviderIds)
+                Guids = GuidsFromProviderIds(item.ProviderIds),
+                Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
+                Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList()
             };
 
             if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))

@@ -81,7 +81,7 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             [Query]
             string parentId,
             [Query]
-            string fields = "Path,DateCreated,Etag,Overview,ProviderIds",
+            string fields = "Path,DateCreated,Etag,Overview,ProviderIds,People",
             [Query]
             string includeItemTypes = "Episode",
             [Query]
