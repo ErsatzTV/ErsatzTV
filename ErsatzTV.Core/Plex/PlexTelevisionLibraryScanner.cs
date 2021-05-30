@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -70,17 +71,7 @@ namespace ErsatzTV.Core.Plex
                         await maybeShow.Match(
                             async result =>
                             {
-                                if (result.IsAdded || incoming.ShowMetadata.Head().DateUpdated >
-                                    result.Item.ShowMetadata.Head().DateUpdated)
-                                {
-                                    await ScanSeasons(library, result.Item, connection, token);
-                                }
-                                else
-                                {
-                                    _logger.LogDebug(
-                                        "Skipping Plex show that has not been updated: {Show}",
-                                        incoming.ShowMetadata.Head().Title);
-                                }
+                                await ScanSeasons(library, result.Item, connection, token);
 
                                 if (result.IsAdded)
                                 {
@@ -227,6 +218,28 @@ namespace ErsatzTV.Core.Plex
                             }
                         }
 
+                        foreach (MetadataGuid guid in existingMetadata.Guids
+                            .Filter(g => fullMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                            .ToList())
+                        {
+                            existingMetadata.Guids.Remove(guid);
+                            if (await _metadataRepository.RemoveGuid(guid))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
+                        foreach (MetadataGuid guid in fullMetadata.Guids
+                            .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                            .ToList())
+                        {
+                            existingMetadata.Guids.Add(guid);
+                            if (await _metadataRepository.AddGuid(existingMetadata, guid))
+                            {
+                                result.IsUpdated = true;
+                            }
+                        }
+
                         if (result.IsUpdated)
                         {
                             await _metadataRepository.MarkAsUpdated(existingMetadata, fullMetadata.DateUpdated);
@@ -278,7 +291,7 @@ namespace ErsatzTV.Core.Plex
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexSeason> maybeSeason = await _televisionRepository
                             .GetOrAddPlexSeason(plexMediaSourceLibrary, incoming)
-                            .BindT(existing => UpdateArtwork(existing, incoming));
+                            .BindT(existing => UpdateMetadataAndArtwork(existing, incoming));
 
                         await maybeSeason.Match(
                             async season => await ScanEpisodes(plexMediaSourceLibrary, season, connection, token),
@@ -308,13 +321,31 @@ namespace ErsatzTV.Core.Plex
                 });
         }
 
-        private async Task<Either<BaseError, PlexSeason>> UpdateArtwork(PlexSeason existing, PlexSeason incoming)
+        private async Task<Either<BaseError, PlexSeason>> UpdateMetadataAndArtwork(
+            PlexSeason existing,
+            PlexSeason incoming)
         {
             SeasonMetadata existingMetadata = existing.SeasonMetadata.Head();
             SeasonMetadata incomingMetadata = incoming.SeasonMetadata.Head();
 
             if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
             {
+                foreach (MetadataGuid guid in existingMetadata.Guids
+                    .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    existingMetadata.Guids.Remove(guid);
+                    await _metadataRepository.RemoveGuid(guid);
+                }
+
+                foreach (MetadataGuid guid in incomingMetadata.Guids
+                    .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    existingMetadata.Guids.Add(guid);
+                    await _metadataRepository.AddGuid(existingMetadata, guid);
+                }
+
                 await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
                 await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
             }
@@ -344,18 +375,34 @@ namespace ErsatzTV.Core.Plex
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexEpisode> maybeEpisode = await _televisionRepository
                             .GetOrAddPlexEpisode(plexMediaSourceLibrary, incoming)
-                            .BindT(existing => UpdateStatistics(existing, incoming, connection, token))
+                            .BindT(
+                                existing => UpdateMetadataAndStatistics(
+                                    existing,
+                                    incoming,
+                                    plexMediaSourceLibrary,
+                                    connection,
+                                    token))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
-                        maybeEpisode.IfLeft(
-                            error => _logger.LogWarning(
-                                "Error processing plex episode at {Key}: {Error}",
-                                incoming.Key,
-                                error.Value));
+                        await maybeEpisode.Match(
+                            async episode =>
+                            {
+                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
+                            },
+                            error =>
+                            {
+                                _logger.LogWarning(
+                                    "Error processing plex episode at {Key}: {Error}",
+                                    incoming.Key,
+                                    error.Value);
+                                return Task.CompletedTask;
+                            });
                     }
 
                     var episodeKeys = episodeEntries.Map(s => s.Key).ToList();
-                    await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
+                    List<int> ids = await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
+                    await _searchIndex.RemoveItems(ids);
+                    _searchIndex.Commit();
 
                     return Unit.Default;
                 },
@@ -370,9 +417,10 @@ namespace ErsatzTV.Core.Plex
                 });
         }
 
-        private async Task<Either<BaseError, PlexEpisode>> UpdateStatistics(
+        private async Task<Either<BaseError, PlexEpisode>> UpdateMetadataAndStatistics(
             PlexEpisode existing,
             PlexEpisode incoming,
+            PlexLibrary library,
             PlexConnection connection,
             PlexServerAuthToken token)
         {
@@ -381,12 +429,36 @@ namespace ErsatzTV.Core.Plex
 
             if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
             {
-                Either<BaseError, MediaVersion> maybeStatistics =
-                    await _plexServerApiClient.GetStatistics(incoming.Key.Split("/").Last(), connection, token);
+                Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeStatistics =
+                    await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
+                        library,
+                        incoming.Key.Split("/").Last(),
+                        connection,
+                        token);
 
                 await maybeStatistics.Match(
-                    async mediaVersion =>
+                    async tuple =>
                     {
+                        (EpisodeMetadata incomingMetadata, MediaVersion mediaVersion) = tuple;
+
+                        EpisodeMetadata existingMetadata = existing.EpisodeMetadata.Head();
+
+                        foreach (MetadataGuid guid in existingMetadata.Guids
+                            .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                            .ToList())
+                        {
+                            existingMetadata.Guids.Remove(guid);
+                            await _metadataRepository.RemoveGuid(guid);
+                        }
+
+                        foreach (MetadataGuid guid in incomingMetadata.Guids
+                            .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                            .ToList())
+                        {
+                            existingMetadata.Guids.Add(guid);
+                            await _metadataRepository.AddGuid(existingMetadata, guid);
+                        }
+
                         existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
                         existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
                         existingVersion.DateUpdated = mediaVersion.DateUpdated;
@@ -399,7 +471,9 @@ namespace ErsatzTV.Core.Plex
             return Right<BaseError, PlexEpisode>(existing);
         }
 
-        private async Task<Either<BaseError, PlexEpisode>> UpdateArtwork(PlexEpisode existing, PlexEpisode incoming)
+        private async Task<Either<BaseError, PlexEpisode>> UpdateArtwork(
+            PlexEpisode existing,
+            PlexEpisode incoming)
         {
             EpisodeMetadata existingMetadata = existing.EpisodeMetadata.Head();
             EpisodeMetadata incomingMetadata = incoming.EpisodeMetadata.Head();

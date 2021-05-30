@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -87,9 +88,9 @@ namespace ErsatzTV.Infrastructure.Plex
         {
             try
             {
-                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
-                return await service.GetChildren(show.Key.Split("/").Reverse().Skip(1).Head(), token.AuthToken)
-                    .Map(r => r.MediaContainer.Metadata)
+                IPlexServerApi service = XmlServiceFor(connection.Uri);
+                return await service.GetShowChildren(show.Key.Split("/").Reverse().Skip(1).Head(), token.AuthToken)
+                    .Map(r => r.Metadata)
                     .Map(list => list.Map(metadata => ProjectToSeason(metadata, library.MediaSourceId)).ToList());
             }
             catch (Exception ex)
@@ -106,9 +107,9 @@ namespace ErsatzTV.Infrastructure.Plex
         {
             try
             {
-                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
-                return await service.GetChildren(season.Key.Split("/").Reverse().Skip(1).Head(), token.AuthToken)
-                    .Map(r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
+                IPlexServerApi service = XmlServiceFor(connection.Uri);
+                return await service.GetSeasonChildren(season.Key.Split("/").Reverse().Skip(1).Head(), token.AuthToken)
+                    .Map(r => r.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0))
                     .Map(list => list.Map(metadata => ProjectToEpisode(metadata, library.MediaSourceId)).ToList());
             }
             catch (Exception ex)
@@ -125,12 +126,13 @@ namespace ErsatzTV.Infrastructure.Plex
         {
             try
             {
-                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
-                return await service.GetMetadata(key, token.AuthToken)
+                IPlexServerApi service = XmlServiceFor(connection.Uri);
+                return await service.GetVideoMetadata(key, token.AuthToken)
+                    .Map(Optional)
                     .Map(
-                        r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0)
+                        r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
                             .HeadOrNone())
-                    .MapT(response => ProjectToMovieMetadata(response, library.MediaSourceId))
+                    .MapT(response => ProjectToMovieMetadata(response.Metadata, library.MediaSourceId))
                     .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
             }
             catch (Exception ex)
@@ -147,10 +149,10 @@ namespace ErsatzTV.Infrastructure.Plex
         {
             try
             {
-                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
-                return await service.GetMetadata(key, token.AuthToken)
-                    .Map(r => r.MediaContainer.Metadata.HeadOrNone())
-                    .MapT(response => ProjectToShowMetadata(response, library.MediaSourceId))
+                IPlexServerApi service = XmlServiceFor(connection.Uri);
+                return await service.GetDirectoryMetadata(key, token.AuthToken)
+                    .Map(Optional)
+                    .MapT(response => ProjectToShowMetadata(response.Metadata, library.MediaSourceId))
                     .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
             }
             catch (Exception ex)
@@ -159,25 +161,86 @@ namespace ErsatzTV.Infrastructure.Plex
             }
         }
 
-        public async Task<Either<BaseError, MediaVersion>> GetStatistics(
+        public async Task<Either<BaseError, Tuple<MovieMetadata, MediaVersion>>> GetMovieMetadataAndStatistics(
+            PlexLibrary library,
             string key,
             PlexConnection connection,
             PlexServerAuthToken token)
         {
             try
             {
-                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
-                return await service.GetMetadata(key, token.AuthToken)
+                IPlexServerApi service = XmlServiceFor(connection.Uri);
+                Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
+                    .GetVideoMetadata(key, token.AuthToken)
+                    .Map(Optional)
                     .Map(
-                        r => r.MediaContainer.Metadata.Filter(m => m.Media.Count > 0 && m.Media[0].Part.Count > 0)
-                            .HeadOrNone())
-                    .BindT(ProjectToMediaVersion)
-                    .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
+                        r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
+                            .HeadOrNone());
+                return maybeResponse.Match(
+                    response =>
+                    {
+                        Option<MediaVersion> maybeVersion = ProjectToMediaVersion(response.Metadata);
+                        return maybeVersion.Match<Either<BaseError, Tuple<MovieMetadata, MediaVersion>>>(
+                            version => Tuple(ProjectToMovieMetadata(response.Metadata, library.MediaSourceId), version),
+                            () => BaseError.New("Unable to locate metadata"));
+                    },
+                    () => BaseError.New("Unable to locate metadata"));
             }
             catch (Exception ex)
             {
                 return BaseError.New(ex.ToString());
             }
+        }
+
+        public async Task<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>> GetEpisodeMetadataAndStatistics(
+            PlexLibrary library,
+            string key,
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            try
+            {
+                IPlexServerApi service = XmlServiceFor(connection.Uri);
+                Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
+                    .GetVideoMetadata(key, token.AuthToken)
+                    .Map(Optional)
+                    .Map(
+                        r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
+                            .HeadOrNone());
+                return maybeResponse.Match(
+                    response =>
+                    {
+                        Option<MediaVersion> maybeVersion = ProjectToMediaVersion(response.Metadata);
+                        return maybeVersion.Match<Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>>>(
+                            version => Tuple(
+                                ProjectToEpisodeMetadata(response.Metadata, library.MediaSourceId),
+                                version),
+                            () => BaseError.New("Unable to locate metadata"));
+                    },
+                    () => BaseError.New("Unable to locate metadata"));
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
+        }
+
+        private static IPlexServerApi XmlServiceFor(string uri)
+        {
+            var overrides = new XmlAttributeOverrides();
+            var attrs = new XmlAttributes { XmlIgnore = true };
+            overrides.Add(typeof(PlexMetadataResponse), "Media", attrs);
+
+            return RestService.For<IPlexServerApi>(
+                uri,
+                new RefitSettings
+                {
+                    ContentSerializer = new XmlContentSerializer(
+                        new XmlContentSerializerSettings
+                        {
+                            XmlAttributeOverrides = overrides
+                        })
+                });
         }
 
         private static Option<PlexLibrary> Project(PlexLibraryResponse response) =>
@@ -205,7 +268,7 @@ namespace ErsatzTV.Infrastructure.Plex
 
         private PlexMovie ProjectToMovie(PlexMetadataResponse response, int mediaSourceId)
         {
-            PlexMediaResponse media = response.Media.Head();
+            PlexMediaResponse<PlexPartResponse> media = response.Media.Head();
             PlexPartResponse part = media.Part.Head();
             DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
@@ -268,6 +331,23 @@ namespace ErsatzTV.Infrastructure.Plex
                 Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList()
             };
 
+            if (response is PlexXmlMetadataResponse xml)
+            {
+                metadata.Guids = Optional(xml.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
+                if (!string.IsNullOrWhiteSpace(xml.PlexGuid))
+                {
+                    string normalized = NormalizeGuid(xml.PlexGuid);
+                    if (!string.IsNullOrWhiteSpace(normalized) && metadata.Guids.All(g => g.Guid != normalized))
+                    {
+                        metadata.Guids.Add(new MetadataGuid { Guid = normalized });
+                    }
+                }
+            }
+            else
+            {
+                metadata.Guids = new List<MetadataGuid>();
+            }
+
             if (!string.IsNullOrWhiteSpace(response.Studio))
             {
                 metadata.Studios.Add(new Studio { Name = response.Studio });
@@ -311,7 +391,7 @@ namespace ErsatzTV.Infrastructure.Plex
             return metadata;
         }
 
-        private Option<MediaVersion> ProjectToMediaVersion(PlexMetadataResponse response)
+        private Option<MediaVersion> ProjectToMediaVersion(PlexXmlMetadataResponse response)
         {
             List<PlexStreamResponse> streams = response.Media.Head().Part.Head().Stream;
             DateTime dateUpdated = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
@@ -418,6 +498,23 @@ namespace ErsatzTV.Infrastructure.Plex
                     .ToList()
             };
 
+            if (response is PlexXmlMetadataResponse xml)
+            {
+                metadata.Guids = Optional(xml.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
+                if (!string.IsNullOrWhiteSpace(xml.PlexGuid))
+                {
+                    string normalized = NormalizeGuid(xml.PlexGuid);
+                    if (!string.IsNullOrWhiteSpace(normalized) && metadata.Guids.All(g => g.Guid != normalized))
+                    {
+                        metadata.Guids.Add(new MetadataGuid { Guid = normalized });
+                    }
+                }
+            }
+            else
+            {
+                metadata.Guids = new List<MetadataGuid>();
+            }
+
             if (!string.IsNullOrWhiteSpace(response.Studio))
             {
                 metadata.Studios.Add(new Studio { Name = response.Studio });
@@ -461,7 +558,7 @@ namespace ErsatzTV.Infrastructure.Plex
             return metadata;
         }
 
-        private PlexSeason ProjectToSeason(PlexMetadataResponse response, int mediaSourceId)
+        private PlexSeason ProjectToSeason(PlexXmlMetadataResponse response, int mediaSourceId)
         {
             DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
@@ -475,6 +572,16 @@ namespace ErsatzTV.Infrastructure.Plex
                 DateAdded = dateAdded,
                 DateUpdated = lastWriteTime
             };
+
+            metadata.Guids = Optional(response.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
+            if (!string.IsNullOrWhiteSpace(response.PlexGuid))
+            {
+                string normalized = NormalizeGuid(response.PlexGuid);
+                if (!string.IsNullOrWhiteSpace(normalized) && metadata.Guids.All(g => g.Guid != normalized))
+                {
+                    metadata.Guids.Add(new MetadataGuid { Guid = normalized });
+                }
+            }
 
             if (!string.IsNullOrWhiteSpace(response.Thumb))
             {
@@ -516,47 +623,14 @@ namespace ErsatzTV.Infrastructure.Plex
             return season;
         }
 
-        private PlexEpisode ProjectToEpisode(PlexMetadataResponse response, int mediaSourceId)
+        private PlexEpisode ProjectToEpisode(PlexXmlMetadataResponse response, int mediaSourceId)
         {
-            PlexMediaResponse media = response.Media.Head();
-            PlexPartResponse part = media.Part.Head();
+            PlexMediaResponse<PlexXmlPartResponse> media = response.Media.Head();
+            PlexXmlPartResponse part = media.Part.Head();
             DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
             DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
-            var metadata = new EpisodeMetadata
-            {
-                MetadataKind = MetadataKind.External,
-                Title = response.Title,
-                SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
-                Plot = response.Summary,
-                Year = response.Year,
-                Tagline = response.Tagline,
-                DateAdded = dateAdded,
-                DateUpdated = lastWriteTime,
-                Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
-                    .ToList()
-            };
-
-            if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
-            {
-                metadata.ReleaseDate = releaseDate;
-            }
-
-            if (!string.IsNullOrWhiteSpace(response.Thumb))
-            {
-                var path = $"plex/{mediaSourceId}{response.Thumb}";
-                var artwork = new Artwork
-                {
-                    ArtworkKind = ArtworkKind.Thumbnail,
-                    Path = path,
-                    DateAdded = dateAdded,
-                    DateUpdated = lastWriteTime
-                };
-
-                metadata.Artwork ??= new List<Artwork>();
-                metadata.Artwork.Add(artwork);
-            }
-
+            EpisodeMetadata metadata = ProjectToEpisodeMetadata(response, mediaSourceId);
             var version = new MediaVersion
             {
                 Name = "Main",
@@ -589,6 +663,67 @@ namespace ErsatzTV.Infrastructure.Plex
             return episode;
         }
 
+        private EpisodeMetadata ProjectToEpisodeMetadata(PlexMetadataResponse response, int mediaSourceId)
+        {
+            DateTime dateAdded = DateTimeOffset.FromUnixTimeSeconds(response.AddedAt).DateTime;
+            DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
+
+            var metadata = new EpisodeMetadata
+            {
+                MetadataKind = MetadataKind.External,
+                Title = response.Title,
+                SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+                Plot = response.Summary,
+                Year = response.Year,
+                Tagline = response.Tagline,
+                DateAdded = dateAdded,
+                DateUpdated = lastWriteTime,
+                Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
+                    .ToList(),
+                Directors = Optional(response.Director).Flatten().Map(d => new Director { Name = d.Tag }).ToList(),
+                Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList()
+            };
+
+            if (response is PlexXmlMetadataResponse xml)
+            {
+                metadata.Guids = Optional(xml.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
+                if (!string.IsNullOrWhiteSpace(xml.PlexGuid))
+                {
+                    string normalized = NormalizeGuid(xml.PlexGuid);
+                    if (!string.IsNullOrWhiteSpace(normalized) && metadata.Guids.All(g => g.Guid != normalized))
+                    {
+                        metadata.Guids.Add(new MetadataGuid { Guid = normalized });
+                    }
+                }
+            }
+            else
+            {
+                metadata.Guids = new List<MetadataGuid>();
+            }
+
+            if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
+            {
+                metadata.ReleaseDate = releaseDate;
+            }
+
+            if (!string.IsNullOrWhiteSpace(response.Thumb))
+            {
+                var path = $"plex/{mediaSourceId}{response.Thumb}";
+                var artwork = new Artwork
+                {
+                    ArtworkKind = ArtworkKind.Thumbnail,
+                    Path = path,
+                    DateAdded = dateAdded,
+                    DateUpdated = lastWriteTime
+                };
+
+                metadata.Artwork ??= new List<Artwork>();
+                metadata.Artwork.Add(artwork);
+            }
+
+            return metadata;
+        }
+
         private Actor ProjectToModel(PlexRoleResponse role, DateTime dateAdded, DateTime lastWriteTime)
         {
             var actor = new Actor { Name = role.Tag, Role = role.Role };
@@ -604,6 +739,33 @@ namespace ErsatzTV.Infrastructure.Plex
             }
 
             return actor;
+        }
+
+        private string NormalizeGuid(string guid)
+        {
+            if (guid.StartsWith("plex://show") ||
+                guid.StartsWith("plex://season") ||
+                guid.StartsWith("plex://episode") ||
+                guid.StartsWith("plex://movie"))
+            {
+                return guid;
+            }
+
+            if (guid.StartsWith("com.plexapp.agents.thetvdb"))
+            {
+                string strip1 = guid.Replace("com.plexapp.agents.thetvdb://", string.Empty);
+                string strip2 = strip1.Split("?").Head();
+                return $"tvdb://{strip2}";
+            }
+
+            if (guid.StartsWith("com.plexapp.agents.themoviedb"))
+            {
+                string strip1 = guid.Replace("com.plexapp.agents.themoviedb://", string.Empty);
+                string strip2 = strip1.Split("?").Head();
+                return $"tmdb://{strip2}";
+            }
+
+            throw new NotSupportedException(guid);
         }
     }
 }

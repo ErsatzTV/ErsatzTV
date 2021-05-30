@@ -119,6 +119,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Directors)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Writers)
+                .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Guids)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
@@ -328,6 +330,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Directors)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Writers)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Guids)
                 .Filter(m => m.ItemId == movie.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -445,6 +449,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     .ToList())
                 {
                     metadata.Writers.Add(writer);
+                }
+
+                // guids
+                foreach (MetadataGuid guid in metadata.Guids
+                    .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Remove(guid);
+                }
+
+                foreach (MetadataGuid guid in incomingMetadata.Guids
+                    .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Add(guid);
                 }
 
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
@@ -565,6 +584,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Writers)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
+                .Include(m => m.MovieMetadata)
+                .ThenInclude(mm => mm.Guids)
                 .Filter(m => m.ItemId == movie.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -684,6 +705,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     metadata.Writers.Add(writer);
                 }
 
+                // guids
+                foreach (MetadataGuid guid in metadata.Guids
+                    .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Remove(guid);
+                }
+
+                foreach (MetadataGuid guid in incomingMetadata.Guids
+                    .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid))
+                    .ToList())
+                {
+                    metadata.Guids.Add(guid);
+                }
+
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
 
                 // poster
@@ -737,18 +773,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return maybeExisting;
         }
 
-        public Task<bool> RemoveDirector(Director director) =>
-            _dbConnection.ExecuteAsync("DELETE FROM Director WHERE Id = @DirectorId", new { DirectorId = director.Id })
-                .Map(result => result > 0);
-
         public Task<bool> AddDirector(MovieMetadata metadata, Director director) =>
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Director (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { director.Name, MetadataId = metadata.Id }).Map(result => result > 0);
-
-        public Task<bool> RemoveWriter(Writer writer) =>
-            _dbConnection.ExecuteAsync("DELETE FROM Writer WHERE Id = @WriterId", new { WriterId = writer.Id })
-                .Map(result => result > 0);
 
         public Task<bool> AddWriter(MovieMetadata metadata, Writer writer) =>
             _dbConnection.ExecuteAsync(

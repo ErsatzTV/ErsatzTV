@@ -3,14 +3,16 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20210527214039_Add_MetadataGuid")]
+    partial class Add_MetadataGuid
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -274,9 +276,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("EpisodeMetadataId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("MovieMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -284,8 +283,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EpisodeMetadataId");
 
                     b.HasIndex("MovieMetadataId");
 
@@ -1330,9 +1327,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("EpisodeMetadataId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("MovieMetadataId")
                         .HasColumnType("INTEGER");
 
@@ -1340,8 +1334,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EpisodeMetadataId");
 
                     b.HasIndex("MovieMetadataId");
 
@@ -1824,11 +1816,6 @@ namespace ErsatzTV.Infrastructure.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Director", b =>
                 {
-                    b.HasOne("ErsatzTV.Core.Domain.EpisodeMetadata", null)
-                        .WithMany("Directors")
-                        .HasForeignKey("EpisodeMetadataId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("ErsatzTV.Core.Domain.MovieMetadata", null)
                         .WithMany("Directors")
                         .HasForeignKey("MovieMetadataId")
@@ -2345,11 +2332,6 @@ namespace ErsatzTV.Infrastructure.Migrations
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Writer", b =>
                 {
-                    b.HasOne("ErsatzTV.Core.Domain.EpisodeMetadata", null)
-                        .WithMany("Writers")
-                        .HasForeignKey("EpisodeMetadataId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.HasOne("ErsatzTV.Core.Domain.MovieMetadata", null)
                         .WithMany("Writers")
                         .HasForeignKey("MovieMetadataId")
@@ -2696,8 +2678,6 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Navigation("Artwork");
 
-                    b.Navigation("Directors");
-
                     b.Navigation("Genres");
 
                     b.Navigation("Guids");
@@ -2705,8 +2685,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Studios");
 
                     b.Navigation("Tags");
-
-                    b.Navigation("Writers");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Library", b =>

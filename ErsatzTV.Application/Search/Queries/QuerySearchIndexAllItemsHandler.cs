@@ -17,18 +17,16 @@ namespace ErsatzTV.Application.Search.Queries
 
         public async Task<SearchResultAllItemsViewModel> Handle(
             QuerySearchIndexAllItems request,
-            CancellationToken cancellationToken)
-        {
-            List<int> movieIds = await _searchIndex.Search($"type:movie AND ({request.Query})", 0, 0)
-                .Map(result => result.Items.Map(i => i.Id).ToList());
-            List<int> showIds = await _searchIndex.Search($"type:show AND ({request.Query})", 0, 0)
-                .Map(result => result.Items.Map(i => i.Id).ToList());
-            List<int> artistIds = await _searchIndex.Search($"type:artist AND ({request.Query})", 0, 0)
-                .Map(result => result.Items.Map(i => i.Id).ToList());
-            List<int> musicVideoIds = await _searchIndex.Search($"type:music_video AND ({request.Query})", 0, 0)
-                .Map(result => result.Items.Map(i => i.Id).ToList());
+            CancellationToken cancellationToken) =>
+            new(
+                await GetIds("movie", request.Query),
+                await GetIds("show", request.Query),
+                await GetIds("episode", request.Query),
+                await GetIds("artist", request.Query),
+                await GetIds("music_video", request.Query));
 
-            return new SearchResultAllItemsViewModel(movieIds, showIds, artistIds, musicVideoIds);
-        }
+        private Task<List<int>> GetIds(string type, string query) =>
+            _searchIndex.Search($"type:{type} AND ({query})", 0, 0)
+                .Map(result => result.Items.Map(i => i.Id).ToList());
     }
 }

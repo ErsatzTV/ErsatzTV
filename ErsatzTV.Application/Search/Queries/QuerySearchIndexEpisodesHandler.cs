@@ -2,35 +2,43 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
 using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
-namespace ErsatzTV.Application.MediaCards.Queries
+namespace ErsatzTV.Application.Search.Queries
 {
     public class
-        GetTelevisionEpisodeCardsHandler : IRequestHandler<GetTelevisionEpisodeCards,
+        QuerySearchIndexEpisodesHandler : IRequestHandler<QuerySearchIndexEpisodes,
             TelevisionEpisodeCardResultsViewModel>
     {
         private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly ISearchIndex _searchIndex;
         private readonly ITelevisionRepository _televisionRepository;
 
-        public GetTelevisionEpisodeCardsHandler(
+        public QuerySearchIndexEpisodesHandler(
+            ISearchIndex searchIndex,
             ITelevisionRepository televisionRepository,
             IMediaSourceRepository mediaSourceRepository)
         {
+            _searchIndex = searchIndex;
             _televisionRepository = televisionRepository;
             _mediaSourceRepository = mediaSourceRepository;
         }
 
         public async Task<TelevisionEpisodeCardResultsViewModel> Handle(
-            GetTelevisionEpisodeCards request,
+            QuerySearchIndexEpisodes request,
             CancellationToken cancellationToken)
         {
-            int count = await _televisionRepository.GetEpisodeCount(request.TelevisionSeasonId);
+            SearchResult searchResult = await _searchIndex.Search(
+                request.Query,
+                (request.PageNumber - 1) * request.PageSize,
+                request.PageSize);
 
             Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
                 .Map(list => list.HeadOrNone());
@@ -38,11 +46,11 @@ namespace ErsatzTV.Application.MediaCards.Queries
             Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
                 .Map(list => list.HeadOrNone());
 
-            List<TelevisionEpisodeCardViewModel> results = await _televisionRepository
-                .GetPagedEpisodes(request.TelevisionSeasonId, request.PageNumber, request.PageSize)
-                .Map(list => list.Map(e => ProjectToViewModel(e, maybeJellyfin, maybeEmby, false)).ToList());
+            List<TelevisionEpisodeCardViewModel> items = await _televisionRepository
+                .GetEpisodesForCards(searchResult.Items.Map(i => i.Id).ToList())
+                .Map(list => list.Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby, true)).ToList());
 
-            return new TelevisionEpisodeCardResultsViewModel(count, results, Option<SearchPageMap>.None);
+            return new TelevisionEpisodeCardResultsViewModel(searchResult.TotalCount, items, searchResult.PageMap);
         }
     }
 }

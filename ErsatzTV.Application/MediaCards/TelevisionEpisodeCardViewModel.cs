@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace ErsatzTV.Application.MediaCards
 {
@@ -9,13 +10,17 @@ namespace ErsatzTV.Application.MediaCards
         string ShowTitle,
         int ShowId,
         int SeasonId,
+        int Season,
         int Episode,
         string Title,
+        string SortTitle,
         string Plot,
-        string Poster) : MediaCardViewModel(
+        string Poster,
+        List<string> Directors,
+        List<string> Writers) : MediaCardViewModel(
         EpisodeId,
         Title,
         $"Episode {Episode}",
-        $"Episode {Episode}",
+        SortTitle,
         Poster);
 }

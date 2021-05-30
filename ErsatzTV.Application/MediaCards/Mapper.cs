@@ -39,7 +39,8 @@ namespace ErsatzTV.Application.MediaCards
         internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
             EpisodeMetadata episodeMetadata,
             Option<JellyfinMediaSource> maybeJellyfin,
-            Option<EmbyMediaSource> maybeEmby) =>
+            Option<EmbyMediaSource> maybeEmby,
+            bool isSearchResult) =>
             new(
                 episodeMetadata.EpisodeId,
                 episodeMetadata.ReleaseDate ?? DateTime.MinValue,
@@ -48,12 +49,21 @@ namespace ErsatzTV.Application.MediaCards
                     () => string.Empty),
                 episodeMetadata.Episode.Season.ShowId,
                 episodeMetadata.Episode.SeasonId,
+                episodeMetadata.Episode.Season.SeasonNumber,
                 episodeMetadata.Episode.EpisodeNumber,
                 episodeMetadata.Title,
+                episodeMetadata.SortTitle,
                 episodeMetadata.Episode.EpisodeMetadata.HeadOrNone().Match(
                     em => em.Plot ?? string.Empty,
                     () => string.Empty),
-                GetThumbnail(episodeMetadata, maybeJellyfin, maybeEmby));
+                isSearchResult
+                    ? GetPoster(
+                        episodeMetadata.Episode.Season.SeasonMetadata.Head(),
+                        maybeJellyfin,
+                        maybeEmby)
+                    : GetThumbnail(episodeMetadata, maybeJellyfin, maybeEmby),
+                episodeMetadata.Directors.Map(d => d.Name).ToList(),
+                episodeMetadata.Writers.Map(w => w.Name).ToList());
 
         internal static MovieCardViewModel ProjectToViewModel(
             MovieMetadata movieMetadata,
@@ -101,7 +111,7 @@ namespace ErsatzTV.Application.MediaCards
                 collection.MediaItems.OfType<Season>().Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby))
                     .ToList(),
                 collection.MediaItems.OfType<Episode>()
-                    .Map(e => ProjectToViewModel(e.EpisodeMetadata.Head(), maybeJellyfin, maybeEmby))
+                    .Map(e => ProjectToViewModel(e.EpisodeMetadata.Head(), maybeJellyfin, maybeEmby, false))
                     .ToList(),
                 collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
                 collection.MediaItems.OfType<MusicVideo>().Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head()))

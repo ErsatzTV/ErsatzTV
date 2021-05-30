@@ -120,8 +120,6 @@ namespace ErsatzTV.Core.Emby
                 decimal percentCompletion = (decimal) shows.IndexOf(incoming) / shows.Count;
                 await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
-                var changed = false;
-
                 Option<EmbyItemEtag> maybeExisting = existingShows.Find(ie => ie.ItemId == incoming.ItemId);
                 await maybeExisting.Match(
                     async existing =>
@@ -135,7 +133,6 @@ namespace ErsatzTV.Core.Emby
                             "UPDATE: Etag has changed for show {Show}",
                             incoming.ShowMetadata.Head().Title);
 
-                        changed = true;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
                         Option<EmbyShow> updated = await _televisionRepository.Update(incoming);
@@ -148,7 +145,6 @@ namespace ErsatzTV.Core.Emby
                     },
                     async () =>
                     {
-                        changed = true;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
                         // _logger.LogDebug("INSERT: Item id is new for show {Show}", incoming.ShowMetadata.Head().Title);
@@ -159,50 +155,45 @@ namespace ErsatzTV.Core.Emby
                         }
                     });
 
-                if (changed)
-                {
-                    List<EmbyItemEtag> existingSeasons =
-                        await _televisionRepository.GetExistingSeasons(library, incoming.ItemId);
+                List<EmbyItemEtag> existingSeasons =
+                    await _televisionRepository.GetExistingSeasons(library, incoming.ItemId);
 
-                    Either<BaseError, List<EmbySeason>> maybeSeasons =
-                        await _embyApiClient.GetSeasonLibraryItems(
+                Either<BaseError, List<EmbySeason>> maybeSeasons =
+                    await _embyApiClient.GetSeasonLibraryItems(
+                        address,
+                        apiKey,
+                        library.MediaSourceId,
+                        incoming.ItemId);
+
+                await maybeSeasons.Match(
+                    async seasons =>
+                    {
+                        await ProcessSeasons(
                             address,
                             apiKey,
-                            library.MediaSourceId,
-                            incoming.ItemId);
+                            library,
+                            ffprobePath,
+                            pathReplacements,
+                            incoming,
+                            existingSeasons,
+                            seasons);
 
-                    await maybeSeasons.Match(
-                        async seasons =>
-                        {
-                            await ProcessSeasons(
-                                address,
-                                apiKey,
-                                library,
-                                ffprobePath,
-                                pathReplacements,
-                                incoming,
-                                existingSeasons,
-                                seasons);
+                        var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
+                        var seasonIds = existingSeasons
+                            .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
+                            .Map(m => m.ItemId)
+                            .ToList();
+                        await _televisionRepository.RemoveMissingSeasons(library, seasonIds);
+                    },
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Error synchronizing emby library {Path}: {Error}",
+                            library.Name,
+                            error.Value);
 
-                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { incoming });
-
-                            var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
-                            var seasonIds = existingSeasons
-                                .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
-                                .Map(m => m.ItemId)
-                                .ToList();
-                            await _televisionRepository.RemoveMissingSeasons(library, seasonIds);
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error synchronizing emby library {Path}: {Error}",
-                                library.Name,
-                                error.Value);
-
-                            return Task.CompletedTask;
-                        });
-                }
+                        return Task.CompletedTask;
+                    });
             }
         }
 
@@ -218,8 +209,6 @@ namespace ErsatzTV.Core.Emby
         {
             foreach (EmbySeason incoming in seasons)
             {
-                var changed = false;
-
                 Option<EmbyItemEtag> maybeExisting = existingSeasons.Find(ie => ie.ItemId == incoming.ItemId);
                 await maybeExisting.Match(
                     async existing =>
@@ -234,7 +223,6 @@ namespace ErsatzTV.Core.Emby
                             show.ShowMetadata.Head().Title,
                             incoming.SeasonMetadata.Head().Title);
 
-                        changed = true;
                         incoming.ShowId = show.Id;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
@@ -242,7 +230,6 @@ namespace ErsatzTV.Core.Emby
                     },
                     async () =>
                     {
-                        changed = true;
                         incoming.ShowId = show.Id;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
@@ -254,68 +241,68 @@ namespace ErsatzTV.Core.Emby
                         await _televisionRepository.AddSeason(incoming);
                     });
 
-                if (changed)
-                {
-                    List<EmbyItemEtag> existingEpisodes =
-                        await _televisionRepository.GetExistingEpisodes(library, incoming.ItemId);
+                List<EmbyItemEtag> existingEpisodes =
+                    await _televisionRepository.GetExistingEpisodes(library, incoming.ItemId);
 
-                    Either<BaseError, List<EmbyEpisode>> maybeEpisodes =
-                        await _embyApiClient.GetEpisodeLibraryItems(
-                            address,
-                            apiKey,
-                            library.MediaSourceId,
-                            incoming.ItemId);
+                Either<BaseError, List<EmbyEpisode>> maybeEpisodes =
+                    await _embyApiClient.GetEpisodeLibraryItems(
+                        address,
+                        apiKey,
+                        library.MediaSourceId,
+                        incoming.ItemId);
 
-                    await maybeEpisodes.Match(
-                        async episodes =>
+                await maybeEpisodes.Match(
+                    async episodes =>
+                    {
+                        var validEpisodes = new List<EmbyEpisode>();
+                        foreach (EmbyEpisode episode in episodes)
                         {
-                            var validEpisodes = new List<EmbyEpisode>();
-                            foreach (EmbyEpisode episode in episodes)
-                            {
-                                string localPath = _pathReplacementService.GetReplacementEmbyPath(
-                                    pathReplacements,
-                                    episode.MediaVersions.Head().MediaFiles.Head().Path,
-                                    false);
-
-                                if (!_localFileSystem.FileExists(localPath))
-                                {
-                                    _logger.LogWarning(
-                                        "Skipping emby episode that does not exist at {Path}",
-                                        localPath);
-                                }
-                                else
-                                {
-                                    validEpisodes.Add(episode);
-                                }
-                            }
-
-                            await ProcessEpisodes(
-                                show.ShowMetadata.Head().Title,
-                                incoming.SeasonMetadata.Head().Title,
-                                library,
-                                ffprobePath,
+                            string localPath = _pathReplacementService.GetReplacementEmbyPath(
                                 pathReplacements,
-                                incoming,
-                                existingEpisodes,
-                                validEpisodes);
+                                episode.MediaVersions.Head().MediaFiles.Head().Path,
+                                false);
 
-                            var incomingEpisodeIds = episodes.Map(s => s.ItemId).ToList();
-                            var episodeIds = existingEpisodes
-                                .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))
-                                .Map(m => m.ItemId)
-                                .ToList();
+                            if (!_localFileSystem.FileExists(localPath))
+                            {
+                                _logger.LogWarning(
+                                    "Skipping emby episode that does not exist at {Path}",
+                                    localPath);
+                            }
+                            else
+                            {
+                                validEpisodes.Add(episode);
+                            }
+                        }
+
+                        await ProcessEpisodes(
+                            show.ShowMetadata.Head().Title,
+                            incoming.SeasonMetadata.Head().Title,
+                            library,
+                            ffprobePath,
+                            pathReplacements,
+                            incoming,
+                            existingEpisodes,
+                            validEpisodes);
+
+                        var incomingEpisodeIds = episodes.Map(s => s.ItemId).ToList();
+                        var episodeIds = existingEpisodes
+                            .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))
+                            .Map(m => m.ItemId)
+                            .ToList();
+                        List<int> missingEpisodeIds =
                             await _televisionRepository.RemoveMissingEpisodes(library, episodeIds);
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error synchronizing emby library {Path}: {Error}",
-                                library.Name,
-                                error.Value);
+                        await _searchIndex.RemoveItems(missingEpisodeIds);
+                        _searchIndex.Commit();
+                    },
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Error synchronizing emby library {Path}: {Error}",
+                            library.Name,
+                            error.Value);
 
-                            return Task.CompletedTask;
-                        });
-                }
+                        return Task.CompletedTask;
+                    });
             }
         }
 
@@ -354,7 +341,13 @@ namespace ErsatzTV.Core.Emby
                             incoming.SeasonId = season.Id;
                             incoming.LibraryPathId = library.Paths.Head().Id;
 
-                            await _televisionRepository.Update(incoming);
+                            Option<EmbyEpisode> updated = await _televisionRepository.Update(incoming);
+                            if (updated.IsSome)
+                            {
+                                await _searchIndex.UpdateItems(
+                                    _searchRepository,
+                                    new List<MediaItem> { updated.ValueUnsafe() });
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -379,7 +372,10 @@ namespace ErsatzTV.Core.Emby
                                 seasonName,
                                 incoming.EpisodeNumber);
 
-                            await _televisionRepository.AddEpisode(incoming);
+                            if (await _televisionRepository.AddEpisode(incoming))
+                            {
+                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                            }
                         }
                         catch (Exception ex)
                         {
