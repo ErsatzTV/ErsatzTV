@@ -602,7 +602,7 @@ namespace ErsatzTV.Infrastructure.Search
                         new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO),
                         new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
 
                     AddLanguages(doc, episode.MediaVersions);

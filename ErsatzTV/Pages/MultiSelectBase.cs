@@ -119,7 +119,13 @@ namespace ErsatzTV.Pages
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
-                var request = new AddItemsToCollection(collection.Id, movieIds, showIds, episodeIds, artistIds, musicVideoIds);
+                var request = new AddItemsToCollection(
+                    collection.Id,
+                    movieIds,
+                    showIds,
+                    episodeIds,
+                    artistIds,
+                    musicVideoIds);
 
                 Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(

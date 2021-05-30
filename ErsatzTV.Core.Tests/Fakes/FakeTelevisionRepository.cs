@@ -17,11 +17,6 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<Option<Show>> GetShow(int showId) => throw new NotSupportedException();
 
-        public Task<int> GetShowCount() => throw new NotSupportedException();
-
-        public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
-            throw new NotSupportedException();
-
         public Task<List<ShowMetadata>> GetShowsForCards(List<int> ids) => throw new NotSupportedException();
         public Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids) => throw new NotSupportedException();
 
@@ -98,6 +93,11 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) => throw new NotSupportedException();
 
         public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) => throw new NotSupportedException();
+
+        public Task<int> GetShowCount() => throw new NotSupportedException();
+
+        public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
+            throw new NotSupportedException();
 
         public Task<bool> Update(Show show) => throw new NotSupportedException();
 

@@ -14,7 +14,8 @@ using static ErsatzTV.Application.MediaCards.Mapper;
 namespace ErsatzTV.Application.Search.Queries
 {
     public class
-        QuerySearchIndexEpisodesHandler : IRequestHandler<QuerySearchIndexEpisodes, TelevisionEpisodeCardResultsViewModel>
+        QuerySearchIndexEpisodesHandler : IRequestHandler<QuerySearchIndexEpisodes,
+            TelevisionEpisodeCardResultsViewModel>
     {
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly ISearchIndex _searchIndex;

@@ -124,7 +124,7 @@
             }
         </MudContainer>
     }
-    
+
     @if (_episodes.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
@@ -292,7 +292,7 @@
                     Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
             }
         }
-        
+
         if (card is TelevisionEpisodeCardViewModel episode)
         {
             var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
@@ -376,7 +376,7 @@
         }
         return uri;
     }
-    
+
     private string GetEpisodesLink()
     {
         var uri = "/media/tv/episodes/page/1";
