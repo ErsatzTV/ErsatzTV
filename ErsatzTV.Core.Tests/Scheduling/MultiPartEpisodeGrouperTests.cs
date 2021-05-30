@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
 using FluentAssertions;
 using NUnit.Framework;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Scheduling
 {
@@ -16,19 +18,18 @@ namespace ErsatzTV.Core.Tests.Scheduling
         {
             var mediaItems = new List<MediaItem>
             {
-                NamedEpisode(one),
-                NamedEpisode(two),
-                NamedEpisode(three),
-                NamedEpisode(four)
+                NamedEpisode(one, 1, 1, 1),
+                NamedEpisode(two, 1, 1, 2),
+                NamedEpisode(three, 1, 1, 3),
+                NamedEpisode(four, 1, 1, 4)
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
 
             result.Count.Should().Be(3);
-            result[0].First.Should().Be(mediaItems[0]);
-            result[1].First.Should().Be(mediaItems[1]);
-            result[1].Additional[0].Should().Be(mediaItems[2]);
-            result[2].First.Should().Be(mediaItems[3]);
+            ShouldHaveOneItem(result, mediaItems[0]);
+            ShouldHaveTwoItems(result, mediaItems[1], mediaItems[2]);
+            ShouldHaveOneItem(result, mediaItems[3]);
         }
 
         [Test]
@@ -39,17 +40,16 @@ namespace ErsatzTV.Core.Tests.Scheduling
         {
             var mediaItems = new List<MediaItem>
             {
-                NamedEpisode(one),
-                NamedEpisode(two),
-                NamedEpisode(three)
+                NamedEpisode(one, 1, 1, 1),
+                NamedEpisode(two, 1, 1, 2),
+                NamedEpisode(three, 1, 1, 3)
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
 
             result.Count.Should().Be(2);
-            result[0].First.Should().Be(mediaItems[0]);
-            result[0].Additional[0].Should().Be(mediaItems[1]);
-            result[1].First.Should().Be(mediaItems[2]);
+            ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
+            ShouldHaveOneItem(result, mediaItems[2]);
         }
 
         [Test]
@@ -65,21 +65,19 @@ namespace ErsatzTV.Core.Tests.Scheduling
         {
             var mediaItems = new List<MediaItem>
             {
-                NamedEpisode(one),
-                NamedEpisode(two),
-                NamedEpisode(three),
-                NamedEpisode(four),
-                NamedEpisode(five)
+                NamedEpisode(one, 1, 1, 1),
+                NamedEpisode(two, 1, 1, 2),
+                NamedEpisode(three, 1, 1, 3),
+                NamedEpisode(four, 1, 1, 4),
+                NamedEpisode(five, 1, 1, 5)
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
 
             result.Count.Should().Be(3);
-            result[0].First.Should().Be(mediaItems[0]);
-            result[0].Additional[0].Should().Be(mediaItems[1]);
-            result[1].First.Should().Be(mediaItems[2]);
-            result[2].First.Should().Be(mediaItems[3]);
-            result[2].Additional[0].Should().Be(mediaItems[4]);
+            ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
+            ShouldHaveOneItem(result, mediaItems[2]);
+            ShouldHaveTwoItems(result, mediaItems[3], mediaItems[4]);
         }
 
         [Test]
@@ -90,19 +88,17 @@ namespace ErsatzTV.Core.Tests.Scheduling
         {
             var mediaItems = new List<MediaItem>
             {
-                NamedEpisode(one),
-                NamedEpisode(two),
-                NamedEpisode(three),
-                NamedEpisode(four)
+                NamedEpisode(one, 1, 1, 1),
+                NamedEpisode(two, 1, 1, 2),
+                NamedEpisode(three, 1, 1, 3),
+                NamedEpisode(four, 1, 1, 4)
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
 
             result.Count.Should().Be(2);
-            result[0].First.Should().Be(mediaItems[0]);
-            result[0].Additional[0].Should().Be(mediaItems[1]);
-            result[1].First.Should().Be(mediaItems[2]);
-            result[1].Additional[0].Should().Be(mediaItems[3]);
+            ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
+            ShouldHaveTwoItems(result, mediaItems[2], mediaItems[3]);
         }
 
         [Test]
@@ -113,19 +109,18 @@ namespace ErsatzTV.Core.Tests.Scheduling
         {
             var mediaItems = new List<MediaItem>
             {
-                NamedEpisode(one),
-                NamedEpisode(two),
-                NamedEpisode(three),
-                NamedEpisode(four)
+                NamedEpisode(one, 1, 1, 1),
+                NamedEpisode(two, 1, 1, 2),
+                NamedEpisode(three, 1, 1, 3),
+                NamedEpisode(four, 1, 1, 4)
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
 
             result.Count.Should().Be(3);
-            result[0].First.Should().Be(mediaItems[0]);
-            result[1].First.Should().Be(mediaItems[1]);
-            result[2].First.Should().Be(mediaItems[2]);
-            result[2].Additional[0].Should().Be(mediaItems[3]);
+            ShouldHaveOneItem(result, mediaItems[0]);
+            ShouldHaveOneItem(result, mediaItems[1]);
+            ShouldHaveTwoItems(result, mediaItems[2], mediaItems[3]);
         }
 
         [Test]
@@ -136,19 +131,19 @@ namespace ErsatzTV.Core.Tests.Scheduling
         {
             var mediaItems = new List<MediaItem>
             {
-                NamedEpisode(one),
-                NamedEpisode(two),
-                NamedEpisode(three),
-                NamedEpisode(four)
+                NamedEpisode(one, 1, 1, 1),
+                NamedEpisode(two, 1, 1, 3),
+                NamedEpisode(three, 1, 1, 4),
+                NamedEpisode(four, 1, 1, 5)
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
 
             result.Count.Should().Be(4);
-            result[0].First.Should().Be(mediaItems[0]);
-            result[1].First.Should().Be(mediaItems[1]);
-            result[2].First.Should().Be(mediaItems[2]);
-            result[3].First.Should().Be(mediaItems[3]);
+            ShouldHaveOneItem(result, mediaItems[0]);
+            ShouldHaveOneItem(result, mediaItems[1]);
+            ShouldHaveOneItem(result, mediaItems[2]);
+            ShouldHaveOneItem(result, mediaItems[3]);
         }
 
         [Test]
@@ -159,28 +154,76 @@ namespace ErsatzTV.Core.Tests.Scheduling
         {
             var mediaItems = new List<MediaItem>
             {
-                NamedEpisode(one),
-                NamedEpisode(two),
-                NamedEpisode(three),
-                NamedEpisode(four)
+                NamedEpisode(one, 1, 1, 1),
+                NamedEpisode(two, 1, 1, 3),
+                NamedEpisode(three, 1, 1, 4),
+                NamedEpisode(four, 1, 1, 5)
             };
 
             List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
 
             result.Count.Should().Be(3);
-            result[0].First.Should().Be(mediaItems[0]);
-            result[1].First.Should().Be(mediaItems[1]);
-            result[1].Additional[0].Should().Be(mediaItems[2]);
-            result[2].First.Should().Be(mediaItems[3]);
+            ShouldHaveOneItem(result, mediaItems[0]);
+            ShouldHaveTwoItems(result, mediaItems[1], mediaItems[2]);
+            ShouldHaveOneItem(result, mediaItems[3]);
         }
 
-        private static Episode NamedEpisode(string title) =>
+        [Test]
+        [TestCase("S1 Episode 1 (1)", "S2 Episode 3 (1)", "S1 Episode 2 (2)", "S1 Episode 5")]
+        [TestCase(
+            "S1 Episode 1 (1) - More",
+            "S2 Episode 3 (1) - Title",
+            "S1 Episode 2 (2) - After",
+            "S1 Episode 5 - Dash")]
+        [TestCase("S1 Episode 1 Part 1", "S2 Episode 3 Part 1", "S1 Episode 2 Part 2", "S1 Episode 5")]
+        public void Mixed_Shows_Chronologically(string one, string two, string three, string four)
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                NamedEpisode(one, 1, 1, 1, new DateTime(2020, 1, 1)),
+                NamedEpisode(two, 2, 1, 3, new DateTime(2020, 1, 2)),
+                NamedEpisode(three, 1, 1, 2, new DateTime(2020, 1, 3)),
+                NamedEpisode(four, 1, 1, 5, new DateTime(2020, 1, 4))
+            };
+
+            List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems);
+
+            result.Count.Should().Be(3);
+            ShouldHaveTwoItems(result, mediaItems[0], mediaItems[2]);
+            ShouldHaveOneItem(result, mediaItems[1]);
+            ShouldHaveOneItem(result, mediaItems[3]);
+        }
+
+        private static Episode NamedEpisode(
+            string title,
+            int showId,
+            int season,
+            int episode,
+            DateTime? releaseDate = null) =>
             new()
             {
+                EpisodeNumber = episode,
                 EpisodeMetadata = new List<EpisodeMetadata>
                 {
-                    new() { Title = title }
+                    new() { Title = title, ReleaseDate = releaseDate }
+                },
+                Season = new Season
+                {
+                    SeasonNumber = season,
+                    Show = new Show { Id = showId },
+                    ShowId = showId
                 }
             };
+
+        private static void ShouldHaveOneItem(IEnumerable<GroupedMediaItem> result, MediaItem item) =>
+            result.Filter(g => g.First == item && Optional(g.Additional).Flatten().HeadOrNone() == None)
+                .Should().HaveCount(1);
+
+        private static void ShouldHaveTwoItems(
+            IEnumerable<GroupedMediaItem> result,
+            MediaItem first,
+            MediaItem additional) =>
+            result.Filter(g => g.First == first && Optional(g.Additional).Flatten().HeadOrNone() == Some(additional))
+                .Should().HaveCount(1);
     }
 }

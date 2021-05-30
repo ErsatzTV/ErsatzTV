@@ -11,9 +11,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add unique id/provider id metadata, which will support future features
 - Allow grouping multi-part episodes with titles ending in `Part X`, `Part Y`, etc.
 
+### Changed
+- Change home page link from release notes to full changelog
+
 ### Fixed
 - Fix missing channel logos after restart
 - Fix multi-part episode grouping with missing episodes/parts
+- Fix grouping multi-part episodes in collections containing multiple shows
 
 ## [0.0.40-prealpha] - 2021-05-28
 ### Added
