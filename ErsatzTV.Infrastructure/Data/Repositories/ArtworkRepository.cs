@@ -21,6 +21,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                       WHERE A.ArtistMetadataId IS NULL AND A.EpisodeMetadataId IS NULL
                       AND A.SeasonMetadataId IS NULL AND A.ShowMetadataId IS NULL
                       AND A.MovieMetadataId IS NULL AND A.MusicVideoMetadataId IS NULL
+                      AND A.ChannelId IS NULL
                       AND NOT EXISTS (SELECT * FROM Actor WHERE Actor.ArtworkId = A.Id)")
                 .Map(result => result.ToList());
 

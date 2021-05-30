@@ -28,7 +28,7 @@ namespace ErsatzTV.Infrastructure.Emby
             string parentId,
             [Query]
             string fields =
-                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating",
+                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating,ProviderIds",
             [Query]
             string includeItemTypes = "Movie",
             [Query]
@@ -42,7 +42,7 @@ namespace ErsatzTV.Infrastructure.Emby
             string parentId,
             [Query]
             string fields =
-                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating",
+                "Path,Genres,Tags,DateCreated,Etag,Overview,Taglines,Studios,People,ProductionYear,PremiereDate,MediaSources,OfficialRating,ProviderIds",
             [Query]
             string includeItemTypes = "Series",
             [Query]
@@ -55,9 +55,11 @@ namespace ErsatzTV.Infrastructure.Emby
             [Query]
             string parentId,
             [Query]
-            string fields = "Path,DateCreated,Etag,Taglines",
+            string fields = "Path,DateCreated,Etag,Taglines,ProviderIds",
             [Query]
             string includeItemTypes = "Season",
+            [Query]
+            string excludeLocationTypes = "Virtual",
             [Query]
             bool recursive = true);
 
@@ -68,9 +70,12 @@ namespace ErsatzTV.Infrastructure.Emby
             [Query]
             string parentId,
             [Query]
-            string fields = "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType",
+            string fields =
+                "Path,DateCreated,Etag,Overview,ProductionYear,PremiereDate,MediaSources,LocationType,ProviderIds,People",
             [Query]
             string includeItemTypes = "Episode",
+            [Query]
+            string excludeLocationTypes = "Virtual",
             [Query]
             bool recursive = true);
     }

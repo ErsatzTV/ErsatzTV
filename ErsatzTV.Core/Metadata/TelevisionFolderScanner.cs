@@ -209,9 +209,19 @@ namespace ErsatzTV.Core.Metadata
                     .BindT(UpdateMetadata)
                     .BindT(UpdateThumbnail);
 
-                maybeEpisode.IfLeft(
-                    error => _logger.LogWarning("Error processing episode at {Path}: {Error}", file, error.Value));
+                await maybeEpisode.Match(
+                    async episode =>
+                    {
+                        await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
+                    },
+                    error =>
+                    {
+                        _logger.LogWarning("Error processing episode at {Path}: {Error}", file, error.Value);
+                        return Task.CompletedTask;
+                    });
             }
+
+            // TODO: remove missing episodes?
 
             return Unit.Default;
         }

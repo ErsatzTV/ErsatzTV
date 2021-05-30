@@ -45,6 +45,11 @@
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
             }
 
+            if (_episodes.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#episodes")" Style="margin-bottom: auto; margin-top: auto">@_episodes.Count Episodes</MudLink>
+            }
+
             if (_artists.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
@@ -120,6 +125,34 @@
         </MudContainer>
     }
 
+    @if (_episodes.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "episodes" } })">
+                Episodes
+            </MudText>
+            @if (_episodes.Count > 50)
+            {
+                <MudLink Href="@GetEpisodesLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (TelevisionEpisodeCardViewModel card in _episodes.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           AddToCollectionClicked="@AddToCollection"
+                           Link="@($"/media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
+                           Subtitle="@($"{card.ShowTitle} - S{card.Season} E{card.Episode}")"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
+
     @if (_artists.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
@@ -181,6 +214,7 @@
     private string _query;
     private MovieCardResultsViewModel _movies;
     private TelevisionShowCardResultsViewModel _shows;
+    private TelevisionEpisodeCardResultsViewModel _episodes;
     private MusicVideoCardResultsViewModel _musicVideos;
     private ArtistCardResultsViewModel _artists;
 
@@ -194,6 +228,7 @@
 
             _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
             _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50));
+            _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50));
             _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50));
             _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50));
         }
@@ -205,6 +240,7 @@
         {
             return _movies.Cards.OrderBy(m => m.SortTitle)
                 .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
+                .Append(_episodes.Cards.OrderBy(ep => ep.SortTitle))
                 .Append(_artists.Cards.OrderBy(a => a.SortTitle))
                 .Append(_musicVideos.Cards.OrderBy(mv => mv.SortTitle))
                 .ToList();
@@ -254,6 +290,27 @@
                         Logger.LogError("Unexpected error adding show to collection: {Error}", error.Value);
                     },
                     Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
+
+        if (card is TelevisionEpisodeCardViewModel episode)
+        {
+            var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
             }
         }
 
@@ -320,6 +377,16 @@
         return uri;
     }
 
+    private string GetEpisodesLink()
+    {
+        var uri = "/media/tv/episodes/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+        }
+        return uri;
+    }
+
     private string GetArtistsLink()
     {
         var uri = "/media/music/artists/page/1";
@@ -343,7 +410,7 @@
     private async Task AddAllToCollection(MouseEventArgs _)
     {
         SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query));
-        await AddItemsToCollection(results.MovieIds, results.ShowIds, results.ArtistIds, results.MusicVideoIds, "search results");
+        await AddItemsToCollection(results.MovieIds, results.ShowIds, results.EpisodeIds, results.ArtistIds, results.MusicVideoIds, "search results");
     }
 
 }

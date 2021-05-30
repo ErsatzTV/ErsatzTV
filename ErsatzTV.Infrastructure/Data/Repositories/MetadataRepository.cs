@@ -75,6 +75,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
             }
 
+            foreach (MetadataGuid guid in Optional(metadata.Guids).Flatten())
+            {
+                dbContext.Entry(guid).State = EntityState.Added;
+            }
+
             if (metadata is MovieMetadata movieMetadata)
             {
                 foreach (Director director in Optional(movieMetadata.Directors).Flatten())
@@ -83,6 +88,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
 
                 foreach (Writer writer in Optional(movieMetadata.Writers).Flatten())
+                {
+                    dbContext.Entry(writer).State = EntityState.Added;
+                }
+            }
+
+            if (metadata is EpisodeMetadata episodeMetadata)
+            {
+                foreach (Director director in Optional(episodeMetadata.Directors).Flatten())
+                {
+                    dbContext.Entry(director).State = EntityState.Added;
+                }
+
+                foreach (Writer writer in Optional(episodeMetadata.Writers).Flatten())
                 {
                     dbContext.Entry(writer).State = EntityState.Added;
                 }
@@ -260,6 +278,44 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 @"UPDATE MovieMetadata SET ContentRating = @ContentRating WHERE Id = @Id",
                 new { metadata.Id, ContentRating = contentRating }).ToUnit();
+
+        public Task<bool> RemoveGuid(MetadataGuid guid) =>
+            _dbConnection.ExecuteAsync("DELETE FROM MetadataGuid WHERE Id = @GuidId", new { GuidId = guid.Id })
+                .Map(result => result > 0);
+
+        public Task<bool> AddGuid(Metadata metadata, MetadataGuid guid) =>
+            metadata switch
+            {
+                MovieMetadata =>
+                    _dbConnection.ExecuteAsync(
+                        "INSERT INTO MetadataGuid (Guid, MovieMetadataId) VALUES (@Guid, @MetadataId)",
+                        new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
+                ShowMetadata =>
+                    _dbConnection.ExecuteAsync(
+                        "INSERT INTO MetadataGuid (Guid, ShowMetadataId) VALUES (@Guid, @MetadataId)",
+                        new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
+                SeasonMetadata =>
+                    _dbConnection.ExecuteAsync(
+                        "INSERT INTO MetadataGuid (Guid, SeasonMetadataId) VALUES (@Guid, @MetadataId)",
+                        new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
+                EpisodeMetadata =>
+                    _dbConnection.ExecuteAsync(
+                        "INSERT INTO MetadataGuid (Guid, EpisodeMetadataId) VALUES (@Guid, @MetadataId)",
+                        new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
+                ArtistMetadata =>
+                    _dbConnection.ExecuteAsync(
+                        "INSERT INTO MetadataGuid (Guid, ArtistMetadataId) VALUES (@Guid, @MetadataId)",
+                        new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
+                _ => throw new NotSupportedException()
+            };
+
+        public Task<bool> RemoveDirector(Director director) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Director WHERE Id = @DirectorId", new { DirectorId = director.Id })
+                .Map(result => result > 0);
+
+        public Task<bool> RemoveWriter(Writer writer) =>
+            _dbConnection.ExecuteAsync("DELETE FROM Writer WHERE Id = @WriterId", new { WriterId = writer.Id })
+                .Map(result => result > 0);
 
         public Task<bool> RemoveGenre(Genre genre) =>
             _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id })

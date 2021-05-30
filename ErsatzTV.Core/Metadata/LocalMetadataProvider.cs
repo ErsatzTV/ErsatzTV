@@ -212,6 +212,66 @@ namespace ErsatzTV.Core.Metadata
                         (_, _) => Task.FromResult(false),
                         _televisionRepository.AddActor);
 
+                    foreach (Director director in existing.Directors
+                        .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
+                    {
+                        existing.Directors.Remove(director);
+                        if (await _metadataRepository.RemoveDirector(director))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Director director in metadata.Directors
+                        .Filter(d => existing.Directors.All(d2 => d2.Name != d.Name)).ToList())
+                    {
+                        existing.Directors.Add(director);
+                        if (await _televisionRepository.AddDirector(existing, director))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Writer writer in existing.Writers
+                        .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name)).ToList())
+                    {
+                        existing.Writers.Remove(writer);
+                        if (await _metadataRepository.RemoveWriter(writer))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (Writer writer in metadata.Writers
+                        .Filter(w => existing.Writers.All(w2 => w2.Name != w.Name)).ToList())
+                    {
+                        existing.Writers.Add(writer);
+                        if (await _televisionRepository.AddWriter(existing, writer))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (MetadataGuid guid in existing.Guids
+                        .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+                    {
+                        existing.Guids.Remove(guid);
+                        if (await _metadataRepository.RemoveGuid(guid))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (MetadataGuid guid in metadata.Guids
+                        .Filter(g => existing.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+                    {
+                        existing.Guids.Add(guid);
+                        if (await _metadataRepository.AddGuid(existing, guid))
+                        {
+                            updated = true;
+                        }
+                    }
+
                     return await _metadataRepository.Update(existing) || updated;
                 },
                 async () =>
@@ -261,17 +321,17 @@ namespace ErsatzTV.Core.Metadata
                         _movieRepository.AddActor);
 
                     foreach (Director director in existing.Directors
-                        .Filter(g => metadata.Directors.All(g2 => g2.Name != g.Name)).ToList())
+                        .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
                     {
                         existing.Directors.Remove(director);
-                        if (await _movieRepository.RemoveDirector(director))
+                        if (await _metadataRepository.RemoveDirector(director))
                         {
                             updated = true;
                         }
                     }
 
                     foreach (Director director in metadata.Directors
-                        .Filter(g => existing.Directors.All(g2 => g2.Name != g.Name)).ToList())
+                        .Filter(d => existing.Directors.All(d2 => d2.Name != d.Name)).ToList())
                     {
                         existing.Directors.Add(director);
                         if (await _movieRepository.AddDirector(existing, director))
@@ -281,20 +341,40 @@ namespace ErsatzTV.Core.Metadata
                     }
 
                     foreach (Writer writer in existing.Writers
-                        .Filter(g => metadata.Writers.All(g2 => g2.Name != g.Name)).ToList())
+                        .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name)).ToList())
                     {
                         existing.Writers.Remove(writer);
-                        if (await _movieRepository.RemoveWriter(writer))
+                        if (await _metadataRepository.RemoveWriter(writer))
                         {
                             updated = true;
                         }
                     }
 
                     foreach (Writer writer in metadata.Writers
-                        .Filter(g => existing.Writers.All(g2 => g2.Name != g.Name)).ToList())
+                        .Filter(w => existing.Writers.All(w2 => w2.Name != w.Name)).ToList())
                     {
                         existing.Writers.Add(writer);
                         if (await _movieRepository.AddWriter(existing, writer))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (MetadataGuid guid in existing.Guids
+                        .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+                    {
+                        existing.Guids.Remove(guid);
+                        if (await _metadataRepository.RemoveGuid(guid))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (MetadataGuid guid in metadata.Guids
+                        .Filter(g => existing.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+                    {
+                        existing.Guids.Add(guid);
+                        if (await _metadataRepository.AddGuid(existing, guid))
                         {
                             updated = true;
                         }
@@ -344,6 +424,26 @@ namespace ErsatzTV.Core.Metadata
                         _televisionRepository.AddTag,
                         _televisionRepository.AddStudio,
                         _televisionRepository.AddActor);
+
+                    foreach (MetadataGuid guid in existing.Guids
+                        .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+                    {
+                        existing.Guids.Remove(guid);
+                        if (await _metadataRepository.RemoveGuid(guid))
+                        {
+                            updated = true;
+                        }
+                    }
+
+                    foreach (MetadataGuid guid in metadata.Guids
+                        .Filter(g => existing.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+                    {
+                        existing.Guids.Add(guid);
+                        if (await _metadataRepository.AddGuid(existing, guid))
+                        {
+                            updated = true;
+                        }
+                    }
 
                     return await _metadataRepository.Update(existing) || updated;
                 },
@@ -522,7 +622,10 @@ namespace ErsatzTV.Core.Metadata
                             Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                             Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                             Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
-                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated)
+                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
+                            Guids = nfo.UniqueIds
+                                .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
+                                .ToList()
                         };
                     },
                     None);
@@ -582,7 +685,12 @@ namespace ErsatzTV.Core.Metadata
                             Title = nfo.Title,
                             ReleaseDate = GetAired(0, nfo.Aired),
                             Plot = nfo.Plot,
-                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated)
+                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
+                            Guids = nfo.UniqueIds
+                                .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
+                                .ToList(),
+                            Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
+                            Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList()
                         };
                         return Tuple(metadata, nfo.Episode);
                     },
@@ -624,7 +732,10 @@ namespace ErsatzTV.Core.Metadata
                             Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
                             Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
                             Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
-                            Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList()
+                            Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList(),
+                            Guids = nfo.UniqueIds
+                                .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
+                                .ToList()
                         };
                     },
                     None);

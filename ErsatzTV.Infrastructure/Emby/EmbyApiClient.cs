@@ -244,7 +244,8 @@ namespace ErsatzTV.Infrastructure.Emby
                 Actors = Optional(item.People).Flatten().Collect(r => ProjectToActor(r, dateAdded)).ToList(),
                 Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
                 Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList(),
-                Artwork = new List<Artwork>()
+                Artwork = new List<Artwork>(),
+                Guids = GuidsFromProviderIds(item.ProviderIds)
             };
 
             // set order on actors
@@ -365,7 +366,8 @@ namespace ErsatzTV.Infrastructure.Emby
                 Tags = Optional(item.Tags).Flatten().Map(t => new Tag { Name = t }).ToList(),
                 Studios = Optional(item.Studios).Flatten().Map(s => new Studio { Name = s.Name }).ToList(),
                 Actors = Optional(item.People).Flatten().Collect(r => ProjectToActor(r, dateAdded)).ToList(),
-                Artwork = new List<Artwork>()
+                Artwork = new List<Artwork>(),
+                Guids = GuidsFromProviderIds(item.ProviderIds)
             };
 
             // set order on actors
@@ -429,7 +431,8 @@ namespace ErsatzTV.Infrastructure.Emby
                     SortTitle = _fallbackMetadataProvider.GetSortTitle(item.Name),
                     Year = item.ProductionYear,
                     DateAdded = dateAdded,
-                    Artwork = new List<Artwork>()
+                    Artwork = new List<Artwork>(),
+                    Guids = GuidsFromProviderIds(item.ProviderIds)
                 };
 
                 if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
@@ -540,7 +543,10 @@ namespace ErsatzTV.Infrastructure.Emby
                 Tags = new List<Tag>(),
                 Studios = new List<Studio>(),
                 Actors = new List<Actor>(),
-                Artwork = new List<Artwork>()
+                Artwork = new List<Artwork>(),
+                Guids = GuidsFromProviderIds(item.ProviderIds),
+                Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
+                Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList()
             };
 
             if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
@@ -560,6 +566,31 @@ namespace ErsatzTV.Infrastructure.Emby
             }
 
             return metadata;
+        }
+
+        private List<MetadataGuid> GuidsFromProviderIds(EmbyProviderIdsResponse providerIds)
+        {
+            var result = new List<MetadataGuid>();
+
+            if (providerIds != null)
+            {
+                if (!string.IsNullOrWhiteSpace(providerIds.Imdb))
+                {
+                    result.Add(new MetadataGuid { Guid = $"imdb://{providerIds.Imdb}" });
+                }
+
+                if (!string.IsNullOrWhiteSpace(providerIds.Tmdb))
+                {
+                    result.Add(new MetadataGuid { Guid = $"tmdb://{providerIds.Tmdb}" });
+                }
+
+                if (!string.IsNullOrWhiteSpace(providerIds.Tvdb))
+                {
+                    result.Add(new MetadataGuid { Guid = $"tvdb://{providerIds.Tvdb}" });
+                }
+            }
+
+            return result;
         }
     }
 }

@@ -4,15 +4,16 @@ using Refit;
 
 namespace ErsatzTV.Infrastructure.Plex
 {
-    [Headers("Accept: application/json")]
     public interface IPlexServerApi
     {
         [Get("/library/sections")]
+        [Headers("Accept: application/json")]
         public Task<PlexMediaContainerResponse<PlexMediaContainerDirectoryContent<PlexLibraryResponse>>> GetLibraries(
             [Query] [AliasAs("X-Plex-Token")]
             string token);
 
         [Get("/library/sections/{key}/all")]
+        [Headers("Accept: application/json")]
         public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
             GetLibrarySectionContents(
                 string key,
@@ -20,15 +21,33 @@ namespace ErsatzTV.Infrastructure.Plex
                 string token);
 
         [Get("/library/metadata/{key}")]
-        public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
-            GetMetadata(
+        [Headers("Accept: text/xml")]
+        public Task<PlexXmlVideoMetadataResponseContainer>
+            GetVideoMetadata(
+                string key,
+                [Query] [AliasAs("X-Plex-Token")]
+                string token);
+
+        [Get("/library/metadata/{key}")]
+        [Headers("Accept: text/xml")]
+        public Task<PlexXmlDirectoryMetadataResponseContainer>
+            GetDirectoryMetadata(
                 string key,
                 [Query] [AliasAs("X-Plex-Token")]
                 string token);
 
         [Get("/library/metadata/{key}/children")]
-        public Task<PlexMediaContainerResponse<PlexMediaContainerMetadataContent<PlexMetadataResponse>>>
-            GetChildren(
+        [Headers("Accept: text/xml")]
+        public Task<PlexXmlSeasonsMetadataResponseContainer>
+            GetShowChildren(
+                string key,
+                [Query] [AliasAs("X-Plex-Token")]
+                string token);
+
+        [Get("/library/metadata/{key}/children")]
+        [Headers("Accept: text/xml")]
+        public Task<PlexXmlEpisodesMetadataResponseContainer>
+            GetSeasonChildren(
                 string key,
                 [Query] [AliasAs("X-Plex-Token")]
                 string token);

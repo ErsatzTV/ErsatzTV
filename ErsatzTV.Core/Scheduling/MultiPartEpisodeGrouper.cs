@@ -15,15 +15,27 @@ namespace ErsatzTV.Core.Scheduling
             var groups = new List<GroupedMediaItem>();
             GroupedMediaItem group = null;
             var lastNumber = 0;
+
+            void AddUngrouped(MediaItem item)
+            {
+                if (group != null && lastNumber != 0)
+                {
+                    groups.Add(group);
+                    group = null;
+                    lastNumber = 0;
+                }
+
+                groups.Add(new GroupedMediaItem(item, null));
+            }
+
             foreach (MediaItem item in sortedMediaItems)
             {
                 if (item is Episode e)
                 {
-                    const string PATTERN = @"^.*\((\d+)\)( - .*)?$";
-                    Match match = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN);
-                    if (match.Success)
+                    string numberString = FindPartNumber(e);
+                    if (numberString != null)
                     {
-                        var number = int.Parse(match.Groups[1].Value);
+                        var number = int.Parse(numberString);
                         if (number <= lastNumber && group != null)
                         {
                             groups.Add(group);
@@ -48,28 +60,20 @@ namespace ErsatzTV.Core.Scheduling
                             else
                             {
                                 // this should never happen
-                                throw new InvalidOperationException("Bad shuffle state");
+                                throw new InvalidOperationException(
+                                    $"Bad shuffle state; unexpected number {number} after {lastNumber} with no existing group");
                             }
 
                             lastNumber = number;
                         }
                         else
                         {
-                            // this should never happen
-                            throw new InvalidOperationException(
-                                $"Bad shuffle state; unexpected number {number} after {lastNumber}");
+                            AddUngrouped(item);
                         }
                     }
                     else
                     {
-                        if (group != null && lastNumber != 0)
-                        {
-                            groups.Add(group);
-                            group = null;
-                            lastNumber = 0;
-                        }
-
-                        groups.Add(new GroupedMediaItem(item, null));
+                        AddUngrouped(item);
                     }
                 }
                 else
@@ -84,6 +88,20 @@ namespace ErsatzTV.Core.Scheduling
             }
 
             return groups;
+        }
+
+        private static string FindPartNumber(Episode e)
+        {
+            const string PATTERN = @"^.*\((\d+)\)( - .*)?$";
+            Match match = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN);
+            if (match.Success)
+            {
+                return match.Groups[1].Value;
+            }
+
+            const string PATTERN_2 = @"^.*Part (\d+)$";
+            Match match2 = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN_2);
+            return match2.Success ? match2.Groups[1].Value : null;
         }
 
         public static IList<MediaItem> FlattenGroups(GroupedMediaItem[] copy, int mediaItemCount)

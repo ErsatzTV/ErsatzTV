@@ -354,10 +354,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             List<int> movieIds = await context.PlexMovies.Map(pm => pm.Id).ToListAsync();
             List<int> showIds = await context.PlexShows.Map(ps => ps.Id).ToListAsync();
+            List<int> episodeIds = await context.PlexEpisodes.Map(pe => pe.Id).ToListAsync();
 
             await context.SaveChangesAsync();
 
-            return movieIds.Append(showIds).ToList();
+            return movieIds.Append(showIds).Append(episodeIds).ToList();
         }
 
         public async Task<List<int>> DeletePlex(PlexMediaSource plexMediaSource)
@@ -404,6 +405,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
 
+            List<int> episodeIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+
             await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
@@ -439,7 +448,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
 
-            return movieIds.Append(showIds).ToList();
+            return movieIds.Append(showIds).Append(episodeIds).ToList();
         }
 
         public Task EnablePlexLibrarySync(IEnumerable<int> libraryIds) =>
@@ -561,6 +570,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
 
+            List<int> episodeIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN JellyfinEpisode pe ON pe.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
+
             await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
@@ -596,7 +613,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
 
-            return movieIds.Append(showIds).ToList();
+            return movieIds.Append(showIds).Append(episodeIds).ToList();
         }
 
         public Task<Option<JellyfinLibrary>> GetJellyfinLibrary(int jellyfinLibraryId)
@@ -708,9 +725,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(ps => ps.Id)
                 .ToListAsync();
 
+            List<int> episodeIds = await context.JellyfinEpisodes
+                .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
+                .Map(ps => ps.Id)
+                .ToListAsync();
+
             await context.SaveChangesAsync();
 
-            return movieIds.Append(showIds).ToList();
+            return movieIds.Append(showIds).Append(episodeIds).ToList();
         }
 
         public async Task<Unit> UpsertEmby(string address, string serverName, string operatingSystem)
@@ -904,9 +926,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Map(ps => ps.Id)
                 .ToListAsync();
 
+            List<int> episodeIds = await context.EmbyEpisodes
+                .Where(m => libraryIds.Contains(m.LibraryPath.LibraryId))
+                .Map(ps => ps.Id)
+                .ToListAsync();
+
             await context.SaveChangesAsync();
 
-            return movieIds.Append(showIds).ToList();
+            return movieIds.Append(showIds).Append(episodeIds).ToList();
         }
 
         public Task<Unit> EnableEmbyLibrarySync(IEnumerable<int> libraryIds) =>
@@ -940,6 +967,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 INNER JOIN Library l ON l.Id = lp.LibraryId
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
+
+            List<int> episodeIds = await _dbConnection.QueryAsync<int>(
+                @"SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
+                INNER JOIN Library l ON l.Id = lp.LibraryId
+                WHERE l.Id IN @ids",
+                new { ids = libraryIds }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
                 @"DELETE FROM MediaItem WHERE Id IN
@@ -976,7 +1011,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE l.Id IN @ids)",
                 new { ids = libraryIds });
 
-            return movieIds.Append(showIds).ToList();
+            return movieIds.Append(showIds).Append(episodeIds).ToList();
         }
     }
 }
