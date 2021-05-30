@@ -73,6 +73,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Studios)
                 .Include(i => i.MovieMetadata)
+                .ThenInclude(mm => mm.Guids)
+                .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Actors)
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Actors)
