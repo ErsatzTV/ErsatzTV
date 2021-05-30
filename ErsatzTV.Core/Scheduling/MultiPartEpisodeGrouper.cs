@@ -11,28 +11,32 @@ namespace ErsatzTV.Core.Scheduling
     {
         public static List<GroupedMediaItem> GroupMediaItems(IList<MediaItem> mediaItems)
         {
-            var sortedMediaItems = mediaItems.OrderBy(identity, new ChronologicalMediaComparer()).ToList();
+            var episodes = mediaItems.OfType<Episode>().ToList();
+            var showIds = episodes.Map(e => e.Season.ShowId).Distinct().ToList();
+
             var groups = new List<GroupedMediaItem>();
             GroupedMediaItem group = null;
-            var lastNumber = 0;
 
-            void AddUngrouped(MediaItem item)
+            foreach (int showId in showIds)
             {
-                if (group != null && lastNumber != 0)
+                var lastNumber = 0;
+
+                void AddUngrouped(MediaItem item)
                 {
-                    groups.Add(group);
-                    group = null;
-                    lastNumber = 0;
+                    if (group != null && lastNumber != 0)
+                    {
+                        groups.Add(group);
+                        group = null;
+                        lastNumber = 0;
+                    }
+
+                    groups.Add(new GroupedMediaItem(item, null));
                 }
 
-                groups.Add(new GroupedMediaItem(item, null));
-            }
-
-            foreach (MediaItem item in sortedMediaItems)
-            {
-                if (item is Episode e)
+                foreach (Episode episode in episodes.Filter(e => e.Season.ShowId == showId)
+                    .OrderBy(identity, new ChronologicalMediaComparer()))
                 {
-                    string numberString = FindPartNumber(e);
+                    string numberString = FindPartNumber(episode);
                     if (numberString != null)
                     {
                         var number = int.Parse(numberString);
@@ -48,13 +52,13 @@ namespace ErsatzTV.Core.Scheduling
                             if (lastNumber == 0)
                             {
                                 // start a new group
-                                group = new GroupedMediaItem(item, null);
+                                group = new GroupedMediaItem(episode, null);
                             }
                             else if (group != null)
                             {
                                 // add to current group
                                 List<MediaItem> additional = group.Additional ?? new List<MediaItem>();
-                                additional.Add(item);
+                                additional.Add(episode);
                                 group = group with { Additional = additional };
                             }
                             else
@@ -68,23 +72,25 @@ namespace ErsatzTV.Core.Scheduling
                         }
                         else
                         {
-                            AddUngrouped(item);
+                            AddUngrouped(episode);
                         }
                     }
                     else
                     {
-                        AddUngrouped(item);
+                        AddUngrouped(episode);
                     }
                 }
-                else
+
+                if (group != null && lastNumber != 0)
                 {
-                    groups.Add(new GroupedMediaItem(item, null));
+                    groups.Add(group);
+                    group = null;
                 }
             }
 
-            if (group != null && lastNumber != 0)
+            foreach (MediaItem notEpisode in mediaItems.Filter(i => i is not Episode))
             {
-                groups.Add(group);
+                groups.Add(new GroupedMediaItem(notEpisode, null));
             }
 
             return groups;
