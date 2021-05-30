@@ -3,7 +3,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## Unreleased
+
+## [0.0.41-prealpha] - 2021-05-30
 ### Added
 - Add button to refresh list of Plex, Jellyfin, Emby libraries without restarting app
 - Add episodes to search index
@@ -17,7 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix missing channel logos after restart
 - Fix multi-part episode grouping with missing episodes/parts
-- Fix grouping multi-part episodes in collections containing multiple shows
+- Fix multi-part episode grouping in collections containing multiple shows
+- Fix updating modified seasons and episodes from Jellyfin and Emby
 
 ## [0.0.40-prealpha] - 2021-05-28
 ### Added
@@ -377,7 +380,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.40-prealpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.41-prealpha...HEAD
+[0.0.41-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.40-prealpha...v0.0.41-prealpha
 [0.0.40-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.39-prealpha...v0.0.40-prealpha
 [0.0.39-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.38-prealpha...v0.0.39-prealpha
 [0.0.38-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.37-prealpha...v0.0.38-prealpha
