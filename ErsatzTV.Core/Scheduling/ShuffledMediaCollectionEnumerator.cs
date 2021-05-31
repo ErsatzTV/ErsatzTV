@@ -26,6 +26,12 @@ namespace ErsatzTV.Core.Scheduling
                 ? MultiPartEpisodeGrouper.GroupMediaItems(mediaItems)
                 : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
 
+            if (state.Index >= _mediaItems.Count)
+            {
+                state.Index = 0;
+                state.Seed = new Random(state.Seed).Next();
+            }
+
             _random = new Random(state.Seed);
             _shuffled = Shuffle(_mediaItems, _random);
 

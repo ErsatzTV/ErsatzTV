@@ -59,6 +59,19 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 chronologicalContent.MoveNext();
             }
         }
+        
+        [Test]
+        [Timeout(1000)]
+        public void State_Should_Reset_When_Invalid()
+        {
+            List<MediaItem> contents = Episodes(10);
+            var state = new CollectionEnumeratorState { Index = 10 };
+
+            var chronologicalContent = new ChronologicalMediaCollectionEnumerator(contents, state);
+
+            chronologicalContent.State.Index.Should().Be(0);
+            chronologicalContent.State.Seed.Should().Be(0);
+        }
 
         private static List<MediaItem> Episodes(int count) =>
             Range(1, count).Map(
