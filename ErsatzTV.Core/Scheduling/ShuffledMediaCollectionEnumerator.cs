@@ -18,12 +18,13 @@ namespace ErsatzTV.Core.Scheduling
         public ShuffledMediaCollectionEnumerator(
             IList<MediaItem> mediaItems,
             CollectionEnumeratorState state,
-            bool keepMultiPartEpisodesTogether)
+            bool keepMultiPartEpisodesTogether,
+            bool treatCollectionsAsShows)
         {
             _mediaItemCount = mediaItems.Count;
 
             _mediaItems = keepMultiPartEpisodesTogether
-                ? MultiPartEpisodeGrouper.GroupMediaItems(mediaItems)
+                ? MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, treatCollectionsAsShows)
                 : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
 
             if (state.Index >= _mediaItems.Count)

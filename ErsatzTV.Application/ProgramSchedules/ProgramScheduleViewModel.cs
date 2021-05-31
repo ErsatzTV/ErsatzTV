@@ -6,5 +6,6 @@ namespace ErsatzTV.Application.ProgramSchedules
         int Id,
         string Name,
         PlaybackOrder MediaCollectionPlaybackOrder,
-        bool KeepMultiPartEpisodesTogether);
+        bool KeepMultiPartEpisodesTogether,
+        bool TreatCollectionsAsShows);
 }

@@ -34,13 +34,18 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         private Task<Validation<BaseError, ProgramSchedule>> Validate(CreateProgramSchedule request) =>
             ValidateName(request)
                 .MapT(
-                    name => new ProgramSchedule
+                    name =>
                     {
-                        Name = name,
-                        MediaCollectionPlaybackOrder = request.MediaCollectionPlaybackOrder,
-                        KeepMultiPartEpisodesTogether =
+                        bool keepMultiPartEpisodesTogether =
                             request.MediaCollectionPlaybackOrder == PlaybackOrder.Shuffle &&
-                            request.KeepMultiPartEpisodesTogether
+                            request.KeepMultiPartEpisodesTogether;
+                        return new ProgramSchedule
+                        {
+                            Name = name,
+                            MediaCollectionPlaybackOrder = request.MediaCollectionPlaybackOrder,
+                            KeepMultiPartEpisodesTogether = keepMultiPartEpisodesTogether,
+                            TreatCollectionsAsShows = keepMultiPartEpisodesTogether && request.TreatCollectionsAsShows
+                        };
                     });
 
         private async Task<Validation<BaseError, string>> ValidateName(CreateProgramSchedule createProgramSchedule)

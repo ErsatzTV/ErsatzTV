@@ -506,7 +506,8 @@ namespace ErsatzTV.Core.Scheduling
                     return new ShuffledMediaCollectionEnumerator(
                         mediaItems,
                         state,
-                        playout.ProgramSchedule.KeepMultiPartEpisodesTogether);
+                        playout.ProgramSchedule.KeepMultiPartEpisodesTogether,
+                        playout.ProgramSchedule.TreatCollectionsAsShows);
                 default:
                     // TODO: handle this error case differently?
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
