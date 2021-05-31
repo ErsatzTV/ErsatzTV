@@ -80,17 +80,52 @@ namespace ErsatzTV.Core.Scheduling
                 playout.Channel.Number,
                 playout.Channel.Name);
 
+            foreach ((CollectionKey _, List<MediaItem> items) in collectionMediaItems)
+            {
+                var zeroItems = new List<MediaItem>();
+
+                foreach (MediaItem item in items)
+                {
+                    bool isZero = item switch
+                    {
+                        Movie m => await m.MediaVersions.Map(v => v.Duration).HeadOrNone().IfNoneAsync(TimeSpan.Zero) ==
+                                   TimeSpan.Zero,
+                        Episode e => await e.MediaVersions.Map(v => v.Duration).HeadOrNone()
+                                         .IfNoneAsync(TimeSpan.Zero) ==
+                                     TimeSpan.Zero,
+                        MusicVideo mv => await mv.MediaVersions.Map(v => v.Duration).HeadOrNone()
+                                             .IfNoneAsync(TimeSpan.Zero) ==
+                                         TimeSpan.Zero,
+                        _ => true
+                    };
+
+                    if (isZero)
+                    {
+                        _logger.LogWarning(
+                            "Skipping media item with zero duration {MediaItem} - {MediaItemTitle}",
+                            item.Id,
+                            DisplayTitle(item));
+
+                        zeroItems.Add(item);
+                    }
+                }
+
+                items.RemoveAll(i => zeroItems.Contains(i));
+            }
+
+            // this guard needs to be below the place where we modify the collections (by removing zero-duration items)
             Option<CollectionKey> emptyCollection =
                 collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
             if (emptyCollection.IsSome)
             {
                 _logger.LogError(
-                    "Unable to rebuild playout; collection {@CollectionKey} has no items!",
+                    "Unable to rebuild playout; collection {@CollectionKey} has no valid items!",
                     emptyCollection.ValueUnsafe());
 
                 return playout;
             }
 
+            // leaving this guard in for a while to ensure the zero item removal is working properly
             Option<CollectionKey> zeroDurationCollection = collectionMediaItems.Find(
                 c => c.Value.Any(
                     mi => mi switch
@@ -106,7 +141,7 @@ namespace ErsatzTV.Core.Scheduling
             if (zeroDurationCollection.IsSome)
             {
                 _logger.LogError(
-                    "Unable to rebuild playout; collection {@CollectionKey} contains items with zero duration!",
+                    "BUG: Unable to rebuild playout; collection {@CollectionKey} contains items with zero duration!",
                     zeroDurationCollection.ValueUnsafe());
 
                 return playout;

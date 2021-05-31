@@ -3,7 +3,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## Unreleased
+## [Unreleased]
+
+### Changed
+- Skip zero duration items when building a playout, rather than aborting the playout build
+
+### Fixed
+- Fix edge case where a playout rebuild would get stuck and block all other playouts and library scans
 
 ## [0.0.41-prealpha] - 2021-05-30
 ### Added
