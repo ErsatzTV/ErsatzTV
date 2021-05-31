@@ -9,11 +9,12 @@ namespace ErsatzTV.ViewModels
         public string Name { get; set; }
         public PlaybackOrder MediaCollectionPlaybackOrder { get; set; }
         public bool KeepMultiPartEpisodesTogether { get; set; }
+        public bool TreatCollectionsAsShows { get; set; }
 
         public UpdateProgramSchedule ToUpdate() =>
-            new(Id, Name, MediaCollectionPlaybackOrder, KeepMultiPartEpisodesTogether);
+            new(Id, Name, MediaCollectionPlaybackOrder, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows);
 
         public CreateProgramSchedule ToCreate() =>
-            new(Name, MediaCollectionPlaybackOrder, KeepMultiPartEpisodesTogether);
+            new(Name, MediaCollectionPlaybackOrder, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows);
     }
 }

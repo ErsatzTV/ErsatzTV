@@ -10,5 +10,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int ProgramScheduleId,
         string Name,
         PlaybackOrder MediaCollectionPlaybackOrder,
-        bool KeepMultiPartEpisodesTogether) : IRequest<Either<BaseError, ProgramScheduleViewModel>>;
+        bool KeepMultiPartEpisodesTogether,
+        bool TreatCollectionsAsShows) : IRequest<Either<BaseError, ProgramScheduleViewModel>>;
 }
