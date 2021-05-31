@@ -59,7 +59,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 chronologicalContent.MoveNext();
             }
         }
-        
+
         [Test]
         [Timeout(1000)]
         public void State_Should_Reset_When_Invalid()

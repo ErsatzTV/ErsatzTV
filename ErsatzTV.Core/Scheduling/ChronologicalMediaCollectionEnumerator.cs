@@ -18,13 +18,13 @@ namespace ErsatzTV.Core.Scheduling
             _sortedMediaItems = mediaItems.OrderBy(identity, new ChronologicalMediaComparer()).ToList();
 
             State = new CollectionEnumeratorState { Seed = state.Seed };
-            
+
             if (state.Index >= _sortedMediaItems.Count)
             {
                 state.Index = 0;
                 state.Seed = 0;
             }
-            
+
             while (State.Index < state.Index)
             {
                 MoveNext();

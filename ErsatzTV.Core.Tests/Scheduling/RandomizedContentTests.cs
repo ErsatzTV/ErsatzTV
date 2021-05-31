@@ -77,7 +77,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 randomizedContent.MoveNext();
             }
         }
-        
+
         [Test]
         [Timeout(1000)]
         public void State_Index_Should_Continue_Past_End_Of_Items()

@@ -76,8 +76,10 @@ namespace ErsatzTV.Services
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
-            List<int> playoutIds = await dbContext.Playouts.Map(p => p.Id).ToListAsync(cancellationToken);
-            foreach (int playoutId in playoutIds)
+            List<Playout> playouts = await dbContext.Playouts
+                .Include(p => p.Channel)
+                .ToListAsync(cancellationToken);
+            foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number)).Map(p => p.Id))
             {
                 await _workerChannel.WriteAsync(new BuildPlayout(playoutId), cancellationToken);
             }
