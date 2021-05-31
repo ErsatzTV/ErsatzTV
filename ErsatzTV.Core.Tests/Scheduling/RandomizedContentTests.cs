@@ -78,6 +78,16 @@ namespace ErsatzTV.Core.Tests.Scheduling
             }
         }
 
+        [Test]
+        [Timeout(1000)]
+        public void State_Index_Should_Continue_Past_End_Of_Items()
+        {
+            List<MediaItem> contents = Episodes(10);
+            var state = new CollectionEnumeratorState { Index = 10, Seed = KnownSeed };
+
+            var _ = new RandomizedMediaCollectionEnumerator(contents, state);
+        }
+
         private static List<MediaItem> Episodes(int count) =>
             Range(1, count).Map(
                     i => (MediaItem) new Episode
