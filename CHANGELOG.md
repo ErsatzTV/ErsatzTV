@@ -4,12 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Support roman numerals and english integer names for multi-part episode grouping
+- Add option to treat entire collection as a single show with multi-part episode grouping
+    - This is useful for multi-part episodes that span multiple shows (crossovers)
 
 ### Changed
 - Skip zero duration items when building a playout, rather than aborting the playout build
 
 ### Fixed
-- Fix edge case where a playout rebuild would get stuck and block all other playouts and library scans
+- Fix edge case where a playout rebuild would get stuck and block all other playouts and local library scans
 
 ## [0.0.41-prealpha] - 2021-05-30
 ### Added

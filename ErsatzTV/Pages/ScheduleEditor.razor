@@ -28,6 +28,14 @@
                                      Disabled="@(_model.MediaCollectionPlaybackOrder != PlaybackOrder.Shuffle)"
                                      For="@(() => _model.KeepMultiPartEpisodesTogether)"/>
                     </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTooltip Text="This is useful for multi-part crossover episodes">
+                            <MudCheckBox Label="Treat Collections As Shows*"
+                                         @bind-Checked="@_model.TreatCollectionsAsShows"
+                                         Disabled="@(_model.KeepMultiPartEpisodesTogether == false)"
+                                         For="@(() => _model.TreatCollectionsAsShows)"/>
+                        </MudTooltip>
+                    </MudElement>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -60,6 +68,7 @@
                     _model.Name = viewModel.Name;
                     _model.MediaCollectionPlaybackOrder = viewModel.MediaCollectionPlaybackOrder;
                     _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
+                    _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }
