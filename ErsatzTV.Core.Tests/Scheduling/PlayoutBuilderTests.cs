@@ -39,7 +39,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
         [Test]
         [Timeout(2000)]
-        public async Task ZeroDurationItem_Should_Abort()
+        public async Task OnlyZeroDurationItem_Should_Abort()
         {
             var mediaItems = new List<MediaItem>
             {
@@ -53,6 +53,27 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Playout result = await builder.BuildPlayoutItems(playout, start, finish);
 
             result.Items.Should().BeNull();
+        }
+
+        [Test]
+        public async Task ZeroDurationItem_Should_BeSkipped()
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                TestMovie(1, TimeSpan.Zero, DateTime.Today),
+                TestMovie(2, TimeSpan.FromHours(6), DateTime.Today)
+            };
+
+            (PlayoutBuilder builder, Playout playout) = TestDataFloodForItems(mediaItems, PlaybackOrder.Random);
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(6);
+
+            Playout result = await builder.BuildPlayoutItems(playout, start, finish);
+
+            result.Items.Count.Should().Be(1);
+            result.Items.Head().MediaItemId.Should().Be(2);
+            result.Items.Head().StartOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
+            result.Items.Head().FinishOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
         }
 
         [Test]
