@@ -128,7 +128,7 @@ namespace ErsatzTV.Core.Scheduling
                 return value1;
             }
 
-            const string PATTERN_2 = @"^.*Part (\d+)$";
+            const string PATTERN_2 = @"^.*\(?Part (\d+)\)?$";
             Match match2 = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN_2);
             if (match2.Success && int.TryParse(match2.Groups[1].Value, out int value2))
             {
