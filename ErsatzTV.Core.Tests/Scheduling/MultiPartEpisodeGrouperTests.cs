@@ -14,6 +14,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [TestCase("Episode 1", "Episode 2 (1)", "Episode 3 (2)", "Episode 4")]
         [TestCase("Episode 1 - More", "Episode 2 (1) - Title", "Episode 3 (2) - After", "Episode 4 - Dash")]
         [TestCase("Episode 1", "Episode 2 Part 1", "Episode 3 Part 2", "Episode 4")]
+        [TestCase("Episode 1", "Episode 2 (Part 1)", "Episode 3 (Part 2)", "Episode 4")]
         public void NotGrouped_Grouped_NotGrouped(string one, string two, string three, string four)
         {
             var mediaItems = new List<MediaItem>
@@ -36,9 +37,30 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [TestCase("Episode 1 (1)", "Episode 2 - Part 2", "Episode 3")]
         [TestCase("Episode 1 Part 1", "Episode 2 (2) - More", "Episode 3 - After")]
         [TestCase("Episode 1 Part 1", "Episode 2 (II)", "Episode 3")]
-        [TestCase("Episode 1 Part (V)", "Episode 2 (VI)", "Episode 3")]
-        [TestCase("Episode 1 Part Three", "Episode 2 (IV)", "Episode 3")]
+        [TestCase("Episode 1 Part One", "Episode 2 (II)", "Episode 3")]
+        [TestCase("Episode 1 (1)", "Episode 2 (Part 2)", "Episode 3")]
         public void MixedNaming_Group(string one, string two, string three)
+        {
+            var mediaItems = new List<MediaItem>
+            {
+                NamedEpisode(one, 1, 1, 1),
+                NamedEpisode(two, 1, 1, 2),
+                NamedEpisode(three, 1, 1, 3)
+            };
+
+            List<GroupedMediaItem> result = MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, false);
+
+            result.Count.Should().Be(2);
+            ShouldHaveTwoItems(result, mediaItems[0], mediaItems[1]);
+            ShouldHaveOneItem(result, mediaItems[2]);
+        }
+
+        [Test]
+        [TestCase("Episode 1 (5)", "Episode 2 - (6)", "Episode 3")]
+        [TestCase("Episode 1 Part 5", "Episode 2 Part 6", "Episode 3 - After")]
+        [TestCase("Episode 1 Part (V)", "Episode 2 (VI)", "Episode 3")]
+        [TestCase("Episode 1 (Part 5)", "Episode 2 (Part 6)", "Episode 3")]
+        public void Only_Later_Parts(string one, string two, string three)
         {
             var mediaItems = new List<MediaItem>
             {
@@ -58,6 +80,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [TestCase("Episode 1 (1)", "Episode 2 (2)", "Episode 3")]
         [TestCase("Episode 1 (1) - More", "Episode 2 (2) - Title", "Episode 3 - After")]
         [TestCase("Episode 1 Part 1", "Episode 2 Part 2", "Episode 3")]
+        [TestCase("Episode 1 (Part 1)", "Episode 2 (Part 2)", "Episode 3")]
         public void Grouped_NotGrouped(string one, string two, string three)
         {
             var mediaItems = new List<MediaItem>
@@ -83,6 +106,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             "Episode 4 (1) - Dash",
             "Episode 5 (2) - Again")]
         [TestCase("Episode 1 Part 1", "Episode 2 Part 2", "Episode 3", "Episode 4 Part 1", "Episode 5 Part 2")]
+        [TestCase("Episode 1 (Part 1)", "Episode 2 (Part 2)", "Episode 3", "Episode 4 (Part 1)", "Episode 5 (Part 2)")]
         public void Grouped_NotGrouped_Grouped(string one, string two, string three, string four, string five)
         {
             var mediaItems = new List<MediaItem>
@@ -106,6 +130,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [TestCase("Episode 1 (1)", "Episode 2 (2)", "Episode 3 (1)", "Episode 4 (2)")]
         [TestCase("Episode 1 (1) - More", "Episode 2 (2) - Title", "Episode 3 (1) - After", "Episode 4 (2) - Dash")]
         [TestCase("Episode 1 Part 1", "Episode 2 Part 2", "Episode 3 Part 1", "Episode 4 Part 2")]
+        [TestCase("Episode 1 (Part 1)", "Episode 2 (Part 2)", "Episode 3 (Part 1)", "Episode 4 (Part 2)")]
         public void Grouped_Grouped(string one, string two, string three, string four)
         {
             var mediaItems = new List<MediaItem>
@@ -127,6 +152,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [TestCase("Episode 1", "Episode 2 (2)", "Episode 3 (1)", "Episode 4 (2)")]
         [TestCase("Episode 1 - More", "Episode 2 (2) - Title", "Episode 3 (1) - After", "Episode 4 (2) - Dash")]
         [TestCase("Episode 1", "Episode 2 Part 2", "Episode 3 Part 1", "Episode 4 Part 2")]
+        [TestCase("Episode 1", "Episode 2 (Part 2)", "Episode 3 (Part 1)", "Episode 4 (Part 2)")]
         public void Part2_Without_Part1(string one, string two, string three, string four)
         {
             var mediaItems = new List<MediaItem>
@@ -149,6 +175,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [TestCase("Episode 1", "Episode 2 (2)", "Episode 3 (3)", "Episode 4")]
         [TestCase("Episode 1 - More", "Episode 2 (2) - Title", "Episode 3 (3) - After", "Episode 4 - Dash")]
         [TestCase("Episode 1", "Episode 2 Part 2", "Episode 3 Part 3", "Episode 4")]
+        [TestCase("Episode 1", "Episode 2 (Part 2)", "Episode 3 (Part 3)", "Episode 4")]
         public void Part2And3_Without_Part1(string one, string two, string three, string four)
         {
             var mediaItems = new List<MediaItem>
@@ -171,6 +198,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [TestCase("Episode 1 (1)", "Episode 3 (3)", "Episode 4", "Episode 5")]
         [TestCase("Episode 1 (1) - More", "Episode 3 (3) - Title", "Episode 4 - After", "Episode 5 - Dash")]
         [TestCase("Episode 1 Part 1", "Episode 3 Part 3", "Episode 4", "Episode 5")]
+        [TestCase("Episode 1 (Part 1)", "Episode 3 (Part 3)", "Episode 4", "Episode 5")]
         public void Skip_Part(string one, string two, string three, string four)
         {
             var mediaItems = new List<MediaItem>
@@ -194,6 +222,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         [TestCase("Episode 1 (1)", "Episode 3 (1)", "Episode 4 (2)", "Episode 5")]
         [TestCase("Episode 1 (1) - More", "Episode 3 (1) - Title", "Episode 4 (2) - After", "Episode 5 - Dash")]
         [TestCase("Episode 1 Part 1", "Episode 3 Part 1", "Episode 4 Part 2", "Episode 5")]
+        [TestCase("Episode 1 (Part 1)", "Episode 3 (Part 1)", "Episode 4 (Part 2)", "Episode 5")]
         public void Repeat_Part(string one, string two, string three, string four)
         {
             var mediaItems = new List<MediaItem>
@@ -220,6 +249,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             "S1 Episode 2 (2) - After",
             "S1 Episode 5 - Dash")]
         [TestCase("S1 Episode 1 Part 1", "S2 Episode 3 Part 1", "S1 Episode 2 Part 2", "S1 Episode 5")]
+        [TestCase("S1 Episode 1 (Part 1)", "S2 Episode 3 (Part 1)", "S1 Episode 2 (Part 2)", "S1 Episode 5")]
         public void Mixed_Shows_Chronologically(string one, string two, string three, string four)
         {
             var mediaItems = new List<MediaItem>
@@ -246,6 +276,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             "S1 Episode 2 (3) - After",
             "S1 Episode 5 - Dash")]
         [TestCase("S1 Episode 1 Part 1", "S2 Episode 3 Part 2", "S1 Episode 2 Part 3", "S1 Episode 5")]
+        [TestCase("S1 Episode 1 (Part 1)", "S2 Episode 3 (Part 2)", "S1 Episode 2 (Part 3)", "S1 Episode 5")]
         public void Mixed_Shows_Chronologically_Crossover(string one, string two, string three, string four)
         {
             var mediaItems = new List<MediaItem>
