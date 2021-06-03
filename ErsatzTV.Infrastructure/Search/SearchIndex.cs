@@ -682,7 +682,7 @@ namespace ErsatzTV.Infrastructure.Search
             metadata switch
             {
                 EpisodeMetadata em =>
-                    $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.Episode.EpisodeNumber}"
+                    $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}"
                         .ToLowerInvariant(),
                 _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
             };

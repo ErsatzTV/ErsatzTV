@@ -197,7 +197,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Actors)
                 .ThenInclude(a => a.Artwork)
-                .OrderBy(em => em.Episode.EpisodeNumber)
+                .OrderBy(em => em.EpisodeNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -523,7 +523,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber)
         {
-            episode.EpisodeNumber = episodeNumber;
+            // TODO: fix this
+            // episode.EpisodeNumber = episodeNumber;
             await _dbConnection.ExecuteAsync(
                 @"UPDATE Episode SET EpisodeNumber = @EpisodeNumber WHERE Id = @Id",
                 new { EpisodeNumber = episodeNumber, episode.Id });

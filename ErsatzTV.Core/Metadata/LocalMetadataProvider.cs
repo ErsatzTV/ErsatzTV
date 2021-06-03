@@ -177,10 +177,11 @@ namespace ErsatzTV.Core.Metadata
         private async Task<bool> ApplyMetadataUpdate(Episode episode, Tuple<EpisodeMetadata, int> metadataEpisodeNumber)
         {
             (EpisodeMetadata metadata, int episodeNumber) = metadataEpisodeNumber;
-            if (episode.EpisodeNumber != episodeNumber)
-            {
-                await _televisionRepository.SetEpisodeNumber(episode, episodeNumber);
-            }
+            // TODO: fix this
+            // if (episode.EpisodeNumber != episodeNumber)
+            // {
+            //     await _televisionRepository.SetEpisodeNumber(episode, episodeNumber);
+            // }
 
             await Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
                 async existing =>

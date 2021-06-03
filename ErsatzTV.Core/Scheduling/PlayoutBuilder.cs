@@ -522,7 +522,7 @@ namespace ErsatzTV.Core.Scheduling
                     string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()
                         .Map(sm => $"{sm.Title} - ").IfNone(string.Empty);
                     return e.EpisodeMetadata.HeadOrNone()
-                        .Map(em => $"{showTitle}s{e.Season.SeasonNumber:00}e{e.EpisodeNumber:00} - {em.Title}")
+                        .Map(em => $"{showTitle}s{e.Season.SeasonNumber:00}e{em.EpisodeNumber:00} - {em.Title}")
                         .IfNone("[unknown episode]");
                 case Movie m:
                     return m.MovieMetadata.HeadOrNone().Match(mm => mm.Title ?? string.Empty, () => "[unknown movie]");
