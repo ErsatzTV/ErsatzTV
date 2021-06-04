@@ -57,10 +57,7 @@ namespace ErsatzTV.Application.MediaCards
                     em => em.Plot ?? string.Empty,
                     () => string.Empty),
                 isSearchResult
-                    ? GetPoster(
-                        episodeMetadata.Episode.Season.SeasonMetadata.Head(),
-                        maybeJellyfin,
-                        maybeEmby)
+                    ? GetEpisodePoster(episodeMetadata, maybeJellyfin, maybeEmby)
                     : GetThumbnail(episodeMetadata, maybeJellyfin, maybeEmby),
                 episodeMetadata.Directors.Map(d => d.Name).ToList(),
                 episodeMetadata.Writers.Map(w => w.Name).ToList());
@@ -145,6 +142,24 @@ namespace ErsatzTV.Application.MediaCards
 
         private static string GetSeasonName(int number) =>
             number == 0 ? "Specials" : $"Season {number}";
+
+        private static string GetEpisodePoster(
+            EpisodeMetadata episodeMetadata,
+            Option<JellyfinMediaSource> maybeJellyfin,
+            Option<EmbyMediaSource> maybeEmby)
+        {
+            Option<SeasonMetadata> maybeSeasonMetadata = episodeMetadata.Episode.Season.SeasonMetadata.HeadOrNone();
+            return maybeSeasonMetadata.Match(
+                seasonMetadata => GetPoster(seasonMetadata, maybeJellyfin, maybeEmby),
+                () =>
+                {
+                    Option<ShowMetadata> maybeShowMetadata =
+                        episodeMetadata.Episode.Season.Show.ShowMetadata.HeadOrNone();
+                    return maybeShowMetadata.Match(
+                        showMetadata => GetPoster(showMetadata, maybeJellyfin, maybeEmby),
+                        () => string.Empty);
+                });
+        }
 
         private static string GetPoster(
             Metadata metadata,
