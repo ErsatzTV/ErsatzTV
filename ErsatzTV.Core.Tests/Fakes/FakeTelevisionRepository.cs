@@ -89,20 +89,13 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys) =>
             throw new NotSupportedException();
 
-        public Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber) => throw new NotSupportedException();
+        public Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata) =>
+            throw new NotSupportedException();
+
         public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) => throw new NotSupportedException();
 
         public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) => throw new NotSupportedException();
 
-        public Task<int> GetShowCount() => throw new NotSupportedException();
-
-        public Task<List<ShowMetadata>> GetPagedShows(int pageNumber, int pageSize) =>
-            throw new NotSupportedException();
-
-        public Task<bool> Update(Show show) => throw new NotSupportedException();
-
-        public Task<bool> Update(Season season) => throw new NotSupportedException();
-
-        public Task<bool> Update(Episode episode) => throw new NotSupportedException();
+        public Task<Unit> AddMetadata(Episode episode, EpisodeMetadata metadata) => throw new NotSupportedException();
     }
 }

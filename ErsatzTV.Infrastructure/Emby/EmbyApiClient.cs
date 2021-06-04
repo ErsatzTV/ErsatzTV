@@ -512,11 +512,6 @@ namespace ErsatzTV.Infrastructure.Emby
                     EpisodeMetadata = new List<EpisodeMetadata> { metadata }
                 };
 
-                if (item.IndexNumber.HasValue)
-                {
-                    episode.EpisodeNumber = item.IndexNumber.Value;
-                }
-
                 return episode;
             }
             catch (Exception ex)
@@ -548,6 +543,11 @@ namespace ErsatzTV.Infrastructure.Emby
                 Directors = Optional(item.People).Flatten().Collect(r => ProjectToDirector(r)).ToList(),
                 Writers = Optional(item.People).Flatten().Collect(r => ProjectToWriter(r)).ToList()
             };
+
+            if (item.IndexNumber.HasValue)
+            {
+                metadata.EpisodeNumber = item.IndexNumber.Value;
+            }
 
             if (DateTime.TryParse(item.PremiereDate, out DateTime releaseDate))
             {

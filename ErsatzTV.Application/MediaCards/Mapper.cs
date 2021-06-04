@@ -50,7 +50,7 @@ namespace ErsatzTV.Application.MediaCards
                 episodeMetadata.Episode.Season.ShowId,
                 episodeMetadata.Episode.SeasonId,
                 episodeMetadata.Episode.Season.SeasonNumber,
-                episodeMetadata.Episode.EpisodeNumber,
+                episodeMetadata.Episode.EpisodeMetadata.HeadOrNone().Match(em => em.EpisodeNumber, () => 0),
                 episodeMetadata.Title,
                 episodeMetadata.SortTitle,
                 episodeMetadata.Episode.EpisodeMetadata.HeadOrNone().Match(

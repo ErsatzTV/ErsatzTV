@@ -3,14 +3,16 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20210603014211_Update_EpisodeMetadataEpisodeNumber")]
+    partial class Update_EpisodeMetadataEpisodeNumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1423,6 +1425,9 @@ namespace ErsatzTV.Infrastructure.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.Episode", b =>
                 {
                     b.HasBaseType("ErsatzTV.Core.Domain.MediaItem");
+
+                    b.Property<int>("EpisodeNumber")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("SeasonId")
                         .HasColumnType("INTEGER");

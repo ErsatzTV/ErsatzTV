@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Core.Scheduling
@@ -65,13 +66,13 @@ namespace ErsatzTV.Core.Scheduling
 
             int episode1 = x switch
             {
-                Episode e => e.EpisodeNumber,
+                Episode e => e.EpisodeMetadata.Max(em => em.EpisodeNumber),
                 _ => int.MaxValue
             };
 
             int episode2 = y switch
             {
-                Episode e => e.EpisodeNumber,
+                Episode e => e.EpisodeMetadata.Max(em => em.EpisodeNumber),
                 _ => int.MaxValue
             };
 

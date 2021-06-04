@@ -57,14 +57,18 @@ namespace ErsatzTV.Application.Television
                 season.Show.ShowMetadata.HeadOrNone().Map(m => GetFanArt(m, maybeJellyfin, maybeEmby))
                     .IfNone(string.Empty));
 
-        internal static TelevisionEpisodeViewModel ProjectToViewModel(Episode episode) =>
-            new(
+        internal static TelevisionEpisodeViewModel ProjectToViewModel(Episode episode)
+        {
+            Option<EpisodeMetadata> maybeMetadata = episode.EpisodeMetadata.HeadOrNone();
+
+            return new TelevisionEpisodeViewModel(
                 episode.Season.ShowId,
                 episode.SeasonId,
-                episode.EpisodeNumber,
-                episode.EpisodeMetadata.HeadOrNone().Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
-                episode.EpisodeMetadata.HeadOrNone().Map(m => m.Plot ?? string.Empty).IfNone(string.Empty),
-                episode.EpisodeMetadata.HeadOrNone().Map(m => GetThumbnail(m, None, None)).IfNone(string.Empty));
+                maybeMetadata.Map(em => em.EpisodeNumber).IfNone(0),
+                maybeMetadata.Map(m => m.Title ?? string.Empty).IfNone(string.Empty),
+                maybeMetadata.Map(m => m.Plot ?? string.Empty).IfNone(string.Empty),
+                maybeMetadata.Map(m => GetThumbnail(m, None, None)).IfNone(string.Empty));
+        }
 
         private static string GetPoster(
             Metadata metadata,

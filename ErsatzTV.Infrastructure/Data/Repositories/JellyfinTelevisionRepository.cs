@@ -423,9 +423,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 episode.Id = existing.Id;
 
                 existing.Etag = episode.Etag;
-                existing.EpisodeNumber = episode.EpisodeNumber;
 
                 // metadata
+                // TODO: multiple metadata?
                 EpisodeMetadata metadata = existing.EpisodeMetadata.Head();
                 EpisodeMetadata incomingMetadata = episode.EpisodeMetadata.Head();
                 metadata.Title = incomingMetadata.Title;
@@ -435,6 +435,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 metadata.DateAdded = incomingMetadata.DateAdded;
                 metadata.DateUpdated = DateTime.UtcNow;
                 metadata.ReleaseDate = incomingMetadata.ReleaseDate;
+                metadata.EpisodeNumber = metadata.EpisodeNumber;
 
                 // thumbnail
                 Artwork incomingThumbnail =

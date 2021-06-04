@@ -4,6 +4,7 @@ namespace ErsatzTV.Core.Domain
 {
     public class EpisodeMetadata : Metadata
     {
+        public int EpisodeNumber { get; set; }
         public string Outline { get; set; }
         public string Plot { get; set; }
         public string Tagline { get; set; }

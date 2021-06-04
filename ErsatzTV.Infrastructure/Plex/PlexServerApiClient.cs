@@ -655,7 +655,6 @@ namespace ErsatzTV.Infrastructure.Plex
             var episode = new PlexEpisode
             {
                 Key = response.Key,
-                EpisodeNumber = response.Index,
                 EpisodeMetadata = new List<EpisodeMetadata> { metadata },
                 MediaVersions = new List<MediaVersion> { version }
             };
@@ -673,6 +672,7 @@ namespace ErsatzTV.Infrastructure.Plex
                 MetadataKind = MetadataKind.External,
                 Title = response.Title,
                 SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
+                EpisodeNumber = response.Index,
                 Plot = response.Summary,
                 Year = response.Year,
                 Tagline = response.Tagline,
