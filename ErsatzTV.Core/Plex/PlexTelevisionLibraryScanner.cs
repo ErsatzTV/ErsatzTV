@@ -8,6 +8,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -375,8 +376,9 @@ namespace ErsatzTV.Core.Plex
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexEpisode> maybeEpisode = await _televisionRepository
                             .GetOrAddPlexEpisode(plexMediaSourceLibrary, incoming)
+                            .BindT(existing => UpdateMetadata(existing, incoming))
                             .BindT(
-                                existing => UpdateMetadataAndStatistics(
+                                existing => UpdateStatistics(
                                     existing,
                                     incoming,
                                     plexMediaSourceLibrary,
@@ -417,7 +419,36 @@ namespace ErsatzTV.Core.Plex
                 });
         }
 
-        private async Task<Either<BaseError, PlexEpisode>> UpdateMetadataAndStatistics(
+        private async Task<Either<BaseError, PlexEpisode>> UpdateMetadata(PlexEpisode existing, PlexEpisode incoming)
+        {
+            var toUpdate = existing.EpisodeMetadata
+                .Where(em => incoming.EpisodeMetadata.Any(em2 => em2.EpisodeNumber == em.EpisodeNumber))
+                .ToList();
+            var toRemove = existing.EpisodeMetadata.Except(toUpdate).ToList();
+            var toAdd = incoming.EpisodeMetadata
+                .Where(em => existing.EpisodeMetadata.All(em2 => em2.EpisodeNumber != em.EpisodeNumber))
+                .ToList();
+            
+            foreach (EpisodeMetadata metadata in toRemove)
+            {
+                await _televisionRepository.RemoveMetadata(existing, metadata);
+            }
+            
+            foreach (EpisodeMetadata metadata in toAdd)
+            {
+                metadata.EpisodeId = existing.Id;
+                metadata.Episode = existing;
+                existing.EpisodeMetadata.Add(metadata);
+
+                await _metadataRepository.Add(metadata);
+            }
+            
+            // TODO: update existing metadata
+
+            return existing;
+        }
+
+        private async Task<Either<BaseError, PlexEpisode>> UpdateStatistics(
             PlexEpisode existing,
             PlexEpisode incoming,
             PlexLibrary library,
@@ -441,22 +472,25 @@ namespace ErsatzTV.Core.Plex
                     {
                         (EpisodeMetadata incomingMetadata, MediaVersion mediaVersion) = tuple;
 
-                        EpisodeMetadata existingMetadata = existing.EpisodeMetadata.Head();
-
-                        foreach (MetadataGuid guid in existingMetadata.Guids
-                            .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                            .ToList())
+                        Option<EpisodeMetadata> maybeExisting = existing.EpisodeMetadata
+                            .Find(em => em.EpisodeNumber == incomingMetadata.EpisodeNumber);
+                        foreach (EpisodeMetadata existingMetadata in maybeExisting)
                         {
-                            existingMetadata.Guids.Remove(guid);
-                            await _metadataRepository.RemoveGuid(guid);
-                        }
+                            foreach (MetadataGuid guid in existingMetadata.Guids
+                                .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                                .ToList())
+                            {
+                                existingMetadata.Guids.Remove(guid);
+                                await _metadataRepository.RemoveGuid(guid);
+                            }
 
-                        foreach (MetadataGuid guid in incomingMetadata.Guids
-                            .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                            .ToList())
-                        {
-                            existingMetadata.Guids.Add(guid);
-                            await _metadataRepository.AddGuid(existingMetadata, guid);
+                            foreach (MetadataGuid guid in incomingMetadata.Guids
+                                .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                                .ToList())
+                            {
+                                existingMetadata.Guids.Add(guid);
+                                await _metadataRepository.AddGuid(existingMetadata, guid);
+                            }
                         }
 
                         existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
@@ -471,17 +505,21 @@ namespace ErsatzTV.Core.Plex
             return Right<BaseError, PlexEpisode>(existing);
         }
 
-        private async Task<Either<BaseError, PlexEpisode>> UpdateArtwork(
-            PlexEpisode existing,
-            PlexEpisode incoming)
+        private async Task<Either<BaseError, PlexEpisode>> UpdateArtwork(PlexEpisode existing, PlexEpisode incoming)
         {
-            EpisodeMetadata existingMetadata = existing.EpisodeMetadata.Head();
-            EpisodeMetadata incomingMetadata = incoming.EpisodeMetadata.Head();
-
-            if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
+            foreach (EpisodeMetadata incomingMetadata in incoming.EpisodeMetadata)
             {
-                await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Thumbnail);
-                await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
+                Option<EpisodeMetadata> maybeExistingMetadata = existing.EpisodeMetadata
+                    .Find(em => em.EpisodeNumber == incomingMetadata.EpisodeNumber);
+                if (maybeExistingMetadata.IsSome)
+                {
+                    EpisodeMetadata existingMetadata = maybeExistingMetadata.ValueUnsafe();
+                    if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
+                    {
+                        await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Thumbnail);
+                        await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
+                    }
+                }
             }
 
             return existing;
