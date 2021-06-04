@@ -197,7 +197,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(s => s.ShowMetadata)
                 .ThenInclude(sm => sm.Actors)
                 .ThenInclude(a => a.Artwork)
-                .OrderBy(em => em.Episode.EpisodeNumber)
+                .OrderBy(em => em.EpisodeNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -521,12 +521,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return ids;
         }
 
-        public async Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber)
+        public async Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata)
         {
-            episode.EpisodeNumber = episodeNumber;
+            episode.EpisodeMetadata.Remove(metadata);
             await _dbConnection.ExecuteAsync(
-                @"UPDATE Episode SET EpisodeNumber = @EpisodeNumber WHERE Id = @Id",
-                new { EpisodeNumber = episodeNumber, episode.Id });
+                @"DELETE FROM EpisodeMetadata WHERE Id = @MetadataId",
+                new { MetadataId = metadata.Id });
             return Unit.Default;
         }
 

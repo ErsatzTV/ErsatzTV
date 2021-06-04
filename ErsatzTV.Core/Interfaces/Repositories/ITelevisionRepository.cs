@@ -47,7 +47,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys);
         Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys);
         Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys);
-        Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber);
+        Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata);
         Task<bool> AddDirector(EpisodeMetadata metadata, Director director);
         Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer);
     }

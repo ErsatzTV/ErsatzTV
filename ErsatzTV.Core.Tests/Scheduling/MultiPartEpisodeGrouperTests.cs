@@ -302,10 +302,9 @@ namespace ErsatzTV.Core.Tests.Scheduling
             DateTime? releaseDate = null) =>
             new()
             {
-                EpisodeNumber = episode,
                 EpisodeMetadata = new List<EpisodeMetadata>
                 {
-                    new() { Title = title, ReleaseDate = releaseDate }
+                    new() { Title = title, ReleaseDate = releaseDate, EpisodeNumber = episode }
                 },
                 Season = new Season
                 {

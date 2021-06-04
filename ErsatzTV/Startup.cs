@@ -17,6 +17,7 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Metadata.Nfo;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
@@ -24,6 +25,7 @@ using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.Metadata.Nfo;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Formatters;
@@ -252,6 +254,7 @@ namespace ErsatzTV
                 });
             services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
             services.AddScoped<IEmbySecretStore, EmbySecretStore>();
+            services.AddScoped<IEpisodeNfoReader, EpisodeNfoReader>();
 
             services.AddHostedService<EndpointValidatorService>();
             services.AddHostedService<DatabaseMigratorService>();

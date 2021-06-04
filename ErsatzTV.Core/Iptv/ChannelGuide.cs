@@ -182,7 +182,8 @@ namespace ErsatzTV.Core.Iptv
                         if (!isSameCustomShow)
                         {
                             int s = Optional(episode.Season?.SeasonNumber).IfNone(0);
-                            int e = episode.EpisodeNumber;
+                            // TODO: multi-episode?
+                            int e = episode.EpisodeMetadata.Head().EpisodeNumber;
                             if (s > 0 && e > 0)
                             {
                                 xml.WriteStartElement("episode-num");
