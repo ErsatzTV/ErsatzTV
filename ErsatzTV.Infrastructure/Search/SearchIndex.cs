@@ -593,17 +593,15 @@ namespace ErsatzTV.Infrastructure.Search
 
                 try
                 {
-                    var doc = new Document
-                    {
-                        new StringField(IdField, episode.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, EpisodeType, Field.Store.NO),
-                        new TextField(TitleField, metadata.Title, Field.Store.NO),
-                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
-                        new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO),
-                        new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
-                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
-                    };
+                    var doc = new Document();
+                    doc.Add(new StringField(IdField, episode.Id.ToString(), Field.Store.YES));
+                    doc.Add(new StringField(TypeField, EpisodeType, Field.Store.NO));
+                    doc.Add(new TextField(TitleField, metadata.Title, Field.Store.NO));
+                    doc.Add(new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO));
+                    doc.Add(new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO));
+                    doc.Add(new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO));
+                    doc.Add(new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO));
+                    doc.Add(new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES));
 
                     AddLanguages(doc, episode.MediaVersions);
 

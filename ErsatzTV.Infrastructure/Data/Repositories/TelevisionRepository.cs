@@ -530,18 +530,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return Unit.Default;
         }
 
-        public async Task<Unit> AddMetadata(Episode episode, EpisodeMetadata metadata)
-        {
-            episode.EpisodeMetadata.Add(metadata);
-            metadata.EpisodeId = episode.Id;
-
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            dbContext.Entry(metadata).State = EntityState.Added;
-            await dbContext.SaveChangesAsync();
-
-            return Unit.Default;
-        }
-
         public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) =>
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Director (Name, EpisodeMetadataId) VALUES (@Name, @MetadataId)",

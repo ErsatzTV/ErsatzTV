@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Metadata.Nfo;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata.Nfo;
 using LanguageExt;
@@ -17,13 +18,13 @@ namespace ErsatzTV.Core.Metadata
     public class LocalMetadataProvider : ILocalMetadataProvider
     {
         private static readonly XmlSerializer MovieSerializer = new(typeof(MovieNfo));
-        private static readonly XmlSerializer EpisodeSerializer = new(typeof(TvShowEpisodeNfo));
         private static readonly XmlSerializer TvShowSerializer = new(typeof(TvShowNfo));
         private static readonly XmlSerializer ArtistSerializer = new(typeof(ArtistNfo));
         private static readonly XmlSerializer MusicVideoSerializer = new(typeof(MusicVideoNfo));
         private readonly IArtistRepository _artistRepository;
         private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
         private readonly ILocalFileSystem _localFileSystem;
+        private readonly IEpisodeNfoReader _episodeNfoReader;
         private readonly ILogger<LocalMetadataProvider> _logger;
 
         private readonly IMetadataRepository _metadataRepository;
@@ -39,6 +40,7 @@ namespace ErsatzTV.Core.Metadata
             IMusicVideoRepository musicVideoRepository,
             IFallbackMetadataProvider fallbackMetadataProvider,
             ILocalFileSystem localFileSystem,
+            IEpisodeNfoReader episodeNfoReader,
             ILogger<LocalMetadataProvider> logger)
         {
             _metadataRepository = metadataRepository;
@@ -48,6 +50,7 @@ namespace ErsatzTV.Core.Metadata
             _musicVideoRepository = musicVideoRepository;
             _fallbackMetadataProvider = fallbackMetadataProvider;
             _localFileSystem = localFileSystem;
+            _episodeNfoReader = episodeNfoReader;
             _logger = logger;
         }
 
@@ -190,7 +193,14 @@ namespace ErsatzTV.Core.Metadata
 
             foreach (EpisodeMetadata metadata in toAdd)
             {
-                await _televisionRepository.AddMetadata(episode, metadata);
+                metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                    : metadata.SortTitle;
+                metadata.EpisodeId = episode.Id;
+                metadata.Episode = episode;
+                episode.EpisodeMetadata.Add(metadata);
+
+                await _metadataRepository.Add(metadata);
             }
 
             foreach (EpisodeMetadata metadata in toUpdate)
@@ -289,16 +299,7 @@ namespace ErsatzTV.Core.Metadata
 
                         return await _metadataRepository.Update(existing) || updated;
                     },
-                    async () =>
-                    {
-                        metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                            : metadata.SortTitle;
-                        metadata.EpisodeId = episode.Id;
-                        episode.EpisodeMetadata = new List<EpisodeMetadata> { metadata };
-
-                        return await _metadataRepository.Add(metadata);
-                    });
+                    () => Task.FromResult(false));
             }
 
             return true;
@@ -686,33 +687,40 @@ namespace ErsatzTV.Core.Metadata
             try
             {
                 await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
-                Option<TvShowEpisodeNfo> maybeNfo = EpisodeSerializer.Deserialize(fileStream) as TvShowEpisodeNfo;
-                return maybeNfo.Match(
-                    nfo =>
+                List<TvShowEpisodeNfo> nfos = await _episodeNfoReader.Read(fileStream);
+                var result = new List<EpisodeMetadata>();
+                foreach (TvShowEpisodeNfo nfo in nfos)
+                {
+                    DateTime dateAdded = DateTime.UtcNow;
+                    DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+
+                    var metadata = new EpisodeMetadata
                     {
-                        DateTime dateAdded = DateTime.UtcNow;
-                        DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+                        MetadataKind = MetadataKind.Sidecar,
+                        DateAdded = dateAdded,
+                        DateUpdated = dateUpdated,
+                        Title = nfo.Title,
+                        SortTitle = _fallbackMetadataProvider.GetSortTitle(nfo.Title),
+                        EpisodeNumber = nfo.Episode,
+                        Year = GetYear(0, nfo.Aired),
+                        ReleaseDate = GetAired(0, nfo.Aired),
+                        Plot = nfo.Plot,
+                        Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
+                        Guids = nfo.UniqueIds
+                            .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
+                            .ToList(),
+                        Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
+                        Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList(),
+                        Genres = new List<Genre>(),
+                        Tags = new List<Tag>(),
+                        Studios = new List<Studio>(),
+                        Artwork = new List<Artwork>()
+                    };
 
-                        var metadata = new EpisodeMetadata
-                        {
-                            MetadataKind = MetadataKind.Sidecar,
-                            DateAdded = dateAdded,
-                            DateUpdated = dateUpdated,
-                            Title = nfo.Title,
-                            EpisodeNumber = nfo.Episode,
-                            ReleaseDate = GetAired(0, nfo.Aired),
-                            Plot = nfo.Plot,
-                            Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
-                            Guids = nfo.UniqueIds
-                                .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
-                                .ToList(),
-                            Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
-                            Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList()
-                        };
+                    result.Add(metadata);
+                }
 
-                        return new List<EpisodeMetadata> { metadata };
-                    },
-                    new List<EpisodeMetadata>());
+                return result;
             }
             catch (Exception ex)
             {
