@@ -521,13 +521,24 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return ids;
         }
 
-        public async Task<Unit> SetEpisodeNumber(Episode episode, int episodeNumber)
+        public async Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata)
         {
-            // TODO: fix this
-            // episode.EpisodeNumber = episodeNumber;
+            episode.EpisodeMetadata.Remove(metadata);
             await _dbConnection.ExecuteAsync(
-                @"UPDATE Episode SET EpisodeNumber = @EpisodeNumber WHERE Id = @Id",
-                new { EpisodeNumber = episodeNumber, episode.Id });
+                @"DELETE FROM EpisodeMetadata WHERE Id = @MetadataId",
+                new { MetadataId = metadata.Id });
+            return Unit.Default;
+        }
+
+        public async Task<Unit> AddMetadata(Episode episode, EpisodeMetadata metadata)
+        {
+            episode.EpisodeMetadata.Add(metadata);
+            metadata.EpisodeId = episode.Id;
+
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            dbContext.Entry(metadata).State = EntityState.Added;
+            await dbContext.SaveChangesAsync();
+
             return Unit.Default;
         }
 

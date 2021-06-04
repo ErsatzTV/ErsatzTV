@@ -26,13 +26,20 @@ namespace ErsatzTV.Core.Metadata
                 { MetadataKind = MetadataKind.Fallback, Title = fileName ?? artistFolder };
         }
 
-        public Tuple<EpisodeMetadata, int> GetFallbackMetadata(Episode episode)
+        public List<EpisodeMetadata> GetFallbackMetadata(Episode episode)
         {
             string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
             string fileName = Path.GetFileName(path);
-            var metadata = new EpisodeMetadata
-                { MetadataKind = MetadataKind.Fallback, Title = fileName ?? path, DateAdded = DateTime.UtcNow };
-            return fileName != null ? GetEpisodeMetadata(fileName, metadata) : Tuple(metadata, 0);
+            var baseMetadata = new EpisodeMetadata
+            {
+                MetadataKind = MetadataKind.Fallback,
+                Title = fileName ?? path,
+                DateAdded = DateTime.UtcNow,
+                EpisodeNumber = 0
+            };
+            return fileName != null
+                ? GetEpisodeMetadata(fileName, baseMetadata)
+                : new List<EpisodeMetadata> { baseMetadata };
         }
 
         public MovieMetadata GetFallbackMetadata(Movie movie)
@@ -87,18 +94,40 @@ namespace ErsatzTV.Core.Metadata
             return title;
         }
 
-        private Tuple<EpisodeMetadata, int> GetEpisodeMetadata(string fileName, EpisodeMetadata metadata)
+        private static List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
         {
+            var result = new List<EpisodeMetadata>();
+            
             try
             {
-                const string PATTERN = @"^(.*?)[.\s-]+[sS](\d+)[eE](\d+).*\.\w+$";
-                Match match = Regex.Match(fileName, PATTERN);
-                if (match.Success)
+                const string PATTERN = @"[sS]\d+[eE]([e\-\d{1,2}]+)";
+                MatchCollection matches = Regex.Matches(fileName, PATTERN);
+                if (matches.Count > 0)
                 {
-                    metadata.Title = match.Groups[1].Value;
-                    metadata.DateUpdated = DateTime.UtcNow;
-                    metadata.Actors = new List<Actor>();
-                    return Tuple(metadata, int.Parse(match.Groups[3].Value));
+                    foreach (Match match in matches)
+                    {
+                        string[] split = match.Groups[1].Value.Replace('e', '-').Split('-');
+                        foreach (string ep in split)
+                        {
+                            if (!int.TryParse(ep, out int episodeNumber))
+                            {
+                                continue;
+                            }
+
+                            var metadata = new EpisodeMetadata
+                            {
+                                MetadataKind = MetadataKind.Fallback,
+                                EpisodeNumber = episodeNumber,
+                                DateAdded = baseMetadata.DateAdded,
+                                DateUpdated = baseMetadata.DateAdded,
+                                Actors = new List<Actor>()
+                            };
+
+                            result.Add(metadata);
+                        }
+                    }
+
+                    return result;
                 }
             }
             catch (Exception)
@@ -106,7 +135,7 @@ namespace ErsatzTV.Core.Metadata
                 // ignored
             }
 
-            return Tuple(metadata, 0);
+            return result;
         }
 
         private MovieMetadata GetMovieMetadata(string fileName, MovieMetadata metadata)

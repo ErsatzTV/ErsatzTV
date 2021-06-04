@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
 using FluentAssertions;
@@ -16,35 +17,33 @@ namespace ErsatzTV.Core.Tests.Metadata
         private FallbackMetadataProvider _fallbackMetadataProvider;
 
         [Test]
-        [TestCase("Awesome Show - s01e02.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - S01E02.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - s1e2.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - S1E2.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - s01e02 - Episode Title.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - S01E02 - Episode Title.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - s1e2 - Episode Title.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - S1E2 - Episode Title.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show (2021) - s01e02 - Episode Title.mkv", "Awesome Show (2021)", 1, 2)]
-        [TestCase("Awesome Show (2021) - S01E02 - Episode Title.mkv", "Awesome Show (2021)", 1, 2)]
-        [TestCase("Awesome Show (2021) - s1e2 - Episode Title.mkv", "Awesome Show (2021)", 1, 2)]
-        [TestCase("Awesome Show (2021) - S1E2 - Episode Title.mkv", "Awesome Show (2021)", 1, 2)]
-        [TestCase("Awesome Show - s01e02 - Episode Title-720p.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - S01E02 - Episode Title-720p.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - s1e2 - Episode Title-720p.mkv", "Awesome Show", 1, 2)]
-        [TestCase("Awesome Show - S1E2 - Episode Title-720p.mkv", "Awesome Show", 1, 2)]
+        [TestCase("Awesome Show - s01e02.mkv", 1, 2)]
+        [TestCase("Awesome Show - S01E02.mkv", 1, 2)]
+        [TestCase("Awesome Show - s1e2.mkv", 1, 2)]
+        [TestCase("Awesome Show - S1E2.mkv", 1, 2)]
+        [TestCase("Awesome Show - s01e02 - Episode Title.mkv", 1, 2)]
+        [TestCase("Awesome Show - S01E02 - Episode Title.mkv", 1, 2)]
+        [TestCase("Awesome Show - s1e2 - Episode Title.mkv", 1, 2)]
+        [TestCase("Awesome Show - S1E2 - Episode Title.mkv", 1, 2)]
+        [TestCase("Awesome Show (2021) - s01e02 - Episode Title.mkv", 1, 2)]
+        [TestCase("Awesome Show (2021) - S01E02 - Episode Title.mkv", 1, 2)]
+        [TestCase("Awesome Show (2021) - s1e2 - Episode Title.mkv", 1, 2)]
+        [TestCase("Awesome Show (2021) - S1E2 - Episode Title.mkv", 1, 2)]
+        [TestCase("Awesome Show - s01e02 - Episode Title-720p.mkv", 1, 2)]
+        [TestCase("Awesome Show - S01E02 - Episode Title-720p.mkv", 1, 2)]
+        [TestCase("Awesome Show - s1e2 - Episode Title-720p.mkv", 1, 2)]
+        [TestCase("Awesome Show - S1E2 - Episode Title-720p.mkv", 1, 2)]
         [TestCase(
             "Awesome Show (2021) - S01E02 - Description; More Description (1080p QUALITY codec GROUP).mkv",
-            "Awesome Show (2021)",
             1,
             2)]
         [TestCase(
             "Awesome.Show.S01E02.Description.more.Description.QUAlity.codec.CODEC-GROUP.mkv",
-            "Awesome.Show",
             1,
             2)]
-        public void GetFallbackMetadata_ShouldHandleVariousFormats(string path, string title, int season, int episode)
+        public void GetFallbackMetadata_ShouldHandleVariousFormats(string path, int season, int episode)
         {
-            (EpisodeMetadata metadata, int episodeNumber) = _fallbackMetadataProvider.GetFallbackMetadata(
+            List<EpisodeMetadata> metadata = _fallbackMetadataProvider.GetFallbackMetadata(
                 new Episode
                 {
                     LibraryPath = new LibraryPath(),
@@ -60,10 +59,41 @@ namespace ErsatzTV.Core.Tests.Metadata
                     }
                 });
 
-            metadata.Title.Should().Be(title);
+            metadata.Count.Should().Be(1);
             // TODO: how can we test season number? do we need to?
             // metadata.Season.Should().Be(season);
-            episodeNumber.Should().Be(episode);
+            metadata.Head().EpisodeNumber.Should().Be(episode);
+        }
+
+        [Test]
+        [TestCase("Awesome Show - s01e02-s01e03.mkv", 1, 2, 3)]
+        [TestCase("Awesome Show - s01e02-whatever-s01e03-whatever2.mkv", 1, 2, 3)]
+        [TestCase("Awesome Show - s01e02e03.mkv", 1, 2, 3)]
+        [TestCase("Awesome Show - s01e02-03.mkv", 1, 2, 3)]
+        public void GetFallbackMetadata_Should_Handle_Two_Episode_Formats(
+            string path,
+            int season,
+            int episode1,
+            int episode2)
+        {
+            List<EpisodeMetadata> metadata = _fallbackMetadataProvider.GetFallbackMetadata(
+                new Episode
+                {
+                    LibraryPath = new LibraryPath(),
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = path }
+                            }
+                        }
+                    }
+                });
+
+            metadata.Count.Should().Be(2);
+            metadata.Map(m => m.EpisodeNumber).Should().BeEquivalentTo(episode1, episode2);
         }
     }
 }
