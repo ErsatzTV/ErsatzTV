@@ -806,13 +806,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
 
                 item.LibraryPathId = library.Paths.Head().Id;
-                EpisodeMetadata metadata = item.EpisodeMetadata.Head();
-                metadata.Genres ??= new List<Genre>();
-                metadata.Tags ??= new List<Tag>();
-                metadata.Studios ??= new List<Studio>();
-                metadata.Actors ??= new List<Actor>();
-                metadata.Directors ??= new List<Director>();
-                metadata.Writers ??= new List<Writer>();
+                foreach (EpisodeMetadata metadata in item.EpisodeMetadata)
+                {
+                    metadata.Genres ??= new List<Genre>();
+                    metadata.Tags ??= new List<Tag>();
+                    metadata.Studios ??= new List<Studio>();
+                    metadata.Actors ??= new List<Actor>();
+                    metadata.Directors ??= new List<Director>();
+                    metadata.Writers ??= new List<Writer>();
+                }
 
                 await dbContext.PlexEpisodes.AddAsync(item);
                 await dbContext.SaveChangesAsync();

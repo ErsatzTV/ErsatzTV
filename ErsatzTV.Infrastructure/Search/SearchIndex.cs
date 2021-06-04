@@ -586,13 +586,21 @@ namespace ErsatzTV.Infrastructure.Search
 
         private void UpdateEpisode(Episode episode)
         {
-            Option<EpisodeMetadata> maybeMetadata = episode.EpisodeMetadata.HeadOrNone();
-            if (maybeMetadata.IsSome)
+            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
             {
-                EpisodeMetadata metadata = maybeMetadata.ValueUnsafe();
-
                 try
                 {
+                    if (string.IsNullOrWhiteSpace(metadata.Title))
+                    {
+                        _logger.LogWarning(
+                            "Unable to index episode without title {Show} s{Season}e{Episode}",
+                            metadata.Episode.Season?.Show?.ShowMetadata.Head().Title,
+                            metadata.Episode.Season?.SeasonNumber,
+                            metadata.EpisodeNumber);
+
+                        continue;
+                    }
+
                     var doc = new Document();
                     doc.Add(new StringField(IdField, episode.Id.ToString(), Field.Store.YES));
                     doc.Add(new StringField(TypeField, EpisodeType, Field.Store.NO));
