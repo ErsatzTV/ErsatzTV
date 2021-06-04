@@ -97,7 +97,7 @@ namespace ErsatzTV.Core.Metadata
         private static List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
         {
             var result = new List<EpisodeMetadata>();
-            
+
             try
             {
                 const string PATTERN = @"[sS]\d+[eE]([e\-\d{1,2}]+)";

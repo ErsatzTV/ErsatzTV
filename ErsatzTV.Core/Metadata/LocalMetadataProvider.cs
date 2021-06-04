@@ -22,9 +22,9 @@ namespace ErsatzTV.Core.Metadata
         private static readonly XmlSerializer ArtistSerializer = new(typeof(ArtistNfo));
         private static readonly XmlSerializer MusicVideoSerializer = new(typeof(MusicVideoNfo));
         private readonly IArtistRepository _artistRepository;
+        private readonly IEpisodeNfoReader _episodeNfoReader;
         private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
         private readonly ILocalFileSystem _localFileSystem;
-        private readonly IEpisodeNfoReader _episodeNfoReader;
         private readonly ILogger<LocalMetadataProvider> _logger;
 
         private readonly IMetadataRepository _metadataRepository;
