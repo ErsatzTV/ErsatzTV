@@ -35,7 +35,15 @@ namespace ErsatzTV.Core.Metadata
                 MetadataKind = MetadataKind.Fallback,
                 Title = fileName ?? path,
                 DateAdded = DateTime.UtcNow,
-                EpisodeNumber = 0
+                EpisodeNumber = 0,
+                Actors = new List<Actor>(),
+                Artwork = new List<Artwork>(),
+                Directors = new List<Director>(),
+                Genres = new List<Genre>(),
+                Guids = new List<MetadataGuid>(),
+                Studios = new List<Studio>(),
+                Tags = new List<Tag>(),
+                Writers = new List<Writer>()
             };
             return fileName != null
                 ? GetEpisodeMetadata(fileName, baseMetadata)
@@ -120,7 +128,14 @@ namespace ErsatzTV.Core.Metadata
                                 EpisodeNumber = episodeNumber,
                                 DateAdded = baseMetadata.DateAdded,
                                 DateUpdated = baseMetadata.DateAdded,
-                                Actors = new List<Actor>()
+                                Actors = new List<Actor>(),
+                                Artwork = new List<Artwork>(),
+                                Directors = new List<Director>(),
+                                Genres = new List<Genre>(),
+                                Guids = new List<MetadataGuid>(),
+                                Studios = new List<Studio>(),
+                                Tags = new List<Tag>(),
+                                Writers = new List<Writer>()
                             };
 
                             result.Add(metadata);
