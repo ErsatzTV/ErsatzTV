@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Playouts
@@ -31,9 +32,16 @@ namespace ErsatzTV.Application.Playouts
                 case Episode e:
                     string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()
                         .Map(sm => $"{sm.Title} - ").IfNone(string.Empty);
-                    return e.EpisodeMetadata.HeadOrNone()
-                        .Map(em => $"{showTitle}s{e.Season.SeasonNumber:00}e{em.EpisodeNumber:00} - {em.Title}")
-                        .IfNone("[unknown episode]");
+                    var episodeNumbers = e.EpisodeMetadata.Map(em => em.EpisodeNumber).ToList();
+                    var episodeTitles = e.EpisodeMetadata.Map(em => em.Title).ToList();
+                    if (episodeNumbers.Count == 0 || episodeTitles.Count == 0)
+                    {
+                        return "[unknown episode]";
+                    }
+
+                    var numbersString = $"e{string.Join('e', episodeNumbers.Map(n => $"{n:00}"))}";
+                    var titlesString = $"{string.Join('/', episodeTitles)}";
+                    return $"{showTitle}s{e.Season.SeasonNumber:00}{numbersString} - {titlesString}";
                 case Movie m:
                     return m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]");
                 case MusicVideo mv:

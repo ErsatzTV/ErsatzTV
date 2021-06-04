@@ -360,8 +360,10 @@ namespace ErsatzTV.Core.Metadata
                 await LocateThumbnail(episode).IfSomeAsync(
                     async posterFile =>
                     {
-                        EpisodeMetadata metadata = episode.EpisodeMetadata.Head();
-                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail);
+                        foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
+                        {
+                            await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail);
+                        }
                     });
 
                 return episode;
