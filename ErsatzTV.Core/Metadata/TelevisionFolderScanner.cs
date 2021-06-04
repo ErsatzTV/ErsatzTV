@@ -22,6 +22,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
+        private readonly IMetadataRepository _metadataRepository;
         private readonly ILogger<TelevisionFolderScanner> _logger;
         private readonly IMediator _mediator;
         private readonly ISearchIndex _searchIndex;
@@ -49,6 +50,7 @@ namespace ErsatzTV.Core.Metadata
             _localFileSystem = localFileSystem;
             _televisionRepository = televisionRepository;
             _localMetadataProvider = localMetadataProvider;
+            _metadataRepository = metadataRepository;
             _searchIndex = searchIndex;
             _searchRepository = searchRepository;
             _libraryRepository = libraryRepository;
@@ -169,6 +171,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         Either<BaseError, Season> maybeSeason = await _televisionRepository
                             .GetOrAddSeason(show, libraryPath.Id, seasonNumber)
+                            .BindT(EnsureMetadataExists)
                             .BindT(season => UpdatePoster(season, seasonFolder));
 
                         await maybeSeason.Match(
@@ -270,8 +273,28 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private async Task<Either<BaseError, Episode>> UpdateMetadata(
-            Episode episode)
+        private async Task<Either<BaseError, Season>> EnsureMetadataExists(Season season)
+        {
+            season.SeasonMetadata ??= new List<SeasonMetadata>();
+            
+            if (!season.SeasonMetadata.Any())
+            {
+                var metadata = new SeasonMetadata
+                {
+                    SeasonId = season.Id,
+                    Season = season,
+                    DateAdded = DateTime.UtcNow,
+                    Guids = new List<MetadataGuid>()
+                };
+
+                season.SeasonMetadata.Add(metadata);
+                await _metadataRepository.Add(metadata);
+            }
+
+            return season;
+        }
+
+        private async Task<Either<BaseError, Episode>> UpdateMetadata(Episode episode)
         {
             try
             {

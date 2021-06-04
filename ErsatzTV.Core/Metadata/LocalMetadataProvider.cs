@@ -176,6 +176,8 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task<bool> ApplyMetadataUpdate(Episode episode, List<EpisodeMetadata> episodeMetadata)
         {
+            var updated = false;
+            
             episode.EpisodeMetadata ??= new List<EpisodeMetadata>();
 
             var toUpdate = episode.EpisodeMetadata
@@ -189,6 +191,7 @@ namespace ErsatzTV.Core.Metadata
             foreach (EpisodeMetadata metadata in toRemove)
             {
                 await _televisionRepository.RemoveMetadata(episode, metadata);
+                updated = true;
             }
 
             foreach (EpisodeMetadata metadata in toAdd)
@@ -200,14 +203,14 @@ namespace ErsatzTV.Core.Metadata
                 metadata.Episode = episode;
                 episode.EpisodeMetadata.Add(metadata);
 
-                await _metadataRepository.Add(metadata);
+                updated = await _metadataRepository.Add(metadata) || updated;
             }
 
             foreach (EpisodeMetadata metadata in toUpdate)
             {
                 Option<EpisodeMetadata> maybeExisting =
                     episode.EpisodeMetadata.Find(em => em.EpisodeNumber == metadata.EpisodeNumber);
-                await maybeExisting.Match(
+                updated = await maybeExisting.Match(
                     async existing =>
                     {
                         existing.Outline = metadata.Outline;
@@ -229,13 +232,13 @@ namespace ErsatzTV.Core.Metadata
                             ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                             : metadata.SortTitle;
 
-                        bool updated = await UpdateMetadataCollections(
+                        updated = await UpdateMetadataCollections(
                             existing,
                             metadata,
                             (_, _) => Task.FromResult(false),
                             (_, _) => Task.FromResult(false),
                             (_, _) => Task.FromResult(false),
-                            _televisionRepository.AddActor);
+                            _televisionRepository.AddActor) || updated;
 
                         foreach (Director director in existing.Directors
                             .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
@@ -299,10 +302,10 @@ namespace ErsatzTV.Core.Metadata
 
                         return await _metadataRepository.Update(existing) || updated;
                     },
-                    () => Task.FromResult(false));
+                    () => Task.FromResult(updated)) || updated;
             }
 
-            return true;
+            return updated;
         }
 
         private Task<bool> ApplyMetadataUpdate(Movie movie, MovieMetadata metadata) =>
