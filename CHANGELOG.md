@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Rename channel mode `TransportStream` to `MPEG-TS` and `HttpLiveStreaming` to `HLS Direct`
+- Improve `HLS Direct` mode compatibility with Channels DVR Server
 
 ### Fixed
 - Fix search result crashes due to missing season metadata
