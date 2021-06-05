@@ -2,7 +2,7 @@
 {
     public record GetPlayoutItemProcessByChannelNumber : FFmpegProcessRequest
     {
-        public GetPlayoutItemProcessByChannelNumber(string channelNumber) : base(channelNumber)
+        public GetPlayoutItemProcessByChannelNumber(string channelNumber, string mode) : base(channelNumber, mode)
         {
         }
     }

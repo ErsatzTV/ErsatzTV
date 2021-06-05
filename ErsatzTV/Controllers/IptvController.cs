@@ -27,7 +27,9 @@ namespace ErsatzTV.Controllers
         }
 
         [HttpGet("iptv/channels.m3u")]
-        public Task<IActionResult> GetChannelPlaylist([FromQuery]string mode = "mixed") =>
+        public Task<IActionResult> GetChannelPlaylist(
+            [FromQuery]
+            string mode = "mixed") =>
             _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), mode))
                 .Map<ChannelPlaylist, IActionResult>(Ok);
 
@@ -54,14 +56,14 @@ namespace ErsatzTV.Controllers
 
         [HttpGet("iptv/channel/{channelNumber}.m3u8")]
         public Task<IActionResult> GetHttpLiveStreamingVideo(string channelNumber) =>
-            _mediator.Send(new GetHlsPlaylistByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
+            _mediator.Send(
+                    new GetHlsPlaylistByChannelNumber(
+                        Request.Scheme,
+                        Request.Host.ToString(),
+                        channelNumber))
                 .Map(
                     result => result.Match<IActionResult>(
-                        playlist =>
-                        {
-                            _logger.LogInformation("Starting hls stream for channel {ChannelNumber}", channelNumber);
-                            return Content(playlist, "application/x-mpegurl");
-                        },
+                        playlist => Content(playlist, "application/x-mpegurl"),
                         error => BadRequest(error.Value)));
 
         [HttpGet("iptv/logos/{fileName}")]

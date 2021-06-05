@@ -27,8 +27,11 @@ namespace ErsatzTV.Controllers
                 .ToActionResult();
 
         [HttpGet("ffmpeg/stream/{channelNumber}")]
-        public Task<IActionResult> GetStream(string channelNumber) =>
-            _mediator.Send(new GetPlayoutItemProcessByChannelNumber(channelNumber)).Map(
+        public Task<IActionResult> GetStream(
+            string channelNumber,
+            [FromQuery]
+            string mode = "mixed") =>
+            _mediator.Send(new GetPlayoutItemProcessByChannelNumber(channelNumber, mode)).Map(
                 result =>
                     result.Match<IActionResult>(
                         process =>
