@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Support `(Part #)` name suffixes for multi-part episode grouping
 - Support multi-episode files in local libraries
 - Save Channels table page size
+- Add optional query string parameter to M3U channel playlist to allow some customization per client
+    - `?mode=ts` will force `MPEG-TS` mode for all channels
+    - `?mode=hls-direct` will force `HLS Direct` mode for all channels
+    - `?mode=mixed` or no parameter will maintain existing behavior
+
+### Changed
+- Rename channel mode `TransportStream` to `MPEG-TS` and `HttpLiveStreaming` to `HLS Direct`
 
 ### Fixed
 - Fix search result crashes due to missing season metadata

@@ -27,8 +27,8 @@ namespace ErsatzTV.Controllers
         }
 
         [HttpGet("iptv/channels.m3u")]
-        public Task<IActionResult> GetChannelPlaylist() =>
-            _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString()))
+        public Task<IActionResult> GetChannelPlaylist([FromQuery]string mode = "mixed") =>
+            _mediator.Send(new GetChannelPlaylist(Request.Scheme, Request.Host.ToString(), mode))
                 .Map<ChannelPlaylist, IActionResult>(Ok);
 
         [HttpGet("iptv/xmltv.xml")]

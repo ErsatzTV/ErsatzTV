@@ -64,7 +64,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             switch (streamingMode)
             {
-                case StreamingMode.HttpLiveStreaming:
+                case StreamingMode.HttpLiveStreamingDirect:
                     result.AudioCodec = "copy";
                     result.VideoCodec = "copy";
                     result.Deinterlace = false;
