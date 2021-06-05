@@ -3,5 +3,5 @@ using MediatR;
 
 namespace ErsatzTV.Application.Channels.Queries
 {
-    public record GetChannelPlaylist(string Scheme, string Host) : IRequest<ChannelPlaylist>;
+    public record GetChannelPlaylist(string Scheme, string Host, string Mode) : IRequest<ChannelPlaylist>;
 }

@@ -6,6 +6,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
+using Microsoft.Extensions.Caching.Memory;
 using Serilog;
 
 namespace ErsatzTV.Application.Streaming.Queries
@@ -14,14 +15,17 @@ namespace ErsatzTV.Application.Streaming.Queries
         GetHlsPlaylistByChannelNumberHandler : IRequestHandler<GetHlsPlaylistByChannelNumber, Either<BaseError, string>>
     {
         private readonly IChannelRepository _channelRepository;
+        private readonly IMemoryCache _memoryCache;
         private readonly IPlayoutRepository _playoutRepository;
 
         public GetHlsPlaylistByChannelNumberHandler(
             IChannelRepository channelRepository,
-            IPlayoutRepository playoutRepository)
+            IPlayoutRepository playoutRepository,
+            IMemoryCache memoryCache)
         {
             _channelRepository = channelRepository;
             _playoutRepository = playoutRepository;
+            _memoryCache = memoryCache;
         }
 
         public Task<Either<BaseError, string>> Handle(
@@ -40,12 +44,15 @@ namespace ErsatzTV.Application.Streaming.Queries
             return maybePlayoutItem.Match<Either<BaseError, string>>(
                 playoutItem =>
                 {
-                    double timeRemaining = Math.Abs((playoutItem.Finish - now).TotalSeconds);
+                    long index = GetIndexForChannel(channel, playoutItem);
+                    double timeRemaining = Math.Abs((playoutItem.FinishOffset - now).TotalSeconds);
                     return $@"#EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-TARGETDURATION:18000
+#EXT-X-TARGETDURATION:6
+#EXT-X-MEDIA-SEQUENCE:{index}
+#EXT-X-DISCONTINUITY
 #EXTINF:{timeRemaining:F2},
-{request.Scheme}://{request.Host}/ffmpeg/stream/{request.ChannelNumber}
+{request.Scheme}://{request.Host}/ffmpeg/stream/{request.ChannelNumber}?index={index}&mode=hls-direct
 ";
                 },
                 () =>
@@ -59,5 +66,36 @@ namespace ErsatzTV.Application.Streaming.Queries
         private async Task<Validation<BaseError, Channel>> ChannelMustExist(GetHlsPlaylistByChannelNumber request) =>
             (await _channelRepository.GetByNumber(request.ChannelNumber))
             .ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist.");
+
+        private long GetIndexForChannel(Channel channel, PlayoutItem playoutItem)
+        {
+            long ticks = playoutItem.Start.Ticks;
+            var key = new ChannelIndexKey(channel.Id);
+
+            long index;
+            if (_memoryCache.TryGetValue(key, out ChannelIndexRecord channelRecord))
+            {
+                if (channelRecord.StartTicks == ticks)
+                {
+                    index = channelRecord.Index;
+                }
+                else
+                {
+                    index = channelRecord.Index + 1;
+                    _memoryCache.Set(key, new ChannelIndexRecord(ticks, index), TimeSpan.FromDays(1));
+                }
+            }
+            else
+            {
+                index = 1;
+                _memoryCache.Set(key, new ChannelIndexRecord(ticks, index), TimeSpan.FromDays(1));
+            }
+
+            return index;
+        }
+
+        private record ChannelIndexKey(int ChannelId);
+
+        private record ChannelIndexRecord(long StartTicks, long Index);
     }
 }

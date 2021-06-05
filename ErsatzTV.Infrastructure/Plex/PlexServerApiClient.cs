@@ -119,27 +119,6 @@ namespace ErsatzTV.Infrastructure.Plex
             }
         }
 
-        private List<PlexEpisode> ProcessMultiEpisodeFiles(IEnumerable<PlexEpisode> episodes)
-        {
-            // add all metadata from duplicate paths to first entry with given path
-            // i.e. s1e1 episode will add s1e2 metadata if s1e1 and s1e2 have same physical path
-            var result = new Dictionary<string, PlexEpisode>();
-            foreach (PlexEpisode episode in episodes.OrderBy(e => e.EpisodeMetadata.Head().EpisodeNumber))
-            {
-                string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
-                if (result.TryGetValue(path, out PlexEpisode existing))
-                {
-                    existing.EpisodeMetadata.Add(episode.EpisodeMetadata.Head());
-                }
-                else
-                {
-                    result.Add(path, episode);
-                }
-            }
-
-            return result.Values.ToList();
-        }
-
         public async Task<Either<BaseError, MovieMetadata>> GetMovieMetadata(
             PlexLibrary library,
             string key,
@@ -245,6 +224,27 @@ namespace ErsatzTV.Infrastructure.Plex
             {
                 return BaseError.New(ex.ToString());
             }
+        }
+
+        private List<PlexEpisode> ProcessMultiEpisodeFiles(IEnumerable<PlexEpisode> episodes)
+        {
+            // add all metadata from duplicate paths to first entry with given path
+            // i.e. s1e1 episode will add s1e2 metadata if s1e1 and s1e2 have same physical path
+            var result = new Dictionary<string, PlexEpisode>();
+            foreach (PlexEpisode episode in episodes.OrderBy(e => e.EpisodeMetadata.Head().EpisodeNumber))
+            {
+                string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+                if (result.TryGetValue(path, out PlexEpisode existing))
+                {
+                    existing.EpisodeMetadata.Add(episode.EpisodeMetadata.Head());
+                }
+                else
+                {
+                    result.Add(path, episode);
+                }
+            }
+
+            return result.Values.ToList();
         }
 
         private static IPlexServerApi XmlServiceFor(string uri)

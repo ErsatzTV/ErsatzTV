@@ -50,7 +50,7 @@
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Language">@context.PreferredLanguageCode</MudTd>
-            <MudTd DataLabel="Mode">@(context.StreamingMode == StreamingMode.TransportStream ? "TS" : "HLS")</MudTd>
+            <MudTd DataLabel="Mode">@(context.StreamingMode == StreamingMode.TransportStream ? "MPEG-TS" : "HLS Direct")</MudTd>
             <MudTd DataLabel="FFmpeg Profile">
                 @if (context.StreamingMode == StreamingMode.TransportStream)
                 {

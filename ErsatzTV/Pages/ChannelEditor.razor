@@ -24,10 +24,8 @@
                     <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
                     <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
-                        @foreach (StreamingMode streamingMode in Enum.GetValues<StreamingMode>())
-                        {
-                            <MudSelectItem Value="@streamingMode">@streamingMode</MudSelectItem>
-                        }
+                        <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS</MudSelectItem>
+                        <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
                     </MudSelect>
                     <MudSelect Class="mt-3" Label="FFmpeg Profile" @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
                                Disabled="@(_model.StreamingMode != StreamingMode.TransportStream)">

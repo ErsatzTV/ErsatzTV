@@ -428,12 +428,12 @@ namespace ErsatzTV.Core.Plex
             var toAdd = incoming.EpisodeMetadata
                 .Where(em => existing.EpisodeMetadata.All(em2 => em2.EpisodeNumber != em.EpisodeNumber))
                 .ToList();
-            
+
             foreach (EpisodeMetadata metadata in toRemove)
             {
                 await _televisionRepository.RemoveMetadata(existing, metadata);
             }
-            
+
             foreach (EpisodeMetadata metadata in toAdd)
             {
                 metadata.EpisodeId = existing.Id;
@@ -442,7 +442,7 @@ namespace ErsatzTV.Core.Plex
 
                 await _metadataRepository.Add(metadata);
             }
-            
+
             // TODO: update existing metadata
 
             return existing;

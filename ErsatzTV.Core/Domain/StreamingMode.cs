@@ -3,6 +3,6 @@
     public enum StreamingMode
     {
         TransportStream = 1,
-        HttpLiveStreaming = 2
+        HttpLiveStreamingDirect = 2
     }
 }
