@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Support `(Part #)` name suffixes for multi-part episode grouping
-- Support multi-episode files in local libraries
+- Support multi-episode files in local and Plex libraries
 - Save Channels table page size
 - Add optional query string parameter to M3U channel playlist to allow some customization per client
     - `?mode=ts` will force `MPEG-TS` mode for all channels

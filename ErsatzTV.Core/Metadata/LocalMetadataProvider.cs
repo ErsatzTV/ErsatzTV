@@ -177,7 +177,7 @@ namespace ErsatzTV.Core.Metadata
         private async Task<bool> ApplyMetadataUpdate(Episode episode, List<EpisodeMetadata> episodeMetadata)
         {
             var updated = false;
-            
+
             episode.EpisodeMetadata ??= new List<EpisodeMetadata>();
 
             var toUpdate = episode.EpisodeMetadata
