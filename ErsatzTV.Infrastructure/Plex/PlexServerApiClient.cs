@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using Refit;
 using static LanguageExt.Prelude;
 
@@ -18,9 +19,15 @@ namespace ErsatzTV.Infrastructure.Plex
     public class PlexServerApiClient : IPlexServerApiClient
     {
         private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
+        private readonly ILogger<PlexServerApiClient> _logger;
 
-        public PlexServerApiClient(IFallbackMetadataProvider fallbackMetadataProvider) =>
+        public PlexServerApiClient(
+            IFallbackMetadataProvider fallbackMetadataProvider,
+            ILogger<PlexServerApiClient> logger)
+        {
             _fallbackMetadataProvider = fallbackMetadataProvider;
+            _logger = logger;
+        }
 
         public async Task<Either<BaseError, List<PlexLibrary>>> GetLibraries(
             PlexConnection connection,
@@ -358,10 +365,13 @@ namespace ErsatzTV.Infrastructure.Plex
                 metadata.Guids = Optional(xml.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
                 if (!string.IsNullOrWhiteSpace(xml.PlexGuid))
                 {
-                    string normalized = NormalizeGuid(xml.PlexGuid);
-                    if (!string.IsNullOrWhiteSpace(normalized) && metadata.Guids.All(g => g.Guid != normalized))
+                    Option<string> normalized = NormalizeGuid(xml.PlexGuid);
+                    foreach (string guid in normalized)
                     {
-                        metadata.Guids.Add(new MetadataGuid { Guid = normalized });
+                        if (metadata.Guids.All(g => g.Guid != guid))
+                        {
+                            metadata.Guids.Add(new MetadataGuid { Guid = guid });
+                        }
                     }
                 }
             }
@@ -525,10 +535,13 @@ namespace ErsatzTV.Infrastructure.Plex
                 metadata.Guids = Optional(xml.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
                 if (!string.IsNullOrWhiteSpace(xml.PlexGuid))
                 {
-                    string normalized = NormalizeGuid(xml.PlexGuid);
-                    if (!string.IsNullOrWhiteSpace(normalized) && metadata.Guids.All(g => g.Guid != normalized))
+                    Option<string> normalized = NormalizeGuid(xml.PlexGuid);
+                    foreach (string guid in normalized)
                     {
-                        metadata.Guids.Add(new MetadataGuid { Guid = normalized });
+                        if (metadata.Guids.All(g => g.Guid != guid))
+                        {
+                            metadata.Guids.Add(new MetadataGuid { Guid = guid });
+                        }
                     }
                 }
             }
@@ -598,10 +611,13 @@ namespace ErsatzTV.Infrastructure.Plex
             metadata.Guids = Optional(response.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
             if (!string.IsNullOrWhiteSpace(response.PlexGuid))
             {
-                string normalized = NormalizeGuid(response.PlexGuid);
-                if (!string.IsNullOrWhiteSpace(normalized) && metadata.Guids.All(g => g.Guid != normalized))
+                Option<string> normalized = NormalizeGuid(response.PlexGuid);
+                foreach (string guid in normalized)
                 {
-                    metadata.Guids.Add(new MetadataGuid { Guid = normalized });
+                    if (metadata.Guids.All(g => g.Guid != guid))
+                    {
+                        metadata.Guids.Add(new MetadataGuid { Guid = guid });
+                    }
                 }
             }
 
@@ -711,10 +727,13 @@ namespace ErsatzTV.Infrastructure.Plex
                 metadata.Guids = Optional(xml.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
                 if (!string.IsNullOrWhiteSpace(xml.PlexGuid))
                 {
-                    string normalized = NormalizeGuid(xml.PlexGuid);
-                    if (!string.IsNullOrWhiteSpace(normalized) && metadata.Guids.All(g => g.Guid != normalized))
+                    Option<string> normalized = NormalizeGuid(xml.PlexGuid);
+                    foreach (string guid in normalized)
                     {
-                        metadata.Guids.Add(new MetadataGuid { Guid = normalized });
+                        if (metadata.Guids.All(g => g.Guid != guid))
+                        {
+                            metadata.Guids.Add(new MetadataGuid { Guid = guid });
+                        }
                     }
                 }
             }
@@ -763,7 +782,7 @@ namespace ErsatzTV.Infrastructure.Plex
             return actor;
         }
 
-        private string NormalizeGuid(string guid)
+        private Option<string> NormalizeGuid(string guid)
         {
             if (guid.StartsWith("plex://show") ||
                 guid.StartsWith("plex://season") ||
@@ -787,7 +806,9 @@ namespace ErsatzTV.Infrastructure.Plex
                 return $"tmdb://{strip2}";
             }
 
-            throw new NotSupportedException(guid);
+            _logger.LogWarning("Unsupported guid format from Plex; ignoring: {Guid}", guid);
+
+            return None;
         }
     }
 }
