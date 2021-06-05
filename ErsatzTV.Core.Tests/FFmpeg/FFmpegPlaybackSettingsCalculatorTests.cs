@@ -40,7 +40,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegProfile ffmpegProfile = TestProfile() with { ThreadCount = 7 };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.HttpLiveStreaming,
+                    StreamingMode.HttpLiveStreamingDirect,
                     ffmpegProfile,
                     new MediaVersion(),
                     new MediaStream(),
@@ -76,7 +76,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegProfile ffmpegProfile = TestProfile();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.HttpLiveStreaming,
+                    StreamingMode.HttpLiveStreamingDirect,
                     ffmpegProfile,
                     new MediaVersion(),
                     new MediaStream(),
@@ -112,7 +112,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegProfile ffmpegProfile = TestProfile();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.HttpLiveStreaming,
+                    StreamingMode.HttpLiveStreamingDirect,
                     ffmpegProfile,
                     new MediaVersion(),
                     new MediaStream(),
@@ -151,7 +151,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegProfile ffmpegProfile = TestProfile();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.HttpLiveStreaming,
+                    StreamingMode.HttpLiveStreamingDirect,
                     ffmpegProfile,
                     new MediaVersion(),
                     new MediaStream(),
@@ -317,7 +317,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.HttpLiveStreaming,
+                    StreamingMode.HttpLiveStreamingDirect,
                     ffmpegProfile,
                     version,
                     new MediaStream(),
@@ -426,7 +426,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.HttpLiveStreaming,
+                    StreamingMode.HttpLiveStreamingDirect,
                     ffmpegProfile,
                     version,
                     new MediaStream { Codec = "mpeg2video" },
@@ -718,7 +718,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 var version = new MediaVersion();
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                    StreamingMode.HttpLiveStreaming,
+                    StreamingMode.HttpLiveStreamingDirect,
                     ffmpegProfile,
                     version,
                     new MediaStream(),

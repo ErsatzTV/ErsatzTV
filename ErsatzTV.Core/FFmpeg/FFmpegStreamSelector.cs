@@ -28,7 +28,7 @@ namespace ErsatzTV.Core.FFmpeg
 
         public async Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version)
         {
-            if (channel.StreamingMode == StreamingMode.HttpLiveStreaming &&
+            if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
                 string.IsNullOrWhiteSpace(channel.PreferredLanguageCode))
             {
                 _logger.LogDebug(

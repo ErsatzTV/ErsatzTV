@@ -22,9 +22,9 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILibraryRepository _libraryRepository;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalMetadataProvider _localMetadataProvider;
-        private readonly IMetadataRepository _metadataRepository;
         private readonly ILogger<TelevisionFolderScanner> _logger;
         private readonly IMediator _mediator;
+        private readonly IMetadataRepository _metadataRepository;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
         private readonly ITelevisionRepository _televisionRepository;
@@ -276,7 +276,7 @@ namespace ErsatzTV.Core.Metadata
         private async Task<Either<BaseError, Season>> EnsureMetadataExists(Season season)
         {
             season.SeasonMetadata ??= new List<SeasonMetadata>();
-            
+
             if (!season.SeasonMetadata.Any())
             {
                 var metadata = new SeasonMetadata

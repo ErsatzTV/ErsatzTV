@@ -8,9 +8,9 @@ Channel numbers can be whole numbers or can contain one decimal, like `500` or `
 
 ### Streaming Mode
 
-Two streaming modes are currently supported: `Transport Stream` and `HttpLiveStreaming`.
-`Transport Stream` is considered stable and is recommended for most purposes.
-`HttpLiveStreaming` is unstable and is not recommended for general use.
+Two streaming modes are currently supported: `MPEG-TS` (Transport Stream) and `HLS Direct` (HTTP Live Streaming Direct).
+`MPEG-TS` is considered stable and is recommended for most purposes.
+`HLS Direct` is unstable and is not recommended for general use, but can avoid the need to transcode with some clients.
 
 ### FFmpeg Profile
 

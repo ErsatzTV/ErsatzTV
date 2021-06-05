@@ -39,6 +39,18 @@ namespace ErsatzTV.Application.Streaming.Queries
 
         private async Task<Validation<BaseError, Channel>> ChannelMustExist(T request) =>
             (await _channelRepository.GetByNumber(request.ChannelNumber))
+            .Map(
+                channel =>
+                {
+                    channel.StreamingMode = request.Mode.ToLowerInvariant() switch
+                    {
+                        "hls-direct" => StreamingMode.HttpLiveStreamingDirect,
+                        "ts" => StreamingMode.TransportStream,
+                        _ => channel.StreamingMode
+                    };
+
+                    return channel;
+                })
             .ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist.");
 
         private Task<Validation<BaseError, string>> FFmpegPathMustExist() =>
