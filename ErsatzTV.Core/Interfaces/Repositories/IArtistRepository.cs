@@ -21,5 +21,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<bool> AddGenre(ArtistMetadata metadata, Genre genre);
         Task<bool> AddStyle(ArtistMetadata metadata, Style style);
         Task<bool> AddMood(ArtistMetadata metadata, Mood mood);
+        Task<List<MusicVideo>> GetArtistItems(int artistId);
+        Task<List<Artist>> GetAllArtists();
     }
 }

@@ -18,6 +18,7 @@ namespace ErsatzTV.Core.Scheduling
     public class PlayoutBuilder : IPlayoutBuilder
     {
         private static readonly Random Random = new();
+        private readonly IArtistRepository _artistRepository;
         private readonly ILogger<PlayoutBuilder> _logger;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
@@ -25,10 +26,12 @@ namespace ErsatzTV.Core.Scheduling
         public PlayoutBuilder(
             IMediaCollectionRepository mediaCollectionRepository,
             ITelevisionRepository televisionRepository,
+            IArtistRepository artistRepository,
             ILogger<PlayoutBuilder> logger)
         {
             _mediaCollectionRepository = mediaCollectionRepository;
             _televisionRepository = televisionRepository;
+            _artistRepository = artistRepository;
             _logger = logger;
         }
 
@@ -66,6 +69,10 @@ namespace ErsatzTV.Core.Scheduling
                             List<Episode> seasonItems =
                                 await _televisionRepository.GetSeasonItems(collectionKey.MediaItemId ?? 0);
                             return Tuple(collectionKey, seasonItems.Cast<MediaItem>().ToList());
+                        case ProgramScheduleItemCollectionType.Artist:
+                            List<MusicVideo> artistItems =
+                                await _artistRepository.GetArtistItems(collectionKey.MediaItemId ?? 0);
+                            return Tuple(collectionKey, artistItems.Cast<MediaItem>().ToList());
                         default:
                             return Tuple(collectionKey, new List<MediaItem>());
                     }
@@ -551,6 +558,11 @@ namespace ErsatzTV.Core.Scheduling
                     MediaItemId = item.MediaItemId
                 },
                 ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
+                {
+                    CollectionType = item.CollectionType,
+                    MediaItemId = item.MediaItemId
+                },
+                ProgramScheduleItemCollectionType.Artist => new CollectionKey
                 {
                     CollectionType = item.CollectionType,
                     MediaItemId = item.MediaItemId

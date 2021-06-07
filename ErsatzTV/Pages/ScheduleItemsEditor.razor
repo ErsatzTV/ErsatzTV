@@ -6,6 +6,7 @@
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using ErsatzTV.Application.ProgramSchedules.Queries
 @using ErsatzTV.Application.Television.Queries
+@using ErsatzTV.Application.Artists.Queries
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger
 @inject ISnackbar _snackbar
@@ -129,6 +130,15 @@
                                                  SearchFunc="@SearchTelevisionSeasons"
                                                  ToStringFunc="@(s => s?.Name)"/>
                             }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Artist)
+                            {
+                                <MudAutocomplete Class="mt-3"
+                                                 T="NamedMediaItemViewModel"
+                                                 Label="Artist"
+                                                 @bind-value="_selectedItem.MediaItem"
+                                                 SearchFunc="@SearchArtists"
+                                                 ToStringFunc="@(s => s?.Name)"/>
+                            }
                             <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
                                 @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
                                 {
@@ -177,6 +187,7 @@
     private List<MediaCollectionViewModel> _mediaCollections;
     private List<NamedMediaItemViewModel> _televisionShows;
     private List<NamedMediaItemViewModel> _televisionSeasons;
+    private List<NamedMediaItemViewModel> _artists;
 
     private ProgramScheduleItemEditViewModel _selectedItem;
 
@@ -184,9 +195,11 @@
 
     private async Task LoadScheduleItems()
     {
+    // TODO: fix performance
         _mediaCollections = await _mediator.Send(new GetAllCollections());
         _televisionShows = await _mediator.Send(new GetAllTelevisionShows());
         _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons());
+        _artists = await _mediator.Send(new GetAllArtists());
 
         string name = string.Empty;
         Option<ProgramScheduleViewModel> maybeSchedule = await _mediator.Send(new GetProgramScheduleById(Id));
@@ -275,6 +288,9 @@
 
     private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value) =>
         _televisionSeasons.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value) =>
+        _artists.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
     private async Task SaveChanges()
     {
