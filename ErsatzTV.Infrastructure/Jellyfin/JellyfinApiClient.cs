@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -232,6 +233,12 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             {
                 if (item.LocationType != "FileSystem")
                 {
+                    return None;
+                }
+
+                if (Path.GetExtension(item.Path)?.ToLowerInvariant() == ".strm")
+                {
+                    _logger.LogInformation("STRM files are not supported; skipping {Path}", item.Path);
                     return None;
                 }
 
@@ -540,6 +547,12 @@ namespace ErsatzTV.Infrastructure.Jellyfin
             {
                 if (item.LocationType != "FileSystem")
                 {
+                    return None;
+                }
+
+                if (Path.GetExtension(item.Path)?.ToLowerInvariant() == ".strm")
+                {
+                    _logger.LogWarning("STRM files are not supported; skipping {Path}", item.Path);
                     return None;
                 }
 
