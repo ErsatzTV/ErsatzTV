@@ -55,6 +55,7 @@ Schedule items can contain the following collection types:
 - `Collection`: Select a collection that you have created manually.
 - `Television Show`: Select an entire television show.
 - `Television Season`: Select a specific season of a television show.
+- `Artist`: Select all music videos for a specific artist.
 
 #### Collection
 
