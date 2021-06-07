@@ -54,6 +54,7 @@ namespace ErsatzTV.ViewModels
             ProgramScheduleItemCollectionType.Collection => Collection?.Name,
             ProgramScheduleItemCollectionType.TelevisionShow => MediaItem?.Name,
             ProgramScheduleItemCollectionType.TelevisionSeason => MediaItem?.Name,
+            ProgramScheduleItemCollectionType.Artist => MediaItem?.Name,
             _ => string.Empty
         };
 

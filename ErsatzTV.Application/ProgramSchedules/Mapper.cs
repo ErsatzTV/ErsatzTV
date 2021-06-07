@@ -30,6 +30,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
                             Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                            Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
                         duration.PlayoutDuration,
@@ -49,6 +50,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
                             Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                            Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
                         flood.CustomTitle),
@@ -66,6 +68,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
                             Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                            Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
                         multiple.Count,
@@ -84,6 +87,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
                             Season season => MediaItems.Mapper.ProjectToViewModel(season),
+                            Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
                         one.CustomTitle),

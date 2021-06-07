@@ -19,10 +19,12 @@ namespace ErsatzTV.Application.ProgramSchedules
         public string Name => CollectionType switch
         {
             ProgramScheduleItemCollectionType.Collection => Collection?.Name,
-            ProgramScheduleItemCollectionType
-                .TelevisionShow => MediaItem?.Name, // $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
-            ProgramScheduleItemCollectionType
-                .TelevisionSeason => MediaItem?.Name, // $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",
+            ProgramScheduleItemCollectionType.TelevisionShow =>
+                MediaItem?.Name, // $"{TelevisionShow?.Title} ({TelevisionShow?.Year})",
+            ProgramScheduleItemCollectionType.TelevisionSeason =>
+                MediaItem?.Name, // $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",
+            ProgramScheduleItemCollectionType.Artist =>
+                MediaItem?.Name,
             _ => string.Empty
         };
     }
