@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Ignore unsupported plex guids (this prevented some libraries from scanning correctly)
+- Ignore unsupported STRM files from Jellyfin
 
 ## [0.0.43-prealpha] - 2021-06-05
 ### Added
