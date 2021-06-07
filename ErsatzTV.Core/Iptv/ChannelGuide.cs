@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
+using Serilog;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Iptv
@@ -94,7 +96,7 @@ namespace ErsatzTV.Core.Iptv
                     string title = GetTitle(startItem);
                     string subtitle = GetSubtitle(startItem);
                     string description = GetDescription(startItem);
-                    string contentRating = string.Empty;
+                    Option<ContentRating> contentRating = GetContentRating(startItem);
 
                     xml.WriteStartElement("programme");
                     xml.WriteAttributeString("start", start);
@@ -210,12 +212,12 @@ namespace ErsatzTV.Core.Iptv
                         }
                     }
 
-                    if (!string.IsNullOrWhiteSpace(contentRating))
+                    foreach (ContentRating rating in contentRating)
                     {
                         xml.WriteStartElement("rating");
-                        xml.WriteAttributeString("system", "MPAA");
+                        xml.WriteAttributeString("system", rating.System);
                         xml.WriteStartElement("value");
-                        xml.WriteString(contentRating);
+                        xml.WriteString(rating.Value);
                         xml.WriteEndElement(); // value
                         xml.WriteEndElement(); // rating
                     }
@@ -322,5 +324,45 @@ namespace ErsatzTV.Core.Iptv
                 _ => string.Empty
             };
         }
+
+        private static Option<ContentRating> GetContentRating(PlayoutItem playoutItem)
+        {
+            try
+            {
+                return playoutItem.MediaItem switch
+                {
+                    Movie m => m.MovieMetadata
+                        .HeadOrNone()
+                        .Match(mm => ParseContentRating(mm.ContentRating, "MPAA"), () => None),
+                    Episode e => e.Season.Show.ShowMetadata
+                        .HeadOrNone()
+                        .Match(sm => ParseContentRating(sm.ContentRating, "VCHIP"), () => None),
+                    _ => None
+                };
+            }
+            catch (Exception ex)
+            {
+                Log.Logger.Warning(ex, "Failed to get content rating for playout item {Item}", GetTitle(playoutItem));
+                return None;
+            }
+        }
+
+        private static Option<ContentRating> ParseContentRating(string contentRating, string system)
+        {
+            Option<string> maybeFirst = contentRating.Split('/').HeadOrNone();
+            return maybeFirst.Map<Option<ContentRating>>(
+                first =>
+                {
+                    string[] split = first.Split(':');
+                    if (split.Length == 2 && split[0].ToLowerInvariant() == "us")
+                    {
+                        return new ContentRating(system, split[1].ToUpperInvariant());
+                    }
+
+                    return None;
+                }).Flatten();
+        }
+
+        private record ContentRating(string System, string Value);
     }
 }
