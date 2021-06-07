@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add artists directly to schedules
+- Include MPAA and VCHIP content ratings in XMLTV guide data
 
 ### Fixed
 - Ignore unsupported plex guids (this prevented some libraries from scanning correctly)
