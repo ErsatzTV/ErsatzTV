@@ -80,6 +80,13 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     }
 
                     break;
+                case ProgramScheduleItemCollectionType.Artist:
+                    if (item.MediaItemId is null)
+                    {
+                        return BaseError.New("[MediaItem] is required for collection type 'Artist'");
+                    }
+
+                    break;
                 default:
                     return BaseError.New("[CollectionType] is invalid");
             }

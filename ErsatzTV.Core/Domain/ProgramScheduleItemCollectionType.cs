@@ -4,6 +4,7 @@
     {
         Collection = 0,
         TelevisionShow = 1,
-        TelevisionSeason = 2
+        TelevisionSeason = 2,
+        Artist = 3
     }
 }

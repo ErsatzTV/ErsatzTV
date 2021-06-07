@@ -146,5 +146,28 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Mood (Name, ArtistMetadataId) VALUES (@Name, @MetadataId)",
                 new { mood.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        public async Task<List<MusicVideo>> GetArtistItems(int artistId)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.MusicVideos
+                .AsNoTracking()
+                .Include(mv => mv.MusicVideoMetadata)
+                .Include(mv => mv.MediaVersions)
+                .Include(mv => mv.Artist)
+                .ThenInclude(a => a.ArtistMetadata)
+                .Filter(mv => mv.ArtistId == artistId)
+                .ToListAsync();
+        }
+
+        public async Task<List<Artist>> GetAllArtists()
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Artists
+                .AsNoTracking()
+                .Include(a => a.ArtistMetadata)
+                .ThenInclude(am => am.Artwork)
+                .ToListAsync();
+        }
     }
 }

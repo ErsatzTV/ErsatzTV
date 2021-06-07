@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Tests.Fakes;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Moq;
 using NUnit.Framework;
 using Serilog;
 using static LanguageExt.Prelude;
@@ -349,7 +351,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             };
 
             var televisionRepo = new FakeTelevisionRepository();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -429,7 +432,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             };
 
             var televisionRepo = new FakeTelevisionRepository();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(7);
@@ -515,7 +519,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             };
 
             var televisionRepo = new FakeTelevisionRepository();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -605,7 +610,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             };
 
             var televisionRepo = new FakeTelevisionRepository();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -699,7 +705,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             };
 
             var televisionRepo = new FakeTelevisionRepository();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(5);
@@ -792,7 +799,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             };
 
             var televisionRepo = new FakeTelevisionRepository();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, _logger);
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(5);
@@ -851,7 +859,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             var collectionRepo = new FakeMediaCollectionRepository(Map((mediaCollection.Id, mediaItems)));
             var televisionRepo = new FakeTelevisionRepository();
-            var builder = new PlayoutBuilder(collectionRepo, televisionRepo, _logger);
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(collectionRepo, televisionRepo, artistRepo.Object, _logger);
 
             var items = new List<ProgramScheduleItem> { Flood(mediaCollection) };
 

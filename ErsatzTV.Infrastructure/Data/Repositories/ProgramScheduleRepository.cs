@@ -76,6 +76,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .Include(i => i.MediaItem)
                         .ThenInclude(i => (i as Show).ShowMetadata)
                         .ThenInclude(sm => sm.Artwork)
+                        .Include(i => i.MediaItem)
+                        .ThenInclude(i => (i as Artist).ArtistMetadata)
+                        .ThenInclude(am => am.Artwork)
                         .LoadAsync();
                     return programSchedule.Items;
                 }).Sequence();
