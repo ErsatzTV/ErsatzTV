@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
@@ -18,6 +19,9 @@ namespace ErsatzTV.Core.Plex
     {
         private readonly ILogger<PlexMovieLibraryScanner> _logger;
         private readonly IMediator _mediator;
+        private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly IPlexPathReplacementService _plexPathReplacementService;
+        private readonly ILocalFileSystem _localFileSystem;
         private readonly IMetadataRepository _metadataRepository;
         private readonly IMovieRepository _movieRepository;
         private readonly IPlexServerApiClient _plexServerApiClient;
@@ -31,6 +35,9 @@ namespace ErsatzTV.Core.Plex
             ISearchIndex searchIndex,
             ISearchRepository searchRepository,
             IMediator mediator,
+            IMediaSourceRepository mediaSourceRepository,
+            IPlexPathReplacementService plexPathReplacementService,
+            ILocalFileSystem localFileSystem,
             ILogger<PlexMovieLibraryScanner> logger)
             : base(metadataRepository, logger)
         {
@@ -40,6 +47,9 @@ namespace ErsatzTV.Core.Plex
             _searchIndex = searchIndex;
             _searchRepository = searchRepository;
             _mediator = mediator;
+            _mediaSourceRepository = mediaSourceRepository;
+            _plexPathReplacementService = plexPathReplacementService;
+            _localFileSystem = localFileSystem;
             _logger = logger;
         }
 
@@ -48,6 +58,9 @@ namespace ErsatzTV.Core.Plex
             PlexServerAuthToken token,
             PlexLibrary library)
         {
+            List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
+                .GetPlexPathReplacements(library.MediaSourceId);
+            
             Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetMovieLibraryContents(
                 library,
                 connection,
@@ -56,9 +69,27 @@ namespace ErsatzTV.Core.Plex
             await entries.Match(
                 async movieEntries =>
                 {
-                    foreach (PlexMovie incoming in movieEntries)
+                    var validMovies = new List<PlexMovie>();
+                    foreach (PlexMovie movie in movieEntries.OrderBy(m => m.MovieMetadata.Head().Title))
                     {
-                        decimal percentCompletion = (decimal) movieEntries.IndexOf(incoming) / movieEntries.Count;
+                        string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                            pathReplacements,
+                            movie.MediaVersions.Head().MediaFiles.Head().Path,
+                            false);
+
+                        if (!_localFileSystem.FileExists(localPath))
+                        {
+                            _logger.LogWarning("Skipping plex movie that does not exist at {Path}", localPath);
+                        }
+                        else
+                        {
+                            validMovies.Add(movie);
+                        }
+                    }
+
+                    foreach (PlexMovie incoming in validMovies)
+                    {
+                        decimal percentCompletion = (decimal) validMovies.IndexOf(incoming) / validMovies.Count;
                         await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
                         // TODO: figure out how to rebuild playlists
@@ -92,7 +123,7 @@ namespace ErsatzTV.Core.Plex
                             });
                     }
 
-                    var movieKeys = movieEntries.Map(s => s.Key).ToList();
+                    var movieKeys = validMovies.Map(s => s.Key).ToList();
                     List<int> ids = await _movieRepository.RemoveMissingPlexMovies(library, movieKeys);
                     await _searchIndex.RemoveItems(ids);
 
