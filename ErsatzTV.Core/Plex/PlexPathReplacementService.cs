@@ -31,7 +31,13 @@ namespace ErsatzTV.Core.Plex
         {
             List<PlexPathReplacement> replacements =
                 await _mediaSourceRepository.GetPlexPathReplacementsByLibraryId(libraryPathId);
-            Option<PlexPathReplacement> maybeReplacement = replacements
+
+            return GetReplacementPlexPath(replacements, path);
+        }
+
+        public string GetReplacementPlexPath(List<PlexPathReplacement> pathReplacements, string path, bool log = true)
+        {
+            Option<PlexPathReplacement> maybeReplacement = pathReplacements
                 .SingleOrDefault(
                     r =>
                     {
@@ -39,6 +45,7 @@ namespace ErsatzTV.Core.Plex
                         string prefix = r.PlexPath.EndsWith(separatorChar) ? r.PlexPath : r.PlexPath + separatorChar;
                         return path.StartsWith(prefix);
                     });
+
             return maybeReplacement.Match(
                 replacement =>
                 {
@@ -52,11 +59,15 @@ namespace ErsatzTV.Core.Plex
                         finalPath = finalPath.Replace(@"/", @"\");
                     }
 
-                    _logger.LogInformation(
-                        "Replacing plex path {PlexPath} with {LocalPath} resulting in {FinalPath}",
-                        replacement.PlexPath,
-                        replacement.LocalPath,
-                        finalPath);
+                    if (log)
+                    {
+                        _logger.LogInformation(
+                            "Replacing plex path {PlexPath} with {LocalPath} resulting in {FinalPath}",
+                            replacement.PlexPath,
+                            replacement.LocalPath,
+                            finalPath);
+                    }
+
                     return finalPath;
                 },
                 () => path);

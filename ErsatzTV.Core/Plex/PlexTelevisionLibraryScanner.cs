@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
@@ -18,9 +19,12 @@ namespace ErsatzTV.Core.Plex
 {
     public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionLibraryScanner
     {
+        private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
+        private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IMediator _mediator;
         private readonly IMetadataRepository _metadataRepository;
+        private readonly IPlexPathReplacementService _plexPathReplacementService;
         private readonly IPlexServerApiClient _plexServerApiClient;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
@@ -33,6 +37,9 @@ namespace ErsatzTV.Core.Plex
             ISearchIndex searchIndex,
             ISearchRepository searchRepository,
             IMediator mediator,
+            IMediaSourceRepository mediaSourceRepository,
+            IPlexPathReplacementService plexPathReplacementService,
+            ILocalFileSystem localFileSystem,
             ILogger<PlexTelevisionLibraryScanner> logger)
             : base(metadataRepository, logger)
         {
@@ -42,6 +49,9 @@ namespace ErsatzTV.Core.Plex
             _searchIndex = searchIndex;
             _searchRepository = searchRepository;
             _mediator = mediator;
+            _mediaSourceRepository = mediaSourceRepository;
+            _plexPathReplacementService = plexPathReplacementService;
+            _localFileSystem = localFileSystem;
             _logger = logger;
         }
 
@@ -50,6 +60,9 @@ namespace ErsatzTV.Core.Plex
             PlexServerAuthToken token,
             PlexLibrary library)
         {
+            List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
+                .GetPlexPathReplacements(library.MediaSourceId);
+
             Either<BaseError, List<PlexShow>> entries = await _plexServerApiClient.GetShowLibraryContents(
                 library,
                 connection,
@@ -72,7 +85,7 @@ namespace ErsatzTV.Core.Plex
                         await maybeShow.Match(
                             async result =>
                             {
-                                await ScanSeasons(library, result.Item, connection, token);
+                                await ScanSeasons(library, pathReplacements, result.Item, connection, token);
 
                                 if (result.IsAdded)
                                 {
@@ -271,13 +284,14 @@ namespace ErsatzTV.Core.Plex
         }
 
         private async Task<Either<BaseError, Unit>> ScanSeasons(
-            PlexLibrary plexMediaSourceLibrary,
+            PlexLibrary library,
+            List<PlexPathReplacement> pathReplacements,
             PlexShow show,
             PlexConnection connection,
             PlexServerAuthToken token)
         {
             Either<BaseError, List<PlexSeason>> entries = await _plexServerApiClient.GetShowSeasons(
-                plexMediaSourceLibrary,
+                library,
                 show,
                 connection,
                 token);
@@ -291,11 +305,11 @@ namespace ErsatzTV.Core.Plex
 
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexSeason> maybeSeason = await _televisionRepository
-                            .GetOrAddPlexSeason(plexMediaSourceLibrary, incoming)
+                            .GetOrAddPlexSeason(library, incoming)
                             .BindT(existing => UpdateMetadataAndArtwork(existing, incoming));
 
                         await maybeSeason.Match(
-                            async season => await ScanEpisodes(plexMediaSourceLibrary, season, connection, token),
+                            async season => await ScanEpisodes(library, pathReplacements, season, connection, token),
                             error =>
                             {
                                 _logger.LogWarning(
@@ -315,7 +329,7 @@ namespace ErsatzTV.Core.Plex
                 {
                     _logger.LogWarning(
                         "Error synchronizing plex library {Path}: {Error}",
-                        plexMediaSourceLibrary.Name,
+                        library.Name,
                         error.Value);
 
                     return Left<BaseError, Unit>(error).AsTask();
@@ -355,13 +369,14 @@ namespace ErsatzTV.Core.Plex
         }
 
         private async Task<Either<BaseError, Unit>> ScanEpisodes(
-            PlexLibrary plexMediaSourceLibrary,
+            PlexLibrary library,
+            List<PlexPathReplacement> pathReplacements,
             PlexSeason season,
             PlexConnection connection,
             PlexServerAuthToken token)
         {
             Either<BaseError, List<PlexEpisode>> entries = await _plexServerApiClient.GetSeasonEpisodes(
-                plexMediaSourceLibrary,
+                library,
                 season,
                 connection,
                 token);
@@ -369,19 +384,39 @@ namespace ErsatzTV.Core.Plex
             return await entries.Match<Task<Either<BaseError, Unit>>>(
                 async episodeEntries =>
                 {
-                    foreach (PlexEpisode incoming in episodeEntries)
+                    var validEpisodes = new List<PlexEpisode>();
+                    foreach (PlexEpisode episode in episodeEntries)
+                    {
+                        string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                            pathReplacements,
+                            episode.MediaVersions.Head().MediaFiles.Head().Path,
+                            false);
+
+                        if (!_localFileSystem.FileExists(localPath))
+                        {
+                            _logger.LogWarning(
+                                "Skipping plex episode that does not exist at {Path}",
+                                localPath);
+                        }
+                        else
+                        {
+                            validEpisodes.Add(episode);
+                        }
+                    }
+
+                    foreach (PlexEpisode incoming in validEpisodes)
                     {
                         incoming.SeasonId = season.Id;
 
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, PlexEpisode> maybeEpisode = await _televisionRepository
-                            .GetOrAddPlexEpisode(plexMediaSourceLibrary, incoming)
+                            .GetOrAddPlexEpisode(library, incoming)
                             .BindT(existing => UpdateMetadata(existing, incoming))
                             .BindT(
                                 existing => UpdateStatistics(
                                     existing,
                                     incoming,
-                                    plexMediaSourceLibrary,
+                                    library,
                                     connection,
                                     token))
                             .BindT(existing => UpdateArtwork(existing, incoming));
@@ -401,7 +436,7 @@ namespace ErsatzTV.Core.Plex
                             });
                     }
 
-                    var episodeKeys = episodeEntries.Map(s => s.Key).ToList();
+                    var episodeKeys = validEpisodes.Map(s => s.Key).ToList();
                     List<int> ids = await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
                     await _searchIndex.RemoveItems(ids);
                     _searchIndex.Commit();
@@ -412,7 +447,7 @@ namespace ErsatzTV.Core.Plex
                 {
                     _logger.LogWarning(
                         "Error synchronizing plex library {Path}: {Error}",
-                        plexMediaSourceLibrary.Name,
+                        library.Name,
                         error.Value);
 
                     return Left<BaseError, Unit>(error).AsTask();

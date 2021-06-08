@@ -72,6 +72,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         {
             using TvContext context = _dbContextFactory.CreateDbContext();
             return context.PlexPathReplacements
+                .Include(ppr => ppr.PlexMediaSource)
                 .Filter(r => r.PlexMediaSourceId == plexMediaSourceId)
                 .ToListAsync();
         }
