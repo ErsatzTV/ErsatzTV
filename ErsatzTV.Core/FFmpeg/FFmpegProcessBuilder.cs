@@ -152,6 +152,22 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithOverlay(Option<string> input)
+        {
+            foreach (string path in input)
+            {
+                string subfolder = path[..2];
+                string fullPath = Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder, path);
+                
+                _arguments.Add("-i");
+                _arguments.Add(fullPath);
+
+                _complexFilterBuilder = _complexFilterBuilder.WithOverlayBug(input);
+            }
+
+            return this;
+        }
+
         public FFmpegProcessBuilder WithInputCodec(string input, HardwareAccelerationKind hwAccel, string codec)
         {
             if (hwAccel == HardwareAccelerationKind.Qsv && QsvMap.TryGetValue(codec, out string qsvCodec))

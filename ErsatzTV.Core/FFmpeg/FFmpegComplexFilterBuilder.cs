@@ -19,6 +19,7 @@ namespace ErsatzTV.Core.FFmpeg
         private bool _normalizeLoudness;
         private Option<IDisplaySize> _padToSize = None;
         private Option<IDisplaySize> _scaleToSize = None;
+        private Option<string> _overlayBug;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -65,6 +66,12 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegComplexFilterBuilder WithFrameRate(Option<string> frameRate)
         {
             _frameRate = frameRate;
+            return this;
+        }
+
+        public FFmpegComplexFilterBuilder WithOverlayBug(Option<string> path)
+        {
+            _overlayBug = path;
             return this;
         }
 
@@ -137,7 +144,10 @@ namespace ErsatzTV.Core.FFmpeg
                     }
                 });
 
-            if (_scaleToSize.IsSome || _padToSize.IsSome)
+            bool scaleOrPad = _scaleToSize.IsSome || _padToSize.IsSome;
+            bool usesSoftwareFilters = scaleOrPad || _overlayBug.IsSome;
+            
+            if (usesSoftwareFilters)
             {
                 if (acceleration != HardwareAccelerationKind.None && (isHardwareDecode || usesHardwareFilters))
                 {
@@ -150,12 +160,34 @@ namespace ErsatzTV.Core.FFmpeg
                     videoFilterQueue.Add(format);
                 }
 
-                videoFilterQueue.Add("setsar=1");
+                if (scaleOrPad)
+                {
+                    videoFilterQueue.Add("setsar=1");
+                }
+
+                foreach (string overlayBugPath in _overlayBug)
+                {
+                    // position: bottom right, bottom left, top right, top left
+                    // size (%)
+                    // horizontal margin (%), vertical margin (%)
+                    
+                    // frequency:
+                    // every: 5, 10, 15, 20, 30, 60 minutes
+                    // per hour: 1, 2, 3, 4, 6, 12
+                    // every x minutes vs y times per hour
+                    
+                    // duration:
+                    // for n seconds
+                    
+                    // TODO: consider time(0) for wall-clock time
+                    // as an option instead of t for stream time
+                    videoFilterQueue.Add("{OVERLAY}[1:v]overlay=x=W-w-10:y=H-h-10:enable='lt(mod(t,15*60),15)'");
+                }
             }
 
             _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
 
-            if ((_scaleToSize.IsSome || _padToSize.IsSome) && acceleration != HardwareAccelerationKind.None)
+            if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None)
             {
                 string upload = acceleration switch
                 {
@@ -182,7 +214,9 @@ namespace ErsatzTV.Core.FFmpeg
                 }
 
                 complexFilter.Append($"[{videoLabel}]");
-                complexFilter.Append(string.Join(",", videoFilterQueue));
+                string filters = string.Join(",", videoFilterQueue)
+                    .Replace(",{OVERLAY}", "[vt];[vt]");
+                complexFilter.Append(filters);
                 videoLabel = "[v]";
                 complexFilter.Append(videoLabel);
             }

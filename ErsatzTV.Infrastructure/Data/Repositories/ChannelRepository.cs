@@ -40,6 +40,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.Channels
                 .Include(c => c.FFmpegProfile)
                 .ThenInclude(p => p.Resolution)
+                .Include(c => c.Artwork)
                 .OrderBy(c => c.Number)
                 .SingleOrDefaultAsync(c => c.Number == number)
                 .Map(Optional);

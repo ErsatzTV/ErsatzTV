@@ -42,6 +42,12 @@ namespace ErsatzTV.Core.FFmpeg
                 start,
                 now);
 
+            Option<string> maybeArtworkPath = channel.Artwork
+                .Filter(_ => channel.StreamingMode == StreamingMode.TransportStream)
+                .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                .HeadOrNone()
+                .Map(a => a.Path);
+
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports)
                 .WithThreads(playbackSettings.ThreadCount)
                 .WithHardwareAcceleration(playbackSettings.HardwareAcceleration)
@@ -50,6 +56,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
                 .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec)
+                .WithOverlay(maybeArtworkPath)
                 .WithFrameRate(playbackSettings.FrameRate)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(playbackSettings.AudioDuration)
