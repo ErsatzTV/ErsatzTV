@@ -420,7 +420,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
 [Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.44-prealpha...HEAD
-[0.0.43-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.43-prealpha...v0.0.44-prealpha
+[0.0.44-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.43-prealpha...v0.0.44-prealpha
 [0.0.43-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.42-prealpha...v0.0.43-prealpha
 [0.0.42-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.41-prealpha...v0.0.42-prealpha
 [0.0.41-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.40-prealpha...v0.0.41-prealpha
