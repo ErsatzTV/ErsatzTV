@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.0.44-prealpha] - 2021-06-09
 ### Added
 - Add artists directly to schedules
 - Include MPAA and VCHIP content ratings in XMLTV guide data
@@ -417,7 +419,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.43-prealpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.44-prealpha...HEAD
+[0.0.43-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.43-prealpha...v0.0.44-prealpha
 [0.0.43-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.42-prealpha...v0.0.43-prealpha
 [0.0.42-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.41-prealpha...v0.0.42-prealpha
 [0.0.41-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.40-prealpha...v0.0.41-prealpha
