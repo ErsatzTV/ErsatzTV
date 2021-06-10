@@ -27,6 +27,28 @@ namespace ErsatzTV.Validators
                                 StringComparison.OrdinalIgnoreCase)))
                 .When(vm => !string.IsNullOrWhiteSpace(vm.PreferredLanguageCode))
                 .WithMessage("Preferred language code is invalid");
+
+            RuleFor(x => x.WatermarkWidth)
+                .GreaterThan(0)
+                .LessThanOrEqualTo(100)
+                .When(
+                    vm => vm.WatermarkMode != ChannelWatermarkMode.None &&
+                          vm.WatermarkSize == ChannelWatermarkSize.Scaled);
+
+            RuleFor(x => x.WatermarkHorizontalMargin)
+                .GreaterThanOrEqualTo(0)
+                .LessThanOrEqualTo(50)
+                .When(vm => vm.WatermarkMode != ChannelWatermarkMode.None);
+
+            RuleFor(x => x.WatermarkVerticalMargin)
+                .GreaterThanOrEqualTo(0)
+                .LessThanOrEqualTo(50)
+                .When(vm => vm.WatermarkMode != ChannelWatermarkMode.None);
+            
+            RuleFor(x => x.WatermarkDurationSeconds)
+                .GreaterThan(0)
+                .LessThan(c => c.WatermarkFrequencyMinutes * 60)
+                .When(vm => vm.WatermarkMode != ChannelWatermarkMode.None);
         }
     }
 }

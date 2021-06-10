@@ -168,7 +168,7 @@ namespace ErsatzTV.Core.FFmpeg
                 foreach (string overlayBugPath in _overlayBug)
                 {
                     // position: bottom right, bottom left, top right, top left
-                    // size (%)
+                    // width (%)
                     // horizontal margin (%), vertical margin (%)
                     
                     // frequency:

@@ -20,6 +20,11 @@
         <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
             <FluentValidator/>
             <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Channel Settings</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
                 <MudCardContent>
                     <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
@@ -59,7 +64,83 @@
                             </MudButton>
                         </MudItem>
                     </MudGrid>
-                </MudCardContent>
+                    <div style="padding-top: 20px; padding-bottom: 16px;">
+                        <MudText Typo="Typo.h6">Watermark Settings</MudText>
+                    </div>
+                    <MudSelect Class="mt-3" Label="Mode" @bind-Value="_model.WatermarkMode"
+                               For="@(() => _model.WatermarkMode)"
+                               Disabled="@(_model.StreamingMode != StreamingMode.TransportStream)">
+                        <MudSelectItem Value="@(ChannelWatermarkMode.None)">None</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkMode.Permanent)">Permanent</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkMode.Intermittent)">Intermittent</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="Location" @bind-Value="_model.WatermarkLocation"
+                               For="@(() => _model.WatermarkLocation)"
+                               Disabled="@(_model.StreamingMode != StreamingMode.TransportStream || _model.WatermarkMode == ChannelWatermarkMode.None)">
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.BottomRight)">Bottom Right</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.BottomLeft)">Bottom Left</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopRight)">Top Right</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopLeft)">Top Left</MudSelectItem>
+                    </MudSelect>
+                    <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <MudSelect Label="Size" @bind-Value="_model.WatermarkSize"
+                                       For="@(() => _model.WatermarkSize)"
+                                       Disabled="@(_model.StreamingMode != StreamingMode.TransportStream || _model.WatermarkMode == ChannelWatermarkMode.None)">
+                                <MudSelectItem Value="@(ChannelWatermarkSize.Scaled)">Scaled</MudSelectItem>
+                                <MudSelectItem Value="@(ChannelWatermarkSize.ActualSize)">Actual Size</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="6">
+                        <MudTextField Label="Width" @bind-Value="_model.WatermarkWidth"
+                                      For="@(() => _model.WatermarkWidth)"
+                                      Adornment="Adornment.End"
+                                      AdornmentText="%"
+                                      Disabled="@(_model.StreamingMode != StreamingMode.TransportStream || _model.WatermarkMode == ChannelWatermarkMode.None || _model.WatermarkSize == ChannelWatermarkSize.ActualSize)"
+                                      Immediate="true"/>
+                        </MudItem>
+                    </MudGrid>
+                    <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <MudTextField Label="Horizontal Margin" @bind-Value="_model.WatermarkHorizontalMargin"
+                                          For="@(() => _model.WatermarkHorizontalMargin)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="%"
+                                          Disabled="@(_model.StreamingMode != StreamingMode.TransportStream || _model.WatermarkMode == ChannelWatermarkMode.None)"
+                                          Immediate="true"/>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Vertical Margin" @bind-Value="_model.WatermarkVerticalMargin"
+                                          For="@(() => _model.WatermarkVerticalMargin)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="%"
+                                          Disabled="@(_model.StreamingMode != StreamingMode.TransportStream || _model.WatermarkMode == ChannelWatermarkMode.None)"
+                                          Immediate="true"/>
+                        </MudItem>
+                    </MudGrid>
+                    <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <MudSelect Label="Frequency" @bind-Value="_model.WatermarkFrequencyMinutes"
+                                       For="@(() => _model.WatermarkFrequencyMinutes)"
+                                       Disabled="@(_model.StreamingMode != StreamingMode.TransportStream || _model.WatermarkMode != ChannelWatermarkMode.Intermittent)">
+                                <MudSelectItem Value="5">5 minutes</MudSelectItem>
+                                <MudSelectItem Value="10">10 minutes</MudSelectItem>
+                                <MudSelectItem Value="15">15 minutes</MudSelectItem>
+                                <MudSelectItem Value="20">20 minutes</MudSelectItem>
+                                <MudSelectItem Value="30">30 minutes</MudSelectItem>
+                                <MudSelectItem Value="60">60 minutes</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Duration" @bind-Value="_model.WatermarkDurationSeconds"
+                                          For="@(() => _model.WatermarkDurationSeconds)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="seconds"
+                                          Disabled="@(_model.StreamingMode != StreamingMode.TransportStream || _model.WatermarkMode != ChannelWatermarkMode.Intermittent)"
+                                          Immediate="true"/>
+                        </MudItem>
+                    </MudGrid>
+               </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
                         @(IsEdit ? "Save Changes" : "Add Channel")
@@ -100,6 +181,13 @@
                     _model.Logo = channelViewModel.Logo;
                     _model.StreamingMode = channelViewModel.StreamingMode;
                     _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
+                    _model.WatermarkMode = channelViewModel.WatermarkMode;
+                    _model.WatermarkSize = channelViewModel.WatermarkSize;
+                    _model.WatermarkWidth = channelViewModel.WatermarkWidth;
+                    _model.WatermarkHorizontalMargin = channelViewModel.WatermarkHorizontalMargin;
+                    _model.WatermarkVerticalMargin = channelViewModel.WatermarkVerticalMargin;
+                    _model.WatermarkFrequencyMinutes = channelViewModel.WatermarkFrequencyMinutes;
+                    _model.WatermarkDurationSeconds = channelViewModel.WatermarkDurationSeconds;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }
@@ -115,6 +203,13 @@
             _model.Name = "New Channel";
             _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
             _model.StreamingMode = StreamingMode.TransportStream;
+            _model.WatermarkMode = ChannelWatermarkMode.None;
+            _model.WatermarkSize = ChannelWatermarkSize.Scaled;
+            _model.WatermarkWidth = 15;
+            _model.WatermarkHorizontalMargin = 5;
+            _model.WatermarkVerticalMargin = 5;
+            _model.WatermarkFrequencyMinutes = 15;
+            _model.WatermarkDurationSeconds = 15;
         }
     }
 
