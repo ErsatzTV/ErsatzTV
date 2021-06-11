@@ -57,7 +57,6 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithSeek(playbackSettings.StreamSeek)
                 .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec)
                 .WithOverlay(maybeArtworkPath)
-                .WithFrameRate(playbackSettings.FrameRate)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(playbackSettings.AudioDuration)
                 .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);

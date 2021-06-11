@@ -3,14 +3,16 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20210611214836_Remove_FFmpegProfileFrameRate")]
+    partial class Remove_FFmpegProfileFrameRate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -203,9 +205,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<Guid>("UniqueId")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("WatermarkId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("FFmpegProfileId");
@@ -213,45 +212,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("Number")
                         .IsUnique();
 
-                    b.HasIndex("WatermarkId")
-                        .IsUnique();
-
                     b.ToTable("Channel");
-                });
-
-            modelBuilder.Entity("ErsatzTV.Core.Domain.ChannelWatermark", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DurationSeconds")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("FrequencyMinutes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("HorizontalMarginPercent")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Location")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Mode")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Size")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("VerticalMarginPercent")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("WidthPercent")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("ChannelWatermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Collection", b =>
@@ -1841,14 +1802,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ErsatzTV.Core.Domain.ChannelWatermark", "Watermark")
-                        .WithOne("Channel")
-                        .HasForeignKey("ErsatzTV.Core.Domain.Channel", "WatermarkId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
                     b.Navigation("FFmpegProfile");
-
-                    b.Navigation("Watermark");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.CollectionItem", b =>
@@ -2731,11 +2685,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Artwork");
 
                     b.Navigation("Playouts");
-                });
-
-            modelBuilder.Entity("ErsatzTV.Core.Domain.ChannelWatermark", b =>
-                {
-                    b.Navigation("Channel");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Collection", b =>

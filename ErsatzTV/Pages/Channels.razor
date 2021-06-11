@@ -50,9 +50,9 @@
             </MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Language">@context.PreferredLanguageCode</MudTd>
-            <MudTd DataLabel="Mode">@(context.StreamingMode == StreamingMode.TransportStream ? "MPEG-TS" : "HLS Direct")</MudTd>
+            <MudTd DataLabel="Mode">@GetStreamingMode(context.StreamingMode)</MudTd>
             <MudTd DataLabel="FFmpeg Profile">
-                @if (context.StreamingMode == StreamingMode.TransportStream)
+                @if (context.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
                 {
                     @_ffmpegProfiles.Find(p => p.Id == context.FFmpegProfileId)?.Name
                 }
@@ -137,5 +137,11 @@
             Items = processedChannels.Skip(state.Page * state.PageSize).Take(state.PageSize)
         };
     }
+
+    private static string GetStreamingMode(StreamingMode streamingMode) => streamingMode switch {
+        StreamingMode.HttpLiveStreamingDirect => "HLS Direct",
+        StreamingMode.HttpLiveStreamingHybrid => "HLS Hybrid",
+        _ => "MPEG-TS"
+        };
 
 }
