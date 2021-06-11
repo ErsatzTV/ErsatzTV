@@ -349,7 +349,7 @@ namespace ErsatzTV.Core.Iptv
 
         private static Option<ContentRating> ParseContentRating(string contentRating, string system)
         {
-            Option<string> maybeFirst = contentRating.Split('/').HeadOrNone();
+            Option<string> maybeFirst = (contentRating ?? string.Empty).Split('/').HeadOrNone();
             return maybeFirst.Map<Option<ContentRating>>(
                 first =>
                 {
