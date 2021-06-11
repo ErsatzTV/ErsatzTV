@@ -92,15 +92,11 @@ namespace ErsatzTV.Core.FFmpeg
 
                     if (ffmpegProfile.NormalizeVideo)
                     {
-                        result.FrameRate = string.IsNullOrWhiteSpace(ffmpegProfile.FrameRate)
-                            ? None
-                            : Some(ffmpegProfile.FrameRate);
-
                         result.VideoTrackTimeScale = 90000;
                     }
 
                     if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
-                        NeedToNormalizeVideoCodec(ffmpegProfile, videoStream) || result.FrameRate.IsSome)
+                        NeedToNormalizeVideoCodec(ffmpegProfile, videoStream))
                     {
                         result.VideoCodec = ffmpegProfile.VideoCodec;
                         result.VideoBitrate = ffmpegProfile.VideoBitrate;
