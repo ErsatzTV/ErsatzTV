@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+- Fix serving channels.m3u with missing content ratings
+
 ## [0.0.44-prealpha] - 2021-06-09
 ### Added
 - Add artists directly to schedules
