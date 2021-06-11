@@ -332,12 +332,6 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithFrameRate(Option<string> frameRate)
-        {
-            _complexFilterBuilder = _complexFilterBuilder.WithFrameRate(frameRate);
-            return this;
-        }
-
         public FFmpegProcessBuilder WithVideoTrackTimeScale(Option<int> videoTrackTimeScale)
         {
             videoTrackTimeScale.IfSome(

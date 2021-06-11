@@ -48,7 +48,6 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.AudioChannels = update.AudioChannels;
             p.AudioSampleRate = update.AudioSampleRate;
             p.NormalizeAudio = update.NormalizeAudio;
-            p.FrameRate = update.FrameRate;
             await _ffmpegProfileRepository.Update(p);
             return ProjectToViewModel(p);
         }
