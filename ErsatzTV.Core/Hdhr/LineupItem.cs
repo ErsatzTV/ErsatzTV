@@ -22,7 +22,8 @@ namespace ErsatzTV.Core.Hdhr
 
         public string URL => _channel.StreamingMode switch
         {
-            StreamingMode.HttpLiveStreamingDirect => $"{_scheme}://{_host}/iptv/channel/{_channel.Number}.m3u8",
+            StreamingMode.HttpLiveStreamingDirect or StreamingMode.HttpLiveStreamingHybrid =>
+                $"{_scheme}://{_host}/iptv/channel/{_channel.Number}.m3u8",
             _ => $"{_scheme}://{_host}/iptv/channel/{_channel.Number}.ts"
         };
     }

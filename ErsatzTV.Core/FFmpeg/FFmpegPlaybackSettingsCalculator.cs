@@ -69,6 +69,7 @@ namespace ErsatzTV.Core.FFmpeg
                     result.VideoCodec = "copy";
                     result.Deinterlace = false;
                     break;
+                case StreamingMode.HttpLiveStreamingHybrid:
                 case StreamingMode.TransportStream:
                     result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
 

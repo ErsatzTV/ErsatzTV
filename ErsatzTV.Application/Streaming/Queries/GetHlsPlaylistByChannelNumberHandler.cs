@@ -39,6 +39,10 @@ namespace ErsatzTV.Application.Streaming.Queries
             GetHlsPlaylistByChannelNumber request,
             Channel channel)
         {
+            string mode = string.IsNullOrWhiteSpace(request.Mode)
+                ? string.Empty
+                : $"&mode={request.Mode}";
+
             DateTimeOffset now = DateTimeOffset.Now;
             Option<PlayoutItem> maybePlayoutItem = await _playoutRepository.GetPlayoutItem(channel.Id, now);
             return maybePlayoutItem.Match<Either<BaseError, string>>(
@@ -48,11 +52,11 @@ namespace ErsatzTV.Application.Streaming.Queries
                     double timeRemaining = Math.Abs((playoutItem.FinishOffset - now).TotalSeconds);
                     return $@"#EXTM3U
 #EXT-X-VERSION:3
-#EXT-X-TARGETDURATION:6
+#EXT-X-TARGETDURATION:10
 #EXT-X-MEDIA-SEQUENCE:{index}
 #EXT-X-DISCONTINUITY
 #EXTINF:{timeRemaining:F2},
-{request.Scheme}://{request.Host}/ffmpeg/stream/{request.ChannelNumber}?index={index}&mode=hls-direct
+{request.Scheme}://{request.Host}/ffmpeg/stream/{request.ChannelNumber}?index={index}{mode}
 ";
                 },
                 () =>
