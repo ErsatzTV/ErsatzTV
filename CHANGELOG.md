@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add experimental `HLS Hybrid` channel mode
   - Media items are transcoded using the channel's ffmpeg profile and served using HLS
 
+### Changed
+- Remove framerate normalization; it caused more problems than it solved
+
 ### Fixed
 - Fix serving channels.m3u with missing content ratings
 

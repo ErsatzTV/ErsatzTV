@@ -53,8 +53,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     NormalizeLoudness = request.NormalizeLoudness,
                     AudioChannels = request.AudioChannels,
                     AudioSampleRate = request.AudioSampleRate,
-                    NormalizeAudio = request.NormalizeAudio,
-                    FrameRate = request.FrameRate
+                    NormalizeAudio = request.NormalizeAudio
                 });
 
         private Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>

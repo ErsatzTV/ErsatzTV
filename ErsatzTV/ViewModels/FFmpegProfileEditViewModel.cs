@@ -30,7 +30,6 @@ namespace ErsatzTV.ViewModels
             VideoBitrate = viewModel.VideoBitrate;
             VideoBufferSize = viewModel.VideoBufferSize;
             VideoCodec = viewModel.VideoCodec;
-            FrameRate = viewModel.FrameRate;
         }
 
         public int AudioBitrate { get; set; }
@@ -50,7 +49,6 @@ namespace ErsatzTV.ViewModels
         public int VideoBitrate { get; set; }
         public int VideoBufferSize { get; set; }
         public string VideoCodec { get; set; }
-        public string FrameRate { get; set; }
 
         public CreateFFmpegProfile ToCreate() =>
             new(
@@ -69,8 +67,7 @@ namespace ErsatzTV.ViewModels
                 NormalizeLoudness,
                 AudioChannels,
                 AudioSampleRate,
-                NormalizeAudio,
-                FrameRate
+                NormalizeAudio
             );
 
         public UpdateFFmpegProfile ToUpdate() =>
@@ -91,8 +88,7 @@ namespace ErsatzTV.ViewModels
                 NormalizeLoudness,
                 AudioChannels,
                 AudioSampleRate,
-                NormalizeAudio,
-                FrameRate
+                NormalizeAudio
             );
     }
 }
