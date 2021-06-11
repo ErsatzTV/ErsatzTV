@@ -55,12 +55,16 @@ namespace ErsatzTV.Controllers
                         error => BadRequest(error.Value)));
 
         [HttpGet("iptv/channel/{channelNumber}.m3u8")]
-        public Task<IActionResult> GetHttpLiveStreamingVideo(string channelNumber) =>
+        public Task<IActionResult> GetHttpLiveStreamingVideo(
+            string channelNumber,
+            [FromQuery]
+            string mode = "mixed") =>
             _mediator.Send(
                     new GetHlsPlaylistByChannelNumber(
                         Request.Scheme,
                         Request.Host.ToString(),
-                        channelNumber))
+                        channelNumber,
+                        mode))
                 .Map(
                     result => result.Match<IActionResult>(
                         playlist => Content(playlist, "application/x-mpegurl"),
