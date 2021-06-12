@@ -354,7 +354,7 @@ namespace ErsatzTV.Core.Iptv
         private static Option<ContentRating> ParseContentRating(string contentRating, string system)
         {
             Option<string> maybeFirst = (contentRating ?? string.Empty).Split('/').HeadOrNone();
-            return maybeFirst.Map<Option<ContentRating>>(
+            return maybeFirst.Map(
                 first =>
                 {
                     string[] split = first.Split(':');
@@ -365,7 +365,9 @@ namespace ErsatzTV.Core.Iptv
                             : new ContentRating(None, split[1].ToUpperInvariant());
                     }
 
-                    return new ContentRating(None, first);
+                    return string.IsNullOrWhiteSpace(first)
+                        ? Option<ContentRating>.None
+                        : new ContentRating(None, first);
                 }).Flatten();
         }
 
