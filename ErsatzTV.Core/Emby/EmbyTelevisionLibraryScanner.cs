@@ -115,9 +115,10 @@ namespace ErsatzTV.Core.Emby
             List<EmbyItemEtag> existingShows,
             List<EmbyShow> shows)
         {
-            foreach (EmbyShow incoming in shows.OrderBy(s => s.ShowMetadata.Head().Title))
+            var sortedShows = shows.OrderBy(s => s.ShowMetadata.Head().Title).ToList();
+            foreach (EmbyShow incoming in sortedShows)
             {
-                decimal percentCompletion = (decimal) shows.IndexOf(incoming) / shows.Count;
+                decimal percentCompletion = (decimal) sortedShows.IndexOf(incoming) / shows.Count;
                 await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
                 Option<EmbyItemEtag> maybeExisting = existingShows.Find(ie => ie.ItemId == incoming.ItemId);

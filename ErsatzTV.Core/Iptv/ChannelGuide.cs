@@ -215,7 +215,11 @@ namespace ErsatzTV.Core.Iptv
                     foreach (ContentRating rating in contentRating)
                     {
                         xml.WriteStartElement("rating");
-                        xml.WriteAttributeString("system", rating.System);
+                        foreach (string system in rating.System)
+                        {
+                            xml.WriteAttributeString("system", system);
+                        }
+
                         xml.WriteStartElement("value");
                         xml.WriteString(rating.Value);
                         xml.WriteEndElement(); // value
@@ -354,15 +358,17 @@ namespace ErsatzTV.Core.Iptv
                 first =>
                 {
                     string[] split = first.Split(':');
-                    if (split.Length == 2 && split[0].ToLowerInvariant() == "us")
+                    if (split.Length == 2)
                     {
-                        return new ContentRating(system, split[1].ToUpperInvariant());
+                        return split[0].ToLowerInvariant() == "us"
+                            ? new ContentRating(system, split[1].ToUpperInvariant())
+                            : new ContentRating(None, split[1].ToUpperInvariant());
                     }
 
-                    return None;
+                    return new ContentRating(None, first);
                 }).Flatten();
         }
 
-        private record ContentRating(string System, string Value);
+        private record ContentRating(Option<string> System, string Value);
     }
 }
