@@ -57,7 +57,7 @@ namespace ErsatzTV.Application.Channels.Commands
                             });
                     }
 
-                    return new Channel(Guid.NewGuid())
+                    var channel = new Channel(Guid.NewGuid())
                     {
                         Name = name,
                         Number = number,
@@ -66,6 +66,23 @@ namespace ErsatzTV.Application.Channels.Commands
                         Artwork = artwork,
                         PreferredLanguageCode = preferredLanguageCode
                     };
+
+                    if (request.WatermarkMode != ChannelWatermarkMode.None)
+                    {
+                        channel.Watermark = new ChannelWatermark
+                        {
+                            Mode = request.WatermarkMode,
+                            Location = request.WatermarkLocation,
+                            Size = request.WatermarkSize,
+                            WidthPercent = request.WatermarkWidth,
+                            HorizontalMarginPercent = request.WatermarkHorizontalMargin,
+                            VerticalMarginPercent = request.WatermarkVerticalMargin,
+                            FrequencyMinutes = request.WatermarkFrequencyMinutes,
+                            DurationSeconds = request.WatermarkDurationSeconds,
+                        };
+                    }
+
+                    return channel;
                 });
 
         private Validation<BaseError, string> ValidateName(CreateChannel createChannel) =>

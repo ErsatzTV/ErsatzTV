@@ -18,7 +18,8 @@ namespace ErsatzTV.Core.FFmpeg
         private bool _normalizeLoudness;
         private Option<IDisplaySize> _padToSize = None;
         private Option<IDisplaySize> _scaleToSize = None;
-        private Option<string> _overlayBug;
+        private Option<ChannelWatermark> _watermark;
+        private IDisplaySize _resolution;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -62,9 +63,10 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegComplexFilterBuilder WithOverlayBug(Option<string> path)
+        public FFmpegComplexFilterBuilder WithWatermark(Option<ChannelWatermark> watermark, IDisplaySize resolution)
         {
-            _overlayBug = path;
+            _watermark = watermark;
+            _resolution = resolution;
             return this;
         }
 
@@ -86,6 +88,8 @@ namespace ErsatzTV.Core.FFmpeg
 
             var audioFilterQueue = new List<string>();
             var videoFilterQueue = new List<string>();
+            string watermarkScale = string.Empty;
+            string watermarkOverlay = string.Empty;
 
             if (_normalizeLoudness)
             {
@@ -136,7 +140,7 @@ namespace ErsatzTV.Core.FFmpeg
                 });
 
             bool scaleOrPad = _scaleToSize.IsSome || _padToSize.IsSome;
-            bool usesSoftwareFilters = scaleOrPad || _overlayBug.IsSome;
+            bool usesSoftwareFilters = scaleOrPad || _watermark.IsSome;
             
             if (usesSoftwareFilters)
             {
@@ -156,29 +160,37 @@ namespace ErsatzTV.Core.FFmpeg
                     videoFilterQueue.Add("setsar=1");
                 }
 
-                foreach (string overlayBugPath in _overlayBug)
+                foreach (ChannelWatermark watermark in _watermark)
                 {
-                    // position: bottom right, bottom left, top right, top left
-                    // width (%)
-                    // horizontal margin (%), vertical margin (%)
-                    
-                    // frequency:
-                    // every: 5, 10, 15, 20, 30, 60 minutes
-                    // per hour: 1, 2, 3, 4, 6, 12
-                    // every x minutes vs y times per hour
-                    
-                    // duration:
-                    // for n seconds
-                    
-                    // TODO: consider time(0) for wall-clock time
-                    // as an option instead of t for stream time
-                    videoFilterQueue.Add("{OVERLAY}[1:v]overlay=x=W-w-10:y=H-h-10:enable='lt(mod(t,15*60),15)'");
+                    string enable = watermark.Mode == ChannelWatermarkMode.Intermittent
+                        ? $":enable='lt(mod(mod(time(0),60*60),{watermark.FrequencyMinutes}*60),{watermark.DurationSeconds})'"
+                        : string.Empty;
+
+                    double horizontalMargin = Math.Round(watermark.HorizontalMarginPercent / 100.0 * _resolution.Width);
+                    double verticalMargin = Math.Round(watermark.VerticalMarginPercent / 100.0 * _resolution.Height);
+
+                    string position = watermark.Location switch
+                    {
+                        ChannelWatermarkLocation.BottomLeft => $"x={horizontalMargin}:y=H-h-{verticalMargin}",
+                        ChannelWatermarkLocation.TopLeft => $"x={horizontalMargin}:y={verticalMargin}",
+                        ChannelWatermarkLocation.TopRight => $"x=W-w-{horizontalMargin}:y={verticalMargin}",
+                        _ => $"x=W-w-{horizontalMargin}:y=H-h-{verticalMargin}"
+                    };
+
+                    if (watermark.Size == ChannelWatermarkSize.Scaled)
+                    {
+                        double width = Math.Round(watermark.WidthPercent / 100.0 * _resolution.Width);
+                        watermarkScale = $"scale={width}:-1";
+                    }
+
+                    watermarkOverlay = $"overlay={position}{enable}";
                 }
             }
 
             _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
 
-            if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None)
+            if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None &&
+                string.IsNullOrWhiteSpace(watermarkOverlay))
             {
                 string upload = acceleration switch
                 {
@@ -205,9 +217,26 @@ namespace ErsatzTV.Core.FFmpeg
                 }
 
                 complexFilter.Append($"[{videoLabel}]");
-                string filters = string.Join(",", videoFilterQueue)
-                    .Replace(",{OVERLAY}", "[vt];[vt]");
+                var filters = string.Join(",", videoFilterQueue);
                 complexFilter.Append(filters);
+
+                if (!string.IsNullOrWhiteSpace(watermarkOverlay))
+                {
+                    complexFilter.Append("[vt]");
+                    var watermarkLabel = "[1:v]";
+                    if (!string.IsNullOrWhiteSpace(watermarkScale))
+                    {
+                        complexFilter.Append($";{watermarkLabel}{watermarkScale}[wms]");
+                        watermarkLabel = "[wms]";
+                    }
+
+                    complexFilter.Append($";[vt]{watermarkLabel}{watermarkOverlay}");
+                    if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None)
+                    {
+                        complexFilter.Append(",hwupload");
+                    }
+                }
+
                 videoLabel = "[v]";
                 complexFilter.Append(videoLabel);
             }

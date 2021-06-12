@@ -61,6 +61,39 @@ namespace ErsatzTV.Application.Channels.Commands
                     });
             }
 
+            if (update.WatermarkMode == ChannelWatermarkMode.None)
+            {
+                await _channelRepository.RemoveWatermark(c);
+            }
+            else
+            {
+                if (c.Watermark != null)
+                {
+                    c.Watermark.Mode = update.WatermarkMode;
+                    c.Watermark.Location = update.WatermarkLocation;
+                    c.Watermark.Size = update.WatermarkSize;
+                    c.Watermark.WidthPercent = update.WatermarkWidth;
+                    c.Watermark.HorizontalMarginPercent = update.WatermarkHorizontalMargin;
+                    c.Watermark.VerticalMarginPercent = update.WatermarkVerticalMargin;
+                    c.Watermark.FrequencyMinutes = update.WatermarkFrequencyMinutes;
+                    c.Watermark.DurationSeconds = update.WatermarkDurationSeconds;
+                }
+                else
+                {
+                    c.Watermark = new ChannelWatermark
+                    {
+                        Mode = update.WatermarkMode,
+                        Location = update.WatermarkLocation,
+                        Size = update.WatermarkSize,
+                        WidthPercent = update.WatermarkWidth,
+                        HorizontalMarginPercent = update.WatermarkHorizontalMargin,
+                        VerticalMarginPercent = update.WatermarkVerticalMargin,
+                        FrequencyMinutes = update.WatermarkFrequencyMinutes,
+                        DurationSeconds = update.WatermarkDurationSeconds,
+                    };
+                }
+            }
+
             c.StreamingMode = update.StreamingMode;
             await _channelRepository.Update(c);
             return ProjectToViewModel(c);
