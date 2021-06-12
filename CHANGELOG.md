@@ -11,9 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Remove framerate normalization; it caused more problems than it solved
+- Include non-US (and unknown) content ratings in XMLTV
 
 ### Fixed
 - Fix serving channels.m3u with missing content ratings
+- Fix percent progress indicator for Jellyfin and Emby show library scans
 
 ## [0.0.44-prealpha] - 2021-06-09
 ### Added
