@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add experimental `HLS Hybrid` channel mode
   - Media items are transcoded using the channel's ffmpeg profile and served using HLS
+- Add optional channel watermark
 
 ### Changed
 - Remove framerate normalization; it caused more problems than it solved

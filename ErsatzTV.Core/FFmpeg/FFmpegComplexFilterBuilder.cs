@@ -17,7 +17,9 @@ namespace ErsatzTV.Core.FFmpeg
         private string _inputCodec;
         private bool _normalizeLoudness;
         private Option<IDisplaySize> _padToSize = None;
+        private IDisplaySize _resolution;
         private Option<IDisplaySize> _scaleToSize = None;
+        private Option<ChannelWatermark> _watermark;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -61,6 +63,13 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegComplexFilterBuilder WithWatermark(Option<ChannelWatermark> watermark, IDisplaySize resolution)
+        {
+            _watermark = watermark;
+            _resolution = resolution;
+            return this;
+        }
+
         public Option<FFmpegComplexFilter> Build(int videoStreamIndex, Option<int> audioStreamIndex)
         {
             var complexFilter = new StringBuilder();
@@ -79,6 +88,8 @@ namespace ErsatzTV.Core.FFmpeg
 
             var audioFilterQueue = new List<string>();
             var videoFilterQueue = new List<string>();
+            string watermarkScale = string.Empty;
+            string watermarkOverlay = string.Empty;
 
             if (_normalizeLoudness)
             {
@@ -128,7 +139,10 @@ namespace ErsatzTV.Core.FFmpeg
                     }
                 });
 
-            if (_scaleToSize.IsSome || _padToSize.IsSome)
+            bool scaleOrPad = _scaleToSize.IsSome || _padToSize.IsSome;
+            bool usesSoftwareFilters = scaleOrPad || _watermark.IsSome;
+
+            if (usesSoftwareFilters)
             {
                 if (acceleration != HardwareAccelerationKind.None && (isHardwareDecode || usesHardwareFilters))
                 {
@@ -141,12 +155,42 @@ namespace ErsatzTV.Core.FFmpeg
                     videoFilterQueue.Add(format);
                 }
 
-                videoFilterQueue.Add("setsar=1");
+                if (scaleOrPad)
+                {
+                    videoFilterQueue.Add("setsar=1");
+                }
+
+                foreach (ChannelWatermark watermark in _watermark)
+                {
+                    string enable = watermark.Mode == ChannelWatermarkMode.Intermittent
+                        ? $":enable='lt(mod(mod(time(0),60*60),{watermark.FrequencyMinutes}*60),{watermark.DurationSeconds})'"
+                        : string.Empty;
+
+                    double horizontalMargin = Math.Round(watermark.HorizontalMarginPercent / 100.0 * _resolution.Width);
+                    double verticalMargin = Math.Round(watermark.VerticalMarginPercent / 100.0 * _resolution.Height);
+
+                    string position = watermark.Location switch
+                    {
+                        ChannelWatermarkLocation.BottomLeft => $"x={horizontalMargin}:y=H-h-{verticalMargin}",
+                        ChannelWatermarkLocation.TopLeft => $"x={horizontalMargin}:y={verticalMargin}",
+                        ChannelWatermarkLocation.TopRight => $"x=W-w-{horizontalMargin}:y={verticalMargin}",
+                        _ => $"x=W-w-{horizontalMargin}:y=H-h-{verticalMargin}"
+                    };
+
+                    if (watermark.Size == ChannelWatermarkSize.Scaled)
+                    {
+                        double width = Math.Round(watermark.WidthPercent / 100.0 * _resolution.Width);
+                        watermarkScale = $"scale={width}:-1";
+                    }
+
+                    watermarkOverlay = $"overlay={position}{enable}";
+                }
             }
 
             _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
 
-            if ((_scaleToSize.IsSome || _padToSize.IsSome) && acceleration != HardwareAccelerationKind.None)
+            if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None &&
+                string.IsNullOrWhiteSpace(watermarkOverlay))
             {
                 string upload = acceleration switch
                 {
@@ -173,7 +217,26 @@ namespace ErsatzTV.Core.FFmpeg
                 }
 
                 complexFilter.Append($"[{videoLabel}]");
-                complexFilter.Append(string.Join(",", videoFilterQueue));
+                var filters = string.Join(",", videoFilterQueue);
+                complexFilter.Append(filters);
+
+                if (!string.IsNullOrWhiteSpace(watermarkOverlay))
+                {
+                    complexFilter.Append("[vt]");
+                    var watermarkLabel = "[1:v]";
+                    if (!string.IsNullOrWhiteSpace(watermarkScale))
+                    {
+                        complexFilter.Append($";{watermarkLabel}{watermarkScale}[wms]");
+                        watermarkLabel = "[wms]";
+                    }
+
+                    complexFilter.Append($";[vt]{watermarkLabel}{watermarkOverlay}");
+                    if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None)
+                    {
+                        complexFilter.Append(",hwupload");
+                    }
+                }
+
                 videoLabel = "[v]";
                 complexFilter.Append(videoLabel);
             }
