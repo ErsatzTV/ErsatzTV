@@ -8,6 +8,8 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Processing;
@@ -18,10 +20,17 @@ namespace ErsatzTV.Infrastructure.Images
     {
         private static readonly SHA1CryptoServiceProvider Crypto;
         private readonly ILocalFileSystem _localFileSystem;
+        private readonly ILogger<ImageCache> _logger;
+        private readonly IMemoryCache _memoryCache;
 
         static ImageCache() => Crypto = new SHA1CryptoServiceProvider();
 
-        public ImageCache(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
+        public ImageCache(ILocalFileSystem localFileSystem, IMemoryCache memoryCache, ILogger<ImageCache> logger)
+        {
+            _localFileSystem = localFileSystem;
+            _memoryCache = memoryCache;
+            _logger = logger;
+        }
 
         public async Task<Either<BaseError, byte[]>> ResizeImage(byte[] imageBuffer, int height)
         {
@@ -119,6 +128,29 @@ namespace ErsatzTV.Infrastructure.Images
             };
 
             return Path.Combine(baseFolder, fileName);
+        }
+
+        public async Task<bool> IsAnimated(string fileName)
+        {
+            try
+            {
+                var cacheKey = $"image.animated.{Path.GetFileName(fileName)}";
+                if (_memoryCache.TryGetValue(cacheKey, out bool animated))
+                {
+                    return animated;
+                }
+
+                using Image image = await Image.LoadAsync(fileName);
+                animated = image.Frames.Count > 1;
+                _memoryCache.Set(cacheKey, animated, TimeSpan.FromDays(1));
+
+                return animated;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unable to check image for animation");
+                return false;
+            }
         }
     }
 }

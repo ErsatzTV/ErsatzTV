@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Images;
 using LanguageExt;
 
 namespace ErsatzTV.Core.FFmpeg
@@ -11,14 +12,17 @@ namespace ErsatzTV.Core.FFmpeg
     public class FFmpegProcessService
     {
         private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
+        private readonly IImageCache _imageCache;
         private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
         public FFmpegProcessService(
             FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
-            IFFmpegStreamSelector ffmpegStreamSelector)
+            IFFmpegStreamSelector ffmpegStreamSelector,
+            IImageCache imageCache)
         {
             _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
             _ffmpegStreamSelector = ffmpegStreamSelector;
+            _imageCache = imageCache;
         }
 
         public async Task<Process> ForPlayoutItem(
@@ -46,7 +50,11 @@ namespace ErsatzTV.Core.FFmpeg
                 .Filter(_ => channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                 .HeadOrNone()
-                .Map(a => a.Path);
+                .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+
+            bool isAnimated = await maybeWatermarkPath.Match(
+                p => _imageCache.IsAnimated(p),
+                () => Task.FromResult(false));
 
             Option<ChannelWatermark> maybeWatermark = channel.Watermark;
 
@@ -58,7 +66,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
                 .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec)
-                .WithWatermark(maybeWatermark, maybeWatermarkPath, channel.FFmpegProfile.Resolution)
+                .WithWatermark(maybeWatermark, maybeWatermarkPath, channel.FFmpegProfile.Resolution, isAnimated)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(playbackSettings.AudioDuration)
                 .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);
