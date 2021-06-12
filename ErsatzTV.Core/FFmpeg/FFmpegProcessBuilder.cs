@@ -155,15 +155,19 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegProcessBuilder WithWatermark(
             Option<ChannelWatermark> watermark,
             Option<string> maybePath,
-            IDisplaySize resolution)
+            IDisplaySize resolution,
+            bool isAnimated)
         {
             foreach (string path in maybePath)
             {
-                string subfolder = path[..2];
-                string fullPath = Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder, path);
+                if (isAnimated)
+                {
+                    _arguments.Add("-ignore_loop");
+                    _arguments.Add("0");
+                }
 
                 _arguments.Add("-i");
-                _arguments.Add(fullPath);
+                _arguments.Add(path);
 
                 _complexFilterBuilder = _complexFilterBuilder.WithWatermark(watermark, resolution);
             }
