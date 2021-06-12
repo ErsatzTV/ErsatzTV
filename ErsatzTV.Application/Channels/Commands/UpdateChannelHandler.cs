@@ -89,7 +89,7 @@ namespace ErsatzTV.Application.Channels.Commands
                         HorizontalMarginPercent = update.WatermarkHorizontalMargin,
                         VerticalMarginPercent = update.WatermarkVerticalMargin,
                         FrequencyMinutes = update.WatermarkFrequencyMinutes,
-                        DurationSeconds = update.WatermarkDurationSeconds,
+                        DurationSeconds = update.WatermarkDurationSeconds
                     };
                 }
             }

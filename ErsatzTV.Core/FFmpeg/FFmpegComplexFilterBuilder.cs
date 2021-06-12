@@ -17,9 +17,9 @@ namespace ErsatzTV.Core.FFmpeg
         private string _inputCodec;
         private bool _normalizeLoudness;
         private Option<IDisplaySize> _padToSize = None;
+        private IDisplaySize _resolution;
         private Option<IDisplaySize> _scaleToSize = None;
         private Option<ChannelWatermark> _watermark;
-        private IDisplaySize _resolution;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -141,7 +141,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             bool scaleOrPad = _scaleToSize.IsSome || _padToSize.IsSome;
             bool usesSoftwareFilters = scaleOrPad || _watermark.IsSome;
-            
+
             if (usesSoftwareFilters)
             {
                 if (acceleration != HardwareAccelerationKind.None && (isHardwareDecode || usesHardwareFilters))

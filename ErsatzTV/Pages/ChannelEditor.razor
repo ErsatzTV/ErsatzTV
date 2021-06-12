@@ -65,7 +65,7 @@
                             </MudButton>
                         </MudItem>
                     </MudGrid>
-                    <div style="padding-top: 20px; padding-bottom: 16px;">
+                    <div style="padding-bottom: 16px; padding-top: 20px;">
                         <MudText Typo="Typo.h6">Watermark Settings</MudText>
                     </div>
                     <MudSelect Class="mt-3" Label="Mode" @bind-Value="_model.WatermarkMode"
@@ -93,12 +93,12 @@
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="6">
-                        <MudTextField Label="Width" @bind-Value="_model.WatermarkWidth"
-                                      For="@(() => _model.WatermarkWidth)"
-                                      Adornment="Adornment.End"
-                                      AdornmentText="%"
-                                      Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect || _model.WatermarkMode == ChannelWatermarkMode.None || _model.WatermarkSize == ChannelWatermarkSize.ActualSize)"
-                                      Immediate="true"/>
+                            <MudTextField Label="Width" @bind-Value="_model.WatermarkWidth"
+                                          For="@(() => _model.WatermarkWidth)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="%"
+                                          Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect || _model.WatermarkMode == ChannelWatermarkMode.None || _model.WatermarkSize == ChannelWatermarkSize.ActualSize)"
+                                          Immediate="true"/>
                         </MudItem>
                     </MudGrid>
                     <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
@@ -141,7 +141,7 @@
                                           Immediate="true"/>
                         </MudItem>
                     </MudGrid>
-               </MudCardContent>
+                </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
                         @(IsEdit ? "Save Changes" : "Add Channel")

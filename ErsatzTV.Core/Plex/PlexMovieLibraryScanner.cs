@@ -17,13 +17,13 @@ namespace ErsatzTV.Core.Plex
 {
     public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScanner
     {
-        private readonly ILogger<PlexMovieLibraryScanner> _logger;
-        private readonly IMediator _mediator;
-        private readonly IMediaSourceRepository _mediaSourceRepository;
-        private readonly IPlexPathReplacementService _plexPathReplacementService;
         private readonly ILocalFileSystem _localFileSystem;
+        private readonly ILogger<PlexMovieLibraryScanner> _logger;
+        private readonly IMediaSourceRepository _mediaSourceRepository;
+        private readonly IMediator _mediator;
         private readonly IMetadataRepository _metadataRepository;
         private readonly IMovieRepository _movieRepository;
+        private readonly IPlexPathReplacementService _plexPathReplacementService;
         private readonly IPlexServerApiClient _plexServerApiClient;
         private readonly ISearchIndex _searchIndex;
         private readonly ISearchRepository _searchRepository;
@@ -60,7 +60,7 @@ namespace ErsatzTV.Core.Plex
         {
             List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
                 .GetPlexPathReplacements(library.MediaSourceId);
-            
+
             Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetMovieLibraryContents(
                 library,
                 connection,

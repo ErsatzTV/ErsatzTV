@@ -44,7 +44,7 @@ namespace ErsatzTV.Validators
                 .GreaterThanOrEqualTo(0)
                 .LessThanOrEqualTo(50)
                 .When(vm => vm.WatermarkMode != ChannelWatermarkMode.None);
-            
+
             RuleFor(x => x.WatermarkDurationSeconds)
                 .GreaterThan(0)
                 .LessThan(c => c.WatermarkFrequencyMinutes * 60)
