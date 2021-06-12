@@ -12,6 +12,14 @@ namespace ErsatzTV.ViewModels
         public string PreferredLanguageCode { get; set; }
         public string Logo { get; set; }
         public StreamingMode StreamingMode { get; set; }
+        public ChannelWatermarkMode WatermarkMode { get; set; }
+        public ChannelWatermarkLocation WatermarkLocation { get; set; }
+        public ChannelWatermarkSize WatermarkSize { get; set; }
+        public int WatermarkWidth { get; set; }
+        public int WatermarkHorizontalMargin { get; set; }
+        public int WatermarkVerticalMargin { get; set; }
+        public int WatermarkFrequencyMinutes { get; set; }
+        public int WatermarkDurationSeconds { get; set; }
 
         public UpdateChannel ToUpdate() =>
             new(
@@ -21,7 +29,15 @@ namespace ErsatzTV.ViewModels
                 FFmpegProfileId,
                 Logo,
                 PreferredLanguageCode,
-                StreamingMode);
+                StreamingMode,
+                WatermarkMode,
+                WatermarkLocation,
+                WatermarkSize,
+                WatermarkWidth,
+                WatermarkHorizontalMargin,
+                WatermarkVerticalMargin,
+                WatermarkFrequencyMinutes,
+                WatermarkDurationSeconds);
 
         public CreateChannel ToCreate() =>
             new(
@@ -30,6 +46,14 @@ namespace ErsatzTV.ViewModels
                 FFmpegProfileId,
                 Logo,
                 PreferredLanguageCode,
-                StreamingMode);
+                StreamingMode,
+                WatermarkMode,
+                WatermarkLocation,
+                WatermarkSize,
+                WatermarkWidth,
+                WatermarkHorizontalMargin,
+                WatermarkVerticalMargin,
+                WatermarkFrequencyMinutes,
+                WatermarkDurationSeconds);
     }
 }

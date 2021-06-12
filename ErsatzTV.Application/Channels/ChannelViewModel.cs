@@ -9,5 +9,13 @@ namespace ErsatzTV.Application.Channels
         int FFmpegProfileId,
         string Logo,
         string PreferredLanguageCode,
-        StreamingMode StreamingMode);
+        StreamingMode StreamingMode,
+        ChannelWatermarkMode WatermarkMode,
+        ChannelWatermarkLocation WatermarkLocation,
+        ChannelWatermarkSize WatermarkSize,
+        int WatermarkWidth,
+        int WatermarkHorizontalMargin,
+        int WatermarkVerticalMargin,
+        int WatermarkFrequencyMinutes,
+        int WatermarkDurationSeconds);
 }

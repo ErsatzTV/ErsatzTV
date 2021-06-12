@@ -14,6 +14,8 @@ namespace ErsatzTV.Core.Domain
         public string Name { get; set; }
         public int FFmpegProfileId { get; set; }
         public FFmpegProfile FFmpegProfile { get; set; }
+        public int? WatermarkId { get; set; }
+        public ChannelWatermark Watermark { get; set; }
         public StreamingMode StreamingMode { get; set; }
         public List<Playout> Playouts { get; set; }
         public List<Artwork> Artwork { get; set; }

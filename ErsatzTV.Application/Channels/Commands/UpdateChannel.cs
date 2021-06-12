@@ -13,5 +13,13 @@ namespace ErsatzTV.Application.Channels.Commands
         int FFmpegProfileId,
         string Logo,
         string PreferredLanguageCode,
-        StreamingMode StreamingMode) : IRequest<Either<BaseError, ChannelViewModel>>;
+        StreamingMode StreamingMode,
+        ChannelWatermarkMode WatermarkMode,
+        ChannelWatermarkLocation WatermarkLocation,
+        ChannelWatermarkSize WatermarkSize,
+        int WatermarkWidth,
+        int WatermarkHorizontalMargin,
+        int WatermarkVerticalMargin,
+        int WatermarkFrequencyMinutes,
+        int WatermarkDurationSeconds) : IRequest<Either<BaseError, ChannelViewModel>>;
 }
