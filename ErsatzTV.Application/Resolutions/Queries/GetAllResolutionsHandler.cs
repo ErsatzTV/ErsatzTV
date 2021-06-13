@@ -2,21 +2,29 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Resolutions.Mapper;
 
 namespace ErsatzTV.Application.Resolutions.Queries
 {
     public class GetAllResolutionsHandler : IRequestHandler<GetAllResolutions, List<ResolutionViewModel>>
     {
-        private readonly IResolutionRepository _resolutionRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public GetAllResolutionsHandler(IResolutionRepository resolutionRepository) =>
-            _resolutionRepository = resolutionRepository;
+        public GetAllResolutionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public Task<List<ResolutionViewModel>> Handle(GetAllResolutions request, CancellationToken cancellationToken) =>
-            _resolutionRepository.GetAll().Map(resolutions => resolutions.Map(ProjectToViewModel).ToList());
+        public async Task<List<ResolutionViewModel>> Handle(
+            GetAllResolutions request,
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Resolutions
+                .ToListAsync(cancellationToken)
+                .Map(list => list.Map(ProjectToViewModel).ToList());
+        }
     }
 }
