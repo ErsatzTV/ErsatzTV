@@ -8,7 +8,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface IPlayoutRepository
     {
-        Task<Option<Playout>> Get(int id);
         Task<Option<Playout>> GetFull(int id);
         Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now);
         Task<Option<DateTimeOffset>> GetNextItemStart(int channelId, DateTimeOffset now);

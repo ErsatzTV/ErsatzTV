@@ -21,12 +21,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContextFactory = dbContextFactory;
         }
 
-        public Task<Option<Playout>> Get(int id) =>
-            _dbContext.Playouts
-                .OrderBy(p => p.Id)
-                .SingleOrDefaultAsync(p => p.Id == id)
-                .Map(Optional);
-
         public async Task<Option<Playout>> GetFull(int id) =>
             await _dbContext.Playouts
                 .Include(p => p.Channel)

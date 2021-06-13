@@ -6,24 +6,11 @@ namespace ErsatzTV.Application.Playouts
 {
     internal static class Mapper
     {
-        internal static PlayoutViewModel ProjectToViewModel(Playout playout) =>
-            new(
-                playout.Id,
-                Project(playout.Channel),
-                Project(playout.ProgramSchedule),
-                playout.ProgramSchedulePlayoutType);
-
         internal static PlayoutItemViewModel ProjectToViewModel(PlayoutItem playoutItem) =>
             new(
                 GetDisplayTitle(playoutItem.MediaItem),
                 playoutItem.StartOffset,
                 GetDisplayDuration(playoutItem.MediaItem));
-
-        private static PlayoutChannelViewModel Project(Channel channel) =>
-            new(channel.Id, channel.Number, channel.Name);
-
-        private static PlayoutProgramScheduleViewModel Project(ProgramSchedule programSchedule) =>
-            new(programSchedule.Id, programSchedule.Name);
 
         private static string GetDisplayTitle(MediaItem mediaItem)
         {

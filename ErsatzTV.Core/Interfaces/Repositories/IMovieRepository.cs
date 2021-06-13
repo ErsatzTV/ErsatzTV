@@ -14,8 +14,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<Movie>> GetMovie(int movieId);
         Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(LibraryPath libraryPath, string path);
         Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> GetOrAdd(PlexLibrary library, PlexMovie item);
-        Task<int> GetMovieCount();
-        Task<List<MovieMetadata>> GetPagedMovies(int pageNumber, int pageSize);
         Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids);
         Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath);
         Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);

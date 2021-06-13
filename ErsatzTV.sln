@@ -2,10 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV", "ErsatzTV\ErsatzTV.csproj", "{E83551AD-27E4-46E5-AD06-5B0DF797B8FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.CommandLine", "ErsatzTV.CommandLine\ErsatzTV.CommandLine.csproj", "{B3615FB4-9A0A-419F-AB49-CD162B14AC9A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Api.Sdk", "generated\ErsatzTV.Api.Sdk\src\ErsatzTV.Api.Sdk\ErsatzTV.Api.Sdk.csproj", "{2926C44D-6351-4E57-976D-E7A5919CC406}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Infrastructure", "ErsatzTV.Infrastructure\ErsatzTV.Infrastructure.csproj", "{C56FC23D-B863-401E-8E7C-E92BC307AFC1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Core", "ErsatzTV.Core\ErsatzTV.Core.csproj", "{BAC52351-F5CC-47A7-9C60-3E9551A3E26A}"
@@ -24,14 +20,6 @@ Global
 		{E83551AD-27E4-46E5-AD06-5B0DF797B8FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E83551AD-27E4-46E5-AD06-5B0DF797B8FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E83551AD-27E4-46E5-AD06-5B0DF797B8FF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B3615FB4-9A0A-419F-AB49-CD162B14AC9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B3615FB4-9A0A-419F-AB49-CD162B14AC9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B3615FB4-9A0A-419F-AB49-CD162B14AC9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B3615FB4-9A0A-419F-AB49-CD162B14AC9A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2926C44D-6351-4E57-976D-E7A5919CC406}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2926C44D-6351-4E57-976D-E7A5919CC406}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2926C44D-6351-4E57-976D-E7A5919CC406}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2926C44D-6351-4E57-976D-E7A5919CC406}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C56FC23D-B863-401E-8E7C-E92BC307AFC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C56FC23D-B863-401E-8E7C-E92BC307AFC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C56FC23D-B863-401E-8E7C-E92BC307AFC1}.Release|Any CPU.ActiveCfg = Release|Any CPU

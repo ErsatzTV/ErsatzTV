@@ -24,32 +24,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task<LocalMediaSource> Add(LocalMediaSource localMediaSource)
-        {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            await context.LocalMediaSources.AddAsync(localMediaSource);
-            await context.SaveChangesAsync();
-            return localMediaSource;
-        }
-
         public async Task<PlexMediaSource> Add(PlexMediaSource plexMediaSource)
         {
             await using TvContext context = _dbContextFactory.CreateDbContext();
             await context.PlexMediaSources.AddAsync(plexMediaSource);
             await context.SaveChangesAsync();
             return plexMediaSource;
-        }
-
-        public async Task<List<MediaSource>> GetAll()
-        {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            List<MediaSource> all = await context.MediaSources.ToListAsync();
-            foreach (PlexMediaSource plex in all.OfType<PlexMediaSource>())
-            {
-                await context.Entry(plex).Collection(p => p.Connections).LoadAsync();
-            }
-
-            return all;
         }
 
         public Task<List<PlexMediaSource>> GetAllPlex()
@@ -84,15 +64,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(l => l.Paths)
                 .OrderBy(l => l.Id) // https://github.com/dotnet/efcore/issues/22579
                 .SingleOrDefaultAsync(l => l.Id == plexLibraryId)
-                .Map(Optional);
-        }
-
-        public Task<Option<MediaSource>> Get(int id)
-        {
-            using TvContext context = _dbContextFactory.CreateDbContext();
-            return context.MediaSources
-                .OrderBy(s => s.Id) // https://github.com/dotnet/efcore/issues/22579
-                .SingleOrDefaultAsync(s => s.Id == id)
                 .Map(Optional);
         }
 
@@ -138,20 +109,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     plexLibraryPathId)
                 .Include(ppr => ppr.PlexMediaSource)
                 .ToListAsync();
-        }
-
-        public Task<int> CountMediaItems(int id)
-        {
-            using TvContext context = _dbContextFactory.CreateDbContext();
-            return context.MediaItems
-                .CountAsync(i => i.LibraryPath.Library.MediaSourceId == id);
-        }
-
-        public async Task Update(LocalMediaSource localMediaSource)
-        {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            context.LocalMediaSources.Update(localMediaSource);
-            await context.SaveChangesAsync();
         }
 
         public async Task Update(
@@ -326,21 +283,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
 
             return Unit.Default;
-        }
-
-        public async Task Update(PlexLibrary plexMediaSourceLibrary)
-        {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            context.PlexLibraries.Update(plexMediaSourceLibrary);
-            await context.SaveChangesAsync();
-        }
-
-        public async Task Delete(int mediaSourceId)
-        {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            MediaSource mediaSource = await context.MediaSources.FindAsync(mediaSourceId);
-            context.MediaSources.Remove(mediaSource);
-            await context.SaveChangesAsync();
         }
 
         public async Task<List<int>> DeleteAllPlex()
