@@ -111,16 +111,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<List<Playout>> GetAll()
-        {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            return await context.Playouts
-                .AsNoTracking()
-                .Include(p => p.Channel)
-                .Include(p => p.ProgramSchedule)
-                .ToListAsync();
-        }
-
         public Task Update(Playout playout)
         {
             _dbContext.Playouts.Update(playout);
