@@ -17,7 +17,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<Collection>> GetAll();
         Task<int> CountAllCollections();
         Task<List<Collection>> GetPagedCollections(int pageNumber, int pageSize);
-        Task<Option<List<MediaItem>>> GetItems(int id);
+        Task<List<MediaItem>> GetItems(int id);
         Task<bool> Update(Collection collection);
         Task Delete(int collectionId);
         Task<List<int>> PlayoutIdsUsingCollection(int collectionId);

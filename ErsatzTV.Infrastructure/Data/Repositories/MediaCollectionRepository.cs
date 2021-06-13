@@ -197,8 +197,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public Task<Option<List<MediaItem>>> GetItems(int id) =>
-            Get(id).MapT(GetItemsForCollection).Bind(x => x.Sequence());
+        public async Task<List<MediaItem>> GetItems(int collectionId)
+        {
+            var result = new List<MediaItem>();
+
+            result.AddRange(await GetMovieItems(collectionId));
+            result.AddRange(await GetShowItems(collectionId));
+            result.AddRange(await GetSeasonItems(collectionId));
+            result.AddRange(await GetEpisodeItems(collectionId));
+            result.AddRange(await GetArtistItems(collectionId));
+            result.AddRange(await GetMusicVideoItems(collectionId));
+
+            return result.Distinct().ToList();
+        }
 
         public Task<bool> Update(Collection collection)
         {
@@ -228,27 +239,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 @"SELECT IFNULL(MIN(UseCustomPlaybackOrder), 0) FROM Collection WHERE Id = @CollectionId",
                 new { CollectionId = collectionId });
 
-        private async Task<List<MediaItem>> GetItemsForCollection(Collection collection)
-        {
-            var result = new List<MediaItem>();
-
-            result.AddRange(await GetMovieItems(collection));
-            result.AddRange(await GetShowItems(collection));
-            result.AddRange(await GetSeasonItems(collection));
-            result.AddRange(await GetEpisodeItems(collection));
-            result.AddRange(await GetArtistItems(collection));
-            result.AddRange(await GetMusicVideoItems(collection));
-
-            return result.Distinct().ToList();
-        }
-
-        private async Task<List<Movie>> GetMovieItems(Collection collection)
+        private async Task<List<Movie>> GetMovieItems(int collectionId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
                 @"SELECT m.Id FROM CollectionItem ci
             INNER JOIN Movie m ON m.Id = ci.MediaItemId
             WHERE ci.CollectionId = @CollectionId",
-                new { CollectionId = collection.Id });
+                new { CollectionId = collectionId });
 
             return await _dbContext.Movies
                 .Include(m => m.MovieMetadata)
@@ -257,14 +254,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        private async Task<List<MusicVideo>> GetArtistItems(Collection collection)
+        private async Task<List<MusicVideo>> GetArtistItems(int collectionId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
                 @"SELECT MusicVideo.Id FROM CollectionItem ci
             INNER JOIN Artist on Artist.Id = ci.MediaItemId
             INNER JOIN MusicVideo on Artist.Id = MusicVideo.ArtistId
             WHERE ci.CollectionId = @CollectionId",
-                new { CollectionId = collection.Id });
+                new { CollectionId = collectionId });
 
             return await _dbContext.MusicVideos
                 .Include(m => m.Artist)
@@ -276,13 +273,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
 
-        private async Task<List<MusicVideo>> GetMusicVideoItems(Collection collection)
+        private async Task<List<MusicVideo>> GetMusicVideoItems(int collectionId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
                 @"SELECT m.Id FROM CollectionItem ci
             INNER JOIN MusicVideo m ON m.Id = ci.MediaItemId
             WHERE ci.CollectionId = @CollectionId",
-                new { CollectionId = collection.Id });
+                new { CollectionId = collectionId });
 
             return await _dbContext.MusicVideos
                 .Include(m => m.Artist)
@@ -293,7 +290,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        private async Task<List<Episode>> GetShowItems(Collection collection)
+        private async Task<List<Episode>> GetShowItems(int collectionId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
                 @"SELECT Episode.Id FROM CollectionItem ci
@@ -301,7 +298,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             INNER JOIN Season ON Season.ShowId = Show.Id
             INNER JOIN Episode ON Episode.SeasonId = Season.Id
             WHERE ci.CollectionId = @CollectionId",
-                new { CollectionId = collection.Id });
+                new { CollectionId = collectionId });
 
             return await _dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
@@ -313,14 +310,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        private async Task<List<Episode>> GetSeasonItems(Collection collection)
+        private async Task<List<Episode>> GetSeasonItems(int collectionId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
                 @"SELECT Episode.Id FROM CollectionItem ci
             INNER JOIN Season ON Season.Id = ci.MediaItemId
             INNER JOIN Episode ON Episode.SeasonId = Season.Id
             WHERE ci.CollectionId = @CollectionId",
-                new { CollectionId = collection.Id });
+                new { CollectionId = collectionId });
 
             return await _dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
@@ -332,13 +329,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        private async Task<List<Episode>> GetEpisodeItems(Collection collection)
+        private async Task<List<Episode>> GetEpisodeItems(int collectionId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
                 @"SELECT Episode.Id FROM CollectionItem ci
             INNER JOIN Episode ON Episode.Id = ci.MediaItemId
             WHERE ci.CollectionId = @CollectionId",
-                new { CollectionId = collection.Id });
+                new { CollectionId = collectionId });
 
             return await _dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)

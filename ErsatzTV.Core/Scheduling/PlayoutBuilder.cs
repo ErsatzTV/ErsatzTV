@@ -58,9 +58,9 @@ namespace ErsatzTV.Core.Scheduling
                     switch (collectionKey.CollectionType)
                     {
                         case ProgramScheduleItemCollectionType.Collection:
-                            Option<List<MediaItem>> maybeItems =
+                            List<MediaItem> collectionItems =
                                 await _mediaCollectionRepository.GetItems(collectionKey.CollectionId ?? 0);
-                            return Tuple(collectionKey, await maybeItems.IfNoneAsync(new List<MediaItem>()));
+                            return Tuple(collectionKey, collectionItems);
                         case ProgramScheduleItemCollectionType.TelevisionShow:
                             List<Episode> showItems =
                                 await _televisionRepository.GetShowItems(collectionKey.MediaItemId ?? 0);

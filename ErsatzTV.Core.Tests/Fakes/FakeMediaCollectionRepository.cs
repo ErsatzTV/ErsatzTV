@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Fakes
 {
@@ -31,7 +30,7 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<Collection>> GetPagedCollections(int pageNumber, int pageSize) =>
             throw new NotSupportedException();
 
-        public Task<Option<List<MediaItem>>> GetItems(int id) => Some(_data[id].ToList()).AsTask();
+        public Task<List<MediaItem>> GetItems(int id) => _data[id].ToList().AsTask();
         Task<bool> IMediaCollectionRepository.Update(Collection collection) => throw new NotSupportedException();
         public Task Delete(int collectionId) => throw new NotSupportedException();
         public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) => throw new NotSupportedException();
