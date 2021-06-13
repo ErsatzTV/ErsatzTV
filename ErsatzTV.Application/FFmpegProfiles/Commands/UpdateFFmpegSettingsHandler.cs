@@ -86,35 +86,25 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
 
         private async Task<Unit> ApplyUpdate(UpdateFFmpegSettings request)
         {
-            await Upsert(ConfigElementKey.FFmpegPath, request.Settings.FFmpegPath);
-            await Upsert(ConfigElementKey.FFprobePath, request.Settings.FFprobePath);
-            await Upsert(ConfigElementKey.FFmpegDefaultProfileId, request.Settings.DefaultFFmpegProfileId.ToString());
-            await Upsert(ConfigElementKey.FFmpegSaveReports, request.Settings.SaveReports.ToString());
+            await _configElementRepository.Upsert(ConfigElementKey.FFmpegPath, request.Settings.FFmpegPath);
+            await _configElementRepository.Upsert(ConfigElementKey.FFprobePath, request.Settings.FFprobePath);
+            await _configElementRepository.Upsert(
+                ConfigElementKey.FFmpegDefaultProfileId,
+                request.Settings.DefaultFFmpegProfileId.ToString());
+            await _configElementRepository.Upsert(
+                ConfigElementKey.FFmpegSaveReports,
+                request.Settings.SaveReports.ToString());
 
             if (request.Settings.SaveReports && !Directory.Exists(FileSystemLayout.FFmpegReportsFolder))
             {
                 Directory.CreateDirectory(FileSystemLayout.FFmpegReportsFolder);
             }
 
-            await Upsert(ConfigElementKey.FFmpegPreferredLanguageCode, request.Settings.PreferredLanguageCode);
+            await _configElementRepository.Upsert(
+                ConfigElementKey.FFmpegPreferredLanguageCode,
+                request.Settings.PreferredLanguageCode);
 
             return Unit.Default;
-        }
-
-        private async Task Upsert(ConfigElementKey key, string value)
-        {
-            Option<ConfigElement> maybeElement = await _configElementRepository.Get(key);
-            await maybeElement.Match(
-                ce =>
-                {
-                    ce.Value = value;
-                    return _configElementRepository.Update(ce);
-                },
-                () =>
-                {
-                    var ce = new ConfigElement { Key = key.Key, Value = value };
-                    return _configElementRepository.Add(ce);
-                });
         }
     }
 }

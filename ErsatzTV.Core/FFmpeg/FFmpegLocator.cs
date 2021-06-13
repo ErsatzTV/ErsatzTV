@@ -43,7 +43,7 @@ namespace ErsatzTV.Core.FFmpeg
             return await maybePath.MatchAsync(
                 async path =>
                 {
-                    await _configElementRepository.Add(new ConfigElement { Key = key.Key, Value = path });
+                    await _configElementRepository.Upsert(key, path);
                     return Some(path);
                 },
                 () => None);
