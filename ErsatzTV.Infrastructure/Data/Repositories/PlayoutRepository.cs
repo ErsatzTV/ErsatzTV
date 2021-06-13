@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories
 {
@@ -35,75 +32,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(psi => psi.MediaItem)
                 .OrderBy(p => p.Id) // https://github.com/dotnet/efcore/issues/22579#issuecomment-694772289
                 .SingleOrDefaultAsync(p => p.Id == id);
-
-        public Task<Option<PlayoutItem>> GetPlayoutItem(int channelId, DateTimeOffset now) =>
-            _dbContext.PlayoutItems
-                .Where(pi => pi.Playout.ChannelId == channelId)
-                .Where(pi => pi.Start <= now.UtcDateTime && pi.Finish > now.UtcDateTime)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Episode).MediaVersions)
-                .ThenInclude(mv => mv.MediaFiles)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Episode).MediaVersions)
-                .ThenInclude(mv => mv.Streams)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Movie).MediaVersions)
-                .ThenInclude(mv => mv.MediaFiles)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Movie).MediaVersions)
-                .ThenInclude(mv => mv.Streams)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
-                .ThenInclude(mv => mv.MediaFiles)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
-                .ThenInclude(mv => mv.Streams)
-                .AsNoTracking()
-                .OrderBy(pi => pi.Start)
-                .SingleOrDefaultAsync()
-                .Map(Optional);
-
-        public Task<Option<DateTimeOffset>> GetNextItemStart(int channelId, DateTimeOffset now) =>
-            _dbContext.PlayoutItems
-                .Where(pi => pi.Playout.ChannelId == channelId)
-                .Where(pi => pi.Start > now.UtcDateTime)
-                .OrderBy(pi => pi.Start)
-                .FirstOrDefaultAsync()
-                .Map(Optional)
-                .MapT(pi => pi.StartOffset);
-
-        public async Task<List<PlayoutItem>> GetPlayoutItems(int playoutId)
-        {
-            await using TvContext context = _dbContextFactory.CreateDbContext();
-            return await context.PlayoutItems
-                .AsNoTracking()
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Movie).MovieMetadata)
-                .ThenInclude(mm => mm.Artwork)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Movie).MediaVersions)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as MusicVideo).MusicVideoMetadata)
-                .ThenInclude(mm => mm.Artwork)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as MusicVideo).Artist)
-                .ThenInclude(mm => mm.ArtistMetadata)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
-                .ThenInclude(em => em.Artwork)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Episode).MediaVersions)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Episode).Season)
-                .ThenInclude(s => s.SeasonMetadata)
-                .Include(i => i.MediaItem)
-                .ThenInclude(mi => (mi as Episode).Season.Show)
-                .ThenInclude(s => s.ShowMetadata)
-                .Filter(i => i.PlayoutId == playoutId)
-                .ToListAsync();
-        }
 
         public Task Update(Playout playout)
         {

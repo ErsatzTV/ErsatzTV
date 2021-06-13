@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -10,39 +11,35 @@ using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
-using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
-    public class
-        GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
+    public class GetPlayoutItemProcessByChannelNumberHandler :
+        FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
     {
-        private readonly IConfigElementRepository _configElementRepository;
         private readonly IEmbyPathReplacementService _embyPathReplacementService;
         private readonly FFmpegProcessService _ffmpegProcessService;
         private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
         private readonly ILocalFileSystem _localFileSystem;
-        private readonly IPlayoutRepository _playoutRepository;
         private readonly IPlexPathReplacementService _plexPathReplacementService;
         private readonly IRuntimeInfo _runtimeInfo;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
-            IChannelRepository channelRepository,
-            IConfigElementRepository configElementRepository,
-            IPlayoutRepository playoutRepository,
+            IDbContextFactory<TvContext> dbContextFactory,
             FFmpegProcessService ffmpegProcessService,
             ILocalFileSystem localFileSystem,
             IPlexPathReplacementService plexPathReplacementService,
             IJellyfinPathReplacementService jellyfinPathReplacementService,
             IEmbyPathReplacementService embyPathReplacementService,
             IRuntimeInfo runtimeInfo)
-            : base(channelRepository, configElementRepository)
+            : base(dbContextFactory)
         {
-            _configElementRepository = configElementRepository;
-            _playoutRepository = playoutRepository;
             _ffmpegProcessService = ffmpegProcessService;
             _localFileSystem = localFileSystem;
             _plexPathReplacementService = plexPathReplacementService;
@@ -52,13 +49,32 @@ namespace ErsatzTV.Application.Streaming.Queries
         }
 
         protected override async Task<Either<BaseError, Process>> GetProcess(
+            TvContext dbContext,
             GetPlayoutItemProcessByChannelNumber _,
             Channel channel,
             string ffmpegPath)
         {
             DateTimeOffset now = DateTimeOffset.Now;
-            Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await _playoutRepository
-                .GetPlayoutItem(channel.Id, now)
+            Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await dbContext.PlayoutItems
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Episode).MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Movie).MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Movie).MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
+                .ThenInclude(mv => mv.Streams)
+                .ForChannelAndTime(channel.Id, now)
                 .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
                 .BindT(ValidatePlayoutItemPath);
 
@@ -73,7 +89,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         _ => throw new ArgumentOutOfRangeException(nameof(playoutItemWithPath))
                     };
 
-                    bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await _configElementRepository
+                    bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await dbContext.ConfigElements
                         .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                         .Map(result => result.IfNone(false));
 
@@ -95,8 +111,13 @@ namespace ErsatzTV.Application.Streaming.Queries
                     Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
                         .Filter(transcode => transcode)
                         .Match(
-                            _ => _playoutRepository.GetNextItemStart(channel.Id, now)
-                                .MapT(nextStart => nextStart - now),
+                            _ => dbContext.PlayoutItems
+                                .Filter(pi => pi.Playout.ChannelId == channel.Id)
+                                .Filter(pi => pi.Start > now.UtcDateTime)
+                                .OrderBy(pi => pi.Start)
+                                .FirstOrDefaultAsync()
+                                .Map(Optional)
+                                .MapT(pi => pi.StartOffset - now),
                             () => Option<TimeSpan>.None.AsTask());
 
                     switch (error)
