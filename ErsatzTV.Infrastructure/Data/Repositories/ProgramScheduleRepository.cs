@@ -15,28 +15,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public ProgramScheduleRepository(TvContext dbContext) => _dbContext = dbContext;
 
-        public async Task<ProgramSchedule> Add(ProgramSchedule programSchedule)
-        {
-            await _dbContext.ProgramSchedules.AddAsync(programSchedule);
-            await _dbContext.SaveChangesAsync();
-            return programSchedule;
-        }
-
-        public Task<Option<ProgramSchedule>> Get(int id) =>
-            _dbContext.ProgramSchedules
-                .OrderBy(s => s.Id)
-                .SingleOrDefaultAsync(s => s.Id == id)
-                .Map(Optional);
-
         public async Task<Option<ProgramSchedule>> GetWithPlayouts(int id) =>
             await _dbContext.ProgramSchedules
                 .Include(ps => ps.Items)
                 .Include(ps => ps.Playouts)
                 .OrderBy(ps => ps.Id)
                 .SingleOrDefaultAsync(ps => ps.Id == id);
-
-        public Task<List<ProgramSchedule>> GetAll() =>
-            _dbContext.ProgramSchedules.ToListAsync();
 
         public async Task Update(ProgramSchedule programSchedule)
         {
@@ -45,13 +29,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await _dbContext.Entry(programSchedule).Collection(s => s.Items).Query().Include(i => i.Collection)
                 .LoadAsync();
             await _dbContext.Entry(programSchedule).Collection(s => s.Playouts).LoadAsync();
-        }
-
-        public async Task Delete(int programScheduleId)
-        {
-            ProgramSchedule programSchedule = await _dbContext.ProgramSchedules.FindAsync(programScheduleId);
-            _dbContext.ProgramSchedules.Remove(programSchedule);
-            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<Option<List<ProgramScheduleItem>>> GetItems(int programScheduleId)
@@ -83,5 +60,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     return programSchedule.Items;
                 }).Sequence();
         }
+
+        private Task<Option<ProgramSchedule>> Get(int id) =>
+            _dbContext.ProgramSchedules
+                .OrderBy(s => s.Id)
+                .SingleOrDefaultAsync(s => s.Id == id)
+                .Map(Optional);
     }
 }

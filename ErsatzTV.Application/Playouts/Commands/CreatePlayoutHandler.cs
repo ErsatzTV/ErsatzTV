@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -60,9 +61,7 @@ namespace ErsatzTV.Application.Playouts.Commands
             CreatePlayout createPlayout) =>
             dbContext.Channels
                 .Include(c => c.Playouts)
-                .OrderBy(c => c.Id)
-                .FirstOrDefaultAsync(c => c.Id == createPlayout.ChannelId)
-                .Map(Optional)
+                .SelectOneAsync(c => c.Id, c => c.Id == createPlayout.ChannelId)
                 .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
                 .BindT(ChannelMustNotHavePlayouts);
 
@@ -77,9 +76,7 @@ namespace ErsatzTV.Application.Playouts.Commands
             CreatePlayout createPlayout) =>
             dbContext.ProgramSchedules
                 .Include(ps => ps.Items)
-                .OrderBy(ps => ps.Id)
-                .FirstOrDefaultAsync(ps => ps.Id == createPlayout.ProgramScheduleId)
-                .Map(Optional)
+                .SelectOneAsync(ps => ps.Id, ps => ps.Id == createPlayout.ProgramScheduleId)
                 .Map(o => o.ToValidation<BaseError>("Program schedule does not exist"))
                 .BindT(ProgramScheduleMustHaveItems);
 

@@ -1,24 +1,30 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.ProgramSchedules.Mapper;
 
 namespace ErsatzTV.Application.ProgramSchedules.Queries
 {
-    public class
-        GetProgramScheduleByIdHandler : IRequestHandler<GetProgramScheduleById, Option<ProgramScheduleViewModel>>
+    public class GetProgramScheduleByIdHandler :
+        IRequestHandler<GetProgramScheduleById, Option<ProgramScheduleViewModel>>
     {
-        private readonly IProgramScheduleRepository _programScheduleRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public GetProgramScheduleByIdHandler(IProgramScheduleRepository programScheduleRepository) =>
-            _programScheduleRepository = programScheduleRepository;
+        public GetProgramScheduleByIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public Task<Option<ProgramScheduleViewModel>> Handle(
+        public async Task<Option<ProgramScheduleViewModel>> Handle(
             GetProgramScheduleById request,
-            CancellationToken cancellationToken) =>
-            _programScheduleRepository.Get(request.Id)
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.ProgramSchedules
+                .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id)
                 .MapT(ProjectToViewModel);
+        }
     }
 }

@@ -1,32 +1,43 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.ProgramSchedules.Commands
 {
-    public class DeleteProgramScheduleHandler : IRequestHandler<DeleteProgramSchedule, Either<BaseError, Task>>
+    public class DeleteProgramScheduleHandler : IRequestHandler<DeleteProgramSchedule, Either<BaseError, Unit>>
     {
-        private readonly IProgramScheduleRepository _programScheduleRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public DeleteProgramScheduleHandler(IProgramScheduleRepository programScheduleRepository) =>
-            _programScheduleRepository = programScheduleRepository;
+        public DeleteProgramScheduleHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public async Task<Either<BaseError, Task>> Handle(
+        public async Task<Either<BaseError, Unit>> Handle(
             DeleteProgramSchedule request,
-            CancellationToken cancellationToken) =>
-            (await ProgramScheduleMustExist(request))
-            .Map(DoDeletion)
-            .ToEither<Task>();
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, ProgramSchedule> validation = await ProgramScheduleMustExist(dbContext, request);
+            return await validation.Apply(ps => DoDeletion(dbContext, ps));
+        }
 
-        private Task DoDeletion(int programScheduleId) => _programScheduleRepository.Delete(programScheduleId);
+        private static Task<Unit> DoDeletion(TvContext dbContext, ProgramSchedule programSchedule)
+        {
+            dbContext.ProgramSchedules.Remove(programSchedule);
+            return dbContext.SaveChangesAsync().ToUnit();
+        }
 
-        private async Task<Validation<BaseError, int>> ProgramScheduleMustExist(
-            DeleteProgramSchedule deleteProgramSchedule) =>
-            (await _programScheduleRepository.Get(deleteProgramSchedule.ProgramScheduleId))
-            .ToValidation<BaseError>($"ProgramSchedule {deleteProgramSchedule.ProgramScheduleId} does not exist.")
-            .Map(c => c.Id);
+        private Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
+            TvContext dbContext,
+            DeleteProgramSchedule request) =>
+            dbContext.ProgramSchedules
+                .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.ProgramScheduleId)
+                .Map(o => o.ToValidation<BaseError>($"ProgramSchedule {request.ProgramScheduleId} does not exist."));
     }
 }

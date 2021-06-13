@@ -7,17 +7,18 @@ using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.Playouts.Commands
 {
-    public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Option<BaseError>>
+    public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Either<BaseError, Unit>>
     {
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
         public DeletePlayoutHandler(IDbContextFactory<TvContext> dbContextFactory) =>
             _dbContextFactory = dbContextFactory;
 
-        public async Task<Option<BaseError>> Handle(
+        public async Task<Either<BaseError, Unit>> Handle(
             DeletePlayout request,
             CancellationToken cancellationToken)
         {
@@ -33,9 +34,9 @@ namespace ErsatzTV.Application.Playouts.Commands
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
 
-            return maybePlayout.Match(
-                _ => Option<BaseError>.None,
-                () => BaseError.New($"Playout {request.PlayoutId} does not exist."));
+            return maybePlayout
+                .Map(_ => Unit.Default)
+                .ToEither(BaseError.New($"Playout {request.PlayoutId} does not exist."));
         }
     }
 }
