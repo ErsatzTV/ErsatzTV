@@ -1,33 +1,42 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
-using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public class DeleteCollectionHandler : IRequestHandler<DeleteCollection, Either<BaseError, Task>>
+    public class DeleteCollectionHandler : MediatR.IRequestHandler<DeleteCollection, Either<BaseError, Unit>>
     {
-        private readonly IMediaCollectionRepository _mediaCollectionRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public DeleteCollectionHandler(IMediaCollectionRepository mediaCollectionRepository) =>
-            _mediaCollectionRepository = mediaCollectionRepository;
+        public DeleteCollectionHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public async Task<Either<BaseError, Task>> Handle(
+        public async Task<Either<BaseError, Unit>> Handle(
             DeleteCollection request,
-            CancellationToken cancellationToken) =>
-            (await CollectionMustExist(request))
-            .Map(DoDeletion)
-            .ToEither<Task>();
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
-        private Task DoDeletion(int mediaCollectionId) => _mediaCollectionRepository.Delete(mediaCollectionId);
+            Validation<BaseError, Collection> validation = await CollectionMustExist(dbContext, request);
+            return await validation.Apply(c => DoDeletion(dbContext, c));
+        }
 
-        private async Task<Validation<BaseError, int>> CollectionMustExist(
-            DeleteCollection deleteMediaCollection) =>
-            (await _mediaCollectionRepository.Get(deleteMediaCollection.CollectionId))
-            .ToValidation<BaseError>(
-                $"Collection {deleteMediaCollection.CollectionId} does not exist.")
-            .Map(c => c.Id);
+        private static Task<Unit> DoDeletion(TvContext dbContext, Collection collection)
+        {
+            dbContext.Collections.Remove(collection);
+            return dbContext.SaveChangesAsync().ToUnit();
+        }
+
+        private static Task<Validation<BaseError, Collection>> CollectionMustExist(
+            TvContext dbContext,
+            DeleteCollection request) =>
+            dbContext.Collections
+                .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+                .Map(o => o.ToValidation<BaseError>($"Collection {request.CollectionId} does not exist."));
     }
 }

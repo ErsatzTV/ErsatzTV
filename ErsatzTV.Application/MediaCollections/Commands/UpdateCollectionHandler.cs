@@ -5,36 +5,47 @@ using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
     public class UpdateCollectionHandler : MediatR.IRequestHandler<UpdateCollection, Either<BaseError, Unit>>
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
 
         public UpdateCollectionHandler(
+            IDbContextFactory<TvContext> dbContextFactory,
             IMediaCollectionRepository mediaCollectionRepository,
             ChannelWriter<IBackgroundServiceRequest> channel)
         {
+            _dbContextFactory = dbContextFactory;
             _mediaCollectionRepository = mediaCollectionRepository;
             _channel = channel;
         }
 
-        public Task<Either<BaseError, Unit>> Handle(
+        public async Task<Either<BaseError, Unit>> Handle(
             UpdateCollection request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(c => ApplyUpdateRequest(c, request))
-                .Bind(v => v.ToEitherAsync());
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, Collection> validation = await Validate(dbContext, request);
+            return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        }
 
-        private async Task<Unit> ApplyUpdateRequest(Collection c, UpdateCollection request)
+        private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, Collection c, UpdateCollection request)
         {
             c.Name = request.Name;
-            await request.UseCustomPlaybackOrder.IfSomeAsync(
-                useCustomPlaybackOrder => c.UseCustomPlaybackOrder = useCustomPlaybackOrder);
-            if (await _mediaCollectionRepository.Update(c) && request.UseCustomPlaybackOrder.IsSome)
+            foreach (bool useCustomPlaybackOrder in request.UseCustomPlaybackOrder)
+            {
+                c.UseCustomPlaybackOrder = useCustomPlaybackOrder;
+            }
+
+            if (await dbContext.SaveChangesAsync() > 0 && request.UseCustomPlaybackOrder.IsSome)
             {
                 // rebuild all playouts that use this collection
                 foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingCollection(
@@ -47,17 +58,20 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             return Unit.Default;
         }
 
-        private async Task<Validation<BaseError, Collection>>
-            Validate(UpdateCollection request) =>
-            (await CollectionMustExist(request), ValidateName(request))
+        private static async Task<Validation<BaseError, Collection>> Validate(
+            TvContext dbContext,
+            UpdateCollection request) =>
+            (await CollectionMustExist(dbContext, request), ValidateName(request))
             .Apply((collectionToUpdate, _) => collectionToUpdate);
 
-        private Task<Validation<BaseError, Collection>> CollectionMustExist(
+        private static Task<Validation<BaseError, Collection>> CollectionMustExist(
+            TvContext dbContext,
             UpdateCollection updateCollection) =>
-            _mediaCollectionRepository.Get(updateCollection.CollectionId)
-                .Map(v => v.ToValidation<BaseError>("Collection does not exist."));
+            dbContext.Collections
+                .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.CollectionId)
+                .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
-        private Validation<BaseError, string> ValidateName(UpdateCollection updateSimpleMediaCollection) =>
+        private static Validation<BaseError, string> ValidateName(UpdateCollection updateSimpleMediaCollection) =>
             updateSimpleMediaCollection.NotEmpty(c => c.Name)
                 .Bind(_ => updateSimpleMediaCollection.NotLongerThan(50)(c => c.Name));
     }

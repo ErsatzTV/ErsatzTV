@@ -6,47 +6,60 @@ using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public class
-        UpdateCollectionCustomOrderHandler : MediatR.IRequestHandler<UpdateCollectionCustomOrder,
-            Either<BaseError, Unit>>
+    public class UpdateCollectionCustomOrderHandler :
+        MediatR.IRequestHandler<UpdateCollectionCustomOrder, Either<BaseError, Unit>>
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
 
         public UpdateCollectionCustomOrderHandler(
+            IDbContextFactory<TvContext> dbContextFactory,
             IMediaCollectionRepository mediaCollectionRepository,
             ChannelWriter<IBackgroundServiceRequest> channel)
         {
+            _dbContextFactory = dbContextFactory;
             _mediaCollectionRepository = mediaCollectionRepository;
             _channel = channel;
         }
 
-        public Task<Either<BaseError, Unit>> Handle(
+        public async Task<Either<BaseError, Unit>> Handle(
             UpdateCollectionCustomOrder request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(c => ApplyUpdateRequest(c, request))
-                .Bind(v => v.ToEitherAsync());
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, Collection> validation = await Validate(dbContext, request);
+            return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        }
 
-        private async Task<Unit> ApplyUpdateRequest(Collection c, UpdateCollectionCustomOrder request)
+        private async Task<Unit> ApplyUpdateRequest(
+            TvContext dbContext,
+            Collection c,
+            UpdateCollectionCustomOrder request)
         {
             foreach (MediaItemCustomOrder updateItem in request.MediaItemCustomOrders)
             {
-                Option<CollectionItem> maybeCollectionItem =
-                    c.CollectionItems.FirstOrDefault(ci => ci.MediaItemId == updateItem.MediaItemId);
+                Option<CollectionItem> maybeCollectionItem = c.CollectionItems
+                    .FirstOrDefault(ci => ci.MediaItemId == updateItem.MediaItemId);
 
-                await maybeCollectionItem.IfSomeAsync(ci => ci.CustomIndex = updateItem.CustomIndex);
+                foreach (CollectionItem collectionItem in maybeCollectionItem)
+                {
+                    collectionItem.CustomIndex = updateItem.CustomIndex;
+                }
             }
 
-            if (await _mediaCollectionRepository.Update(c))
+            if (await dbContext.SaveChangesAsync() > 0)
             {
                 // rebuild all playouts that use this collection
-                foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingCollection(
-                    request.CollectionId))
+                foreach (int playoutId in await _mediaCollectionRepository
+                    .PlayoutIdsUsingCollection(request.CollectionId))
                 {
                     await _channel.WriteAsync(new BuildPlayout(playoutId, true));
                 }
@@ -55,12 +68,17 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             return Unit.Default;
         }
 
-        private Task<Validation<BaseError, Collection>> Validate(UpdateCollectionCustomOrder request) =>
-            CollectionMustExist(request);
-
-        private Task<Validation<BaseError, Collection>> CollectionMustExist(
+        private static Task<Validation<BaseError, Collection>> Validate(
+            TvContext dbContext,
             UpdateCollectionCustomOrder request) =>
-            _mediaCollectionRepository.Get(request.CollectionId)
-                .Map(v => v.ToValidation<BaseError>("Collection does not exist."));
+            CollectionMustExist(dbContext, request);
+
+        private static Task<Validation<BaseError, Collection>> CollectionMustExist(
+            TvContext dbContext,
+            UpdateCollectionCustomOrder request) =>
+            dbContext.Collections
+                .Include(c => c.CollectionItems)
+                .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+                .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
     }
 }

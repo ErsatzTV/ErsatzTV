@@ -14,25 +14,10 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public FakeMediaCollectionRepository(Map<int, List<MediaItem>> data) => _data = data;
 
-        public Task<Collection> Add(Collection collection) => throw new NotSupportedException();
-        public Task<bool> AddMediaItem(int collectionId, int mediaItemId) => throw new NotSupportedException();
-        public Task<bool> AddMediaItems(int collectionId, List<int> mediaItemIds) => throw new NotSupportedException();
-        public Task<Option<Collection>> Get(int id) => throw new NotSupportedException();
-        public Task<Option<Collection>> GetCollectionWithItems(int id) => throw new NotSupportedException();
-        public Task<Option<Collection>> GetCollectionWithItemsUntracked(int id) => throw new NotSupportedException();
-
         public Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id) =>
             throw new NotSupportedException();
 
-        public Task<List<Collection>> GetAll() => throw new NotSupportedException();
-        public Task<int> CountAllCollections() => throw new NotSupportedException();
-
-        public Task<List<Collection>> GetPagedCollections(int pageNumber, int pageSize) =>
-            throw new NotSupportedException();
-
         public Task<List<MediaItem>> GetItems(int id) => _data[id].ToList().AsTask();
-        Task<bool> IMediaCollectionRepository.Update(Collection collection) => throw new NotSupportedException();
-        public Task Delete(int collectionId) => throw new NotSupportedException();
         public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) => throw new NotSupportedException();
         public Task<bool> IsCustomPlaybackOrder(int collectionId) => false.AsTask();
     }
