@@ -14,6 +14,5 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<DateTimeOffset>> GetNextItemStart(int channelId, DateTimeOffset now);
         Task<List<PlayoutItem>> GetPlayoutItems(int playoutId);
         Task Update(Playout playout);
-        Task Delete(int playoutId);
     }
 }

@@ -1,32 +1,41 @@
-﻿using System.Threading;
+﻿using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Playouts.Commands
 {
-    public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Either<BaseError, Task>>
+    public class DeletePlayoutHandler : IRequestHandler<DeletePlayout, Option<BaseError>>
     {
-        private readonly IPlayoutRepository _playoutRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public DeletePlayoutHandler(IPlayoutRepository playoutRepository) =>
-            _playoutRepository = playoutRepository;
+        public DeletePlayoutHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public async Task<Either<BaseError, Task>> Handle(
+        public async Task<Option<BaseError>> Handle(
             DeletePlayout request,
-            CancellationToken cancellationToken) =>
-            (await PlayoutMustExist(request))
-            .Map(DoDeletion)
-            .ToEither<Task>();
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
-        private Task DoDeletion(int playoutId) => _playoutRepository.Delete(playoutId);
+            Option<Playout> maybePlayout = await dbContext.Playouts
+                .OrderBy(p => p.Id)
+                .FirstOrDefaultAsync(p => p.Id == request.PlayoutId, cancellationToken);
 
-        private async Task<Validation<BaseError, int>> PlayoutMustExist(
-            DeletePlayout deletePlayout) =>
-            (await _playoutRepository.Get(deletePlayout.PlayoutId))
-            .ToValidation<BaseError>($"Playout {deletePlayout.PlayoutId} does not exist.")
-            .Map(c => c.Id);
+            foreach (Playout playout in maybePlayout)
+            {
+                dbContext.Playouts.Remove(playout);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            return maybePlayout.Match(
+                _ => Option<BaseError>.None,
+                () => BaseError.New($"Playout {request.PlayoutId} does not exist."));
+        }
     }
 }

@@ -60,9 +60,8 @@ namespace ErsatzTV.Application.Playouts.Commands
             CreatePlayout createPlayout) =>
             dbContext.Channels
                 .Include(c => c.Playouts)
-                .Filter(c => c.Id == createPlayout.ChannelId)
                 .OrderBy(c => c.Id)
-                .FirstOrDefaultAsync()
+                .FirstOrDefaultAsync(c => c.Id == createPlayout.ChannelId)
                 .Map(Optional)
                 .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
                 .BindT(ChannelMustNotHavePlayouts);
@@ -78,9 +77,8 @@ namespace ErsatzTV.Application.Playouts.Commands
             CreatePlayout createPlayout) =>
             dbContext.ProgramSchedules
                 .Include(ps => ps.Items)
-                .Filter(ps => ps.Id == createPlayout.ProgramScheduleId)
                 .OrderBy(ps => ps.Id)
-                .FirstOrDefaultAsync()
+                .FirstOrDefaultAsync(ps => ps.Id == createPlayout.ProgramScheduleId)
                 .Map(Optional)
                 .Map(o => o.ToValidation<BaseError>("Program schedule does not exist"))
                 .BindT(ProgramScheduleMustHaveItems);

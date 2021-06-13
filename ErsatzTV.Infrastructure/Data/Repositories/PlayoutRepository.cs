@@ -116,12 +116,5 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext.Playouts.Update(playout);
             return _dbContext.SaveChangesAsync();
         }
-
-        public async Task Delete(int playoutId)
-        {
-            Playout playout = await _dbContext.Playouts.FindAsync(playoutId);
-            _dbContext.Playouts.Remove(playout);
-            await _dbContext.SaveChangesAsync();
-        }
     }
 }
