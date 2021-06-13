@@ -197,7 +197,6 @@ namespace ErsatzTV
             services.AddScoped<IMediaCollectionRepository, MediaCollectionRepository>();
             services.AddScoped<IResolutionRepository, ResolutionRepository>();
             services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
-            services.AddScoped<IProgramScheduleRepository, ProgramScheduleRepository>();
             services.AddScoped<IPlayoutRepository, PlayoutRepository>();
             services.AddScoped<ILogRepository, LogRepository>();
             services.AddScoped<ITelevisionRepository, TelevisionRepository>();
