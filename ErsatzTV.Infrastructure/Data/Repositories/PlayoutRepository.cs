@@ -21,13 +21,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContextFactory = dbContextFactory;
         }
 
-        public async Task<Playout> Add(Playout playout)
-        {
-            await _dbContext.Playouts.AddAsync(playout);
-            await _dbContext.SaveChangesAsync();
-            return playout;
-        }
-
         public Task<Option<Playout>> Get(int id) =>
             _dbContext.Playouts
                 .OrderBy(p => p.Id)

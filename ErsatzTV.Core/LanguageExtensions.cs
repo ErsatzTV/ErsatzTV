@@ -1,6 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using LanguageExt;
+using static LanguageExt.Prelude;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core
@@ -15,6 +17,13 @@ namespace ErsatzTV.Core
             validation.ToEither()
                 .MapLeft(errors => errors.Join())
                 .MapAsync<BaseError, Task<TR>, TR>(e => e);
+
+        public static Task<Either<BaseError, TR>> Apply<T, TR>(
+            this Validation<BaseError, T> validation,
+            Func<T, Task<TR>> task) =>
+            validation.Match<Task<Either<BaseError, TR>>>(
+                async t => await task(t),
+                error => Task.FromResult(Left<BaseError, TR>(error.Join())));
 
         public static Task<T> LogFailure<T>(
             this TryAsync<T> tryAsync,

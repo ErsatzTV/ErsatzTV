@@ -124,11 +124,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await dbContext.SaveChangesAsync();
         }
 
-        public Task<int> CountPlayouts(int channelId) =>
-            _dbConnection.QuerySingleAsync<int>(
-                @"SELECT COUNT(*) FROM Playout WHERE ChannelId = @ChannelId",
-                new { ChannelId = channelId });
-
         public async Task<Unit> RemoveWatermark(Channel channel)
         {
             if (channel.Watermark != null)
