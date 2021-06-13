@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -20,36 +19,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<FFmpegProfile> Add(FFmpegProfile ffmpegProfile)
-        {
-            await _dbContext.FFmpegProfiles.AddAsync(ffmpegProfile);
-            await _dbContext.SaveChangesAsync();
-            return ffmpegProfile;
-        }
-
         public async Task<Option<FFmpegProfile>> Get(int id) =>
             await _dbContext.FFmpegProfiles
                 .Include(p => p.Resolution)
                 .OrderBy(p => p.Id)
                 .SingleOrDefaultAsync(p => p.Id == id);
-
-        public Task<List<FFmpegProfile>> GetAll() =>
-            _dbContext.FFmpegProfiles
-                .Include(p => p.Resolution)
-                .ToListAsync();
-
-        public Task Update(FFmpegProfile ffmpegProfile)
-        {
-            _dbContext.FFmpegProfiles.Update(ffmpegProfile);
-            return _dbContext.SaveChangesAsync();
-        }
-
-        public async Task Delete(int ffmpegProfileId)
-        {
-            FFmpegProfile ffmpegProfile = await _dbContext.FFmpegProfiles.FindAsync(ffmpegProfileId);
-            _dbContext.FFmpegProfiles.Remove(ffmpegProfile);
-            await _dbContext.SaveChangesAsync();
-        }
 
         public async Task<FFmpegProfile> Copy(int ffmpegProfileId, string name)
         {
