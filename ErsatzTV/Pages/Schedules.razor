@@ -2,11 +2,18 @@
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using ErsatzTV.Application.ProgramSchedules.Queries
+@using ErsatzTV.Application.Configuration.Queries
+@using ErsatzTV.Application.Configuration.Commands
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Items="_schedules" Dense="true" SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))">
+    <MudTable Hover="true"
+              Dense="true"
+              SelectedItemChanged="@(async (ProgramScheduleViewModel x) => await ScheduleSelected(x))"
+              @bind-RowsPerPage="@_rowsPerPage"
+              ServerData="@(new Func<TableState, Task<TableData<ProgramScheduleViewModel>>>(ServerReload))"
+              @ref="_table">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Schedules</MudText>
         </ToolBarContent>
@@ -80,13 +87,17 @@
     }
 </MudContainer>
 
-
 @code {
-    private List<ProgramScheduleViewModel> _schedules;
+    private MudTable<ProgramScheduleViewModel> _table;
+    private int _rowsPerPage;
     private List<ProgramScheduleItemViewModel> _selectedScheduleItems;
     private ProgramScheduleViewModel _selectedSchedule;
 
-    protected override Task OnParametersSetAsync() => LoadSchedules();
+    protected override async Task OnParametersSetAsync()
+    {
+        _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.SchedulesPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    }
 
     private async Task ScheduleSelected(ProgramScheduleViewModel schedule)
     {
@@ -105,11 +116,23 @@
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeleteProgramSchedule(programSchedule.Id));
-            await LoadSchedules();
+            await _table.ReloadServerData();
         }
     }
+    
+    private async Task<TableData<ProgramScheduleViewModel>> ServerReload(TableState state)
+    {
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesPageSize, state.PageSize.ToString()));
 
-    private async Task LoadSchedules() =>
-        _schedules = await _mediator.Send(new GetAllProgramSchedules()).Map(list => list.OrderBy(vm => vm.Name).ToList());
+        List<ProgramScheduleViewModel> schedules = await _mediator.Send(new GetAllProgramSchedules());
+        IOrderedEnumerable<ProgramScheduleViewModel> sorted = schedules.OrderBy(s => s.Name);
+
+        // TODO: properly page this data
+        return new TableData<ProgramScheduleViewModel>
+        {
+            TotalItems = schedules.Count,
+            Items = sorted.Skip(state.Page * state.PageSize).Take(state.PageSize)
+        };
+    }
 
 }
