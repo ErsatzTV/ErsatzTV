@@ -12,9 +12,7 @@ WORKDIR /source
 # copy csproj and restore as distinct layers
 COPY *.sln .
 COPY ErsatzTV/*.csproj ./ErsatzTV/
-COPY generated/ErsatzTV.Api.Sdk/src/ErsatzTV.Api.Sdk/*.csproj ./generated/ErsatzTV.Api.Sdk/src/ErsatzTV.Api.Sdk/
 COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
-COPY ErsatzTV.CommandLine/*.csproj ./ErsatzTV.CommandLine/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
 COPY ErsatzTV.Core.Tests/*.csproj ./ErsatzTV.Core.Tests/
 COPY ErsatzTV.Infrastructure/*.csproj ./ErsatzTV.Infrastructure/
@@ -22,9 +20,7 @@ RUN dotnet restore -r linux-x64
 
 # copy everything else and build app
 COPY ErsatzTV/. ./ErsatzTV/
-COPY generated/ErsatzTV.Api.Sdk/src/ErsatzTV.Api.Sdk/. ./generated/ErsatzTV.Api.Sdk/src/ErsatzTV.Api.Sdk/
 COPY ErsatzTV.Application/. ./ErsatzTV.Application/
-COPY ErsatzTV.CommandLine/. ./ErsatzTV.CommandLine/
 COPY ErsatzTV.Core/. ./ErsatzTV.Core/
 COPY ErsatzTV.Core.Tests/. ./ErsatzTV.Core.Tests/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
