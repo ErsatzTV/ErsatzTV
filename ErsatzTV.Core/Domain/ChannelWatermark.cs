@@ -3,10 +3,12 @@
     public class ChannelWatermark
     {
         public int Id { get; set; }
-        public Channel Channel { get; set; }
+        public string Name { get; set; }
+        public ChannelWatermarkMode Mode { get; set; }
+        public ChannelWatermarkImageSource ImageSource { get; set; }
+        public string Image { get; set; }
         public ChannelWatermarkLocation Location { get; set; }
         public ChannelWatermarkSize Size { get; set; }
-        public ChannelWatermarkMode Mode { get; set; }
         public int WidthPercent { get; set; }
         public int HorizontalMarginPercent { get; set; }
         public int VerticalMarginPercent { get; set; }
@@ -34,5 +36,11 @@
         None = 0,
         Permanent = 1,
         Intermittent = 2
+    }
+
+    public enum ChannelWatermarkImageSource
+    {
+        Custom = 0,
+        ChannelLogo = 1
     }
 }

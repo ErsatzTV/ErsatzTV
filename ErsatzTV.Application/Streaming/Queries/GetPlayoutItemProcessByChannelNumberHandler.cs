@@ -93,6 +93,12 @@ namespace ErsatzTV.Application.Streaming.Queries
                         .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                         .Map(result => result.IfNone(false));
 
+                    Option<ChannelWatermark> maybeGlobalWatermark = await dbContext.ConfigElements
+                        .GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId)
+                        .BindT(
+                            watermarkId => dbContext.ChannelWatermarks
+                                .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
+
                     return Right<BaseError, Process>(
                         await _ffmpegProcessService.ForPlayoutItem(
                             ffmpegPath,
@@ -101,7 +107,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                             version,
                             playoutItemWithPath.Path,
                             playoutItemWithPath.PlayoutItem.StartOffset,
-                            now));
+                            now,
+                            maybeGlobalWatermark));
                 },
                 async error =>
                 {

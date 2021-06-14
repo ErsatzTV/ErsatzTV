@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
-using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -15,16 +14,13 @@ namespace ErsatzTV.Core.FFmpeg
     {
         private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
         private readonly IImageCache _imageCache;
-        private readonly IConfigElementRepository _configElementRepository;
         private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
         public FFmpegProcessService(
-            IConfigElementRepository configElementRepository,
             FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
             IFFmpegStreamSelector ffmpegStreamSelector,
             IImageCache imageCache)
         {
-            _configElementRepository = configElementRepository;
             _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
             _ffmpegStreamSelector = ffmpegStreamSelector;
             _imageCache = imageCache;
@@ -37,7 +33,8 @@ namespace ErsatzTV.Core.FFmpeg
             MediaVersion version,
             string path,
             DateTimeOffset start,
-            DateTimeOffset now)
+            DateTimeOffset now,
+            Option<ChannelWatermark> globalWatermark)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
@@ -51,39 +48,12 @@ namespace ErsatzTV.Core.FFmpeg
                 start,
                 now);
 
-            Option<string> maybeWatermarkPath = None;
-
-            if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
-            {
-                // check for channel watermark
-                maybeWatermarkPath = channel.Artwork
-                    .Filter(a => a.ArtworkKind == ArtworkKind.Watermark)
-                    .HeadOrNone()
-                    .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Watermark, Option<int>.None));
-
-                // check for global watermark
-                if (maybeWatermarkPath.IsNone)
-                {
-                    maybeWatermarkPath = await _configElementRepository
-                        .GetValue<string>(ConfigElementKey.FFmpegWatermark)
-                        .MapT(a => _imageCache.GetPathForImage(a, ArtworkKind.Watermark, Option<int>.None));
-                }
-
-                // finally, check for channel logo
-                if (maybeWatermarkPath.IsNone)
-                {
-                    maybeWatermarkPath = channel.Artwork
-                        .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                        .HeadOrNone()
-                        .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
-                }
-            }
+            (Option<ChannelWatermark> maybeWatermark, Option<string> maybeWatermarkPath) =
+                GetWatermarkOptions(channel, globalWatermark);
 
             bool isAnimated = await maybeWatermarkPath.Match(
                 p => _imageCache.IsAnimated(p),
                 () => Task.FromResult(false));
-
-            Option<ChannelWatermark> maybeWatermark = channel.Watermark;
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports)
                 .WithThreads(playbackSettings.ThreadCount)
@@ -187,5 +157,59 @@ namespace ErsatzTV.Core.FFmpeg
 
         private bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
             displaySize.Width != target.Width || displaySize.Height != target.Height;
+
+        private WatermarkOptions GetWatermarkOptions(Channel channel, Option<ChannelWatermark> globalWatermark)
+        {
+            if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
+            {
+                // check for channel watermark
+                if (channel.Watermark != null)
+                {
+                    switch (channel.Watermark.ImageSource)
+                    {
+                        case ChannelWatermarkImageSource.Custom:
+                            string customPath = _imageCache.GetPathForImage(
+                                channel.Watermark.Image,
+                                ArtworkKind.Watermark,
+                                Option<int>.None);
+                            return new WatermarkOptions(channel.Watermark, customPath);
+                        case ChannelWatermarkImageSource.ChannelLogo:
+                            Option<string> maybeChannelPath = channel.Artwork
+                                .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                                .HeadOrNone()
+                                .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                            return new WatermarkOptions(channel.Watermark, maybeChannelPath);
+                        default:
+                            throw new NotSupportedException("Unsupported watermark image source");
+                    }
+                }
+
+                // check for global watermark
+                foreach (ChannelWatermark watermark in globalWatermark)
+                {
+                    switch (watermark.ImageSource)
+                    {
+                        case ChannelWatermarkImageSource.Custom:
+                            string customPath = _imageCache.GetPathForImage(
+                                watermark.Image,
+                                ArtworkKind.Watermark,
+                                Option<int>.None);
+                            return new WatermarkOptions(watermark, customPath);
+                        case ChannelWatermarkImageSource.ChannelLogo:
+                            Option<string> maybeChannelPath = channel.Artwork
+                                .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                                .HeadOrNone()
+                                .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                            return new WatermarkOptions(watermark, maybeChannelPath);
+                        default:
+                            throw new NotSupportedException("Unsupported watermark image source");
+                    }
+                }
+            }
+
+            return new WatermarkOptions(None, None);
+        }
+
+        private record WatermarkOptions(Option<ChannelWatermark> Watermark, Option<string> ImagePath);
     }
 }

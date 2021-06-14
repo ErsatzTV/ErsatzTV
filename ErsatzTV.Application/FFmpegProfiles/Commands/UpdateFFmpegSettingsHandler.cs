@@ -104,13 +104,15 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 ConfigElementKey.FFmpegPreferredLanguageCode,
                 request.Settings.PreferredLanguageCode);
 
-            if (!string.IsNullOrWhiteSpace(request.Settings.Watermark))
+            if (request.Settings.GlobalWatermarkId is not null)
             {
-                await _configElementRepository.Upsert(ConfigElementKey.FFmpegWatermark, request.Settings.Watermark);
+                await _configElementRepository.Upsert(
+                    ConfigElementKey.FFmpegGlobalWatermarkId,
+                    request.Settings.GlobalWatermarkId.Value);
             }
             else
             {
-                await _configElementRepository.Delete(ConfigElementKey.FFmpegWatermark);
+                await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalWatermarkId);
             }
 
             return Unit.Default;

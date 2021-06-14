@@ -1,0 +1,109 @@
+﻿@page "/watermarks"
+@using ErsatzTV.Application.Watermarks
+@using ErsatzTV.Application.Watermarks.Commands
+@using ErsatzTV.Application.Watermarks.Queries
+@inject IDialogService _dialog
+@inject IMediator _mediator
+@inject ILogger<Watermarks> _logger
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigationManager
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudTable Hover="true" Items="_watermarks">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Watermarks</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col/>
+            <col/>
+            <col style="width: 180px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Image</MudTh>
+            <MudTh>Mode</MudTh>
+            <MudTh>Location</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Image">
+                @if (!string.IsNullOrWhiteSpace(context.Image))
+                {
+                    <MudElement HtmlTag="img" src="@($"artwork/watermarks/{context.Image}")" Style="max-height: 50px"/>
+                }
+                else if (context.ImageSource == ChannelWatermarkImageSource.ChannelLogo)
+                {
+                    <MudText>[channel logo]</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Mode">
+                @context.Mode
+            </MudTd>
+            <MudTd DataLabel="Location">
+                @context.Location
+            </MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Watermark">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@($"/watermarks/{context.Id}")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Copy Watermark">
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="@(_ => CopyWatermarkAsync(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Watermark">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteWatermarkAsync(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/watermarks/add" Class="mt-4">
+        Add Watermark
+    </MudButton>
+</MudContainer>
+
+@code {
+    private List<WatermarkViewModel> _watermarks;
+
+    protected override async Task OnParametersSetAsync() => await LoadWatermarksAsync();
+
+    private async Task LoadWatermarksAsync() =>
+        _watermarks = await _mediator.Send(new GetAllWatermarks());
+
+    private async Task DeleteWatermarkAsync(WatermarkViewModel watermark)
+    {
+        var parameters = new DialogParameters { { "EntityType", "watermark" }, { "EntityName", watermark.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Watermark", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await _mediator.Send(new DeleteWatermark(watermark.Id));
+            await LoadWatermarksAsync();
+        }
+    }
+
+    private async Task CopyWatermarkAsync(WatermarkViewModel watermark)
+    {
+        var parameters = new DialogParameters { { "WatermarkId", watermark.Id } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = _dialog.Show<CopyWatermarkDialog>("Copy Watermark", parameters, options);
+        DialogResult dialogResult = await dialog.Result;
+        if (!dialogResult.Cancelled && dialogResult.Data is WatermarkViewModel data)
+        {
+            _navigationManager.NavigateTo($"/watermarks/{data.Id}");
+        }
+    }
+
+}

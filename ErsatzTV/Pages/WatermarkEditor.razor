@@ -1,0 +1,238 @@
+﻿@page "/watermarks/{Id:int}"
+@page "/watermarks/add"
+@using ErsatzTV.Application.Images.Commands
+@using ErsatzTV.Application.Watermarks
+@using ErsatzTV.Application.Watermarks.Queries
+@inject NavigationManager _navigationManager
+@inject ILogger<WatermarkEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div style="max-width: 400px;">
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h5">@(IsEdit ? "Edit Watermark" : "Add Watermark")</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudSelect Class="mt-3" Label="Mode" @bind-Value="_model.Mode"
+                               For="@(() => _model.Mode)">
+                        <MudSelectItem Value="@(ChannelWatermarkMode.None)">None</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkMode.Permanent)">Permanent</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkMode.Intermittent)">Intermittent</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="Image Source" @bind-Value="_model.ImageSource"
+                               For="@(() => _model.ImageSource)"
+                               Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
+                        <MudSelectItem Value="@(ChannelWatermarkImageSource.Custom)">Custom</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkImageSource.ChannelLogo)">Channel Logo</MudSelectItem>
+                    </MudSelect>
+                    <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <InputFile id="watermarkFileInput" OnChange="UploadWatermark" style="display: none;"/>
+                            @if (!string.IsNullOrWhiteSpace(_model.Image) && _model.ImageSource != ChannelWatermarkImageSource.ChannelLogo)
+                            {
+                                <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image}")" Style="max-height: 50px"/>
+                            }
+                            <ValidationMessage For="@(() => _model.Image)" style="color: #f44336!important;"/>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudButton Class="ml-auto" HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       Disabled="@(_model.ImageSource == ChannelWatermarkImageSource.ChannelLogo)"
+                                       for="watermarkFileInput">
+                                Upload Image
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                    <MudSelect Class="mt-3" Label="Location" @bind-Value="_model.Location"
+                               For="@(() => _model.Location)"
+                               Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.BottomRight)">Bottom Right</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.BottomLeft)">Bottom Left</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopRight)">Top Right</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopLeft)">Top Left</MudSelectItem>
+                    </MudSelect>
+                    <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <MudSelect Label="Size" @bind-Value="_model.Size"
+                                       For="@(() => _model.Size)"
+                                       Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
+                                <MudSelectItem Value="@(ChannelWatermarkSize.Scaled)">Scaled</MudSelectItem>
+                                <MudSelectItem Value="@(ChannelWatermarkSize.ActualSize)">Actual Size</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Width" @bind-Value="_model.Width"
+                                          For="@(() => _model.Width)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="%"
+                                          Disabled="@(_model.Mode == ChannelWatermarkMode.None || _model.Size == ChannelWatermarkSize.ActualSize)"
+                                          Immediate="true"/>
+                        </MudItem>
+                    </MudGrid>
+                    <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <MudTextField Label="Horizontal Margin" @bind-Value="_model.HorizontalMargin"
+                                          For="@(() => _model.HorizontalMargin)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="%"
+                                          Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
+                                          Immediate="true"/>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Vertical Margin" @bind-Value="_model.VerticalMargin"
+                                          For="@(() => _model.VerticalMargin)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="%"
+                                          Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
+                                          Immediate="true"/>
+                        </MudItem>
+                    </MudGrid>
+                    <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <MudSelect Label="Frequency" @bind-Value="_model.FrequencyMinutes"
+                                       For="@(() => _model.FrequencyMinutes)"
+                                       Disabled="@(_model.Mode != ChannelWatermarkMode.Intermittent)">
+                                <MudSelectItem Value="5">5 minutes</MudSelectItem>
+                                <MudSelectItem Value="10">10 minutes</MudSelectItem>
+                                <MudSelectItem Value="15">15 minutes</MudSelectItem>
+                                <MudSelectItem Value="20">20 minutes</MudSelectItem>
+                                <MudSelectItem Value="30">30 minutes</MudSelectItem>
+                                <MudSelectItem Value="60">60 minutes</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField Label="Duration" @bind-Value="_model.DurationSeconds"
+                                          For="@(() => _model.DurationSeconds)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="seconds"
+                                          Disabled="@(_model.Mode != ChannelWatermarkMode.Intermittent)"
+                                          Immediate="true"/>
+                        </MudItem>
+                    </MudGrid>
+                    <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <MudTextField Label="Opacity" @bind-Value="_model.Opacity"
+                                          For="@(() => _model.Opacity)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="%"
+                                          Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
+                                          Immediate="true"/>
+                        </MudItem>
+                        <MudItem xs="6" />
+                    </MudGrid>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
+                        @(IsEdit ? "Save Changes" : "Add Watermark")
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    private WatermarkEditViewModel _model = new();
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsEdit)
+        {
+            Option<WatermarkViewModel> watermark = await _mediator.Send(new GetWatermarkById(Id));
+            watermark.Match(
+                watermarkViewModel => _model = new WatermarkEditViewModel(watermarkViewModel),
+                () => _navigationManager.NavigateTo("404"));
+        }
+        else
+        {
+            _model = new WatermarkEditViewModel
+            {
+                Name = string.Empty,
+                Mode = ChannelWatermarkMode.Permanent,
+                Image = string.Empty,
+                Location = ChannelWatermarkLocation.BottomRight,
+                Size = ChannelWatermarkSize.Scaled,
+                Width = 15,
+                HorizontalMargin = 5,
+                VerticalMargin = 5,
+                FrequencyMinutes = 15,
+                DurationSeconds = 15,
+                Opacity = 100,
+            };
+        }
+
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private bool IsEdit => Id != 0;
+
+    private async Task HandleSubmitAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            Seq<BaseError> errorMessage = IsEdit ?
+                (await _mediator.Send(_model.ToUpdate())).LeftToSeq() :
+                (await _mediator.Send(_model.ToCreate())).LeftToSeq();
+
+            errorMessage.HeadOrNone().Match(
+                error =>
+                {
+                    _snackbar.Add("Unexpected error saving watermark");
+                    _logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
+                },
+                () => _navigationManager.NavigateTo("/watermarks"));
+        }
+    }
+    
+    private async Task UploadWatermark(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var buffer = new byte[e.File.Size];
+            await e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
+            Either<BaseError, string> maybeCacheFileName = await _mediator
+                .Send(new SaveArtworkToDisk(buffer, ArtworkKind.Watermark));
+            maybeCacheFileName.Match(
+                relativeFileName =>
+                {
+                    _model.Image = relativeFileName;
+                    _messageStore.Clear();
+                    _editContext.Validate();
+                    StateHasChanged();
+                },
+                error =>
+                {
+                    _snackbar.Add($"Unexpected error saving watermark: {error.Value}", Severity.Error);
+                    _logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
+                });
+        }
+        catch (IOException)
+        {
+            _snackbar.Add("Watermark exceeds maximum allowed file size of 10 MB", Severity.Error);
+            _logger.LogError("Watermark exceeds maximum allowed file size of 10 MB");
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Unexpected error saving watermark: {ex.Message}", Severity.Error);
+            _logger.LogError("Unexpected error saving watermark: {Error}", ex.Message);
+        }
+    }
+
+}
