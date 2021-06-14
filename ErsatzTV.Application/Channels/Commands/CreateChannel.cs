@@ -13,14 +13,5 @@ namespace ErsatzTV.Application.Channels.Commands
         string Logo,
         string PreferredLanguageCode,
         StreamingMode StreamingMode,
-        string Watermark,
-        ChannelWatermarkMode WatermarkMode,
-        ChannelWatermarkLocation WatermarkLocation,
-        ChannelWatermarkSize WatermarkSize,
-        int WatermarkWidth,
-        int WatermarkHorizontalMargin,
-        int WatermarkVerticalMargin,
-        int WatermarkFrequencyMinutes,
-        int WatermarkDurationSeconds,
-        int WatermarkOpacity) : IRequest<Either<BaseError, CreateChannelResult>>;
+        int? WatermarkId) : IRequest<Either<BaseError, CreateChannelResult>>;
 }

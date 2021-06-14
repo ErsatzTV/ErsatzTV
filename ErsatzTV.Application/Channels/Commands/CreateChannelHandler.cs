@@ -41,9 +41,10 @@ namespace ErsatzTV.Application.Channels.Commands
         private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, CreateChannel request) =>
             (ValidateName(request), await ValidateNumber(dbContext, request),
                 await FFmpegProfileMustExist(dbContext, request),
-                ValidatePreferredLanguage(request))
+                ValidatePreferredLanguage(request),
+                await WatermarkMustExist(dbContext, request))
             .Apply(
-                (name, number, ffmpegProfileId, preferredLanguageCode) =>
+                (name, number, ffmpegProfileId, preferredLanguageCode, watermarkId) =>
                 {
                     var artwork = new List<Artwork>();
                     if (!string.IsNullOrWhiteSpace(request.Logo))
@@ -58,18 +59,6 @@ namespace ErsatzTV.Application.Channels.Commands
                             });
                     }
 
-                    if (!string.IsNullOrWhiteSpace(request.Watermark))
-                    {
-                        artwork.Add(
-                            new Artwork
-                            {
-                                Path = request.Watermark,
-                                ArtworkKind = ArtworkKind.Watermark,
-                                DateAdded = DateTime.UtcNow,
-                                DateUpdated = DateTime.UtcNow
-                            });
-                    }
-
                     var channel = new Channel(Guid.NewGuid())
                     {
                         Name = name,
@@ -77,24 +66,9 @@ namespace ErsatzTV.Application.Channels.Commands
                         FFmpegProfileId = ffmpegProfileId,
                         StreamingMode = request.StreamingMode,
                         Artwork = artwork,
-                        PreferredLanguageCode = preferredLanguageCode
+                        PreferredLanguageCode = preferredLanguageCode,
+                        WatermarkId = watermarkId
                     };
-
-                    if (request.WatermarkMode != ChannelWatermarkMode.None)
-                    {
-                        channel.Watermark = new ChannelWatermark
-                        {
-                            Mode = request.WatermarkMode,
-                            Location = request.WatermarkLocation,
-                            Size = request.WatermarkSize,
-                            WidthPercent = request.WatermarkWidth,
-                            HorizontalMarginPercent = request.WatermarkHorizontalMargin,
-                            VerticalMarginPercent = request.WatermarkVerticalMargin,
-                            FrequencyMinutes = request.WatermarkFrequencyMinutes,
-                            DurationSeconds = request.WatermarkDurationSeconds,
-                            Opacity = request.WatermarkOpacity
-                        };
-                    }
 
                     return channel;
                 });
@@ -136,5 +110,22 @@ namespace ErsatzTV.Application.Channels.Commands
                 .Filter(c => c > 0)
                 .MapT(_ => createChannel.FFmpegProfileId)
                 .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {createChannel.FFmpegProfileId} does not exist."));
+
+        private static async Task<Validation<BaseError, int?>> WatermarkMustExist(
+            TvContext dbContext,
+            CreateChannel createChannel)
+        {
+            if (createChannel.WatermarkId is null)
+            {
+                return createChannel.WatermarkId;
+            }
+
+            return await dbContext.ChannelWatermarks
+                .CountAsync(w => w.Id == createChannel.WatermarkId)
+                .Map(Optional)
+                .Filter(c => c > 0)
+                .MapT(_ => createChannel.WatermarkId)
+                .Map(o => o.ToValidation<BaseError>($"Watermark {createChannel.WatermarkId} does not exist."));
+        }
     }
 }

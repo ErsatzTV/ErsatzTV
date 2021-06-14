@@ -1,0 +1,66 @@
+﻿@using ErsatzTV.Application.Watermarks
+@using ErsatzTV.Application.Watermarks.Commands
+@inject IMediator _mediator
+@inject ISnackbar _snackbar
+@inject ILogger<AddToCollectionDialog> _logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudText>
+                    Enter a name for the new Watermark
+                </MudText>
+            </MudContainer>
+            <MudTextFieldString Label="New Watermark Name"
+                                @bind-Text="@_newWatermarkName"
+                                Class="mb-6 mx-4">
+            </MudTextFieldString>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Copy Watermark
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int WatermarkId { get; set; }
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    private string _newWatermarkName;
+
+    private bool CanSubmit() => !string.IsNullOrWhiteSpace(_newWatermarkName);
+
+    private async Task Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        Either<BaseError, WatermarkViewModel> maybeResult =
+            await _mediator.Send(new CopyWatermark(WatermarkId, _newWatermarkName));
+
+        maybeResult.Match(
+            watermark => { MudDialog.Close(DialogResult.Ok(watermark)); },
+            error =>
+            {
+                _snackbar.Add(error.Value, Severity.Error);
+                _logger.LogError("Error copying Watermark: {Error}", error.Value);
+                MudDialog.Close(DialogResult.Cancel());
+            });
+    }
+
+    private void Cancel(MouseEventArgs e) => MudDialog.Cancel();
+}

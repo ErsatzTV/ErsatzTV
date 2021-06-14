@@ -64,74 +64,9 @@ namespace ErsatzTV.Application.Channels.Commands
                         c.Artwork.Add(artwork);
                     });
             }
-
-            if (!string.IsNullOrWhiteSpace(update.Watermark))
-            {
-                Option<Artwork> maybeWatermark =
-                    Optional(c.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Watermark);
-
-                maybeWatermark.Match(
-                    artwork =>
-                    {
-                        artwork.Path = update.Watermark;
-                        artwork.DateUpdated = DateTime.UtcNow;
-                    },
-                    () =>
-                    {
-                        var artwork = new Artwork
-                        {
-                            Path = update.Watermark,
-                            DateAdded = DateTime.UtcNow,
-                            DateUpdated = DateTime.UtcNow,
-                            ArtworkKind = ArtworkKind.Watermark
-                        };
-                        c.Artwork.Add(artwork);
-                    });
-            }
-            else
-            {
-                c.Artwork.RemoveAll(a => a.ArtworkKind == ArtworkKind.Watermark);
-            }
-
-            if (update.WatermarkMode == ChannelWatermarkMode.None)
-            {
-                if (c.Watermark != null)
-                {
-                    dbContext.Remove(c.Watermark);
-                }
-            }
-            else
-            {
-                if (c.Watermark != null)
-                {
-                    c.Watermark.Mode = update.WatermarkMode;
-                    c.Watermark.Location = update.WatermarkLocation;
-                    c.Watermark.Size = update.WatermarkSize;
-                    c.Watermark.WidthPercent = update.WatermarkWidth;
-                    c.Watermark.HorizontalMarginPercent = update.WatermarkHorizontalMargin;
-                    c.Watermark.VerticalMarginPercent = update.WatermarkVerticalMargin;
-                    c.Watermark.FrequencyMinutes = update.WatermarkFrequencyMinutes;
-                    c.Watermark.DurationSeconds = update.WatermarkDurationSeconds;
-                    c.Watermark.Opacity = update.WatermarkOpacity;
-                }
-                else
-                {
-                    c.Watermark = new ChannelWatermark
-                    {
-                        Mode = update.WatermarkMode,
-                        Location = update.WatermarkLocation,
-                        Size = update.WatermarkSize,
-                        WidthPercent = update.WatermarkWidth,
-                        HorizontalMarginPercent = update.WatermarkHorizontalMargin,
-                        VerticalMarginPercent = update.WatermarkVerticalMargin,
-                        FrequencyMinutes = update.WatermarkFrequencyMinutes,
-                        DurationSeconds = update.WatermarkDurationSeconds,
-                        Opacity = update.WatermarkOpacity
-                    };
-                }
-            }
-
+            
             c.StreamingMode = update.StreamingMode;
+            c.WatermarkId = update.WatermarkId;
             await dbContext.SaveChangesAsync();
             return ProjectToViewModel(c);
         }

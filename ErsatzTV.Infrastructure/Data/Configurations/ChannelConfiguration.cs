@@ -21,11 +21,6 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
             builder.HasMany(c => c.Artwork)
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
-
-            builder.HasOne(c => c.Watermark)
-                .WithOne(w => w.Channel)
-                .HasForeignKey<Channel>(c => c.WatermarkId)
-                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

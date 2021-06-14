@@ -9,7 +9,9 @@
 @using ErsatzTV.Application.Configuration.Queries
 @using Unit = LanguageExt.Unit
 @using ErsatzTV.Application.Configuration.Commands
-@using ErsatzTV.Application.Images.Commands
+@using ErsatzTV.Application.Watermarks
+@using ErsatzTV.Application.Watermarks.Queries
+@using Microsoft.AspNetCore.Components
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
 @inject ILogger<Settings> _logger
@@ -47,37 +49,13 @@
                                Color="Color.Primary"
                                @bind-Checked="@_ffmpegSettings.SaveReports"/>
                 </MudElement>
-                <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
-                    <MudItem xs="6">
-                        <InputFile id="fileInput" OnChange="UploadWatermark" hidden/>
-                        @if (!string.IsNullOrWhiteSpace(_ffmpegSettings.Watermark))
-                        {
-                            <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_ffmpegSettings.Watermark}")" Style="max-height: 50px"/>
-                        }
-                    </MudItem>
-                    <MudItem xs="6">
-                        @if (string.IsNullOrWhiteSpace(_ffmpegSettings.Watermark))
-                        {
-                            <MudButton Class="ml-auto" HtmlTag="label"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       StartIcon="@Icons.Material.Filled.CloudUpload"
-                                       for="fileInput">
-                                Upload Watermark
-                            </MudButton>
-                        }
-                        else
-                        {
-                            <MudButton Class="ml-auto" HtmlTag="label"
-                                       Variant="Variant.Filled"
-                                       Color="Color.Error"
-                                       StartIcon="@Icons.Material.Filled.DeleteForever"
-                                       OnClick="DeleteWatermark">
-                                Delete Watermark
-                            </MudButton>
-                        }
-                    </MudItem>
-                </MudGrid>
+                <MudSelect Class="mt-3" Label="Global Watermark" @bind-Value="_ffmpegSettings.GlobalWatermarkId" For="@(() => _ffmpegSettings.GlobalWatermarkId)">
+                    <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                    @foreach (WatermarkViewModel watermark in _watermarks)
+                    {
+                        <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                    }
+                </MudSelect>
             </MudForm>
         </MudCardContent>
         <MudCardActions>
@@ -130,6 +108,7 @@
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
     private FFmpegSettingsViewModel _ffmpegSettings;
     private List<CultureInfo> _availableCultures;
+    private List<WatermarkViewModel> _watermarks;
     private int _tunerCount;
     private int _libraryRefreshInterval;
 
@@ -140,6 +119,7 @@
         _ffmpegSettings = await _mediator.Send(new GetFFmpegSettings());
         _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
         _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
+        _watermarks = await _mediator.Send(new GetAllWatermarks());
         _tunerCount = await _mediator.Send(new GetHDHRTunerCount());
         _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
         _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval());
@@ -189,44 +169,6 @@
                 _logger.LogError("Unexpected error saving scanner settings: {Error}", error.Value);
             },
             Right: _ => _snackbar.Add("Successfully saved scanner settings", Severity.Success));
-    }
-    
-    private async Task UploadWatermark(InputFileChangeEventArgs e)
-    {
-        try
-        {
-            var buffer = new byte[e.File.Size];
-            await e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
-            Either<BaseError, string> maybeCacheFileName = await _mediator
-                .Send(new SaveArtworkToDisk(buffer, ArtworkKind.Watermark));
-            maybeCacheFileName.Match(
-                relativeFileName =>
-                {
-                    _ffmpegSettings.Watermark = relativeFileName;
-                    StateHasChanged();
-                },
-                error =>
-                {
-                    _snackbar.Add($"Unexpected error saving watermark: {error.Value}", Severity.Error);
-                    _logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
-                });
-        }
-        catch (IOException)
-        {
-            _snackbar.Add("Watermark exceeds maximum allowed file size of 10 MB", Severity.Error);
-            _logger.LogError("Watermark exceeds maximum allowed file size of 10 MB");
-        }
-        catch (Exception ex)
-        {
-            _snackbar.Add($"Unexpected error saving watermark: {ex.Message}", Severity.Error);
-            _logger.LogError("Unexpected error saving watermark: {Error}", ex.Message);
-        }
-    }
-
-    private void DeleteWatermark()
-    {
-        _ffmpegSettings.Watermark = null;
-        StateHasChanged();
     }
 
 }

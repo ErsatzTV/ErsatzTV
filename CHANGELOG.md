@@ -6,11 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add watermark opacity setting to allow blending with content
-- Add global watermark and channel watermark artwork
-    - Watermark precedence is: channel watermark, global watermark, channel logo
+- Add global watermark setting; channel-specific watermarks have precedence over global watermarks
 
 ### Changed
 - Remove unused API and SDK project; may reintroduce in the future but for now they have fallen out of date
+- Rework watermarks to be separate from channels (similar to ffmpeg profiles)
+  - This allows easy watermark reuse across channels
 
 ### Fixed
 - Fix crash adding or editing schedule items due to Artist with no name
