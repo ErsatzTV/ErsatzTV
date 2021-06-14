@@ -7,9 +7,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Channels.Mapper;
 using static LanguageExt.Prelude;
 
@@ -17,28 +19,30 @@ namespace ErsatzTV.Application.Channels.Commands
 {
     public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseError, ChannelViewModel>>
     {
-        private readonly IChannelRepository _channelRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public UpdateChannelHandler(IChannelRepository channelRepository) => _channelRepository = channelRepository;
+        public UpdateChannelHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public Task<Either<BaseError, ChannelViewModel>> Handle(
+        public async Task<Either<BaseError, ChannelViewModel>> Handle(
             UpdateChannel request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(c => ApplyUpdateRequest(c, request))
-                .Bind(v => v.ToEitherAsync());
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, Channel> validation = await Validate(dbContext, request);
+            return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        }
 
-        private async Task<ChannelViewModel> ApplyUpdateRequest(Channel c, UpdateChannel update)
+        private async Task<ChannelViewModel> ApplyUpdateRequest(TvContext dbContext, Channel c, UpdateChannel update)
         {
             c.Name = update.Name;
             c.Number = update.Number;
             c.FFmpegProfileId = update.FFmpegProfileId;
             c.PreferredLanguageCode = update.PreferredLanguageCode;
+            c.Artwork ??= new List<Artwork>();
 
             if (!string.IsNullOrWhiteSpace(update.Logo))
             {
-                c.Artwork ??= new List<Artwork>();
-
                 Option<Artwork> maybeLogo =
                     Optional(c.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Logo);
 
@@ -61,9 +65,40 @@ namespace ErsatzTV.Application.Channels.Commands
                     });
             }
 
+            if (!string.IsNullOrWhiteSpace(update.Watermark))
+            {
+                Option<Artwork> maybeWatermark =
+                    Optional(c.Artwork).Flatten().FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Watermark);
+
+                maybeWatermark.Match(
+                    artwork =>
+                    {
+                        artwork.Path = update.Watermark;
+                        artwork.DateUpdated = DateTime.UtcNow;
+                    },
+                    () =>
+                    {
+                        var artwork = new Artwork
+                        {
+                            Path = update.Watermark,
+                            DateAdded = DateTime.UtcNow,
+                            DateUpdated = DateTime.UtcNow,
+                            ArtworkKind = ArtworkKind.Watermark
+                        };
+                        c.Artwork.Add(artwork);
+                    });
+            }
+            else
+            {
+                c.Artwork.RemoveAll(a => a.ArtworkKind == ArtworkKind.Watermark);
+            }
+
             if (update.WatermarkMode == ChannelWatermarkMode.None)
             {
-                await _channelRepository.RemoveWatermark(c);
+                if (c.Watermark != null)
+                {
+                    dbContext.Remove(c.Watermark);
+                }
             }
             else
             {
@@ -97,27 +132,37 @@ namespace ErsatzTV.Application.Channels.Commands
             }
 
             c.StreamingMode = update.StreamingMode;
-            await _channelRepository.Update(c);
+            await dbContext.SaveChangesAsync();
             return ProjectToViewModel(c);
         }
 
-        private async Task<Validation<BaseError, Channel>> Validate(UpdateChannel request) =>
-            (await ChannelMustExist(request), ValidateName(request), await ValidateNumber(request),
+        private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
+            (await ChannelMustExist(dbContext, request), ValidateName(request),
+                await ValidateNumber(dbContext, request),
                 ValidatePreferredLanguage(request))
             .Apply((channelToUpdate, _, _, _) => channelToUpdate);
 
-        private Task<Validation<BaseError, Channel>> ChannelMustExist(UpdateChannel updateChannel) =>
-            _channelRepository.Get(updateChannel.ChannelId)
-                .Map(v => v.ToValidation<BaseError>("Channel does not exist."));
+        private static Task<Validation<BaseError, Channel>> ChannelMustExist(
+            TvContext dbContext,
+            UpdateChannel updateChannel) =>
+            dbContext.Channels
+                .Include(c => c.Artwork)
+                .Include(c => c.Watermark)
+                .SelectOneAsync(c => c.Id, c => c.Id == updateChannel.ChannelId)
+                .Map(o => o.ToValidation<BaseError>("Channel does not exist."));
 
-        private Validation<BaseError, string> ValidateName(UpdateChannel updateChannel) =>
+        private static Validation<BaseError, string> ValidateName(UpdateChannel updateChannel) =>
             updateChannel.NotEmpty(c => c.Name)
                 .Bind(_ => updateChannel.NotLongerThan(50)(c => c.Name));
 
-        private async Task<Validation<BaseError, string>> ValidateNumber(UpdateChannel updateChannel)
+        private static async Task<Validation<BaseError, string>> ValidateNumber(
+            TvContext dbContext,
+            UpdateChannel updateChannel)
         {
-            Option<Channel> match = await _channelRepository.GetByNumber(updateChannel.Number);
-            int matchId = await match.Map(c => c.Id).IfNoneAsync(updateChannel.ChannelId);
+            int matchId = await dbContext.Channels
+                .SelectOneAsync(c => c.Number, c => c.Number == updateChannel.Number)
+                .Match(c => c.Id, () => updateChannel.ChannelId);
+
             if (matchId == updateChannel.ChannelId)
             {
                 if (Regex.IsMatch(updateChannel.Number, Channel.NumberValidator))
@@ -131,7 +176,7 @@ namespace ErsatzTV.Application.Channels.Commands
             return BaseError.New("Channel number must be unique");
         }
 
-        private Validation<BaseError, string> ValidatePreferredLanguage(UpdateChannel updateChannel) =>
+        private static Validation<BaseError, string> ValidatePreferredLanguage(UpdateChannel updateChannel) =>
             Optional(updateChannel.PreferredLanguageCode ?? string.Empty)
                 .Filter(
                     lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(

@@ -52,25 +52,31 @@ namespace ErsatzTV.Core.FFmpeg
                 now);
 
             Option<string> maybeWatermarkPath = None;
-            
-            // TODO: check for channel watermark
-            
-            // check for global watermark
-            if (maybeWatermarkPath.IsNone)
-            {
-                maybeWatermarkPath = await _configElementRepository
-                    .GetValue<string>(ConfigElementKey.FFmpegWatermark)
-                    .MapT(a => _imageCache.GetPathForImage(a, ArtworkKind.Watermark, Option<int>.None));
-            }
 
-            // finally, check for channel logo
-            if (maybeWatermarkPath.IsNone)
+            if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
             {
+                // check for channel watermark
                 maybeWatermarkPath = channel.Artwork
-                    .Filter(_ => channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
-                    .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                    .Filter(a => a.ArtworkKind == ArtworkKind.Watermark)
                     .HeadOrNone()
-                    .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                    .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Watermark, Option<int>.None));
+
+                // check for global watermark
+                if (maybeWatermarkPath.IsNone)
+                {
+                    maybeWatermarkPath = await _configElementRepository
+                        .GetValue<string>(ConfigElementKey.FFmpegWatermark)
+                        .MapT(a => _imageCache.GetPathForImage(a, ArtworkKind.Watermark, Option<int>.None));
+                }
+
+                // finally, check for channel logo
+                if (maybeWatermarkPath.IsNone)
+                {
+                    maybeWatermarkPath = channel.Artwork
+                        .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                        .HeadOrNone()
+                        .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                }
             }
 
             bool isAnimated = await maybeWatermarkPath.Match(

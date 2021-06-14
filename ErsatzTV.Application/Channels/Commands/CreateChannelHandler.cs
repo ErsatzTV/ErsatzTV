@@ -58,6 +58,18 @@ namespace ErsatzTV.Application.Channels.Commands
                             });
                     }
 
+                    if (!string.IsNullOrWhiteSpace(request.Watermark))
+                    {
+                        artwork.Add(
+                            new Artwork
+                            {
+                                Path = request.Watermark,
+                                ArtworkKind = ArtworkKind.Watermark,
+                                DateAdded = DateTime.UtcNow,
+                                DateUpdated = DateTime.UtcNow
+                            });
+                    }
+
                     var channel = new Channel(Guid.NewGuid())
                     {
                         Name = name,
