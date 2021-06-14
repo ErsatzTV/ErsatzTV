@@ -104,6 +104,15 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 ConfigElementKey.FFmpegPreferredLanguageCode,
                 request.Settings.PreferredLanguageCode);
 
+            if (!string.IsNullOrWhiteSpace(request.Settings.Watermark))
+            {
+                await _configElementRepository.Upsert(ConfigElementKey.FFmpegWatermark, request.Settings.Watermark);
+            }
+            else
+            {
+                await _configElementRepository.Delete(ConfigElementKey.FFmpegWatermark);
+            }
+
             return Unit.Default;
         }
     }

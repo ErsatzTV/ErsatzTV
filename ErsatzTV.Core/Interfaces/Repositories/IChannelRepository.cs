@@ -11,8 +11,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<Channel>> GetByNumber(string number);
         Task<List<Channel>> GetAll();
         Task<List<Channel>> GetAllForGuide();
-        Task<bool> Update(Channel channel);
         Task Delete(int channelId);
-        Task<Unit> RemoveWatermark(Channel channel);
     }
 }

@@ -12,6 +12,7 @@ namespace ErsatzTV.ViewModels
         public string PreferredLanguageCode { get; set; }
         public string Logo { get; set; }
         public StreamingMode StreamingMode { get; set; }
+        public string Watermark { get; set; }
         public ChannelWatermarkMode WatermarkMode { get; set; }
         public ChannelWatermarkLocation WatermarkLocation { get; set; }
         public ChannelWatermarkSize WatermarkSize { get; set; }
@@ -31,6 +32,7 @@ namespace ErsatzTV.ViewModels
                 Logo,
                 PreferredLanguageCode,
                 StreamingMode,
+                Watermark,
                 WatermarkMode,
                 WatermarkLocation,
                 WatermarkSize,
@@ -49,6 +51,7 @@ namespace ErsatzTV.ViewModels
                 Logo,
                 PreferredLanguageCode,
                 StreamingMode,
+                Watermark,
                 WatermarkMode,
                 WatermarkLocation,
                 WatermarkSize,

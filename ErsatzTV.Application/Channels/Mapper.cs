@@ -15,6 +15,7 @@ namespace ErsatzTV.Application.Channels
                 GetLogo(channel),
                 channel.PreferredLanguageCode,
                 channel.StreamingMode,
+                GetWatermark(channel),
                 channel.Watermark?.Mode ?? ChannelWatermarkMode.None,
                 channel.Watermark?.Location ?? ChannelWatermarkLocation.BottomRight,
                 channel.Watermark?.Size ?? ChannelWatermarkSize.Scaled,
@@ -27,6 +28,10 @@ namespace ErsatzTV.Application.Channels
 
         private static string GetLogo(Channel channel) =>
             Optional(channel.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Logo))
+                .Match(a => a.Path, string.Empty);
+
+        private static string GetWatermark(Channel channel) =>
+            Optional(channel.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Watermark))
                 .Match(a => a.Path, string.Empty);
     }
 }

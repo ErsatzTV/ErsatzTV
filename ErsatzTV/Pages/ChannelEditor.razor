@@ -68,6 +68,37 @@
                     <div style="padding-bottom: 16px; padding-top: 20px;">
                         <MudText Typo="Typo.h6">Watermark Settings</MudText>
                     </div>
+                    <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <InputFile id="watermarkFileInput" OnChange="UploadWatermark" hidden/>
+                            @if (!string.IsNullOrWhiteSpace(_model.Watermark))
+                            {
+                                <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Watermark}")" Style="max-height: 50px"/>
+                            }
+                        </MudItem>
+                        <MudItem xs="6">
+                            @if (string.IsNullOrWhiteSpace(_model.Watermark))
+                            {
+                                <MudButton Class="ml-auto" HtmlTag="label"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.CloudUpload"
+                                           for="watermarkFileInput">
+                                    Upload Watermark
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Class="ml-auto" HtmlTag="label"
+                                           Variant="Variant.Filled"
+                                           Color="Color.Error"
+                                           StartIcon="@Icons.Material.Filled.DeleteForever"
+                                           OnClick="DeleteWatermark">
+                                    Delete Watermark
+                                </MudButton>
+                            }
+                        </MudItem>
+                    </MudGrid>
                     <MudSelect Class="mt-3" Label="Mode" @bind-Value="_model.WatermarkMode"
                                For="@(() => _model.WatermarkMode)"
                                Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)">
@@ -194,6 +225,7 @@
                     _model.StreamingMode = channelViewModel.StreamingMode;
                     _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
                     _model.WatermarkMode = channelViewModel.WatermarkMode;
+                    _model.Watermark = channelViewModel.Watermark;
                     _model.WatermarkLocation = channelViewModel.WatermarkLocation;
                     _model.WatermarkSize = channelViewModel.WatermarkSize;
                     _model.WatermarkWidth = channelViewModel.WatermarkWidth;
@@ -218,6 +250,7 @@
             _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
             _model.StreamingMode = StreamingMode.TransportStream;
             _model.WatermarkMode = ChannelWatermarkMode.None;
+            _model.Watermark = string.Empty;
             _model.WatermarkLocation = ChannelWatermarkLocation.BottomRight;
             _model.WatermarkSize = ChannelWatermarkSize.Scaled;
             _model.WatermarkWidth = 15;
@@ -288,6 +321,44 @@
             _snackbar.Add($"Unexpected error saving channel logo: {ex.Message}", Severity.Error);
             _logger.LogError("Unexpected error saving channel logo: {Error}", ex.Message);
         }
+    }
+    
+    private async Task UploadWatermark(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var buffer = new byte[e.File.Size];
+            await e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
+            Either<BaseError, string> maybeCacheFileName = await _mediator
+                .Send(new SaveArtworkToDisk(buffer, ArtworkKind.Watermark));
+            maybeCacheFileName.Match(
+                relativeFileName =>
+                {
+                    _model.Watermark = relativeFileName;
+                    StateHasChanged();
+                },
+                error =>
+                {
+                    _snackbar.Add($"Unexpected error saving watermark: {error.Value}", Severity.Error);
+                    _logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
+                });
+        }
+        catch (IOException)
+        {
+            _snackbar.Add("Watermark exceeds maximum allowed file size of 10 MB", Severity.Error);
+            _logger.LogError("Watermark exceeds maximum allowed file size of 10 MB");
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Unexpected error saving watermark: {ex.Message}", Severity.Error);
+            _logger.LogError("Unexpected error saving watermark: {Error}", ex.Message);
+        }
+    }
+
+    private void DeleteWatermark()
+    {
+        _model.Watermark = null;
+        StateHasChanged();
     }
 
 }

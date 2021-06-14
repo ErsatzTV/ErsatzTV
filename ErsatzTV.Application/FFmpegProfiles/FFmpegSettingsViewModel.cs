@@ -7,5 +7,6 @@
         public int DefaultFFmpegProfileId { get; set; }
         public string PreferredLanguageCode { get; set; }
         public bool SaveReports { get; set; }
+        public string Watermark { get; set; }
     }
 }
