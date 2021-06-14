@@ -3,14 +3,16 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20210614095655_Add_ChannelWatermarkNameImage")]
+    partial class Add_ChannelWatermarkNameImage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -235,9 +237,6 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<string>("Image")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("ImageSource")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("Location")
                         .HasColumnType("INTEGER");
