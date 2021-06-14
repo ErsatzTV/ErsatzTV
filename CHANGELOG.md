@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix ui crash adding a channel without a watermark
 
 ## [0.0.46-prealpha] - 2021-06-14
 ### Added
@@ -18,7 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This allows easy watermark reuse across channels
 
 ### Fixed
-- Fix crash adding or editing schedule items due to Artist with no name
+- Fix ui crash adding or editing schedule items due to Artist with no name
 - Fix many potential sources of inconsistent data in UI
 
 ## [0.0.45-prealpha] - 2021-06-12
