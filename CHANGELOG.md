@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fix crash adding or editing schedule items due to Artist with no name
+- Fix many potential sources of inconsistent data in UI
 
 ## [0.0.45-prealpha] - 2021-06-12
 ### Added
