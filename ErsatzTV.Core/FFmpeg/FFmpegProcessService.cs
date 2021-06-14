@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg
 {
@@ -13,13 +15,16 @@ namespace ErsatzTV.Core.FFmpeg
     {
         private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
         private readonly IImageCache _imageCache;
+        private readonly IConfigElementRepository _configElementRepository;
         private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
         public FFmpegProcessService(
+            IConfigElementRepository configElementRepository,
             FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
             IFFmpegStreamSelector ffmpegStreamSelector,
             IImageCache imageCache)
         {
+            _configElementRepository = configElementRepository;
             _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
             _ffmpegStreamSelector = ffmpegStreamSelector;
             _imageCache = imageCache;
@@ -46,11 +51,27 @@ namespace ErsatzTV.Core.FFmpeg
                 start,
                 now);
 
-            Option<string> maybeWatermarkPath = channel.Artwork
-                .Filter(_ => channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
-                .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                .HeadOrNone()
-                .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+            Option<string> maybeWatermarkPath = None;
+            
+            // TODO: check for channel watermark
+            
+            // check for global watermark
+            if (maybeWatermarkPath.IsNone)
+            {
+                maybeWatermarkPath = await _configElementRepository
+                    .GetValue<string>(ConfigElementKey.FFmpegWatermark)
+                    .MapT(a => _imageCache.GetPathForImage(a, ArtworkKind.Watermark, Option<int>.None));
+            }
+
+            // finally, check for channel logo
+            if (maybeWatermarkPath.IsNone)
+            {
+                maybeWatermarkPath = channel.Artwork
+                    .Filter(_ => channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
+                    .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                    .HeadOrNone()
+                    .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+            }
 
             bool isAnimated = await maybeWatermarkPath.Match(
                 p => _imageCache.IsAnimated(p),

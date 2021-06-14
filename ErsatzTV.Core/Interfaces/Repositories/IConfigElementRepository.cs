@@ -10,5 +10,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<ConfigElement>> Get(ConfigElementKey key);
         Task<Option<T>> GetValue<T>(ConfigElementKey key);
         Task Delete(ConfigElement configElement);
+        Task<Unit> Delete(ConfigElementKey configElementKey);
     }
 }

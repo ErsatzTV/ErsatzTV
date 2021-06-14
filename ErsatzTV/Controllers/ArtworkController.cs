@@ -46,6 +46,16 @@ namespace ErsatzTV.Controllers
                 Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
         }
 
+        [HttpGet("/artwork/watermarks/{fileName}")]
+        public async Task<IActionResult> GetWatermark(string fileName)
+        {
+            Either<BaseError, CachedImagePathViewModel> cachedImagePath =
+                await _mediator.Send(new GetCachedImagePath(fileName, ArtworkKind.Watermark));
+            return cachedImagePath.Match<IActionResult>(
+                Left: _ => new NotFoundResult(),
+                Right: r => new PhysicalFileResult(r.FileName, r.MimeType));
+        }
+
         [HttpGet("/artwork/fanart/{fileName}")]
         public async Task<IActionResult> GetFanArt(string fileName)
         {

@@ -63,5 +63,20 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             dbContext.ConfigElements.Remove(configElement);
             await dbContext.SaveChangesAsync();
         }
+
+        public async Task<Unit> Delete(ConfigElementKey configElementKey)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Option<ConfigElement> maybeExisting = await dbContext.ConfigElements
+                .SelectOneAsync(ce => ce.Key, ce => ce.Key == configElementKey.Key);
+            foreach (ConfigElement element in maybeExisting)
+            {
+                dbContext.ConfigElements.Remove(element);
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            return Unit.Default;
+        }
     }
 }
