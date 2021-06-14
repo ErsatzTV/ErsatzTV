@@ -115,6 +115,10 @@
         {
             await _mediator.Send(new DeletePlayout(playout.PlayoutId));
             await _table.ReloadServerData();
+            if (_selectedPlayoutId == playout.PlayoutId)
+            {
+                _selectedPlayoutItems = null;
+            }
         }
     }
 
