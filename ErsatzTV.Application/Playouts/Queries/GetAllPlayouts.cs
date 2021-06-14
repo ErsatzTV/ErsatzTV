@@ -3,5 +3,5 @@ using MediatR;
 
 namespace ErsatzTV.Application.Playouts.Queries
 {
-    public record GetAllPlayouts : IRequest<List<PlayoutViewModel>>;
+    public record GetAllPlayouts : IRequest<List<PlayoutNameViewModel>>;
 }

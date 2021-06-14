@@ -5,7 +5,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -35,19 +34,7 @@ namespace ErsatzTV.Services.RunOnce
             {
                 _logger.LogInformation("Disabling ffmpeg reports on Windows platform");
                 IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
-                ConfigElementKey key = ConfigElementKey.FFmpegSaveReports;
-                Option<ConfigElement> maybeExisting = await repo.Get(key);
-                await maybeExisting.Match(
-                    ce =>
-                    {
-                        ce.Value = false.ToString();
-                        return repo.Update(ce);
-                    },
-                    () =>
-                    {
-                        var ce = new ConfigElement { Key = key.Key, Value = false.ToString() };
-                        return repo.Add(ce);
-                    });
+                await repo.Upsert(ConfigElementKey.FFmpegSaveReports, false);
             }
         }
 

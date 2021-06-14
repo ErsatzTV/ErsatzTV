@@ -5,41 +5,47 @@ using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public class
-        AddMusicVideoToCollectionHandler : MediatR.IRequestHandler<AddMusicVideoToCollection, Either<BaseError, Unit>>
+    public class AddMusicVideoToCollectionHandler :
+        MediatR.IRequestHandler<AddMusicVideoToCollection, Either<BaseError, Unit>>
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
-        private readonly IMusicVideoRepository _musicVideoRepository;
 
         public AddMusicVideoToCollectionHandler(
+            IDbContextFactory<TvContext> dbContextFactory,
             IMediaCollectionRepository mediaCollectionRepository,
-            IMusicVideoRepository musicVideoRepository,
             ChannelWriter<IBackgroundServiceRequest> channel)
         {
+            _dbContextFactory = dbContextFactory;
             _mediaCollectionRepository = mediaCollectionRepository;
-            _musicVideoRepository = musicVideoRepository;
             _channel = channel;
         }
 
-        public Task<Either<BaseError, Unit>> Handle(
+        public async Task<Either<BaseError, Unit>> Handle(
             AddMusicVideoToCollection request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(_ => ApplyAddMusicVideoRequest(request))
-                .Bind(v => v.ToEitherAsync());
-
-        private async Task<Unit> ApplyAddMusicVideoRequest(AddMusicVideoToCollection request)
+            CancellationToken cancellationToken)
         {
-            if (await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.MusicVideoId))
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+            return await validation.Apply(parameters => ApplyAddMusicVideoRequest(dbContext, parameters));
+        }
+
+        private async Task<Unit> ApplyAddMusicVideoRequest(TvContext dbContext, Parameters parameters)
+        {
+            parameters.Collection.MediaItems.Add(parameters.MusicVideo);
+            if (await dbContext.SaveChangesAsync() > 0)
             {
                 // rebuild all playouts that use this collection
                 foreach (int playoutId in await _mediaCollectionRepository
-                    .PlayoutIdsUsingCollection(request.CollectionId))
+                    .PlayoutIdsUsingCollection(parameters.Collection.Id))
                 {
                     await _channel.WriteAsync(new BuildPlayout(playoutId, true));
                 }
@@ -48,21 +54,27 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             return Unit.Default;
         }
 
-        private async Task<Validation<BaseError, Unit>> Validate(AddMusicVideoToCollection request) =>
-            (await CollectionMustExist(request), await ValidateMusicVideo(request))
-            .Apply((_, _) => Unit.Default);
+        private static async Task<Validation<BaseError, Parameters>> Validate(
+            TvContext dbContext,
+            AddMusicVideoToCollection request) =>
+            (await CollectionMustExist(dbContext, request), await ValidateMusicVideo(dbContext, request))
+            .Apply((collection, episode) => new Parameters(collection, episode));
 
-        private Task<Validation<BaseError, Unit>> CollectionMustExist(AddMusicVideoToCollection request) =>
-            _mediaCollectionRepository.GetCollectionWithItems(request.CollectionId)
-                .MapT(_ => Unit.Default)
-                .Map(v => v.ToValidation<BaseError>("Collection does not exist."));
+        private static Task<Validation<BaseError, Collection>> CollectionMustExist(
+            TvContext dbContext,
+            AddMusicVideoToCollection request) =>
+            dbContext.Collections
+                .Include(c => c.MediaItems)
+                .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+                .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
-        private Task<Validation<BaseError, Unit>> ValidateMusicVideo(AddMusicVideoToCollection request) =>
-            LoadMusicVideo(request)
-                .MapT(_ => Unit.Default)
-                .Map(v => v.ToValidation<BaseError>("Music video does not exist"));
+        private static Task<Validation<BaseError, MusicVideo>> ValidateMusicVideo(
+            TvContext dbContext,
+            AddMusicVideoToCollection request) =>
+            dbContext.MusicVideos
+                .SelectOneAsync(m => m.Id, e => e.Id == request.MusicVideoId)
+                .Map(o => o.ToValidation<BaseError>("MusicVideo does not exist"));
 
-        private Task<Option<MusicVideo>> LoadMusicVideo(AddMusicVideoToCollection request) =>
-            _musicVideoRepository.GetMusicVideo(request.MusicVideoId);
+        private record Parameters(Collection Collection, MusicVideo MusicVideo);
     }
 }

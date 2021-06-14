@@ -2,35 +2,35 @@
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
-using static ErsatzTV.Application.FFmpegProfiles.Mapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.FFmpegProfiles.Commands
 {
     public class
-        UpdateFFmpegProfileHandler : IRequestHandler<UpdateFFmpegProfile, Either<BaseError, FFmpegProfileViewModel>>
+        UpdateFFmpegProfileHandler : IRequestHandler<UpdateFFmpegProfile, Either<BaseError, UpdateFFmpegProfileResult>>
     {
-        private readonly IFFmpegProfileRepository _ffmpegProfileRepository;
-        private readonly IResolutionRepository _resolutionRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public UpdateFFmpegProfileHandler(
-            IFFmpegProfileRepository ffmpegProfileRepository,
-            IResolutionRepository resolutionRepository)
+        public UpdateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
+
+        public async Task<Either<BaseError, UpdateFFmpegProfileResult>> Handle(
+            UpdateFFmpegProfile request,
+            CancellationToken cancellationToken)
         {
-            _ffmpegProfileRepository = ffmpegProfileRepository;
-            _resolutionRepository = resolutionRepository;
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
+            return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
         }
 
-        public Task<Either<BaseError, FFmpegProfileViewModel>> Handle(
-            UpdateFFmpegProfile request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(c => ApplyUpdateRequest(c, request))
-                .Bind(v => v.ToEitherAsync());
-
-        private async Task<FFmpegProfileViewModel> ApplyUpdateRequest(FFmpegProfile p, UpdateFFmpegProfile update)
+        private async Task<UpdateFFmpegProfileResult> ApplyUpdateRequest(
+            TvContext dbContext,
+            FFmpegProfile p,
+            UpdateFFmpegProfile update)
         {
             p.Name = update.Name;
             p.ThreadCount = update.ThreadCount;
@@ -48,30 +48,37 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.AudioChannels = update.AudioChannels;
             p.AudioSampleRate = update.AudioSampleRate;
             p.NormalizeAudio = update.NormalizeAudio;
-            await _ffmpegProfileRepository.Update(p);
-            return ProjectToViewModel(p);
+            await dbContext.SaveChangesAsync();
+            return new UpdateFFmpegProfileResult(p.Id);
         }
 
-        private async Task<Validation<BaseError, FFmpegProfile>> Validate(UpdateFFmpegProfile request) =>
-            (await FFmpegProfileMustExist(request), ValidateName(request), ValidateThreadCount(request),
-                await ResolutionMustExist(request))
+        private static async Task<Validation<BaseError, FFmpegProfile>> Validate(
+            TvContext dbContext,
+            UpdateFFmpegProfile request) =>
+            (await FFmpegProfileMustExist(dbContext, request), ValidateName(request), ValidateThreadCount(request),
+                await ResolutionMustExist(dbContext, request))
             .Apply((ffmpegProfileToUpdate, _, _, _) => ffmpegProfileToUpdate);
 
-        private async Task<Validation<BaseError, FFmpegProfile>> FFmpegProfileMustExist(
+        private static Task<Validation<BaseError, FFmpegProfile>> FFmpegProfileMustExist(
+            TvContext dbContext,
             UpdateFFmpegProfile updateFFmpegProfile) =>
-            (await _ffmpegProfileRepository.Get(updateFFmpegProfile.FFmpegProfileId))
-            .ToValidation<BaseError>("FFmpegProfile does not exist.");
+            dbContext.FFmpegProfiles
+                .SelectOneAsync(p => p.Id, p => p.Id == updateFFmpegProfile.FFmpegProfileId)
+                .Map(o => o.ToValidation<BaseError>("FFmpegProfile does not exist."));
 
-        private Validation<BaseError, string> ValidateName(UpdateFFmpegProfile updateFFmpegProfile) =>
+        private static Validation<BaseError, string> ValidateName(UpdateFFmpegProfile updateFFmpegProfile) =>
             updateFFmpegProfile.NotEmpty(x => x.Name)
                 .Bind(_ => updateFFmpegProfile.NotLongerThan(50)(x => x.Name));
 
-        private Validation<BaseError, int> ValidateThreadCount(UpdateFFmpegProfile updateFFmpegProfile) =>
+        private static Validation<BaseError, int> ValidateThreadCount(UpdateFFmpegProfile updateFFmpegProfile) =>
             updateFFmpegProfile.AtLeast(0)(p => p.ThreadCount);
 
-        private async Task<Validation<BaseError, int>> ResolutionMustExist(UpdateFFmpegProfile updateFFmpegProfile) =>
-            (await _resolutionRepository.Get(updateFFmpegProfile.ResolutionId))
-            .ToValidation<BaseError>($"[Resolution] {updateFFmpegProfile.ResolutionId} does not exist.")
-            .Map(c => c.Id);
+        private static Task<Validation<BaseError, int>> ResolutionMustExist(
+            TvContext dbContext,
+            UpdateFFmpegProfile updateFFmpegProfile) =>
+            dbContext.Resolutions
+                .SelectOneAsync(r => r.Id, r => r.Id == updateFFmpegProfile.ResolutionId)
+                .MapT(r => r.Id)
+                .Map(o => o.ToValidation<BaseError>($"[Resolution] {updateFFmpegProfile.ResolutionId} does not exist"));
     }
 }

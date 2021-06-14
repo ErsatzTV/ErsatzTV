@@ -1,32 +1,43 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.FFmpegProfiles.Commands
 {
-    public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, Either<BaseError, Task>>
+    public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, Either<BaseError, LanguageExt.Unit>>
     {
-        private readonly IFFmpegProfileRepository _ffmpegProfileRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public DeleteFFmpegProfileHandler(IFFmpegProfileRepository ffmpegProfileRepository) =>
-            _ffmpegProfileRepository = ffmpegProfileRepository;
+        public DeleteFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public async Task<Either<BaseError, Task>> Handle(
+        public async Task<Either<BaseError, LanguageExt.Unit>> Handle(
             DeleteFFmpegProfile request,
-            CancellationToken cancellationToken) =>
-            (await FFmpegProfileMustExist(request))
-            .Map(DoDeletion)
-            .ToEither<Task>();
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, FFmpegProfile> validation = await FFmpegProfileMustExist(dbContext, request);
+            return await validation.Apply(p => DoDeletion(dbContext, p));
+        }
 
-        private Task DoDeletion(int channelId) => _ffmpegProfileRepository.Delete(channelId);
+        private static async Task<LanguageExt.Unit> DoDeletion(TvContext dbContext, FFmpegProfile ffmpegProfile)
+        {
+            dbContext.FFmpegProfiles.Remove(ffmpegProfile);
+            await dbContext.SaveChangesAsync();
+            return LanguageExt.Unit.Default;
+        }
 
-        private async Task<Validation<BaseError, int>> FFmpegProfileMustExist(
-            DeleteFFmpegProfile deleteFFmpegProfile) =>
-            (await _ffmpegProfileRepository.Get(deleteFFmpegProfile.FFmpegProfileId))
-            .ToValidation<BaseError>($"FFmpegProfile {deleteFFmpegProfile.FFmpegProfileId} does not exist.")
-            .Map(c => c.Id);
+        private static Task<Validation<BaseError, FFmpegProfile>> FFmpegProfileMustExist(
+            TvContext dbContext,
+            DeleteFFmpegProfile request) =>
+            dbContext.FFmpegProfiles
+                .SelectOneAsync(p => p.Id, p => p.Id == request.FFmpegProfileId)
+                .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {request.FFmpegProfileId} does not exist"));
     }
 }

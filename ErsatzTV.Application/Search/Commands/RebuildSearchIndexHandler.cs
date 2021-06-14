@@ -49,23 +49,7 @@ namespace ErsatzTV.Application.Search.Commands
                 List<int> itemIds = await _searchRepository.GetItemIdsToIndex();
                 await _searchIndex.Rebuild(_searchRepository, itemIds);
 
-                Option<ConfigElement> maybeVersion =
-                    await _configElementRepository.Get(ConfigElementKey.SearchIndexVersion);
-                await maybeVersion.Match(
-                    version =>
-                    {
-                        version.Value = _searchIndex.Version.ToString();
-                        return _configElementRepository.Update(version);
-                    },
-                    () =>
-                    {
-                        var configElement = new ConfigElement
-                        {
-                            Key = ConfigElementKey.SearchIndexVersion.Key,
-                            Value = _searchIndex.Version.ToString()
-                        };
-                        return _configElementRepository.Add(configElement);
-                    });
+                await _configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, _searchIndex.Version);
 
                 _logger.LogDebug("Done migrating search index");
             }

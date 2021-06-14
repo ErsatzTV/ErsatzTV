@@ -5,41 +5,47 @@ using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public class
-        AddMovieToCollectionHandler : MediatR.IRequestHandler<AddMovieToCollection, Either<BaseError, Unit>>
+    public class AddMovieToCollectionHandler :
+        MediatR.IRequestHandler<AddMovieToCollection, Either<BaseError, Unit>>
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
-        private readonly IMovieRepository _movieRepository;
 
         public AddMovieToCollectionHandler(
+            IDbContextFactory<TvContext> dbContextFactory,
             IMediaCollectionRepository mediaCollectionRepository,
-            IMovieRepository movieRepository,
             ChannelWriter<IBackgroundServiceRequest> channel)
         {
+            _dbContextFactory = dbContextFactory;
             _mediaCollectionRepository = mediaCollectionRepository;
-            _movieRepository = movieRepository;
             _channel = channel;
         }
 
-        public Task<Either<BaseError, Unit>> Handle(
+        public async Task<Either<BaseError, Unit>> Handle(
             AddMovieToCollection request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(_ => ApplyAddMoviesRequest(request))
-                .Bind(v => v.ToEitherAsync());
-
-        private async Task<Unit> ApplyAddMoviesRequest(AddMovieToCollection request)
+            CancellationToken cancellationToken)
         {
-            if (await _mediaCollectionRepository.AddMediaItem(request.CollectionId, request.MovieId))
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
+            return await validation.Apply(parameters => ApplyAddMovieRequest(dbContext, parameters));
+        }
+
+        private async Task<Unit> ApplyAddMovieRequest(TvContext dbContext, Parameters parameters)
+        {
+            parameters.Collection.MediaItems.Add(parameters.Movie);
+            if (await dbContext.SaveChangesAsync() > 0)
             {
                 // rebuild all playouts that use this collection
                 foreach (int playoutId in await _mediaCollectionRepository
-                    .PlayoutIdsUsingCollection(request.CollectionId))
+                    .PlayoutIdsUsingCollection(parameters.Collection.Id))
                 {
                     await _channel.WriteAsync(new BuildPlayout(playoutId, true));
                 }
@@ -48,21 +54,27 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             return Unit.Default;
         }
 
-        private async Task<Validation<BaseError, Unit>> Validate(AddMovieToCollection request) =>
-            (await CollectionMustExist(request), await ValidateMovies(request))
-            .Apply((_, _) => Unit.Default);
+        private static async Task<Validation<BaseError, Parameters>> Validate(
+            TvContext dbContext,
+            AddMovieToCollection request) =>
+            (await CollectionMustExist(dbContext, request), await ValidateMovie(dbContext, request))
+            .Apply((collection, episode) => new Parameters(collection, episode));
 
-        private Task<Validation<BaseError, Unit>> CollectionMustExist(AddMovieToCollection request) =>
-            _mediaCollectionRepository.GetCollectionWithItems(request.CollectionId)
-                .MapT(_ => Unit.Default)
-                .Map(v => v.ToValidation<BaseError>("Collection does not exist."));
+        private static Task<Validation<BaseError, Collection>> CollectionMustExist(
+            TvContext dbContext,
+            AddMovieToCollection request) =>
+            dbContext.Collections
+                .Include(c => c.MediaItems)
+                .SelectOneAsync(c => c.Id, c => c.Id == request.CollectionId)
+                .Map(o => o.ToValidation<BaseError>("Collection does not exist."));
 
-        private Task<Validation<BaseError, Unit>> ValidateMovies(AddMovieToCollection request) =>
-            LoadMovie(request)
-                .MapT(_ => Unit.Default)
-                .Map(v => v.ToValidation<BaseError>("Movie does not exist"));
+        private static Task<Validation<BaseError, Movie>> ValidateMovie(
+            TvContext dbContext,
+            AddMovieToCollection request) =>
+            dbContext.Movies
+                .SelectOneAsync(m => m.Id, e => e.Id == request.MovieId)
+                .Map(o => o.ToValidation<BaseError>("Movie does not exist"));
 
-        private Task<Option<Movie>> LoadMovie(AddMovieToCollection request) =>
-            _movieRepository.GetMovie(request.MovieId);
+        private record Parameters(Collection Collection, Movie Movie);
     }
 }

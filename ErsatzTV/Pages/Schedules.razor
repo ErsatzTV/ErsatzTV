@@ -92,7 +92,7 @@
     {
         _selectedSchedule = schedule;
         await _mediator.Send(new GetProgramScheduleItems(schedule.Id))
-            .IterT(results => _selectedScheduleItems = results.OrderBy(x => x.Name).ToList());
+            .Map(results => _selectedScheduleItems = results.OrderBy(x => x.Name).ToList());
     }
 
     private async Task DeleteSchedule(ProgramScheduleViewModel programSchedule)

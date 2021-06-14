@@ -139,25 +139,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 async () => await AddPlexMovie(context, library, item));
         }
 
-        public Task<int> GetMovieCount() =>
-            _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT(DISTINCT MovieId) FROM MovieMetadata");
-
-        public async Task<List<MovieMetadata>> GetPagedMovies(int pageNumber, int pageSize)
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            return await dbContext.MovieMetadata.FromSqlRaw(
-                    @"SELECT * FROM MovieMetadata WHERE Id IN
-            (SELECT Id FROM MovieMetadata GROUP BY MovieId, MetadataKind HAVING MetadataKind = MAX(MetadataKind))
-            ORDER BY SortTitle
-            LIMIT {0} OFFSET {1}",
-                    pageSize,
-                    (pageNumber - 1) * pageSize)
-                .AsNoTracking()
-                .Include(mm => mm.Artwork)
-                .OrderBy(mm => mm.SortTitle)
-                .ToListAsync();
-        }
-
         public async Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();

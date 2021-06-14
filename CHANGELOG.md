@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- Remove unused API and SDK project; may reintroduce in the future but for now they have fallen out of date
+
+### Fixed
+- Fix crash adding or editing schedule items due to Artist with no name
+- Fix many potential sources of inconsistent data in UI
 
 ## [0.0.45-prealpha] - 2021-06-12
 ### Added

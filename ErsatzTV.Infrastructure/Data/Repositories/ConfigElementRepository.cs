@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
@@ -11,36 +12,56 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 {
     public class ConfigElementRepository : IConfigElementRepository
     {
-        private readonly TvContext _dbContext;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public ConfigElementRepository(TvContext dbContext) => _dbContext = dbContext;
+        public ConfigElementRepository(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public async Task<ConfigElement> Add(ConfigElement configElement)
+        public async Task<Unit> Upsert<T>(ConfigElementKey configElementKey, T value)
         {
-            await _dbContext.ConfigElements.AddAsync(configElement);
-            await _dbContext.SaveChangesAsync();
-            return configElement;
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            Option<ConfigElement> maybeElement = await dbContext.ConfigElements
+                .SelectOneAsync(c => c.Key, c => c.Key == configElementKey.Key);
+
+            await maybeElement.Match(
+                async element =>
+                {
+                    element.Value = value.ToString();
+                    await dbContext.SaveChangesAsync();
+                },
+                async () =>
+                {
+                    var configElement = new ConfigElement
+                    {
+                        Key = configElementKey.Key,
+                        Value = value.ToString()
+                    };
+
+                    await dbContext.ConfigElements.AddAsync(configElement);
+                    await dbContext.SaveChangesAsync();
+                });
+
+            return Unit.Default;
         }
 
-        public Task<Option<ConfigElement>> Get(ConfigElementKey key) =>
-            _dbContext.ConfigElements
+        public async Task<Option<ConfigElement>> Get(ConfigElementKey key)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.ConfigElements
                 .OrderBy(ce => ce.Key)
                 .SingleOrDefaultAsync(ce => ce.Key == key.Key)
                 .Map(Optional);
+        }
 
         public Task<Option<T>> GetValue<T>(ConfigElementKey key) =>
             Get(key).MapT(ce => (T) Convert.ChangeType(ce.Value, typeof(T)));
 
-        public Task Update(ConfigElement configElement)
+        public async Task Delete(ConfigElement configElement)
         {
-            _dbContext.ConfigElements.Update(configElement);
-            return _dbContext.SaveChangesAsync();
-        }
-
-        public Task Delete(ConfigElement configElement)
-        {
-            _dbContext.ConfigElements.Remove(configElement);
-            return _dbContext.SaveChangesAsync();
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            dbContext.ConfigElements.Remove(configElement);
+            await dbContext.SaveChangesAsync();
         }
     }
 }

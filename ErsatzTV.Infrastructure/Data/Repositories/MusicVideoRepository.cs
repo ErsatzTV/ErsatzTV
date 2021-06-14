@@ -131,23 +131,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Option<MusicVideo>> GetMusicVideo(int musicVideoId)
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            return await dbContext.MusicVideos
-                .Include(m => m.MusicVideoMetadata)
-                .ThenInclude(m => m.Artwork)
-                .Include(m => m.MusicVideoMetadata)
-                .ThenInclude(m => m.Genres)
-                .Include(m => m.MusicVideoMetadata)
-                .ThenInclude(m => m.Tags)
-                .Include(m => m.MusicVideoMetadata)
-                .ThenInclude(m => m.Studios)
-                .OrderBy(m => m.Id)
-                .SingleOrDefaultAsync(m => m.Id == musicVideoId)
-                .Map(Optional);
-        }
-
         public Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath) =>
             _dbConnection.QueryAsync<string>(
                 @"SELECT MF.Path

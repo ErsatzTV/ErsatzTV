@@ -162,19 +162,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task<Option<Episode>> GetEpisode(int episodeId)
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            return await dbContext.Episodes
-                .AsNoTracking()
-                .Include(e => e.Season)
-                .Include(e => e.EpisodeMetadata)
-                .ThenInclude(em => em.Artwork)
-                .OrderBy(s => s.Id)
-                .SingleOrDefaultAsync(s => s.Id == episodeId)
-                .Map(Optional);
-        }
-
         public async Task<int> GetEpisodeCount(int seasonId)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();

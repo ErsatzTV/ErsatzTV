@@ -1,24 +1,28 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
+using ErsatzTV.Infrastructure.Data;
 using MediatR;
-using static ErsatzTV.Application.Playouts.Mapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Playouts.Queries
 {
-    public class GetAllPlayoutsHandler : IRequestHandler<GetAllPlayouts, List<PlayoutViewModel>>
+    public class GetAllPlayoutsHandler : IRequestHandler<GetAllPlayouts, List<PlayoutNameViewModel>>
     {
-        private readonly IPlayoutRepository _playoutRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public GetAllPlayoutsHandler(IPlayoutRepository playoutRepository) =>
-            _playoutRepository = playoutRepository;
+        public GetAllPlayoutsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public Task<List<PlayoutViewModel>> Handle(
+        public async Task<List<PlayoutNameViewModel>> Handle(
             GetAllPlayouts request,
-            CancellationToken cancellationToken) =>
-            _playoutRepository.GetAll().Map(list => list.Map(ProjectToViewModel).ToList());
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.Playouts
+                .Filter(p => p.Channel != null && p.ProgramSchedule != null)
+                .Map(p => new PlayoutNameViewModel(p.Id, p.Channel.Name, p.Channel.Number, p.ProgramSchedule.Name))
+                .ToListAsync(cancellationToken);
+        }
     }
 }

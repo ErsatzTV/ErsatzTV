@@ -3,73 +3,83 @@ using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Serilog;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
-    public class
-        GetHlsPlaylistByChannelNumberHandler : IRequestHandler<GetHlsPlaylistByChannelNumber, Either<BaseError, string>>
+    public class GetHlsPlaylistByChannelNumberHandler :
+        IRequestHandler<GetHlsPlaylistByChannelNumber, Either<BaseError, string>>
     {
-        private readonly IChannelRepository _channelRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
         private readonly IMemoryCache _memoryCache;
-        private readonly IPlayoutRepository _playoutRepository;
 
         public GetHlsPlaylistByChannelNumberHandler(
-            IChannelRepository channelRepository,
-            IPlayoutRepository playoutRepository,
+            IDbContextFactory<TvContext> dbContextFactory,
             IMemoryCache memoryCache)
         {
-            _channelRepository = channelRepository;
-            _playoutRepository = playoutRepository;
+            _dbContextFactory = dbContextFactory;
             _memoryCache = memoryCache;
         }
 
-        public Task<Either<BaseError, string>> Handle(
+        public async Task<Either<BaseError, string>> Handle(
             GetHlsPlaylistByChannelNumber request,
-            CancellationToken cancellationToken) =>
-            ChannelMustExist(request)
-                .Map(v => v.ToEither<Channel>())
-                .BindT(channel => GetPlaylist(request, channel));
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            DateTimeOffset now = DateTimeOffset.Now;
+            Validation<BaseError, Parameters> validation = await Validate(dbContext, request, now);
+            return await validation.Apply(parameters => GetPlaylist(dbContext, request, parameters, now));
+        }
 
-        private async Task<Either<BaseError, string>> GetPlaylist(
+        private Task<string> GetPlaylist(
+            TvContext dbContext,
             GetHlsPlaylistByChannelNumber request,
-            Channel channel)
+            Parameters parameters,
+            DateTimeOffset now)
         {
             string mode = string.IsNullOrWhiteSpace(request.Mode)
                 ? string.Empty
                 : $"&mode={request.Mode}";
 
-            DateTimeOffset now = DateTimeOffset.Now;
-            Option<PlayoutItem> maybePlayoutItem = await _playoutRepository.GetPlayoutItem(channel.Id, now);
-            return maybePlayoutItem.Match<Either<BaseError, string>>(
-                playoutItem =>
-                {
-                    long index = GetIndexForChannel(channel, playoutItem);
-                    double timeRemaining = Math.Abs((playoutItem.FinishOffset - now).TotalSeconds);
-                    return $@"#EXTM3U
+            long index = GetIndexForChannel(parameters.Channel, parameters.PlayoutItem);
+            double timeRemaining = Math.Abs((parameters.PlayoutItem.FinishOffset - now).TotalSeconds);
+            return $@"#EXTM3U
 #EXT-X-VERSION:3
 #EXT-X-TARGETDURATION:10
 #EXT-X-MEDIA-SEQUENCE:{index}
 #EXT-X-DISCONTINUITY
 #EXTINF:{timeRemaining:F2},
 {request.Scheme}://{request.Host}/ffmpeg/stream/{request.ChannelNumber}?index={index}{mode}
-";
-                },
-                () =>
-                {
-                    // TODO: playlist for error stream
-                    Log.Logger.Error("Unable to locate playout item for m3u8");
-                    return BaseError.New($"Unable to locate playout item for channel {channel.Number}");
-                });
+".AsTask();
         }
 
-        private async Task<Validation<BaseError, Channel>> ChannelMustExist(GetHlsPlaylistByChannelNumber request) =>
-            (await _channelRepository.GetByNumber(request.ChannelNumber))
-            .ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist.");
+        private Task<Validation<BaseError, Parameters>> Validate(
+            TvContext dbContext,
+            GetHlsPlaylistByChannelNumber request,
+            DateTimeOffset now) =>
+            ChannelMustExist(dbContext, request)
+                .BindT(channel => PlayoutItemMustExist(dbContext, channel, now));
+
+        private static Task<Validation<BaseError, Channel>> ChannelMustExist(
+            TvContext dbContext,
+            GetHlsPlaylistByChannelNumber request) =>
+            dbContext.Channels
+                .SelectOneAsync(c => c.Number, c => c.Number == request.ChannelNumber)
+                .Map(o => o.ToValidation<BaseError>($"Channel number {request.ChannelNumber} does not exist."));
+
+        private static Task<Validation<BaseError, Parameters>> PlayoutItemMustExist(
+            TvContext dbContext,
+            Channel channel,
+            DateTimeOffset now) =>
+            dbContext.PlayoutItems
+                .ForChannelAndTime(channel.Id, now)
+                .MapT(playoutItem => new Parameters(channel, playoutItem))
+                .Map(o => o.ToValidation<BaseError>($"Unable to locate playout item for channel {channel.Number}"));
 
         private long GetIndexForChannel(Channel channel, PlayoutItem playoutItem)
         {
@@ -101,5 +111,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         private record ChannelIndexKey(int ChannelId);
 
         private record ChannelIndexRecord(long StartTicks, long Index);
+
+        private record Parameters(Channel Channel, PlayoutItem PlayoutItem);
     }
 }
