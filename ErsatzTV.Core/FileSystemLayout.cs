@@ -31,5 +31,6 @@ namespace ErsatzTV.Core
         public static readonly string ThumbnailCacheFolder = Path.Combine(ArtworkCacheFolder, "thumbnails");
         public static readonly string LogoCacheFolder = Path.Combine(ArtworkCacheFolder, "logos");
         public static readonly string FanArtCacheFolder = Path.Combine(ArtworkCacheFolder, "fanart");
+        public static readonly string WatermarkCacheFolder = Path.Combine(ArtworkCacheFolder, "watermarks");
     }
 }

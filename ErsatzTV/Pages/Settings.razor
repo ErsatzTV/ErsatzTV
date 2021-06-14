@@ -9,6 +9,7 @@
 @using ErsatzTV.Application.Configuration.Queries
 @using Unit = LanguageExt.Unit
 @using ErsatzTV.Application.Configuration.Commands
+@using ErsatzTV.Application.Images.Commands
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
 @inject ILogger<Settings> _logger
@@ -46,6 +47,37 @@
                                Color="Color.Primary"
                                @bind-Checked="@_ffmpegSettings.SaveReports"/>
                 </MudElement>
+                <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
+                    <MudItem xs="6">
+                        <InputFile id="fileInput" OnChange="UploadWatermark" hidden/>
+                        @if (!string.IsNullOrWhiteSpace(_ffmpegSettings.Watermark))
+                        {
+                            <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_ffmpegSettings.Watermark}")" Style="max-height: 50px"/>
+                        }
+                    </MudItem>
+                    <MudItem xs="6">
+                        @if (string.IsNullOrWhiteSpace(_ffmpegSettings.Watermark))
+                        {
+                            <MudButton Class="ml-auto" HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.CloudUpload"
+                                       for="fileInput">
+                                Upload Watermark
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudButton Class="ml-auto" HtmlTag="label"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Error"
+                                       StartIcon="@Icons.Material.Filled.DeleteForever"
+                                       OnClick="DeleteWatermark">
+                                Delete Watermark
+                            </MudButton>
+                        }
+                    </MudItem>
+                </MudGrid>
             </MudForm>
         </MudCardContent>
         <MudCardActions>
@@ -157,6 +189,44 @@
                 _logger.LogError("Unexpected error saving scanner settings: {Error}", error.Value);
             },
             Right: _ => _snackbar.Add("Successfully saved scanner settings", Severity.Success));
+    }
+    
+    private async Task UploadWatermark(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var buffer = new byte[e.File.Size];
+            await e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
+            Either<BaseError, string> maybeCacheFileName = await _mediator
+                .Send(new SaveArtworkToDisk(buffer, ArtworkKind.Watermark));
+            maybeCacheFileName.Match(
+                relativeFileName =>
+                {
+                    _ffmpegSettings.Watermark = relativeFileName;
+                    StateHasChanged();
+                },
+                error =>
+                {
+                    _snackbar.Add($"Unexpected error saving watermark: {error.Value}", Severity.Error);
+                    _logger.LogError("Unexpected error saving watermark: {Error}", error.Value);
+                });
+        }
+        catch (IOException)
+        {
+            _snackbar.Add("Watermark exceeds maximum allowed file size of 10 MB", Severity.Error);
+            _logger.LogError("Watermark exceeds maximum allowed file size of 10 MB");
+        }
+        catch (Exception ex)
+        {
+            _snackbar.Add($"Unexpected error saving watermark: {ex.Message}", Severity.Error);
+            _logger.LogError("Unexpected error saving watermark: {Error}", ex.Message);
+        }
+    }
+
+    private void DeleteWatermark()
+    {
+        _ffmpegSettings.Watermark = null;
+        StateHasChanged();
     }
 
 }

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add watermark opacity setting to allow blending with content
+- Add global watermark and channel watermark artwork
+    - Watermark precedence is: channel watermark, global watermark, channel logo
 
 ### Changed
 - Remove unused API and SDK project; may reintroduce in the future but for now they have fallen out of date

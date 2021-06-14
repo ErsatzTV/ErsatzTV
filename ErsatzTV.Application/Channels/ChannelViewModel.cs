@@ -10,6 +10,7 @@ namespace ErsatzTV.Application.Channels
         string Logo,
         string PreferredLanguageCode,
         StreamingMode StreamingMode,
+        string Watermark,
         ChannelWatermarkMode WatermarkMode,
         ChannelWatermarkLocation WatermarkLocation,
         ChannelWatermarkSize WatermarkSize,

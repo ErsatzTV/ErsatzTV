@@ -26,6 +26,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
             Option<string> preferredLanguageCode =
                 await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
+            Option<string> watermark =
+                await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegWatermark);
 
             return new FFmpegSettingsViewModel
             {
@@ -33,7 +35,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 FFprobePath = await ffprobePath.IfNoneAsync(string.Empty),
                 DefaultFFmpegProfileId = await defaultFFmpegProfileId.IfNoneAsync(0),
                 SaveReports = await saveReports.IfNoneAsync(false),
-                PreferredLanguageCode = await preferredLanguageCode.IfNoneAsync("eng")
+                PreferredLanguageCode = await preferredLanguageCode.IfNoneAsync("eng"),
+                Watermark = await watermark.IfNoneAsync(string.Empty)
             };
         }
     }

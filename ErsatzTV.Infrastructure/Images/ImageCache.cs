@@ -66,6 +66,7 @@ namespace ErsatzTV.Infrastructure.Images
                     ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
                     ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
                     ArtworkKind.FanArt => Path.Combine(FileSystemLayout.FanArtCacheFolder, subfolder),
+                    ArtworkKind.Watermark => Path.Combine(FileSystemLayout.WatermarkCacheFolder, subfolder),
                     _ => FileSystemLayout.LegacyImageCacheFolder
                 };
                 string target = Path.Combine(baseFolder, hex);
@@ -124,6 +125,7 @@ namespace ErsatzTV.Infrastructure.Images
                 ArtworkKind.Thumbnail => Path.Combine(FileSystemLayout.ThumbnailCacheFolder, subfolder),
                 ArtworkKind.Logo => Path.Combine(FileSystemLayout.LogoCacheFolder, subfolder),
                 ArtworkKind.FanArt => Path.Combine(FileSystemLayout.FanArtCacheFolder, subfolder),
+                ArtworkKind.Watermark => Path.Combine(FileSystemLayout.WatermarkCacheFolder, subfolder),
                 _ => FileSystemLayout.LegacyImageCacheFolder
             };
 
