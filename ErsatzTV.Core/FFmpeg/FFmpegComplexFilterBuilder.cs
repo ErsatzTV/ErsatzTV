@@ -88,7 +88,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             var audioFilterQueue = new List<string>();
             var videoFilterQueue = new List<string>();
-            string watermarkScale = string.Empty;
+            string watermarkPreprocess = string.Empty;
             string watermarkOverlay = string.Empty;
 
             if (_normalizeLoudness)
@@ -180,7 +180,20 @@ namespace ErsatzTV.Core.FFmpeg
                     if (watermark.Size == ChannelWatermarkSize.Scaled)
                     {
                         double width = Math.Round(watermark.WidthPercent / 100.0 * _resolution.Width);
-                        watermarkScale = $"scale={width}:-1";
+                        watermarkPreprocess = $"scale={width}:-1";
+                    }
+                    
+                    if (watermark.Opacity != 100)
+                    {
+                        const string FORMATS = "yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8"; 
+                        string join = string.Empty;
+                        double opacity = watermark.Opacity / 100.0;
+                        if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
+                        {
+                            join = ",";
+                        }
+
+                        watermarkPreprocess = $"format={FORMATS},colorchannelmixer=aa={opacity:F2}{join}{watermarkPreprocess}";
                     }
 
                     watermarkOverlay = $"overlay={position}{enable}";
@@ -224,10 +237,10 @@ namespace ErsatzTV.Core.FFmpeg
                 {
                     complexFilter.Append("[vt]");
                     var watermarkLabel = "[1:v]";
-                    if (!string.IsNullOrWhiteSpace(watermarkScale))
+                    if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
                     {
-                        complexFilter.Append($";{watermarkLabel}{watermarkScale}[wms]");
-                        watermarkLabel = "[wms]";
+                        complexFilter.Append($";{watermarkLabel}{watermarkPreprocess}[wmp]");
+                        watermarkLabel = "[wmp]";
                     }
 
                     complexFilter.Append($";[vt]{watermarkLabel}{watermarkOverlay}");

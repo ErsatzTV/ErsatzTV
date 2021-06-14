@@ -20,6 +20,7 @@ namespace ErsatzTV.ViewModels
         public int WatermarkVerticalMargin { get; set; }
         public int WatermarkFrequencyMinutes { get; set; }
         public int WatermarkDurationSeconds { get; set; }
+        public int WatermarkOpacity { get; set; }
 
         public UpdateChannel ToUpdate() =>
             new(
@@ -37,7 +38,8 @@ namespace ErsatzTV.ViewModels
                 WatermarkHorizontalMargin,
                 WatermarkVerticalMargin,
                 WatermarkFrequencyMinutes,
-                WatermarkDurationSeconds);
+                WatermarkDurationSeconds,
+                WatermarkOpacity);
 
         public CreateChannel ToCreate() =>
             new(
@@ -54,6 +56,7 @@ namespace ErsatzTV.ViewModels
                 WatermarkHorizontalMargin,
                 WatermarkVerticalMargin,
                 WatermarkFrequencyMinutes,
-                WatermarkDurationSeconds);
+                WatermarkDurationSeconds,
+                WatermarkOpacity);
     }
 }
