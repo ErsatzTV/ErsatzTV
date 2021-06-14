@@ -17,5 +17,6 @@ namespace ErsatzTV.Application.Channels
         int WatermarkHorizontalMargin,
         int WatermarkVerticalMargin,
         int WatermarkFrequencyMinutes,
-        int WatermarkDurationSeconds);
+        int WatermarkDurationSeconds,
+        int WatermarkOpacity);
 }

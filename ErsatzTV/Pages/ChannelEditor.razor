@@ -141,6 +141,17 @@
                                           Immediate="true"/>
                         </MudItem>
                     </MudGrid>
+                    <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
+                        <MudItem xs="6">
+                            <MudTextField Label="Opacity" @bind-Value="_model.WatermarkOpacity"
+                                          For="@(() => _model.WatermarkOpacity)"
+                                          Adornment="Adornment.End"
+                                          AdornmentText="%"
+                                          Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect || _model.WatermarkMode == ChannelWatermarkMode.None)"
+                                          Immediate="true"/>
+                        </MudItem>
+                        <MudItem xs="6" />
+                    </MudGrid>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -190,6 +201,7 @@
                     _model.WatermarkVerticalMargin = channelViewModel.WatermarkVerticalMargin;
                     _model.WatermarkFrequencyMinutes = channelViewModel.WatermarkFrequencyMinutes;
                     _model.WatermarkDurationSeconds = channelViewModel.WatermarkDurationSeconds;
+                    _model.WatermarkOpacity = channelViewModel.WatermarkOpacity;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }
@@ -213,6 +225,7 @@
             _model.WatermarkVerticalMargin = 5;
             _model.WatermarkFrequencyMinutes = 15;
             _model.WatermarkDurationSeconds = 15;
+            _model.WatermarkOpacity = 100;
         }
     }
 
