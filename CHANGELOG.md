@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add watermark opacity setting to allow blending with content
 - Add global watermark setting; channel-specific watermarks have precedence over global watermarks
+- Save Schedules, Playouts table page sizes
 
 ### Changed
 - Remove unused API and SDK project; may reintroduce in the future but for now they have fallen out of date

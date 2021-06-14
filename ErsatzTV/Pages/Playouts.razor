@@ -2,11 +2,18 @@
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Playouts.Commands
 @using ErsatzTV.Application.Playouts.Queries
+@using ErsatzTV.Application.Configuration.Commands
+@using ErsatzTV.Application.Configuration.Queries
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Dense="true" Items="_playouts" SelectedItemChanged="@(async (PlayoutNameViewModel x) => await PlayoutSelected(x))">
+    <MudTable Hover="true"
+              Dense="true"
+              SelectedItemChanged="@(async (PlayoutNameViewModel x) => await PlayoutSelected(x))"
+              @bind-RowsPerPage="@_rowsPerPage"
+              ServerData="@(new Func<TableState, Task<TableData<PlayoutNameViewModel>>>(ServerReload))"
+              @ref="_table">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Playouts</MudText>
         </ToolBarContent>
@@ -80,12 +87,16 @@
 </MudContainer>
 
 @code {
-    private List<PlayoutNameViewModel> _playouts;
+    private MudTable<PlayoutNameViewModel> _table;
+    private int _rowsPerPage;
     private List<PlayoutItemViewModel> _selectedPlayoutItems;
     private int? _selectedPlayoutId;
 
-    protected override Task OnParametersSetAsync() =>
-        LoadAllPlayouts();
+    protected override async Task OnParametersSetAsync()
+    {
+        _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    }
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
@@ -103,23 +114,33 @@
         if (!result.Cancelled)
         {
             await _mediator.Send(new DeletePlayout(playout.PlayoutId));
-            await LoadAllPlayouts();
+            await _table.ReloadServerData();
         }
     }
 
     private async Task RebuildPlayout(PlayoutNameViewModel playout)
     {
         await _mediator.Send(new BuildPlayout(playout.PlayoutId, true));
-        await LoadAllPlayouts();
+        await _table.ReloadServerData();
         if (_selectedPlayoutId == playout.PlayoutId)
         {
             await PlayoutSelected(playout);
         }
     }
 
-    private async Task LoadAllPlayouts() =>
-        _playouts = await _mediator.Send(new GetAllPlayouts())
-            .Map(list => list.OrderBy(x => decimal.Parse(x.ChannelNumber)).ToList());
+    private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state)
+    {
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsPageSize, state.PageSize.ToString()));
 
+        List<PlayoutNameViewModel> playouts = await _mediator.Send(new GetAllPlayouts());
+        IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber));
+
+        // TODO: properly page this data
+        return new TableData<PlayoutNameViewModel>
+        {
+            TotalItems = playouts.Count,
+            Items = sorted.Skip(state.Page * state.PageSize).Take(state.PageSize)
+        };
+    }
 
 }
