@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
 using MediatR;
