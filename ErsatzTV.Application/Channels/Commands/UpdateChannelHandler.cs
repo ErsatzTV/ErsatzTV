@@ -77,6 +77,7 @@ namespace ErsatzTV.Application.Channels.Commands
                     c.Watermark.VerticalMarginPercent = update.WatermarkVerticalMargin;
                     c.Watermark.FrequencyMinutes = update.WatermarkFrequencyMinutes;
                     c.Watermark.DurationSeconds = update.WatermarkDurationSeconds;
+                    c.Watermark.Opacity = update.WatermarkOpacity;
                 }
                 else
                 {
@@ -89,7 +90,8 @@ namespace ErsatzTV.Application.Channels.Commands
                         HorizontalMarginPercent = update.WatermarkHorizontalMargin,
                         VerticalMarginPercent = update.WatermarkVerticalMargin,
                         FrequencyMinutes = update.WatermarkFrequencyMinutes,
-                        DurationSeconds = update.WatermarkDurationSeconds
+                        DurationSeconds = update.WatermarkDurationSeconds,
+                        Opacity = update.WatermarkOpacity
                     };
                 }
             }

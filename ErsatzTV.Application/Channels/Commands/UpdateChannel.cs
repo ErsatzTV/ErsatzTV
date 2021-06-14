@@ -21,5 +21,6 @@ namespace ErsatzTV.Application.Channels.Commands
         int WatermarkHorizontalMargin,
         int WatermarkVerticalMargin,
         int WatermarkFrequencyMinutes,
-        int WatermarkDurationSeconds) : IRequest<Either<BaseError, ChannelViewModel>>;
+        int WatermarkDurationSeconds,
+        int WatermarkOpacity) : IRequest<Either<BaseError, ChannelViewModel>>;
 }

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add watermark opacity setting to allow blending with content
+
 ### Changed
 - Remove unused API and SDK project; may reintroduce in the future but for now they have fallen out of date
 

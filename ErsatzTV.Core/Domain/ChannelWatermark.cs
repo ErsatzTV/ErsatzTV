@@ -12,6 +12,7 @@
         public int VerticalMarginPercent { get; set; }
         public int FrequencyMinutes { get; set; }
         public int DurationSeconds { get; set; }
+        public int Opacity { get; set; }
     }
 
     public enum ChannelWatermarkLocation
