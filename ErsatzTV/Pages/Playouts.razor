@@ -6,7 +6,7 @@
 @inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Dense="true" Items="_playouts" SelectedItemChanged="@(async (PlayoutViewModel x) => await PlayoutSelected(x))">
+    <MudTable Hover="true" Dense="true" Items="_playouts" SelectedItemChanged="@(async (PlayoutNameViewModel x) => await PlayoutSelected(x))">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Playouts</MudText>
         </ToolBarContent>
@@ -30,8 +30,8 @@
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
-            <MudTd DataLabel="Channel">@context.Channel.Number - @context.Channel.Name</MudTd>
-            <MudTd DataLabel="Schedule">@context.ProgramSchedule.Name</MudTd>
+            <MudTd DataLabel="Channel">@context.ChannelNumber - @context.ChannelName</MudTd>
+            <MudTd DataLabel="Schedule">@context.ScheduleName</MudTd>
             @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
             <MudTd>
                 <div style="align-items: center; display: flex;">
@@ -80,38 +80,38 @@
 </MudContainer>
 
 @code {
-    private List<PlayoutViewModel> _playouts;
+    private List<PlayoutNameViewModel> _playouts;
     private List<PlayoutItemViewModel> _selectedPlayoutItems;
     private int? _selectedPlayoutId;
 
     protected override Task OnParametersSetAsync() =>
         LoadAllPlayouts();
 
-    private async Task PlayoutSelected(PlayoutViewModel playout)
+    private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
-        _selectedPlayoutId = playout.Id;
-        _selectedPlayoutItems = await _mediator.Send(new GetPlayoutItemsById(playout.Id));
+        _selectedPlayoutId = playout.PlayoutId;
+        _selectedPlayoutItems = await _mediator.Send(new GetPlayoutItemsById(playout.PlayoutId));
     }
 
-    private async Task DeletePlayout(PlayoutViewModel playout)
+    private async Task DeletePlayout(PlayoutNameViewModel playout)
     {
-        var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ProgramSchedule.Name} on {playout.Channel.Number} - {playout.Channel.Name}" } };
+        var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ScheduleName} on {playout.ChannelNumber} - {playout.ChannelName}" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Playout", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeletePlayout(playout.Id));
+            await _mediator.Send(new DeletePlayout(playout.PlayoutId));
             await LoadAllPlayouts();
         }
     }
 
-    private async Task RebuildPlayout(PlayoutViewModel playout)
+    private async Task RebuildPlayout(PlayoutNameViewModel playout)
     {
-        await _mediator.Send(new BuildPlayout(playout.Id, true));
+        await _mediator.Send(new BuildPlayout(playout.PlayoutId, true));
         await LoadAllPlayouts();
-        if (_selectedPlayoutId == playout.Id)
+        if (_selectedPlayoutId == playout.PlayoutId)
         {
             await PlayoutSelected(playout);
         }
@@ -119,7 +119,7 @@
 
     private async Task LoadAllPlayouts() =>
         _playouts = await _mediator.Send(new GetAllPlayouts())
-            .Map(list => list.OrderBy(x => decimal.Parse(x.Channel.Number)).ToList());
+            .Map(list => list.OrderBy(x => decimal.Parse(x.ChannelNumber)).ToList());
 
 
 }

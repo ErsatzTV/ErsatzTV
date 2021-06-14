@@ -4,36 +4,36 @@ using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
-using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
     public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetConcatProcessByChannelNumber>
     {
-        private readonly IConfigElementRepository _configElementRepository;
         private readonly FFmpegProcessService _ffmpegProcessService;
         private readonly IRuntimeInfo _runtimeInfo;
 
         public GetConcatProcessByChannelNumberHandler(
-            IChannelRepository channelRepository,
-            IConfigElementRepository configElementRepository,
+            IDbContextFactory<TvContext> dbContextFactory,
             FFmpegProcessService ffmpegProcessService,
             IRuntimeInfo runtimeInfo)
-            : base(channelRepository, configElementRepository)
+            : base(dbContextFactory)
         {
-            _configElementRepository = configElementRepository;
             _ffmpegProcessService = ffmpegProcessService;
             _runtimeInfo = runtimeInfo;
         }
 
         protected override async Task<Either<BaseError, Process>> GetProcess(
+            TvContext dbContext,
             GetConcatProcessByChannelNumber request,
             Channel channel,
             string ffmpegPath)
         {
-            bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await _configElementRepository
+            bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await dbContext.ConfigElements
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 

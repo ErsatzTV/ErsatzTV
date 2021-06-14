@@ -7,39 +7,40 @@ using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
-using static ErsatzTV.Application.Channels.Mapper;
+using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Channels.Commands
 {
-    public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseError, ChannelViewModel>>
+    public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseError, CreateChannelResult>>
     {
-        private readonly IChannelRepository _channelRepository;
-        private readonly IFFmpegProfileRepository _ffmpegProfileRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public CreateChannelHandler(
-            IChannelRepository channelRepository,
-            IFFmpegProfileRepository ffmpegProfileRepository)
+        public CreateChannelHandler(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+
+        public async Task<Either<BaseError, CreateChannelResult>> Handle(
+            CreateChannel request,
+            CancellationToken cancellationToken)
         {
-            _channelRepository = channelRepository;
-            _ffmpegProfileRepository = ffmpegProfileRepository;
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, Channel> validation = await Validate(dbContext, request);
+            return await validation.Apply(c => PersistChannel(dbContext, c));
         }
 
-        public Task<Either<BaseError, ChannelViewModel>> Handle(
-            CreateChannel request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(PersistChannel)
-                .Bind(v => v.ToEitherAsync());
+        private static async Task<CreateChannelResult> PersistChannel(TvContext dbContext, Channel channel)
+        {
+            await dbContext.Channels.AddAsync(channel);
+            await dbContext.SaveChangesAsync();
+            return new CreateChannelResult(channel.Id);
+        }
 
-        private Task<ChannelViewModel> PersistChannel(Channel c) =>
-            _channelRepository.Add(c).Map(ProjectToViewModel);
-
-        private async Task<Validation<BaseError, Channel>> Validate(CreateChannel request) =>
-            (ValidateName(request), await ValidateNumber(request), await FFmpegProfileMustExist(request),
+        private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, CreateChannel request) =>
+            (ValidateName(request), await ValidateNumber(dbContext, request),
+                await FFmpegProfileMustExist(dbContext, request),
                 ValidatePreferredLanguage(request))
             .Apply(
                 (name, number, ffmpegProfileId, preferredLanguageCode) =>
@@ -85,20 +86,21 @@ namespace ErsatzTV.Application.Channels.Commands
                     return channel;
                 });
 
-        private Validation<BaseError, string> ValidateName(CreateChannel createChannel) =>
+        private static Validation<BaseError, string> ValidateName(CreateChannel createChannel) =>
             createChannel.NotEmpty(c => c.Name)
                 .Bind(_ => createChannel.NotLongerThan(50)(c => c.Name));
 
-        private Validation<BaseError, string> ValidatePreferredLanguage(CreateChannel createChannel) =>
+        private static Validation<BaseError, string> ValidatePreferredLanguage(CreateChannel createChannel) =>
             Optional(createChannel.PreferredLanguageCode ?? string.Empty)
                 .Filter(
                     lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
                         ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
                 .ToValidation<BaseError>("Preferred language code is invalid");
 
-        private async Task<Validation<BaseError, string>> ValidateNumber(CreateChannel createChannel)
+        private static async Task<Validation<BaseError, string>> ValidateNumber(TvContext dbContext, CreateChannel createChannel)
         {
-            Option<Channel> maybeExistingChannel = await _channelRepository.GetByNumber(createChannel.Number);
+            Option<Channel> maybeExistingChannel = await dbContext.Channels
+                .SelectOneAsync(c => c.Number, c => c.Number == createChannel.Number);
             return maybeExistingChannel.Match<Validation<BaseError, string>>(
                 _ => BaseError.New("Channel number must be unique"),
                 () =>
@@ -112,9 +114,14 @@ namespace ErsatzTV.Application.Channels.Commands
                 });
         }
 
-        private async Task<Validation<BaseError, int>> FFmpegProfileMustExist(CreateChannel createChannel) =>
-            (await _ffmpegProfileRepository.Get(createChannel.FFmpegProfileId))
-            .ToValidation<BaseError>($"FFmpegProfile {createChannel.FFmpegProfileId} does not exist.")
-            .Map(c => c.Id);
+        private static Task<Validation<BaseError, int>> FFmpegProfileMustExist(
+            TvContext dbContext,
+            CreateChannel createChannel) =>
+            dbContext.FFmpegProfiles
+                .CountAsync(p => p.Id == createChannel.FFmpegProfileId)
+                .Map(Optional)
+                .Filter(c => c > 0)
+                .MapT(_ => createChannel.FFmpegProfileId)
+                .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {createChannel.FFmpegProfileId} does not exist."));
     }
 }

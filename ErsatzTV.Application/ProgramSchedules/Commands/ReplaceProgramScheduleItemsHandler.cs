@@ -6,43 +6,46 @@ using System.Threading.Tasks;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.ProgramSchedules.Mapper;
 
 namespace ErsatzTV.Application.ProgramSchedules.Commands
 {
     public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase,
-        IRequestHandler<ReplaceProgramScheduleItems,
-            Either<BaseError, IEnumerable<ProgramScheduleItemViewModel>>>
+        IRequestHandler<ReplaceProgramScheduleItems, Either<BaseError, IEnumerable<ProgramScheduleItemViewModel>>>
     {
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-        private readonly IProgramScheduleRepository _programScheduleRepository;
 
         public ReplaceProgramScheduleItemsHandler(
-            IProgramScheduleRepository programScheduleRepository,
+            IDbContextFactory<TvContext> dbContextFactory,
             ChannelWriter<IBackgroundServiceRequest> channel)
-            : base(programScheduleRepository)
         {
-            _programScheduleRepository = programScheduleRepository;
+            _dbContextFactory = dbContextFactory;
             _channel = channel;
         }
 
-        public Task<Either<BaseError, IEnumerable<ProgramScheduleItemViewModel>>> Handle(
+        public async Task<Either<BaseError, IEnumerable<ProgramScheduleItemViewModel>>> Handle(
             ReplaceProgramScheduleItems request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(programSchedule => PersistItems(request, programSchedule))
-                .Bind(v => v.ToEitherAsync());
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
+            return await validation.Apply(ps => PersistItems(dbContext, request, ps));
+        }
 
         private async Task<IEnumerable<ProgramScheduleItemViewModel>> PersistItems(
+            TvContext dbContext,
             ReplaceProgramScheduleItems request,
             ProgramSchedule programSchedule)
         {
+            dbContext.RemoveRange(programSchedule.Items);
             programSchedule.Items = request.Items.Map(i => BuildItem(programSchedule, i.Index, i)).ToList();
 
-            await _programScheduleRepository.Update(programSchedule);
+            await dbContext.SaveChangesAsync();
 
             // rebuild any playouts that use this schedule
             foreach (Playout playout in programSchedule.Playouts)
@@ -53,12 +56,14 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             return programSchedule.Items.Map(ProjectToViewModel);
         }
 
-        private Task<Validation<BaseError, ProgramSchedule>> Validate(ReplaceProgramScheduleItems request) =>
-            ProgramScheduleMustExist(request.ProgramScheduleId)
+        private Task<Validation<BaseError, ProgramSchedule>> Validate(
+            TvContext dbContext,
+            ReplaceProgramScheduleItems request) =>
+            ProgramScheduleMustExist(dbContext, request.ProgramScheduleId)
                 .BindT(programSchedule => PlayoutModesMustBeValid(request, programSchedule))
                 .BindT(programSchedule => CollectionTypesMustBeValid(request, programSchedule));
 
-        private Validation<BaseError, ProgramSchedule> PlayoutModesMustBeValid(
+        private static Validation<BaseError, ProgramSchedule> PlayoutModesMustBeValid(
             ReplaceProgramScheduleItems request,
             ProgramSchedule programSchedule) =>
             request.Items.Map(item => PlayoutModeMustBeValid(item, programSchedule)).Sequence()

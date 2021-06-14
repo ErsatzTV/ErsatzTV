@@ -22,14 +22,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             _dbConnection = dbConnection;
         }
 
-        public async Task<Channel> Add(Channel channel)
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            await dbContext.Channels.AddAsync(channel);
-            await dbContext.SaveChangesAsync();
-            return channel;
-        }
-
         public async Task<Option<Channel>> Get(int id)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
@@ -123,11 +115,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             dbContext.Channels.Remove(channel);
             await dbContext.SaveChangesAsync();
         }
-
-        public Task<int> CountPlayouts(int channelId) =>
-            _dbConnection.QuerySingleAsync<int>(
-                @"SELECT COUNT(*) FROM Playout WHERE ChannelId = @ChannelId",
-                new { ChannelId = channelId });
 
         public async Task<Unit> RemoveWatermark(Channel channel)
         {

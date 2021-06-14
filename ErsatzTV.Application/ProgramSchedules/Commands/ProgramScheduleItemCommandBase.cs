@@ -2,23 +2,25 @@
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.ProgramSchedules.Commands
 {
     public abstract class ProgramScheduleItemCommandBase
     {
-        private readonly IProgramScheduleRepository _programScheduleRepository;
+        protected static Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
+            TvContext dbContext,
+            int programScheduleId) =>
+            dbContext.ProgramSchedules
+                .Include(ps => ps.Items)
+                .Include(ps => ps.Playouts)
+                .SelectOneAsync(ps => ps.Id, ps => ps.Id == programScheduleId)
+                .Map(o => o.ToValidation<BaseError>("[ProgramScheduleId] does not exist."));
 
-        protected ProgramScheduleItemCommandBase(IProgramScheduleRepository programScheduleRepository) =>
-            _programScheduleRepository = programScheduleRepository;
-
-        protected async Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(int programScheduleId) =>
-            (await _programScheduleRepository.GetWithPlayouts(programScheduleId))
-            .ToValidation<BaseError>("[ProgramScheduleId] does not exist.");
-
-        protected Validation<BaseError, ProgramSchedule> PlayoutModeMustBeValid(
+        protected static Validation<BaseError, ProgramSchedule> PlayoutModeMustBeValid(
             IProgramScheduleItemRequest item,
             ProgramSchedule programSchedule)
         {

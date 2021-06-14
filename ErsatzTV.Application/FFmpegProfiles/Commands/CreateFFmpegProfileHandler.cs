@@ -2,39 +2,42 @@
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
-using static ErsatzTV.Application.FFmpegProfiles.Mapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.FFmpegProfiles.Commands
 {
-    public class
-        CreateFFmpegProfileHandler : IRequestHandler<CreateFFmpegProfile, Either<BaseError, FFmpegProfileViewModel>>
+    public class CreateFFmpegProfileHandler :
+        IRequestHandler<CreateFFmpegProfile, Either<BaseError, CreateFFmpegProfileResult>>
     {
-        private readonly IFFmpegProfileRepository _ffmpegProfileRepository;
-        private readonly IResolutionRepository _resolutionRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public CreateFFmpegProfileHandler(
-            IFFmpegProfileRepository ffmpegProfileRepository,
-            IResolutionRepository resolutionRepository)
+        public CreateFFmpegProfileHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
+
+        public async Task<Either<BaseError, CreateFFmpegProfileResult>> Handle(
+            CreateFFmpegProfile request,
+            CancellationToken cancellationToken)
         {
-            _ffmpegProfileRepository = ffmpegProfileRepository;
-            _resolutionRepository = resolutionRepository;
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
+            return await validation.Apply(profile => PersistFFmpegProfile(dbContext, profile));
         }
 
-        public Task<Either<BaseError, FFmpegProfileViewModel>> Handle(
-            CreateFFmpegProfile request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(PersistFFmpegProfile)
-                .Bind(v => v.ToEitherAsync());
+        private static async Task<CreateFFmpegProfileResult> PersistFFmpegProfile(
+            TvContext dbContext,
+            FFmpegProfile ffmpegProfile)
+        {
+            await dbContext.FFmpegProfiles.AddAsync(ffmpegProfile);
+            await dbContext.SaveChangesAsync();
+            return new CreateFFmpegProfileResult(ffmpegProfile.Id);
+        }
 
-        private Task<FFmpegProfileViewModel> PersistFFmpegProfile(FFmpegProfile ffmpegProfile) =>
-            _ffmpegProfileRepository.Add(ffmpegProfile).Map(ProjectToViewModel);
-
-        private async Task<Validation<BaseError, FFmpegProfile>> Validate(CreateFFmpegProfile request) =>
-            (ValidateName(request), ValidateThreadCount(request), await ResolutionMustExist(request))
+        private async Task<Validation<BaseError, FFmpegProfile>> Validate(TvContext dbContext, CreateFFmpegProfile request) =>
+            (ValidateName(request), ValidateThreadCount(request), await ResolutionMustExist(dbContext, request))
             .Apply(
                 (name, threadCount, resolutionId) => new FFmpegProfile
                 {
@@ -56,16 +59,19 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     NormalizeAudio = request.NormalizeAudio
                 });
 
-        private Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>
+        private static Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>
             createFFmpegProfile.NotEmpty(x => x.Name)
                 .Bind(_ => createFFmpegProfile.NotLongerThan(50)(x => x.Name));
 
-        private Validation<BaseError, int> ValidateThreadCount(CreateFFmpegProfile createFFmpegProfile) =>
+        private static Validation<BaseError, int> ValidateThreadCount(CreateFFmpegProfile createFFmpegProfile) =>
             createFFmpegProfile.AtLeast(0)(p => p.ThreadCount);
 
-        private async Task<Validation<BaseError, int>> ResolutionMustExist(CreateFFmpegProfile createFFmpegProfile) =>
-            (await _resolutionRepository.Get(createFFmpegProfile.ResolutionId))
-            .ToValidation<BaseError>($"[Resolution] {createFFmpegProfile.ResolutionId} does not exist.")
-            .Map(c => c.Id);
+        private static Task<Validation<BaseError, int>> ResolutionMustExist(
+            TvContext dbContext,
+            CreateFFmpegProfile createFFmpegProfile) =>
+            dbContext.Resolutions
+                .SelectOneAsync(r => r.Id, r => r.Id == createFFmpegProfile.ResolutionId)
+                .MapT(r => r.Id)
+                .Map(o => o.ToValidation<BaseError>($"[Resolution] {createFFmpegProfile.ResolutionId} does not exist"));
     }
 }

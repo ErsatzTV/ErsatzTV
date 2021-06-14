@@ -34,7 +34,6 @@ namespace ErsatzTV.Core.Metadata
             Try(Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)).IfFail(new List<string>());
 
         public bool FileExists(string path) => File.Exists(path);
-        public Task<byte[]> ReadAllBytes(string path) => File.ReadAllBytesAsync(path);
 
         public async Task<Either<BaseError, Unit>> CopyFile(string source, string destination)
         {

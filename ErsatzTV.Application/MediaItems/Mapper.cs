@@ -4,9 +4,6 @@ namespace ErsatzTV.Application.MediaItems
 {
     internal static class Mapper
     {
-        internal static MediaItemViewModel ProjectToViewModel(MediaItem mediaItem) =>
-            new(mediaItem.Id, mediaItem.LibraryPathId);
-
         internal static NamedMediaItemViewModel ProjectToViewModel(Show show) =>
             new(show.Id, show.ShowMetadata.HeadOrNone().Map(sm => $"{sm?.Title} ({sm?.Year})").IfNone("???"));
 

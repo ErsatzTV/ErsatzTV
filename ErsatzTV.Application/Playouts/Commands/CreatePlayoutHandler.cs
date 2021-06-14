@@ -4,51 +4,50 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
-using static ErsatzTV.Application.Playouts.Mapper;
+using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Playouts.Commands
 {
-    public class
-        CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseError, PlayoutViewModel>>
+    public class CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseError, CreatePlayoutResponse>>
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-        private readonly IChannelRepository _channelRepository;
-        private readonly IPlayoutRepository _playoutRepository;
-        private readonly IProgramScheduleRepository _programScheduleRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
         public CreatePlayoutHandler(
-            IPlayoutRepository playoutRepository,
-            IChannelRepository channelRepository,
-            IProgramScheduleRepository programScheduleRepository,
-            ChannelWriter<IBackgroundServiceRequest> channel)
+            ChannelWriter<IBackgroundServiceRequest> channel,
+            IDbContextFactory<TvContext> dbContextFactory)
         {
-            _playoutRepository = playoutRepository;
-            _channelRepository = channelRepository;
-            _programScheduleRepository = programScheduleRepository;
             _channel = channel;
+            _dbContextFactory = dbContextFactory;
         }
 
-        public Task<Either<BaseError, PlayoutViewModel>> Handle(
+        public async Task<Either<BaseError, CreatePlayoutResponse>> Handle(
             CreatePlayout request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(PersistPlayout)
-                .Bind(v => v.ToEitherAsync());
-
-        private async Task<PlayoutViewModel> PersistPlayout(Playout c)
+            CancellationToken cancellationToken)
         {
-            PlayoutViewModel result = await _playoutRepository.Add(c).Map(ProjectToViewModel);
-            await _channel.WriteAsync(new BuildPlayout(result.Id));
-            return result;
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            Validation<BaseError, Playout> validation = await Validate(dbContext, request);
+            return await validation.Apply(playout => PersistPlayout(dbContext, playout));
         }
 
-        private async Task<Validation<BaseError, Playout>> Validate(CreatePlayout request) =>
-            (await ValidateChannel(request), await ProgramScheduleMustExist(request), ValidatePlayoutType(request))
+        private async Task<CreatePlayoutResponse> PersistPlayout(TvContext dbContext, Playout playout)
+        {
+            await dbContext.Playouts.AddAsync(playout);
+            await dbContext.SaveChangesAsync();
+            await _channel.WriteAsync(new BuildPlayout(playout.Id));
+            return new CreatePlayoutResponse(playout.Id);
+        }
+
+        private async Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, CreatePlayout request) =>
+            (await ValidateChannel(dbContext, request), await ValidateProgramSchedule(dbContext, request),
+                ValidatePlayoutType(request))
             .Apply(
                 (channel, programSchedule, playoutType) => new Playout
                 {
@@ -57,31 +56,38 @@ namespace ErsatzTV.Application.Playouts.Commands
                     ProgramSchedulePlayoutType = playoutType
                 });
 
-        private Task<Validation<BaseError, Channel>> ValidateChannel(CreatePlayout createPlayout) =>
-            ChannelMustExist(createPlayout).BindT(ChannelMustNotHavePlayouts);
+        private static Task<Validation<BaseError, Channel>> ValidateChannel(
+            TvContext dbContext,
+            CreatePlayout createPlayout) =>
+            dbContext.Channels
+                .Include(c => c.Playouts)
+                .SelectOneAsync(c => c.Id, c => c.Id == createPlayout.ChannelId)
+                .Map(o => o.ToValidation<BaseError>("Channel does not exist"))
+                .BindT(ChannelMustNotHavePlayouts);
 
-        private async Task<Validation<BaseError, Channel>> ChannelMustExist(CreatePlayout createPlayout) =>
-            (await _channelRepository.Get(createPlayout.ChannelId))
-            .ToValidation<BaseError>("Channel does not exist.");
-
-        private async Task<Validation<BaseError, Channel>> ChannelMustNotHavePlayouts(Channel channel) =>
-            Optional(await _channelRepository.CountPlayouts(channel.Id))
+        private static Validation<BaseError, Channel> ChannelMustNotHavePlayouts(Channel channel) =>
+            Optional(channel.Playouts.Count)
                 .Filter(count => count == 0)
                 .Map(_ => channel)
-                .ToValidation<BaseError>("Channel already has one playout.");
+                .ToValidation<BaseError>("Channel already has one playout");
 
-        private async Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
+        private static Task<Validation<BaseError, ProgramSchedule>> ValidateProgramSchedule(
+            TvContext dbContext,
             CreatePlayout createPlayout) =>
-            (await _programScheduleRepository.GetWithPlayouts(createPlayout.ProgramScheduleId))
-            .ToValidation<BaseError>("ProgramSchedule does not exist.")
-            .Bind(ProgramScheduleMustHaveItems);
+            dbContext.ProgramSchedules
+                .Include(ps => ps.Items)
+                .SelectOneAsync(ps => ps.Id, ps => ps.Id == createPlayout.ProgramScheduleId)
+                .Map(o => o.ToValidation<BaseError>("Program schedule does not exist"))
+                .BindT(ProgramScheduleMustHaveItems);
 
-        private Validation<BaseError, ProgramSchedule> ProgramScheduleMustHaveItems(ProgramSchedule programSchedule) =>
+        private static Validation<BaseError, ProgramSchedule> ProgramScheduleMustHaveItems(
+            ProgramSchedule programSchedule) =>
             Optional(programSchedule)
                 .Filter(ps => ps.Items.Any())
                 .ToValidation<BaseError>("Program schedule must have items");
 
-        private Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(CreatePlayout createPlayout) =>
+        private static Validation<BaseError, ProgramSchedulePlayoutType> ValidatePlayoutType(
+            CreatePlayout createPlayout) =>
             Optional(createPlayout.ProgramSchedulePlayoutType)
                 .Filter(playoutType => playoutType != ProgramSchedulePlayoutType.None)
                 .ToValidation<BaseError>("[ProgramSchedulePlayoutType] must not be None");

@@ -92,9 +92,9 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            Either<BaseError, ProgramScheduleViewModel> result = IsEdit ?
-                await _mediator.Send(_model.ToUpdate()) :
-                await _mediator.Send(_model.ToCreate());
+            Either<BaseError, EntityIdResult> result = IsEdit ?
+                await _mediator.Send(_model.ToUpdate()).MapT(r => r as EntityIdResult) :
+                await _mediator.Send(_model.ToCreate()).MapT(r => r as EntityIdResult);
 
             result.Match(
                 programSchedule =>

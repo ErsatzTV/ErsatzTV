@@ -19,6 +19,11 @@ namespace ErsatzTV.Application.Artists.Queries
         public Task<List<NamedMediaItemViewModel>> Handle(
             GetAllArtists request,
             CancellationToken cancellationToken) =>
-            _artistRepository.GetAllArtists().Map(list => list.Map(ProjectToViewModel).ToList());
+            _artistRepository.GetAllArtists()
+                .Map(
+                    list => list.Filter(
+                        a => !string.IsNullOrWhiteSpace(
+                            a.ArtistMetadata.HeadOrNone().Match(am => am.Title, () => string.Empty))))
+                .Map(list => list.Map(ProjectToViewModel).ToList());
     }
 }

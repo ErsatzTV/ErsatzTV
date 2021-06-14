@@ -52,7 +52,6 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Models;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -92,10 +91,6 @@ namespace ErsatzTV
                         options.RegisterValidatorsFromAssemblyContaining<Startup>();
                         options.ImplicitlyValidateChildProperties = true;
                     });
-
-            services.AddSwaggerGen(
-                c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "ErsatzTV API", Version = "v1" }); });
-            services.AddSwaggerGenNewtonsoftSupport();
 
             services.AddRazorPages();
             services.AddServerSideBlazor();
@@ -170,10 +165,6 @@ namespace ErsatzTV
         {
             // app.UseSerilogRequestLogging();
 
-            app.UseSwagger();
-            app.UseSwaggerUI(
-                c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "ErsatzTV API"); });
-
             app.UseStaticFiles();
 
             app.UseRouting();
@@ -204,10 +195,7 @@ namespace ErsatzTV
             services.AddScoped<IMediaSourceRepository, MediaSourceRepository>();
             services.AddScoped<IMediaItemRepository, MediaItemRepository>();
             services.AddScoped<IMediaCollectionRepository, MediaCollectionRepository>();
-            services.AddScoped<IResolutionRepository, ResolutionRepository>();
             services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
-            services.AddScoped<IProgramScheduleRepository, ProgramScheduleRepository>();
-            services.AddScoped<IPlayoutRepository, PlayoutRepository>();
             services.AddScoped<ILogRepository, LogRepository>();
             services.AddScoped<ITelevisionRepository, TelevisionRepository>();
             services.AddScoped<ISearchRepository, SearchRepository>();

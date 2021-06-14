@@ -1,25 +1,50 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Domain;
+using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.ProgramSchedules.Mapper;
 
 namespace ErsatzTV.Application.ProgramSchedules.Queries
 {
-    public class GetProgramScheduleItemsHandler : IRequestHandler<GetProgramScheduleItems,
-        Option<IEnumerable<ProgramScheduleItemViewModel>>>
+    public class GetProgramScheduleItemsHandler :
+        IRequestHandler<GetProgramScheduleItems, List<ProgramScheduleItemViewModel>>
     {
-        private readonly IProgramScheduleRepository _programScheduleRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public GetProgramScheduleItemsHandler(IProgramScheduleRepository programScheduleRepository) =>
-            _programScheduleRepository = programScheduleRepository;
+        public GetProgramScheduleItemsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+            _dbContextFactory = dbContextFactory;
 
-        public Task<Option<IEnumerable<ProgramScheduleItemViewModel>>> Handle(
+        public async Task<List<ProgramScheduleItemViewModel>> Handle(
             GetProgramScheduleItems request,
-            CancellationToken cancellationToken) =>
-            _programScheduleRepository.GetItems(request.Id)
-                .MapT(programScheduleItems => programScheduleItems.Map(ProjectToViewModel));
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.ProgramScheduleItems
+                .Filter(psi => psi.ProgramScheduleId == request.Id)
+                .Include(i => i.Collection)
+                .Include(i => i.MediaItem)
+                .ThenInclude(i => (i as Movie).MovieMetadata)
+                .ThenInclude(mm => mm.Artwork)
+                .Include(i => i.MediaItem)
+                .ThenInclude(i => (i as Season).SeasonMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(i => i.MediaItem)
+                .ThenInclude(i => (i as Season).Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(i => i.MediaItem)
+                .ThenInclude(i => (i as Show).ShowMetadata)
+                .ThenInclude(sm => sm.Artwork)
+                .Include(i => i.MediaItem)
+                .ThenInclude(i => (i as Artist).ArtistMetadata)
+                .ThenInclude(am => am.Artwork)
+                .ToListAsync(cancellationToken)
+                .Map(programScheduleItems => programScheduleItems.Map(ProjectToViewModel).ToList());
+        }
     }
 }

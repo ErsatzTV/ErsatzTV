@@ -1,9 +1,8 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using LanguageExt;
 using MediatR;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public record DeleteCollection(int CollectionId) : IRequest<Either<BaseError, Task>>;
+    public record DeleteCollection(int CollectionId) : IRequest<Either<BaseError, LanguageExt.Unit>>;
 }

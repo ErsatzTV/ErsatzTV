@@ -1,79 +1,94 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
-using static ErsatzTV.Application.ProgramSchedules.Mapper;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.ProgramSchedules.Commands
 {
-    public class
-        UpdateProgramScheduleHandler : IRequestHandler<UpdateProgramSchedule,
-            Either<BaseError, ProgramScheduleViewModel>>
+    public class UpdateProgramScheduleHandler :
+        IRequestHandler<UpdateProgramSchedule, Either<BaseError, UpdateProgramScheduleResult>>
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
-        private readonly IProgramScheduleRepository _programScheduleRepository;
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
         public UpdateProgramScheduleHandler(
-            IProgramScheduleRepository programScheduleRepository,
+            IDbContextFactory<TvContext> dbContextFactory,
             ChannelWriter<IBackgroundServiceRequest> channel)
         {
-            _programScheduleRepository = programScheduleRepository;
+            _dbContextFactory = dbContextFactory;
             _channel = channel;
         }
 
-        public Task<Either<BaseError, ProgramScheduleViewModel>> Handle(
+        public async Task<Either<BaseError, UpdateProgramScheduleResult>> Handle(
             UpdateProgramSchedule request,
-            CancellationToken cancellationToken) =>
-            Validate(request)
-                .MapT(c => ApplyUpdateRequest(c, request))
-                .Bind(v => v.ToEitherAsync());
+            CancellationToken cancellationToken)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
-        private async Task<ProgramScheduleViewModel> ApplyUpdateRequest(
+            Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
+            return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
+        }
+
+        private async Task<UpdateProgramScheduleResult> ApplyUpdateRequest(
+            TvContext dbContext,
             ProgramSchedule programSchedule,
-            UpdateProgramSchedule update)
+            UpdateProgramSchedule request)
         {
             // we need to rebuild playouts if the playback order or keep multi-episodes has been modified
             bool needToRebuildPlayout =
-                programSchedule.MediaCollectionPlaybackOrder != update.MediaCollectionPlaybackOrder ||
-                programSchedule.KeepMultiPartEpisodesTogether != update.KeepMultiPartEpisodesTogether ||
-                programSchedule.TreatCollectionsAsShows != update.TreatCollectionsAsShows;
+                programSchedule.MediaCollectionPlaybackOrder != request.MediaCollectionPlaybackOrder ||
+                programSchedule.KeepMultiPartEpisodesTogether != request.KeepMultiPartEpisodesTogether ||
+                programSchedule.TreatCollectionsAsShows != request.TreatCollectionsAsShows;
 
-            programSchedule.Name = update.Name;
-            programSchedule.MediaCollectionPlaybackOrder = update.MediaCollectionPlaybackOrder;
+            programSchedule.Name = request.Name;
+            programSchedule.MediaCollectionPlaybackOrder = request.MediaCollectionPlaybackOrder;
             programSchedule.KeepMultiPartEpisodesTogether =
-                update.MediaCollectionPlaybackOrder == PlaybackOrder.Shuffle &&
-                update.KeepMultiPartEpisodesTogether;
+                request.MediaCollectionPlaybackOrder == PlaybackOrder.Shuffle &&
+                request.KeepMultiPartEpisodesTogether;
             programSchedule.TreatCollectionsAsShows = programSchedule.KeepMultiPartEpisodesTogether &&
-                                                      update.TreatCollectionsAsShows;
-            await _programScheduleRepository.Update(programSchedule);
+                                                      request.TreatCollectionsAsShows;
+
+            await dbContext.SaveChangesAsync();
 
             if (needToRebuildPlayout)
             {
-                foreach (Playout playout in programSchedule.Playouts)
+                List<int> playoutIds = await dbContext.Playouts
+                    .Filter(p => p.ProgramScheduleId == programSchedule.Id)
+                    .Map(p => p.Id)
+                    .ToListAsync();
+
+                foreach (int playoutId in playoutIds)
                 {
-                    await _channel.WriteAsync(new BuildPlayout(playout.Id, true));
+                    await _channel.WriteAsync(new BuildPlayout(playoutId, true));
                 }
             }
 
-            return ProjectToViewModel(programSchedule);
+            return new UpdateProgramScheduleResult(programSchedule.Id);
         }
 
-        private async Task<Validation<BaseError, ProgramSchedule>> Validate(UpdateProgramSchedule request) =>
-            (await ProgramScheduleMustExist(request), ValidateName(request))
-            .Apply((programScheduleToUpdate, _) => programScheduleToUpdate);
+        private static async Task<Validation<BaseError, ProgramSchedule>> Validate(
+            TvContext dbContext,
+            UpdateProgramSchedule request) =>
+            (await ProgramScheduleMustExist(dbContext, request), ValidateName(request))
+            .Apply((programSchedule, _) => programSchedule);
 
-        private async Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
-            UpdateProgramSchedule updateProgramSchedule) =>
-            (await _programScheduleRepository.GetWithPlayouts(updateProgramSchedule.ProgramScheduleId))
-            .ToValidation<BaseError>("ProgramSchedule does not exist.");
+        private static Task<Validation<BaseError, ProgramSchedule>> ProgramScheduleMustExist(
+            TvContext dbContext,
+            UpdateProgramSchedule request) =>
+            dbContext.ProgramSchedules
+                .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.ProgramScheduleId)
+                .Map(o => o.ToValidation<BaseError>("ProgramSchedule does not exist"));
 
-        private Validation<BaseError, string> ValidateName(UpdateProgramSchedule updateProgramSchedule) =>
-            updateProgramSchedule.NotEmpty(c => c.Name)
-                .Bind(_ => updateProgramSchedule.NotLongerThan(50)(c => c.Name));
+        private static Validation<BaseError, string> ValidateName(UpdateProgramSchedule request) =>
+            request.NotEmpty(c => c.Name)
+                .Bind(_ => request.NotLongerThan(50)(c => c.Name));
     }
 }
