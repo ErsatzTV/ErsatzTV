@@ -38,7 +38,7 @@ namespace ErsatzTV.Application.Channels.Commands
             return new CreateChannelResult(channel.Id);
         }
 
-        private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, CreateChannel request) =>
+        private static async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, CreateChannel request) =>
             (ValidateName(request), await ValidateNumber(dbContext, request),
                 await FFmpegProfileMustExist(dbContext, request),
                 ValidatePreferredLanguage(request),
@@ -66,9 +66,13 @@ namespace ErsatzTV.Application.Channels.Commands
                         FFmpegProfileId = ffmpegProfileId,
                         StreamingMode = request.StreamingMode,
                         Artwork = artwork,
-                        PreferredLanguageCode = preferredLanguageCode,
-                        WatermarkId = watermarkId
+                        PreferredLanguageCode = preferredLanguageCode
                     };
+
+                    foreach (int id in watermarkId)
+                    {
+                        channel.WatermarkId = id;
+                    }
 
                     return channel;
                 });
@@ -111,20 +115,20 @@ namespace ErsatzTV.Application.Channels.Commands
                 .MapT(_ => createChannel.FFmpegProfileId)
                 .Map(o => o.ToValidation<BaseError>($"FFmpegProfile {createChannel.FFmpegProfileId} does not exist."));
 
-        private static async Task<Validation<BaseError, int?>> WatermarkMustExist(
+        private static async Task<Validation<BaseError, Option<int>>> WatermarkMustExist(
             TvContext dbContext,
             CreateChannel createChannel)
         {
             if (createChannel.WatermarkId is null)
             {
-                return createChannel.WatermarkId;
+                return Option<int>.None;
             }
 
             return await dbContext.ChannelWatermarks
                 .CountAsync(w => w.Id == createChannel.WatermarkId)
                 .Map(Optional)
                 .Filter(c => c > 0)
-                .MapT(_ => createChannel.WatermarkId)
+                .MapT(_ => Optional(createChannel.WatermarkId))
                 .Map(o => o.ToValidation<BaseError>($"Watermark {createChannel.WatermarkId} does not exist."));
         }
     }
