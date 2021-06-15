@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add warning during playout rebuild when schedule has been emptied
+- Save Logs table page size
+
+### Changed
+- Show all log entries in log viewer, not just most recent 100 entries
+- Use server-side paging and sorting for log viewer
 
 ### Fixed
 - Fix ui crash adding a channel without a watermark
