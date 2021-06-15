@@ -1,35 +1,53 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaItems.Queries
 {
     public class GetAllLanguageCodesHandler : IRequestHandler<GetAllLanguageCodes, List<CultureInfo>>
     {
+        private readonly IDbContextFactory<TvContext> _dbContextFactory;
         private readonly IMediaItemRepository _mediaItemRepository;
 
-        public GetAllLanguageCodesHandler(IMediaItemRepository mediaItemRepository) =>
+        public GetAllLanguageCodesHandler(
+            IDbContextFactory<TvContext> dbContextFactory,
+            IMediaItemRepository mediaItemRepository)
+        {
+            _dbContextFactory = dbContextFactory;
             _mediaItemRepository = mediaItemRepository;
+        }
 
         public async Task<List<CultureInfo>> Handle(GetAllLanguageCodes request, CancellationToken cancellationToken)
         {
-            var result = new List<CultureInfo>();
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            
+            var result = new System.Collections.Generic.HashSet<CultureInfo>();
 
             CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
-            List<string> allLanguageCodes = await _mediaItemRepository.GetAllLanguageCodes();
-            foreach (string code in allLanguageCodes)
+            List<string> mediaCodes = await _mediaItemRepository.GetAllLanguageCodes();
+            foreach (string mediaCode in mediaCodes)
             {
-                Option<CultureInfo> maybeCulture = allCultures.Find(
-                    ci => string.Equals(code, ci.ThreeLetterISOLanguageName, StringComparison.OrdinalIgnoreCase));
-                await maybeCulture.IfSomeAsync(cultureInfo => result.Add(cultureInfo));
+                foreach (string code in await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCode))
+                {
+                    Option<CultureInfo> maybeCulture = allCultures.Find(
+                        c => string.Equals(code, c.ThreeLetterISOLanguageName, StringComparison.OrdinalIgnoreCase));
+                    foreach (CultureInfo culture in maybeCulture)
+                    {
+                        result.Add(culture);
+                    }
+                }
             }
 
-            return result;
+            return result.ToList();
         }
     }
 }

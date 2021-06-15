@@ -52,6 +52,15 @@ namespace ErsatzTV.Core.Scheduling
                 .Distinct()
                 .ToList();
 
+            if (!collectionKeys.Any())
+            {
+                _logger.LogWarning(
+                    "Playout {Playout} schedule {Schedule} has no items",
+                    playout.Channel.Name,
+                    playout.ProgramSchedule.Name);
+                return playout;
+            }
+
             IEnumerable<Tuple<CollectionKey, List<MediaItem>>> tuples = await collectionKeys.Map(
                 async collectionKey =>
                 {

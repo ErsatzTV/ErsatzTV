@@ -65,6 +65,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<PlayoutProgramScheduleAnchor> PlayoutProgramScheduleItemAnchors { get; set; }
         public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
         public DbSet<Resolution> Resolutions { get; set; }
+        public DbSet<LanguageCode> LanguageCodes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.UseLoggerFactory(_loggerFactory);

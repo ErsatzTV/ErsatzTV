@@ -53,6 +53,7 @@
       <EmbeddedResource Include="Resources\background.png" />
       <EmbeddedResource Include="Resources\ErsatzTV.png" />
       <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
+      <EmbeddedResource Include="Resources\ISO-639-2_utf-8.txt" />
     </ItemGroup>
 
 </Project>
