@@ -8,6 +8,7 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
+@using ErsatzTV.Extensions
 @using Unit = LanguageExt.Unit
 @inject IMediator _mediator
 @inject ILogger<TelevisionSeasonList> _logger
@@ -81,11 +82,11 @@
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                     <MudText GutterBottom="true">Content Ratings:&nbsp;</MudText>
-                    <MudLink Href="@($"/search?query=content_rating%3a%22{Uri.EscapeDataString(_sortedContentRatings.Head())}%22")">@_sortedContentRatings.Head()</MudLink>
+                    <MudLink Href="@(@$"content_rating:""{_sortedContentRatings.Head()}""".GetRelativeSearchQuery())">@_sortedContentRatings.Head()</MudLink>
                     @foreach (string contentRating in _sortedContentRatings.Skip(1))
                     {
                         <MudText>,&nbsp;</MudText>
-                        <MudLink Href="@($"/search?query=content_rating%3a%22{Uri.EscapeDataString(contentRating)}%22")">@contentRating</MudLink>
+                        <MudLink Href="@(@$"content_rating:""{contentRating}""".GetRelativeSearchQuery())">@contentRating</MudLink>
                     }
                 </div>
             }
@@ -93,11 +94,11 @@
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                     <MudText GutterBottom="true">Languages:&nbsp;</MudText>
-                    <MudLink Href="@($"/search?query=language%3a%22{Uri.EscapeDataString(_sortedLanguages.Head().EnglishName.ToLowerInvariant())}%22")">@_sortedLanguages.Head().EnglishName</MudLink>
+                    <MudLink Href="@(@$"language:""{_sortedLanguages.Head().EnglishName.ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedLanguages.Head().EnglishName</MudLink>
                     @foreach (CultureInfo language in _sortedLanguages.Skip(1))
                     {
                         <MudText>,&nbsp;</MudText>
-                        <MudLink Href="@($"/search?query=language%3a%22{Uri.EscapeDataString(language.EnglishName.ToLowerInvariant())}%22")">@language.EnglishName</MudLink>
+                        <MudLink Href="@(@$"language:""{language.EnglishName.ToLowerInvariant()}""".GetRelativeSearchQuery())">@language.EnglishName</MudLink>
                     }
                 </div>
             }
@@ -105,11 +106,11 @@
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                     <MudText GutterBottom="true">Studios:&nbsp;</MudText>
-                    <MudLink Href="@($"/search?query=studio%3a%22{Uri.EscapeDataString(_sortedStudios.Head())}%22")">@_sortedStudios.Head()</MudLink>
+                    <MudLink Href="@(@$"studio:""{_sortedStudios.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedStudios.Head()</MudLink>
                     @foreach (string studio in _sortedStudios.Skip(1))
                     {
                         <MudText>,&nbsp;</MudText>
-                        <MudLink Href="@($"/search?query=studio%3a%22{Uri.EscapeDataString(studio)}%22")">@studio</MudLink>
+                        <MudLink Href="@(@$"studio:""{studio.ToLowerInvariant()}""".GetRelativeSearchQuery())">@studio</MudLink>
                     }
                 </div>
             }
@@ -117,11 +118,11 @@
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                     <MudText GutterBottom="true">Genres:&nbsp;</MudText>
-                    <MudLink Href="@($"/search?query=genre%3a%22{Uri.EscapeDataString(_sortedGenres.Head())}%22")">@_sortedGenres.Head()</MudLink>
+                    <MudLink Href="@(@$"genre:""{_sortedGenres.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedGenres.Head()</MudLink>
                     @foreach (string genre in _sortedGenres.Skip(1))
                     {
                         <MudText>,&nbsp;</MudText>
-                        <MudLink Href="@($"/search?query=genre%3a%22{Uri.EscapeDataString(genre)}%22")">@genre</MudLink>
+                        <MudLink Href="@(@$"genre:""{genre.ToLowerInvariant()}""".GetRelativeSearchQuery())">@genre</MudLink>
                     }
                 </div>
             }
@@ -129,11 +130,11 @@
             {
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                     <MudText GutterBottom="true">Tags:&nbsp;</MudText>
-                    <MudLink Href="@($"/search?query=tag%3a%22{Uri.EscapeDataString(_sortedTags.Head())}%22")">@_sortedTags.Head()</MudLink>
+                    <MudLink Href="@(@$"tag:""{_sortedTags.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@_sortedTags.Head()</MudLink>
                     @foreach (string tag in _sortedTags.Skip(1))
                     {
                         <MudText>,&nbsp;</MudText>
-                        <MudLink Href="@($"/search?query=tag%3a%22{Uri.EscapeDataString(tag)}%22")">@tag</MudLink>
+                        <MudLink Href="@(@$"tag:""{tag.ToLowerInvariant()}""".GetRelativeSearchQuery())">@tag</MudLink>
                     }
                 </div>
             }
@@ -160,7 +161,7 @@
         @foreach (ActorCardViewModel actor in _show.Actors)
         {
             <MediaCard Data="@actor"
-                       Link="@($"/search?query=actor%3a%22{Uri.EscapeDataString(actor.Name.ToLowerInvariant())}%22")"
+                       Link="@(@$"actor:""{actor.Name.ToLowerInvariant()}""".GetRelativeSearchQuery())"
                        IsRemoteArtwork="true"
                        ArtworkKind="ArtworkKind.Thumbnail"/>
         }

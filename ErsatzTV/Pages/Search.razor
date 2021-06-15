@@ -4,8 +4,8 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.Search
 @using ErsatzTV.Application.Search.Queries
+@using ErsatzTV.Extensions
 @using Microsoft.AspNetCore.WebUtilities
-@using Microsoft.Extensions.Primitives
 @using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<Search>
 @inject NavigationManager _navigationManager
@@ -35,27 +35,27 @@
         else
         {
             <MudText Style="margin-bottom: auto; margin-top: auto">@_query</MudText>
-            if (_movies.Count > 0)
+            if (_movies?.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
             }
 
-            if (_shows.Count > 0)
+            if (_shows?.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
             }
 
-            if (_episodes.Count > 0)
+            if (_episodes?.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#episodes")" Style="margin-bottom: auto; margin-top: auto">@_episodes.Count Episodes</MudLink>
             }
 
-            if (_artists.Count > 0)
+            if (_artists?.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#artists")" Style="margin-bottom: auto; margin-top: auto">@_artists.Count Artists</MudLink>
             }
 
-            if (_musicVideos.Count > 0)
+            if (_musicVideos?.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
             }
@@ -71,7 +71,7 @@
     </div>
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Style="margin-top: 96px">
-    @if (_movies.Count > 0)
+    @if (_movies?.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
             <MudText Typo="Typo.h4"
@@ -98,7 +98,7 @@
         </MudContainer>
     }
 
-    @if (_shows.Count > 0)
+    @if (_shows?.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
             <MudText Typo="Typo.h4"
@@ -125,7 +125,7 @@
         </MudContainer>
     }
 
-    @if (_episodes.Count > 0)
+    @if (_episodes?.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
             <MudText Typo="Typo.h4"
@@ -153,7 +153,7 @@
         </MudContainer>
     }
 
-    @if (_artists.Count > 0)
+    @if (_artists?.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
             <MudText Typo="Typo.h4"
@@ -181,7 +181,7 @@
         </MudContainer>
     }
 
-    @if (_musicVideos.Count > 0)
+    @if (_musicVideos?.Count > 0)
     {
         <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
             <MudText Typo="Typo.h4"
@@ -220,12 +220,9 @@
 
     protected override async Task OnInitializedAsync()
     {
-        string query = new Uri(_navigationManager.Uri).Query;
-
-        if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
+        _query = _navigationManager.Uri.GetSearchQuery();
+        if (!string.IsNullOrWhiteSpace(_query))
         {
-            _query = value;
-
             _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
             _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50));
             _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50));
@@ -362,7 +359,8 @@
         var uri = "/media/movies/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
         }
         return uri;
     }
@@ -372,7 +370,8 @@
         var uri = "/media/tv/shows/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
         }
         return uri;
     }
@@ -382,7 +381,8 @@
         var uri = "/media/tv/episodes/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
         }
         return uri;
     }
@@ -392,7 +392,8 @@
         var uri = "/media/music/artists/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
         }
         return uri;
     }
@@ -402,7 +403,8 @@
         var uri = "/media/music/videos/page/1";
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
         }
         return uri;
     }

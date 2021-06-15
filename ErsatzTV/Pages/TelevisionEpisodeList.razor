@@ -116,11 +116,11 @@
 
                     <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                         <MudText GutterBottom="true">Directors:&nbsp;</MudText>
-                        <MudLink Href="@($"/search?query=director%3a%22{Uri.EscapeDataString(sorted.Head())}%22")">@sorted.Head()</MudLink>
+                        <MudLink Href="@(@$"director:""{sorted.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@sorted.Head()</MudLink>
                         @foreach (string director in sorted.Skip(1))
                         {
                             <MudText>,&nbsp;</MudText>
-                            <MudLink Href="@($"/search?query=director%3a%22{Uri.EscapeDataString(director)}%22")">@director</MudLink>
+                            <MudLink Href="@(@$"director:""{director.ToLowerInvariant()}""".GetRelativeSearchQuery())">@director</MudLink>
                         }
                     </div>
                 }
@@ -130,11 +130,11 @@
 
                     <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                         <MudText GutterBottom="true">Writers:&nbsp;</MudText>
-                        <MudLink Href="@($"/search?query=writer%3a%22{Uri.EscapeDataString(sorted.Head())}%22")">@sorted.Head()</MudLink>
+                        <MudLink Href="@(@$"writer:""{sorted.Head().ToLowerInvariant()}""".GetRelativeSearchQuery())">@sorted.Head()</MudLink>
                         @foreach (string writer in sorted.Skip(1))
                         {
                             <MudText>,&nbsp;</MudText>
-                            <MudLink Href="@($"/search?query=writer%3a%22{Uri.EscapeDataString(writer)}%22")">@writer</MudLink>
+                            <MudLink Href="@(@$"writer:""{writer.ToLowerInvariant()}""".GetRelativeSearchQuery())">@writer</MudLink>
                         }
                     </div>
                 }
