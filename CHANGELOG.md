@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix ui crash adding a channel without a watermark
 - Clear playout detail table when playout is deleted
+- Fix blazor error font color
 
 ## [0.0.46-prealpha] - 2021-06-14
 ### Added

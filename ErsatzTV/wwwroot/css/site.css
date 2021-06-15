@@ -133,3 +133,6 @@
 .release-notes h3 { margin-top: 20px; }
 
 .mud-table-container { overflow-x: unset; }
+
+#blazor-error-ui { color: black; }
+#blazor-error-ui a { color: unset; }
