@@ -62,9 +62,13 @@
         Add Schedule
     </MudButton>
 
-    @if (_selectedScheduleItems != null)
+    @if (_selectedSchedule != null)
     {
-        <MudTable Hover="true" Items="_selectedScheduleItems.OrderBy(i => i.Index)" Class="mt-8">
+        <MudTable Hover="true"
+                  Class="mt-8"
+                  @bind-RowsPerPage="@_detailRowsPerPage"
+                  ServerData="@(new Func<TableState, Task<TableData<ProgramScheduleItemViewModel>>>(DetailServerReload))"
+                  @ref="_detailTable">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">@_selectedSchedule.Name Items</MudText>
             </ToolBarContent>
@@ -89,21 +93,23 @@
 
 @code {
     private MudTable<ProgramScheduleViewModel> _table;
+    private MudTable<ProgramScheduleItemViewModel> _detailTable;
     private int _rowsPerPage;
-    private List<ProgramScheduleItemViewModel> _selectedScheduleItems;
+    private int _detailRowsPerPage;
     private ProgramScheduleViewModel _selectedSchedule;
 
     protected override async Task OnParametersSetAsync()
     {
         _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.SchedulesPageSize))
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        _detailRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.SchedulesDetailPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
 
     private async Task ScheduleSelected(ProgramScheduleViewModel schedule)
     {
         _selectedSchedule = schedule;
-        await _mediator.Send(new GetProgramScheduleItems(schedule.Id))
-            .Map(results => _selectedScheduleItems = results.OrderBy(x => x.Name).ToList());
+        await _detailTable.ReloadServerData();
     }
 
     private async Task DeleteSchedule(ProgramScheduleViewModel programSchedule)
@@ -117,6 +123,10 @@
         {
             await _mediator.Send(new DeleteProgramSchedule(programSchedule.Id));
             await _table.ReloadServerData();
+            if (_selectedSchedule == programSchedule)
+            {
+                _selectedSchedule = null;
+            }
         }
     }
     
@@ -131,6 +141,21 @@
         return new TableData<ProgramScheduleViewModel>
         {
             TotalItems = schedules.Count,
+            Items = sorted.Skip(state.Page * state.PageSize).Take(state.PageSize)
+        };
+    }
+
+    private async Task<TableData<ProgramScheduleItemViewModel>> DetailServerReload(TableState state)
+    {
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesDetailPageSize, state.PageSize.ToString()));
+
+        List<ProgramScheduleItemViewModel> scheduleItems = await _mediator.Send(new GetProgramScheduleItems(_selectedSchedule.Id));
+        IOrderedEnumerable<ProgramScheduleItemViewModel> sorted = scheduleItems.OrderBy(s => s.Index);
+
+        // TODO: properly page this data
+        return new TableData<ProgramScheduleItemViewModel>
+        {
+            TotalItems = scheduleItems.Count,
             Items = sorted.Skip(state.Page * state.PageSize).Take(state.PageSize)
         };
     }

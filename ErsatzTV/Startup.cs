@@ -7,6 +7,7 @@ using Blazored.LocalStorage;
 using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
+using ErsatzTV.Application.Logs.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.FFmpeg;
@@ -144,14 +145,21 @@ namespace ErsatzTV
                         o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                         o.MigrationsAssembly("ErsatzTV.Infrastructure");
                     }));
-
+            
             services.AddTransient<IDbConnection>(_ => new SqliteConnection(connectionString));
             SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
             SqlMapper.AddTypeHandler(new GuidHandler());
             SqlMapper.AddTypeHandler(new TimeSpanHandler());
 
+            var logConnectionString = $"Data Source={FileSystemLayout.LogDatabasePath}";
+            
             services.AddDbContext<LogContext>(
-                options => options.UseSqlite($"Data Source={FileSystemLayout.LogDatabasePath}"));
+                options => options.UseSqlite(logConnectionString),
+                ServiceLifetime.Scoped,
+                ServiceLifetime.Singleton);
+
+            services.AddDbContextFactory<LogContext>(
+                options => options.UseSqlite(logConnectionString));
 
             services.AddMediatR(typeof(GetAllChannels).Assembly);
 
@@ -196,7 +204,6 @@ namespace ErsatzTV
             services.AddScoped<IMediaItemRepository, MediaItemRepository>();
             services.AddScoped<IMediaCollectionRepository, MediaCollectionRepository>();
             services.AddScoped<IConfigElementRepository, ConfigElementRepository>();
-            services.AddScoped<ILogRepository, LogRepository>();
             services.AddScoped<ITelevisionRepository, TelevisionRepository>();
             services.AddScoped<ISearchRepository, SearchRepository>();
             services.AddScoped<IMovieRepository, MovieRepository>();
@@ -243,6 +250,8 @@ namespace ErsatzTV
             services.AddScoped<IJellyfinSecretStore, JellyfinSecretStore>();
             services.AddScoped<IEmbySecretStore, EmbySecretStore>();
             services.AddScoped<IEpisodeNfoReader, EpisodeNfoReader>();
+
+            // services.AddTransient(typeof(IRequestHandler<,>), typeof(GetRecentLogEntriesHandler<>));
 
             services.AddHostedService<EndpointValidatorService>();
             services.AddHostedService<DatabaseMigratorService>();
