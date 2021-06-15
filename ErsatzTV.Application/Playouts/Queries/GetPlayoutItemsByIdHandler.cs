@@ -11,27 +11,29 @@ using static ErsatzTV.Application.Playouts.Mapper;
 
 namespace ErsatzTV.Application.Playouts.Queries
 {
-    public class GetPlayoutItemsByIdHandler : IRequestHandler<GetPlayoutItemsById, List<PlayoutItemViewModel>>
+    public class GetPlayoutItemsByIdHandler : IRequestHandler<GetPlayoutItemsById, PagedPlayoutItemsViewModel>
     {
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
         public GetPlayoutItemsByIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
             _dbContextFactory = dbContextFactory;
 
-        public async Task<List<PlayoutItemViewModel>> Handle(
+        public async Task<PagedPlayoutItemsViewModel> Handle(
             GetPlayoutItemsById request,
             CancellationToken cancellationToken)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            return await dbContext.PlayoutItems
+
+            int totalCount = await dbContext.PlayoutItems
+                .CountAsync(i => i.PlayoutId == request.PlayoutId, cancellationToken);
+            
+            List<PlayoutItemViewModel> page = await dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Movie).MovieMetadata)
-                .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Movie).MediaVersions)
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as MusicVideo).MusicVideoMetadata)
-                .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
                 .Include(i => i.MediaItem)
@@ -39,7 +41,6 @@ namespace ErsatzTV.Application.Playouts.Queries
                 .ThenInclude(mm => mm.ArtistMetadata)
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
-                .ThenInclude(em => em.Artwork)
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Episode).MediaVersions)
                 .Include(i => i.MediaItem)
@@ -49,8 +50,13 @@ namespace ErsatzTV.Application.Playouts.Queries
                 .ThenInclude(mi => (mi as Episode).Season.Show)
                 .ThenInclude(s => s.ShowMetadata)
                 .Filter(i => i.PlayoutId == request.PlayoutId)
+                .OrderBy(i => i.Start)
+                .Skip(request.PageNum * request.PageSize)
+                .Take(request.PageSize)
                 .ToListAsync(cancellationToken)
                 .Map(list => list.Map(ProjectToViewModel).ToList());
+
+            return new PagedPlayoutItemsViewModel(totalCount, page);
         }
     }
 }
