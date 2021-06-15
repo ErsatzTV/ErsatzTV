@@ -2,11 +2,11 @@
 @page "/media/music/videos/page/{PageNumber:int}"
 @using LanguageExt.UnsafeValueAccess
 @using Microsoft.AspNetCore.WebUtilities
-@using Microsoft.Extensions.Primitives
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.Search.Queries
+@using ErsatzTV.Extensions
 @using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<MusicVideoList>
 @inject NavigationManager _navigationManager
@@ -90,16 +90,7 @@
             PageNumber = 1;
         }
 
-        string query = new Uri(_navigationManager.Uri).Query;
-        if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
-        {
-            _query = value;
-        }
-        else
-        {
-            _query = null;
-        }
-
+        _query = _navigationManager.Uri.GetSearchQuery();
         return RefreshData();
     }
 
@@ -114,7 +105,8 @@
         var uri = $"/media/music/videos/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
         }
         _navigationManager.NavigateTo(uri);
     }
@@ -124,7 +116,8 @@
         var uri = $"/media/music/videos/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            uri = QueryHelpers.AddQueryString(uri, "query", _query);
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
         }
         _navigationManager.NavigateTo(uri);
     }

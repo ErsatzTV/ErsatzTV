@@ -1,7 +1,5 @@
 ﻿@using System.Reflection
-@using Microsoft.AspNetCore.WebUtilities
-@using Microsoft.Extensions.Primitives
-@using System.Web
+@using ErsatzTV.Extensions
 @inherits LayoutComponentBase
 @inject NavigationManager _navigationManager
 
@@ -107,22 +105,12 @@
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-
-        string query = new Uri(_navigationManager.Uri).Query;
-        if (QueryHelpers.ParseQuery(query).TryGetValue("query", out StringValues value))
-        {
-            _query = value;
-        }
-        else
-        {
-            _query = string.Empty;
-        }
+        _query = _navigationManager.Uri.GetSearchQuery();
     }
 
     private void PerformSearch()
     {
-        string query = HttpUtility.UrlEncode(_query);
-        _navigationManager.NavigateTo($"/search?query={query}", true);
+        _navigationManager.NavigateTo(_query.GetRelativeSearchQuery(), true);
         StateHasChanged();
     }
 
