@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -13,12 +14,15 @@ namespace ErsatzTV.Core.FFmpeg
     public class FFmpegStreamSelector : IFFmpegStreamSelector
     {
         private readonly IConfigElementRepository _configElementRepository;
+        private readonly ISearchRepository _searchRepository;
         private readonly ILogger<FFmpegStreamSelector> _logger;
 
         public FFmpegStreamSelector(
+            ISearchRepository searchRepository,
             ILogger<FFmpegStreamSelector> logger,
             IConfigElementRepository configElementRepository)
         {
+            _searchRepository = searchRepository;
             _logger = logger;
             _configElementRepository = configElementRepository;
         }
@@ -54,24 +58,31 @@ namespace ErsatzTV.Core.FFmpeg
                     });
             }
 
+            List<string> allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
+            if (allCodes.Count > 1)
+            {
+                _logger.LogDebug("Preferred language has multiple codes {Codes}", allCodes);
+            }
+
             var correctLanguage = audioStreams.Filter(
-                s => string.Equals(
-                    s.Language,
-                    language,
-                    StringComparison.InvariantCultureIgnoreCase)).ToList();
+                s => allCodes.Any(
+                    c => string.Equals(
+                        s.Language,
+                        c,
+                        StringComparison.InvariantCultureIgnoreCase))).ToList();
             if (correctLanguage.Any())
             {
                 _logger.LogDebug(
-                    "Found {Count} audio streams with preferred language code {Code}; selecting stream with most channels",
+                    "Found {Count} audio streams with preferred language code(s) {Code}; selecting stream with most channels",
                     correctLanguage.Count,
-                    language);
+                    allCodes);
 
                 return correctLanguage.OrderByDescending(s => s.Channels).Head();
             }
 
             _logger.LogDebug(
-                "Unable to find audio stream with preferred language code {Code}; selecting stream with most channels",
-                language);
+                "Unable to find audio stream with preferred language code(s) {Code}; selecting stream with most channels",
+                allCodes);
 
             return audioStreams.OrderByDescending(s => s.Channels).Head();
         }

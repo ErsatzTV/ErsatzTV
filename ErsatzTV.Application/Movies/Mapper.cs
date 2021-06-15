@@ -15,6 +15,7 @@ namespace ErsatzTV.Application.Movies
     {
         internal static MovieViewModel ProjectToViewModel(
             Movie movie,
+            List<string> languageCodes,
             Option<JellyfinMediaSource> maybeJellyfin,
             Option<EmbyMediaSource> maybeEmby)
         {
@@ -28,7 +29,7 @@ namespace ErsatzTV.Application.Movies
                 metadata.Studios.Map(s => s.Name).ToList(),
                 (metadata.ContentRating ?? string.Empty).Split("/").Map(s => s.Trim())
                 .Where(x => !string.IsNullOrWhiteSpace(x)).ToList(),
-                LanguagesForMovie(movie),
+                LanguagesForMovie(languageCodes),
                 metadata.Actors.OrderBy(a => a.Order).ThenBy(a => a.Id)
                     .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin, maybeEmby))
                     .ToList(),
@@ -40,13 +41,11 @@ namespace ErsatzTV.Application.Movies
             };
         }
 
-        private static List<CultureInfo> LanguagesForMovie(Movie movie)
+        private static List<CultureInfo> LanguagesForMovie(List<string> languageCodes)
         {
             CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
 
-            return movie.MediaVersions
-                .Map(mv => mv.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).Map(s => s.Language))
-                .Flatten()
+            return languageCodes
                 .Distinct()
                 .Map(
                     lang => allCultures.Filter(

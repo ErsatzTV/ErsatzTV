@@ -28,8 +28,9 @@ namespace ErsatzTV.Application.Artists.Queries
             return await maybeArtist.Match<Task<Option<ArtistViewModel>>>(
                 async artist =>
                 {
-                    List<string> languages = await _searchRepository.GetLanguagesForArtist(artist);
-                    return ProjectToViewModel(artist, languages);
+                    List<string> mediaCodes = await _searchRepository.GetLanguagesForArtist(artist);
+                    List<string> languageCodes = await _searchRepository.GetAllLanguageCodes(mediaCodes);
+                    return ProjectToViewModel(artist, languageCodes);
                 },
                 () => Task.FromResult(Option<ArtistViewModel>.None));
         }

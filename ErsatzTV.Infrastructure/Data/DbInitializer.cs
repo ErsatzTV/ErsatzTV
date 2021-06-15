@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -12,6 +14,43 @@ namespace ErsatzTV.Infrastructure.Data
     {
         public static async Task<Unit> Initialize(TvContext context, CancellationToken cancellationToken)
         {
+            if (!context.LanguageCodes.Any())
+            {
+                var assembly = Assembly.GetEntryAssembly();
+                if (assembly != null)
+                {
+                    await using Stream resource =
+                        assembly.GetManifestResourceStream("ErsatzTV.Resources.ISO-639-2_utf-8.txt");
+                    if (resource != null)
+                    {
+                        using var reader = new StreamReader(resource);
+                        while (!reader.EndOfStream)
+                        {
+                            string line = await reader.ReadLineAsync();
+                            if (line != null)
+                            {
+                                string[] split = line.Split("|");
+                                if (split.Length == 5)
+                                {
+                                    var languageCode = new LanguageCode
+                                    {
+                                        ThreeCode1 = split[0],
+                                        ThreeCode2 = split[1],
+                                        TwoCode = split[2],
+                                        EnglishName = split[3],
+                                        FrenchName = split[4]
+                                    };
+
+                                    await context.LanguageCodes.AddAsync(languageCode, cancellationToken);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                await context.SaveChangesAsync(cancellationToken);
+            }
+
             if (context.Resolutions.Any())
             {
                 return Unit.Default;
