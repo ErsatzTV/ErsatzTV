@@ -72,7 +72,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 13;
+        public int Version => 14;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -91,41 +91,6 @@ namespace ErsatzTV.Infrastructure.Search
             return Task.FromResult(_initialized);
         }
 
-        public async Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds)
-        {
-            _writer.DeleteAll();
-
-            foreach (int id in itemIds)
-            {
-                Option<MediaItem> maybeMediaItem = await searchRepository.GetItemToIndex(id);
-                if (maybeMediaItem.IsSome)
-                {
-                    MediaItem mediaItem = maybeMediaItem.ValueUnsafe();
-                    switch (mediaItem)
-                    {
-                        case Movie movie:
-                            UpdateMovie(movie);
-                            break;
-                        case Show show:
-                            await UpdateShow(searchRepository, show);
-                            break;
-                        case Artist artist:
-                            await UpdateArtist(searchRepository, artist);
-                            break;
-                        case MusicVideo musicVideo:
-                            UpdateMusicVideo(musicVideo);
-                            break;
-                        case Episode episode:
-                            UpdateEpisode(episode);
-                            break;
-                    }
-                }
-            }
-
-            _writer.Commit();
-            return Unit.Default;
-        }
-
         public Task<Unit> AddItems(ISearchRepository searchRepository, List<MediaItem> items) =>
             UpdateItems(searchRepository, items);
 
@@ -136,7 +101,7 @@ namespace ErsatzTV.Infrastructure.Search
                 switch (item)
                 {
                     case Movie movie:
-                        UpdateMovie(movie);
+                        await UpdateMovie(searchRepository, movie);
                         break;
                     case Show show:
                         await UpdateShow(searchRepository, show);
@@ -145,10 +110,10 @@ namespace ErsatzTV.Infrastructure.Search
                         await UpdateArtist(searchRepository, artist);
                         break;
                     case MusicVideo musicVideo:
-                        UpdateMusicVideo(musicVideo);
+                        await UpdateMusicVideo(searchRepository, musicVideo);
                         break;
                     case Episode episode:
-                        UpdateEpisode(episode);
+                        await UpdateEpisode(searchRepository, episode);
                         break;
                 }
             }
@@ -217,6 +182,41 @@ namespace ErsatzTV.Infrastructure.Search
             _directory?.Dispose();
         }
 
+        public async Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds)
+        {
+            _writer.DeleteAll();
+
+            foreach (int id in itemIds)
+            {
+                Option<MediaItem> maybeMediaItem = await searchRepository.GetItemToIndex(id);
+                if (maybeMediaItem.IsSome)
+                {
+                    MediaItem mediaItem = maybeMediaItem.ValueUnsafe();
+                    switch (mediaItem)
+                    {
+                        case Movie movie:
+                            await UpdateMovie(searchRepository, movie);
+                            break;
+                        case Show show:
+                            await UpdateShow(searchRepository, show);
+                            break;
+                        case Artist artist:
+                            await UpdateArtist(searchRepository, artist);
+                            break;
+                        case MusicVideo musicVideo:
+                            await UpdateMusicVideo(searchRepository, musicVideo);
+                            break;
+                        case Episode episode:
+                            await UpdateEpisode(searchRepository, episode);
+                            break;
+                    }
+                }
+            }
+
+            _writer.Commit();
+            return Unit.Default;
+        }
+
         private static Option<SearchPageMap> GetSearchPageMap(
             IndexSearcher searcher,
             Query query,
@@ -263,7 +263,7 @@ namespace ErsatzTV.Infrastructure.Search
             return new SearchPageMap(map);
         }
 
-        private void UpdateMovie(Movie movie)
+        private async Task UpdateMovie(ISearchRepository searchRepository, Movie movie)
         {
             Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
             if (maybeMetadata.IsSome)
@@ -284,7 +284,7 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
 
-                    AddLanguages(doc, movie.MediaVersions);
+                    await AddLanguages(searchRepository, doc, movie.MediaVersions);
 
                     if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                     {
@@ -349,24 +349,37 @@ namespace ErsatzTV.Infrastructure.Search
             }
         }
 
-        private void AddLanguages(Document doc, List<MediaVersion> mediaVersions)
+        private async Task AddLanguages(ISearchRepository searchRepository, Document doc, List<MediaVersion> mediaVersions)
         {
             Option<MediaVersion> maybeVersion = mediaVersions.HeadOrNone();
             if (maybeVersion.IsSome)
             {
                 MediaVersion version = maybeVersion.ValueUnsafe();
-                foreach (CultureInfo cultureInfo in version.Streams
+                var mediaCodes = version.Streams
                     .Filter(ms => ms.MediaStreamKind == MediaStreamKind.Audio)
                     .Map(ms => ms.Language).Distinct()
-                    .Filter(s => !string.IsNullOrWhiteSpace(s))
-                    .Map(
-                        l => _cultureInfos.Filter(
-                            c => string.Equals(c.ThreeLetterISOLanguageName, l, StringComparison.OrdinalIgnoreCase)))
-                    .Sequence()
-                    .Flatten())
+                    .ToList();
+
+                await AddLanguages(searchRepository, doc, mediaCodes);
+            }
+        }
+
+        private async Task AddLanguages(ISearchRepository searchRepository, Document doc, List<string> mediaCodes)
+        {
+            var englishNames = new System.Collections.Generic.HashSet<string>();
+            foreach (string code in await searchRepository.GetAllLanguageCodes(mediaCodes))
+            {
+                Option<CultureInfo> maybeCultureInfo = _cultureInfos.Find(
+                    ci => string.Equals(ci.ThreeLetterISOLanguageName, code, StringComparison.OrdinalIgnoreCase));
+                foreach (CultureInfo cultureInfo in maybeCultureInfo)
                 {
-                    doc.Add(new TextField(LanguageField, cultureInfo.EnglishName, Field.Store.NO));
+                    englishNames.Add(cultureInfo.EnglishName);
                 }
+            }
+
+            foreach (string englishName in englishNames)
+            {
+                doc.Add(new TextField(LanguageField, englishName, Field.Store.NO));
             }
         }
 
@@ -392,20 +405,7 @@ namespace ErsatzTV.Infrastructure.Search
                     };
 
                     List<string> languages = await searchRepository.GetLanguagesForShow(show);
-                    foreach (CultureInfo cultureInfo in languages
-                        .Distinct()
-                        .Filter(s => !string.IsNullOrWhiteSpace(s))
-                        .Map(
-                            l => _cultureInfos.Filter(
-                                c => string.Equals(
-                                    c.ThreeLetterISOLanguageName,
-                                    l,
-                                    StringComparison.OrdinalIgnoreCase)))
-                        .Sequence()
-                        .Flatten())
-                    {
-                        doc.Add(new TextField(LanguageField, cultureInfo.EnglishName, Field.Store.NO));
-                    }
+                    await AddLanguages(searchRepository, doc, languages);
 
                     if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                     {
@@ -482,20 +482,7 @@ namespace ErsatzTV.Infrastructure.Search
                     };
 
                     List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
-                    foreach (CultureInfo cultureInfo in languages
-                        .Distinct()
-                        .Filter(s => !string.IsNullOrWhiteSpace(s))
-                        .Map(
-                            l => _cultureInfos.Filter(
-                                c => string.Equals(
-                                    c.ThreeLetterISOLanguageName,
-                                    l,
-                                    StringComparison.OrdinalIgnoreCase)))
-                        .Sequence()
-                        .Flatten())
-                    {
-                        doc.Add(new TextField(LanguageField, cultureInfo.EnglishName, Field.Store.NO));
-                    }
+                    await AddLanguages(searchRepository, doc, languages);
 
                     foreach (Genre genre in metadata.Genres)
                     {
@@ -522,7 +509,7 @@ namespace ErsatzTV.Infrastructure.Search
             }
         }
 
-        private void UpdateMusicVideo(MusicVideo musicVideo)
+        private async Task UpdateMusicVideo(ISearchRepository searchRepository, MusicVideo musicVideo)
         {
             Option<MusicVideoMetadata> maybeMetadata = musicVideo.MusicVideoMetadata.HeadOrNone();
             if (maybeMetadata.IsSome)
@@ -543,7 +530,7 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
                     };
 
-                    AddLanguages(doc, musicVideo.MediaVersions);
+                    await AddLanguages(searchRepository, doc, musicVideo.MediaVersions);
 
                     if (metadata.ReleaseDate.HasValue)
                     {
@@ -584,7 +571,7 @@ namespace ErsatzTV.Infrastructure.Search
             }
         }
 
-        private void UpdateEpisode(Episode episode)
+        private async Task UpdateEpisode(ISearchRepository searchRepository, Episode episode)
         {
             foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
             {
@@ -611,7 +598,7 @@ namespace ErsatzTV.Infrastructure.Search
                     doc.Add(new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO));
                     doc.Add(new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES));
 
-                    AddLanguages(doc, episode.MediaVersions);
+                    await AddLanguages(searchRepository, doc, episode.MediaVersions);
 
                     if (metadata.ReleaseDate.HasValue)
                     {

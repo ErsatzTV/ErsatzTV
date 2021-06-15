@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
@@ -110,5 +111,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     INNER JOIN Artist A on MV.ArtistId = A.Id
                     WHERE MediaStreamKind = 2 AND A.Id = @ArtistId",
                 new { ArtistId = artist.Id }).Map(result => result.ToList());
+        
+        public async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            return await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes);
+        }
     }
 }

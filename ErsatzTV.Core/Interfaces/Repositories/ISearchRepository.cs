@@ -7,9 +7,10 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 {
     public interface ISearchRepository
     {
-        public Task<List<int>> GetItemIdsToIndex();
-        public Task<Option<MediaItem>> GetItemToIndex(int id);
-        public Task<List<string>> GetLanguagesForShow(Show show);
-        public Task<List<string>> GetLanguagesForArtist(Artist artist);
+        Task<List<int>> GetItemIdsToIndex();
+        Task<Option<MediaItem>> GetItemToIndex(int id);
+        Task<List<string>> GetLanguagesForShow(Show show);
+        Task<List<string>> GetLanguagesForArtist(Artist artist);
+        Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes);
     }
 }

@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add warning during playout rebuild when schedule has been emptied
+
 ### Fixed
 - Fix ui crash adding a channel without a watermark
 - Clear playout detail table when playout is deleted
 - Fix blazor error font color
+- Fix some audio stream languages missing from UI and search index
+- Fix audio stream selection for languages with multiple codes
 
 ## [0.0.46-prealpha] - 2021-06-14
 ### Added
