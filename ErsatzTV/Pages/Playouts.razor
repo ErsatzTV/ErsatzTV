@@ -63,9 +63,14 @@
         Add Playout
     </MudButton>
 
-    @if (_selectedPlayoutItems != null)
+    @if (_selectedPlayoutId != null)
     {
-        <MudTable Hover="true" Dense="true" Items="_selectedPlayoutItems.OrderBy(i => i.Start)" Class="mt-8">
+        <MudTable Class="mt-8"
+                  Hover="true"
+                  Dense="true"
+                  @bind-RowsPerPage="@_detailRowsPerPage"
+                  ServerData="@(new Func<TableState, Task<TableData<PlayoutItemViewModel>>>(DetailServerReload))"
+                  @ref="_detailTable">
             <ToolBarContent>
                 <MudText Typo="Typo.h6">Playout Detail</MudText>
             </ToolBarContent>
@@ -88,20 +93,23 @@
 
 @code {
     private MudTable<PlayoutNameViewModel> _table;
+    private MudTable<PlayoutItemViewModel> _detailTable;
     private int _rowsPerPage;
-    private List<PlayoutItemViewModel> _selectedPlayoutItems;
+    private int _detailRowsPerPage;
     private int? _selectedPlayoutId;
 
     protected override async Task OnParametersSetAsync()
     {
         _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsPageSize))
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+        _detailRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
 
     private async Task PlayoutSelected(PlayoutNameViewModel playout)
     {
         _selectedPlayoutId = playout.PlayoutId;
-        _selectedPlayoutItems = await _mediator.Send(new GetPlayoutItemsById(playout.PlayoutId));
+        await _detailTable.ReloadServerData();
     }
 
     private async Task DeletePlayout(PlayoutNameViewModel playout)
@@ -117,7 +125,7 @@
             await _table.ReloadServerData();
             if (_selectedPlayoutId == playout.PlayoutId)
             {
-                _selectedPlayoutItems = null;
+                _selectedPlayoutId = null;
             }
         }
     }
@@ -145,6 +153,24 @@
             TotalItems = playouts.Count,
             Items = sorted.Skip(state.Page * state.PageSize).Take(state.PageSize)
         };
+    }
+
+    private async Task<TableData<PlayoutItemViewModel>> DetailServerReload(TableState state)
+    {
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.PlayoutsDetailPageSize, state.PageSize.ToString()));
+
+        if (_selectedPlayoutId.HasValue)
+        {
+            PagedPlayoutItemsViewModel data =
+                await _mediator.Send(new GetPlayoutItemsById(_selectedPlayoutId.Value, state.Page, state.PageSize));
+            return new TableData<PlayoutItemViewModel>
+            {
+                TotalItems = data.TotalCount,
+                Items = data.Page
+            };
+        }
+
+        return new TableData<PlayoutItemViewModel> { TotalItems = 0 };
     }
 
 }
