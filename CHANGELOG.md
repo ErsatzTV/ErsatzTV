@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix blazor error font color
 - Fix some audio stream languages missing from UI and search index
 - Fix audio stream selection for languages with multiple codes
+- Fix searching when queries contain non-ascii characters
 
 ## [0.0.46-prealpha] - 2021-06-14
 ### Added

@@ -1,4 +1,5 @@
 ﻿@using ErsatzTV.Core.Search
+@using ErsatzTV.Extensions
 @using Microsoft.AspNetCore.WebUtilities
 <div class="letter-bar-container">
     <div class="letter-bar">
@@ -48,7 +49,8 @@
         var uri = $"{BaseUri}/page/{PageMap.PageMap[letter]}";
         if (!string.IsNullOrWhiteSpace(Query))
         {
-            uri = QueryHelpers.AddQueryString(uri, "query", Query);
+            (string key, string value) = Query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
         }
         return uri + $"#letter-{letter}";
     }
