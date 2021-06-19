@@ -166,24 +166,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 () => Task.FromResult(false));
         }
 
-        public async Task<bool> UpdatePlexStatistics(int mediaVersionId, MediaVersion incoming)
-        {
-            bool updatedVersion = await _dbConnection.ExecuteAsync(
+        public Task<bool> UpdatePlexStatistics(int mediaVersionId, MediaVersion incoming) =>
+            _dbConnection.ExecuteAsync(
                 @"UPDATE MediaVersion SET
-                  SampleAspectRatio = @SampleAspectRatio,
-                  VideoScanKind = @VideoScanKind,
                   DateUpdated = @DateUpdated
                   WHERE Id = @MediaVersionId",
                 new
                 {
-                    incoming.SampleAspectRatio,
-                    incoming.VideoScanKind,
                     incoming.DateUpdated,
                     MediaVersionId = mediaVersionId
                 }).Map(result => result > 0);
-
-            return await UpdateLocalStatistics(mediaVersionId, incoming, false) || updatedVersion;
-        }
 
         public Task<Unit> UpdateArtworkPath(Artwork artwork) =>
             _dbConnection.ExecuteAsync(
