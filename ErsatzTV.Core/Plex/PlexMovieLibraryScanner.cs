@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -18,6 +17,7 @@ namespace ErsatzTV.Core.Plex
     public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScanner
     {
         private readonly ILocalFileSystem _localFileSystem;
+        private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly ILogger<PlexMovieLibraryScanner> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IMediator _mediator;
@@ -38,6 +38,7 @@ namespace ErsatzTV.Core.Plex
             IMediaSourceRepository mediaSourceRepository,
             IPlexPathReplacementService plexPathReplacementService,
             ILocalFileSystem localFileSystem,
+            ILocalStatisticsProvider localStatisticsProvider,
             ILogger<PlexMovieLibraryScanner> logger)
             : base(metadataRepository, logger)
         {
@@ -50,13 +51,15 @@ namespace ErsatzTV.Core.Plex
             _mediaSourceRepository = mediaSourceRepository;
             _plexPathReplacementService = plexPathReplacementService;
             _localFileSystem = localFileSystem;
+            _localStatisticsProvider = localStatisticsProvider;
             _logger = logger;
         }
 
         public async Task<Either<BaseError, Unit>> ScanLibrary(
             PlexConnection connection,
             PlexServerAuthToken token,
-            PlexLibrary library)
+            PlexLibrary library,
+            string ffprobePath)
         {
             List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
                 .GetPlexPathReplacements(library.MediaSourceId);
@@ -95,7 +98,7 @@ namespace ErsatzTV.Core.Plex
                         // TODO: figure out how to rebuild playlists
                         Either<BaseError, MediaItemScanResult<PlexMovie>> maybeMovie = await _movieRepository
                             .GetOrAdd(library, incoming)
-                            .BindT(existing => UpdateStatistics(existing, incoming, library, connection, token))
+                            .BindT(existing => UpdateStatistics(pathReplacements, existing, incoming, ffprobePath))
                             .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
@@ -144,11 +147,10 @@ namespace ErsatzTV.Core.Plex
         }
 
         private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateStatistics(
+            List<PlexPathReplacement> pathReplacements,
             MediaItemScanResult<PlexMovie> result,
             PlexMovie incoming,
-            PlexLibrary library,
-            PlexConnection connection,
-            PlexServerAuthToken token)
+            string ffprobePath)
         {
             PlexMovie existing = result.Item;
             MediaVersion existingVersion = existing.MediaVersions.Head();
@@ -156,30 +158,37 @@ namespace ErsatzTV.Core.Plex
 
             if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
             {
-                Either<BaseError, Tuple<MovieMetadata, MediaVersion>> maybeStatistics =
-                    await _plexServerApiClient.GetMovieMetadataAndStatistics(
-                        library,
-                        incoming.Key.Split("/").Last(),
-                        connection,
-                        token);
-
-                await maybeStatistics.Match(
-                    async tuple =>
+                string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                    pathReplacements,
+                    incoming.MediaVersions.Head().MediaFiles.Head().Path,
+                    false);
+                
+                _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
+                Either<BaseError, bool> refreshResult =
+                    await _localStatisticsProvider.RefreshStatistics(ffprobePath, incoming, localPath);
+                
+                await refreshResult.Match(
+                    async _ =>
                     {
-                        (MovieMetadata _, MediaVersion mediaVersion) = tuple;
+                        foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
+                        {
+                            await _searchIndex.UpdateItems(
+                                _searchRepository,
+                                new List<MediaItem> { updated });
+                        }
 
-                        _logger.LogDebug(
-                            "Refreshing {Attribute} from {Path}",
-                            "Plex Statistics",
-                            existingVersion.MediaFiles.Head().Path);
-
-                        existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
-                        existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
-                        existingVersion.DateUpdated = mediaVersion.DateUpdated;
-
-                        await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, mediaVersion);
+                        await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, incomingVersion);
                     },
-                    _ => Task.CompletedTask);
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                            "Statistics",
+                            localPath,
+                            error.Value);
+
+                        return Task.CompletedTask;
+                    });
             }
 
             return result;

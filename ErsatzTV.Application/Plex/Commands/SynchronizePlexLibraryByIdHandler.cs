@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -74,13 +75,15 @@ namespace ErsatzTV.Application.Plex.Commands
                         await _plexMovieLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection,
                             parameters.ConnectionParameters.PlexServerAuthToken,
-                            parameters.Library);
+                            parameters.Library,
+                            parameters.FFprobePath);
                         break;
                     case LibraryMediaKind.Shows:
                         await _plexTelevisionLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection,
                             parameters.ConnectionParameters.PlexServerAuthToken,
-                            parameters.Library);
+                            parameters.Library,
+                            parameters.FFprobePath);
                         break;
                 }
 
@@ -100,13 +103,14 @@ namespace ErsatzTV.Application.Plex.Commands
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(ISynchronizePlexLibraryById request) =>
             (await ValidateConnection(request), await PlexLibraryMustExist(request),
-                await ValidateLibraryRefreshInterval())
+                await ValidateLibraryRefreshInterval(), await ValidateFFprobePath())
             .Apply(
-                (connectionParameters, plexLibrary, libraryRefreshInterval) => new RequestParameters(
+                (connectionParameters, plexLibrary, libraryRefreshInterval, ffprobePath) => new RequestParameters(
                     connectionParameters,
                     plexLibrary,
                     request.ForceScan,
-                    libraryRefreshInterval
+                    libraryRefreshInterval,
+                    ffprobePath
                 ));
 
         private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -149,12 +153,20 @@ namespace ErsatzTV.Application.Plex.Commands
             _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
                 .FilterT(lri => lri > 0)
                 .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
+        
+        private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
+            _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
+                .FilterT(File.Exists)
+                .Map(
+                    ffprobePath =>
+                        ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
 
         private record RequestParameters(
             ConnectionParameters ConnectionParameters,
             PlexLibrary Library,
             bool ForceScan,
-            int LibraryRefreshInterval);
+            int LibraryRefreshInterval,
+            string FFprobePath);
 
         private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
         {

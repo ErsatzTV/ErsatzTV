@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Store pixel format with media statistics; this is needed to support normalization of 10-bit media items
+  - This requires re-ingesting statistics for all media items the first time this version is launched
+
+### Changed
+- Use ffprobe to retrieve statistics for Plex media items (Local, Emby and Jellyfin libraries already use ffprobe)
+
+### Fixed
+- Fix playback of transcoded 10-bit media items (pixel format `yuv420p10le`) on Nvidia hardware
+- Emby and Jellyfin scanners now respect library refresh interval setting
 
 ## [0.0.47-prealpha] - 2021-06-15
 ### Added

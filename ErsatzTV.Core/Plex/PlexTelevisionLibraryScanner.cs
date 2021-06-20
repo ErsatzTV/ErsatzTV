@@ -20,6 +20,7 @@ namespace ErsatzTV.Core.Plex
     public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionLibraryScanner
     {
         private readonly ILocalFileSystem _localFileSystem;
+        private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
         private readonly IMediaSourceRepository _mediaSourceRepository;
         private readonly IMediator _mediator;
@@ -40,6 +41,7 @@ namespace ErsatzTV.Core.Plex
             IMediaSourceRepository mediaSourceRepository,
             IPlexPathReplacementService plexPathReplacementService,
             ILocalFileSystem localFileSystem,
+            ILocalStatisticsProvider localStatisticsProvider,
             ILogger<PlexTelevisionLibraryScanner> logger)
             : base(metadataRepository, logger)
         {
@@ -52,13 +54,15 @@ namespace ErsatzTV.Core.Plex
             _mediaSourceRepository = mediaSourceRepository;
             _plexPathReplacementService = plexPathReplacementService;
             _localFileSystem = localFileSystem;
+            _localStatisticsProvider = localStatisticsProvider;
             _logger = logger;
         }
 
         public async Task<Either<BaseError, Unit>> ScanLibrary(
             PlexConnection connection,
             PlexServerAuthToken token,
-            PlexLibrary library)
+            PlexLibrary library,
+            string ffprobePath)
         {
             List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
                 .GetPlexPathReplacements(library.MediaSourceId);
@@ -85,7 +89,7 @@ namespace ErsatzTV.Core.Plex
                         await maybeShow.Match(
                             async result =>
                             {
-                                await ScanSeasons(library, pathReplacements, result.Item, connection, token);
+                                await ScanSeasons(library, pathReplacements, result.Item, connection, token, ffprobePath);
 
                                 if (result.IsAdded)
                                 {
@@ -288,7 +292,8 @@ namespace ErsatzTV.Core.Plex
             List<PlexPathReplacement> pathReplacements,
             PlexShow show,
             PlexConnection connection,
-            PlexServerAuthToken token)
+            PlexServerAuthToken token,
+            string ffprobePath)
         {
             Either<BaseError, List<PlexSeason>> entries = await _plexServerApiClient.GetShowSeasons(
                 library,
@@ -309,7 +314,13 @@ namespace ErsatzTV.Core.Plex
                             .BindT(existing => UpdateMetadataAndArtwork(existing, incoming));
 
                         await maybeSeason.Match(
-                            async season => await ScanEpisodes(library, pathReplacements, season, connection, token),
+                            async season => await ScanEpisodes(
+                                library,
+                                pathReplacements,
+                                season,
+                                connection,
+                                token,
+                                ffprobePath),
                             error =>
                             {
                                 _logger.LogWarning(
@@ -373,7 +384,8 @@ namespace ErsatzTV.Core.Plex
             List<PlexPathReplacement> pathReplacements,
             PlexSeason season,
             PlexConnection connection,
-            PlexServerAuthToken token)
+            PlexServerAuthToken token,
+            string ffprobePath)
         {
             Either<BaseError, List<PlexEpisode>> entries = await _plexServerApiClient.GetSeasonEpisodes(
                 library,
@@ -414,11 +426,13 @@ namespace ErsatzTV.Core.Plex
                             .BindT(existing => UpdateMetadata(existing, incoming))
                             .BindT(
                                 existing => UpdateStatistics(
+                                    pathReplacements,
                                     existing,
                                     incoming,
                                     library,
                                     connection,
-                                    token))
+                                    token,
+                                    ffprobePath))
                             .BindT(existing => UpdateArtwork(existing, incoming));
 
                         await maybeEpisode.Match(
@@ -484,57 +498,89 @@ namespace ErsatzTV.Core.Plex
         }
 
         private async Task<Either<BaseError, PlexEpisode>> UpdateStatistics(
+            List<PlexPathReplacement> pathReplacements,
             PlexEpisode existing,
             PlexEpisode incoming,
             PlexLibrary library,
             PlexConnection connection,
-            PlexServerAuthToken token)
+            PlexServerAuthToken token,
+            string ffprobePath)
         {
             MediaVersion existingVersion = existing.MediaVersions.Head();
             MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
             if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
             {
-                Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeStatistics =
-                    await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
-                        library,
-                        incoming.Key.Split("/").Last(),
-                        connection,
-                        token);
-
-                await maybeStatistics.Match(
-                    async tuple =>
+                string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                    pathReplacements,
+                    incoming.MediaVersions.Head().MediaFiles.Head().Path,
+                    false);
+                
+                _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
+                Either<BaseError, bool> refreshResult =
+                    await _localStatisticsProvider.RefreshStatistics(ffprobePath, incoming, localPath);
+                
+                await refreshResult.Match(
+                    async _ =>
                     {
-                        (EpisodeMetadata incomingMetadata, MediaVersion mediaVersion) = tuple;
-
-                        Option<EpisodeMetadata> maybeExisting = existing.EpisodeMetadata
-                            .Find(em => em.EpisodeNumber == incomingMetadata.EpisodeNumber);
-                        foreach (EpisodeMetadata existingMetadata in maybeExisting)
+                        foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
                         {
-                            foreach (MetadataGuid guid in existingMetadata.Guids
-                                .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                                .ToList())
-                            {
-                                existingMetadata.Guids.Remove(guid);
-                                await _metadataRepository.RemoveGuid(guid);
-                            }
-
-                            foreach (MetadataGuid guid in incomingMetadata.Guids
-                                .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                                .ToList())
-                            {
-                                existingMetadata.Guids.Add(guid);
-                                await _metadataRepository.AddGuid(existingMetadata, guid);
-                            }
+                            await _searchIndex.UpdateItems(
+                                _searchRepository,
+                                new List<MediaItem> { updated });
                         }
 
-                        existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
-                        existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
-                        existingVersion.DateUpdated = mediaVersion.DateUpdated;
+                        Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeStatistics =
+                            await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
+                                library,
+                                incoming.Key.Split("/").Last(),
+                                connection,
+                                token);
 
-                        await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, mediaVersion);
+                        await maybeStatistics.Match(
+                            async tuple =>
+                            {
+                                (EpisodeMetadata incomingMetadata, MediaVersion mediaVersion) = tuple;
+
+                                Option<EpisodeMetadata> maybeExisting = existing.EpisodeMetadata
+                                    .Find(em => em.EpisodeNumber == incomingMetadata.EpisodeNumber);
+                                foreach (EpisodeMetadata existingMetadata in maybeExisting)
+                                {
+                                    foreach (MetadataGuid guid in existingMetadata.Guids
+                                        .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                                        .ToList())
+                                    {
+                                        existingMetadata.Guids.Remove(guid);
+                                        await _metadataRepository.RemoveGuid(guid);
+                                    }
+
+                                    foreach (MetadataGuid guid in incomingMetadata.Guids
+                                        .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                                        .ToList())
+                                    {
+                                        existingMetadata.Guids.Add(guid);
+                                        await _metadataRepository.AddGuid(existingMetadata, guid);
+                                    }
+                                }
+
+                                existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
+                                existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
+                                existingVersion.DateUpdated = mediaVersion.DateUpdated;
+
+                                await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, mediaVersion);
+                            },
+                            _ => Task.CompletedTask);
                     },
-                    _ => Task.CompletedTask);
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                            "Statistics",
+                            localPath,
+                            error.Value);
+
+                        return Task.CompletedTask;
+                    });
             }
 
             return Right<BaseError, PlexEpisode>(existing);

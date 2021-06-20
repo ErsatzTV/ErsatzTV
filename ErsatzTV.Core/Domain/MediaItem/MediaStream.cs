@@ -12,6 +12,8 @@
         public string Title { get; set; }
         public bool Default { get; set; }
         public bool Forced { get; set; }
+        public string PixelFormat { get; set; }
+        public int BitsPerRawSample { get; set; }
         public int MediaVersionId { get; set; }
         public MediaVersion MediaVersion { get; set; }
     }
