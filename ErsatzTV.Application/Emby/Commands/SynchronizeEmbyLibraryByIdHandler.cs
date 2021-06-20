@@ -68,7 +68,8 @@ namespace ErsatzTV.Application.Emby.Commands
         private async Task<Unit> Synchronize(RequestParameters parameters)
         {
             var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
-            if (parameters.ForceScan || lastScan < DateTimeOffset.Now - TimeSpan.FromHours(6))
+            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+            if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
                 switch (parameters.Library.MediaKind)
                 {
@@ -104,12 +105,14 @@ namespace ErsatzTV.Application.Emby.Commands
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(
             ISynchronizeEmbyLibraryById request) =>
-            (await ValidateConnection(request), await EmbyLibraryMustExist(request), await ValidateFFprobePath())
+            (await ValidateConnection(request), await EmbyLibraryMustExist(request),
+                await ValidateLibraryRefreshInterval(), await ValidateFFprobePath())
             .Apply(
-                (connectionParameters, embyLibrary, ffprobePath) => new RequestParameters(
+                (connectionParameters, embyLibrary, libraryRefreshInterval, ffprobePath) => new RequestParameters(
                     connectionParameters,
                     embyLibrary,
                     request.ForceScan,
+                    libraryRefreshInterval,
                     ffprobePath
                 ));
 
@@ -149,6 +152,11 @@ namespace ErsatzTV.Application.Emby.Commands
             _mediaSourceRepository.GetEmbyLibrary(request.EmbyLibraryId)
                 .Map(v => v.ToValidation<BaseError>($"Emby library {request.EmbyLibraryId} does not exist."));
 
+        private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
+            _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
+                .FilterT(lri => lri > 0)
+                .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
+
         private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
             _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
                 .FilterT(File.Exists)
@@ -160,6 +168,7 @@ namespace ErsatzTV.Application.Emby.Commands
             ConnectionParameters ConnectionParameters,
             EmbyLibrary Library,
             bool ForceScan,
+            int LibraryRefreshInterval,
             string FFprobePath);
 
         private record ConnectionParameters(
