@@ -194,8 +194,14 @@ namespace ErsatzTV.Core.Metadata
                                 MediaStreamKind = MediaStreamKind.Video,
                                 Index = videoStream.index,
                                 Codec = videoStream.codec_name,
-                                Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant()
+                                Profile = (videoStream.profile ?? string.Empty).ToLowerInvariant(),
+                                PixelFormat = (videoStream.pix_fmt ?? string.Empty).ToLowerInvariant(),
                             };
+
+                            if (int.TryParse(videoStream.bits_per_raw_sample, out int bitsPerRawSample))
+                            {
+                                stream.BitsPerRawSample = bitsPerRawSample;
+                            }
 
                             if (videoStream.disposition is not null)
                             {
@@ -262,8 +268,10 @@ namespace ErsatzTV.Core.Metadata
             int height,
             string sample_aspect_ratio,
             string display_aspect_ratio,
+            string pix_fmt,
             string field_order,
             string r_frame_rate,
+            string bits_per_raw_sample,
             FFprobeDisposition disposition,
             FFProbeTags tags);
         // ReSharper restore InconsistentNaming

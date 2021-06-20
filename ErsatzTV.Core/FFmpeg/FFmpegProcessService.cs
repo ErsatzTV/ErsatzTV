@@ -62,7 +62,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
-                .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec)
+                .WithInputCodec(path, playbackSettings.HardwareAcceleration, videoStream.Codec, videoStream.PixelFormat)
                 .WithWatermark(maybeWatermark, maybeWatermarkPath, channel.FFmpegProfile.Resolution, isAnimated)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(playbackSettings.AudioDuration)
