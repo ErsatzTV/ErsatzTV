@@ -175,7 +175,7 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithInputCodec(string input, HardwareAccelerationKind hwAccel, string codec)
+        public FFmpegProcessBuilder WithInputCodec(string input, HardwareAccelerationKind hwAccel, string codec, string pixelFormat)
         {
             if (hwAccel == HardwareAccelerationKind.Qsv && QsvMap.TryGetValue(codec, out string qsvCodec))
             {
@@ -183,7 +183,9 @@ namespace ErsatzTV.Core.FFmpeg
                 _arguments.Add(qsvCodec);
             }
 
-            _complexFilterBuilder = _complexFilterBuilder.WithInputCodec(codec);
+            _complexFilterBuilder = _complexFilterBuilder
+                .WithInputCodec(codec)
+                .WithInputPixelFormat(pixelFormat);
 
             _arguments.Add("-i");
             _arguments.Add($"{input}");
