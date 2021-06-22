@@ -14,7 +14,7 @@
       </PackageReference>
       <PackageReference Include="Dapper" Version="2.0.90" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00013" />
-      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00013" />
+      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00014" />
       <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00013" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.7" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.7">
