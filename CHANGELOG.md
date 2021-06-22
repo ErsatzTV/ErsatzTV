@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix playback of transcoded 10-bit media items (pixel format `yuv420p10le`) on Nvidia hardware
 - Emby and Jellyfin scanners now respect library refresh interval setting
+- Fix adding new seasons to existing Emby and Jellyfin shows
+- Fix adding new episodes to existing Emby and Jellyfin seasons
 
 ## [0.0.47-prealpha] - 2021-06-15
 ### Added
