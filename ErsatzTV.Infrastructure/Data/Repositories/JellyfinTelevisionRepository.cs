@@ -259,18 +259,29 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return maybeExisting;
         }
 
-        public async Task<bool> AddSeason(JellyfinSeason season)
+        public async Task<bool> AddSeason(JellyfinShow show, JellyfinSeason season)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            await dbContext.AddAsync(season);
-            if (await dbContext.SaveChangesAsync() <= 0)
+            try
+            {
+                season.ShowId = await _dbConnection.ExecuteScalarAsync<int>(
+                    @"SELECT Id FROM JellyfinShow WHERE ItemId = @ItemId",
+                    new { show.ItemId });
+
+                await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+                await dbContext.AddAsync(season);
+                if (await dbContext.SaveChangesAsync() <= 0)
+                {
+                    return false;
+                }
+
+                await dbContext.Entry(season).Reference(m => m.LibraryPath).LoadAsync();
+                await dbContext.Entry(season.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+                return true;
+            }
+            catch (Exception)
             {
                 return false;
             }
-
-            await dbContext.Entry(season).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(season.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            return true;
         }
 
         public async Task<Unit> Update(JellyfinSeason season)
@@ -368,19 +379,30 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return Unit.Default;
         }
 
-        public async Task<bool> AddEpisode(JellyfinEpisode episode)
+        public async Task<bool> AddEpisode(JellyfinSeason season, JellyfinEpisode episode)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            await dbContext.AddAsync(episode);
-            if (await dbContext.SaveChangesAsync() <= 0)
+            try
+            {
+                episode.SeasonId = await _dbConnection.ExecuteScalarAsync<int>(
+                    @"SELECT Id FROM JellyfinSeason WHERE ItemId = @ItemId",
+                    new { season.ItemId });
+
+                await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+                await dbContext.AddAsync(episode);
+                if (await dbContext.SaveChangesAsync() <= 0)
+                {
+                    return false;
+                }
+
+                await dbContext.Entry(episode).Reference(m => m.LibraryPath).LoadAsync();
+                await dbContext.Entry(episode.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+                await dbContext.Entry(episode).Reference(e => e.Season).LoadAsync();
+                return true;
+            }
+            catch (Exception)
             {
                 return false;
             }
-
-            await dbContext.Entry(episode).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(episode.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            await dbContext.Entry(episode).Reference(e => e.Season).LoadAsync();
-            return true;
         }
 
         public async Task<Option<JellyfinEpisode>> Update(JellyfinEpisode episode)

@@ -231,7 +231,6 @@ namespace ErsatzTV.Core.Emby
                     },
                     async () =>
                     {
-                        incoming.ShowId = show.Id;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
                         _logger.LogDebug(
@@ -239,7 +238,7 @@ namespace ErsatzTV.Core.Emby
                             show.ShowMetadata.Head().Title,
                             incoming.SeasonMetadata.Head().Title);
 
-                        await _televisionRepository.AddSeason(incoming);
+                        await _televisionRepository.AddSeason(show, incoming);
                     });
 
                 List<EmbyItemEtag> existingEpisodes =
@@ -364,7 +363,6 @@ namespace ErsatzTV.Core.Emby
                         try
                         {
                             updateStatistics = true;
-                            incoming.SeasonId = season.Id;
                             incoming.LibraryPathId = library.Paths.Head().Id;
 
                             _logger.LogDebug(
@@ -373,7 +371,7 @@ namespace ErsatzTV.Core.Emby
                                 seasonName,
                                 incoming.EpisodeMetadata.HeadOrNone().Map(em => em.EpisodeNumber));
 
-                            if (await _televisionRepository.AddEpisode(incoming))
+                            if (await _televisionRepository.AddEpisode(season, incoming))
                             {
                                 await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
                             }

@@ -13,9 +13,9 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<JellyfinItemEtag>> GetExistingEpisodes(JellyfinLibrary library, string seasonItemId);
         Task<bool> AddShow(JellyfinShow show);
         Task<Option<JellyfinShow>> Update(JellyfinShow show);
-        Task<bool> AddSeason(JellyfinSeason season);
+        Task<bool> AddSeason(JellyfinShow show, JellyfinSeason season);
         Task<Unit> Update(JellyfinSeason season);
-        Task<bool> AddEpisode(JellyfinEpisode episode);
+        Task<bool> AddEpisode(JellyfinSeason season, JellyfinEpisode episode);
         Task<Option<JellyfinEpisode>> Update(JellyfinEpisode episode);
         Task<List<int>> RemoveMissingShows(JellyfinLibrary library, List<string> showIds);
         Task<Unit> RemoveMissingSeasons(JellyfinLibrary library, List<string> seasonIds);
