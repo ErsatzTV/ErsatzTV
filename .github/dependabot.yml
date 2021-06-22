@@ -1,6 +1,8 @@
 ﻿version: 2
 updates:
-  - package-ecosystem: "nuget"
+  - package-ecosystem: nuget
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: daily
+    assignees:
+      - jasongdove
