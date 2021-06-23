@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.0.48-prealpha] - 2021-06-22
 ### Added
 - Store pixel format with media statistics; this is needed to support normalization of 10-bit media items
   - This requires re-ingesting statistics for all media items the first time this version is launched
@@ -480,7 +482,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.47-prealpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.48-prealpha...HEAD
+[0.0.48-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.47-prealpha...v0.0.48-prealpha
 [0.0.47-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.46-prealpha...v0.0.47-prealpha
 [0.0.46-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.45-prealpha...v0.0.46-prealpha
 [0.0.45-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.44-prealpha...v0.0.45-prealpha
