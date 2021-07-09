@@ -13,6 +13,7 @@ namespace ErsatzTV.Core.Domain
         public DateTime NextStart { get; set; }
         public int? MultipleRemaining { get; set; }
         public DateTime? DurationFinish { get; set; }
+        public bool InFlood { get; set; }
 
         public DateTimeOffset NextStartOffset => new DateTimeOffset(NextStart, TimeSpan.Zero).ToLocalTime();
 
