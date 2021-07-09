@@ -201,6 +201,7 @@ namespace ErsatzTV.Core.Scheduling
             // start with the previous multiple/duration states
             Option<int> multipleRemaining = Optional(startAnchor.MultipleRemaining);
             Option<DateTimeOffset> durationFinish = startAnchor.DurationFinishOffset;
+            bool inFlood = startAnchor.InFlood;
 
             bool customGroup = multipleRemaining.IsSome || durationFinish.IsSome;
 
@@ -215,7 +216,8 @@ namespace ErsatzTV.Core.Scheduling
                     scheduleItem,
                     currentTime,
                     multipleRemaining.IsSome,
-                    durationFinish.IsSome);
+                    durationFinish.IsSome,
+                    inFlood);
 
                 IMediaCollectionEnumerator enumerator = collectionEnumerators[CollectionKeyForItem(scheduleItem)];
                 await enumerator.Current.IfSomeAsync(
@@ -318,6 +320,11 @@ namespace ErsatzTV.Core.Scheduling
                                                 "Flood");
                                             index++;
                                             customGroup = false;
+                                            inFlood = false;
+                                        }
+                                        else
+                                        {
+                                            inFlood = true;
                                         }
                                     });
                                 break;
@@ -374,7 +381,8 @@ namespace ErsatzTV.Core.Scheduling
                 NextScheduleItemId = nextScheduleItem.Id,
                 NextStart = GetStartTimeAfter(nextScheduleItem, currentTime).UtcDateTime,
                 MultipleRemaining = multipleRemaining.IsSome ? multipleRemaining.ValueUnsafe() : null,
-                DurationFinish = durationFinish.IsSome ? durationFinish.ValueUnsafe().UtcDateTime : null
+                DurationFinish = durationFinish.IsSome ? durationFinish.ValueUnsafe().UtcDateTime : null,
+                InFlood = inFlood
             };
 
             // build program schedule anchors
@@ -419,13 +427,15 @@ namespace ErsatzTV.Core.Scheduling
             ProgramScheduleItem item,
             DateTimeOffset start,
             bool inMultiple = false,
-            bool inDuration = false)
+            bool inDuration = false,
+            bool inFlood = false)
         {
             switch (item.StartType)
             {
                 case StartType.Fixed:
                     if (item is ProgramScheduleItemMultiple && inMultiple ||
-                        item is ProgramScheduleItemDuration && inDuration)
+                        item is ProgramScheduleItemDuration && inDuration ||
+                        item is ProgramScheduleItemFlood && inFlood)
                     {
                         return start;
                     }
