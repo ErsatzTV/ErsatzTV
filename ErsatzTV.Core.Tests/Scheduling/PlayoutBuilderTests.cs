@@ -459,6 +459,182 @@ namespace ErsatzTV.Core.Tests.Scheduling
         }
 
         [Test]
+        public async Task FloodContent_Should_FloodWithFixedStartTime()
+        {
+            var floodCollection = new Collection
+            {
+                Id = 1,
+                Name = "Flood Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
+                }
+            };
+
+            var fixedCollection = new Collection
+            {
+                Id = 2,
+                Name = "Fixed Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
+                    TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (floodCollection.Id, floodCollection.MediaItems.ToList()),
+                    (fixedCollection.Id, fixedCollection.MediaItems.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemFlood
+                {
+                    Index = 1,
+                    Collection = floodCollection,
+                    CollectionId = floodCollection.Id,
+                    StartTime = TimeSpan.FromHours(7)
+                },
+                new ProgramScheduleItemOne
+                {
+                    Index = 2,
+                    Collection = fixedCollection,
+                    CollectionId = fixedCollection.Id,
+                    StartTime = TimeSpan.FromHours(12)
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items,
+                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
+            };
+
+            var televisionRepo = new FakeTelevisionRepository();
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(24);
+
+            Playout result = await builder.BuildPlayoutItems(playout, start, finish);
+
+            result.Items.Count.Should().Be(6);
+
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(7));
+            result.Items[0].MediaItemId.Should().Be(1);
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(8));
+            result.Items[1].MediaItemId.Should().Be(2);
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(9));
+            result.Items[2].MediaItemId.Should().Be(1);
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(10));
+            result.Items[3].MediaItemId.Should().Be(2);
+            result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(11));
+            result.Items[4].MediaItemId.Should().Be(1);
+
+            result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
+            result.Items[5].MediaItemId.Should().Be(3);
+        }
+
+        [Test]
+        public async Task FloodContent_Should_FloodWithFixedStartTime_FromAnchor()
+        {
+            var floodCollection = new Collection
+            {
+                Id = 1,
+                Name = "Flood Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 2, 1))
+                }
+            };
+
+            var fixedCollection = new Collection
+            {
+                Id = 2,
+                Name = "Fixed Items",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(3, TimeSpan.FromHours(2), new DateTime(2020, 1, 1)),
+                    TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 2))
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (floodCollection.Id, floodCollection.MediaItems.ToList()),
+                    (fixedCollection.Id, fixedCollection.MediaItems.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemFlood
+                {
+                    Index = 1,
+                    Collection = floodCollection,
+                    CollectionId = floodCollection.Id,
+                    StartTime = TimeSpan.FromHours(7)
+                },
+                new ProgramScheduleItemOne
+                {
+                    Index = 2,
+                    Collection = fixedCollection,
+                    CollectionId = fixedCollection.Id,
+                    StartTime = TimeSpan.FromHours(12)
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items,
+                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+                Anchor = new PlayoutAnchor
+                {
+                    NextStart = HoursAfterMidnight(9).UtcDateTime,
+                    NextScheduleItem = items[0],
+                    NextScheduleItemId = 1,
+                    InFlood = true
+                }
+            };
+
+            var televisionRepo = new FakeTelevisionRepository();
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(32);
+
+            Playout result = await builder.BuildPlayoutItems(playout, start, finish);
+
+            result.Items.Count.Should().Be(5);
+
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(9));
+            result.Items[0].MediaItemId.Should().Be(1);
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(10));
+            result.Items[1].MediaItemId.Should().Be(2);
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(11));
+            result.Items[2].MediaItemId.Should().Be(1);
+
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
+            result.Items[3].MediaItemId.Should().Be(3);
+
+            result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(7));
+            result.Items[4].MediaItemId.Should().Be(2);
+
+            result.Anchor.InFlood.Should().BeTrue();
+        }
+
+        [Test]
         public async Task FloodContent_Should_FloodAroundFixedContent_DurationWithoutOfflineTail()
         {
             var floodCollection = new Collection
