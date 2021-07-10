@@ -105,7 +105,7 @@ namespace ErsatzTV.Core.FFmpeg
                 });
 
             return builder.WithPlaybackArgs(playbackSettings)
-                .WithMetadata(channel)
+                .WithMetadata(channel, maybeAudioStream)
                 .WithFormat("mpegts")
                 .WithDuration(start + version.Duration - now)
                 .WithPipe()
@@ -130,7 +130,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithErrorText(desiredResolution, errorMessage)
                 .WithPixfmt("yuv420p")
                 .WithPlaybackArgs(playbackSettings)
-                .WithMetadata(channel)
+                .WithMetadata(channel, None)
                 .WithFormat("mpegts");
 
             duration.IfSome(d => builder = builder.WithDuration(d));
@@ -149,7 +149,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithInfiniteLoop()
                 .WithConcat($"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}")
-                .WithMetadata(channel)
+                .WithMetadata(channel, None)
                 .WithFormat("mpegts")
                 .WithPipe()
                 .Build();

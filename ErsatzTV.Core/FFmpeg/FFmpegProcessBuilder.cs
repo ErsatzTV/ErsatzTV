@@ -230,14 +230,29 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithMetadata(Channel channel)
+        public FFmpegProcessBuilder WithMetadata(Channel channel, Option<MediaStream> maybeAudioStream)
         {
+            if (channel.StreamingMode == StreamingMode.TransportStream)
+            {
+                _arguments.AddRange(new[] { "-map_metadata", "-1" });
+            }
+
+            foreach (MediaStream audioStream in maybeAudioStream)
+            {
+                if (!string.IsNullOrWhiteSpace(audioStream.Language))
+                {
+                    _arguments.AddRange(new[] { "-metadata:s:a:0", $"language={audioStream.Language}" });
+                }
+            }
+
             var arguments = new List<string>
             {
                 "-metadata", "service_provider=\"ErsatzTV\"",
                 "-metadata", $"service_name=\"{channel.Name}\""
             };
+
             _arguments.AddRange(arguments);
+
             return this;
         }
 
@@ -319,11 +334,11 @@ namespace ErsatzTV.Core.FFmpeg
             playbackSettings.AudioSampleRate
                 .IfSome(sampleRate => arguments.AddRange(new[] { "-ar", $"{sampleRate}k" }));
 
+            arguments.AddRange(new[] { "-c:a", playbackSettings.AudioCodec });
+
             arguments.AddRange(
                 new[]
                 {
-                    "-c:a", playbackSettings.AudioCodec,
-                    "-map_metadata", "-1",
                     "-movflags", "+faststart",
                     "-muxdelay", "0",
                     "-muxpreload", "0"
