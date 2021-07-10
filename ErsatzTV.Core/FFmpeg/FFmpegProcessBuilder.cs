@@ -334,11 +334,10 @@ namespace ErsatzTV.Core.FFmpeg
             playbackSettings.AudioSampleRate
                 .IfSome(sampleRate => arguments.AddRange(new[] { "-ar", $"{sampleRate}k" }));
 
-            arguments.AddRange(new[] { "-c:a", playbackSettings.AudioCodec });
-
             arguments.AddRange(
                 new[]
                 {
+                    "-c:a", playbackSettings.AudioCodec,
                     "-movflags", "+faststart",
                     "-muxdelay", "0",
                     "-muxpreload", "0"
