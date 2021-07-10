@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Include audio language metadata in all streaming modes
+
+### Fixed
+- Fix flooding schedule items that have a fixed start time
 
 ## [0.0.48-prealpha] - 2021-06-22
 ### Added
