@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.0.49-prealpha] - 2021-07-11
 ### Added
 - Include audio language metadata in all streaming modes
 - Add special zero-count case to `Multiple` playout mode
@@ -495,7 +497,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.48-prealpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.49-prealpha...HEAD
+[0.0.49-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.48-prealpha...v0.0.49-prealpha
 [0.0.48-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.47-prealpha...v0.0.48-prealpha
 [0.0.47-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.46-prealpha...v0.0.47-prealpha
 [0.0.46-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.45-prealpha...v0.0.46-prealpha
