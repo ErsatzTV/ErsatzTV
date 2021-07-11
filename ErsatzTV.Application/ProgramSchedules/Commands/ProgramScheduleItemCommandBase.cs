@@ -30,9 +30,9 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 case PlayoutMode.One:
                     break;
                 case PlayoutMode.Multiple:
-                    if (item.MultipleCount.GetValueOrDefault() <= 0)
+                    if (item.MultipleCount.GetValueOrDefault() < 0)
                     {
-                        return BaseError.New("[MultipleCount] must be greater than 0 for playout mode 'multiple'");
+                        return BaseError.New("[MultipleCount] must be greater than or equal to 0 for playout mode 'multiple'");
                     }
 
                     break;

@@ -164,7 +164,7 @@
                         <MudText Class="mt-3 mb-2" Typo="Typo.h6">Playout Mode</MudText>
                         <ul class="mud-typography-body1">
                             <li><b>One</b> - to play one media item from the collection before advancing to the next schedule item.</li>
-                            <li><b>Multiple</b> - to play a specified <b>count</b> of media items from the collection before advancing to the next schedule item.</li>
+                            <li><b>Multiple</b> - to play a specified <b>count</b> of media items from the collection before advancing to the next schedule item. A count of <b>0</b> is a special case that will automatically and always equal the number of items in the collection, so each item from the collection will be played once before advancing.</li>
                             <li><b>Duration</b> - to play the maximum number of complete media items that will fit in the specified <b>playout duration</b>, before either going offline for the remainder of the <b>playout duration</b> (an <b>offline tail</b>), or immediately advancing to the next schedule item.</li>
                             <li><b>Flood</b> - to play media items from the collection forever, or until the next schedule item's <b>start time</b> if one exists.</li>
                         </ul>

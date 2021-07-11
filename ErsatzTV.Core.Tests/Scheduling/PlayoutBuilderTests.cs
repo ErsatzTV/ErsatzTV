@@ -906,6 +906,96 @@ namespace ErsatzTV.Core.Tests.Scheduling
         }
 
         [Test]
+        public async Task Auto_Zero_MultipleCount()
+        {
+            var collectionOne = new Collection
+            {
+                Id = 1,
+                Name = "Multiple Items 1",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                    TestMovie(2, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                    TestMovie(3, TimeSpan.FromHours(1), new DateTime(2020, 1, 1))
+                }
+            };
+
+            var collectionTwo = new Collection
+            {
+                Id = 2,
+                Name = "Multiple Items 2",
+                MediaItems = new List<MediaItem>
+                {
+                    TestMovie(4, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                    TestMovie(5, TimeSpan.FromHours(1), new DateTime(2020, 1, 1)),
+                }
+            };
+
+            var fakeRepository = new FakeMediaCollectionRepository(
+                Map(
+                    (collectionOne.Id, collectionOne.MediaItems.ToList()),
+                    (collectionTwo.Id, collectionTwo.MediaItems.ToList())));
+
+            var items = new List<ProgramScheduleItem>
+            {
+                new ProgramScheduleItemMultiple
+                {
+                    Id = 1,
+                    Index = 1,
+                    Collection = collectionOne,
+                    CollectionId = collectionOne.Id,
+                    StartTime = null,
+                    Count = 0
+                },
+                new ProgramScheduleItemMultiple
+                {
+                    Id = 2,
+                    Index = 2,
+                    Collection = collectionTwo,
+                    CollectionId = collectionTwo.Id,
+                    StartTime = null,
+                    Count = 0
+                }
+            };
+
+            var playout = new Playout
+            {
+                ProgramSchedule = new ProgramSchedule
+                {
+                    Items = items,
+                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                },
+                Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
+            };
+
+            var televisionRepo = new FakeTelevisionRepository();
+            var artistRepo = new Mock<IArtistRepository>();
+            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+
+            DateTimeOffset start = HoursAfterMidnight(0);
+            DateTimeOffset finish = start + TimeSpan.FromHours(5);
+
+            Playout result = await builder.BuildPlayoutItems(playout, start, finish);
+
+            result.Items.Count.Should().Be(5);
+
+            result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(0));
+            result.Items[0].MediaItemId.Should().Be(1);
+            result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(1));
+            result.Items[1].MediaItemId.Should().Be(2);
+            result.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(2));
+            result.Items[2].MediaItemId.Should().Be(3);
+            
+            result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
+            result.Items[3].MediaItemId.Should().Be(4);
+            result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4));
+            result.Items[4].MediaItemId.Should().Be(5);
+
+            result.Anchor.NextScheduleItem.Should().Be(items[0]);
+            result.Anchor.MultipleRemaining.Should().BeNull();
+        }
+
+        [Test]
         public async Task Alternating_Duration_Should_Maintain_Duration()
         {
             var collectionOne = new Collection
