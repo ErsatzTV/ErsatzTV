@@ -270,7 +270,16 @@ namespace ErsatzTV.Core.Scheduling
                             case ProgramScheduleItemMultiple multiple:
                                 if (multipleRemaining.IsNone)
                                 {
-                                    multipleRemaining = multiple.Count;
+                                    if (multiple.Count == 0)
+                                    {
+                                        multipleRemaining = collectionMediaItems[CollectionKeyForItem(scheduleItem)]
+                                            .Count;
+                                    }
+                                    else
+                                    {
+                                        multipleRemaining = multiple.Count;
+                                    }
+
                                     customGroup = true;
                                 }
 

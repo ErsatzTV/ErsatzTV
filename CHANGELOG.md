@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Include audio language metadata in all streaming modes
+- Add special zero-count case to `Multiple` playout mode
+  - This configuration will automatically maintain the multiple count so that it is equal to the number of items in the collection
+  - This configuration should be used if you want to play every item in a collection exactly once before advancing
 
 ### Changed
 - Use case-insensitive sorting for collections page and `Add to Collection` dialog
