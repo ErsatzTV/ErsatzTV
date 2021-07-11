@@ -35,6 +35,7 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="MudBlazor" Version="5.0.15" />
+      <PackageReference Include="NaturalSort.Extension" Version="3.1.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="5.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.0.38" />
       <PackageReference Include="Serilog" Version="2.10.0" />
