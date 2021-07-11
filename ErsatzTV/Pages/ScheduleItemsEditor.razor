@@ -193,10 +193,14 @@
     private async Task LoadScheduleItems()
     {
     // TODO: fix performance
-        _mediaCollections = await _mediator.Send(new GetAllCollections());
-        _televisionShows = await _mediator.Send(new GetAllTelevisionShows());
-        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons());
-        _artists = await _mediator.Send(new GetAllArtists());
+        _mediaCollections = await _mediator.Send(new GetAllCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _televisionShows = await _mediator.Send(new GetAllTelevisionShows())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _artists = await _mediator.Send(new GetAllArtists())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         string name = string.Empty;
         Option<ProgramScheduleViewModel> maybeSchedule = await _mediator.Send(new GetProgramScheduleById(Id));

@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Use case-insensitive sorting for collections page and `Add to Collection` dialog
+- Use case-insensitive sorting for all collection lists in schedule items editor
 - Use natural sorting for schedules page and `Add to Schedule` dialog
 
 ### Fixed
