@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Include audio language metadata in all streaming modes
 
+### Changed
+- Use case-insensitive sorting for collections page and `Add to Collection` dialog
+- Use natural sorting for schedules page
+
 ### Fixed
 - Fix flooding schedule items that have a fixed start time
 

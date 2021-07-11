@@ -33,6 +33,7 @@ namespace ErsatzTV.Application.MediaCollections.Queries
             List<MediaCollectionViewModel> page = await dbContext.Collections.FromSqlRaw(
                     @"SELECT * FROM Collection
                     ORDER BY Name
+                    COLLATE NOCASE
                     LIMIT {0} OFFSET {1}",
                     request.PageSize,
                     request.PageNum * request.PageSize)

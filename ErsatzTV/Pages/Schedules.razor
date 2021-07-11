@@ -4,6 +4,7 @@
 @using ErsatzTV.Application.ProgramSchedules.Queries
 @using ErsatzTV.Application.Configuration.Queries
 @using ErsatzTV.Application.Configuration.Commands
+@using NaturalSort.Extension
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
@@ -135,7 +136,7 @@
         await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SchedulesPageSize, state.PageSize.ToString()));
 
         List<ProgramScheduleViewModel> schedules = await _mediator.Send(new GetAllProgramSchedules());
-        IOrderedEnumerable<ProgramScheduleViewModel> sorted = schedules.OrderBy(s => s.Name);
+        IOrderedEnumerable<ProgramScheduleViewModel> sorted = schedules.OrderBy(s => s.Name, new NaturalSortComparer(StringComparison.CurrentCultureIgnoreCase));
 
         // TODO: properly page this data
         return new TableData<ProgramScheduleViewModel>
