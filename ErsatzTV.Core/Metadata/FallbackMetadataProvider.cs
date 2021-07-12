@@ -168,6 +168,8 @@ namespace ErsatzTV.Core.Metadata
                     metadata.Tags = new List<Tag>();
                     metadata.Studios = new List<Studio>();
                     metadata.Actors = new List<Actor>();
+                    metadata.Directors = new List<Director>();
+                    metadata.Writers = new List<Writer>();
                     metadata.DateUpdated = DateTime.UtcNow;
                 }
             }
