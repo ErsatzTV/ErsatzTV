@@ -161,7 +161,7 @@ namespace ErsatzTV.Core.Metadata
                 Match match = Regex.Match(fileName, PATTERN);
                 if (match.Success)
                 {
-                    metadata.Title = match.Groups[1].Value;
+                    metadata.Title = match.Groups[1].Value.Trim();
                     metadata.Year = int.Parse(match.Groups[2].Value);
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
                     metadata.Genres = new List<Genre>();

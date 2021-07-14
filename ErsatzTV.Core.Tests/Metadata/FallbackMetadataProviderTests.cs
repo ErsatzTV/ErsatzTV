@@ -93,5 +93,30 @@ namespace ErsatzTV.Core.Tests.Metadata
             metadata.Count.Should().Be(2);
             metadata.Map(m => m.EpisodeNumber).Should().BeEquivalentTo(episode1, episode2);
         }
+
+        [Test]
+        [TestCase("Something (2021).mkv", "Something")]
+        [TestCase("Something Else (2021).mkv", "Something Else")]
+        public void GetFallbackMetadata_Should_Set_Proper_Movie_Title(string path, string expectedTitle)
+        {
+            MovieMetadata metadata = _fallbackMetadataProvider.GetFallbackMetadata(
+                new Movie
+                {
+                    LibraryPath = new LibraryPath(),
+                    MediaVersions = new List<MediaVersion>
+                    {
+                        new()
+                        {
+                            MediaFiles = new List<MediaFile>
+                            {
+                                new() { Path = path }
+                            }
+                        }
+                    }
+                });
+
+            metadata.Should().NotBeNull();
+            metadata.Title.Should().Be(expectedTitle);
+        }
     }
 }
