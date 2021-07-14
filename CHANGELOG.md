@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add Linux ARM release artifacts which can be used on Raspberry Pi devices
+
 ### Fixed
 - Fix bug preventing ingestion of local movies with fallback metadata (without NFO files)
 - Fix extra spaces in titles of local movies with fallback metadata (without NFO files)
