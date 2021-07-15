@@ -105,7 +105,7 @@ namespace ErsatzTV
                 Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "unknown");
 
-            Log.Logger.Warning("This is pre-alpha software and is likely to be unstable");
+            Log.Logger.Warning("This is alpha software and is likely to be unstable");
             Log.Logger.Warning(
                 "Give feedback at {GitHub} or {Discord}",
                 "https://github.com/jasongdove/ErsatzTV",
