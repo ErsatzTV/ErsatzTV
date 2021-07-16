@@ -14,6 +14,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         PlayoutMode PlayoutMode,
         ProgramScheduleItemCollectionType CollectionType,
         int? CollectionId,
+        int? MultiCollectionId,
         int? MediaItemId,
         int? MultipleCount,
         TimeSpan? PlayoutDuration,

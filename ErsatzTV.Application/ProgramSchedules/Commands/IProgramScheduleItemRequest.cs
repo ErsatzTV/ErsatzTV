@@ -8,6 +8,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         TimeSpan? StartTime { get; }
         ProgramScheduleItemCollectionType CollectionType { get; }
         int? CollectionId { get; }
+        int? MultiCollectionId { get; }
         int? MediaItemId { get; }
         PlayoutMode PlayoutMode { get; }
         int? MultipleCount { get; }

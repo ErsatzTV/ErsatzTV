@@ -6,5 +6,8 @@ namespace ErsatzTV.Application.MediaCollections
     {
         internal static MediaCollectionViewModel ProjectToViewModel(Collection collection) =>
             new(collection.Id, collection.Name);
+
+        internal static MultiCollectionViewModel ProjectToViewModel(MultiCollection multiCollection) =>
+            new(multiCollection.Id, multiCollection.Name);
     }
 }

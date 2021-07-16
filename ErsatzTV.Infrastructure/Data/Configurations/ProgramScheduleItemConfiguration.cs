@@ -21,6 +21,12 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .HasForeignKey(i => i.MediaItemId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
+
+            builder.HasOne(i => i.MultiCollection)
+                .WithOne(mc => mc.ProgramScheduleItem)
+                .HasForeignKey<ProgramScheduleItem>(i => i.MultiCollectionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
         }
     }
 }

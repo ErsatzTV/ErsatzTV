@@ -38,15 +38,18 @@ namespace ErsatzTV.ViewModels
                     _collectionType = value;
 
                     Collection = null;
+                    MultiCollection = null;
                     MediaItem = null;
 
                     OnPropertyChanged(nameof(Collection));
+                    OnPropertyChanged(nameof(MultiCollection));
                     OnPropertyChanged(nameof(MediaItem));
                 }
             }
         }
 
         public MediaCollectionViewModel Collection { get; set; }
+        public MultiCollectionViewModel MultiCollection { get; set; }
         public NamedMediaItemViewModel MediaItem { get; set; }
 
         public string CollectionName => CollectionType switch

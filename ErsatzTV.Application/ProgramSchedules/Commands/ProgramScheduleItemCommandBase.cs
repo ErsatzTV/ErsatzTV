@@ -89,6 +89,13 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     }
 
                     break;
+                case ProgramScheduleItemCollectionType.MultiCollection:
+                    if (item.MultiCollectionId is null)
+                    {
+                        return BaseError.New("[MultiCollection] is required for collection type 'MultiCollection'");
+                    }
+
+                    break;
                 default:
                     return BaseError.New("[CollectionType] is invalid");
             }
