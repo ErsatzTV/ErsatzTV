@@ -7,5 +7,6 @@
         public int CollectionId { get; set; }
         public Collection Collection { get; set; }
         public bool ScheduleAsGroup { get; set; }
+        public PlaybackOrder PlaybackOrder { get; set; }
     }
 }

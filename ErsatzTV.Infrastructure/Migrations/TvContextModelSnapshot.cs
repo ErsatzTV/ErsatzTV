@@ -966,6 +966,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("CollectionId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("PlaybackOrder")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("ScheduleAsGroup")
                         .HasColumnType("INTEGER");
 

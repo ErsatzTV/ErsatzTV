@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20210717153022_Add_MultiCollection")]
+    [Migration("20210717172758_Add_MultiCollection")]
     partial class Add_MultiCollection
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -966,6 +966,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("CollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlaybackOrder")
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("ScheduleAsGroup")

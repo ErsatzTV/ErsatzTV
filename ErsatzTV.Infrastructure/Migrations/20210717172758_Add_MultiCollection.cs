@@ -37,7 +37,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                 {
                     MultiCollectionId = table.Column<int>(type: "INTEGER", nullable: false),
                     CollectionId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ScheduleAsGroup = table.Column<bool>(type: "INTEGER", nullable: false)
+                    ScheduleAsGroup = table.Column<bool>(type: "INTEGER", nullable: false),
+                    PlaybackOrder = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {

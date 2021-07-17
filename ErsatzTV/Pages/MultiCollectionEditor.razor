@@ -43,12 +43,14 @@
         </ToolBarContent>
         <ColGroup>
             <col/>
-            <col/>
+            <col style="width: 20%"/>
+            <col style="width: 30%"/>
             <col style="width: 60px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Collection</MudTh>
             <MudTh>Schedule As Group</MudTh>
+            <MudTh>Playback Order</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
@@ -59,6 +61,26 @@
             </MudTd>
             <MudTd DataLabel="Schedule As Group">
                 <MudCheckBox @bind-Checked="@context.ScheduleAsGroup" For="@(() => context.ScheduleAsGroup)"/>
+            </MudTd>
+            <MudTd DataLabel="Playback Order">
+                @if (context.Collection.UseCustomPlaybackOrder)
+                {
+                    if (context.ScheduleAsGroup)
+                    {
+                        <MudText Typo="Typo.body2">
+                            Custom
+                        </MudText>
+                    }
+                }
+                else
+                {
+                    <MudSelect @bind-Value="@context.PlaybackOrder" For="@(() => context.PlaybackOrder)" Disabled="@(!context.ScheduleAsGroup)" Class="select-in-table">
+                        @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
+                        {
+                            <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
             </MudTd>
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
@@ -96,7 +118,8 @@
                     new MultiCollectionItemEditViewModel
                     {
                         Collection = item.Collection,
-                        ScheduleAsGroup = item.ScheduleAsGroup
+                        ScheduleAsGroup = item.ScheduleAsGroup,
+                        PlaybackOrder = item.PlaybackOrder,
                     }).ToList();
             });
         }
@@ -121,8 +144,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, _model.Items.Map(i => new UpdateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup)).ToList()))).LeftToSeq() :
-                (await _mediator.Send(new CreateMultiCollection(_model.Name, _model.Items.Map(i => new CreateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup)).ToList()))).LeftToSeq();
+                (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, _model.Items.Map(i => new UpdateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup, i.PlaybackOrder)).ToList()))).LeftToSeq() :
+                (await _mediator.Send(new CreateMultiCollection(_model.Name, _model.Items.Map(i => new CreateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup, i.PlaybackOrder)).ToList()))).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
@@ -145,7 +168,8 @@
         {
             _model.Items.Add(new MultiCollectionItemEditViewModel
             {
-                Collection = _selectedCollection
+                Collection = _selectedCollection,
+                PlaybackOrder = PlaybackOrder.Chronological
             });
 
             _selectedCollection = null;

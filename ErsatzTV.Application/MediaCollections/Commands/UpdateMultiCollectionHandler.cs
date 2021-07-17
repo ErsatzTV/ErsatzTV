@@ -54,7 +54,8 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                     {
                         CollectionId = i.CollectionId,
                         MultiCollectionId = c.Id,
-                        ScheduleAsGroup = i.ScheduleAsGroup
+                        ScheduleAsGroup = i.ScheduleAsGroup,
+                        PlaybackOrder = i.PlaybackOrder
                     })
                 .ToList();
             var toRemove = c.MultiCollectionItems
@@ -71,6 +72,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                     i => i.CollectionId == item.CollectionId))
                 {
                     item.ScheduleAsGroup = incoming.ScheduleAsGroup;
+                    item.PlaybackOrder = incoming.PlaybackOrder;
                 }
             }
 

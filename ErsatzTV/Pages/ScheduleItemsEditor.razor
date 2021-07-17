@@ -109,6 +109,15 @@
                                                  SearchFunc="@SearchMediaCollections"
                                                  ToStringFunc="@(c => c?.Name)"/>
                             }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+                            {
+                                <MudAutocomplete Class="mt-3"
+                                                 T="MultiCollectionViewModel"
+                                                 Label="Multi Collection"
+                                                 @bind-value="_selectedItem.MultiCollection"
+                                                 SearchFunc="@SearchMultiCollections"
+                                                 ToStringFunc="@(c => c?.Name)"/>
+                            }
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
                             {
                                 <MudAutocomplete Class="mt-3"
@@ -182,6 +191,7 @@
 
     private ProgramScheduleItemsEditViewModel _schedule;
     private List<MediaCollectionViewModel> _mediaCollections;
+    private List<MultiCollectionViewModel> _multiCollections;
     private List<NamedMediaItemViewModel> _televisionShows;
     private List<NamedMediaItemViewModel> _televisionSeasons;
     private List<NamedMediaItemViewModel> _artists;
@@ -194,6 +204,8 @@
     {
     // TODO: fix performance
         _mediaCollections = await _mediator.Send(new GetAllCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _multiCollections = await _mediator.Send(new GetAllMultiCollections())
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
         _televisionShows = await _mediator.Send(new GetAllTelevisionShows())
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
@@ -225,6 +237,7 @@
             PlayoutMode = item.PlayoutMode,
             CollectionType = item.CollectionType,
             Collection = item.Collection,
+            MultiCollection = item.MultiCollection,
             MediaItem = item.MediaItem,
             CustomTitle = item.CustomTitle
         };
@@ -283,6 +296,9 @@
 
     private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
         _mediaCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value) =>
+        _multiCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
     private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value) =>
         _televisionShows.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();

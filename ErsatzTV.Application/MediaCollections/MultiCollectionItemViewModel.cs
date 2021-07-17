@@ -1,4 +1,10 @@
-﻿namespace ErsatzTV.Application.MediaCollections
+﻿using ErsatzTV.Core.Domain;
+
+namespace ErsatzTV.Application.MediaCollections
 {
-    public record MultiCollectionItemViewModel(int MultiCollectionId, MediaCollectionViewModel Collection, bool ScheduleAsGroup);
+    public record MultiCollectionItemViewModel(
+        int MultiCollectionId,
+        MediaCollectionViewModel Collection,
+        bool ScheduleAsGroup,
+        PlaybackOrder PlaybackOrder);
 }

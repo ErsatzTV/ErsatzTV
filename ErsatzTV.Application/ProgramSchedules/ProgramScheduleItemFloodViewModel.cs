@@ -14,6 +14,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             TimeSpan? startTime,
             ProgramScheduleItemCollectionType collectionType,
             MediaCollectionViewModel collection,
+            MultiCollectionViewModel multiCollection,
             NamedMediaItemViewModel mediaItem,
             string customTitle) : base(
             id,
@@ -23,6 +24,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             PlayoutMode.Flood,
             collectionType,
             collection,
+            multiCollection,
             mediaItem,
             customTitle)
         {

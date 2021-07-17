@@ -54,7 +54,8 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                     MultiCollectionItems = request.Items.Map(i => new MultiCollectionItem
                     {
                         CollectionId = i.CollectionId,
-                        ScheduleAsGroup = i.ScheduleAsGroup
+                        ScheduleAsGroup = i.ScheduleAsGroup,
+                        PlaybackOrder = i.PlaybackOrder
                     }).ToList()
                 });
 
