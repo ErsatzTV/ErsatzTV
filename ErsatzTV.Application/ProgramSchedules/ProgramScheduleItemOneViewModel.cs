@@ -16,6 +16,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             MediaCollectionViewModel collection,
             MultiCollectionViewModel multiCollection,
             NamedMediaItemViewModel mediaItem,
+            PlaybackOrder playbackOrder,
             string customTitle) : base(
             id,
             index,
@@ -26,6 +27,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             collection,
             multiCollection,
             mediaItem,
+            playbackOrder,
             customTitle)
         {
         }

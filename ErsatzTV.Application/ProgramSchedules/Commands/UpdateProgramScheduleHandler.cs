@@ -44,15 +44,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         {
             // we need to rebuild playouts if the playback order or keep multi-episodes has been modified
             bool needToRebuildPlayout =
-                programSchedule.MediaCollectionPlaybackOrder != request.MediaCollectionPlaybackOrder ||
                 programSchedule.KeepMultiPartEpisodesTogether != request.KeepMultiPartEpisodesTogether ||
                 programSchedule.TreatCollectionsAsShows != request.TreatCollectionsAsShows;
 
             programSchedule.Name = request.Name;
-            programSchedule.MediaCollectionPlaybackOrder = request.MediaCollectionPlaybackOrder;
-            programSchedule.KeepMultiPartEpisodesTogether =
-                request.MediaCollectionPlaybackOrder == PlaybackOrder.Shuffle &&
-                request.KeepMultiPartEpisodesTogether;
+            programSchedule.KeepMultiPartEpisodesTogether = request.KeepMultiPartEpisodesTogether;
             programSchedule.TreatCollectionsAsShows = programSchedule.KeepMultiPartEpisodesTogether &&
                                                       request.TreatCollectionsAsShows;
 

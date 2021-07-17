@@ -329,14 +329,16 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
-                    StartTime = null
+                    StartTime = null,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemOne
                 {
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
-                    StartTime = TimeSpan.FromHours(3)
+                    StartTime = TimeSpan.FromHours(3),
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -344,8 +346,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
@@ -409,7 +410,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
-                    StartTime = null
+                    StartTime = null,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemMultiple
                 {
@@ -417,7 +419,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
                     StartTime = TimeSpan.FromHours(3),
-                    Count = 2
+                    Count = 2,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -425,8 +428,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
@@ -495,14 +497,16 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
-                    StartTime = TimeSpan.FromHours(7)
+                    StartTime = TimeSpan.FromHours(7),
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemOne
                 {
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
-                    StartTime = TimeSpan.FromHours(12)
+                    StartTime = TimeSpan.FromHours(12),
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -510,8 +514,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
@@ -579,14 +582,16 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
-                    StartTime = TimeSpan.FromHours(7)
+                    StartTime = TimeSpan.FromHours(7),
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemOne
                 {
                     Index = 2,
                     Collection = fixedCollection,
                     CollectionId = fixedCollection.Id,
-                    StartTime = TimeSpan.FromHours(12)
+                    StartTime = TimeSpan.FromHours(12),
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -594,8 +599,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 Anchor = new PlayoutAnchor
@@ -671,7 +675,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Index = 1,
                     Collection = floodCollection,
                     CollectionId = floodCollection.Id,
-                    StartTime = null
+                    StartTime = null,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemDuration
                 {
@@ -680,7 +685,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     CollectionId = fixedCollection.Id,
                     StartTime = TimeSpan.FromHours(2),
                     PlayoutDuration = TimeSpan.FromHours(2),
-                    OfflineTail = false // immediately continue
+                    OfflineTail = false, // immediately continue
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -688,8 +694,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
@@ -762,7 +767,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Collection = multipleCollection,
                     CollectionId = multipleCollection.Id,
                     StartTime = null,
-                    Count = 2
+                    Count = 2,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemDuration
                 {
@@ -771,7 +777,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     CollectionId = dynamicCollection.Id,
                     StartTime = null,
                     PlayoutDuration = TimeSpan.FromHours(2),
-                    OfflineTail = false // immediately continue
+                    OfflineTail = false, // immediately continue
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -779,8 +786,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
@@ -850,7 +856,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Collection = collectionOne,
                     CollectionId = collectionOne.Id,
                     StartTime = null,
-                    Count = 3
+                    Count = 3,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemMultiple
                 {
@@ -859,7 +866,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Collection = collectionTwo,
                     CollectionId = collectionTwo.Id,
                     StartTime = null,
-                    Count = 3
+                    Count = 3,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -867,8 +875,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 Anchor = new PlayoutAnchor
@@ -945,7 +952,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Collection = collectionOne,
                     CollectionId = collectionOne.Id,
                     StartTime = null,
-                    Count = 0
+                    Count = 0,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemMultiple
                 {
@@ -954,7 +962,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     Collection = collectionTwo,
                     CollectionId = collectionTwo.Id,
                     StartTime = null,
-                    Count = 0
+                    Count = 0,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -962,8 +971,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
             };
@@ -1033,7 +1041,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     CollectionId = collectionOne.Id,
                     StartTime = null,
                     PlayoutDuration = TimeSpan.FromHours(3),
-                    OfflineTail = false
+                    OfflineTail = false,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemDuration
                 {
@@ -1043,7 +1052,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     CollectionId = collectionTwo.Id,
                     StartTime = null,
                     PlayoutDuration = TimeSpan.FromHours(3),
-                    OfflineTail = false
+                    OfflineTail = false,
+                    PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
 
@@ -1051,8 +1061,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             {
                 ProgramSchedule = new ProgramSchedule
                 {
-                    Items = items,
-                    MediaCollectionPlaybackOrder = PlaybackOrder.Chronological
+                    Items = items
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
                 Anchor = new PlayoutAnchor
@@ -1095,13 +1104,14 @@ namespace ErsatzTV.Core.Tests.Scheduling
             return now - now.TimeOfDay + TimeSpan.FromHours(hours);
         }
 
-        private static ProgramScheduleItem Flood(Collection mediaCollection) =>
+        private static ProgramScheduleItem Flood(Collection mediaCollection, PlaybackOrder playbackOrder) =>
             new ProgramScheduleItemFlood
             {
                 Index = 1,
                 Collection = mediaCollection,
                 CollectionId = mediaCollection.Id,
-                StartTime = null
+                StartTime = null,
+                PlaybackOrder = playbackOrder
             };
 
         private static Movie TestMovie(int id, TimeSpan duration, DateTime aired) =>
@@ -1128,12 +1138,12 @@ namespace ErsatzTV.Core.Tests.Scheduling
             var artistRepo = new Mock<IArtistRepository>();
             var builder = new PlayoutBuilder(collectionRepo, televisionRepo, artistRepo.Object, _logger);
 
-            var items = new List<ProgramScheduleItem> { Flood(mediaCollection) };
+            var items = new List<ProgramScheduleItem> { Flood(mediaCollection, playbackOrder) };
 
             var playout = new Playout
             {
                 Id = 1,
-                ProgramSchedule = new ProgramSchedule { Items = items, MediaCollectionPlaybackOrder = playbackOrder },
+                ProgramSchedule = new ProgramSchedule { Items = items },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 

@@ -16,6 +16,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? CollectionId,
         int? MultiCollectionId,
         int? MediaItemId,
+        PlaybackOrder PlaybackOrder,
         int? MultipleCount,
         TimeSpan? PlayoutDuration,
         bool? OfflineTail,

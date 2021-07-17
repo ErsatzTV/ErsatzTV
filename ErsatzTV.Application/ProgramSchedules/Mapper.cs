@@ -9,7 +9,6 @@ namespace ErsatzTV.Application.ProgramSchedules
             new(
                 programSchedule.Id,
                 programSchedule.Name,
-                programSchedule.MediaCollectionPlaybackOrder,
                 programSchedule.KeepMultiPartEpisodesTogether,
                 programSchedule.TreatCollectionsAsShows);
 
@@ -36,6 +35,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
+                        duration.PlaybackOrder,
                         duration.PlayoutDuration,
                         duration.OfflineTail,
                         duration.CustomTitle),
@@ -59,6 +59,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
+                        flood.PlaybackOrder,
                         flood.CustomTitle),
                 ProgramScheduleItemMultiple multiple =>
                     new ProgramScheduleItemMultipleViewModel(
@@ -80,6 +81,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
+                        multiple.PlaybackOrder,
                         multiple.Count,
                         multiple.CustomTitle),
                 ProgramScheduleItemOne one =>
@@ -102,6 +104,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
+                        one.PlaybackOrder,
                         one.CustomTitle),
                 _ => throw new NotSupportedException(
                     $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")

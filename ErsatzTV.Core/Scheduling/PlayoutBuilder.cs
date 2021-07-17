@@ -183,8 +183,11 @@ namespace ErsatzTV.Core.Scheduling
             var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
             foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
             {
+                PlaybackOrder playbackOrder = sortedScheduleItems
+                    .First(item => CollectionKeyForItem(item) == collectionKey)
+                    .PlaybackOrder;
                 IMediaCollectionEnumerator enumerator =
-                    await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems);
+                    await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems, playbackOrder);
                 collectionEnumerators.Add(collectionKey, enumerator);
             }
 
@@ -508,7 +511,8 @@ namespace ErsatzTV.Core.Scheduling
         private async Task<IMediaCollectionEnumerator> GetMediaCollectionEnumerator(
             Playout playout,
             CollectionKey collectionKey,
-            List<MediaItem> mediaItems)
+            List<MediaItem> mediaItems,
+            PlaybackOrder playbackOrder)
         {
             Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors.FirstOrDefault(
                 a => a.ProgramScheduleId == playout.ProgramScheduleId
@@ -537,7 +541,7 @@ namespace ErsatzTV.Core.Scheduling
                 }
             }
             
-            switch (playout.ProgramSchedule.MediaCollectionPlaybackOrder)
+            switch (playbackOrder)
             {
                 case PlaybackOrder.Chronological:
                     return new ChronologicalMediaCollectionEnumerator(mediaItems, state);

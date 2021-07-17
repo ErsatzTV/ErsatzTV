@@ -118,6 +118,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
                     MediaItemId = item.MediaItemId,
+                    PlaybackOrder = item.PlaybackOrder,
                     CustomTitle = item.CustomTitle
                 },
                 PlayoutMode.One => new ProgramScheduleItemOne
@@ -129,6 +130,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
                     MediaItemId = item.MediaItemId,
+                    PlaybackOrder = item.PlaybackOrder,
                     CustomTitle = item.CustomTitle
                 },
                 PlayoutMode.Multiple => new ProgramScheduleItemMultiple
@@ -140,6 +142,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
                     MediaItemId = item.MediaItemId,
+                    PlaybackOrder = item.PlaybackOrder,
                     Count = item.MultipleCount.GetValueOrDefault(),
                     CustomTitle = item.CustomTitle
                 },
@@ -152,6 +155,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
                     MediaItemId = item.MediaItemId,
+                    PlaybackOrder = item.PlaybackOrder,
                     PlayoutDuration = FixDuration(item.PlayoutDuration.GetValueOrDefault()),
                     OfflineTail = item.OfflineTail.GetValueOrDefault(),
                     CustomTitle = item.CustomTitle

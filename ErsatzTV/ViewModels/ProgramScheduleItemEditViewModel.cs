@@ -45,6 +45,11 @@ namespace ErsatzTV.ViewModels
                     OnPropertyChanged(nameof(MultiCollection));
                     OnPropertyChanged(nameof(MediaItem));
                 }
+
+                if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
+                {
+                    PlaybackOrder = PlaybackOrder.Shuffle;
+                }
             }
         }
 
@@ -61,6 +66,8 @@ namespace ErsatzTV.ViewModels
             ProgramScheduleItemCollectionType.MultiCollection => MultiCollection?.Name,
             _ => string.Empty
         };
+
+        public PlaybackOrder PlaybackOrder { get; set; }
 
         public int? MultipleCount
         {

@@ -145,6 +145,12 @@
                                                  SearchFunc="@SearchArtists"
                                                  ToStringFunc="@(s => s?.Name)"/>
                             }
+                            <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)" Disabled="@(_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)">
+                                @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
+                                {
+                                    <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
+                                }
+                            </MudSelect>
                             <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
                                 @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
                                 {
@@ -239,6 +245,7 @@
             Collection = item.Collection,
             MultiCollection = item.MultiCollection,
             MediaItem = item.MediaItem,
+            PlaybackOrder = item.PlaybackOrder,
             CustomTitle = item.CustomTitle
         };
 
@@ -263,6 +270,7 @@
             Index = _schedule.Items.Map(i => i.Index).DefaultIfEmpty().Max() + 1,
             StartType = StartType.Dynamic,
             PlayoutMode = PlayoutMode.One,
+            PlaybackOrder = PlaybackOrder.Shuffle,
             CollectionType = ProgramScheduleItemCollectionType.Collection
         };
 
@@ -320,6 +328,7 @@
             item.Collection?.Id,
             item.MultiCollection?.Id,
             item.MediaItem?.MediaItemId,
+            item.PlaybackOrder,
             item.MultipleCount,
             item.PlayoutDuration,
             item.PlayoutMode == PlayoutMode.Duration ? item.OfflineTail.IfNone(false) : null,
