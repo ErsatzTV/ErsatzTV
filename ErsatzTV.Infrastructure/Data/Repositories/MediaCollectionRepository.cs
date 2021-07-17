@@ -50,6 +50,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return result.Distinct().ToList();
         }
 
+        public Task<List<MediaItem>> GetMultiCollectionItems(int id) => throw new System.NotImplementedException();
+
         public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) =>
             _dbConnection.QueryAsync<int>(
                     @"SELECT DISTINCT p.PlayoutId
