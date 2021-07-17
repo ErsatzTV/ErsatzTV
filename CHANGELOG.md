@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix release notes on home page with `-alpha` suffix
 - Fix linux-arm release by including SQLite interop artifacts
+- Fix issue where cached Plex credentials may become invalid when multiple servers are used
 
 ## [0.0.50-alpha] - 2021-07-13
 ### Added
