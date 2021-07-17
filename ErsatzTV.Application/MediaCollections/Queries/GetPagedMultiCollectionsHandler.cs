@@ -37,6 +37,8 @@ namespace ErsatzTV.Application.MediaCollections.Queries
                     LIMIT {0} OFFSET {1}",
                     request.PageSize,
                     request.PageNum * request.PageSize)
+                .Include(mc => mc.MultiCollectionItems)
+                .ThenInclude(i => i.Collection)
                 .ToListAsync(cancellationToken)
                 .Map(list => list.Map(ProjectToViewModel).ToList());
 

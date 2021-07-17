@@ -1,16 +1,16 @@
-﻿@page "/media/collections/{Id:int}/edit"
-@page "/media/collections/add"
+﻿@page "/media/multi-collections/{Id:int}/edit"
+@page "/media/multi-collections/add"
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
-@inject NavigationManager _navigationManager
-@inject ILogger<CollectionEditor> _logger
-@inject ISnackbar _snackbar
 @inject IMediator _mediator
+@inject NavigationManager _navigationManager
+@inject ISnackbar _snackbar
+@inject ILogger<MultiCollectionEditor> _logger
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <div style="max-width: 400px;">
-        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Collection" : "Add Collection")</MudText>
+        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Multi Collection" : "Add Multi Collection")</MudText>
 
         <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
             <FluentValidator/>
@@ -20,7 +20,7 @@
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
-                        @(IsEdit ? "Save Changes" : "Add Collection")
+                        @(IsEdit ? "Save Changes" : "Add Multi Collection")
                     </MudButton>
                 </MudCardActions>
             </MudCard>
@@ -29,28 +29,38 @@
 </MudContainer>
 
 @code {
-
     [Parameter]
     public int Id { get; set; }
 
-    private readonly CollectionEditViewModel _model = new();
+    private readonly MultiCollectionEditViewModel _model = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
-
+    private List<MediaCollectionViewModel> _collections;
+    
     protected override async Task OnParametersSetAsync()
     {
+        _collections = await _mediator.Send(new GetAllCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
         if (IsEdit)
         {
-            Option<MediaCollectionViewModel> maybeCollection = await _mediator.Send(new GetCollectionById(Id));
+            Option<MultiCollectionViewModel> maybeCollection = await _mediator.Send(new GetMultiCollectionById(Id));
             maybeCollection.IfSome(collection =>
             {
                 _model.Id = collection.Id;
                 _model.Name = collection.Name;
+                _model.Items = collection.Items.Map(item =>
+                    new MultiCollectionItemEditViewModel
+                    {
+                        Collection = item.Collection,
+                        ScheduleAsGroup = item.ScheduleAsGroup
+                    }).ToList();
             });
         }
         else
         {
-            _model.Name = "New Collection";
+            _model.Name = "New Multi Collection";
+            _model.Items = new List<MultiCollectionItemEditViewModel>();
         }
     }
 
@@ -68,8 +78,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(new UpdateCollection(Id, _model.Name))).LeftToSeq() :
-                (await _mediator.Send(new CreateCollection(_model.Name))).LeftToSeq();
+                (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, _model.Items.Map(i => new UpdateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup)).ToList()))).LeftToSeq() :
+                (await _mediator.Send(new CreateMultiCollection(_model.Name, _model.Items.Map(i => new CreateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup)).ToList()))).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
@@ -77,7 +87,7 @@
                     _snackbar.Add(error.Value, Severity.Error);
                     _logger.LogError("Error saving collection: {Error}", error.Value);
                 },
-                () => _navigationManager.NavigateTo(_model.Id > 0 ? $"/media/collections/{_model.Id}" : "/media/collections"));
+                () => _navigationManager.NavigateTo("/media/collections"));
         }
     }
 

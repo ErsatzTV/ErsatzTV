@@ -18,8 +18,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Name = table.Column<string>(type: "TEXT", nullable: true),
-                    ProgramScheduleItemId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Name = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -54,8 +53,7 @@ namespace ErsatzTV.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_ProgramScheduleItem_MultiCollectionId",
                 table: "ProgramScheduleItem",
-                column: "MultiCollectionId",
-                unique: true);
+                column: "MultiCollectionId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MultiCollectionItem_CollectionId",

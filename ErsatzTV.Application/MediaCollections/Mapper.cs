@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Linq;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.MediaCollections
 {
@@ -8,6 +9,15 @@ namespace ErsatzTV.Application.MediaCollections
             new(collection.Id, collection.Name);
 
         internal static MultiCollectionViewModel ProjectToViewModel(MultiCollection multiCollection) =>
-            new(multiCollection.Id, multiCollection.Name);
+            new(
+                multiCollection.Id,
+                multiCollection.Name,
+                multiCollection.MultiCollectionItems.Map(ProjectToViewModel).ToList());
+
+        private static MultiCollectionItemViewModel ProjectToViewModel(MultiCollectionItem multiCollectionItem) =>
+            new(
+                multiCollectionItem.MultiCollectionId,
+                ProjectToViewModel(multiCollectionItem.Collection),
+                multiCollectionItem.ScheduleAsGroup);
     }
 }

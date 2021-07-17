@@ -953,9 +953,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("ProgramScheduleItemId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.ToTable("MultiCollection");
@@ -1222,8 +1219,7 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.HasIndex("MediaItemId");
 
-                    b.HasIndex("MultiCollectionId")
-                        .IsUnique();
+                    b.HasIndex("MultiCollectionId");
 
                     b.HasIndex("ProgramScheduleId");
 
@@ -2394,8 +2390,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ErsatzTV.Core.Domain.MultiCollection", "MultiCollection")
-                        .WithOne("ProgramScheduleItem")
-                        .HasForeignKey("ErsatzTV.Core.Domain.ProgramScheduleItem", "MultiCollectionId")
+                        .WithMany()
+                        .HasForeignKey("MultiCollectionId")
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("ErsatzTV.Core.Domain.ProgramSchedule", "ProgramSchedule")
@@ -2922,8 +2918,6 @@ namespace ErsatzTV.Infrastructure.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.MultiCollection", b =>
                 {
                     b.Navigation("MultiCollectionItems");
-
-                    b.Navigation("ProgramScheduleItem");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoMetadata", b =>

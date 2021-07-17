@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Application.MediaCollections
+﻿using System.Collections.Generic;
+
+namespace ErsatzTV.Application.MediaCollections
 {
-    public record MultiCollectionViewModel(int Id, string Name);
+    public record MultiCollectionViewModel(int Id, string Name, List<MultiCollectionItemViewModel> Items);
 }
