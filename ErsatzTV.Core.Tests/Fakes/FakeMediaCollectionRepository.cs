@@ -19,6 +19,10 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<List<MediaItem>> GetItems(int id) => _data[id].ToList().AsTask();
         public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) => throw new NotSupportedException();
+
+        public Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId) =>
+            throw new NotSupportedException();
+
         public Task<bool> IsCustomPlaybackOrder(int collectionId) => false.AsTask();
     }
 }

@@ -52,12 +52,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) =>
             _dbConnection.QueryAsync<int>(
-                    @"SELECT DISTINCT p.Id
-                    FROM Playout p
-                    INNER JOIN ProgramSchedule PS on p.ProgramScheduleId = PS.Id
-                    INNER JOIN ProgramScheduleItem PSI on p.Anchor_NextScheduleItemId = PSI.Id
-                    WHERE PSI.CollectionId = @CollectionId",
+                    @"SELECT DISTINCT p.PlayoutId
+                    FROM PlayoutProgramScheduleAnchor p
+                    WHERE p.CollectionId = @CollectionId",
                     new { CollectionId = collectionId })
+                .Map(result => result.ToList());
+
+        public Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId) =>
+            _dbConnection.QueryAsync<int>(
+                    @"SELECT DISTINCT p.PlayoutId
+                    FROM PlayoutProgramScheduleAnchor p
+                    WHERE p.MultiCollectionId = @MultiCollectionId",
+                    new { MultiCollectionId = multiCollectionId })
                 .Map(result => result.ToList());
 
         public Task<bool> IsCustomPlaybackOrder(int collectionId) =>

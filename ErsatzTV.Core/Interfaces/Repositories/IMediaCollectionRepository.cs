@@ -10,6 +10,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id);
         Task<List<MediaItem>> GetItems(int id);
         Task<List<int>> PlayoutIdsUsingCollection(int collectionId);
+        Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId);
         Task<bool> IsCustomPlaybackOrder(int collectionId);
     }
 }

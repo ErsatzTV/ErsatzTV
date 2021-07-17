@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    [Migration("20210717104913_Add_MultiCollection")]
+    [Migration("20210717153022_Add_MultiCollection")]
     partial class Add_MultiCollection
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1096,6 +1096,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int?>("MediaItemId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("MultiCollectionId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("PlayoutId")
                         .HasColumnType("INTEGER");
 
@@ -1107,6 +1110,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("CollectionId");
 
                     b.HasIndex("MediaItemId");
+
+                    b.HasIndex("MultiCollectionId");
 
                     b.HasIndex("PlayoutId");
 
@@ -2315,6 +2320,11 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasForeignKey("MediaItemId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("ErsatzTV.Core.Domain.MultiCollection", "MultiCollection")
+                        .WithMany()
+                        .HasForeignKey("MultiCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("ErsatzTV.Core.Domain.Playout", "Playout")
                         .WithMany("ProgramScheduleAnchors")
                         .HasForeignKey("PlayoutId")
@@ -2351,6 +2361,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("EnumeratorState");
 
                     b.Navigation("MediaItem");
+
+                    b.Navigation("MultiCollection");
 
                     b.Navigation("Playout");
 

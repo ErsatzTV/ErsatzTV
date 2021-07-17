@@ -17,15 +17,56 @@
             <MudCard>
                 <MudCardContent>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudAutocomplete @ref="_collectionAutocomplete"
+                                     Class="mt-4"
+                                     T="MediaCollectionViewModel"
+                                     Label="Collection"
+                                     @bind-value="_selectedCollection"
+                                     SearchFunc="@SearchCollections"
+                                     ToStringFunc="@(c => c?.Name)"/>
                 </MudCardContent>
                 <MudCardActions>
-                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddCollection())" Class="ml-2">
+                        Add Collection
+                    </MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2 ml-auto">
                         @(IsEdit ? "Save Changes" : "Add Multi Collection")
                     </MudButton>
                 </MudCardActions>
             </MudCard>
         </EditForm>
     </div>
+
+    <MudTable Hover="true" Items="_model.Items.OrderBy(i => i.Collection.Name, StringComparer.CurrentCultureIgnoreCase)" Dense="true" Class="mt-6">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">@_model.Name Items</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col style="width: 60px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Collection</MudTh>
+            <MudTh>Schedule As Group</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Collection">
+                <MudText Typo="Typo.body2">
+                    @context.Collection.Name
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Schedule As Group">
+                <MudCheckBox @bind-Checked="@context.ScheduleAsGroup" For="@(() => context.ScheduleAsGroup)"/>
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               OnClick="@(_ => RemoveCollection(context))">
+                </MudIconButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
 </MudContainer>
 
 @code {
@@ -36,6 +77,8 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
     private List<MediaCollectionViewModel> _collections;
+    private MediaCollectionViewModel _selectedCollection;
+    private MudAutocomplete<MediaCollectionViewModel> _collectionAutocomplete;
     
     protected override async Task OnParametersSetAsync()
     {
@@ -90,5 +133,27 @@
                 () => _navigationManager.NavigateTo("/media/collections"));
         }
     }
+
+    private void RemoveCollection(MultiCollectionItemEditViewModel item)
+    {
+        _model.Items.Remove(item);
+    }
+
+    private void AddCollection()
+    {
+        if (_model.Items.All(i => i.Collection != _selectedCollection))
+        {
+            _model.Items.Add(new MultiCollectionItemEditViewModel
+            {
+                Collection = _selectedCollection
+            });
+
+            _selectedCollection = null;
+            _collectionAutocomplete.Reset();
+        }
+    }
+
+    private Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value) =>
+        _collections.Filter(c => _model.Items.All(i => i.Collection != c) && c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
 }

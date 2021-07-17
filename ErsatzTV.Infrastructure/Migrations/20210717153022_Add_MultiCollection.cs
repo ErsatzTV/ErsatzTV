@@ -12,6 +12,12 @@ namespace ErsatzTV.Infrastructure.Migrations
                 type: "INTEGER",
                 nullable: true);
 
+            migrationBuilder.AddColumn<int>(
+                name: "MultiCollectionId",
+                table: "PlayoutProgramScheduleAnchor",
+                type: "INTEGER",
+                nullable: true);
+
             migrationBuilder.CreateTable(
                 name: "MultiCollection",
                 columns: table => new
@@ -56,9 +62,22 @@ namespace ErsatzTV.Infrastructure.Migrations
                 column: "MultiCollectionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PlayoutProgramScheduleAnchor_MultiCollectionId",
+                table: "PlayoutProgramScheduleAnchor",
+                column: "MultiCollectionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_MultiCollectionItem_CollectionId",
                 table: "MultiCollectionItem",
                 column: "CollectionId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_PlayoutProgramScheduleAnchor_MultiCollection_MultiCollectionId",
+                table: "PlayoutProgramScheduleAnchor",
+                column: "MultiCollectionId",
+                principalTable: "MultiCollection",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ProgramScheduleItem_MultiCollection_MultiCollectionId",
@@ -71,6 +90,10 @@ namespace ErsatzTV.Infrastructure.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_PlayoutProgramScheduleAnchor_MultiCollection_MultiCollectionId",
+                table: "PlayoutProgramScheduleAnchor");
+
             migrationBuilder.DropForeignKey(
                 name: "FK_ProgramScheduleItem_MultiCollection_MultiCollectionId",
                 table: "ProgramScheduleItem");
@@ -85,9 +108,17 @@ namespace ErsatzTV.Infrastructure.Migrations
                 name: "IX_ProgramScheduleItem_MultiCollectionId",
                 table: "ProgramScheduleItem");
 
+            migrationBuilder.DropIndex(
+                name: "IX_PlayoutProgramScheduleAnchor_MultiCollectionId",
+                table: "PlayoutProgramScheduleAnchor");
+
             migrationBuilder.DropColumn(
                 name: "MultiCollectionId",
                 table: "ProgramScheduleItem");
+
+            migrationBuilder.DropColumn(
+                name: "MultiCollectionId",
+                table: "PlayoutProgramScheduleAnchor");
         }
     }
 }

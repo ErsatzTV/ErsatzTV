@@ -36,6 +36,11 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         {
             await dbContext.MultiCollections.AddAsync(multiCollection);
             await dbContext.SaveChangesAsync();
+            await dbContext.Entry(multiCollection)
+                .Collection(c => c.MultiCollectionItems)
+                .Query()
+                .Include(i => i.Collection)
+                .LoadAsync();
             return ProjectToViewModel(multiCollection);
         }
 
