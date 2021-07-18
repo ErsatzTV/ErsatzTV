@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.0.51-alpha] - 2021-07-18
 ### Added
 - Add `Multi Collection` to support shuffling multiple collections within a single schedule item
   - Collections within a multi collection are optionally grouped together and ordered when scheduling; this can be useful for franchises
@@ -518,7 +520,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.50-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.51-alpha...HEAD
+[0.0.51-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.50-alpha...v0.0.51-alpha
 [0.0.50-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.49-prealpha...v0.0.50-alpha
 [0.0.49-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.48-prealpha...v0.0.49-prealpha
 [0.0.48-prealpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.47-prealpha...v0.0.48-prealpha
