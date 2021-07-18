@@ -24,5 +24,6 @@
         public static ConfigElementKey PlayoutsDetailPageSize => new("pages.playouts.detail_page_size");
         public static ConfigElementKey LogsPageSize => new("pages.logs.page_size");
         public static ConfigElementKey LibraryRefreshInterval => new("scanner.library_refresh_interval");
+        public static ConfigElementKey PlayoutDaysToBuild => new("playout.days_to_build");
     }
 }

@@ -20,25 +20,29 @@ namespace ErsatzTV.Core.Scheduling
         private static readonly Random Random = new();
         private readonly IArtistRepository _artistRepository;
         private readonly ILogger<PlayoutBuilder> _logger;
+        private readonly IConfigElementRepository _configElementRepository;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public PlayoutBuilder(
+            IConfigElementRepository configElementRepository,
             IMediaCollectionRepository mediaCollectionRepository,
             ITelevisionRepository televisionRepository,
             IArtistRepository artistRepository,
             ILogger<PlayoutBuilder> logger)
         {
+            _configElementRepository = configElementRepository;
             _mediaCollectionRepository = mediaCollectionRepository;
             _televisionRepository = televisionRepository;
             _artistRepository = artistRepository;
             _logger = logger;
         }
 
-        public Task<Playout> BuildPlayoutItems(Playout playout, bool rebuild = false)
+        public async Task<Playout> BuildPlayoutItems(Playout playout, bool rebuild = false)
         {
             DateTimeOffset now = DateTimeOffset.Now;
-            return BuildPlayoutItems(playout, now, now.AddDays(2), rebuild);
+            Option<int> daysToBuild = await _configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild);
+            return await BuildPlayoutItems(playout, now, now.AddDays(await daysToBuild.IfNoneAsync(2)), rebuild);
         }
 
         public async Task<Playout> BuildPlayoutItems(
@@ -392,21 +396,25 @@ namespace ErsatzTV.Core.Scheduling
 
             // once more to get playout anchor
             ProgramScheduleItem nextScheduleItem = sortedScheduleItems[index % sortedScheduleItems.Count];
-            playout.Anchor = new PlayoutAnchor
-            {
-                NextScheduleItem = nextScheduleItem,
-                NextScheduleItemId = nextScheduleItem.Id,
-                NextStart = GetStartTimeAfter(nextScheduleItem, currentTime).UtcDateTime,
-                MultipleRemaining = multipleRemaining.IsSome ? multipleRemaining.ValueUnsafe() : null,
-                DurationFinish = durationFinish.IsSome ? durationFinish.ValueUnsafe().UtcDateTime : null,
-                InFlood = inFlood
-            };
 
             // build program schedule anchors
             playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
 
             // remove any items outside the desired range
             playout.Items.RemoveAll(old => old.FinishOffset < playoutStart || old.StartOffset > playoutFinish);
+
+            DateTimeOffset maxStartTime = playout.Items.Max(i => i.FinishOffset);
+            DateTimeOffset minCurrentTime = maxStartTime < currentTime ? maxStartTime : currentTime;
+            
+            playout.Anchor = new PlayoutAnchor
+            {
+                NextScheduleItem = nextScheduleItem,
+                NextScheduleItemId = nextScheduleItem.Id,
+                NextStart = GetStartTimeAfter(nextScheduleItem, minCurrentTime).UtcDateTime,
+                MultipleRemaining = multipleRemaining.IsSome ? multipleRemaining.ValueUnsafe() : null,
+                DurationFinish = durationFinish.IsSome ? durationFinish.ValueUnsafe().UtcDateTime : null,
+                InFlood = inFlood
+            };
 
             return playout;
         }
