@@ -351,9 +351,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -433,9 +439,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(7);
@@ -519,9 +531,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(24);
@@ -611,9 +629,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 }
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(32);
@@ -699,9 +723,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -791,9 +821,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" }
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
@@ -887,9 +923,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 }
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(5);
@@ -976,9 +1018,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(5);
@@ -1073,9 +1121,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 }
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(fakeRepository, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                fakeRepository,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(5);
@@ -1133,10 +1187,16 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 MediaItems = mediaItems
             };
 
+            var configRepo = new Mock<IConfigElementRepository>();
             var collectionRepo = new FakeMediaCollectionRepository(Map((mediaCollection.Id, mediaItems)));
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
-            var builder = new PlayoutBuilder(collectionRepo, televisionRepo, artistRepo.Object, _logger);
+            var builder = new PlayoutBuilder(
+                configRepo.Object,
+                collectionRepo,
+                televisionRepo,
+                artistRepo.Object,
+                _logger);
 
             var items = new List<ProgramScheduleItem> { Flood(mediaCollection, playbackOrder) };
 
