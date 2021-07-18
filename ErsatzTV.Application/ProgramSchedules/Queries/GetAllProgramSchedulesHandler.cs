@@ -24,7 +24,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
                     ps => new ProgramScheduleViewModel(
                         ps.Id,
                         ps.Name,
-                        ps.MediaCollectionPlaybackOrder,
                         ps.KeepMultiPartEpisodesTogether,
                         ps.TreatCollectionsAsShows))
                 .ToListAsync(cancellationToken);

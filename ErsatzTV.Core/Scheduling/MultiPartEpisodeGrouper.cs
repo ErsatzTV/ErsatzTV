@@ -77,7 +77,7 @@ namespace ErsatzTV.Core.Scheduling
                                     // add to current group
                                     List<MediaItem> additional = group.Additional ?? new List<MediaItem>();
                                     additional.Add(episode);
-                                    group = group with { Additional = additional };
+                                    group = new GroupedMediaItem(group.First, additional);
                                 }
                                 else
                                 {
@@ -150,22 +150,6 @@ namespace ErsatzTV.Core.Scheduling
             }
 
             return None;
-        }
-
-        public static IList<MediaItem> FlattenGroups(GroupedMediaItem[] copy, int mediaItemCount)
-        {
-            var result = new MediaItem[mediaItemCount];
-            var i = 0;
-            foreach (GroupedMediaItem group in copy)
-            {
-                result[i++] = group.First;
-                foreach (MediaItem additional in Optional(group.Additional).Flatten())
-                {
-                    result[i++] = additional;
-                }
-            }
-
-            return result;
         }
 
         private static bool TryParseRoman(string input, out int output)

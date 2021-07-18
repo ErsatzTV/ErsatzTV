@@ -51,37 +51,35 @@ namespace ErsatzTV.Infrastructure.Plex
                         .Append(httpsResources.Filter(resource => resource.HttpsRequired))
                         .ToList();
 
-                    IEnumerable<PlexMediaSource> sources = await allResources
+                    IEnumerable<PlexResource> ownedResources = allResources
                         .Filter(r => r.Provides.Split(",").Any(p => p == "server"))
-                        .Filter(r => r.Owned) // TODO: maybe support non-owned servers in the future
-                        .Map(
-                            async resource =>
-                            {
-                                var serverAuthToken = new PlexServerAuthToken(
-                                    resource.ClientIdentifier,
-                                    resource.AccessToken);
+                        .Filter(r => r.Owned); // TODO: maybe support non-owned servers in the future
 
-                                await _plexSecretStore.UpsertServerAuthToken(serverAuthToken);
-                                List<PlexResourceConnection> sortedConnections = resource.HttpsRequired
-                                    ? resource.Connections
-                                    : resource.Connections.OrderBy(c => c.Local ? 0 : 1).ToList();
 
-                                var source = new PlexMediaSource
-                                {
-                                    ServerName = resource.Name,
-                                    ProductVersion = resource.ProductVersion,
-                                    Platform = resource.Platform,
-                                    PlatformVersion = resource.PlatformVersion,
-                                    ClientIdentifier = resource.ClientIdentifier,
-                                    Connections = sortedConnections
-                                        .Map(c => new PlexConnection { Uri = c.Uri }).ToList()
-                                };
+                    foreach (PlexResource resource in ownedResources)
+                    {
+                        var serverAuthToken = new PlexServerAuthToken(
+                            resource.ClientIdentifier,
+                            resource.AccessToken);
 
-                                return source;
-                            })
-                        .Sequence();
+                        await _plexSecretStore.UpsertServerAuthToken(serverAuthToken);
+                        List<PlexResourceConnection> sortedConnections = resource.HttpsRequired
+                            ? resource.Connections
+                            : resource.Connections.OrderBy(c => c.Local ? 0 : 1).ToList();
 
-                    result.AddRange(sources);
+                        var source = new PlexMediaSource
+                        {
+                            ServerName = resource.Name,
+                            ProductVersion = resource.ProductVersion,
+                            Platform = resource.Platform,
+                            PlatformVersion = resource.PlatformVersion,
+                            ClientIdentifier = resource.ClientIdentifier,
+                            Connections = sortedConnections
+                                .Map(c => new PlexConnection { Uri = c.Uri }).ToList()
+                        };
+
+                        result.Add(source);
+                    }
                 }
 
                 return result;

@@ -6,7 +6,6 @@ namespace ErsatzTV.Core.Domain
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public PlaybackOrder MediaCollectionPlaybackOrder { get; set; }
         public bool KeepMultiPartEpisodesTogether { get; set; }
         public bool TreatCollectionsAsShows { get; set; }
         public List<ProgramScheduleItem> Items { get; set; }

@@ -13,7 +13,9 @@ namespace ErsatzTV.Application.ProgramSchedules
         PlayoutMode PlayoutMode,
         ProgramScheduleItemCollectionType CollectionType,
         MediaCollectionViewModel Collection,
+        MultiCollectionViewModel MultiCollection,
         NamedMediaItemViewModel MediaItem,
+        PlaybackOrder PlaybackOrder,
         string CustomTitle)
     {
         public string Name => CollectionType switch
@@ -25,6 +27,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                 MediaItem?.Name, // $"{TelevisionSeason?.Title} ({TelevisionSeason?.Plot})",
             ProgramScheduleItemCollectionType.Artist =>
                 MediaItem?.Name,
+            ProgramScheduleItemCollectionType.MultiCollection =>
+                MultiCollection?.Name,
             _ => string.Empty
         };
     }

@@ -20,7 +20,6 @@
         </ToolBarContent>
         <ColGroup>
             <col/>
-            <col/>
             <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
@@ -29,12 +28,10 @@
                     Name
                 </MudTableSortLabel>
             </MudTh>
-            <MudTh>Collection Playback Order</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Name">@context.MediaCollectionPlaybackOrder</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Properties">

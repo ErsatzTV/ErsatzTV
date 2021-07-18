@@ -1,0 +1,171 @@
+﻿@page "/media/multi-collections/{Id:int}/edit"
+@page "/media/multi-collections/add"
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.MediaCollections.Queries
+@inject IMediator _mediator
+@inject NavigationManager _navigationManager
+@inject ISnackbar _snackbar
+@inject ILogger<MultiCollectionEditor> _logger
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div style="max-width: 400px;">
+        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Multi Collection" : "Add Multi Collection")</MudText>
+
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudAutocomplete @ref="_collectionAutocomplete"
+                                     Class="mt-4"
+                                     T="MediaCollectionViewModel"
+                                     Label="Collection"
+                                     @bind-value="_selectedCollection"
+                                     SearchFunc="@SearchCollections"
+                                     ToStringFunc="@(c => c?.Name)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddCollection())" Class="ml-2">
+                        Add Collection
+                    </MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2 ml-auto">
+                        @(IsEdit ? "Save Changes" : "Add Multi Collection")
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+
+    <MudTable Hover="true" Items="_model.Items.OrderBy(i => i.Collection.Name, StringComparer.CurrentCultureIgnoreCase)" Dense="true" Class="mt-6">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">@_model.Name Items</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col style="width: 20%"/>
+            <col style="width: 30%"/>
+            <col style="width: 60px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Collection</MudTh>
+            <MudTh>Schedule As Group</MudTh>
+            <MudTh>Playback Order</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Collection">
+                <MudText Typo="Typo.body2">
+                    @context.Collection.Name
+                </MudText>
+            </MudTd>
+            <MudTd DataLabel="Schedule As Group">
+                <MudCheckBox @bind-Checked="@context.ScheduleAsGroup" For="@(() => context.ScheduleAsGroup)"/>
+            </MudTd>
+            <MudTd DataLabel="Playback Order">
+                @if (context.ScheduleAsGroup)
+                {
+                    <MudText Typo="Typo.body2">
+                        @(context.Collection.UseCustomPlaybackOrder ? "Custom" : "Chronological")
+                    </MudText>
+                }
+            </MudTd>
+            <MudTd>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                               OnClick="@(_ => RemoveCollection(context))">
+                </MudIconButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private readonly MultiCollectionEditViewModel _model = new();
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
+    private List<MediaCollectionViewModel> _collections;
+    private MediaCollectionViewModel _selectedCollection;
+    private MudAutocomplete<MediaCollectionViewModel> _collectionAutocomplete;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _collections = await _mediator.Send(new GetAllCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
+        if (IsEdit)
+        {
+            Option<MultiCollectionViewModel> maybeCollection = await _mediator.Send(new GetMultiCollectionById(Id));
+            maybeCollection.IfSome(collection =>
+            {
+                _model.Id = collection.Id;
+                _model.Name = collection.Name;
+                _model.Items = collection.Items.Map(item =>
+                    new MultiCollectionItemEditViewModel
+                    {
+                        Collection = item.Collection,
+                        ScheduleAsGroup = item.ScheduleAsGroup,
+                        PlaybackOrder = item.PlaybackOrder,
+                    }).ToList();
+            });
+        }
+        else
+        {
+            _model.Name = "New Multi Collection";
+            _model.Items = new List<MultiCollectionItemEditViewModel>();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private bool IsEdit => Id != 0;
+
+    private async Task HandleSubmitAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            Seq<BaseError> errorMessage = IsEdit ?
+                (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, _model.Items.Map(i => new UpdateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup, i.PlaybackOrder)).ToList()))).LeftToSeq() :
+                (await _mediator.Send(new CreateMultiCollection(_model.Name, _model.Items.Map(i => new CreateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup, i.PlaybackOrder)).ToList()))).LeftToSeq();
+
+            errorMessage.HeadOrNone().Match(
+                error =>
+                {
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Error saving collection: {Error}", error.Value);
+                },
+                () => _navigationManager.NavigateTo("/media/collections"));
+        }
+    }
+
+    private void RemoveCollection(MultiCollectionItemEditViewModel item)
+    {
+        _model.Items.Remove(item);
+    }
+
+    private void AddCollection()
+    {
+        if (_selectedCollection != null && _model.Items.All(i => i.Collection != _selectedCollection))
+        {
+            _model.Items.Add(new MultiCollectionItemEditViewModel
+            {
+                Collection = _selectedCollection,
+                PlaybackOrder = PlaybackOrder.Chronological
+            });
+
+            _selectedCollection = null;
+            _collectionAutocomplete.Reset();
+        }
+    }
+
+    private Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value) =>
+        _collections.Filter(c => _model.Items.All(i => i.Collection != c) && c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+}

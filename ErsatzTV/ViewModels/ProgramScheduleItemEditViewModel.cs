@@ -38,15 +38,23 @@ namespace ErsatzTV.ViewModels
                     _collectionType = value;
 
                     Collection = null;
+                    MultiCollection = null;
                     MediaItem = null;
 
                     OnPropertyChanged(nameof(Collection));
+                    OnPropertyChanged(nameof(MultiCollection));
                     OnPropertyChanged(nameof(MediaItem));
+                }
+
+                if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
+                {
+                    PlaybackOrder = PlaybackOrder.Shuffle;
                 }
             }
         }
 
         public MediaCollectionViewModel Collection { get; set; }
+        public MultiCollectionViewModel MultiCollection { get; set; }
         public NamedMediaItemViewModel MediaItem { get; set; }
 
         public string CollectionName => CollectionType switch
@@ -55,8 +63,11 @@ namespace ErsatzTV.ViewModels
             ProgramScheduleItemCollectionType.TelevisionShow => MediaItem?.Name,
             ProgramScheduleItemCollectionType.TelevisionSeason => MediaItem?.Name,
             ProgramScheduleItemCollectionType.Artist => MediaItem?.Name,
+            ProgramScheduleItemCollectionType.MultiCollection => MultiCollection?.Name,
             _ => string.Empty
         };
+
+        public PlaybackOrder PlaybackOrder { get; set; }
 
         public int? MultipleCount
         {
