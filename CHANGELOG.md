@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add `Multi Collection` to support shuffling multiple collections within a single schedule item
   - Collections within a multi collection are optionally grouped together and ordered when scheduling; this can be useful for franchises
+- Add `Playout Days To Build` setting to control how many days of playout data/program guide data should be built into the future
 
 ### Changed
 - Move `Playback Order` from schedule to schedule items
