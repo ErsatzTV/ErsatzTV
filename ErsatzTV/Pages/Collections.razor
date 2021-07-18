@@ -9,11 +9,20 @@
 @inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true"
-              @bind-RowsPerPage="@_rowsPerPage"
-              ServerData="@(new Func<TableState, Task<TableData<MediaCollectionViewModel>>>(ServerReload))"
+    <div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add">
+            Add Collection
+        </MudButton>
+        <MudButton Class="ml-3" Variant="Variant.Filled" Color="Color.Primary" Link="/media/multi-collections/add">
+            Add Multi Collection
+        </MudButton>
+    </div>
+    <MudTable Class="mt-4"
+              Hover="true"
+              @bind-RowsPerPage="@_collectionsRowsPerPage"
+              ServerData="@(new Func<TableState, Task<TableData<MediaCollectionViewModel>>>(ServerReloadCollections))"
               Dense="true"
-              @ref="_table">
+              @ref="_collectionsTable">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Collections</MudText>
         </ToolBarContent>
@@ -46,43 +55,104 @@
             <MudTablePager/>
         </PagerContent>
     </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/collections/add" Class="mt-4">
-        Add Collection
-    </MudButton>
+    <MudTable Class="mt-4"
+              Hover="true"
+              @bind-RowsPerPage="@_multiCollectionsRowsPerPage"
+              ServerData="@(new Func<TableState, Task<TableData<MultiCollectionViewModel>>>(ServerReloadMultiCollections))"
+              Dense="true"
+              @ref="_multiCollectionsTable">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Multi Collections</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col style="width: 120px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Collection">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@($"/media/multi-collections/{context.Id}/edit")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Collection">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteMultiCollection(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
 </MudContainer>
 
 @code {
-    private MudTable<MediaCollectionViewModel> _table;
+    private MudTable<MediaCollectionViewModel> _collectionsTable;
+    private MudTable<MultiCollectionViewModel> _multiCollectionsTable;
 
-    private int _rowsPerPage;
+    private int _collectionsRowsPerPage;
+    private int _multiCollectionsRowsPerPage;
 
-    protected override async Task OnParametersSetAsync() => _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize))
-        .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
-
-    private async Task DeleteMediaCollection(MediaCardViewModel vm)
+    protected override async Task OnParametersSetAsync()
     {
-        if (vm is MediaCollectionViewModel collection)
-        {
-            var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        _collectionsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.CollectionsPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
-            IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Collection", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (!result.Cancelled)
-            {
-                await _mediator.Send(new DeleteCollection(collection.Id));
-                await _table.ReloadServerData();
-            }
+        _multiCollectionsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    }
+    
+    private async Task DeleteMediaCollection(MediaCollectionViewModel collection)
+    {
+        var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await _mediator.Send(new DeleteCollection(collection.Id));
+            await _collectionsTable.ReloadServerData();
         }
     }
 
+    private async Task DeleteMultiCollection(MultiCollectionViewModel collection)
+    {
+        var parameters = new DialogParameters { { "EntityType", "multi collection" }, { "EntityName", collection.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-    private async Task<TableData<MediaCollectionViewModel>> ServerReload(TableState state)
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Multi Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await _mediator.Send(new DeleteMultiCollection(collection.Id));
+            await _multiCollectionsTable.ReloadServerData();
+        }
+    }
+
+    private async Task<TableData<MediaCollectionViewModel>> ServerReloadCollections(TableState state)
     {
         await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.CollectionsPageSize, state.PageSize.ToString()));
 
         PagedMediaCollectionsViewModel data = await _mediator.Send(new GetPagedCollections(state.Page, state.PageSize));
         return new TableData<MediaCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+
+    private async Task<TableData<MultiCollectionViewModel>> ServerReloadMultiCollections(TableState state)
+    {
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize, state.PageSize.ToString()));
+
+        PagedMultiCollectionsViewModel data = await _mediator.Send(new GetPagedMultiCollections(state.Page, state.PageSize));
+        return new TableData<MultiCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
 }

@@ -23,7 +23,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             // normally returns 10 5 7 4 3 6 2 8 9 1 1 (note duplicate 1 at end)
             var state = new CollectionEnumeratorState { Seed = 8 };
 
-            var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state, false, false);
+            var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+            var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
 
             var list = new List<int>();
             for (var i = 1; i <= 1000; i++)
@@ -50,7 +51,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             var state = new CollectionEnumeratorState();
 
-            var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state, false, false);
+            var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+            var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
 
             var list = new List<int>();
             for (var i = 1; i <= 10; i++)
@@ -70,7 +72,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             var state = new CollectionEnumeratorState();
 
-            var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state, false, false);
+            var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+            var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
 
             var list = new List<int>();
             for (var i = 1; i <= 10; i++)
@@ -90,7 +93,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             List<MediaItem> contents = Episodes(10);
             var state = new CollectionEnumeratorState();
 
-            var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state, false, false);
+            var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+            var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
 
             for (var i = 0; i < 10; i++)
             {
@@ -105,7 +109,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             List<MediaItem> contents = Episodes(10);
             var state = new CollectionEnumeratorState { Index = 5, Seed = MagicSeed };
 
-            var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state, false, false);
+            var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+            var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
 
             for (var i = 6; i <= 10; i++)
             {
@@ -123,7 +128,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             List<MediaItem> contents = Episodes(10);
             var state = new CollectionEnumeratorState { Index = 10, Seed = MagicSeed };
 
-            var shuffledContent = new ShuffledMediaCollectionEnumerator(contents, state, false, false);
+            var groupedMediaItems = contents.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+            var shuffledContent = new ShuffledMediaCollectionEnumerator(groupedMediaItems, state);
 
             shuffledContent.State.Index.Should().Be(0);
             shuffledContent.State.Seed.Should().NotBe(MagicSeed);

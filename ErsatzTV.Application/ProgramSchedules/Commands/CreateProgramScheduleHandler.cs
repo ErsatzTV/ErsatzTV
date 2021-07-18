@@ -45,13 +45,10 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 ValidateName(dbContext, request),
                 name =>
                 {
-                    bool keepMultiPartEpisodesTogether =
-                        request.MediaCollectionPlaybackOrder == PlaybackOrder.Shuffle &&
-                        request.KeepMultiPartEpisodesTogether;
+                    bool keepMultiPartEpisodesTogether = request.KeepMultiPartEpisodesTogether;
                     return new ProgramSchedule
                     {
                         Name = name,
-                        MediaCollectionPlaybackOrder = request.MediaCollectionPlaybackOrder,
                         KeepMultiPartEpisodesTogether = keepMultiPartEpisodesTogether,
                         TreatCollectionsAsShows = keepMultiPartEpisodesTogether && request.TreatCollectionsAsShows
                     };

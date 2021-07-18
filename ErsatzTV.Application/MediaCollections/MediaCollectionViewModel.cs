@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Application.MediaCollections
 {
-    public record MediaCollectionViewModel(int Id, string Name) : MediaCardViewModel(
+    public record MediaCollectionViewModel(int Id, string Name, bool UseCustomPlaybackOrder) : MediaCardViewModel(
         Id,
         Name,
         string.Empty,

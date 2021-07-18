@@ -14,7 +14,9 @@ namespace ErsatzTV.Application.ProgramSchedules
             TimeSpan? startTime,
             ProgramScheduleItemCollectionType collectionType,
             MediaCollectionViewModel collection,
+            MultiCollectionViewModel multiCollection,
             NamedMediaItemViewModel mediaItem,
+            PlaybackOrder playbackOrder,
             TimeSpan playoutDuration,
             bool offlineTail,
             string customTitle) : base(
@@ -25,7 +27,9 @@ namespace ErsatzTV.Application.ProgramSchedules
             PlayoutMode.Duration,
             collectionType,
             collection,
+            multiCollection,
             mediaItem,
+            playbackOrder,
             customTitle)
         {
             PlayoutDuration = playoutDuration;

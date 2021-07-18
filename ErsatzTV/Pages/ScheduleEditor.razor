@@ -16,16 +16,9 @@
             <MudCard>
                 <MudCardContent>
                     <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                    <MudSelect Class="mt-3" Label="Collection Playback Order" @bind-Value="_model.MediaCollectionPlaybackOrder" For="@(() => _model.MediaCollectionPlaybackOrder)">
-                        @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
-                        {
-                            <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
-                        }
-                    </MudSelect>
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudCheckBox Label="Keep Multi-Part Episodes Together"
                                      @bind-Checked="@_model.KeepMultiPartEpisodesTogether"
-                                     Disabled="@(_model.MediaCollectionPlaybackOrder != PlaybackOrder.Shuffle)"
                                      For="@(() => _model.KeepMultiPartEpisodesTogether)"/>
                     </MudElement>
                     <MudElement HtmlTag="div" Class="mt-3">
@@ -66,7 +59,6 @@
                 {
                     _model.Id = viewModel.Id;
                     _model.Name = viewModel.Name;
-                    _model.MediaCollectionPlaybackOrder = viewModel.MediaCollectionPlaybackOrder;
                     _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
                     _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
                 },
@@ -75,7 +67,6 @@
         else
         {
             _model.Name = "New Schedule";
-            _model.MediaCollectionPlaybackOrder = PlaybackOrder.Shuffle;
         }
     }
 

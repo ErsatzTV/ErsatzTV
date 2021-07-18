@@ -16,5 +16,8 @@ namespace ErsatzTV.Core.Domain
         public Collection Collection { get; set; }
         public int? MediaItemId { get; set; }
         public MediaItem MediaItem { get; set; }
+        public int? MultiCollectionId { get; set; }
+        public MultiCollection MultiCollection { get; set; }
+        public PlaybackOrder PlaybackOrder { get; set; }
     }
 }

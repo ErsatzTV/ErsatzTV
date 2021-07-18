@@ -16,16 +16,11 @@ namespace ErsatzTV.Core.Scheduling
         private IList<MediaItem> _shuffled;
 
         public ShuffledMediaCollectionEnumerator(
-            IList<MediaItem> mediaItems,
-            CollectionEnumeratorState state,
-            bool keepMultiPartEpisodesTogether,
-            bool treatCollectionsAsShows)
+            IList<GroupedMediaItem> mediaItems,
+            CollectionEnumeratorState state)
         {
-            _mediaItemCount = mediaItems.Count;
-
-            _mediaItems = keepMultiPartEpisodesTogether
-                ? MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, treatCollectionsAsShows)
-                : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+            _mediaItemCount = mediaItems.Sum(i => 1 + Optional(i.Additional).Flatten().Count());
+            _mediaItems = mediaItems;
 
             if (state.Index >= _mediaItems.Count)
             {
@@ -83,7 +78,7 @@ namespace ErsatzTV.Core.Scheduling
                 copy[n] = value;
             }
 
-            return MultiPartEpisodeGrouper.FlattenGroups(copy, _mediaItemCount);
+            return GroupedMediaItem.FlattenGroups(copy, _mediaItemCount);
         }
     }
 }

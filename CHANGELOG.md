@@ -4,9 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Multi Collection` to support shuffling multiple collections within a single schedule item
+  - Collections within a multi collection are optionally grouped together and ordered when scheduling; this can be useful for franchises
+
+### Changed
+- Move `Playback Order` from schedule to schedule items
+  - This allows different schedule items to have different playback orders within a single schedule
+
 ### Fixed
 - Fix release notes on home page with `-alpha` suffix
 - Fix linux-arm release by including SQLite interop artifacts
+- Fix issue where cached Plex credentials may become invalid when multiple servers are used
 
 ## [0.0.50-alpha] - 2021-07-13
 ### Added

@@ -17,6 +17,7 @@
         public static ConfigElementKey HDHRTunerCount => new("hdhr.tuner_count");
         public static ConfigElementKey ChannelsPageSize => new("pages.channels.page_size");
         public static ConfigElementKey CollectionsPageSize => new("pages.collections.page_size");
+        public static ConfigElementKey MultiCollectionsPageSize => new("pages.multi_collections.page_size");
         public static ConfigElementKey SchedulesPageSize => new("pages.schedules.page_size");
         public static ConfigElementKey SchedulesDetailPageSize => new("pages.schedules.detail_page_size");
         public static ConfigElementKey PlayoutsPageSize => new("pages.playouts.page_size");

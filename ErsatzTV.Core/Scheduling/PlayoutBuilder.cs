@@ -82,6 +82,11 @@ namespace ErsatzTV.Core.Scheduling
                             List<MusicVideo> artistItems =
                                 await _artistRepository.GetArtistItems(collectionKey.MediaItemId ?? 0);
                             return Tuple(collectionKey, artistItems.Cast<MediaItem>().ToList());
+                        case ProgramScheduleItemCollectionType.MultiCollection:
+                            List<MediaItem> multiCollectionItems =
+                                await _mediaCollectionRepository.GetMultiCollectionItems(
+                                    collectionKey.MultiCollectionId ?? 0);
+                            return Tuple(collectionKey, multiCollectionItems);
                         default:
                             return Tuple(collectionKey, new List<MediaItem>());
                     }
@@ -178,8 +183,11 @@ namespace ErsatzTV.Core.Scheduling
             var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
             foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
             {
+                PlaybackOrder playbackOrder = sortedScheduleItems
+                    .First(item => CollectionKeyForItem(item) == collectionKey)
+                    .PlaybackOrder;
                 IMediaCollectionEnumerator enumerator =
-                    await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems);
+                    await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems, playbackOrder);
                 collectionEnumerators.Add(collectionKey, enumerator);
             }
 
@@ -490,6 +498,7 @@ namespace ErsatzTV.Core.Scheduling
                         ProgramScheduleId = playout.ProgramScheduleId,
                         CollectionType = collectionKey.CollectionType,
                         CollectionId = collectionKey.CollectionId,
+                        MultiCollectionId = collectionKey.MultiCollectionId,
                         MediaItemId = collectionKey.MediaItemId,
                         EnumeratorState = maybeEnumeratorState[collectionKey]
                     });
@@ -503,12 +512,14 @@ namespace ErsatzTV.Core.Scheduling
         private async Task<IMediaCollectionEnumerator> GetMediaCollectionEnumerator(
             Playout playout,
             CollectionKey collectionKey,
-            List<MediaItem> mediaItems)
+            List<MediaItem> mediaItems,
+            PlaybackOrder playbackOrder)
         {
             Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors.FirstOrDefault(
                 a => a.ProgramScheduleId == playout.ProgramScheduleId
                      && a.CollectionType == collectionKey.CollectionType
                      && a.CollectionId == collectionKey.CollectionId
+                     && a.MultiCollectionId == collectionKey.MultiCollectionId
                      && a.MediaItemId == collectionKey.MediaItemId);
 
             CollectionEnumeratorState state = maybeAnchor.Match(
@@ -530,8 +541,8 @@ namespace ErsatzTV.Core.Scheduling
                         state);
                 }
             }
-
-            switch (playout.ProgramSchedule.MediaCollectionPlaybackOrder)
+            
+            switch (playbackOrder)
             {
                 case PlaybackOrder.Chronological:
                     return new ChronologicalMediaCollectionEnumerator(mediaItems, state);
@@ -539,14 +550,32 @@ namespace ErsatzTV.Core.Scheduling
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
                 case PlaybackOrder.Shuffle:
                     return new ShuffledMediaCollectionEnumerator(
-                        mediaItems,
-                        state,
-                        playout.ProgramSchedule.KeepMultiPartEpisodesTogether,
-                        playout.ProgramSchedule.TreatCollectionsAsShows);
+                        await GetGroupedMediaItemsForShuffle(playout, mediaItems, collectionKey),
+                        state);
                 default:
                     // TODO: handle this error case differently?
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
             }
+        }
+
+        private async Task<List<GroupedMediaItem>> GetGroupedMediaItemsForShuffle(
+            Playout playout,
+            List<MediaItem> mediaItems,
+            CollectionKey collectionKey)
+        {
+            if (collectionKey.MultiCollectionId != null)
+            {
+                List<CollectionWithItems> collections = await _mediaCollectionRepository
+                    .GetMultiCollectionCollections(collectionKey.MultiCollectionId.Value);
+
+                return MultiCollectionGrouper.GroupMediaItems(collections);
+            }
+
+            return playout.ProgramSchedule.KeepMultiPartEpisodesTogether
+                ? MultiPartEpisodeGrouper.GroupMediaItems(
+                    mediaItems,
+                    playout.ProgramSchedule.TreatCollectionsAsShows)
+                : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
         }
 
         private static string DisplayTitle(MediaItem mediaItem)
@@ -595,6 +624,11 @@ namespace ErsatzTV.Core.Scheduling
                     CollectionType = item.CollectionType,
                     MediaItemId = item.MediaItemId
                 },
+                ProgramScheduleItemCollectionType.MultiCollection => new CollectionKey
+                {
+                    CollectionType = item.CollectionType,
+                    MultiCollectionId = item.MultiCollectionId
+                },
                 _ => throw new ArgumentOutOfRangeException(nameof(item))
             };
 
@@ -602,6 +636,7 @@ namespace ErsatzTV.Core.Scheduling
         {
             public ProgramScheduleItemCollectionType CollectionType { get; set; }
             public int? CollectionId { get; set; }
+            public int? MultiCollectionId { get; set; }
             public int? MediaItemId { get; set; }
         }
     }

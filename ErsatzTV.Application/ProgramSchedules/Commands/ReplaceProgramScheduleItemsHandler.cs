@@ -11,6 +11,7 @@ using LanguageExt;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.ProgramSchedules.Mapper;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.ProgramSchedules.Commands
 {
@@ -61,7 +62,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             ReplaceProgramScheduleItems request) =>
             ProgramScheduleMustExist(dbContext, request.ProgramScheduleId)
                 .BindT(programSchedule => PlayoutModesMustBeValid(request, programSchedule))
-                .BindT(programSchedule => CollectionTypesMustBeValid(request, programSchedule));
+                .BindT(programSchedule => CollectionTypesMustBeValid(request, programSchedule))
+                .BindT(programSchedule => PlaybackOrdersMustBeValid(request, programSchedule));
 
         private static Validation<BaseError, ProgramSchedule> PlayoutModesMustBeValid(
             ReplaceProgramScheduleItems request,
@@ -74,5 +76,43 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             ProgramSchedule programSchedule) =>
             request.Items.Map(item => CollectionTypeMustBeValid(item, programSchedule)).Sequence()
                 .Map(_ => programSchedule);
+
+        private static Validation<BaseError, ProgramSchedule> PlaybackOrdersMustBeValid(
+            ReplaceProgramScheduleItems request,
+            ProgramSchedule programSchedule)
+        {
+            var keyOrders = new Dictionary<CollectionKey, System.Collections.Generic.HashSet<PlaybackOrder>>();
+            foreach (ReplaceProgramScheduleItem item in request.Items)
+            {
+                var key = new CollectionKey(
+                    item.CollectionType,
+                    item.CollectionId,
+                    item.MediaItemId,
+                    item.MultiCollectionId);
+
+                if (keyOrders.TryGetValue(key, out System.Collections.Generic.HashSet<PlaybackOrder> playbackOrders))
+                {
+                    playbackOrders.Add(item.PlaybackOrder);
+                    keyOrders[key] = playbackOrders;
+                }
+                else
+                {
+                    keyOrders.Add(key, new System.Collections.Generic.HashSet<PlaybackOrder> { item.PlaybackOrder });
+                }
+            }
+
+            return Optional(keyOrders.Values.Count(set => set.Count != 1))
+                .Filter(count => count == 0)
+                .Map(_ => programSchedule)
+                .ToValidation<BaseError>("A collection must not use multiple playback orders");
+        }
+
+        private record CollectionKey(
+            ProgramScheduleItemCollectionType CollectionType,
+            int? CollectionId,
+            int? MediaItemId,
+            int? MultiCollectionId);
+
+        private record CollectionKeyOrder(CollectionKey Key, PlaybackOrder PlaybackOrder);
     }
 }

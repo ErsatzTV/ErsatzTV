@@ -5,6 +5,7 @@
         Collection = 0,
         TelevisionShow = 1,
         TelevisionSeason = 2,
-        Artist = 3
+        Artist = 3,
+        MultiCollection = 4
     }
 }

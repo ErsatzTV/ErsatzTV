@@ -9,7 +9,6 @@ namespace ErsatzTV.Application.ProgramSchedules
             new(
                 programSchedule.Id,
                 programSchedule.Name,
-                programSchedule.MediaCollectionPlaybackOrder,
                 programSchedule.KeepMultiPartEpisodesTogether,
                 programSchedule.TreatCollectionsAsShows);
 
@@ -26,6 +25,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         duration.Collection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(duration.Collection)
                             : null,
+                        duration.MultiCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(duration.MultiCollection)
+                            : null,
                         duration.MediaItem switch
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
@@ -33,6 +35,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
+                        duration.PlaybackOrder,
                         duration.PlayoutDuration,
                         duration.OfflineTail,
                         duration.CustomTitle),
@@ -46,6 +49,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         flood.Collection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(flood.Collection)
                             : null,
+                        flood.MultiCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(flood.MultiCollection)
+                            : null,
                         flood.MediaItem switch
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
@@ -53,6 +59,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
+                        flood.PlaybackOrder,
                         flood.CustomTitle),
                 ProgramScheduleItemMultiple multiple =>
                     new ProgramScheduleItemMultipleViewModel(
@@ -64,6 +71,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         multiple.Collection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(multiple.Collection)
                             : null,
+                        multiple.MultiCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(multiple.MultiCollection)
+                            : null,
                         multiple.MediaItem switch
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
@@ -71,6 +81,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
+                        multiple.PlaybackOrder,
                         multiple.Count,
                         multiple.CustomTitle),
                 ProgramScheduleItemOne one =>
@@ -83,6 +94,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         one.Collection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(one.Collection)
                             : null,
+                        one.MultiCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(one.MultiCollection)
+                            : null,
                         one.MediaItem switch
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
@@ -90,6 +104,7 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
+                        one.PlaybackOrder,
                         one.CustomTitle),
                 _ => throw new NotSupportedException(
                     $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")

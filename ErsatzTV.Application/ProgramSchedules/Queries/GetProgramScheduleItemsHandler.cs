@@ -27,6 +27,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
             return await dbContext.ProgramScheduleItems
                 .Filter(psi => psi.ProgramScheduleId == request.Id)
                 .Include(i => i.Collection)
+                .Include(i => i.MultiCollection)
                 .Include(i => i.MediaItem)
                 .ThenInclude(i => (i as Movie).MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)

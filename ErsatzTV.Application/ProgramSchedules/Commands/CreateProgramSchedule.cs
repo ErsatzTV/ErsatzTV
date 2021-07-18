@@ -7,7 +7,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
 {
     public record CreateProgramSchedule(
         string Name,
-        PlaybackOrder MediaCollectionPlaybackOrder,
         bool KeepMultiPartEpisodesTogether,
         bool TreatCollectionsAsShows) : IRequest<Either<BaseError, CreateProgramScheduleResult>>;
 }
