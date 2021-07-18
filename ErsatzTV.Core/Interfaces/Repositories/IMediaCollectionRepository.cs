@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Scheduling;
 using LanguageExt;
 
 namespace ErsatzTV.Core.Interfaces.Repositories
@@ -10,6 +11,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id);
         Task<List<MediaItem>> GetItems(int id);
         Task<List<MediaItem>> GetMultiCollectionItems(int id);
+        Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id);
         Task<List<int>> PlayoutIdsUsingCollection(int collectionId);
         Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId);
         Task<bool> IsCustomPlaybackOrder(int collectionId);

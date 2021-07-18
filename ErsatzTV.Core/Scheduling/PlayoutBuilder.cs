@@ -498,6 +498,7 @@ namespace ErsatzTV.Core.Scheduling
                         ProgramScheduleId = playout.ProgramScheduleId,
                         CollectionType = collectionKey.CollectionType,
                         CollectionId = collectionKey.CollectionId,
+                        MultiCollectionId = collectionKey.MultiCollectionId,
                         MediaItemId = collectionKey.MediaItemId,
                         EnumeratorState = maybeEnumeratorState[collectionKey]
                     });
@@ -548,17 +549,33 @@ namespace ErsatzTV.Core.Scheduling
                 case PlaybackOrder.Random:
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
                 case PlaybackOrder.Shuffle:
-                    List<GroupedMediaItem> groupedMediaItems = playout.ProgramSchedule.KeepMultiPartEpisodesTogether
-                        ? MultiPartEpisodeGrouper.GroupMediaItems(mediaItems, playout.ProgramSchedule.TreatCollectionsAsShows)
-                        : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
-                    
                     return new ShuffledMediaCollectionEnumerator(
-                        groupedMediaItems,
+                        await GetGroupedMediaItemsForShuffle(playout, mediaItems, collectionKey),
                         state);
                 default:
                     // TODO: handle this error case differently?
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
             }
+        }
+
+        private async Task<List<GroupedMediaItem>> GetGroupedMediaItemsForShuffle(
+            Playout playout,
+            List<MediaItem> mediaItems,
+            CollectionKey collectionKey)
+        {
+            if (collectionKey.MultiCollectionId != null)
+            {
+                List<CollectionWithItems> collections = await _mediaCollectionRepository
+                    .GetMultiCollectionCollections(collectionKey.MultiCollectionId.Value);
+
+                return MultiCollectionGrouper.GroupMediaItems(collections);
+            }
+
+            return playout.ProgramSchedule.KeepMultiPartEpisodesTogether
+                ? MultiPartEpisodeGrouper.GroupMediaItems(
+                    mediaItems,
+                    playout.ProgramSchedule.TreatCollectionsAsShows)
+                : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
         }
 
         private static string DisplayTitle(MediaItem mediaItem)

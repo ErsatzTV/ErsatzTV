@@ -63,23 +63,11 @@
                 <MudCheckBox @bind-Checked="@context.ScheduleAsGroup" For="@(() => context.ScheduleAsGroup)"/>
             </MudTd>
             <MudTd DataLabel="Playback Order">
-                @if (context.Collection.UseCustomPlaybackOrder)
+                @if (context.ScheduleAsGroup)
                 {
-                    if (context.ScheduleAsGroup)
-                    {
-                        <MudText Typo="Typo.body2">
-                            Custom
-                        </MudText>
-                    }
-                }
-                else
-                {
-                    <MudSelect @bind-Value="@context.PlaybackOrder" For="@(() => context.PlaybackOrder)" Disabled="@(!context.ScheduleAsGroup)" Class="select-in-table">
-                        @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
-                        {
-                            <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <MudText Typo="Typo.body2">
+                        @(context.Collection.UseCustomPlaybackOrder ? "Custom" : "Chronological")
+                    </MudText>
                 }
             </MudTd>
             <MudTd>
@@ -164,7 +152,7 @@
 
     private void AddCollection()
     {
-        if (_model.Items.All(i => i.Collection != _selectedCollection))
+        if (_selectedCollection != null && _model.Items.All(i => i.Collection != _selectedCollection))
         {
             _model.Items.Add(new MultiCollectionItemEditViewModel
             {

@@ -19,8 +19,7 @@ namespace ErsatzTV.Core.Scheduling
             IList<GroupedMediaItem> mediaItems,
             CollectionEnumeratorState state)
         {
-            _mediaItemCount = mediaItems.Count;
-
+            _mediaItemCount = mediaItems.Sum(i => 1 + Optional(i.Additional).Flatten().Count());
             _mediaItems = mediaItems;
 
             if (state.Index >= _mediaItems.Count)
@@ -79,7 +78,7 @@ namespace ErsatzTV.Core.Scheduling
                 copy[n] = value;
             }
 
-            return MultiPartEpisodeGrouper.FlattenGroups(copy, _mediaItemCount);
+            return GroupedMediaItem.FlattenGroups(copy, _mediaItemCount);
         }
     }
 }

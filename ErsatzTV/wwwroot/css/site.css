@@ -136,7 +136,3 @@
 
 #blazor-error-ui { color: black; }
 #blazor-error-ui a { color: unset; }
-
-.select-in-table .mud-select-input {
-    margin-top: 0 !important;
-}

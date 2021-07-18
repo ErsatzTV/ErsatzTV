@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Scheduling;
 using LanguageExt;
 
 namespace ErsatzTV.Core.Tests.Fakes
@@ -18,7 +19,10 @@ namespace ErsatzTV.Core.Tests.Fakes
             throw new NotSupportedException();
 
         public Task<List<MediaItem>> GetItems(int id) => _data[id].ToList().AsTask();
-        public Task<List<MediaItem>> GetMultiCollectionItems(int id) => _data[id].ToList().AsTask();
+        public Task<List<MediaItem>> GetMultiCollectionItems(int id) => throw new NotSupportedException();
+
+        public Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id) =>
+            throw new NotSupportedException();
 
         public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) => throw new NotSupportedException();
 
