@@ -1,0 +1,99 @@
+﻿@page "/media/sources/local"
+@using ErsatzTV.Application.Libraries
+@using ErsatzTV.Application.Libraries.Commands
+@using ErsatzTV.Application.Libraries.Queries
+@implements IDisposable
+@inject IDialogService _dialog
+@inject IMediator _mediator
+@inject IEntityLocker _locker
+@inject ChannelWriter<IBackgroundServiceRequest> _workerChannel
+@inject ChannelWriter<IPlexBackgroundServiceRequest> _plexWorkerChannel
+@inject ChannelWriter<IJellyfinBackgroundServiceRequest> _jellyfinWorkerChannel
+@inject ChannelWriter<IEmbyBackgroundServiceRequest> _embyWorkerChannel
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <MudTable Hover="true" Items="_libraries" Dense="true">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Local Libraries</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col style="width: 120px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Media Kind</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Media Kind">@context.MediaKind</MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Library">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Disabled="@_locker.IsLibraryLocked(context.Id)"
+                                       Link="@($"/media/sources/local/{context.Id}/edit")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Library">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Disabled="@_locker.IsLibraryLocked(context.Id)"
+                                       OnClick="@(() => DeleteLibrary(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/sources/local/add" Class="mt-4">
+        Add Local Library
+    </MudButton>
+</MudContainer>
+
+@code {
+    private IList<LocalLibraryViewModel> _libraries;
+
+    protected override void OnInitialized()
+    {
+        _locker.OnLibraryChanged += LockChanged;
+    }
+
+    protected override async Task OnParametersSetAsync() => await LoadLibraries();
+
+    private async Task LoadLibraries()
+    {
+        _libraries = await _mediator.Send(new GetAllLocalLibraries());
+    }
+
+    private void LockChanged(object sender, EventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    private async Task DeleteLibrary(LocalLibraryViewModel library)
+    {
+        int count = await _mediator.Send(new CountMediaItemsByLibrary(library.Id));
+        var parameters = new DialogParameters
+        {
+            { "EntityType", "library" },
+            { "EntityName", library.Name },
+            { "DetailText", $"This library contains {count} media items." },
+            { "DetailHighlight", count.ToString() }
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Library", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await _mediator.Send(new DeleteLocalLibrary(library.Id));
+            await LoadLibraries();
+        }
+    }
+
+    void IDisposable.Dispose()
+    {
+        _locker.OnLibraryChanged -= LockChanged;
+    }
+
+}

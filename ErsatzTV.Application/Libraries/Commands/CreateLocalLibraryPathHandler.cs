@@ -45,7 +45,6 @@ namespace ErsatzTV.Application.Libraries.Commands
             List<string> allPaths = await _libraryRepository.GetLocalPaths(request.LibraryId)
                 .Map(list => list.Map(c => c.Path).ToList());
 
-
             return Optional(request.Path)
                 .Filter(folder => allPaths.ForAll(f => !AreSubPaths(f, folder)))
                 .ToValidation<BaseError>("Path must not belong to another library path");

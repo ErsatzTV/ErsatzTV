@@ -1,12 +1,44 @@
-﻿@page "/media/libraries/local/{Id:int}"
+﻿@page "/media/sources/local/{Id:int}/edit"
+@page "/media/sources/local/add"
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.Libraries.Commands
 @using ErsatzTV.Application.Libraries.Queries
 @inject IDialogService _dialog
 @inject IMediator _mediator
+@inject ILogger<LocalLibraryEditor> _logger
+@inject ISnackbar _snackbar
+@inject NavigationManager _navigationManager
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
-    <MudTable Hover="true" Items="_libraryPaths" Dense="true">
+    <div style="max-width: 400px;">
+        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Local Library" : "Add Local Library")</MudText>
+
+        <EditForm EditContext="_editContext" OnSubmit="@SaveChangesAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudSelect Disabled="IsEdit" Label="MediaKind" @bind-Value="_model.MediaKind" For="@(() => _model.MediaKind)">
+                        @foreach (LibraryMediaKind mediaKind in Enum.GetValues<LibraryMediaKind>())
+                        {
+                            <MudSelectItem Value="@mediaKind">@mediaKind</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudTextField Class="mt-3" Label="Path" @bind-Value="_newPath.Path" For="@(() => _newPath.Path)"/>
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddLibraryPath())" Class="ml-2">
+                        Add Path
+                    </MudButton>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2 ml-auto">
+                        Save Changes
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+
+    <MudTable Hover="true" Items="_model.Paths" Dense="true" Class="mt-6">
         <ToolBarContent>
             <MudText Typo="Typo.h6">Library Paths</MudText>
         </ToolBarContent>
@@ -31,9 +63,6 @@
             </MudTd>
         </RowTemplate>
     </MudTable>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="@($"/media/libraries/local/{Id}/add")" Class="mt-4">
-        Add Library Path
-    </MudButton>
 </MudContainer>
 
 
@@ -42,17 +71,65 @@
     [Parameter]
     public int Id { get; set; }
 
-    private IList<LocalLibraryPathViewModel> _libraryPaths;
+    private readonly LocalLibraryEditViewModel _model = new();
+    private LocalLibraryPathEditViewModel _newPath = new();
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
 
-    protected override async Task OnParametersSetAsync() => await LoadLibraryPaths();
+    private bool IsEdit => Id != 0;
 
-    private async Task LoadLibraryPaths() =>
-        _libraryPaths = await _mediator.Send(new GetLocalLibraryPaths(Id));
-
-    private async Task DeleteLibraryPath(LocalLibraryPathViewModel libraryPath)
+    protected override async Task OnParametersSetAsync()
     {
-        int count = await _mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id));
+        if (IsEdit)
+        {
+            Option<LocalLibraryViewModel> maybeLibrary = await _mediator.Send(new GetLocalLibraryById(Id));
+            await maybeLibrary.Match(
+                async library =>
+                {
+                    _model.Id = library.Id;
+                    _model.Name = library.Name;
+                    _model.MediaKind = library.MediaKind;
 
+                    await LoadLibraryPaths();
+                },
+                () =>
+                {
+                    _navigationManager.NavigateTo("404");
+                    return Task.CompletedTask;
+                });
+        }
+        else
+        {
+            _model.Name = "New Local Library";
+            _model.MediaKind = LibraryMediaKind.Movies;
+            _model.Paths = new List<LocalLibraryPathEditViewModel>();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+
+    private async Task LoadLibraryPaths()
+    {
+        _model.Paths = await _mediator.Send(new GetLocalLibraryPaths(Id))
+            .Map(list => list.Map(vm => new LocalLibraryPathEditViewModel
+            {
+                Id = vm.Id,
+                Path = vm.Path
+            }).ToList());
+    }
+
+    private async Task DeleteLibraryPath(LocalLibraryPathEditViewModel libraryPath)
+    {
+        if (libraryPath.Id == 0)
+        {
+            _model.Paths.Remove(libraryPath);
+        }
+        
+        int count = await _mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id));
         var parameters = new DialogParameters
         {
             { "EntityType", "library path" },
@@ -61,14 +138,61 @@
             { "DetailHighlight", count.ToString() }
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
+        
         IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Library Path", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeleteLocalLibraryPath(libraryPath.Id));
-            await LoadLibraryPaths();
+            _model.Paths.Remove(libraryPath);
         }
+    }
+
+    private void AddLibraryPath()
+    {
+        if (_model.Paths.All(p => NormalizePath(p.Path) != NormalizePath(_newPath.Path)))
+        {
+            _model.Paths.Add(new LocalLibraryPathEditViewModel
+            {
+                Path = _newPath.Path
+            });
+        }
+
+        _newPath.Path = null;
+    }
+    
+    private async Task SaveChangesAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            Either<BaseError, LocalLibraryViewModel> result = IsEdit
+                ? await _mediator.Send(new UpdateLocalLibrary(
+                    _model.Id,
+                    _model.Name,
+                    _model.Paths.Map(p => new UpdateLocalLibraryPath(p.Id, p.Path)).ToList()))
+                : await _mediator.Send(new CreateLocalLibrary(
+                    _model.Name,
+                    _model.MediaKind,
+                    _model.Paths.Map(p => p.Path).ToList()));
+
+            result.Match(
+                _ =>
+                {
+                    _navigationManager.NavigateTo("/media/sources/local");
+                },
+                error =>
+                {
+                    _snackbar.Add($"Unexpected error saving local library: {error.Value}", Severity.Error);
+                    _logger.LogError("Unexpected error saving local library: {Error}", error.Value);
+                });
+        }
+    }
+
+    private string NormalizePath(string path)
+    {
+        return Path.GetFullPath(new Uri(path).LocalPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+            .ToUpperInvariant();
     }
 
 }

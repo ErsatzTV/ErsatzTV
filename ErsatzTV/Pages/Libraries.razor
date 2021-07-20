@@ -28,7 +28,7 @@
             <col/>
             <col/>
             <col/>
-            <col style="width: 240px;"/>
+            <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Library Kind</MudTh>
@@ -71,15 +71,6 @@
                                        Link="@($"/search?query=library_id%3a{context.Id}")">
                         </MudIconButton>
                     </MudTooltip>
-                    @if (context is LocalLibraryViewModel)
-                    {
-                        <MudTooltip Text="Edit Library">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                           Disabled="@_locker.IsLibraryLocked(context.Id)"
-                                           Link="@($"/media/libraries/local/{context.Id}")">
-                            </MudIconButton>
-                        </MudTooltip>
-                    }
                 </div>
             </MudTd>
         </RowTemplate>
