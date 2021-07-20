@@ -19,8 +19,8 @@ namespace ErsatzTV.Application.Libraries.Commands
     {
         private readonly ILibraryRepository _libraryRepository;
 
-        public CreateLocalLibraryPathHandler(ILibraryRepository mediaSourceRepository) =>
-            _libraryRepository = mediaSourceRepository;
+        public CreateLocalLibraryPathHandler(ILibraryRepository libraryRepository) =>
+            _libraryRepository = libraryRepository;
 
         public Task<Either<BaseError, LocalLibraryPathViewModel>> Handle(
             CreateLocalLibraryPath request,
@@ -44,7 +44,6 @@ namespace ErsatzTV.Application.Libraries.Commands
         {
             List<string> allPaths = await _libraryRepository.GetLocalPaths(request.LibraryId)
                 .Map(list => list.Map(c => c.Path).ToList());
-
 
             return Optional(request.Path)
                 .Filter(folder => allPaths.ForAll(f => !AreSubPaths(f, folder)))
