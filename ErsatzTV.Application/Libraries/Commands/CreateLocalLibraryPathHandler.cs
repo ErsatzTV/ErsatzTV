@@ -19,8 +19,8 @@ namespace ErsatzTV.Application.Libraries.Commands
     {
         private readonly ILibraryRepository _libraryRepository;
 
-        public CreateLocalLibraryPathHandler(ILibraryRepository mediaSourceRepository) =>
-            _libraryRepository = mediaSourceRepository;
+        public CreateLocalLibraryPathHandler(ILibraryRepository libraryRepository) =>
+            _libraryRepository = libraryRepository;
 
         public Task<Either<BaseError, LocalLibraryPathViewModel>> Handle(
             CreateLocalLibraryPath request,

@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add multiple local libraries to better organize your media
+- Add `Move Library Path` function to support reorganizing existing local libraries
 
 ## [0.0.51-alpha] - 2021-07-18
 ### Added

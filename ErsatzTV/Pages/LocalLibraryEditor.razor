@@ -3,7 +3,10 @@
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.Libraries.Commands
 @using ErsatzTV.Application.Libraries.Queries
+@using Unit = LanguageExt.Unit
+@implements IDisposable
 @inject IDialogService _dialog
+@inject IEntityLocker _locker
 @inject IMediator _mediator
 @inject ILogger<LocalLibraryEditor> _logger
 @inject ISnackbar _snackbar
@@ -44,7 +47,7 @@
         </ToolBarContent>
         <ColGroup>
             <col/>
-            <col style="width: 60px;"/>
+            <col style="width: 120px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>Path</MudTh>
@@ -54,6 +57,12 @@
             <MudTd DataLabel="Path">@context.Path</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Move Library Path">
+                        <MudIconButton Icon="@Icons.Material.Filled.DriveFileMove"
+                                       Disabled="@(_model.Id == 0 || context.Id == 0 || _locker.IsLibraryLocked(_model.Id))"
+                                       OnClick="@(() => MoveLibraryPath(context))">
+                        </MudIconButton>
+                    </MudTooltip>
                     <MudTooltip Text="Delete Library Path">
                         <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                        OnClick="@(() => DeleteLibraryPath(context))">
@@ -100,6 +109,7 @@
         }
         else
         {
+            _model.HasChanges = true;
             _model.Name = "New Local Library";
             _model.MediaKind = LibraryMediaKind.Movies;
             _model.Paths = new List<LocalLibraryPathEditViewModel>();
@@ -108,12 +118,18 @@
 
     protected override void OnInitialized()
     {
+        _locker.OnLibraryChanged += LockChanged;
+
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
     }
+    
+    private void LockChanged(object sender, EventArgs e) =>
+        InvokeAsync(StateHasChanged);
 
     private async Task LoadLibraryPaths()
     {
+        _model.HasChanges = false;
         _model.Paths = await _mediator.Send(new GetLocalLibraryPaths(Id))
             .Map(list => list.Map(vm => new LocalLibraryPathEditViewModel
             {
@@ -122,10 +138,32 @@
             }).ToList());
     }
 
+    private async Task MoveLibraryPath(LocalLibraryPathEditViewModel libraryPath)
+    {
+        var parameters = new DialogParameters { { "MediaKind", _model.MediaKind }, { "SourceLibraryId", Id } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = _dialog.Show<MoveLocalLibraryPathDialog>("Move Local Library Path", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled && result.Data is LocalLibraryViewModel library)
+        {
+            var request = new MoveLocalLibraryPath(libraryPath.Id, library.Id);
+            Either<BaseError, Unit> moveResult = await _mediator.Send(request);
+            moveResult.Match(
+                _ => _navigationManager.NavigateTo($"/media/sources/local/{library.Id}/edit"),
+                error =>
+                {
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Unexpected error moving local library path: {Error}", error.Value);
+                });
+        }
+    }
+
     private async Task DeleteLibraryPath(LocalLibraryPathEditViewModel libraryPath)
     {
         if (libraryPath.Id == 0)
         {
+            _model.HasChanges = true;
             _model.Paths.Remove(libraryPath);
         }
         
@@ -143,6 +181,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
+            _model.HasChanges = true;
             _model.Paths.Remove(libraryPath);
         }
     }
@@ -151,6 +190,7 @@
     {
         if (_model.Paths.All(p => NormalizePath(p.Path) != NormalizePath(_newPath.Path)))
         {
+            _model.HasChanges = true;
             _model.Paths.Add(new LocalLibraryPathEditViewModel
             {
                 Path = _newPath.Path
@@ -176,13 +216,10 @@
                     _model.Paths.Map(p => p.Path).ToList()));
 
             result.Match(
-                _ =>
-                {
-                    _navigationManager.NavigateTo("/media/sources/local");
-                },
+                _ => _navigationManager.NavigateTo("/media/sources/local"),
                 error =>
                 {
-                    _snackbar.Add($"Unexpected error saving local library: {error.Value}", Severity.Error);
+                    _snackbar.Add(error.Value, Severity.Error);
                     _logger.LogError("Unexpected error saving local library: {Error}", error.Value);
                 });
         }
@@ -193,6 +230,11 @@
         return Path.GetFullPath(new Uri(path).LocalPath)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             .ToUpperInvariant();
+    }
+
+    void IDisposable.Dispose()
+    {
+        _locker.OnLibraryChanged -= LockChanged;
     }
 
 }

@@ -73,7 +73,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             AddArtistToCollection request) =>
             dbContext.Artists
                 .SelectOneAsync(a => a.Id, a => a.Id == request.ArtistId)
-                .Map(o => o.ToValidation<BaseError>("Music video does not exist"));
+                .Map(o => o.ToValidation<BaseError>("Artist does not exist"));
 
         private record Parameters(Collection Collection, Artist Artist);
     }

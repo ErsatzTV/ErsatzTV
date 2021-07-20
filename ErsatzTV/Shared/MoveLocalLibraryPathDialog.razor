@@ -1,0 +1,128 @@
+﻿@using Microsoft.Extensions.Caching.Memory
+@using ErsatzTV.Application.Libraries
+@using ErsatzTV.Application.Libraries.Commands
+@using ErsatzTV.Application.Libraries.Queries
+@inject IMediator _mediator
+@inject IMemoryCache _memoryCache
+@inject ISnackbar _snackbar
+@inject ILogger<MoveLocalLibraryPathDialog> _logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudText>
+                    Select the destination library
+                </MudText>
+            </MudContainer>
+            <MudSelect Label="Library" @bind-Value="_selectedLibrary" Class="mb-6 mx-4">
+                @foreach (LocalLibraryViewModel library in _libraries)
+                {
+                    <MudSelectItem Value="@library">@library.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextFieldString Label="New Library Name"
+                                Disabled="@(_selectedLibrary != _newLibrary)"
+                                @bind-Text="@_newLibraryName"
+                                Class="mb-6 mx-4">
+            </MudTextFieldString>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Move To Library
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public LibraryMediaKind MediaKind { get; set; }
+
+    [Parameter]
+    public int SourceLibraryId { get; set; }
+
+    private LocalLibraryViewModel _newLibrary;
+    private string _newLibraryName;
+
+    private List<LocalLibraryViewModel> _libraries;
+
+    private LocalLibraryViewModel _selectedLibrary;
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    private bool CanSubmit() =>
+        _selectedLibrary != null && (_selectedLibrary != _newLibrary || !string.IsNullOrWhiteSpace(_newLibraryName));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _newLibrary = new LocalLibraryViewModel(-1, "(New Library)", MediaKind);
+        
+        _libraries = await _mediator.Send(new GetAllLocalLibraries())
+            .Map(list => list.Filter(ll => ll.MediaKind == MediaKind && ll.Id != SourceLibraryId))
+            .Map(list => new[] { _newLibrary }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());
+
+        if (_memoryCache.TryGetValue("MoveLocalLibraryPathDialog.SelectedLibraryId", out int id))
+        {
+            _selectedLibrary = _libraries.SingleOrDefault(c => c.Id == id) ?? _newLibrary;
+        }
+        else
+        {
+            _selectedLibrary = _newLibrary;
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        if (_selectedLibrary == _newLibrary)
+        {
+            Either<BaseError, LocalLibraryViewModel> maybeResult =
+                await _mediator.Send(new CreateLocalLibrary(_newLibraryName, MediaKind, new List<string>()));
+
+            maybeResult.Match(
+                collection =>
+                {
+                    _memoryCache.Set("MoveLocalLibraryPathDialog.SelectedLibraryId", collection.Id);
+                    MudDialog.Close(DialogResult.Ok(collection));
+                },
+                error =>
+                {
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Error creating new local library: {Error}", error.Value);
+                    MudDialog.Close(DialogResult.Cancel());
+                });
+        }
+        else
+        {
+            _memoryCache.Set("MoveLocalLibraryPathDialog.SelectedLibraryId", _selectedLibrary.Id);
+            MudDialog.Close(DialogResult.Ok(_selectedLibrary));
+        }
+    }
+
+    private async Task Cancel(MouseEventArgs e)
+    {
+    // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+        if (e.Detail == 0)
+        {
+            await Submit();
+        }
+        else
+        {
+            MudDialog.Cancel();
+        }
+    }
+
+}

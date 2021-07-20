@@ -10,5 +10,6 @@ namespace ErsatzTV.ViewModels
         public LibraryMediaKind MediaKind { get; set; }
         public string NewPath { get; set; }
         public List<LocalLibraryPathEditViewModel> Paths { get; set; }
+        public bool HasChanges { get; set; }
     }
 }
