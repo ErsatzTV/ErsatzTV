@@ -3,23 +3,30 @@ Four library kinds are currently supported: [Local](#local-libraries), [Plex](#p
 
 ## Local Libraries
 
-ErsatzTV provides three local libraries, one for each supported media kind: `Movies`, `Shows` and `Music Videos`.
+Local libraries provide a way to schedule media directly from folders; no media server is necessary.
 
 ### Metadata
 
 With local libraries, ErsatzTV will read metadata from [NFO files](https://kodi.wiki/view/NFO_files), falling back to a *minimal* amount of metadata if NFO files are not found.
 
+### Add Libraries
+
+ErsatzTV provides three local libraries by default, one for each supported media kind: `Movies`, `Shows` and `Music Videos`.
+Additional libraries can be added under `Media Sources` > `Local`.
+
 ### Add Media Items
 
-To add media items to a local library under `Media` > `Libraries`, click the edit button for the library:
+To add media items to a local library under `Media Sources` > `Local`, click the edit button for the library:
 
-![Libraries Edit Icon](../images/libraries-edit-icon.png)
+![Local Libraries Edit Icon](../images/local-libraries-edit-icon.png)
 
-Then click the `Add Library Path` button and enter the path where your media files of the appropriate kind are stored:
+In the `Path` field, enter the path where your media files of the appropriate kind are stored:
 
 ![Add Local Library Path](../images/shows-add-local-library-path.png)
 
-Finally, click `Add Local Library Path` and ErsatzTV will scan and import your media items.
+Finally, click `Add Path`.
+
+When you have added all of your media paths, click `Save Changes` and ErsatzTV will scan and import your media items.
 
 ## Plex Libraries
 

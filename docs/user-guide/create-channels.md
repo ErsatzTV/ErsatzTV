@@ -8,9 +8,10 @@ Channel numbers can be whole numbers or can contain one decimal, like `500` or `
 
 ### Streaming Mode
 
-Two streaming modes are currently supported: `MPEG-TS` (Transport Stream) and `HLS Direct` (HTTP Live Streaming Direct).
-`MPEG-TS` is considered stable and is recommended for most purposes.
-`HLS Direct` is unstable and is not recommended for general use, but can avoid the need to transcode with some clients.
+Three streaming modes are currently supported: `MPEG-TS` (Transport Stream), `HLS Direct` (HTTP Live Streaming Direct) and `HLS Hybrid` (HTTP Live Streaming Hybrid).
+* `MPEG-TS` transcodes content and supports watermarks, though some clients will have issues at program boundaries
+* `HLS Direct` does not transcode content and can perform better on low power systems, but does not support watermarks
+* `HLS Hybrid` transcodes content and supports watermarks, and can perform very well at program boundaries with some clients
 
 ### FFmpeg Profile
 
@@ -24,15 +25,10 @@ Channel logos can be added using the `Upload Logo` button and the logos will dis
 ## Create Schedule
 
 Schedules are used to control the playback order of media items on a channel.
-Create a Schedule by navigating to the `Schedules` page, clicking `Add Schedule` and giving your schedule a name, a collection playback order, and clicking `Add Schedule` to confirm your selections.
+Create a Schedule by navigating to the `Schedules` page, clicking `Add Schedule` and giving your schedule a name, and selecting the appropriate settings:
 
-### Collection Playback Order
-
-Select the desired playback order for media items within each collection in the schedule:
-
-- `Chronological`: Items are ordered by release date, then by season and episode number.
-- `Random`: Items are randomly ordered and may contain repeats.
-- `Shuffle`: Items are randomly ordered and no item will be played a second time until every item from the collection has been played once.
+* `Keep Multi-Part Episodes Together`: This only applies to shuffled schedule items, and will try to intelligently group multi-part episodes (i.e. `s05e02 - whatever part 1` and `s05e03 - whatever part 2`) so they are always scheduled together and always play in the correct order.
+* `Treat Collections As Shows`: This only applies when `Keep Multi-Part Episodes Together` is enabled, and will try to group multi-part episodes across shows within the collection (i.e. crossover episodes like `Show 1 - s03e04 - Whatever Part 1` and `Show 2 - s01e07 - Whatever Part 2`).
 
 ### Schedule Items
 
@@ -56,10 +52,19 @@ Schedule items can contain the following collection types:
 - `Television Show`: Select an entire television show.
 - `Television Season`: Select a specific season of a television show.
 - `Artist`: Select all music videos for a specific artist.
+- `Multi Collection`: Select all collections within a multi-collection.
 
 #### Collection
 
 Based on the selected collection type, select the desired collection.
+
+### Playback Order
+
+Select the desired playback order for media items within the selected collection:
+
+- `Chronological`: Items are ordered by release date, then by season and episode number.
+- `Random`: Items are randomly ordered and may contain repeats.
+- `Shuffle`: Items are randomly ordered and no item will be played a second time until every item from the collection has been played once.
 
 #### Playout Mode
 
