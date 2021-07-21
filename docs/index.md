@@ -1,4 +1,4 @@
-![ErsatzTV](../images/ersatztv.png)
+![ErsatzTV](images/ersatztv.png)
 
 **ErsatzTV** is pre-alpha software for configuring and streaming custom live channels using your media library. The software is currently unstable and under active development.
 
