@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add multiple local libraries to better organize your media
 - Add `Move Library Path` function to support reorganizing existing local libraries
 
+### Fixed
+- Fix bug preventing playouts from rebuilding after an empty collection is encountered within a multi-collection
+
 ## [0.0.51-alpha] - 2021-07-18
 ### Added
 - Add `Multi Collection` to support shuffling multiple collections within a single schedule item
