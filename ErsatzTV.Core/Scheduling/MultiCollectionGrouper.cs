@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace ErsatzTV.Core.Scheduling
 {
@@ -8,7 +9,7 @@ namespace ErsatzTV.Core.Scheduling
         {
             var result = new List<GroupedMediaItem>();
 
-            foreach (CollectionWithItems collection in collections)
+            foreach (CollectionWithItems collection in collections.Where(collection => collection.MediaItems.Any()))
             {
                 if (collection.ScheduleAsGroup)
                 {
