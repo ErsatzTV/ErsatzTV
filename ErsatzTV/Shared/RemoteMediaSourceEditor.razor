@@ -54,7 +54,7 @@
         {
             Either<BaseError, Unit> result = await SaveSecrets(_model);
             result.Match(
-                _ => _navigationManager.NavigateTo($"/media/{Name.ToLowerInvariant()}"),
+                _ => _navigationManager.NavigateTo($"/media/sources/{Name.ToLowerInvariant()}"),
                 error =>
                 {
                     _snackbar.Add(error.Value, Severity.Error);

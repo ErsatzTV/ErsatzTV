@@ -132,7 +132,7 @@
                 _snackbar.Add($"Unexpected error saving path replacements: {error.Value}", Severity.Error);
                 _logger.LogError("Unexpected error saving path replacements: {Error}", error.Value);
             },
-            () => _navigationManager.NavigateTo($"/media/{Name.ToLowerInvariant()}"));
+            () => _navigationManager.NavigateTo($"/media/sources/{Name.ToLowerInvariant()}"));
     }
 
 }
