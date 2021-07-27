@@ -403,8 +403,15 @@ namespace ErsatzTV.Core.Scheduling
             // remove any items outside the desired range
             playout.Items.RemoveAll(old => old.FinishOffset < playoutStart || old.StartOffset > playoutFinish);
 
-            DateTimeOffset maxStartTime = playout.Items.Max(i => i.FinishOffset);
-            DateTimeOffset minCurrentTime = maxStartTime < currentTime ? maxStartTime : currentTime;
+            DateTimeOffset minCurrentTime = currentTime;
+            if (playout.Items.Any())
+            {
+                DateTimeOffset maxStartTime = playout.Items.Max(i => i.FinishOffset);
+                if (maxStartTime < currentTime)
+                {
+                    minCurrentTime = maxStartTime;
+                }
+            }
             
             playout.Anchor = new PlayoutAnchor
             {
