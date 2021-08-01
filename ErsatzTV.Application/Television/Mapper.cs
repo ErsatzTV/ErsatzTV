@@ -80,7 +80,7 @@ namespace ErsatzTV.Application.Television
 
             if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
             {
-                Url url = JellyfinUrl.ForArtwork(maybeJellyfin, artwork);
+                Url url = JellyfinUrl.RelativeProxyForArtwork(artwork);
                 if (artworkKind == ArtworkKind.Poster)
                 {
                     url.SetQueryParam("fillHeight", 440);
@@ -90,7 +90,7 @@ namespace ErsatzTV.Application.Television
             }
             else if (maybeEmby.IsSome && artwork.StartsWith("emby://"))
             {
-                Url url = EmbyUrl.ForArtwork(maybeEmby, artwork);
+                Url url = EmbyUrl.RelativeProxyForArtwork(artwork);
                 if (artworkKind == ArtworkKind.Poster)
                 {
                     url.SetQueryParam("maxHeight", 440);

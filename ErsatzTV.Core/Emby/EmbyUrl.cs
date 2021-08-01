@@ -63,5 +63,21 @@ namespace ErsatzTV.Core.Emby
                 .AppendPathSegment(pathSegment)
                 .SetQueryParams(query);
         }
+        
+        public static Url RelativeProxyForArtwork(string artwork)
+        {
+            string[] split = artwork.Replace("emby://", string.Empty).Split('?');
+            if (split.Length != 2)
+            {
+                return artwork;
+            }
+
+            string pathSegment = split[0];
+            QueryParamCollection query = Url.ParseQueryParams(split[1]);
+
+            return Url.Parse("emby")
+                .AppendPathSegment(pathSegment)
+                .SetQueryParams(query);
+        }
     }
 }
