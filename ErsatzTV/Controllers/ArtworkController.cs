@@ -71,6 +71,7 @@ namespace ErsatzTV.Controllers
         [HttpGet("/artwork/posters/jellyfin/{*path}")]
         [HttpGet("/iptv/artwork/thumbnails/jellyfin/{*path}")]
         [HttpGet("/artwork/thumbnails/jellyfin/{*path}")]
+        [HttpGet("/artwork/fanart/jellyfin/{*path}")]
         public Task<IActionResult> GetJellyfin(string path)
         {
             if (Request.QueryString.HasValue)
@@ -85,6 +86,7 @@ namespace ErsatzTV.Controllers
         [HttpGet("/artwork/posters/emby/{*path}")]
         [HttpGet("/iptv/artwork/thumbnails/emby/{*path}")]
         [HttpGet("/artwork/thumbnails/emby/{*path}")]
+        [HttpGet("/artwork/fanart/emby/{*path}")]
         public Task<IActionResult> GetEmby(string path)
         {
             if (Request.QueryString.HasValue)

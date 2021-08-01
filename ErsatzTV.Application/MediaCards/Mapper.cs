@@ -123,12 +123,12 @@ namespace ErsatzTV.Application.MediaCards
 
             if (maybeJellyfin.IsSome && artwork.StartsWith("jellyfin://"))
             {
-                artwork = JellyfinUrl.ForArtwork(maybeJellyfin, artwork)
+                artwork = JellyfinUrl.RelativeProxyForArtwork(artwork)
                     .SetQueryParam("fillHeight", 440);
             }
             else if (maybeEmby.IsSome && artwork.StartsWith("emby://"))
             {
-                artwork = EmbyUrl.ForArtwork(maybeEmby, artwork)
+                artwork = EmbyUrl.RelativeProxyForArtwork(artwork)
                     .SetQueryParam("maxHeight", 440);
             }
 
@@ -171,12 +171,12 @@ namespace ErsatzTV.Application.MediaCards
 
             if (maybeJellyfin.IsSome && poster.StartsWith("jellyfin://"))
             {
-                poster = JellyfinUrl.ForArtwork(maybeJellyfin, poster)
+                poster = JellyfinUrl.RelativeProxyForArtwork(poster)
                     .SetQueryParam("fillHeight", 440);
             }
             else if (maybeEmby.IsSome && poster.StartsWith("emby://"))
             {
-                poster = EmbyUrl.ForArtwork(maybeEmby, poster)
+                poster = EmbyUrl.RelativeProxyForArtwork(poster)
                     .SetQueryParam("maxHeight", 440);
             }
 
@@ -193,12 +193,12 @@ namespace ErsatzTV.Application.MediaCards
 
             if (maybeJellyfin.IsSome && thumb.StartsWith("jellyfin://"))
             {
-                thumb = JellyfinUrl.ForArtwork(maybeJellyfin, thumb)
+                thumb = JellyfinUrl.RelativeProxyForArtwork(thumb)
                     .SetQueryParam("fillHeight", 220);
             }
             else if (maybeEmby.IsSome && thumb.StartsWith("emby://"))
             {
-                thumb = EmbyUrl.ForArtwork(maybeEmby, thumb)
+                thumb = EmbyUrl.RelativeProxyForArtwork(thumb)
                     .SetQueryParam("maxHeight", 220);
             }
 

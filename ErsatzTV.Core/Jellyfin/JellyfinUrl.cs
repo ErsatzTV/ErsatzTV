@@ -63,5 +63,22 @@ namespace ErsatzTV.Core.Jellyfin
                 .AppendPathSegment(pathSegment)
                 .SetQueryParams(query);
         }
+        
+        public static Url RelativeProxyForArtwork(string artwork)
+        {
+            string[] split = artwork.Replace("jellyfin://", string.Empty).Split('?');
+            if (split.Length != 2)
+            {
+                return artwork;
+            }
+
+            string pathSegment = split[0];
+            QueryParamCollection query = Url.ParseQueryParams(split[1]);
+
+            return Url.Parse("jellyfin")
+                .AppendPathSegment(pathSegment)
+                .SetQueryParams(query);
+        }
+
     }
 }
