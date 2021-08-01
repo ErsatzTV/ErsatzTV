@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix error message displayed after building empty playout
 - Fix Emby and Jellyfin links
 
+### Changed
+- Always proxy Jellyfin and Emby artwork; this fixes artwork in some networking scenarios
+
 ## [0.0.52-alpha] - 2021-07-22
 ### Added
 - Add multiple local libraries to better organize your media
