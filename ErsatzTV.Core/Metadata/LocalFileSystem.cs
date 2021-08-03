@@ -56,5 +56,20 @@ namespace ErsatzTV.Core.Metadata
                 return BaseError.New(ex.ToString());
             }
         }
+
+        public Unit EmptyFolder(string folder)
+        {
+            foreach (string file in Directory.GetFiles(folder))
+            {
+                File.Delete(file);
+            }
+
+            foreach (string directory in Directory.GetDirectories(folder))
+            {
+                Directory.Delete(directory, true);
+            }
+
+            return Unit.Default;
+        }
     }
 }

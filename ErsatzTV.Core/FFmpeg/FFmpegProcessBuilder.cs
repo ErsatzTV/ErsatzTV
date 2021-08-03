@@ -293,14 +293,32 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithHls(string channelNumber)
+        {
+            _arguments.AddRange(
+                new[]
+                {
+                    "-f", "hls",
+                    "-hls_time", "2",
+                    "-hls_list_size", "10",
+                    "-segment_list_flags", "+live",
+                    "-hls_flags", "delete_segments",
+                    Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8")
+                });
+
+            return this;
+        }
+
         public FFmpegProcessBuilder WithPlaybackArgs(FFmpegPlaybackSettings playbackSettings)
         {
             var arguments = new List<string>
             {
                 "-c:v", playbackSettings.VideoCodec,
                 "-flags", "cgop",
-                "-sc_threshold", "1000000000"
+                "-sc_threshold", "0" // disable scene change detection
             };
+            
+            // TODO: use framerate from playbackSettings to calc keyframes
 
             string[] videoBitrateArgs = playbackSettings.VideoBitrate.Match(
                 bitrate =>

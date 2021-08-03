@@ -59,6 +59,8 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Either<BaseError, Unit>> CopyFile(string source, string destination) =>
             Task.FromResult(Right<BaseError, Unit>(Unit.Default));
 
+        public Unit EmptyFolder(string folder) => Unit.Default;
+
         private static List<DirectoryInfo> Split(DirectoryInfo path)
         {
             var result = new List<DirectoryInfo>();

@@ -104,12 +104,21 @@ namespace ErsatzTV.Core.FFmpeg
                     }
                 });
 
-            return builder.WithPlaybackArgs(playbackSettings)
+            builder = builder.WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel, maybeAudioStream)
-                .WithFormat("mpegts")
-                .WithDuration(start + version.Duration - now)
-                .WithPipe()
-                .Build();
+                .WithDuration(start + version.Duration - now);
+
+            switch (channel.StreamingMode)
+            {
+                // HLS needs to segment and generate playlist
+                case StreamingMode.HttpLiveStreamingSegmenter:
+                    return builder.WithHls(channel.Number)
+                        .Build();
+                default:
+                    return builder.WithFormat("mpegts")
+                        .WithPipe()
+                        .Build();
+            }
         }
 
         public Process ForError(string ffmpegPath, Channel channel, Option<TimeSpan> duration, string errorMessage)

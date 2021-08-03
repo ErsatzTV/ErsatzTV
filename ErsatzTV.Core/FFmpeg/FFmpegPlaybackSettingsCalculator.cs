@@ -70,6 +70,7 @@ namespace ErsatzTV.Core.FFmpeg
                     result.Deinterlace = false;
                     break;
                 case StreamingMode.HttpLiveStreamingHybrid:
+                case StreamingMode.HttpLiveStreamingSegmenter:
                 case StreamingMode.TransportStream:
                     result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
 

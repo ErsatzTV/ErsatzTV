@@ -56,6 +56,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         channel.StreamingMode = request.Mode.ToLowerInvariant() switch
                         {
                             "hls-direct" => StreamingMode.HttpLiveStreamingDirect,
+                            "segmenter" => StreamingMode.HttpLiveStreamingSegmenter,
                             "ts" => StreamingMode.TransportStream,
                             _ => channel.StreamingMode
                         };

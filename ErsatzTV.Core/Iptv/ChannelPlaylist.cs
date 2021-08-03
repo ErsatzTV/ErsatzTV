@@ -44,6 +44,7 @@ namespace ErsatzTV.Core.Iptv
                 {
                     StreamingMode.HttpLiveStreamingDirect => "m3u8?mode=hls-direct",
                     StreamingMode.HttpLiveStreamingHybrid => "m3u8",
+                    StreamingMode.HttpLiveStreamingSegmenter => "m3u8?mode=segmenter",
                     _ => "ts"
                 };
 
