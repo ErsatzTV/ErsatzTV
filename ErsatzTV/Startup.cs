@@ -202,7 +202,11 @@ namespace ErsatzTV
                 {
                     FileProvider = new PhysicalFileProvider(FileSystemLayout.TranscodeFolder),
                     RequestPath = "/iptv/session",
-                    ContentTypeProvider = extensionProvider
+                    ContentTypeProvider = extensionProvider,
+                    OnPrepareResponse = ctx =>
+                    {
+                        Log.Logger.Information("Transcode access: {Test}", ctx.File.PhysicalPath);
+                    }
                 });
 
             app.UseRouting();
