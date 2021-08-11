@@ -21,7 +21,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.8" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.9" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.10.56">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
