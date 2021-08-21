@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix bug parsing ffprobe output in cultures where `.` is a group/thousands separator
+  - This bug likely prevented ETV from scheduling correctly or working at all in those cultures
+  - After installing a version with this fix, affected content will need to be removed from ETV and re-added
 
 ## [0.0.53-alpha] - 2021-08-01
 ### Fixed
