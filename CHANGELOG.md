@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Shuffle In Order` playback order for multi-collections.
+  - This is useful for randomizing multiple collections/shows on a single channel, while each collection maintains proper ordering (custom or chronological)
+
 ### Fixed
 - Fix bug parsing ffprobe output in cultures where `.` is a group/thousands separator
   - This bug likely prevented ETV from scheduling correctly or working at all in those cultures

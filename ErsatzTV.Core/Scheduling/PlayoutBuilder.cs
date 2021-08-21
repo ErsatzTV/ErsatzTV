@@ -567,6 +567,10 @@ namespace ErsatzTV.Core.Scheduling
                     return new ShuffledMediaCollectionEnumerator(
                         await GetGroupedMediaItemsForShuffle(playout, mediaItems, collectionKey),
                         state);
+                case PlaybackOrder.ShuffleInOrder:
+                    return new ShuffleInOrderCollectionEnumerator(
+                        await GetCollectionItemsForShuffleInOrder(collectionKey),
+                        state);
                 default:
                     // TODO: handle this error case differently?
                     return new RandomizedMediaCollectionEnumerator(mediaItems, state);
@@ -591,6 +595,19 @@ namespace ErsatzTV.Core.Scheduling
                     mediaItems,
                     playout.ProgramSchedule.TreatCollectionsAsShows)
                 : mediaItems.Map(mi => new GroupedMediaItem(mi, null)).ToList();
+        }
+
+        private async Task<List<CollectionWithItems>> GetCollectionItemsForShuffleInOrder(CollectionKey collectionKey)
+        {
+            var result = new List<CollectionWithItems>();
+
+            if (collectionKey.MultiCollectionId != null)
+            {
+                result = await _mediaCollectionRepository.GetMultiCollectionCollections(
+                    collectionKey.MultiCollectionId.Value);
+            }
+
+            return result;
         }
 
         private static string DisplayTitle(MediaItem mediaItem)
