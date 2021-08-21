@@ -24,6 +24,23 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             IProgramScheduleItemRequest item,
             ProgramSchedule programSchedule)
         {
+            if (item.MultiCollectionId.HasValue)
+            {
+                switch (item.PlaybackOrder)
+                {
+                    case PlaybackOrder.Chronological:
+                    case PlaybackOrder.Random:
+                        return BaseError.New($"Invalid playback order for multi collection: '{item.PlaybackOrder}'");
+                    case PlaybackOrder.Shuffle:
+                    case PlaybackOrder.ShuffleInOrder:
+                        break;
+                }
+            }
+            else if (item.PlaybackOrder == PlaybackOrder.ShuffleInOrder)
+            {
+                return BaseError.New("Invalid playback order: 'Shuffle In Order'");
+            }
+
             switch (item.PlayoutMode)
             {
                 case PlayoutMode.Flood:

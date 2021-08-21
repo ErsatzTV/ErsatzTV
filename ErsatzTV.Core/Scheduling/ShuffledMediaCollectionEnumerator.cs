@@ -73,9 +73,7 @@ namespace ErsatzTV.Core.Scheduling
             {
                 n--;
                 int k = random.Next(n + 1);
-                GroupedMediaItem value = copy[k];
-                copy[k] = copy[n];
-                copy[n] = value;
+                (copy[k], copy[n]) = (copy[n], copy[k]);
             }
 
             return GroupedMediaItem.FlattenGroups(copy, _mediaItemCount);
