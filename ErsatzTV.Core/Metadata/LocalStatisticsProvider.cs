@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -126,7 +127,7 @@ namespace ErsatzTV.Core.Metadata
                 });
         }
 
-        private MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
+        internal MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
             Optional(probeOutput)
                 .Filter(json => json?.format != null && json.streams != null)
                 .ToValidation<BaseError>("Unable to parse ffprobe output")
@@ -137,7 +138,7 @@ namespace ErsatzTV.Core.Metadata
                         var version = new MediaVersion
                             { Name = "Main", DateAdded = DateTime.UtcNow, Streams = new List<MediaStream>() };
 
-                        if (double.TryParse(json.format.duration, out double duration))
+                        if (double.TryParse(json.format.duration, NumberStyles.Number, CultureInfo.InvariantCulture, out double duration))
                         {
                             var seconds = TimeSpan.FromSeconds(duration);
                             version.Duration = seconds;
