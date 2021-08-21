@@ -91,7 +91,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 });
 
             metadata.Count.Should().Be(2);
-            metadata.Map(m => m.EpisodeNumber).Should().BeEquivalentTo(episode1, episode2);
+            metadata.Map(m => m.EpisodeNumber).Should().BeEquivalentTo(new[] { episode1, episode2 });
         }
 
         [Test]
