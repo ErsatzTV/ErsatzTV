@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ErsatzTV.Core;
@@ -35,7 +36,12 @@ namespace ErsatzTV.Infrastructure.Plex
         {
             try
             {
-                IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
+                IPlexServerApi service = RestService.For<IPlexServerApi>(
+                    new HttpClient
+                    {
+                        BaseAddress = new Uri(connection.Uri),
+                        Timeout = TimeSpan.FromSeconds(10)
+                    });
                 List<PlexLibraryResponse> directory =
                     await service.GetLibraries(token.AuthToken).Map(r => r.MediaContainer.Directory);
                 return directory

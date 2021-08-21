@@ -112,7 +112,5 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             int? CollectionId,
             int? MediaItemId,
             int? MultiCollectionId);
-
-        private record CollectionKeyOrder(CollectionKey Key, PlaybackOrder PlaybackOrder);
     }
 }
