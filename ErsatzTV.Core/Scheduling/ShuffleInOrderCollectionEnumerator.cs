@@ -66,55 +66,115 @@ namespace ErsatzTV.Core.Scheduling
         
         private IList<MediaItem> Shuffle(IList<CollectionWithItems> collections, Random random)
         {
-            // TODO: "balanced" option?
+            // based on https://keyj.emphy.de/balanced-shuffle/
             
             var orderedCollections = collections
                 .Filter(c => c.ScheduleAsGroup)
                 .Map(c => new OrderedCollection { Index = 0, Items = OrderItems(c) })
                 .ToList();
 
-            orderedCollections.Add(
-                new OrderedCollection
-                {
-                    Index = 0,
-                    Items = Shuffle(collections.Filter(c => !c.ScheduleAsGroup).SelectMany(c => c.MediaItems), random)
-                });
-
-            var result = new MediaItem[_mediaItemCount];
-            
-            var i = 0;
-            while (i < result.Length)
+            if (collections.Any(c => !c.ScheduleAsGroup))
             {
-                int takeFrom = random.Next(orderedCollections.Count);
-                OrderedCollection target = orderedCollections[takeFrom];
-                if (target.Index >= target.Items.Count)
-                {
-                    continue;
-                }
+                orderedCollections.Add(
+                    new OrderedCollection
+                    {
+                        Index = 0,
+                        Items = Shuffle(
+                            collections.Filter(c => !c.ScheduleAsGroup).SelectMany(c => c.MediaItems.Map(Some)),
+                            random)
+                    });
+            }
 
-                result[i] = target.Items[target.Index];
-                target.Index += 1;
-                i += 1;
+            List<OrderedCollection> filled = Fill(orderedCollections, random);
+
+            var result = new List<MediaItem>();
+            for (var i = 0; i < filled[0].Items.Count; i++)
+            {
+                var batch = filled.Select(collection => collection.Items[i]).ToList();
+                foreach (Option<MediaItem> maybeItem in Shuffle(batch, random))
+                {
+                    result.AddRange(maybeItem);
+                }
             }
 
             return result;
         }
-        
-        private static IList<MediaItem> OrderItems(CollectionWithItems collectionWithItems)
+
+        private List<OrderedCollection> Fill(List<OrderedCollection> orderedCollections, Random random)
+        {
+            var result = new List<OrderedCollection>();
+            int maxLength = orderedCollections.Max(c => c.Items.Count);
+
+            foreach (OrderedCollection collection in orderedCollections)
+            {
+                var items = new Queue<Option<MediaItem>>(collection.Items);
+                var spaces = new Queue<Option<MediaItem>>(
+                    Range(0, maxLength - collection.Items.Count).Map(_ => Option<MediaItem>.None).ToList());
+
+                Queue<Option<MediaItem>> smaller = collection.Items.Count < maxLength - collection.Items.Count
+                    ? items
+                    : spaces;
+                Queue<Option<MediaItem>> larger = collection.Items.Count < maxLength - collection.Items.Count
+                    ? spaces
+                    : items;
+
+                var ordered = new List<Option<MediaItem>>();
+                
+                int k = smaller.Count;
+                while (k > 0)
+                {
+                    int n = maxLength - ordered.Count;
+                    
+                    // compute optimal length +/- 10%
+                    double optimalLength = n / (double)k + (random.NextDouble() - 0.5) / 5.0;
+                    int r = Math.Clamp((int)optimalLength, 1, maxLength - k + 1);
+                    ordered.Add(smaller.Dequeue());
+                    for (var i = 0; i < r - 1; i++)
+                    {
+                        ordered.Add(larger.Dequeue());
+                    }
+
+                    k--;
+                }
+
+                if (smaller.Any())
+                {
+                    ordered.AddRange(smaller);
+                }
+
+                if (larger.Any())
+                {
+                    ordered.AddRange(larger);
+                }
+
+                int offset = random.Next(ordered.Count);
+                result.Add(
+                    new OrderedCollection
+                    {
+                        Index = 0,
+                        Items = ordered.Skip(offset).Concat(ordered.Take(offset)).ToList()
+                    });
+            }
+
+            return result;
+        }
+
+        private static IList<Option<MediaItem>> OrderItems(CollectionWithItems collectionWithItems)
         {
             if (collectionWithItems.UseCustomOrder)
             {
-                return collectionWithItems.MediaItems;
+                return collectionWithItems.MediaItems.Map(Some).ToList();
             }
-            
+
             return collectionWithItems.MediaItems
                 .OrderBy(identity, new ChronologicalMediaComparer())
+                .Map(Some)
                 .ToList();
         }
         
-        private static IList<MediaItem> Shuffle(IEnumerable<MediaItem> list, Random random)
+        private static IList<Option<MediaItem>> Shuffle(IEnumerable<Option<MediaItem>> list, Random random)
         {
-            MediaItem[] copy = list.ToArray();
+            Option<MediaItem>[] copy = list.ToArray();
 
             int n = copy.Length;
             while (n > 1)
@@ -130,7 +190,7 @@ namespace ErsatzTV.Core.Scheduling
         private class OrderedCollection
         {
             public int Index { get; set; }
-            public IList<MediaItem> Items { get; set; }
+            public IList<Option<MediaItem>> Items { get; set; }
         }
     }
 }
