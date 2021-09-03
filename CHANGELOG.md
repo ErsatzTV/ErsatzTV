@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix all local library scanners to ignore dot underscore files (`._`)
 
 ## [0.0.54-alpha] - 2021-08-21
 ### Added

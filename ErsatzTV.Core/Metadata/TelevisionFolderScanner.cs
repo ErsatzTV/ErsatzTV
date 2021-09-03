@@ -124,6 +124,11 @@ namespace ErsatzTV.Core.Metadata
                     _logger.LogInformation("Removing missing episode at {Path}", path);
                     await _televisionRepository.DeleteByPath(libraryPath, path);
                 }
+                else if (Path.GetFileName(path).StartsWith("._"))
+                {
+                    _logger.LogInformation("Removing dot underscore file at {Path}", path);
+                    await _televisionRepository.DeleteByPath(libraryPath, path);
+                }
             }
 
             await _televisionRepository.DeleteEmptySeasons(libraryPath);
@@ -201,7 +206,9 @@ namespace ErsatzTV.Core.Metadata
             string seasonPath)
         {
             foreach (string file in _localFileSystem.ListFiles(seasonPath)
-                .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f))).OrderBy(identity))
+                .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
+                .Filter(f => !Path.GetFileName(f).StartsWith("._"))
+                .OrderBy(identity))
             {
                 // TODO: figure out how to rebuild playlists
                 Either<BaseError, Episode> maybeEpisode = await _televisionRepository
