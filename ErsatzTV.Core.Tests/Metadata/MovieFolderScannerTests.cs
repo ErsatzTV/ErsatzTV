@@ -405,6 +405,48 @@ namespace ErsatzTV.Core.Tests.Metadata
                         It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                     Times.Once);
             }
+            
+            [Test]
+            public async Task Should_Ignore_Dot_Underscore_Files(
+                [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
+                string videoExtension)
+            {
+                string moviePath = Path.Combine(
+                    FakeRoot,
+                    Path.Combine("Movie (2020)", $"Movie (2020){videoExtension}"));
+
+                MovieFolderScanner service = GetService(
+                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now },
+                    new FakeFileEntry(
+                        Path.Combine(
+                            Path.GetDirectoryName(moviePath) ?? string.Empty,
+                            $"._Movie (2020){videoExtension}"))
+                );
+                var libraryPath = new LibraryPath
+                    { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
+
+                Either<BaseError, Unit> result = await service.ScanFolder(
+                    libraryPath,
+                    FFprobePath,
+                    0,
+                    1);
+
+                result.IsRight.Should().BeTrue();
+
+                _movieRepository.Verify(x => x.GetOrAdd(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
+                _movieRepository.Verify(x => x.GetOrAdd(libraryPath, moviePath), Times.Once);
+
+                _localStatisticsProvider.Verify(
+                    x => x.RefreshStatistics(
+                        FFprobePath,
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
+                    Times.Once);
+
+                _localMetadataProvider.Verify(
+                    x => x.RefreshFallbackMetadata(
+                        It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
+                    Times.Once);
+            }
 
             [Test]
             public async Task Should_Ignore_Extra_Folders(
