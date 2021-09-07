@@ -9,8 +9,9 @@ Channel numbers can be whole numbers or can contain one decimal, like `500` or `
 ### Streaming Mode
 
 Three streaming modes are currently supported: `MPEG-TS` (Transport Stream), `HLS Direct` (HTTP Live Streaming Direct) and `HLS Hybrid` (HTTP Live Streaming Hybrid).
+
 * `MPEG-TS` transcodes content and supports watermarks, though some clients will have issues at program boundaries
-* `HLS Direct` does not transcode content and can perform better on low power systems, but does not support watermarks
+* `HLS Direct` does not transcode content and can perform better on low power systems, but does not support watermarks and some clients will have issues at program boundaries
 * `HLS Hybrid` transcodes content and supports watermarks, and can perform very well at program boundaries with some clients
 
 ### FFmpeg Profile
