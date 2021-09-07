@@ -36,32 +36,39 @@ namespace ErsatzTV.Core.Iptv
             xml.WriteStartElement("tv");
             xml.WriteAttributeString("generator-info-name", "ersatztv");
 
+            var sortedChannelItems = new Dictionary<Channel, List<PlayoutItem>>();
+
             foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
             {
-                xml.WriteStartElement("channel");
-                xml.WriteAttributeString("id", channel.Number);
+                var sortedItems = channel.Playouts.Collect(p => p.Items).OrderBy(x => x.Start).ToList();
+                sortedChannelItems.Add(channel, sortedItems);
 
-                xml.WriteStartElement("display-name");
-                xml.WriteAttributeString("lang", "en");
-                xml.WriteString(channel.Name);
-                xml.WriteEndElement(); // display-name
+                if (sortedItems.Any())
+                {
+                    xml.WriteStartElement("channel");
+                    xml.WriteAttributeString("id", $"{channel.Number}.etv");
 
-                xml.WriteStartElement("icon");
-                string logo = Optional(channel.Artwork).Flatten()
-                    .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
-                    .HeadOrNone()
-                    .Match(
-                        artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}",
-                        () => $"{_scheme}://{_host}/iptv/images/ersatztv-500.png");
-                xml.WriteAttributeString("src", logo);
-                xml.WriteEndElement(); // icon
+                    xml.WriteStartElement("display-name");
+                    xml.WriteAttributeString("lang", "en");
+                    xml.WriteString(channel.Name);
+                    xml.WriteEndElement(); // display-name
 
-                xml.WriteEndElement(); // channel
+                    xml.WriteStartElement("icon");
+                    string logo = Optional(channel.Artwork).Flatten()
+                        .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                        .HeadOrNone()
+                        .Match(
+                            artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}",
+                            () => $"{_scheme}://{_host}/iptv/images/ersatztv-500.png");
+                    xml.WriteAttributeString("src", logo);
+                    xml.WriteEndElement(); // icon
+
+                    xml.WriteEndElement(); // channel
+                }
             }
 
-            foreach (Channel channel in _channels.OrderBy(c => c.Number))
+            foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(kvp => kvp.Key.Number))
             {
-                var sorted = channel.Playouts.Collect(p => p.Items).OrderBy(x => x.Start).ToList();
                 var i = 0;
                 while (i < sorted.Count)
                 {
@@ -90,7 +97,9 @@ namespace ErsatzTV.Core.Iptv
                     PlayoutItem finishItem = sorted[finishIndex];
                     i = finishIndex;
 
+                    // ReSharper disable once StringLiteralTypo
                     string start = startItem.StartOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                    // ReSharper disable once StringLiteralTypo
                     string stop = finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
 
                     string title = GetTitle(startItem);
@@ -101,27 +110,51 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteStartElement("programme");
                     xml.WriteAttributeString("start", start);
                     xml.WriteAttributeString("stop", stop);
-                    xml.WriteAttributeString("channel", channel.Number);
+                    xml.WriteAttributeString("channel", $"{channel.Number}.etv");
+                    
+                    xml.WriteStartElement("title");
+                    xml.WriteAttributeString("lang", "en");
+                    xml.WriteString(title);
+                    xml.WriteEndElement(); // title
+
+                    if (!string.IsNullOrWhiteSpace(subtitle))
+                    {
+                        xml.WriteStartElement("sub-title");
+                        xml.WriteAttributeString("lang", "en");
+                        xml.WriteString(subtitle);
+                        xml.WriteEndElement(); // subtitle
+                    }
+                    
+                    if (!isSameCustomShow)
+                    {
+                        if (!string.IsNullOrWhiteSpace(description))
+                        {
+                            xml.WriteStartElement("desc");
+                            xml.WriteAttributeString("lang", "en");
+                            xml.WriteString(description);
+                            xml.WriteEndElement(); // desc
+                        }
+                    }
 
                     if (!hasCustomTitle && startItem.MediaItem is Movie movie)
                     {
-                        xml.WriteStartElement("category");
-                        xml.WriteAttributeString("lang", "en");
-                        xml.WriteString("Movie");
-                        xml.WriteEndElement(); // category
-
-                        Option<MovieMetadata> maybeMetadata = movie.MovieMetadata.HeadOrNone();
-                        if (maybeMetadata.IsSome)
+                        foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
                         {
-                            MovieMetadata metadata = maybeMetadata.ValueUnsafe();
-
                             if (metadata.Year.HasValue)
                             {
                                 xml.WriteStartElement("date");
                                 xml.WriteString(metadata.Year.Value.ToString());
                                 xml.WriteEndElement(); // date
                             }
+                        }
 
+                        xml.WriteStartElement("category");
+                        xml.WriteAttributeString("lang", "en");
+                        xml.WriteString("Movie");
+                        xml.WriteEndElement(); // category
+
+                        foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
+                        {
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
@@ -135,22 +168,6 @@ namespace ErsatzTV.Core.Iptv
                             }
                         }
                     }
-
-                    xml.WriteStartElement("title");
-                    xml.WriteAttributeString("lang", "en");
-                    xml.WriteString(title);
-                    xml.WriteEndElement(); // title
-
-                    if (!string.IsNullOrWhiteSpace(subtitle))
-                    {
-                        xml.WriteStartElement("sub-title");
-                        xml.WriteAttributeString("lang", "en");
-                        xml.WriteString(subtitle);
-                        xml.WriteEndElement(); // subtitle
-                    }
-
-                    xml.WriteStartElement("previously-shown");
-                    xml.WriteEndElement(); // previously-shown
 
                     if (startItem.MediaItem is Episode episode && (!hasCustomTitle || isSameCustomShow))
                     {
@@ -200,17 +217,9 @@ namespace ErsatzTV.Core.Iptv
                             }
                         }
                     }
-
-                    if (!isSameCustomShow)
-                    {
-                        if (!string.IsNullOrWhiteSpace(description))
-                        {
-                            xml.WriteStartElement("desc");
-                            xml.WriteAttributeString("lang", "en");
-                            xml.WriteString(description);
-                            xml.WriteEndElement(); // desc
-                        }
-                    }
+                    
+                    xml.WriteStartElement("previously-shown");
+                    xml.WriteEndElement(); // previously-shown
 
                     foreach (ContentRating rating in contentRating)
                     {
