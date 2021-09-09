@@ -134,6 +134,12 @@ namespace ErsatzTV.Core.Metadata
                     List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
                     await _searchIndex.RemoveItems(musicVideoIds);
                 }
+                else if (Path.GetFileName(path).StartsWith("._"))
+                {
+                    _logger.LogInformation("Removing dot underscore file at {Path}", path);
+                    List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
+                    await _searchIndex.RemoveItems(musicVideoIds);
+                }
             }
 
             List<int> artistIds = await _artistRepository.DeleteEmptyArtists(libraryPath);
@@ -238,6 +244,7 @@ namespace ErsatzTV.Core.Metadata
 
                 var allFiles = _localFileSystem.ListFiles(musicVideoFolder)
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
+                    .Filter(f => !Path.GetFileName(f).StartsWith("._"))
                     .ToList();
 
                 foreach (string subdirectory in _localFileSystem.ListSubdirectories(musicVideoFolder)

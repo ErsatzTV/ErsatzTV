@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Generate XMLTV that validates successfully
+  - Properly order elements
+  - Omit channels with no programmes
+  - Properly identify channels using the format number.etv like `15.etv`
+- Fix building playouts when multi-part episode grouping is enabled and episodes are missing metadata
+
+## [0.0.55-alpha] - 2021-09-03
+### Fixed
+- Fix all local library scanners to ignore dot underscore files (`._`)
+
+## [0.0.54-alpha] - 2021-08-21
+### Added
+- Add `Shuffle In Order` playback order for multi-collections.
+  - This is useful for randomizing multiple collections/shows on a single channel, while each collection maintains proper ordering (custom or chronological)
+
+### Fixed
+- Fix bug parsing ffprobe output in cultures where `.` is a group/thousands separator
+  - This bug likely prevented ETV from scheduling correctly or working at all in those cultures
+  - After installing a version with this fix, affected content will need to be removed from ETV and re-added
 
 ## [0.0.53-alpha] - 2021-08-01
 ### Fixed
@@ -536,7 +556,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.53-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.55-alpha...HEAD
+[0.0.55-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.54-alpha...v0.0.55-alpha
+[0.0.54-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.53-alpha...v0.0.54-alpha
 [0.0.53-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.52-alpha...v0.0.53-alpha
 [0.0.52-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.51-alpha...v0.0.52-alpha
 [0.0.51-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.50-alpha...v0.0.51-alpha

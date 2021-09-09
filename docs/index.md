@@ -1,6 +1,6 @@
 ![ErsatzTV](images/ersatztv.png)
 
-**ErsatzTV** is pre-alpha software for configuring and streaming custom live channels using your media library. The software is currently unstable and under active development.
+**ErsatzTV** is alpha software for configuring and streaming custom live channels using your media library. The software is currently unstable and under active development.
 
 Want to join the community or have a question? Join us on [Discord](https://discord.gg/hHaJm3yGy6).
 

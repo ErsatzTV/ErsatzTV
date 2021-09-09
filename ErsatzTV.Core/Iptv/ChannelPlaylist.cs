@@ -52,7 +52,7 @@ namespace ErsatzTV.Core.Iptv
                 string acodec = channel.FFmpegProfile.AudioCodec;
 
                 sb.AppendLine(
-                    $"#EXTINF:0 tvg-id=\"{channel.Number}\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"ErsatzTV\" tvc-stream-vcodec=\"{vcodec}\" tvc-stream-acodec=\"{acodec}\", {channel.Name}");
+                    $"#EXTINF:0 tvg-id=\"{channel.Number}.etv\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"ErsatzTV\" tvc-stream-vcodec=\"{vcodec}\" tvc-stream-acodec=\"{acodec}\", {channel.Name}");
                 sb.AppendLine($"{_scheme}://{_host}/iptv/channel/{channel.Number}.{format}");
             }
 

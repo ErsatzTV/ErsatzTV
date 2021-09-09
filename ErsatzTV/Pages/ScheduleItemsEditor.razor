@@ -145,10 +145,17 @@
                                                  SearchFunc="@SearchArtists"
                                                  ToStringFunc="@(s => s?.Name)"/>
                             }
-                            <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)" Disabled="@(_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)">
-                                @foreach (PlaybackOrder playbackOrder in Enum.GetValues<PlaybackOrder>())
+                            <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
+                                @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
                                 {
-                                    <MudSelectItem Value="@playbackOrder">@playbackOrder</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                }
+                                else
+                                {
+                                    <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                    <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
                                 }
                             </MudSelect>
                             <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">

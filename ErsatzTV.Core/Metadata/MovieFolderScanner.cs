@@ -87,6 +87,7 @@ namespace ErsatzTV.Core.Metadata
 
                 var allFiles = filesForEtag
                     .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
+                    .Filter(f => !Path.GetFileName(f).StartsWith("._"))
                     .Filter(
                         f => !ExtraFiles.Any(
                             e => Path.GetFileNameWithoutExtension(f).EndsWith(e, StringComparison.OrdinalIgnoreCase)))
@@ -154,6 +155,12 @@ namespace ErsatzTV.Core.Metadata
                 if (!_localFileSystem.FileExists(path))
                 {
                     _logger.LogInformation("Removing missing movie at {Path}", path);
+                    List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
+                    await _searchIndex.RemoveItems(ids);
+                }
+                else if (Path.GetFileName(path).StartsWith("._"))
+                {
+                    _logger.LogInformation("Removing dot underscore file at {Path}", path);
                     List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
                     await _searchIndex.RemoveItems(ids);
                 }
