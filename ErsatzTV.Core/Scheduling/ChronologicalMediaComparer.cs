@@ -66,13 +66,17 @@ namespace ErsatzTV.Core.Scheduling
 
             int episode1 = x switch
             {
-                Episode e => e.EpisodeMetadata.Max(em => em.EpisodeNumber),
+                Episode e => e.EpisodeMetadata.HeadOrNone().Match(
+                    em => em.EpisodeNumber,
+                    () => int.MaxValue),
                 _ => int.MaxValue
             };
 
             int episode2 = y switch
             {
-                Episode e => e.EpisodeMetadata.Max(em => em.EpisodeNumber),
+                Episode e => e.EpisodeMetadata.HeadOrNone().Match(
+                    em => em.EpisodeNumber,
+                    () => int.MaxValue),
                 _ => int.MaxValue
             };
 
