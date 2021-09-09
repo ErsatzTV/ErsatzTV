@@ -121,32 +121,35 @@ namespace ErsatzTV.Core.Scheduling
 
         private static Option<int> FindPartNumber(Episode e)
         {
-            const string PATTERN = @"^.*\((\d+)\)( - .*)?$";
-            Match match = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN);
-            if (match.Success && int.TryParse(match.Groups[1].Value, out int value1))
+            foreach (EpisodeMetadata metadata in e.EpisodeMetadata.HeadOrNone())
             {
-                return value1;
-            }
+                const string PATTERN = @"^.*\((\d+)\)( - .*)?$";
+                Match match = Regex.Match(metadata.Title ?? string.Empty, PATTERN);
+                if (match.Success && int.TryParse(match.Groups[1].Value, out int value1))
+                {
+                    return value1;
+                }
 
-            const string PATTERN_2 = @"^.*\(?Part (\d+)\)?$";
-            Match match2 = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN_2);
-            if (match2.Success && int.TryParse(match2.Groups[1].Value, out int value2))
-            {
-                return value2;
-            }
+                const string PATTERN_2 = @"^.*\(?Part (\d+)\)?$";
+                Match match2 = Regex.Match(metadata.Title ?? string.Empty, PATTERN_2);
+                if (match2.Success && int.TryParse(match2.Groups[1].Value, out int value2))
+                {
+                    return value2;
+                }
 
-            const string PATTERN_3 = @"^.*\(([MDCLXVI]+)\)( - .*)?$";
-            Match match3 = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN_3);
-            if (match3.Success && TryParseRoman(match3.Groups[1].Value, out int value3))
-            {
-                return value3;
-            }
+                const string PATTERN_3 = @"^.*\(([MDCLXVI]+)\)( - .*)?$";
+                Match match3 = Regex.Match(metadata.Title ?? string.Empty, PATTERN_3);
+                if (match3.Success && TryParseRoman(match3.Groups[1].Value, out int value3))
+                {
+                    return value3;
+                }
 
-            const string PATTERN_4 = @"^.*Part (\w+)$";
-            Match match4 = Regex.Match(e.EpisodeMetadata.Head().Title, PATTERN_4);
-            if (match4.Success && TryParseEnglish(match4.Groups[1].Value, out int value4))
-            {
-                return value4;
+                const string PATTERN_4 = @"^.*Part (\w+)$";
+                Match match4 = Regex.Match(metadata.Title ?? string.Empty, PATTERN_4);
+                if (match4.Success && TryParseEnglish(match4.Groups[1].Value, out int value4))
+                {
+                    return value4;
+                }
             }
 
             return None;
