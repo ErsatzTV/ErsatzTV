@@ -9,8 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Properly order elements
   - Omit channels with no programmes
   - Properly identify channels using the format number.etv like `15.etv`
-- Fix sorting episodes without episode metadata
-  - This bug prevented playouts from building and was most often seen when grouping multi-part episodes, as shows are sorted chronologically before checking for multi-part episodes
+- Fix building playouts when multi-part episode grouping is enabled and episodes are missing metadata
 
 ## [0.0.55-alpha] - 2021-09-03
 ### Fixed
