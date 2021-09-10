@@ -430,23 +430,23 @@
 
         IDialogReference dialog = Dialog.Show<SaveAsSmartCollectionDialog>("Save As Smart Collection", options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled && result.Data is string collectionName)
+        if (!result.Cancelled && result.Data is SmartCollectionViewModel collection)
         {
-            var request = new CreateSmartCollection(
-                _query,
-                collectionName);
+            var request = new UpdateSmartCollection(
+                collection.Id,
+                _query);
 
-            Either<BaseError, SmartCollectionViewModel> createResult = await Mediator.Send(request);
-            createResult.Match(
+            Either<BaseError, Unit> updateResult = await Mediator.Send(request);
+            updateResult.Match(
                 Left: error =>
                 {
-                    Snackbar.Add($"Unexpected error creating smart collection: {error.Value}");
-                    Logger.LogError("Unexpected error creating smart collection: {Error}", error.Value);
+                    Snackbar.Add($"Unexpected error saving smart collection: {error.Value}");
+                    Logger.LogError("Unexpected error saving smart collection: {Error}", error.Value);
                 },
                 Right: _ =>
                 {
                     Snackbar.Add(
-                        $"Created smart collection {collectionName}",
+                        $"Saved smart collection {collection.Name}",
                         Severity.Success);
                     ClearSelection();
                 });
