@@ -28,6 +28,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         duration.MultiCollection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(duration.MultiCollection)
                             : null,
+                        duration.SmartCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(duration.SmartCollection)
+                            : null,
                         duration.MediaItem switch
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
@@ -52,6 +55,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         flood.MultiCollection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(flood.MultiCollection)
                             : null,
+                        flood.SmartCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(flood.SmartCollection)
+                            : null,
                         flood.MediaItem switch
                         {
                             Show show => MediaItems.Mapper.ProjectToViewModel(show),
@@ -73,6 +79,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                             : null,
                         multiple.MultiCollection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(multiple.MultiCollection)
+                            : null,
+                        multiple.SmartCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(multiple.SmartCollection)
                             : null,
                         multiple.MediaItem switch
                         {
@@ -96,6 +105,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                             : null,
                         one.MultiCollection != null
                             ? MediaCollections.Mapper.ProjectToViewModel(one.MultiCollection)
+                            : null,
+                        one.SmartCollection != null
+                            ? MediaCollections.Mapper.ProjectToViewModel(one.SmartCollection)
                             : null,
                         one.MediaItem switch
                         {

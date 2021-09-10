@@ -3,14 +3,16 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20210910142324_Add_SmartCollection")]
+    partial class Add_SmartCollection
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1106,9 +1108,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("ProgramScheduleId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("SmartCollectionId")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CollectionId");
@@ -1120,8 +1119,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("PlayoutId");
 
                     b.HasIndex("ProgramScheduleId");
-
-                    b.HasIndex("SmartCollectionId");
 
                     b.ToTable("PlayoutProgramScheduleAnchor");
                 });
@@ -1223,9 +1220,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("ProgramScheduleId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("SmartCollectionId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<TimeSpan?>("StartTime")
                         .HasColumnType("TEXT");
 
@@ -1238,8 +1232,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("MultiCollectionId");
 
                     b.HasIndex("ProgramScheduleId");
-
-                    b.HasIndex("SmartCollectionId");
 
                     b.ToTable("ProgramScheduleItem");
                 });
@@ -2365,10 +2357,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
-                        .WithMany()
-                        .HasForeignKey("SmartCollectionId");
-
                     b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
                         {
                             b1.Property<int>("PlayoutProgramScheduleAnchorId")
@@ -2399,8 +2387,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Playout");
 
                     b.Navigation("ProgramSchedule");
-
-                    b.Navigation("SmartCollection");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlexConnection", b =>
@@ -2448,10 +2434,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
-                        .WithMany()
-                        .HasForeignKey("SmartCollectionId");
-
                     b.Navigation("Collection");
 
                     b.Navigation("MediaItem");
@@ -2459,8 +2441,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("MultiCollection");
 
                     b.Navigation("ProgramSchedule");
-
-                    b.Navigation("SmartCollection");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.SeasonMetadata", b =>

@@ -52,11 +52,11 @@ namespace ErsatzTV.Infrastructure.Search
         private const string DirectorField = "director";
         private const string WriterField = "writer";
 
-        private const string MovieType = "movie";
-        private const string ShowType = "show";
-        private const string ArtistType = "artist";
-        private const string MusicVideoType = "music_video";
-        private const string EpisodeType = "episode";
+        public const string MovieType = "movie";
+        public const string ShowType = "show";
+        public const string ArtistType = "artist";
+        public const string MusicVideoType = "music_video";
+        public const string EpisodeType = "episode";
         private readonly List<CultureInfo> _cultureInfos;
 
         private readonly ILogger<SearchIndex> _logger;
@@ -72,7 +72,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 14;
+        public int Version => 15;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -275,7 +275,7 @@ namespace ErsatzTV.Infrastructure.Search
                     var doc = new Document
                     {
                         new StringField(IdField, movie.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, MovieType, Field.Store.NO),
+                        new StringField(TypeField, MovieType, Field.Store.YES),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                         new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
@@ -395,7 +395,7 @@ namespace ErsatzTV.Infrastructure.Search
                     var doc = new Document
                     {
                         new StringField(IdField, show.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, ShowType, Field.Store.NO),
+                        new StringField(TypeField, ShowType, Field.Store.YES),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                         new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
@@ -472,7 +472,7 @@ namespace ErsatzTV.Infrastructure.Search
                     var doc = new Document
                     {
                         new StringField(IdField, artist.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, ArtistType, Field.Store.NO),
+                        new StringField(TypeField, ArtistType, Field.Store.YES),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                         new TextField(LibraryNameField, artist.LibraryPath.Library.Name, Field.Store.NO),
@@ -521,7 +521,7 @@ namespace ErsatzTV.Infrastructure.Search
                     var doc = new Document
                     {
                         new StringField(IdField, musicVideo.Id.ToString(), Field.Store.YES),
-                        new StringField(TypeField, MusicVideoType, Field.Store.NO),
+                        new StringField(TypeField, MusicVideoType, Field.Store.YES),
                         new TextField(TitleField, metadata.Title, Field.Store.NO),
                         new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
                         new TextField(LibraryNameField, musicVideo.LibraryPath.Library.Name, Field.Store.NO),
@@ -590,7 +590,7 @@ namespace ErsatzTV.Infrastructure.Search
 
                     var doc = new Document();
                     doc.Add(new StringField(IdField, episode.Id.ToString(), Field.Store.YES));
-                    doc.Add(new StringField(TypeField, EpisodeType, Field.Store.NO));
+                    doc.Add(new StringField(TypeField, EpisodeType, Field.Store.YES));
                     doc.Add(new TextField(TitleField, metadata.Title, Field.Store.NO));
                     doc.Add(new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO));
                     doc.Add(new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO));
@@ -654,7 +654,9 @@ namespace ErsatzTV.Infrastructure.Search
             }
         }
 
-        private SearchItem ProjectToSearchItem(Document doc) => new(Convert.ToInt32(doc.Get(IdField)));
+        private SearchItem ProjectToSearchItem(Document doc) => new(
+            doc.Get(TypeField),
+            Convert.ToInt32(doc.Get(IdField)));
 
         private Query ParseQuery(string searchQuery, QueryParser parser)
         {

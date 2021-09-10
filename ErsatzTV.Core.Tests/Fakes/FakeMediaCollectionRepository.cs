@@ -20,6 +20,7 @@ namespace ErsatzTV.Core.Tests.Fakes
 
         public Task<List<MediaItem>> GetItems(int id) => _data[id].ToList().AsTask();
         public Task<List<MediaItem>> GetMultiCollectionItems(int id) => throw new NotSupportedException();
+        public Task<List<MediaItem>> GetSmartCollectionItems(int id) => throw new NotSupportedException();
 
         public Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id) =>
             throw new NotSupportedException();
@@ -27,6 +28,9 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) => throw new NotSupportedException();
 
         public Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId) =>
+            throw new NotSupportedException();
+
+        public Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId) =>
             throw new NotSupportedException();
 
         public Task<bool> IsCustomPlaybackOrder(int collectionId) => false.AsTask();

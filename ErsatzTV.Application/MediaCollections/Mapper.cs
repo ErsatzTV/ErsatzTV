@@ -15,6 +15,9 @@ namespace ErsatzTV.Application.MediaCollections
                 multiCollection.Name,
                 Optional(multiCollection.MultiCollectionItems).Flatten().Map(ProjectToViewModel).ToList());
 
+        internal static SmartCollectionViewModel ProjectToViewModel(SmartCollection collection) =>
+            new(collection.Id, collection.Name, collection.Query);
+
         private static MultiCollectionItemViewModel ProjectToViewModel(MultiCollectionItem multiCollectionItem) =>
             new(
                 multiCollectionItem.MultiCollectionId,

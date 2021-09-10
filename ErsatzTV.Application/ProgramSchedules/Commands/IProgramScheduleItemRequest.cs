@@ -9,6 +9,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         ProgramScheduleItemCollectionType CollectionType { get; }
         int? CollectionId { get; }
         int? MultiCollectionId { get; }
+        int? SmartCollectionId { get; }
         int? MediaItemId { get; }
         PlayoutMode PlayoutMode { get; }
         PlaybackOrder PlaybackOrder { get; }

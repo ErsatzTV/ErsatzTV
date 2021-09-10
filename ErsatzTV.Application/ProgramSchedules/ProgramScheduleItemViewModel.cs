@@ -14,6 +14,7 @@ namespace ErsatzTV.Application.ProgramSchedules
         ProgramScheduleItemCollectionType CollectionType,
         MediaCollectionViewModel Collection,
         MultiCollectionViewModel MultiCollection,
+        SmartCollectionViewModel SmartCollection,
         NamedMediaItemViewModel MediaItem,
         PlaybackOrder PlaybackOrder,
         string CustomTitle)
@@ -29,6 +30,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                 MediaItem?.Name,
             ProgramScheduleItemCollectionType.MultiCollection =>
                 MultiCollection?.Name,
+            ProgramScheduleItemCollectionType.SmartCollection =>
+                SmartCollection?.Name,
             _ => string.Empty
         };
     }
