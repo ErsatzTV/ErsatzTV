@@ -4,10 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.0.56-alpha] - 2021-09-10
 ### Added
 - Add Smart Collections
   - Smart Collections use search queries and can be created from the search result page
   - Smart Collections are re-evaluated every time playouts are extended or rebuilt to automatically include newly-matching items
+  - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
 - Allow `Shuffle In Order` with Collections and Smart Collections
   - Episodes will be grouped by show, and music videos will be grouped by artist
   - All movies will be a single group (multi-collections are probably better if `Shuffle In Order` is desired for movies)
@@ -566,7 +569,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.55-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.56-alpha...HEAD
+[0.0.56-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.55-alpha...v0.0.56-alpha
 [0.0.55-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.54-alpha...v0.0.55-alpha
 [0.0.54-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.53-alpha...v0.0.54-alpha
 [0.0.53-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.52-alpha...v0.0.53-alpha
