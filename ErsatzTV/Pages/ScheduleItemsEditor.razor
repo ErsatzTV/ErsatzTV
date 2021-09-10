@@ -154,18 +154,25 @@
                                                  SearchFunc="@SearchArtists"
                                                  ToStringFunc="@(s => s?.Name)"/>
                             }
-                            <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
-                                @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+                        <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
+                                @switch (_selectedItem.CollectionType)
                                 {
-                                    <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                                    <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
-                                }
-                                else
-                                {
-                                    <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
-                                    <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
-                                    <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
-                                    @*<MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>*@
+                                    case ProgramScheduleItemCollectionType.MultiCollection:
+                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                        break;
+                                    case ProgramScheduleItemCollectionType.Collection:
+                                    case ProgramScheduleItemCollectionType.SmartCollection:
+                                        <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>
+                                        break;
+                                    default:
+                                        <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
+                                        <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                        break;
                                 }
                             </MudSelect>
                             <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">

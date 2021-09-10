@@ -25,6 +25,9 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id) =>
             throw new NotSupportedException();
 
+        public Task<List<CollectionWithItems>> GetFakeMultiCollectionCollections(int? collectionId, int? smartCollectionId) =>
+            throw new NotSupportedException();
+
         public Task<List<int>> PlayoutIdsUsingCollection(int collectionId) => throw new NotSupportedException();
 
         public Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId) =>

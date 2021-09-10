@@ -36,10 +36,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                         break;
                 }
             }
-            else if (item.PlaybackOrder == PlaybackOrder.ShuffleInOrder)
-            {
-                return BaseError.New("Invalid playback order: 'Shuffle In Order'");
-            }
 
             switch (item.PlayoutMode)
             {

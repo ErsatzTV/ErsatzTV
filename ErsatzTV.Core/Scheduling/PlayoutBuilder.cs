@@ -613,6 +613,12 @@ namespace ErsatzTV.Core.Scheduling
                 result = await _mediaCollectionRepository.GetMultiCollectionCollections(
                     collectionKey.MultiCollectionId.Value);
             }
+            else
+            {
+                result = await _mediaCollectionRepository.GetFakeMultiCollectionCollections(
+                    collectionKey.CollectionId,
+                    collectionKey.SmartCollectionId);
+            }
 
             return result;
         }
