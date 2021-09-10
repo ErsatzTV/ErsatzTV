@@ -15,6 +15,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             ProgramScheduleItemCollectionType collectionType,
             MediaCollectionViewModel collection,
             MultiCollectionViewModel multiCollection,
+            SmartCollectionViewModel smartCollection,
             NamedMediaItemViewModel mediaItem,
             PlaybackOrder playbackOrder,
             string customTitle) : base(
@@ -26,6 +27,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             collectionType,
             collection,
             multiCollection,
+            smartCollection,
             mediaItem,
             playbackOrder,
             customTitle)

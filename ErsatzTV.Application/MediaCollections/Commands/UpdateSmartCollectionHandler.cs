@@ -48,11 +48,10 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             if (await dbContext.SaveChangesAsync() > 0)
             {
                 // rebuild all playouts that use this smart collection
-                // TODO: fix this
-                // foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingSmartCollection(request.Id))
-                // {
-                //     await _channel.WriteAsync(new BuildPlayout(playoutId, true));
-                // }
+                foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingSmartCollection(request.Id))
+                {
+                    await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                }
             }
 
             return Unit.Default;

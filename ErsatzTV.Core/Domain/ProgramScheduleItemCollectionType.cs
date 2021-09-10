@@ -6,6 +6,7 @@
         TelevisionShow = 1,
         TelevisionSeason = 2,
         Artist = 3,
-        MultiCollection = 4
+        MultiCollection = 4,
+        SmartCollection = 5
     }
 }

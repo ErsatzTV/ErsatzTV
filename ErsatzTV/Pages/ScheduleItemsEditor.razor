@@ -118,6 +118,15 @@
                                                  SearchFunc="@SearchMultiCollections"
                                                  ToStringFunc="@(c => c?.Name)"/>
                             }
+                            @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+                            {
+                                <MudAutocomplete Class="mt-3"
+                                                 T="SmartCollectionViewModel"
+                                                 Label="Smart Collection"
+                                                 @bind-value="_selectedItem.SmartCollection"
+                                                 SearchFunc="@SearchSmartCollections"
+                                                 ToStringFunc="@(c => c?.Name)"/>
+                            }
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
                             {
                                 <MudAutocomplete Class="mt-3"
@@ -156,6 +165,7 @@
                                     <MudSelectItem Value="PlaybackOrder.Chronological">Chronological</MudSelectItem>
                                     <MudSelectItem Value="PlaybackOrder.Random">Random</MudSelectItem>
                                     <MudSelectItem Value="PlaybackOrder.Shuffle">Shuffle</MudSelectItem>
+                                    @*<MudSelectItem Value="PlaybackOrder.ShuffleInOrder">Shuffle In Order</MudSelectItem>*@
                                 }
                             </MudSelect>
                             <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
@@ -205,6 +215,7 @@
     private ProgramScheduleItemsEditViewModel _schedule;
     private List<MediaCollectionViewModel> _mediaCollections;
     private List<MultiCollectionViewModel> _multiCollections;
+    private List<SmartCollectionViewModel> _smartCollections;
     private List<NamedMediaItemViewModel> _televisionShows;
     private List<NamedMediaItemViewModel> _televisionSeasons;
     private List<NamedMediaItemViewModel> _artists;
@@ -219,6 +230,8 @@
         _mediaCollections = await _mediator.Send(new GetAllCollections())
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
         _multiCollections = await _mediator.Send(new GetAllMultiCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _smartCollections = await _mediator.Send(new GetAllSmartCollections())
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
         _televisionShows = await _mediator.Send(new GetAllTelevisionShows())
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
@@ -251,6 +264,7 @@
             CollectionType = item.CollectionType,
             Collection = item.Collection,
             MultiCollection = item.MultiCollection,
+            SmartCollection = item.SmartCollection,
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
             CustomTitle = item.CustomTitle
@@ -295,18 +309,14 @@
     {
     // swap with lower index
         ProgramScheduleItemEditViewModel toSwap = _schedule.Items.OrderByDescending(x => x.Index).First(x => x.Index < item.Index);
-        int temp = toSwap.Index;
-        toSwap.Index = item.Index;
-        item.Index = temp;
+        (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
     private void MoveItemDown(ProgramScheduleItemEditViewModel item)
     {
     // swap with higher index
         ProgramScheduleItemEditViewModel toSwap = _schedule.Items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
-        int temp = toSwap.Index;
-        toSwap.Index = item.Index;
-        item.Index = temp;
+        (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
     private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
@@ -314,6 +324,9 @@
 
     private Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value) =>
         _multiCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value) =>
+        _smartCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
     private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value) =>
         _televisionShows.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
@@ -334,6 +347,7 @@
             item.CollectionType,
             item.Collection?.Id,
             item.MultiCollection?.Id,
+            item.SmartCollection?.Id,
             item.MediaItem?.MediaItemId,
             item.PlaybackOrder,
             item.MultipleCount,

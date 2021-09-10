@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Scheduling;
+using ErsatzTV.Core.Search;
 using ErsatzTV.Infrastructure.Extensions;
+using ErsatzTV.Infrastructure.Search;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
@@ -16,12 +19,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     public class MediaCollectionRepository : IMediaCollectionRepository
     {
         private readonly IDbConnection _dbConnection;
+        private readonly ISearchIndex _searchIndex;
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
         public MediaCollectionRepository(
+            ISearchIndex searchIndex,
             IDbContextFactory<TvContext> dbContextFactory,
             IDbConnection dbConnection)
         {
+            _searchIndex = searchIndex;
             _dbContextFactory = dbContextFactory;
             _dbConnection = dbConnection;
         }
@@ -76,6 +82,53 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
             
             return result.Distinct().ToList();
+        }
+
+        public async Task<List<MediaItem>> GetSmartCollectionItems(int id)
+        {
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            var result = new List<MediaItem>();
+
+            Option<SmartCollection> maybeCollection = await dbContext.SmartCollections
+                .SelectOneAsync(sc => sc.Id, sc => sc.Id == id);
+
+            foreach (SmartCollection collection in maybeCollection)
+            {
+                SearchResult searchResults = await _searchIndex.Search(collection.Query, 0, 0);
+                
+                var movieIds = searchResults.Items
+                    .Filter(i => i.Type == SearchIndex.MovieType)
+                    .Map(i => i.Id)
+                    .ToList();
+                result.AddRange(await GetMovieItems(dbContext, movieIds));
+
+                var showIds = searchResults.Items
+                    .Filter(i => i.Type == SearchIndex.ShowType)
+                    .Map(i => i.Id)
+                    .ToList();
+                result.AddRange(await GetShowItems(dbContext, showIds));
+
+                var artistIds = searchResults.Items
+                    .Filter(i => i.Type == SearchIndex.ArtistType)
+                    .Map(i => i.Id)
+                    .ToList();
+                result.AddRange(await GetArtistItems(dbContext, artistIds));
+                
+                var musicVideoIds = searchResults.Items
+                    .Filter(i => i.Type == SearchIndex.MusicVideoType)
+                    .Map(i => i.Id)
+                    .ToList();
+                result.AddRange(await GetMusicVideoItems(dbContext, musicVideoIds));
+                
+                var episodeIds = searchResults.Items
+                    .Filter(i => i.Type == SearchIndex.EpisodeType)
+                    .Map(i => i.Id)
+                    .ToList();
+                result.AddRange(await GetEpisodeItems(dbContext, episodeIds));
+            }
+
+            return result;
         }
 
         public async Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id)
@@ -159,6 +212,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     new { MultiCollectionId = multiCollectionId })
                 .Map(result => result.ToList());
 
+        public Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId) =>
+            _dbConnection.QueryAsync<int>(
+                    @"SELECT DISTINCT p.PlayoutId
+                    FROM PlayoutProgramScheduleAnchor p
+                    WHERE p.SmartCollectionId = @SmartCollectionId",
+                    new { SmartCollectionId = smartCollectionId })
+                .Map(result => result.ToList());
+
         public Task<bool> IsCustomPlaybackOrder(int collectionId) =>
             _dbConnection.QuerySingleAsync<bool>(
                 @"SELECT IFNULL(MIN(UseCustomPlaybackOrder), 0) FROM Collection WHERE Id = @CollectionId",
@@ -172,12 +233,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             WHERE ci.CollectionId = @CollectionId",
                 new { CollectionId = collectionId });
 
-            return await dbContext.Movies
+            return await GetMovieItems(dbContext, ids);
+        }
+        
+        private static Task<List<Movie>> GetMovieItems(TvContext dbContext, IEnumerable<int> movieIds) =>
+            dbContext.Movies
                 .Include(m => m.MovieMetadata)
                 .Include(m => m.MediaVersions)
-                .Filter(m => ids.Contains(m.Id))
+                .Filter(m => movieIds.Contains(m.Id))
                 .ToListAsync();
-        }
 
         private async Task<List<MusicVideo>> GetArtistItems(TvContext dbContext, int collectionId)
         {
@@ -188,15 +252,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             WHERE ci.CollectionId = @CollectionId",
                 new { CollectionId = collectionId });
 
-            return await dbContext.MusicVideos
+            return await GetArtistItems(dbContext, ids);
+        }
+
+        private static Task<List<MusicVideo>> GetArtistItems(TvContext dbContext, IEnumerable<int> artistIds) =>
+            dbContext.MusicVideos
                 .Include(m => m.Artist)
                 .ThenInclude(a => a.ArtistMetadata)
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
-                .Filter(m => ids.Contains(m.Id))
+                .Filter(m => artistIds.Contains(m.Id))
                 .ToListAsync();
-        }
-
 
         private async Task<List<MusicVideo>> GetMusicVideoItems(TvContext dbContext, int collectionId)
         {
@@ -206,14 +272,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             WHERE ci.CollectionId = @CollectionId",
                 new { CollectionId = collectionId });
 
-            return await dbContext.MusicVideos
+            return await GetMusicVideoItems(dbContext, ids);
+        }
+        
+        private static Task<List<MusicVideo>> GetMusicVideoItems(TvContext dbContext, IEnumerable<int> musicVideoIds) =>
+            dbContext.MusicVideos
                 .Include(m => m.Artist)
                 .ThenInclude(a => a.ArtistMetadata)
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
-                .Filter(m => ids.Contains(m.Id))
+                .Filter(m => musicVideoIds.Contains(m.Id))
                 .ToListAsync();
-        }
 
         private async Task<List<Episode>> GetShowItems(TvContext dbContext, int collectionId)
         {
@@ -225,15 +294,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             WHERE ci.CollectionId = @CollectionId",
                 new { CollectionId = collectionId });
 
-            return await dbContext.Episodes
+            return await GetShowItems(dbContext, ids);
+        }
+        
+        private static Task<List<Episode>> GetShowItems(TvContext dbContext, IEnumerable<int> showIds) =>
+            dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
-                .Filter(e => ids.Contains(e.Id))
+                .Filter(e => showIds.Contains(e.Id))
                 .ToListAsync();
-        }
 
         private async Task<List<Episode>> GetSeasonItems(TvContext dbContext, int collectionId)
         {
@@ -262,14 +334,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             WHERE ci.CollectionId = @CollectionId",
                 new { CollectionId = collectionId });
 
-            return await dbContext.Episodes
+            return await GetEpisodeItems(dbContext, ids);
+        }
+        
+        private static Task<List<Episode>> GetEpisodeItems(TvContext dbContext, IEnumerable<int> episodeIds) =>
+            dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .Include(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
-                .Filter(e => ids.Contains(e.Id))
+                .Filter(e => episodeIds.Contains(e.Id))
                 .ToListAsync();
-        }
     }
 }
