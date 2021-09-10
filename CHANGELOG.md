@@ -4,12 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add Smart Collections
+  - Smart Collections use search queries and can be created from the search result page
+  - Smart Collections are re-evaluated every time playouts are extended or rebuilt to automatically include newly-matching items
+
 ### Fixed
 - Generate XMLTV that validates successfully
   - Properly order elements
   - Omit channels with no programmes
   - Properly identify channels using the format number.etv like `15.etv`
 - Fix building playouts when multi-part episode grouping is enabled and episodes are missing metadata
+- Fix incorrect total items count in `Multi Collections` table
 
 ## [0.0.55-alpha] - 2021-09-03
 ### Fixed

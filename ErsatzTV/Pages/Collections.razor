@@ -3,8 +3,8 @@
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
 @using ErsatzTV.Application.Configuration.Queries
-@using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.Configuration.Commands
+@using ErsatzTV.Extensions
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
@@ -93,14 +93,54 @@
             <MudTablePager/>
         </PagerContent>
     </MudTable>
+    <MudTable Class="mt-4"
+              Hover="true"
+              @bind-RowsPerPage="@_smartCollectionsRowsPerPage"
+              ServerData="@(new Func<TableState, Task<TableData<SmartCollectionViewModel>>>(ServerReloadSmartCollections))"
+              Dense="true"
+              @ref="_smartCollectionsTable">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Smart Collections</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col style="width: 120px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Collection">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@context.Query.GetRelativeSearchQuery()">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Collection">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteSmartCollection(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
 </MudContainer>
 
 @code {
     private MudTable<MediaCollectionViewModel> _collectionsTable;
     private MudTable<MultiCollectionViewModel> _multiCollectionsTable;
+    private MudTable<SmartCollectionViewModel> _smartCollectionsTable;
 
     private int _collectionsRowsPerPage;
     private int _multiCollectionsRowsPerPage;
+    private int _smartCollectionsRowsPerPage;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -108,6 +148,9 @@
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
         _multiCollectionsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.MultiCollectionsPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+
+        _smartCollectionsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize))
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
     
@@ -138,6 +181,20 @@
             await _multiCollectionsTable.ReloadServerData();
         }
     }
+    
+    private async Task DeleteSmartCollection(SmartCollectionViewModel collection)
+    {
+        var parameters = new DialogParameters { { "EntityType", "smart collection" }, { "EntityName", collection.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Smart Collection", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await _mediator.Send(new DeleteSmartCollection(collection.Id));
+            await _smartCollectionsTable.ReloadServerData();
+        }
+    }
 
     private async Task<TableData<MediaCollectionViewModel>> ServerReloadCollections(TableState state)
     {
@@ -153,6 +210,14 @@
 
         PagedMultiCollectionsViewModel data = await _mediator.Send(new GetPagedMultiCollections(state.Page, state.PageSize));
         return new TableData<MultiCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+
+    private async Task<TableData<SmartCollectionViewModel>> ServerReloadSmartCollections(TableState state)
+    {
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize, state.PageSize.ToString()));
+
+        PagedSmartCollectionsViewModel data = await _mediator.Send(new GetPagedSmartCollections(state.Page, state.PageSize));
+        return new TableData<SmartCollectionViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
 
 }

@@ -44,7 +44,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         {
             c.Name = request.Name;
             
-            // save name first so playouts don't get rebuild for a name change
+            // save name first so playouts don't get rebuilt for a name change
             await dbContext.SaveChangesAsync();
 
             var toAdd = request.Items

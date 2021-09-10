@@ -14,6 +14,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         ProgramScheduleItemCollectionType CollectionType,
         int? CollectionId,
         int? MultiCollectionId,
+        int? SmartCollectionId,
         int? MediaItemId,
         PlaybackOrder PlaybackOrder,
         int? MultipleCount,

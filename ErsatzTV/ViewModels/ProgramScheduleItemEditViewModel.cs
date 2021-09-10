@@ -55,6 +55,7 @@ namespace ErsatzTV.ViewModels
 
         public MediaCollectionViewModel Collection { get; set; }
         public MultiCollectionViewModel MultiCollection { get; set; }
+        public SmartCollectionViewModel SmartCollection { get; set; }
         public NamedMediaItemViewModel MediaItem { get; set; }
 
         public string CollectionName => CollectionType switch
@@ -64,6 +65,7 @@ namespace ErsatzTV.ViewModels
             ProgramScheduleItemCollectionType.TelevisionSeason => MediaItem?.Name,
             ProgramScheduleItemCollectionType.Artist => MediaItem?.Name,
             ProgramScheduleItemCollectionType.MultiCollection => MultiCollection?.Name,
+            ProgramScheduleItemCollectionType.SmartCollection => SmartCollection?.Name,
             _ => string.Empty
         };
 

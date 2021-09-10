@@ -88,7 +88,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     item.CollectionType,
                     item.CollectionId,
                     item.MediaItemId,
-                    item.MultiCollectionId);
+                    item.MultiCollectionId,
+                    item.SmartCollectionId);
 
                 if (keyOrders.TryGetValue(key, out System.Collections.Generic.HashSet<PlaybackOrder> playbackOrders))
                 {
@@ -111,6 +112,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             ProgramScheduleItemCollectionType CollectionType,
             int? CollectionId,
             int? MediaItemId,
-            int? MultiCollectionId);
+            int? MultiCollectionId,
+            int? SmartCollectionId);
     }
 }
