@@ -12,37 +12,35 @@ using static ErsatzTV.Application.MediaCollections.Mapper;
 
 namespace ErsatzTV.Application.MediaCollections.Queries
 {
-    public class GetPagedMultiCollectionsHandler : IRequestHandler<GetPagedMultiCollections, PagedMultiCollectionsViewModel>
+    public class GetPagedSmartCollectionsHandler : IRequestHandler<GetPagedSmartCollections, PagedSmartCollectionsViewModel>
     {
         private readonly IDbConnection _dbConnection;
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public GetPagedMultiCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+        public GetPagedSmartCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
         {
             _dbContextFactory = dbContextFactory;
             _dbConnection = dbConnection;
         }
 
-        public async Task<PagedMultiCollectionsViewModel> Handle(
-            GetPagedMultiCollections request,
+        public async Task<PagedSmartCollectionsViewModel> Handle(
+            GetPagedSmartCollections request,
             CancellationToken cancellationToken)
         {
-            int count = await _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM MultiCollection");
+            int count = await _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM SmartCollection");
 
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            List<MultiCollectionViewModel> page = await dbContext.MultiCollections.FromSqlRaw(
-                    @"SELECT * FROM MultiCollection
+            List<SmartCollectionViewModel> page = await dbContext.SmartCollections.FromSqlRaw(
+                    @"SELECT * FROM SmartCollection
                     ORDER BY Name
                     COLLATE NOCASE
                     LIMIT {0} OFFSET {1}",
                     request.PageSize,
                     request.PageNum * request.PageSize)
-                .Include(mc => mc.MultiCollectionItems)
-                .ThenInclude(i => i.Collection)
                 .ToListAsync(cancellationToken)
                 .Map(list => list.Map(ProjectToViewModel).ToList());
 
-            return new PagedMultiCollectionsViewModel(count, page);
+            return new PagedSmartCollectionsViewModel(count, page);
         }
     }
 }

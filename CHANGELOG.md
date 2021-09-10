@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Omit channels with no programmes
   - Properly identify channels using the format number.etv like `15.etv`
 - Fix building playouts when multi-part episode grouping is enabled and episodes are missing metadata
+- Fix incorrect total items count in `Multi Collections` table
 
 ## [0.0.55-alpha] - 2021-09-03
 ### Fixed
