@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add Smart Collections
   - Smart Collections use search queries and can be created from the search result page
   - Smart Collections are re-evaluated every time playouts are extended or rebuilt to automatically include newly-matching items
+- Allow `Shuffle In Order` with Collections and Smart Collections
+  - Episodes will be grouped by show, and music videos will be grouped by artist
+  - All movies will be a single group (multi-collections are probably better if `Shuffle In Order` is desired for movies)
+  - All groups will be be ordered chronologically (custom ordering is only supported in multi-collections)
 
 ### Fixed
 - Generate XMLTV that validates successfully
