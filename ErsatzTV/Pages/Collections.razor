@@ -93,6 +93,44 @@
             <MudTablePager/>
         </PagerContent>
     </MudTable>
+    @* <MudTable Class="mt-4" *@
+    @*           Hover="true" *@
+    @*           @bind-RowsPerPage="@_multiCollectionsRowsPerPage" *@
+    @*           ServerData="@(new Func<TableState, Task<TableData<MultiCollectionViewModel>>>(ServerReloadMultiCollections))" *@
+    @*           Dense="true" *@
+    @*           @ref="_multiCollectionsTable"> *@
+    @*     <ToolBarContent> *@
+    @*         <MudText Typo="Typo.h6">Multi Collections</MudText> *@
+    @*     </ToolBarContent> *@
+    @*     <ColGroup> *@
+    @*         <col/> *@
+    @*         <col style="width: 120px;"/> *@
+    @*     </ColGroup> *@
+    @*     <HeaderContent> *@
+    @*         <MudTh>Name</MudTh> *@
+    @*         <MudTh/> *@
+    @*     </HeaderContent> *@
+    @*     <RowTemplate> *@
+    @*         <MudTd DataLabel="Name">@context.Name</MudTd> *@
+    @*         <MudTd> *@
+    @*             <div style="align-items: center; display: flex;"> *@
+    @*                 <MudTooltip Text="Edit Collection"> *@
+    @*                     <MudIconButton Icon="@Icons.Material.Filled.Edit" *@
+    @*                                    Link="@($"/media/multi-collections/{context.Id}/edit")"> *@
+    @*                     </MudIconButton> *@
+    @*                 </MudTooltip> *@
+    @*                 <MudTooltip Text="Delete Collection"> *@
+    @*                     <MudIconButton Icon="@Icons.Material.Filled.Delete" *@
+    @*                                    OnClick="@(_ => DeleteMultiCollection(context))"> *@
+    @*                     </MudIconButton> *@
+    @*                 </MudTooltip> *@
+    @*             </div> *@
+    @*         </MudTd> *@
+    @*     </RowTemplate> *@
+    @*     <PagerContent> *@
+    @*         <MudTablePager/> *@
+    @*     </PagerContent> *@
+    @* </MudTable> *@
 </MudContainer>
 
 @code {
