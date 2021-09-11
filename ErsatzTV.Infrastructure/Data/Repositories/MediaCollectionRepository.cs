@@ -66,6 +66,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             Option<MultiCollection> maybeMultiCollection = await dbContext.MultiCollections
                 .Include(mc => mc.Collections)
+                .Include(mc => mc.SmartCollections)
                 .SelectOneAsync(mc => mc.Id, mc => mc.Id == id);
 
             foreach (MultiCollection multiCollection in maybeMultiCollection)
@@ -78,6 +79,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     result.AddRange(await GetEpisodeItems(dbContext, collectionId));
                     result.AddRange(await GetArtistItems(dbContext, collectionId));
                     result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
+                }
+
+                foreach (int smartCollectionId in multiCollection.SmartCollections.Map(c => c.Id))
+                {
+                    result.AddRange(await GetSmartCollectionItems(smartCollectionId));
                 }
             }
             
@@ -138,8 +144,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             Option<MultiCollection> maybeMultiCollection = await dbContext.MultiCollections
                 .Include(mc => mc.Collections)
+                .Include(mc => mc.SmartCollections)
                 .Include(mc => mc.MultiCollectionItems)
                 .ThenInclude(mci => mci.Collection)
+                .Include(mc => mc.MultiCollectionSmartItems)
+                .ThenInclude(mci => mci.SmartCollection)
                 .SelectOneAsync(mc => mc.Id, mc => mc.Id == id);
 
             foreach (MultiCollection multiCollection in maybeMultiCollection)
@@ -177,6 +186,19 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                                 multiCollectionItem.PlaybackOrder,
                                 multiCollectionItem.Collection.UseCustomPlaybackOrder));
                     }
+                }
+
+                foreach (MultiCollectionSmartItem multiCollectionSmartItem in multiCollection.MultiCollectionSmartItems)
+                {
+                    List<MediaItem> items = await GetSmartCollectionItems(multiCollectionSmartItem.SmartCollectionId);
+
+                    result.Add(
+                        new CollectionWithItems(
+                            multiCollectionSmartItem.SmartCollectionId,
+                            items,
+                            multiCollectionSmartItem.ScheduleAsGroup,
+                            multiCollectionSmartItem.PlaybackOrder,
+                            false));
                 }
             }
 
