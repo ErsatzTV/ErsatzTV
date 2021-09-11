@@ -24,6 +24,8 @@ namespace ErsatzTV.Application.MediaCollections.Queries
             return await dbContext.MultiCollections
                 .Include(mc => mc.MultiCollectionItems)
                 .ThenInclude(mc => mc.Collection)
+                .Include(mc => mc.MultiCollectionSmartItems)
+                .ThenInclude(mc => mc.SmartCollection)
                 .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
                 .MapT(ProjectToViewModel);
         }

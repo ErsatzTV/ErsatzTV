@@ -22,6 +22,19 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                         .HasForeignKey(mci => mci.MultiCollectionId)
                         .OnDelete(DeleteBehavior.Cascade),
                     j => j.HasKey(mci => new { mci.MultiCollectionId, mci.CollectionId }));
+
+            builder.HasMany(m => m.SmartCollections)
+                .WithMany(m => m.MultiCollections)
+                .UsingEntity<MultiCollectionSmartItem>(
+                    j => j.HasOne(mci => mci.SmartCollection)
+                        .WithMany(c => c.MultiCollectionSmartItems)
+                        .HasForeignKey(mci => mci.SmartCollectionId)
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j => j.HasOne(mci => mci.MultiCollection)
+                        .WithMany(mc => mc.MultiCollectionSmartItems)
+                        .HasForeignKey(mci => mci.MultiCollectionId)
+                        .OnDelete(DeleteBehavior.Cascade),
+                    j => j.HasKey(mci => new { mci.MultiCollectionId, mci.SmartCollectionId }));
         }
     }
 }
