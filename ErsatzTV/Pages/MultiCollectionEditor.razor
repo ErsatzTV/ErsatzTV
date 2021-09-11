@@ -24,11 +24,21 @@
                                      @bind-value="_selectedCollection"
                                      SearchFunc="@SearchCollections"
                                      ToStringFunc="@(c => c?.Name)"/>
-                </MudCardContent>
-                <MudCardActions>
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddCollection())" Class="ml-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddCollection())" Class="mt-4 mr-auto">
                         Add Collection
                     </MudButton>
+                    <MudAutocomplete @ref="_smartCollectionAutocomplete"
+                                     Class="mt-4"
+                                     T="SmartCollectionViewModel"
+                                     Label="Smart Collection"
+                                     @bind-value="_selectedSmartCollection"
+                                     SearchFunc="@SearchSmartCollections"
+                                     ToStringFunc="@(c => c?.Name)"/>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddSmartCollection())" Class="mt-4 mr-auto">
+                        Add Smart Collection
+                    </MudButton>
+                </MudCardContent>
+                <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mr-2 ml-auto">
                         @(IsEdit ? "Save Changes" : "Add Multi Collection")
                     </MudButton>
@@ -87,12 +97,18 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
     private List<MediaCollectionViewModel> _collections;
+    private List<SmartCollectionViewModel> _smartCollections;
     private MediaCollectionViewModel _selectedCollection;
+    private SmartCollectionViewModel _selectedSmartCollection;
     private MudAutocomplete<MediaCollectionViewModel> _collectionAutocomplete;
+    private MudAutocomplete<SmartCollectionViewModel> _smartCollectionAutocomplete;
     
     protected override async Task OnParametersSetAsync()
     {
         _collections = await _mediator.Send(new GetAllCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
+        _smartCollections = await _mediator.Send(new GetAllSmartCollections())
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         if (IsEdit)
@@ -102,13 +118,21 @@
             {
                 _model.Id = collection.Id;
                 _model.Name = collection.Name;
-                _model.Items = collection.Items.Map(item =>
-                    new MultiCollectionItemEditViewModel
-                    {
-                        Collection = item.Collection,
-                        ScheduleAsGroup = item.ScheduleAsGroup,
-                        PlaybackOrder = item.PlaybackOrder,
-                    }).ToList();
+                _model.Items = collection.Items
+                    .Map(item =>
+                        new MultiCollectionItemEditViewModel
+                        {
+                            Collection = item.Collection,
+                            ScheduleAsGroup = item.ScheduleAsGroup,
+                            PlaybackOrder = item.PlaybackOrder,
+                        })
+                    .Append(collection.SmartItems.Map(item =>
+                        new MultiCollectionSmartItemEditViewModel
+                        {
+                            SmartCollection = item.SmartCollection,
+                            ScheduleAsGroup = item.ScheduleAsGroup,
+                            PlaybackOrder = item.PlaybackOrder
+                        })).ToList();
             });
         }
         else
@@ -132,8 +156,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, _model.Items.Map(i => new UpdateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup, i.PlaybackOrder)).ToList()))).LeftToSeq() :
-                (await _mediator.Send(new CreateMultiCollection(_model.Name, _model.Items.Map(i => new CreateMultiCollectionItem(i.Collection.Id, i.ScheduleAsGroup, i.PlaybackOrder)).ToList()))).LeftToSeq();
+                (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, GetUpdateItems()))).LeftToSeq() :
+                (await _mediator.Send(new CreateMultiCollection(_model.Name, GetCreateItems()))).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
@@ -144,6 +168,32 @@
                 () => _navigationManager.NavigateTo("/media/collections"));
         }
     }
+
+    private List<UpdateMultiCollectionItem> GetUpdateItems() => 
+        _model.Items.Map(i =>
+            i switch
+            {
+                MultiCollectionSmartItemEditViewModel smartVm =>
+                    new UpdateMultiCollectionItem(
+                        null,
+                        smartVm.SmartCollection.Id,
+                        smartVm.ScheduleAsGroup,
+                        smartVm.PlaybackOrder),
+                _ => new UpdateMultiCollectionItem(i.Collection.Id, null, i.ScheduleAsGroup, i.PlaybackOrder)
+            }).ToList();
+    
+    private List<CreateMultiCollectionItem> GetCreateItems() => 
+        _model.Items.Map(i =>
+            i switch
+            {
+                MultiCollectionSmartItemEditViewModel smartVm =>
+                    new CreateMultiCollectionItem(
+                        null,
+                        smartVm.SmartCollection.Id,
+                        smartVm.ScheduleAsGroup,
+                        smartVm.PlaybackOrder),
+                _ => new CreateMultiCollectionItem(i.Collection.Id, null, i.ScheduleAsGroup, i.PlaybackOrder)
+            }).ToList();
 
     private void RemoveCollection(MultiCollectionItemEditViewModel item)
     {
@@ -165,7 +215,25 @@
         }
     }
 
+    private void AddSmartCollection()
+    {
+        if (_selectedSmartCollection != null && _model.Items.OfType<MultiCollectionSmartItemEditViewModel>().All(i => i.SmartCollection != _selectedSmartCollection))
+        {
+            _model.Items.Add(new MultiCollectionSmartItemEditViewModel
+            {
+                SmartCollection = _selectedSmartCollection,
+                PlaybackOrder = PlaybackOrder.Chronological
+            });
+
+            _selectedSmartCollection = null;
+            _smartCollectionAutocomplete.Reset();
+        }
+    }
+
     private Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value) =>
         _collections.Filter(c => _model.Items.All(i => i.Collection != c) && c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value) =>
+        _smartCollections.Filter(c => _model.Items.OfType<MultiCollectionSmartItemEditViewModel>().All(i => i.SmartCollection != c) && c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
 }

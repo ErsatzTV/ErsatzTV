@@ -5,7 +5,7 @@ using LanguageExt;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public record UpdateMultiCollectionItem(int CollectionId, bool ScheduleAsGroup, PlaybackOrder PlaybackOrder);
+    public record UpdateMultiCollectionItem(int? CollectionId, int? SmartCollectionId, bool ScheduleAsGroup, PlaybackOrder PlaybackOrder);
 
     public record UpdateMultiCollection
     (

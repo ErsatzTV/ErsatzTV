@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 - Add `released_inthelast` search field for relative release date queries
-  - Syntax is a number and a unit (days, weeks, months, years) like `1 week` or `2 years`  
+  - Syntax is a number and a unit (days, weeks, months, years) like `1 week` or `2 years`
+- Allow adding smart collections to multi collections
 
 ## [0.0.56-alpha] - 2021-09-10
 ### Added

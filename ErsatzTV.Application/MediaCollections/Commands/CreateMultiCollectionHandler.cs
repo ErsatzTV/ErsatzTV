@@ -41,6 +41,11 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 .Query()
                 .Include(i => i.Collection)
                 .LoadAsync();
+            await dbContext.Entry(multiCollection)
+                .Collection(c => c.MultiCollectionSmartItems)
+                .Query()
+                .Include(i => i.SmartCollection)
+                .LoadAsync();
             return ProjectToViewModel(multiCollection);
         }
 
@@ -51,12 +56,44 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 name => new MultiCollection
                 {
                     Name = name,
-                    MultiCollectionItems = request.Items.Map(i => new MultiCollectionItem
-                    {
-                        CollectionId = i.CollectionId,
-                        ScheduleAsGroup = i.ScheduleAsGroup,
-                        PlaybackOrder = i.PlaybackOrder
-                    }).ToList()
+                    MultiCollectionItems = request.Items.Map(
+                            i =>
+                            {
+                                if (i.CollectionId.HasValue)
+                                {
+                                    return Some(
+                                        new MultiCollectionItem
+                                        {
+                                            CollectionId = i.CollectionId.Value,
+                                            ScheduleAsGroup = i.ScheduleAsGroup,
+                                            PlaybackOrder = i.PlaybackOrder
+                                        });
+                                }
+
+                                return None;
+                            })
+                        .Sequence()
+                        .Flatten()
+                        .ToList(),
+                    MultiCollectionSmartItems = request.Items.Map(
+                            i =>
+                            {
+                                if (i.SmartCollectionId.HasValue)
+                                {
+                                    return Some(
+                                        new MultiCollectionSmartItem
+                                        {
+                                            SmartCollectionId = i.SmartCollectionId.Value,
+                                            ScheduleAsGroup = i.ScheduleAsGroup,
+                                            PlaybackOrder = i.PlaybackOrder
+                                        });
+                                }
+
+                                return None;
+                            })
+                        .Sequence()
+                        .Flatten()
+                        .ToList()
                 });
 
         private static async Task<Validation<BaseError, string>> ValidateName(
