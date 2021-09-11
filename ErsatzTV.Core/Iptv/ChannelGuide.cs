@@ -276,7 +276,7 @@ namespace ErsatzTV.Core.Iptv
                     _ => "posters"
                 };
 
-                artworkPath = $"{_scheme}://{_host}/iptv/artwork/{artworkFolder}/{artwork.Path}";
+                artworkPath = $"{_scheme}://{_host}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg";
             }
 
             return artworkPath;

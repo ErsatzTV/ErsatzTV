@@ -71,6 +71,7 @@ namespace ErsatzTV.Controllers
                         error => BadRequest(error.Value)));
 
         [HttpGet("iptv/logos/{fileName}")]
+        [HttpGet("iptv/logos/{fileName}.jpg")]
         public async Task<IActionResult> GetImage(string fileName)
         {
             Either<BaseError, CachedImagePathViewModel> cachedImagePath =
