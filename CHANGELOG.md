@@ -10,7 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Allow adding smart collections to multi collections
 
 ### Fixed
-- Use fake image extension (`.jpg`) for artwork in M3U and XMLTV to make Kodi happy since it detects MIME type from URL
+- Fix loading artwork in Kodi
+  - Use fake image extension (`.jpg`) for artwork in M3U and XMLTV since Kodi detects MIME type from URL
+  - Enable HEAD requests for IPTV image paths since Kodi requires those
 
 ## [0.0.56-alpha] - 2021-09-10
 ### Added
