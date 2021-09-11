@@ -24,6 +24,7 @@ The following fields are available for searching movies:
 - `content_rating`: The movie content rating (case-sensitive) 
 - `language`: The movie audio stream language
 - `release_date`: The movie release date (YYYYMMDD)
+- `released_inthelast`: A range for the movie release date (days, weeks, months, years)
 - `type`: Always `movie`
 
 ### Shows
@@ -40,6 +41,7 @@ The following fields are available for searching shows:
 - `content_rating`: The show content rating (case-sensitive)
 - `language`: The show audio stream language
 - `release_date`: The show release date (YYYYMMDD)
+- `released_inthelast`: A range for the show release date (days, weeks, months, years)
 - `type`: Always `show`
 
 ### Episodes
@@ -53,6 +55,7 @@ The following fields are available for searching episodes:
 - `library_name`: The name of the library that contains the episode
 - `language`: The episode audio stream language
 - `release_date`: The episode release date (YYYYMMDD)
+- `released_inthelast`: A range for the episode release date (days, weeks, months, years)
 - `type`: Always `episode`
 
 ### Artists
@@ -97,3 +100,7 @@ The following fields are available for searching music videos:
 ### Lush Music
 
 `mood:lush`
+
+### Episodes from the past week
+
+`type:episode AND released_inthelast:"1 week"`
