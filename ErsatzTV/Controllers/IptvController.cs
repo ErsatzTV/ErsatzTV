@@ -71,6 +71,7 @@ namespace ErsatzTV.Controllers
                         error => BadRequest(error.Value)));
 
         [HttpGet("iptv/logos/{fileName}")]
+        [HttpHead("iptv/logos/{fileName}.jpg")]
         [HttpGet("iptv/logos/{fileName}.jpg")]
         public async Task<IActionResult> GetImage(string fileName)
         {
