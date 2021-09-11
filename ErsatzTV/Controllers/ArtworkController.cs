@@ -36,6 +36,7 @@ namespace ErsatzTV.Controllers
         }
 
         [HttpGet("/iptv/artwork/posters/{fileName}")]
+        [HttpGet("/iptv/artwork/posters/{fileName}.jpg")]
         [HttpGet("/artwork/posters/{fileName}")]
         public async Task<IActionResult> GetPoster(string fileName)
         {
@@ -117,6 +118,7 @@ namespace ErsatzTV.Controllers
                 $"photo/:/transcode?url=/{path}&height=220&width=392&minSize=1&upscale=0");
 
         [HttpGet("/iptv/artwork/thumbnails/{fileName}")]
+        [HttpGet("/iptv/artwork/thumbnails/{fileName}.jpg")]
         [HttpGet("/artwork/thumbnails/{fileName}")]
         public async Task<IActionResult> GetThumbnail(string fileName)
         {
