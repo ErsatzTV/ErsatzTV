@@ -24,7 +24,6 @@ The following fields are available for searching movies:
 - `content_rating`: The movie content rating (case-sensitive) 
 - `language`: The movie audio stream language
 - `release_date`: The movie release date (YYYYMMDD)
-- `released_inthelast`: A range for the movie release date (days, weeks, months, years)
 - `type`: Always `movie`
 
 ### Shows
@@ -41,7 +40,6 @@ The following fields are available for searching shows:
 - `content_rating`: The show content rating (case-sensitive)
 - `language`: The show audio stream language
 - `release_date`: The show release date (YYYYMMDD)
-- `released_inthelast`: A range for the show release date (days, weeks, months, years)
 - `type`: Always `show`
 
 ### Episodes
@@ -55,7 +53,6 @@ The following fields are available for searching episodes:
 - `library_name`: The name of the library that contains the episode
 - `language`: The episode audio stream language
 - `release_date`: The episode release date (YYYYMMDD)
-- `released_inthelast`: A range for the episode release date (days, weeks, months, years)
 - `type`: Always `episode`
 
 ### Artists
@@ -78,8 +75,13 @@ The following fields are available for searching music videos:
 - `library_name`: The name of the library that contains the music video
 - `language`: The music video audio stream language
 - `release_date`: The music video release date (YYYYMMDD)
-- `released_inthelast`: A range for the music video release date (days, weeks, months, years)
 - `type`: Always `music_video`
+
+## Special Search Fields
+
+- `released_inthelast`: For any media type that supports `release_date`, `released_inthelast` takes a number and a unit (days, weeks, months, years) and returns items released between the specified time ago and now
+- `released_notinthelast`: For any media type that supports `release_date`, `released_notinthelast` takes a number and a unit (days, weeks, months, years) and returns items released before the specified time ago
+- `released_onthisday`: For any media type that supports `release_date`, `released_onthisday` takes any value (ignored) and will return items released on this month number and day number in previous years
 
 ## Sample Searches
 
@@ -106,3 +108,11 @@ The following fields are available for searching music videos:
 ### Episodes from the past week
 
 `type:episode AND released_inthelast:"1 week"`
+
+### Episodes older than the past week
+
+`type:episode AND released_notinthelast:"1 week"`
+
+### Episodes released on this day
+
+`type:episode AND released_onthisday:1`

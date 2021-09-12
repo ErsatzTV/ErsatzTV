@@ -148,8 +148,8 @@ namespace ErsatzTV.Infrastructure.Search
             };
             using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
             QueryParser parser = !string.IsNullOrWhiteSpace(searchField)
-                ? new RelativeDateQueryParser(AppLuceneVersion, searchField, analyzerWrapper)
-                : new RelativeDateMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
+                ? new CustomQueryParser(AppLuceneVersion, searchField, analyzerWrapper)
+                : new CustomMultiFieldQueryParser(AppLuceneVersion, new[] { TitleField }, analyzerWrapper);
             parser.AllowLeadingWildcard = true;
             Query query = ParseQuery(searchQuery, parser);
             var filter = new DuplicateFilter(TitleAndYearField);
