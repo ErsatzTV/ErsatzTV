@@ -77,6 +77,8 @@ The following fields are available for searching music videos:
 - `genre`: The music video genre
 - `library_name`: The name of the library that contains the music video
 - `language`: The music video audio stream language
+- `release_date`: The music video release date (YYYYMMDD)
+- `released_inthelast`: A range for the music video release date (days, weeks, months, years)
 - `type`: Always `music_video`
 
 ## Sample Searches
