@@ -6,18 +6,29 @@ using Lucene.Net.Util;
 
 namespace ErsatzTV.Infrastructure.Search
 {
-    public class RelativeDateQueryParser : QueryParser
+    public class CustomQueryParser : QueryParser
     {
-        public RelativeDateQueryParser(LuceneVersion matchVersion, string f, Analyzer a) : base(matchVersion, f, a)
+        public CustomQueryParser(LuceneVersion matchVersion, string f, Analyzer a) : base(matchVersion, f, a)
         {
         }
 
-        protected internal RelativeDateQueryParser(ICharStream stream) : base(stream)
+        protected internal CustomQueryParser(ICharStream stream) : base(stream)
         {
         }
 
-        protected RelativeDateQueryParser(QueryParserTokenManager tm) : base(tm)
+        protected CustomQueryParser(QueryParserTokenManager tm) : base(tm)
         {
+        }
+        
+        protected override Query GetFieldQuery(string field, string queryText, bool quoted)
+        {
+            if (field == "released_onthisday")
+            {
+                var todayString = DateTime.Today.ToString("*MMdd");
+                return base.GetWildcardQuery("release_date", todayString);
+            }
+
+            return base.GetFieldQuery(field, queryText, quoted);
         }
 
         protected override Query GetFieldQuery(string field, string queryText, int slop)
@@ -28,6 +39,13 @@ namespace ErsatzTV.Infrastructure.Search
                 var dateString = start.ToString("yyyyMMdd");
 
                 return base.GetRangeQuery("release_date", dateString, todayString, true, true);
+            }
+            
+            if (field == "released_notinthelast" && ParseStart(queryText, out DateTime finish))
+            {
+                var dateString = finish.ToString("yyyyMMdd");
+
+                return base.GetRangeQuery("release_date", "00000000", dateString, false, false);
             }
 
             return base.GetFieldQuery(field, queryText, slop);
