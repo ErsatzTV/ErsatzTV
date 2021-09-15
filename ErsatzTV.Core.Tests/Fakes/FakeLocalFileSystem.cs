@@ -41,7 +41,7 @@ namespace ErsatzTV.Core.Tests.Fakes
         public DateTime GetLastWriteTime(string path) =>
             Optional(_files.SingleOrDefault(f => f.Path == path))
                 .Map(f => f.LastWriteTime)
-                .IfNone(DateTime.MinValue);
+                .IfNone(SystemTime.MinValueUtc);
 
         public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
             _files.Any(f => f.Path.StartsWith(libraryPath.Path + Path.DirectorySeparatorChar));

@@ -67,7 +67,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
 
         private async Task<Unit> Synchronize(RequestParameters parameters)
         {
-            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
+            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
             DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
             if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
