@@ -218,7 +218,7 @@ namespace ErsatzTV.Core.Metadata
                         existing.Tagline = metadata.Tagline;
                         existing.Title = metadata.Title;
 
-                        if (existing.DateAdded == DateTime.MinValue)
+                        if (existing.DateAdded == SystemTime.MinValueUtc)
                         {
                             existing.DateAdded = metadata.DateAdded;
                         }
@@ -318,7 +318,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
 
-                    if (existing.DateAdded == DateTime.MinValue)
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }
@@ -423,7 +423,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
 
-                    if (existing.DateAdded == DateTime.MinValue)
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }
@@ -486,7 +486,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Disambiguation = metadata.Disambiguation;
                     existing.Biography = metadata.Biography;
 
-                    if (existing.DateAdded == DateTime.MinValue)
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }
@@ -581,7 +581,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Plot = metadata.Plot;
                     existing.Album = metadata.Album;
 
-                    if (existing.DateAdded == DateTime.MinValue)
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }

@@ -374,9 +374,9 @@ namespace ErsatzTV.Core.Scheduling
                                         }
 
                                         bool willNotFinishInTime =
-                                            currentTime <= durationFinish.IfNone(DateTime.MinValue) &&
+                                            currentTime <= durationFinish.IfNone(SystemTime.MinValueUtc) &&
                                             currentTime + peekVersion.Duration >
-                                            durationFinish.IfNone(DateTime.MinValue);
+                                            durationFinish.IfNone(SystemTime.MinValueUtc);
                                         if (willNotFinishInTime)
                                         {
                                             _logger.LogDebug(
