@@ -4,6 +4,7 @@ using ErsatzTV.Core.FFmpeg;
 using FluentAssertions;
 using LanguageExt;
 using NUnit.Framework;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.FFmpeg
 {
@@ -109,6 +110,161 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     {
                         filter.ComplexFilter.Should().Be(expectedVideoFilter);
                         filter.AudioLabel.Should().Be("0:1");
+                        filter.VideoLabel.Should().Be(expectedVideoLabel);
+                    });
+            }
+
+            [Test]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.BottomLeft,
+                false,
+                100,
+                "[0:0][1:v]overlay=x=134:y=H-h-54[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.BottomRight,
+                false,
+                100,
+                "[0:0][1:v]overlay=x=W-w-134:y=H-h-54[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:0][1:v]overlay=x=134:y=54[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.TopRight,
+                false,
+                100,
+                "[0:0][1:v]overlay=x=W-w-134:y=54[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                false,
+                false,
+                true,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:0][1:v]overlay=x=134:y=54:enable='lt(mod(mod(time(0),60*60),10*60),15)'[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                true,
+                100,
+                "[1:v]scale=384:-1[wmp];[0:0][wmp]overlay=x=134:y=54[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                90,
+                "[1:v]format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,colorchannelmixer=aa=0.90[wmp];[0:0][wmp]overlay=x=134:y=54[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                false,
+                true,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:0]yadif=1[vt];[vt][1:v]overlay=x=134:y=54[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                false,
+                true,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                true,
+                100,
+                "[0:0]yadif=1[vt];[1:v]scale=384:-1[wmp];[vt][wmp]overlay=x=134:y=54[v]",
+                "0:1",
+                "[v]")]
+            [TestCase(
+                true,
+                true,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:1]apad=whole_dur=3300000ms[a];[0:0]yadif=1[vt];[vt][1:v]overlay=x=134:y=54[v]",
+                "[a]",
+                "[v]")]
+            [TestCase(
+                true,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:1]apad=whole_dur=3300000ms[a];[0:0][1:v]overlay=x=134:y=54[v]",
+                "[a]",
+                "[v]")]
+            public void Should_Return_Watermark(
+                bool alignAudio,
+                bool deinterlace,
+                bool intermittent,
+                ChannelWatermarkLocation location,
+                bool scaled,
+                int opacity,
+                string expectedVideoFilter,
+                string expectedAudioLabel,
+                string expectedVideoLabel)
+            {
+                FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
+                    .WithWatermark(
+                        Some(
+                            new ChannelWatermark
+                            {
+                                Mode = intermittent
+                                    ? ChannelWatermarkMode.Intermittent
+                                    : ChannelWatermarkMode.Permanent,
+                                DurationSeconds = intermittent ? 15 : 0,
+                                FrequencyMinutes = intermittent ? 10 : 0,
+                                Location = location,
+                                Size = scaled ? ChannelWatermarkSize.Scaled : ChannelWatermarkSize.ActualSize,
+                                WidthPercent = scaled ? 20 : 0,
+                                Opacity = opacity,
+                                HorizontalMarginPercent = 7,
+                                VerticalMarginPercent = 5
+                            }),
+                        new Resolution { Width = 1920, Height = 1080 })
+                    .WithDeinterlace(deinterlace)
+                    .WithAlignedAudio(alignAudio ? Some(TimeSpan.FromMinutes(55)) : None);
+
+                Option<FFmpegComplexFilter> result = builder.Build(0, 1);
+
+                result.IsSome.Should().BeTrue();
+                result.IfSome(
+                    filter =>
+                    {
+                        filter.ComplexFilter.Should().Be(expectedVideoFilter);
+                        filter.AudioLabel.Should().Be(expectedAudioLabel);
                         filter.VideoLabel.Should().Be(expectedVideoLabel);
                     });
             }
