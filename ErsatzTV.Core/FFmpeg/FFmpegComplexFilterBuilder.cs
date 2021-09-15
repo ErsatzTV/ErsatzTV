@@ -233,28 +233,39 @@ namespace ErsatzTV.Core.FFmpeg
                 complexFilter.Append(audioLabel);
             }
 
-            if (videoFilterQueue.Any())
+            if (videoFilterQueue.Any() || !string.IsNullOrWhiteSpace(watermarkOverlay))
             {
                 if (hasAudioFilters)
                 {
                     complexFilter.Append(';');
                 }
 
-                complexFilter.Append($"[{videoLabel}]");
-                var filters = string.Join(",", videoFilterQueue);
-                complexFilter.Append(filters);
+                if (videoFilterQueue.Any())
+                {
+                    complexFilter.Append($"[{videoLabel}]");
+                    var filters = string.Join(",", videoFilterQueue);
+                    complexFilter.Append(filters);
+                }
 
                 if (!string.IsNullOrWhiteSpace(watermarkOverlay))
                 {
-                    complexFilter.Append("[vt]");
+                    if (videoFilterQueue.Any())
+                    {
+                        complexFilter.Append("[vt];");
+                    }
+
                     var watermarkLabel = "[1:v]";
                     if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
                     {
-                        complexFilter.Append($";{watermarkLabel}{watermarkPreprocess}[wmp]");
+                        complexFilter.Append($"{watermarkLabel}{watermarkPreprocess}[wmp];");
                         watermarkLabel = "[wmp]";
                     }
 
-                    complexFilter.Append($";[vt]{watermarkLabel}{watermarkOverlay}");
+                    complexFilter.Append(
+                        videoFilterQueue.Any()
+                            ? $"[vt]{watermarkLabel}{watermarkOverlay}"
+                            : $"[{videoLabel}]{watermarkLabel}{watermarkOverlay}");
+
                     if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None)
                     {
                         complexFilter.Append(",hwupload");
