@@ -1,4 +1,5 @@
 ﻿using System;
+using ErsatzTV.Core;
 using Lucene.Net.Analysis;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
@@ -53,7 +54,7 @@ namespace ErsatzTV.Infrastructure.Search
         
         internal static bool ParseStart(string text, out DateTime start)
         {
-            start = DateTime.MinValue;
+            start = SystemTime.MinValueUtc;
 
             try
             {

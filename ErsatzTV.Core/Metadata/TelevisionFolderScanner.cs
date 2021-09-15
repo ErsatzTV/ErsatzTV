@@ -322,7 +322,7 @@ namespace ErsatzTV.Core.Metadata
                     async () =>
                     {
                         bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
-                            m => m.DateUpdated == DateTime.MinValue,
+                            m => m.DateUpdated == SystemTime.MinValueUtc,
                             true);
 
                         if (shouldUpdate)

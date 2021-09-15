@@ -703,7 +703,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         new()
                         {
                             DateAdded = DateTime.UtcNow,
-                            DateUpdated = DateTime.MinValue,
+                            DateUpdated = SystemTime.MinValueUtc,
                             MetadataKind = MetadataKind.Fallback,
                             Actors = new List<Actor>(),
                             Guids = new List<MetadataGuid>(),

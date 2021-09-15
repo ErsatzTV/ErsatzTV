@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
@@ -43,7 +44,7 @@ namespace ErsatzTV.Application.MediaCards
             bool isSearchResult) =>
             new(
                 episodeMetadata.EpisodeId,
-                episodeMetadata.ReleaseDate ?? DateTime.MinValue,
+                episodeMetadata.ReleaseDate ?? SystemTime.MinValueUtc,
                 episodeMetadata.Episode.Season.Show.ShowMetadata.HeadOrNone().Match(
                     m => m.Title ?? string.Empty,
                     () => string.Empty),

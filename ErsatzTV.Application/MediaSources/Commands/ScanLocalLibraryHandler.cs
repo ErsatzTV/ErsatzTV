@@ -78,7 +78,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
                 decimal progressMin = (decimal) i / localLibrary.Paths.Count;
                 decimal progressMax = (decimal) (i + 1) / localLibrary.Paths.Count;
 
-                var lastScan = new DateTimeOffset(libraryPath.LastScan ?? DateTime.MinValue, TimeSpan.Zero);
+                var lastScan = new DateTimeOffset(libraryPath.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
                 DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);
                 if (forceScan || nextScan < DateTimeOffset.Now)
                 {
