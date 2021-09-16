@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `released_inthelast` search field for relative release date queries
   - Syntax is a number and a unit (days, weeks, months, years) like `1 week` or `2 years`
 - Allow adding smart collections to multi collections
+- Add tooltip explaining `Keep Multi-Part Episodes Together`
 
 ### Fixed
 - Fix loading artwork in Kodi
