@@ -5,21 +5,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.0.58-alpha] - 2021-09-15
+### Added
+- Add `released_notinthelast` search field for relative release date queries
+  - Syntax is a number and a unit (days, weeks, months, years) like `1 week` or `2 years`
+- Add `released_onthisday` search field for historical queries
+  - Syntax is `released_onthisday:1` and will search for items released on this month number and day number in prior years
+- Add tooltip explaining `Keep Multi-Part Episodes Together`
+
+### Fixed
+- Properly display watermark when no other video filters (like scaling or padding) are required
+- Fix building some playouts in timezones with positive offsets (like UTC+2)
+- Fix `Shuffle In Order` so all collections/shows start from the earliest episode
+  - You may need to rebuild playouts to see this fixed behavior more quickly
+
 ## [0.0.57-alpha] - 2021-09-10
 ### Added
 - Add `released_inthelast` search field for relative release date queries
   - Syntax is a number and a unit (days, weeks, months, years) like `1 week` or `2 years`
 - Allow adding smart collections to multi collections
-- Add tooltip explaining `Keep Multi-Part Episodes Together`
 
 ### Fixed
 - Fix loading artwork in Kodi
   - Use fake image extension (`.jpg`) for artwork in M3U and XMLTV since Kodi detects MIME type from URL
   - Enable HEAD requests for IPTV image paths since Kodi requires those
-- Properly display watermark when no other video filters (like scaling or padding) are required
-- Fix building some playouts in timezones with positive offsets (like UTC+2)
-- Fix `Shuffle In Order` so all collections/shows start from the earliest episode
-  - You may need to rebuild playouts to see this fixed behavior more quickly
 
 ## [0.0.56-alpha] - 2021-09-10
 ### Added
@@ -585,7 +594,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.57-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.58-alpha...HEAD
+[0.0.58-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.57-alpha...v0.0.57-alpha
 [0.0.57-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.56-alpha...v0.0.57-alpha
 [0.0.56-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.55-alpha...v0.0.56-alpha
 [0.0.55-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.54-alpha...v0.0.55-alpha
