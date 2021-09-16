@@ -17,9 +17,11 @@
                 <MudCardContent>
                     <MudTextField Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
                     <MudElement HtmlTag="div" Class="mt-3">
-                        <MudCheckBox Label="Keep Multi-Part Episodes Together"
-                                     @bind-Checked="@_model.KeepMultiPartEpisodesTogether"
-                                     For="@(() => _model.KeepMultiPartEpisodesTogether)"/>
+                        <MudTooltip Text="Always schedule multi-part episodes chronologically when shuffling">
+                            <MudCheckBox Label="Keep Multi-Part Episodes Together"
+                                         @bind-Checked="@_model.KeepMultiPartEpisodesTogether"
+                                         For="@(() => _model.KeepMultiPartEpisodesTogether)"/>
+                        </MudTooltip>
                     </MudElement>
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudTooltip Text="This is useful for multi-part crossover episodes">
