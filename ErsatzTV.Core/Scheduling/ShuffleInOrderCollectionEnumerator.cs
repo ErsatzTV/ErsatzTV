@@ -147,13 +147,7 @@ namespace ErsatzTV.Core.Scheduling
                     ordered.AddRange(larger);
                 }
 
-                int offset = random.Next(ordered.Count);
-                result.Add(
-                    new OrderedCollection
-                    {
-                        Index = 0,
-                        Items = ordered.Skip(offset).Concat(ordered.Take(offset)).ToList()
-                    });
+                result.Add(new OrderedCollection { Index = 0, Items = ordered });
             }
 
             return result;
