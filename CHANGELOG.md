@@ -17,6 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Enable HEAD requests for IPTV image paths since Kodi requires those
 - Properly display watermark when no other video filters (like scaling or padding) are required
 - Fix building some playouts in timezones with positive offsets (like UTC+2)
+- Fix `Shuffle In Order` so all collections/shows start from the earliest episode
+  - You may need to rebuild playouts to see this fixed behavior more quickly
 
 ## [0.0.56-alpha] - 2021-09-10
 ### Added
