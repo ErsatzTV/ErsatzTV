@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace ErsatzTV.Core.Domain
 {
-    [DebuggerDisplay("{EpisodeMetadata[0].Title}")]
+    [DebuggerDisplay("{EpisodeMetadata[0].Title ?? \"[unknown episode]\"}")]
     public class Episode : MediaItem
     {
         public int SeasonId { get; set; }
