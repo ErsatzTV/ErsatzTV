@@ -1,9 +1,12 @@
 ﻿@page "/"
 @using Microsoft.Extensions.Caching.Memory
 @using System.Reflection
+@using ErsatzTV.Application.Health.Queries
+@using ErsatzTV.Core.Health
 @using ErsatzTV.Core.Interfaces.GitHub
 @inject IGitHubApiClient _gitHubApiClient
 @inject IMemoryCache _memoryCache
+@inject IMediator _mediator
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <MudCard>
@@ -12,11 +15,49 @@
         </MudCardContent>
     </MudCard>
     <MudText Class="mt-6">Full changelog is available on <MudLink Href="https://github.com/jasongdove/ErsatzTV/blob/main/CHANGELOG.md">GitHub</MudLink></MudText>
+    <MudTable Class="mt-6"
+              Hover="true"
+              Dense="true"
+              ServerData="@(new Func<TableState, Task<TableData<HealthCheckResult>>>(ServerReload))"
+              @ref="_table">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Health Checks</MudText>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Check</MudTh>
+                <MudTh>Message</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Check">
+                    <div style="display: flex; flex-direction: row; align-items: center">
+                        @if (context.Status == HealthCheckStatus.Fail)
+                        {
+                            <MudIcon Color="@Color.Error" Icon="@Icons.Material.Filled.Error"/>
+                        }
+                        else if (context.Status == HealthCheckStatus.Warning)
+                        {
+                            <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning"/>
+                        }
+                        else if (context.Status == HealthCheckStatus.Info)
+                        {
+                            <MudIcon Color="@Color.Info" Icon="@Icons.Material.Filled.Info"/>
+                        }
+                        else
+                        {
+                            <MudIcon Color="@Color.Success" Icon="@Icons.Material.Filled.Check"/>
+                        }
+                        <div class="ml-2">@context.Title</div>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Message">@context.Message</MudTd>
+            </RowTemplate>
+        </MudTable>
 </MudContainer>
 
 @code {
 
     private string _releaseNotes;
+    private MudTable<HealthCheckResult> _table;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -65,6 +106,17 @@
         {
     // ignore
         }
+    }
+    
+    private async Task<TableData<HealthCheckResult>> ServerReload(TableState state)
+    {
+        List<HealthCheckResult> healthCheckResults = await _mediator.Send(new GetAllHealthCheckResults());
+
+        return new TableData<HealthCheckResult>
+        {
+            TotalItems = healthCheckResults.Count,
+            Items = healthCheckResults
+        };
     }
 
 }
