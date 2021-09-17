@@ -4,8 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add `Health Checks` table to home page to identify and surface common misconfigurations
+  - `FFmpeg Version` checks `ffmpeg` and `ffprobe` versions
+  - `FFmpeg Reports` checks whether ffmpeg troubleshooting reports are enabled since they can use a lot of disk space over time
+  - `Hardware Acceleration` checks whether channels that transcode are using acceleration methods that ffmpeg claims to support
+  - `Movie Metadata` checks whether all movies have metadata (fallback metadata counts as metadata)
+  - `Episode Metadata` checks whether all episodes have metadata (fallback metadata counts as metadata)
+  - `Zero Duration` checks whether all movies and episodes have a valid (non-zero) duration
+
 ### Fixed
-- Fix scanning and indexing local movies and episodes with no metadata
+- Fix scanning and indexing local movies and episodes without NFO metadata
 - Fix displaying seasons for shows with no year (in metadata or in folder name)
 
 ## [0.0.58-alpha] - 2021-09-15

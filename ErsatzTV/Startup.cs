@@ -11,6 +11,8 @@ using ErsatzTV.Application.Logs.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Health;
+using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.GitHub;
@@ -34,6 +36,8 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
 using ErsatzTV.Infrastructure.Emby;
 using ErsatzTV.Infrastructure.GitHub;
+using ErsatzTV.Infrastructure.Health;
+using ErsatzTV.Infrastructure.Health.Checks;
 using ErsatzTV.Infrastructure.Images;
 using ErsatzTV.Infrastructure.Jellyfin;
 using ErsatzTV.Infrastructure.Locking;
@@ -197,6 +201,14 @@ namespace ErsatzTV
             AddChannel<IPlexBackgroundServiceRequest>(services);
             AddChannel<IJellyfinBackgroundServiceRequest>(services);
             AddChannel<IEmbyBackgroundServiceRequest>(services);
+            
+            services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
+            services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
+            services.AddScoped<IHardwareAccelerationHealthCheck, HardwareAccelerationHealthCheck>();
+            services.AddScoped<IMovieMetadataHealthCheck, MovieMetadataHealthCheck>();
+            services.AddScoped<IEpisodeMetadataHealthCheck, EpisodeMetadataHealthCheck>();
+            services.AddScoped<IZeroDurationHealthCheck, ZeroDurationHealthCheck>();
+            services.AddScoped<IHealthCheckService, HealthCheckService>();
 
             services.AddScoped<IChannelRepository, ChannelRepository>();
             services.AddScoped<IFFmpegProfileRepository, FFmpegProfileRepository>();
