@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix scanning and indexing local movies and episodes with no metadata
+- Fix displaying seasons for shows with no year (in metadata or in folder name)
 
 ## [0.0.58-alpha] - 2021-09-15
 ### Added

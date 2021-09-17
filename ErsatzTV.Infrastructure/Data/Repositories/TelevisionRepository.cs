@@ -144,7 +144,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     @"SELECT m1.ShowId
                 FROM ShowMetadata m1
                 LEFT OUTER JOIN ShowMetadata m2 ON m2.ShowId = @ShowId
-                WHERE m1.Title = m2.Title AND m1.Year = m2.Year",
+                WHERE m1.Title = m2.Title AND m1.Year is m2.Year",
                     new { ShowId = televisionShowId })
                 .Map(results => results.ToList());
 
