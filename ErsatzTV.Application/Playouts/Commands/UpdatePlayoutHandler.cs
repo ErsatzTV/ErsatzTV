@@ -8,6 +8,7 @@ using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Playouts.Commands
 {
@@ -45,7 +46,8 @@ namespace ErsatzTV.Application.Playouts.Commands
                 playout.Id,
                 playout.Channel.Name,
                 playout.Channel.Number,
-                playout.ProgramSchedule.Name);
+                playout.ProgramSchedule.Name,
+                Optional(playout.DailyRebuildTime));
         }
 
         private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, UpdatePlayout request) =>

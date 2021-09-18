@@ -12,6 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Movie Metadata` checks whether all movies have metadata (fallback metadata counts as metadata)
   - `Episode Metadata` checks whether all episodes have metadata (fallback metadata counts as metadata)
   - `Zero Duration` checks whether all movies and episodes have a valid (non-zero) duration
+- Add setting to each playout to schedule an automatic daily rebuild
+  - This is useful if the playout uses a smart collection with `released_onthisday`
 
 ### Fixed
 - Fix docker vaapi support for newer Intel platforms (Broadwell and things that end in Lake)

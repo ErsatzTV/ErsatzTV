@@ -18,9 +18,7 @@
                 @for (var i = 1; i < 48; i++)
                 {
                     var time = TimeSpan.FromHours(i * 0.5);
-                    string formatted = string.IsNullOrWhiteSpace(DateTimeFormatInfo.CurrentInfo?.AMDesignator)
-                        ? DateTime.Today.Add(time).ToString(@"hh\:mm")
-                        : DateTime.Today.Add(time).ToString(@"hh\:mm tt"); 
+                    string formatted = DateTime.Today.Add(time).ToShortTimeString();
                     <MudSelectItem Value="@(Option<TimeSpan>.Some(time))">@formatted</MudSelectItem>
                 }
             </MudSelect>
@@ -48,6 +46,9 @@
     [Parameter]
     public string ScheduleName { get; set; }
 
+    [Parameter]
+    public Option<TimeSpan> DailyRebuildTime { get; set; }
+
     private string FormatText() => $"Enter the time that the playout on channel {ChannelName} with schedule {ScheduleName} should rebuild every day";
 
     private record DummyModel;
@@ -55,6 +56,11 @@
     private readonly DummyModel _dummyModel = new();
 
     private Option<TimeSpan> _rebuildTime;
+
+    protected override void OnParametersSet()
+    {
+        _rebuildTime = DailyRebuildTime;
+    }
 
     private async Task Submit()
     {
