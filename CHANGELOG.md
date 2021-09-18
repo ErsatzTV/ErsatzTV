@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Zero Duration` checks whether all movies and episodes have a valid (non-zero) duration
 
 ### Fixed
+- Fix docker vaapi support for newer Intel platforms (Broadwell and things that end in Lake)
 - Fix scanning and indexing local movies and episodes without NFO metadata
 - Fix displaying seasons for shows with no year (in metadata or in folder name)
 
