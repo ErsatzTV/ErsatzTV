@@ -44,14 +44,35 @@ namespace ErsatzTV.Services
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
+            DateTime firstRun = DateTime.Now;
+            
+            // run once immediately at startup
+            if (!cancellationToken.IsCancellationRequested)
+            {
+                await DoWork(cancellationToken);
+            }
+
             while (!cancellationToken.IsCancellationRequested)
             {
+                int currentMinutes = DateTime.Now.TimeOfDay.Minutes;
+                int toWait = currentMinutes < 30 ? 30 - currentMinutes : 60 - currentMinutes;
+                _logger.LogDebug("Scheduler sleeping for {Minutes} minutes", toWait);
+                await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
+                
                 if (!cancellationToken.IsCancellationRequested)
                 {
-                    await DoWork(cancellationToken);
+                    var roundedMinute = (int)(Math.Round(DateTime.Now.Minute / 5.0) * 5);
+                    if (roundedMinute % 30 == 0)
+                    {
+                        // check for playouts to rebuild every 30 minutes
+                        await RebuildPlayouts(cancellationToken);
+                    }
+                    if (roundedMinute % 60 == 0 && DateTime.Now.Subtract(firstRun) > TimeSpan.FromHours(1))
+                    {
+                        // do other work every hour (on the hour)
+                        await DoWork(cancellationToken);
+                    }
                 }
-
-                await Task.Delay(TimeSpan.FromHours(1), cancellationToken);
             }
         }
 
@@ -64,6 +85,33 @@ namespace ErsatzTV.Services
                 await BuildPlayouts(cancellationToken);
                 await ScanLocalMediaSources(cancellationToken);
                 await ScanPlexMediaSources(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error during scheduler run");
+            }
+        }
+
+        private async Task RebuildPlayouts(CancellationToken cancellationToken)
+        {
+            try
+            {
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+
+                List<Playout> playouts = await dbContext.Playouts
+                    .Filter(p => p.DailyRebuildTime != null)
+                    .Include(p => p.Channel)
+                    .ToListAsync(cancellationToken);
+
+                foreach (Playout playout in playouts.OrderBy(p => decimal.Parse(p.Channel.Number)))
+                {
+                    if (DateTime.Now.Subtract(DateTime.Today.Add(playout.DailyRebuildTime ?? TimeSpan.FromDays(7))) <
+                        TimeSpan.FromMinutes(5))
+                    {
+                        await _workerChannel.WriteAsync(new BuildPlayout(playout.Id, true), cancellationToken);
+                    }
+                }
             }
             catch (Exception ex)
             {

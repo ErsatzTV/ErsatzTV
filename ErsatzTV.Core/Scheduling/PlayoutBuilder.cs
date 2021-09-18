@@ -103,9 +103,9 @@ namespace ErsatzTV.Core.Scheduling
 
             var collectionMediaItems = Map.createRange(tuples);
 
-            // using IDisposable scope = _logger.BeginScope(new { PlayoutId = playout.Id });
             _logger.LogDebug(
-                $"{(rebuild ? "Rebuilding" : "Building")} playout {{PlayoutId}} for channel {{ChannelNumber}} - {{ChannelName}}",
+                "{Action} playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
+                rebuild ? "Rebuilding" : "Building",
                 playout.Id,
                 playout.Channel.Number,
                 playout.Channel.Name);
