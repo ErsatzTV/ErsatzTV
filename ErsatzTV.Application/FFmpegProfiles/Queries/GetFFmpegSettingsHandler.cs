@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
@@ -28,6 +29,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
             Option<int> watermark =
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId);
+            Option<int> vaapiDriver =
+                await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegVaapiDriver);
 
             var result = new FFmpegSettingsViewModel
             {
@@ -36,6 +39,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 DefaultFFmpegProfileId = await defaultFFmpegProfileId.IfNoneAsync(0),
                 SaveReports = await saveReports.IfNoneAsync(false),
                 PreferredLanguageCode = await preferredLanguageCode.IfNoneAsync("eng"),
+                VaapiDriver = (VaapiDriver)await vaapiDriver.IfNoneAsync(0)
             };
 
             foreach (int watermarkId in watermark)
