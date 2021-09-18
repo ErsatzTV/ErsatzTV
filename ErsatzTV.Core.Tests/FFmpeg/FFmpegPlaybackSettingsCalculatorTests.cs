@@ -258,6 +258,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
@@ -283,6 +284,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1280, Height = 720 }
                 };
@@ -309,6 +311,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
@@ -334,6 +337,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeVideo = false,
                     Resolution = new Resolution { Width = 1920, Height = 1080 }
                 };
@@ -359,6 +363,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoCodec = "testCodec"
@@ -387,6 +392,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoCodec = "testCodec"
@@ -416,6 +422,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoCodec = "testCodec"
@@ -444,6 +451,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoCodec = "libx264"
@@ -473,6 +481,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = false,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoCodec = "libx264"
@@ -495,12 +504,47 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 actual.PadToDesiredResolution.Should().BeFalse();
                 actual.VideoCodec.Should().Be("copy");
             }
+            
+            [Test]
+            public void
+                Should_SetCopyVideoCodec_AndCopyAudioCodec_When_NotTranscoding_ForTransportStream()
+            {
+                var ffmpegProfile = new FFmpegProfile
+                {
+                    Transcode = false,
+                    NormalizeVideo = true,
+                    NormalizeAudio = true,
+                    NormalizeLoudness = true,
+                    Resolution = new Resolution { Width = 1920, Height = 1080 },
+                    VideoCodec = "libx264"
+                };
+
+                // not anamorphic
+                var version = new MediaVersion
+                    { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    ffmpegProfile,
+                    version,
+                    new MediaStream { Codec = "mpeg2video" },
+                    new MediaStream(),
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now);
+
+                actual.ScaledSize.IsNone.Should().BeTrue();
+                actual.PadToDesiredResolution.Should().BeFalse();
+                actual.VideoCodec.Should().Be("copy");
+                actual.NormalizeLoudness.Should().BeFalse();
+                actual.AudioCodec.Should().Be("copy");
+            }
 
             [Test]
             public void Should_SetVideoBitrate_When_ContentIsPadded_ForTransportStream()
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoBitrate = 2525
@@ -528,6 +572,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoBitrate = 2525
@@ -556,6 +601,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoBufferSize = 2525
@@ -584,6 +630,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var ffmpegProfile = new FFmpegProfile
                 {
+                    Transcode = true,
                     NormalizeVideo = true,
                     Resolution = new Resolution { Width = 1920, Height = 1080 },
                     VideoBufferSize = 2525
@@ -612,6 +659,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioCodec = "aac"
                 };
@@ -658,6 +706,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioCodec = "aac"
                 };
@@ -681,6 +730,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioCodec = "aac"
                 };
@@ -704,6 +754,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioBitrate = 2424,
                     AudioCodec = "ac3"
@@ -728,6 +779,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioBufferSize = 2424,
                     AudioCodec = "ac3"
@@ -752,6 +804,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioCodec = "ac3",
                     AudioChannels = 6
@@ -776,6 +829,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioCodec = "ac3",
                     AudioSampleRate = 48
@@ -800,6 +854,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioChannels = 6
                 };
@@ -823,6 +878,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioSampleRate = 48
                 };
@@ -846,6 +902,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     AudioSampleRate = 48,
                     AudioCodec = "ac3"
@@ -870,6 +927,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = true,
                     NormalizeLoudness = true
                 };
@@ -893,6 +951,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegProfile ffmpegProfile = TestProfile() with
                 {
+                    Transcode = true,
                     NormalizeAudio = false,
                     NormalizeLoudness = true
                 };
