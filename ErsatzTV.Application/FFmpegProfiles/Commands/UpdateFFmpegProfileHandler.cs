@@ -37,17 +37,17 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.Transcode = update.Transcode;
             p.HardwareAcceleration = update.HardwareAcceleration;
             p.ResolutionId = update.ResolutionId;
-            p.NormalizeVideo = update.NormalizeVideo;
+            p.NormalizeVideo = update.Transcode && update.NormalizeVideo;
             p.VideoCodec = update.VideoCodec;
             p.VideoBitrate = update.VideoBitrate;
             p.VideoBufferSize = update.VideoBufferSize;
             p.AudioCodec = update.AudioCodec;
             p.AudioBitrate = update.AudioBitrate;
             p.AudioBufferSize = update.AudioBufferSize;
-            p.NormalizeLoudness = update.NormalizeLoudness;
+            p.NormalizeLoudness = update.Transcode && update.NormalizeLoudness;
             p.AudioChannels = update.AudioChannels;
             p.AudioSampleRate = update.AudioSampleRate;
-            p.NormalizeAudio = update.NormalizeAudio;
+            p.NormalizeAudio = update.Transcode && update.NormalizeAudio;
             await dbContext.SaveChangesAsync();
             return new UpdateFFmpegProfileResult(p.Id);
         }

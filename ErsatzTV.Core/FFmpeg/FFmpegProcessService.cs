@@ -162,7 +162,8 @@ namespace ErsatzTV.Core.FFmpeg
 
         private WatermarkOptions GetWatermarkOptions(Channel channel, Option<ChannelWatermark> globalWatermark)
         {
-            if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
+            if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && channel.FFmpegProfile.Transcode &&
+                channel.FFmpegProfile.NormalizeVideo)
             {
                 // check for channel watermark
                 if (channel.Watermark != null)

@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This includes a new setting to force a particular vaapi driver (`iHD` or `i965`), as some Gen 8 or 9 hardware that is supported by both drivers will perform better with one or the other
 - Fix scanning and indexing local movies and episodes without NFO metadata
 - Fix displaying seasons for shows with no year (in metadata or in folder name)
+- Fix "direct play" in MPEG-TS mode (copy audio and video stream when `Transcode` is unchecked)
 
 ## [0.0.58-alpha] - 2021-09-15
 ### Added
