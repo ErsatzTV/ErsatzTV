@@ -14,6 +14,9 @@ namespace ErsatzTV.Infrastructure.Health.Checks
         protected HealthCheckResult Result(HealthCheckStatus status, string message) =>
             new(Title, status, message);
 
+        protected HealthCheckResult NotApplicableResult() =>
+            new(Title, HealthCheckStatus.NotApplicable, string.Empty);
+        
         protected HealthCheckResult OkResult() =>
             new(Title, HealthCheckStatus.Pass, string.Empty);
 

@@ -18,7 +18,8 @@ namespace ErsatzTV.Infrastructure.Health
             IHardwareAccelerationHealthCheck hardwareAccelerationHealthCheck,
             IMovieMetadataHealthCheck movieMetadataHealthCheck,
             IEpisodeMetadataHealthCheck episodeMetadataHealthCheck,
-            IZeroDurationHealthCheck zeroDurationHealthCheck)
+            IZeroDurationHealthCheck zeroDurationHealthCheck,
+            IVaapiDriverHealthCheck vaapiDriverHealthCheck)
         {
             _checks = new List<IHealthCheck>
             {
@@ -27,7 +28,8 @@ namespace ErsatzTV.Infrastructure.Health
                 hardwareAccelerationHealthCheck,
                 movieMetadataHealthCheck,
                 episodeMetadataHealthCheck,
-                zeroDurationHealthCheck
+                zeroDurationHealthCheck,
+                vaapiDriverHealthCheck
             };
         }
 

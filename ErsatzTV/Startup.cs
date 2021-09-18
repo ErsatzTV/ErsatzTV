@@ -208,6 +208,7 @@ namespace ErsatzTV
             services.AddScoped<IMovieMetadataHealthCheck, MovieMetadataHealthCheck>();
             services.AddScoped<IEpisodeMetadataHealthCheck, EpisodeMetadataHealthCheck>();
             services.AddScoped<IZeroDurationHealthCheck, ZeroDurationHealthCheck>();
+            services.AddScoped<IVaapiDriverHealthCheck, VaapiDriverHealthCheck>();
             services.AddScoped<IHealthCheckService, HealthCheckService>();
 
             services.AddScoped<IChannelRepository, ChannelRepository>();
