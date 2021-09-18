@@ -157,7 +157,7 @@
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog = _dialog.Show<SchedulePlayoutRebuild>("Schedule Playout Rebuild", parameters, options);
-        DialogResult result = await dialog.Result;
+        await dialog.Result;
     }
 
     private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state)
