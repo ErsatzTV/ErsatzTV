@@ -99,6 +99,10 @@ namespace ErsatzTV.Application.Streaming.Queries
                             watermarkId => dbContext.ChannelWatermarks
                                 .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
 
+                    Option<VaapiDriver> maybeVaapiDriver = await dbContext.ConfigElements
+                        .GetValue<int>(ConfigElementKey.FFmpegVaapiDriver)
+                        .MapT(i => (VaapiDriver)i);
+
                     return Right<BaseError, Process>(
                         await _ffmpegProcessService.ForPlayoutItem(
                             ffmpegPath,
@@ -108,7 +112,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                             playoutItemWithPath.Path,
                             playoutItemWithPath.PlayoutItem.StartOffset,
                             now,
-                            maybeGlobalWatermark));
+                            maybeGlobalWatermark,
+                            maybeVaapiDriver));
                 },
                 async error =>
                 {

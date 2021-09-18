@@ -115,6 +115,10 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalWatermarkId);
             }
 
+            await _configElementRepository.Upsert(
+                ConfigElementKey.FFmpegVaapiDriver,
+                (int)request.Settings.VaapiDriver);
+
             return Unit.Default;
         }
     }

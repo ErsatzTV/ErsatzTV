@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Health;
@@ -13,9 +14,12 @@ namespace ErsatzTV.Application.Health.Queries
         public GetAllHealthCheckResultsHandler(IHealthCheckService healthCheckService) =>
             _healthCheckService = healthCheckService;
 
-        public Task<List<HealthCheckResult>> Handle(
+        public async Task<List<HealthCheckResult>> Handle(
             GetAllHealthCheckResults request,
-            CancellationToken cancellationToken) =>
-            _healthCheckService.PerformHealthChecks();
+            CancellationToken cancellationToken)
+        {
+            List<HealthCheckResult> results = await _healthCheckService.PerformHealthChecks();
+            return results.Filter(r => r.Status != HealthCheckStatus.NotApplicable).ToList();
+        }
     }
 }

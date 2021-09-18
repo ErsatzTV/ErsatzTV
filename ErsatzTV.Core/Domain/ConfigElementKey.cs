@@ -13,6 +13,7 @@
         public static ConfigElementKey FFmpegSaveReports => new("ffmpeg.save_reports");
         public static ConfigElementKey FFmpegPreferredLanguageCode => new("ffmpeg.preferred_language_code");
         public static ConfigElementKey FFmpegGlobalWatermarkId => new("ffmpeg.global_watermark_id");
+        public static ConfigElementKey FFmpegVaapiDriver => new("ffmpeg.vaapi_driver");
         public static ConfigElementKey SearchIndexVersion => new("search_index.version");
         public static ConfigElementKey HDHRTunerCount => new("hdhr.tuner_count");
         public static ConfigElementKey ChannelsPageSize => new("pages.channels.page_size");

@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Application.FFmpegProfiles
+﻿using ErsatzTV.Core.FFmpeg;
+
+namespace ErsatzTV.Application.FFmpegProfiles
 {
     public class FFmpegSettingsViewModel
     {
@@ -8,5 +10,6 @@
         public string PreferredLanguageCode { get; set; }
         public bool SaveReports { get; set; }
         public int? GlobalWatermarkId { get; set; }
+        public VaapiDriver VaapiDriver { get; set; }
     }
 }

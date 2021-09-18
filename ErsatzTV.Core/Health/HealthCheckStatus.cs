@@ -2,9 +2,10 @@
 {
     public enum HealthCheckStatus
     {
-        Pass,
-        Fail,
-        Warning,
-        Info
+        Pass = 0,
+        Fail = 1,
+        Warning = 2,
+        Info = 3,
+        NotApplicable = 4
     }
 }
