@@ -12,11 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Movie Metadata` checks whether all movies have metadata (fallback metadata counts as metadata)
   - `Episode Metadata` checks whether all episodes have metadata (fallback metadata counts as metadata)
   - `Zero Duration` checks whether all movies and episodes have a valid (non-zero) duration
+  - `VAAPI Driver` checks whether a vaapi driver preference is configured when using the vaapi docker image
 - Add setting to each playout to schedule an automatic daily rebuild
   - This is useful if the playout uses a smart collection with `released_onthisday`
 
 ### Fixed
-- Fix docker vaapi support for newer Intel platforms (Broadwell and things that end in Lake)
+- Fix docker vaapi support for newer Intel platforms (Gen 8+)
+  - This includes a new setting to force a particular vaapi driver (`iHD` or `i965`), as some Gen 8 or 9 hardware that is supported by both drivers will perform better with one or the other
 - Fix scanning and indexing local movies and episodes without NFO metadata
 - Fix displaying seasons for shows with no year (in metadata or in folder name)
 
