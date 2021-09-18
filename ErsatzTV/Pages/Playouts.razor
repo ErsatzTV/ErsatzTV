@@ -20,7 +20,7 @@
         <ColGroup>
             <col/>
             <col/>
-            <col style="width: 120px;"/>
+            <col style="width: 180px;"/>
         </ColGroup>
         <HeaderContent>
             <MudTh>
@@ -45,6 +45,11 @@
                     <MudTooltip Text="Rebuild Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                        OnClick="@(_ => RebuildPlayout(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Schedule Rebuild">
+                        <MudIconButton Icon="@Icons.Material.Filled.Update"
+                                       OnClick="@(_ => ScheduleRebuild(context))">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Playout">
@@ -138,6 +143,20 @@
         {
             await PlayoutSelected(playout);
         }
+    }
+
+    private async Task ScheduleRebuild(PlayoutNameViewModel playout)
+    {
+        var parameters = new DialogParameters
+        {
+            { "PlayoutId", playout.PlayoutId },
+            { "ChannelName", playout.ChannelName },
+            { "ScheduleName", playout.ScheduleName }
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = _dialog.Show<SchedulePlayoutRebuild>("Schedule Playout Rebuild", parameters, options);
+        DialogResult result = await dialog.Result;
     }
 
     private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state)
