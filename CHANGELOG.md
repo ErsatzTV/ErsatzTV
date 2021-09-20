@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix local television scanner to properly update episode metadata when NFO files have been added/changed
+- Properly detect ffmpeg nvenc (cuda) support in Hardware Acceleration health check
+- Fix nvenc/cuda filter for some yuv420p content
 
 ## [0.0.59-alpha] - 2021-09-18
 ### Added
