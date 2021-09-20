@@ -161,7 +161,8 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
                         HardwareAccelerationKind.Nvenc when _scaleToSize.IsNone && _pixelFormat == "yuv420p10le" =>
                             "format=p010le,format=nv12",
-                        _ => "format=yuv420p|nv12"
+                        HardwareAccelerationKind.Nvenc => "format=yuv420p|nv12",
+                        _ => "format=nv12"
                     };
                     videoFilterQueue.Add(format);
                 }
