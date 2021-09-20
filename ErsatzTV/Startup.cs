@@ -26,11 +26,13 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Metadata.Nfo;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Scheduling;
+using ErsatzTV.Core.Trakt;
 using ErsatzTV.Formatters;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Data.Repositories;
@@ -44,6 +46,7 @@ using ErsatzTV.Infrastructure.Locking;
 using ErsatzTV.Infrastructure.Plex;
 using ErsatzTV.Infrastructure.Runtime;
 using ErsatzTV.Infrastructure.Search;
+using ErsatzTV.Infrastructure.Trakt;
 using ErsatzTV.Serialization;
 using ErsatzTV.Services;
 using ErsatzTV.Services.RunOnce;
@@ -170,6 +173,11 @@ namespace ErsatzTV
             services.AddRefitClient<IPlexTvApi>()
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://plex.tv/api/v2"));
 
+            services.AddRefitClient<ITraktApi>()
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.trakt.tv"));
+
+            services.Configure<TraktConfiguration>(Configuration.GetSection("Trakt"));
+
             CustomServices(services);
         }
 
@@ -195,6 +203,7 @@ namespace ErsatzTV
             services.AddSingleton<FFmpegPlaybackSettingsCalculator>();
             services.AddSingleton<IPlexSecretStore, PlexSecretStore>();
             services.AddSingleton<IPlexTvApiClient, PlexTvApiClient>(); // TODO: does this need to be singleton?
+            services.AddSingleton<ITraktApiClient, TraktApiClient>();
             services.AddSingleton<IEntityLocker, EntityLocker>();
             services.AddSingleton<ISearchIndex, SearchIndex>();
             AddChannel<IBackgroundServiceRequest>(services);
