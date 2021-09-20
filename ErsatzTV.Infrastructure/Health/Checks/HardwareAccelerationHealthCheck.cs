@@ -109,6 +109,9 @@ namespace ErsatzTV.Infrastructure.Health.Checks
                     case "nvenc":
                         result.Add(HardwareAccelerationKind.Nvenc);
                         break;
+                    case "cuda":
+                        result.Add(HardwareAccelerationKind.Nvenc);
+                        break;
                     case "qsv":
                         // qsv is only supported on windows
                         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
