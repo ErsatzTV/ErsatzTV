@@ -137,7 +137,7 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Qsv => $"scale_qsv=w={size.Width}:h={size.Height}",
                         HardwareAccelerationKind.Nvenc when _pixelFormat == "yuv420p10le" =>
                             $"hwdownload,format=p010le,format=nv12,hwupload,scale_npp={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Nvenc => $"scale_npp={size.Width}:{size.Height}",
+                        HardwareAccelerationKind.Nvenc => $"hwupload_cuda,scale_npp={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Vaapi => $"scale_vaapi=w={size.Width}:h={size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
@@ -161,6 +161,7 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
                         HardwareAccelerationKind.Nvenc when _scaleToSize.IsNone && _pixelFormat == "yuv420p10le" =>
                             "format=p010le,format=nv12",
+                        HardwareAccelerationKind.Nvenc => "format=yuv420p|nv12",
                         _ => "format=nv12"
                     };
                     videoFilterQueue.Add(format);
