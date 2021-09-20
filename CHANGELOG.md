@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add ability to sync Trakt lists to a collection
+  - This sync is one-time (manual button) and one-way (Trakt => ErsatzTV)
+  - After synchronization, the collection will *only* contain media items found in the Trakt list
+
 ### Fixed
 - Fix local television scanner to properly update episode metadata when NFO files have been added/changed
 - Properly detect ffmpeg nvenc (cuda) support in Hardware Acceleration health check

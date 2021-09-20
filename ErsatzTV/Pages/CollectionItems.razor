@@ -2,6 +2,7 @@
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCards.Queries
 @using ErsatzTV.Application.MediaCollections.Commands
+@using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<CollectionItems>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel
@@ -30,11 +31,19 @@
         }
         else
         {
-            <div style="display: flex; flex-direction: row;">
+            <div style="display: flex; flex-direction: row; align-items: center">
                 <MudText Typo="Typo.h4">@_data.Name</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                               Link="@($"/media/collections/{Id}/edit")"
-                               Style="margin-bottom: auto; margin-top: auto;"/>
+                               Link="@($"/media/collections/{Id}/edit")"/>
+                <MudTooltip Text="Sync From Trakt List">
+                    <MudButton Class="ml-3"
+                               Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Download"
+                               OnClick="@(_ => SyncFromTraktList())">
+                        Trakt
+                    </MudButton>
+                </MudTooltip>
             </div>
             @if (_data.MovieCards.Any())
             {
@@ -385,6 +394,32 @@
         _data.UseCustomPlaybackOrder = !_data.UseCustomPlaybackOrder;
         var request = new UpdateCollection(Id, _data.Name) { UseCustomPlaybackOrder = _data.UseCustomPlaybackOrder };
         await Mediator.Send(request);
+    }
+
+    private async Task SyncFromTraktList()
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+        IDialogReference dialog = Dialog.Show<SyncFromTraktListDialog>("Sync From Trakt List", options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled && result.Data is string url)
+        {
+            Either<BaseError, Unit> syncResult = await Mediator.Send(new SyncCollectionFromTraktList(Id, url));
+            syncResult.Match(
+                Left: error =>
+                {
+                    Snackbar.Add($"Unexpected error synchronizing from Trakt: {error.Value}");
+                    Logger.LogError("Unexpected error synchronizing from Trakt: {Error}", error.Value);
+                },
+                Right: _ =>
+                {
+                    Snackbar.Add("Successfully synchronized collection from Trakt", Severity.Success);
+                });
+
+            if (syncResult.IsRight)
+            {
+                await RefreshData();
+            }
+        }
     }
 
 }

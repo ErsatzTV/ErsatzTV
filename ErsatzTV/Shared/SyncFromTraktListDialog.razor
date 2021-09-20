@@ -1,0 +1,68 @@
+﻿@using Microsoft.Extensions.Caching.Memory
+@inject IMediator _mediator
+@inject IMemoryCache _memoryCache
+@inject ISnackbar _snackbar
+@inject ILogger<SyncFromTraktListDialog> _logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudText>
+                    Enter Trakt List URL
+                </MudText>
+            </MudContainer>
+            <MudTextFieldString Label="Trakt List URL"
+                                Placeholder="https://trakt.tv/users/username/lists/list-name"
+                                @bind-Text="@_traktListUrl"
+                                Style="min-width: 400px"
+                                Class="mb-6 mx-4">
+            </MudTextFieldString>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Sync
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    private string _traktListUrl;
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    private bool CanSubmit() => !string.IsNullOrWhiteSpace(_traktListUrl);
+
+    private void Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        MudDialog.Close(DialogResult.Ok(_traktListUrl));
+    }
+
+    private void Cancel(MouseEventArgs e)
+    {
+    // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+        if (e.Detail == 0)
+        {
+            Submit();
+        }
+        else
+        {
+            MudDialog.Cancel();
+        }
+    }
+
+}
