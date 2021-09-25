@@ -2,7 +2,7 @@
 @inject IMediator _mediator
 @inject IMemoryCache _memoryCache
 @inject ISnackbar _snackbar
-@inject ILogger<SyncFromTraktListDialog> _logger
+@inject ILogger<AddTraktListDialog> _logger
 
 <MudDialog>
     <DialogContent>
@@ -23,7 +23,7 @@
     <DialogActions>
         <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
-            Sync
+            Add
         </MudButton>
     </DialogActions>
 </MudDialog>

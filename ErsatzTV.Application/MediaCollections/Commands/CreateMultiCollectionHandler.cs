@@ -56,7 +56,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 name => new MultiCollection
                 {
                     Name = name,
-                    MultiCollectionItems = request.Items.Map(
+                    MultiCollectionItems = request.Items.Bind(
                             i =>
                             {
                                 if (i.CollectionId.HasValue)
@@ -70,12 +70,10 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                                         });
                                 }
 
-                                return None;
+                                return Option<MultiCollectionItem>.None;
                             })
-                        .Sequence()
-                        .Flatten()
                         .ToList(),
-                    MultiCollectionSmartItems = request.Items.Map(
+                    MultiCollectionSmartItems = request.Items.Bind(
                             i =>
                             {
                                 if (i.SmartCollectionId.HasValue)
@@ -89,10 +87,8 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                                         });
                                 }
 
-                                return None;
+                                return Option<MultiCollectionSmartItem>.None;
                             })
-                        .Sequence()
-                        .Flatten()
                         .ToList()
                 });
 

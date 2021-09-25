@@ -6,6 +6,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Maintenance.Commands;
+using ErsatzTV.Application.MediaCollections.Commands;
 using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Application.Playouts.Commands;
 using ErsatzTV.Application.Plex.Commands;
@@ -85,6 +86,7 @@ namespace ErsatzTV.Services
                 await BuildPlayouts(cancellationToken);
                 await ScanLocalMediaSources(cancellationToken);
                 await ScanPlexMediaSources(cancellationToken);
+                await MatchTraktLists(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -169,6 +171,26 @@ namespace ErsatzTV.Services
                 {
                     await _plexWorkerChannel.WriteAsync(
                         new SynchronizePlexLibraryByIdIfNeeded(library.Id),
+                        cancellationToken);
+                }
+            }
+        }
+
+        private async Task MatchTraktLists(CancellationToken cancellationToken)
+        {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
+
+            List<TraktList> traktLists = await dbContext.TraktLists
+                .ToListAsync(cancellationToken);
+
+            if (traktLists.Any() && _entityLocker.LockTrakt())
+            {
+                TraktList last = traktLists.Last();
+                foreach (TraktList list in traktLists)
+                {
+                    await _workerChannel.WriteAsync(
+                        new MatchTraktListItems(list.Id, list == last),
                         cancellationToken);
                 }
             }

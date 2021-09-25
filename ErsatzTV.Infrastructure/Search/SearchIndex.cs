@@ -51,6 +51,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string ContentRatingField = "content_rating";
         private const string DirectorField = "director";
         private const string WriterField = "writer";
+        private const string TraktListField = "trakt_list";
 
         public const string MovieType = "movie";
         public const string ShowType = "show";
@@ -339,6 +340,11 @@ namespace ErsatzTV.Infrastructure.Search
                         doc.Add(new TextField(WriterField, writer.Name, Field.Store.NO));
                     }
 
+                    foreach (TraktListItem item in movie.TraktListItems)
+                    {
+                        doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
+                    }
+
                     _writer.UpdateDocument(new Term(IdField, movie.Id.ToString()), doc);
                 }
                 catch (Exception ex)
@@ -448,6 +454,11 @@ namespace ErsatzTV.Infrastructure.Search
                     foreach (Actor actor in metadata.Actors)
                     {
                         doc.Add(new TextField(ActorField, actor.Name, Field.Store.NO));
+                    }
+                    
+                    foreach (TraktListItem item in show.TraktListItems)
+                    {
+                        doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
                     }
 
                     _writer.UpdateDocument(new Term(IdField, show.Id.ToString()), doc);
@@ -642,6 +653,11 @@ namespace ErsatzTV.Infrastructure.Search
                     foreach (Writer writer in metadata.Writers)
                     {
                         doc.Add(new TextField(WriterField, writer.Name, Field.Store.NO));
+                    }
+
+                    foreach (TraktListItem item in episode.TraktListItems)
+                    {
+                        doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
                     }
 
                     _writer.UpdateDocument(new Term(IdField, episode.Id.ToString()), doc);

@@ -9,6 +9,7 @@ namespace ErsatzTV.Infrastructure.Locking
         private readonly ConcurrentDictionary<int, byte> _lockedLibraries;
         private readonly ConcurrentDictionary<Type, byte> _lockedRemoteMediaSourceTypes;
         private bool _plex;
+        private bool _trakt;
 
         public EntityLocker()
         {
@@ -19,6 +20,7 @@ namespace ErsatzTV.Infrastructure.Locking
         public event EventHandler OnLibraryChanged;
         public event EventHandler OnPlexChanged;
         public event EventHandler<Type> OnRemoteMediaSourceChanged;
+        public event EventHandler OnTraktChanged;
 
         public bool LockLibrary(int libraryId)
         {
@@ -100,5 +102,31 @@ namespace ErsatzTV.Infrastructure.Locking
 
             return false;
         }
+        
+        public bool LockTrakt()
+        {
+            if (!_trakt)
+            {
+                _trakt = true;
+                OnTraktChanged?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool UnlockTrakt()
+        {
+            if (_trakt)
+            {
+                _trakt = false;
+                OnTraktChanged?.Invoke(this, EventArgs.Empty);
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsTraktLocked() => _trakt;
     }
 }

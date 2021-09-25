@@ -14,7 +14,7 @@
       <PackageReference Include="LanguageExt.Core" Version="3.4.15" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
       <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.10.56">
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.63">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
