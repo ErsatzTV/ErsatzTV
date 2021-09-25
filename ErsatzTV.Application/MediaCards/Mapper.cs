@@ -21,7 +21,7 @@ namespace ErsatzTV.Application.MediaCards
                 showMetadata.Year?.ToString(),
                 showMetadata.SortTitle,
                 GetPoster(showMetadata, maybeJellyfin, maybeEmby));
-
+        
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(
             Season season,
             Option<JellyfinMediaSource> maybeJellyfin,
@@ -36,6 +36,26 @@ namespace ErsatzTV.Application.MediaCards
                 season.SeasonMetadata.HeadOrNone().Map(sm => GetPoster(sm, maybeJellyfin, maybeEmby))
                     .IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString());
+
+        internal static TelevisionSeasonCardViewModel ProjectToViewModel(
+            SeasonMetadata seasonMetadata,
+            Option<JellyfinMediaSource> maybeJellyfin,
+            Option<EmbyMediaSource> maybeEmby)
+        {
+            string showTitle = seasonMetadata.Season.Show.ShowMetadata.HeadOrNone().Match(
+                m => m.Title ?? string.Empty,
+                () => string.Empty);
+
+            return new TelevisionSeasonCardViewModel(
+                showTitle,
+                seasonMetadata.SeasonId,
+                seasonMetadata.Season.SeasonNumber,
+                showTitle,
+                GetSeasonName(seasonMetadata.Season.SeasonNumber),
+                $"{showTitle}_{seasonMetadata.Season.SeasonNumber:0000}",
+                GetPoster(seasonMetadata, maybeJellyfin, maybeEmby),
+                seasonMetadata.Season.SeasonNumber == 0 ? "S" : seasonMetadata.Season.SeasonNumber.ToString());
+        }
 
         internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
             EpisodeMetadata episodeMetadata,

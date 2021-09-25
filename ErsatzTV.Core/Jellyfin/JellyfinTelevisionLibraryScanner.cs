@@ -227,7 +227,11 @@ namespace ErsatzTV.Core.Jellyfin
                         incoming.ShowId = show.Id;
                         incoming.LibraryPathId = library.Paths.Head().Id;
 
-                        await _televisionRepository.Update(incoming);
+                        foreach (JellyfinSeason updated in await _televisionRepository.Update(incoming))
+                        {
+                            incoming.Show = show;
+                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated });
+                        }
                     },
                     async () =>
                     {
@@ -238,7 +242,11 @@ namespace ErsatzTV.Core.Jellyfin
                             show.ShowMetadata.Head().Title,
                             incoming.SeasonMetadata.Head().Title);
 
-                        await _televisionRepository.AddSeason(show, incoming);
+                        if (await _televisionRepository.AddSeason(show, incoming))
+                        {
+                            incoming.Show = show;
+                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                        }
                     });
 
                 List<JellyfinItemEtag> existingEpisodes =

@@ -65,6 +65,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(mi => (mi as Episode).MediaVersions)
                 .ThenInclude(em => em.Streams)
                 .Include(mi => (mi as Episode).Season)
+                .Include(mi => (mi as Season).SeasonMetadata)
+                .ThenInclude(sm => sm.Genres)
+                .Include(mi => (mi as Season).SeasonMetadata)
+                .ThenInclude(sm => sm.Tags)
+                .Include(mi => (mi as Season).SeasonMetadata)
+                .ThenInclude(sm => sm.Studios)
+                .Include(mi => (mi as Season).SeasonMetadata)
+                .ThenInclude(sm => sm.Actors)
+                .Include(mi => (mi as Season).Show)
+                .ThenInclude(sm => sm.ShowMetadata)
                 .Include(mi => (mi as Show).ShowMetadata)
                 .ThenInclude(mm => mm.Genres)
                 .Include(mi => (mi as Show).ShowMetadata)
@@ -103,6 +113,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     INNER JOIN Season S ON E.SeasonId = S.Id
                     WHERE MediaStreamKind = 2 AND S.ShowId = @ShowId",
                 new { ShowId = show.Id }).Map(result => result.ToList());
+
+        public Task<List<string>> GetLanguagesForSeason(Season season) =>
+            _dbConnection.QueryAsync<string>(
+                @"SELECT DISTINCT Language
+                    FROM MediaStream
+                    INNER JOIN MediaVersion MV ON MediaStream.MediaVersionId = MV.Id
+                    INNER JOIN Episode E ON MV.EpisodeId = E.Id
+                    WHERE MediaStreamKind = 2 AND E.SeasonId = @SeasonId",
+                new { SeasonId = season.Id }).Map(result => result.ToList());
 
         public Task<List<string>> GetLanguagesForArtist(Artist artist) =>
             _dbConnection.QueryAsync<string>(
