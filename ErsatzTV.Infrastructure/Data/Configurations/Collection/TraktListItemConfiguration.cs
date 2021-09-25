@@ -11,7 +11,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
             builder.ToTable("TraktListItem");
 
             builder.HasOne(i => i.MediaItem)
-                .WithMany(mi => mi.TraktListItems);
+                .WithMany(mi => mi.TraktListItems)
+                .OnDelete(DeleteBehavior.SetNull);
 
             builder.HasMany(i => i.Guids)
                 .WithOne(g => g.TraktListItem)

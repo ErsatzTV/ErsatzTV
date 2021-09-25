@@ -286,7 +286,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        public async Task<Unit> Update(JellyfinSeason season)
+        public async Task<Option<JellyfinSeason>> Update(JellyfinSeason season)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<JellyfinSeason> maybeExisting = await dbContext.JellyfinSeasons
@@ -374,11 +374,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     metadata.Artwork.Remove(artworkToRemove);
                 }
+
+                await dbContext.SaveChangesAsync();
+                await dbContext.Entry(existing.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             }
 
-            await dbContext.SaveChangesAsync();
-
-            return Unit.Default;
+            return maybeExisting;
         }
 
         public async Task<bool> AddEpisode(JellyfinSeason season, JellyfinEpisode episode)

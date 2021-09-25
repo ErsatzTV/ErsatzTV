@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - To re-download a Trakt list, simply add it again (no need to delete)
   - See `Logs` for unmatched item details
   - Trakt lists can only be scheduled by using Smart Collections
+- Add seasons to search index
+  - This is needed because Trakt lists can contain seasons 
 
 ### Fixed
 - Fix local television scanner to properly update episode metadata when NFO files have been added/changed

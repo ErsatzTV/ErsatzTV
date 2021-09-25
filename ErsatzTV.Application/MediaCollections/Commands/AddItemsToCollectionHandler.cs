@@ -52,6 +52,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         {
             var allItems = request.MovieIds
                 .Append(request.ShowIds)
+                .Append(request.SeasonIds)
                 .Append(request.EpisodeIds)
                 .Append(request.ArtistIds)
                 .Append(request.MusicVideoIds)
@@ -77,12 +78,15 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             return Unit.Default;
         }
 
-        private async Task<Validation<BaseError, Collection>> Validate(TvContext dbContext, AddItemsToCollection request) =>
+        private async Task<Validation<BaseError, Collection>> Validate(
+            TvContext dbContext,
+            AddItemsToCollection request) =>
             (await CollectionMustExist(dbContext, request),
                 await ValidateMovies(request),
                 await ValidateShows(request),
+                await ValidateSeasons(request),
                 await ValidateEpisodes(request))
-            .Apply((collection, _, _, _) => collection);
+            .Apply((collection, _, _, _, _) => collection);
 
         private static Task<Validation<BaseError, Collection>> CollectionMustExist(
             TvContext dbContext,
@@ -105,6 +109,13 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 .Filter(v => v == true)
                 .MapT(_ => Unit.Default)
                 .Map(v => v.ToValidation<BaseError>("Show does not exist"));
+
+        private Task<Validation<BaseError, Unit>> ValidateSeasons(AddItemsToCollection request) =>
+            _televisionRepository.AllSeasonsExist(request.SeasonIds)
+                .Map(Optional)
+                .Filter(v => v == true)
+                .MapT(_ => Unit.Default)
+                .Map(v => v.ToValidation<BaseError>("Season does not exist"));
 
         private Task<Validation<BaseError, Unit>> ValidateEpisodes(AddItemsToCollection request) =>
             _televisionRepository.AllEpisodesExist(request.EpisodeIds)
