@@ -1,6 +1,6 @@
 ﻿namespace ErsatzTV.Infrastructure.Trakt.Models
 {
-    public class TraktListItem
+    public class TraktListItemResponse
     {
         public int Rank { get; set; }
         public int Id { get; set; }

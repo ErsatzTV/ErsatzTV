@@ -19,6 +19,15 @@ namespace ErsatzTV.Application.MediaCollections
         internal static SmartCollectionViewModel ProjectToViewModel(SmartCollection collection) =>
             new(collection.Id, collection.Name, collection.Query);
 
+        internal static TraktListViewModel ProjectToViewModel(TraktList traktList) =>
+            new(
+                traktList.Id,
+                traktList.TraktId,
+                $"{traktList.User}/{traktList.List}",
+                traktList.Name,
+                traktList.ItemCount,
+                traktList.Items.Count(i => i.MediaItemId.HasValue));
+
         private static MultiCollectionItemViewModel ProjectToViewModel(MultiCollectionItem multiCollectionItem) =>
             new(
                 multiCollectionItem.MultiCollectionId,

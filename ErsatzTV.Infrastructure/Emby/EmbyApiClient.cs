@@ -211,7 +211,8 @@ namespace ErsatzTV.Infrastructure.Emby
                     ItemId = item.Id,
                     Etag = item.Etag,
                     MediaVersions = new List<MediaVersion> { version },
-                    MovieMetadata = new List<MovieMetadata> { metadata }
+                    MovieMetadata = new List<MovieMetadata> { metadata },
+                    TraktListItems = new List<TraktListItem>()
                 };
 
                 return movie;
@@ -335,7 +336,8 @@ namespace ErsatzTV.Infrastructure.Emby
                 {
                     ItemId = item.Id,
                     Etag = item.Etag,
-                    ShowMetadata = new List<ShowMetadata> { metadata }
+                    ShowMetadata = new List<ShowMetadata> { metadata },
+                    TraktListItems = new List<TraktListItem>()
                 };
 
                 return show;
@@ -461,7 +463,8 @@ namespace ErsatzTV.Infrastructure.Emby
                 {
                     ItemId = item.Id,
                     Etag = item.Etag,
-                    SeasonMetadata = new List<SeasonMetadata> { metadata }
+                    SeasonMetadata = new List<SeasonMetadata> { metadata },
+                    TraktListItems = new List<TraktListItem>()
                 };
 
                 if (item.IndexNumber.HasValue)
@@ -509,7 +512,8 @@ namespace ErsatzTV.Infrastructure.Emby
                     ItemId = item.Id,
                     Etag = item.Etag,
                     MediaVersions = new List<MediaVersion> { version },
-                    EpisodeMetadata = new List<EpisodeMetadata> { metadata }
+                    EpisodeMetadata = new List<EpisodeMetadata> { metadata },
+                    TraktListItems = new List<TraktListItem>()
                 };
 
                 return episode;

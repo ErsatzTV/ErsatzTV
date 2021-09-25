@@ -35,9 +35,7 @@ namespace ErsatzTV.Infrastructure.Health.Checks
             {
                 var paths = movies.SelectMany(e => e.MediaVersions.Map(mv => mv.MediaFiles))
                     .Flatten()
-                    .Map(f => Optional<string>(Path.GetDirectoryName(f.Path)))
-                    .Sequence()
-                    .Flatten()
+                    .Bind(f => Optional<string>(Path.GetDirectoryName(f.Path)))
                     .Distinct()
                     .Take(5)
                     .ToList();

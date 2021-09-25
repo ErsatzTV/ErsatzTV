@@ -221,6 +221,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         .ThenInclude(sm => sm.Guids)
                         .Include(s => s.LibraryPath)
                         .ThenInclude(lp => lp.Library)
+                        .Include(s => s.TraktListItems)
+                        .ThenInclude(tli => tli.TraktList)
                         .OrderBy(s => s.Id)
                         .SingleOrDefaultAsync(s => s.Id == id)
                         .Map(Optional);
@@ -247,7 +249,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     LibraryPathId = libraryPathId,
                     ShowMetadata = new List<ShowMetadata> { metadata },
-                    Seasons = new List<Season>()
+                    Seasons = new List<Season>(),
+                    TraktListItems = new List<TraktListItem>()
                 };
 
                 await dbContext.Shows.AddAsync(show);
@@ -311,6 +314,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .Include(i => i.Season)
+                .Include(i => i.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
@@ -414,6 +419,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(sm => sm.Guids)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
+                .Include(i => i.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -469,6 +476,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
                 .Include(e => e.Season)
+                .Include(e => e.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -724,7 +733,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             },
                             Streams = new List<MediaStream>()
                         }
-                    }
+                    },
+                    TraktListItems = new List<TraktListItem>()
                 };
                 await dbContext.Episodes.AddAsync(episode);
                 await dbContext.SaveChangesAsync();

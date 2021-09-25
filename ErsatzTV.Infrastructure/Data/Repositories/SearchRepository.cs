@@ -87,6 +87,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Styles)
                 .Include(mi => (mi as Artist).ArtistMetadata)
                 .ThenInclude(mm => mm.Moods)
+                .Include(mi => mi.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .OrderBy(mi => mi.Id)
                 .SingleOrDefaultAsync(mi => mi.Id == id)
                 .Map(Optional);

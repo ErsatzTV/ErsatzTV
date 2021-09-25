@@ -1,4 +1,4 @@
-﻿namespace ErsatzTV.Core.Trakt
+﻿namespace ErsatzTV.Core.Domain
 {
     public enum TraktListItemKind
     {

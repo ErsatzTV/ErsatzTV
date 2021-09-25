@@ -5,6 +5,6 @@ using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.MediaCollections.Commands
 {
-    public record SyncCollectionFromTraktList
-        (int CollectionId, string TraktListUrl) : IRequest<Either<BaseError, Unit>>;
+    public record MatchTraktListItems(int TraktListId, bool Unlock = true) : IRequest<Either<BaseError, Unit>>,
+        IBackgroundServiceRequest;
 }

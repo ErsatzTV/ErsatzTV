@@ -90,6 +90,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(m => m.ShowMetadata)
                 .ThenInclude(mm => mm.Guids)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .Filter(m => m.ItemId == show.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -432,6 +434,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Writers)
                 .Include(m => m.Season)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .Filter(m => m.ItemId == episode.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();

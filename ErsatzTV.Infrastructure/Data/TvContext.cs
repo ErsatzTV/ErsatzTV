@@ -69,6 +69,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
         public DbSet<Resolution> Resolutions { get; set; }
         public DbSet<LanguageCode> LanguageCodes { get; set; }
+        public DbSet<TraktList> TraktLists { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.UseLoggerFactory(_loggerFactory);
