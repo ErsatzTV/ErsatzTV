@@ -157,7 +157,7 @@
             @foreach (TelevisionSeasonCardViewModel card in _seasons.Cards.OrderBy(s => s.SortTitle))
             {
                 <MediaCard Data="@card"
-                           Link="@($"/media/tv/shows/{card.TelevisionSeasonId}")"
+                           Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
                            AddToCollectionClicked="@AddToCollection"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
