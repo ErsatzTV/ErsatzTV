@@ -82,11 +82,28 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 {
                     var toAdd = items.Filter(i => list.Items.All(i2 => i2.TraktId != i.TraktId)).ToList();
                     var toRemove = list.Items.Filter(i => items.All(i2 => i2.TraktId != i.TraktId)).ToList();
+                    var toUpdate = list.Items.Filter(i => !toRemove.Contains(i)).ToList();
                     
-                    // TODO: do we need to update?
-
                     list.Items.RemoveAll(toRemove.Contains);
                     list.Items.AddRange(toAdd.Map(a => ProjectItem(list, a)));
+
+                    foreach (TraktListItem existing in toUpdate)
+                    {
+                        Option<TraktListItem> maybeIncoming = list.Items.Find(i => i.TraktId == existing.TraktId);
+                        foreach (TraktListItem incoming in maybeIncoming)
+                        {
+                            existing.Kind = incoming.Kind;
+                            existing.Rank = incoming.Rank;
+                            existing.Title = incoming.Title;
+                            existing.Year = incoming.Year;
+                            existing.Season = incoming.Season;
+                            existing.Episode = incoming.Episode;
+                            existing.Guids.Clear();
+                            existing.Guids.AddRange(incoming.Guids);
+                            existing.MediaItemId = null;
+                            existing.MediaItem = null;
+                        }
+                    }
 
                     await dbContext.SaveChangesAsync();
 
