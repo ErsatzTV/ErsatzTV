@@ -174,7 +174,7 @@ namespace ErsatzTV
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://plex.tv/api/v2"));
 
             services.AddRefitClient<ITraktApi>()
-                .ConfigureHttpClient(c => { c.BaseAddress = new Uri("https://api.trakt.tv"); });
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.trakt.tv"));
 
             services.Configure<TraktConfiguration>(Configuration.GetSection("Trakt"));
 
