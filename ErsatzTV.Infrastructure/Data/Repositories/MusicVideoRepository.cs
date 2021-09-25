@@ -47,6 +47,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(mv => mv.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(mv => mv.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
@@ -188,7 +190,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             },
                             Streams = new List<MediaStream>()
                         }
-                    }
+                    },
+                    TraktListItems = new List<TraktListItem>()
                 };
 
                 await dbContext.MusicVideos.AddAsync(musicVideo);
