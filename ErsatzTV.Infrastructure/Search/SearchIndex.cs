@@ -55,6 +55,7 @@ namespace ErsatzTV.Infrastructure.Search
 
         public const string MovieType = "movie";
         public const string ShowType = "show";
+        public const string SeasonType = "season";
         public const string ArtistType = "artist";
         public const string MusicVideoType = "music_video";
         public const string EpisodeType = "episode";
@@ -73,7 +74,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 15;
+        public int Version => 16;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -106,6 +107,9 @@ namespace ErsatzTV.Infrastructure.Search
                         break;
                     case Show show:
                         await UpdateShow(searchRepository, show);
+                        break;
+                    case Season season:
+                        await UpdateSeason(searchRepository, season);
                         break;
                     case Artist artist:
                         await UpdateArtist(searchRepository, artist);
@@ -200,6 +204,9 @@ namespace ErsatzTV.Infrastructure.Search
                             break;
                         case Show show:
                             await UpdateShow(searchRepository, show);
+                            break;
+                        case Season season:
+                            await UpdateSeason(searchRepository, season);
                             break;
                         case Artist artist:
                             await UpdateArtist(searchRepository, artist);
@@ -470,6 +477,71 @@ namespace ErsatzTV.Infrastructure.Search
                 }
             }
         }
+        
+        private async Task UpdateSeason(ISearchRepository searchRepository, Season season)
+        {
+            Option<SeasonMetadata> maybeMetadata = season.SeasonMetadata.HeadOrNone();
+            Option<ShowMetadata> maybeShowMetadata = season.Show.ShowMetadata.HeadOrNone();
+            if (maybeMetadata.IsSome && maybeShowMetadata.IsSome)
+            {
+                SeasonMetadata metadata = maybeMetadata.ValueUnsafe();
+                ShowMetadata showMetadata = maybeShowMetadata.ValueUnsafe();
+
+                try
+                {
+                    var seasonTitle = $"{showMetadata.Title} - S{season.SeasonNumber}";
+                    string sortTitle = $"{showMetadata.SortTitle}_{season.SeasonNumber:0000}"
+                        .ToLowerInvariant();
+                    string titleAndYear = $"{showMetadata.Title}_{showMetadata.Year}_{season.SeasonNumber}"
+                        .ToLowerInvariant();
+
+                    var doc = new Document
+                    {
+                        new StringField(IdField, season.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, SeasonType, Field.Store.YES),
+                        new TextField(TitleField, seasonTitle, Field.Store.NO),
+                        new StringField(SortTitleField, sortTitle, Field.Store.NO),
+                        new TextField(LibraryNameField, season.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(LibraryIdField, season.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                        new StringField(TitleAndYearField, titleAndYear, Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES)
+                    };
+
+                    List<string> languages = await searchRepository.GetLanguagesForSeason(season);
+                    await AddLanguages(searchRepository, doc, languages);
+
+                    if (!string.IsNullOrWhiteSpace(showMetadata.ContentRating))
+                    {
+                        foreach (string contentRating in (showMetadata.ContentRating ?? string.Empty).Split("/")
+                            .Map(x => x.Trim()).Where(x => !string.IsNullOrWhiteSpace(x)))
+                        {
+                            doc.Add(new StringField(ContentRatingField, contentRating, Field.Store.NO));
+                        }
+                    }
+
+                    if (metadata.ReleaseDate.HasValue)
+                    {
+                        doc.Add(
+                            new StringField(
+                                ReleaseDateField,
+                                metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
+                                Field.Store.NO));
+                    }
+                    
+                    foreach (TraktListItem item in season.TraktListItems)
+                    {
+                        doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
+                    }
+
+                    _writer.UpdateDocument(new Term(IdField, season.Id.ToString()), doc);
+                }
+                catch (Exception ex)
+                {
+                    metadata.Season = null;
+                    _logger.LogWarning(ex, "Error indexing show with metadata {@Metadata}", metadata);
+                }
+            }
+        }
 
         private async Task UpdateArtist(ISearchRepository searchRepository, Artist artist)
         {
@@ -697,7 +769,7 @@ namespace ErsatzTV.Infrastructure.Search
                         .ToLowerInvariant(),
                 _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
             };
-
+        
         private static string GetJumpLetter(Metadata metadata)
         {
             char c = metadata.SortTitle.ToLowerInvariant().Head();

@@ -314,13 +314,19 @@ namespace ErsatzTV.Core.Plex
                             .BindT(existing => UpdateMetadataAndArtwork(existing, incoming));
 
                         await maybeSeason.Match(
-                            async season => await ScanEpisodes(
-                                library,
-                                pathReplacements,
-                                season,
-                                connection,
-                                token,
-                                ffprobePath),
+                            async season =>
+                            {
+                                await ScanEpisodes(
+                                    library,
+                                    pathReplacements,
+                                    season,
+                                    connection,
+                                    token,
+                                    ffprobePath);
+
+                                season.Show = show;
+                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { season });
+                            },
                             error =>
                             {
                                 _logger.LogWarning(

@@ -184,6 +184,9 @@ namespace ErsatzTV.Core.Metadata
                             {
                                 await ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder);
                                 await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
+
+                                season.Show = show;
+                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { season });
                             },
                             error =>
                             {

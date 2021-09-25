@@ -1,5 +1,5 @@
-﻿@page "/media/tv/shows"
-@page "/media/tv/shows/page/{PageNumber:int}"
+﻿@page "/media/tv/seasons"
+@page "/media/tv/seasons/page/{PageNumber:int}"
 @using LanguageExt.UnsafeValueAccess
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
@@ -55,9 +55,9 @@
 </MudPaper>
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8" Style="margin-top: 64px">
     <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
-        <FragmentLetterAnchor TCard="TelevisionShowCardViewModel" Cards="@_data.Cards">
+        <FragmentLetterAnchor TCard="TelevisionSeasonCardViewModel" Cards="@_data.Cards">
             <MediaCard Data="@context"
-                       Link="@($"/media/tv/shows/{context.TelevisionShowId}")"
+                       Link="@($"/media/tv/seasons/{context.TelevisionSeasonId}")"
                        AddToCollectionClicked="@AddToCollection"
                        SelectClicked="@(e => SelectClicked(context, e))"
                        IsSelected="@IsSelected(context)"
@@ -68,7 +68,7 @@
 @if (_data.PageMap.IsSome)
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
-               BaseUri="/media/tv/shows"
+               BaseUri="/media/tv/seasons"
                Query="@_query"/>
 }
 
@@ -78,7 +78,7 @@
     [Parameter]
     public int PageNumber { get; set; }
 
-    private TelevisionShowCardResultsViewModel _data;
+    private TelevisionSeasonCardResultsViewModel _data;
     private string _query;
 
     protected override Task OnParametersSetAsync()
@@ -94,13 +94,13 @@
 
     protected override async Task RefreshData()
     {
-        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:show" : $"type:show AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexShows(searchQuery, PageNumber, PageSize));
+        string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:season" : $"type:season AND ({_query})";
+        _data = await Mediator.Send(new QuerySearchIndexSeasons(searchQuery, PageNumber, PageSize));
     }
 
     private void PrevPage()
     {
-        var uri = $"/media/tv/shows/page/{PageNumber - 1}";
+        var uri = $"/media/tv/seasons/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -111,7 +111,7 @@
 
     private void NextPage()
     {
-        var uri = $"/media/tv/shows/page/{PageNumber + 1}";
+        var uri = $"/media/tv/seasons/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -132,24 +132,24 @@
 
     private async Task AddToCollection(MediaCardViewModel card)
     {
-        if (card is TelevisionShowCardViewModel show)
+        if (card is TelevisionSeasonCardViewModel season)
         {
-            var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", show.Title } };
+            var parameters = new DialogParameters { { "EntityType", "season" }, { "EntityName", season.Title } };
             var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
             IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
-                var request = new AddShowToCollection(collection.Id, show.TelevisionShowId);
+                var request = new AddSeasonToCollection(collection.Id, season.TelevisionSeasonId);
                 Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(
                     Left: error =>
                     {
-                        Snackbar.Add($"Unexpected error adding show to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding show to collection: {Error}", error.Value);
+                        Snackbar.Add($"Unexpected error adding season to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding season to collection: {Error}", error.Value);
                     },
-                    Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
+                    Right: _ => Snackbar.Add($"Added {season.Title} to collection {collection.Name}", Severity.Success));
             }
         }
     }

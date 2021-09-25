@@ -269,7 +269,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        public async Task<Unit> Update(EmbySeason season)
+        public async Task<Option<EmbySeason>> Update(EmbySeason season)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<EmbySeason> maybeExisting = await dbContext.EmbySeasons
@@ -378,7 +378,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return maybeExisting;
         }
 
         public async Task<bool> AddEpisode(EmbySeason season, EmbyEpisode episode)
