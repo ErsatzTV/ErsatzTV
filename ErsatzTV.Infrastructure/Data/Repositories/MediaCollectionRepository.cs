@@ -114,6 +114,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     result.AddRange(await GetShowItemsFromShowId(dbContext, showId));
                 }
 
+                foreach (int seasonId in searchResults.Items.Filter(i => i.Type == SearchIndex.SeasonType)
+                    .Map(i => i.Id))
+                {
+                    result.AddRange(await GetSeasonItemsFromSeasonId(dbContext, seasonId));
+                }
+
                 foreach (int artistId in searchResults.Items.Filter(i => i.Type == SearchIndex.ArtistType)
                     .Map(i => i.Id))
                 {

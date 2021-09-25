@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Trakt lists can only be scheduled by using Smart Collections
 - Add seasons to search index
   - This is needed because Trakt lists can contain seasons 
+  - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
 
 ### Fixed
 - Fix local television scanner to properly update episode metadata when NFO files have been added/changed

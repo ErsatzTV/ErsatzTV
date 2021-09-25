@@ -145,7 +145,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                             Option<int> maybeSeasonId = await IdentifySeason(dbContext, item);
                             foreach (int seasonId in maybeSeasonId)
                             {
-                                // TODO: ids.Add(seasonId);
+                                ids.Add(seasonId);
                                 item.MediaItemId = seasonId;
                             }
 
