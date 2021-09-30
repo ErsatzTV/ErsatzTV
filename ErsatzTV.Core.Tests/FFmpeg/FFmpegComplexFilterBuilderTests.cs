@@ -365,37 +365,37 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 true,
                 true,
                 false,
-                "[0:0]hwupload_cuda,scale_npp=1920:1000,hwdownload,format=yuv420p|nv12,setsar=1,hwupload[v]",
+                "[0:0]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 true,
                 false,
                 true,
-                "[0:0]hwdownload,format=yuv420p|nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:0]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 true,
                 true,
                 true,
-                "[0:0]hwupload_cuda,scale_npp=1920:1000,hwdownload,format=yuv420p|nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:0]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 false,
                 true,
                 false,
-                "[0:0]hwupload_cuda,scale_npp=1920:1000,hwdownload,format=yuv420p|nv12,setsar=1,hwupload[v]",
+                "[0:0]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 false,
                 false,
                 true,
-                "[0:0]hwdownload,format=yuv420p|nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:0]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 false,
                 true,
                 true,
-                "[0:0]hwupload_cuda,scale_npp=1920:1000,hwdownload,format=yuv420p|nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:0]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             public void Should_Return_NVENC_Video_Filter(
                 bool deinterlace,
