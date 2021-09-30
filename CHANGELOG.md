@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.0.61-alpha] - 2021-09-30
+### Fixed
+- Revert nvenc/cuda filter change from v60
+
 ## [0.0.60-alpha] - 2021-09-25
 ### Added
 - Add Trakt list support under `Lists` > `Trakt Lists`
@@ -630,7 +634,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.60-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.61-alpha...HEAD
+[0.0.61-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.60-alpha...v0.0.61-alpha
 [0.0.60-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.59-alpha...v0.0.60-alpha
 [0.0.59-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.58-alpha...v0.0.59-alpha
 [0.0.58-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.57-alpha...v0.0.58-alpha
