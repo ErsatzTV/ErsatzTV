@@ -21,11 +21,11 @@
                     <MudSelectItem Value="@library">@library.Name</MudSelectItem>
                 }
             </MudSelect>
-            <MudTextFieldString Label="New Library Name"
-                                Disabled="@(_selectedLibrary != _newLibrary)"
-                                @bind-Text="@_newLibraryName"
-                                Class="mb-6 mx-4">
-            </MudTextFieldString>
+            <MudTextField T="string" Label="New Library Name"
+                          Disabled="@(_selectedLibrary != _newLibrary)"
+                          @bind-Text="@_newLibraryName"
+                          Class="mb-6 mx-4">
+            </MudTextField>
         </EditForm>
     </DialogContent>
     <DialogActions>

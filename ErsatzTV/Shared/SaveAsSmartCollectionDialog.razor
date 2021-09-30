@@ -21,11 +21,11 @@
                     <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
                 }
             </MudSelect>
-            <MudTextFieldString Label="New Collection Name"
-                                Disabled="@(_selectedCollection != _newCollection)"
-                                @bind-Text="@_newCollectionName"
-                                Class="mb-6 mx-4">
-            </MudTextFieldString>
+            <MudTextField T="string" Label="New Collection Name"
+                          Disabled="@(_selectedCollection != _newCollection)"
+                          @bind-Text="@_newCollectionName"
+                          Class="mb-6 mx-4">
+            </MudTextField>
         </EditForm>
     </DialogContent>
     <DialogActions>
