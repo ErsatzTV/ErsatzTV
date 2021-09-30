@@ -12,10 +12,10 @@
                     Enter a name for the new FFmpeg Profile
                 </MudText>
             </MudContainer>
-            <MudTextFieldString Label="New FFmpeg Profile Name"
-                                @bind-Text="@_newFFmpegProfileName"
-                                Class="mb-6 mx-4">
-            </MudTextFieldString>
+            <MudTextField T="string" Label="New FFmpeg Profile Name"
+                          @bind-Text="@_newFFmpegProfileName"
+                          Class="mb-6 mx-4">
+            </MudTextField>
         </EditForm>
     </DialogContent>
     <DialogActions>

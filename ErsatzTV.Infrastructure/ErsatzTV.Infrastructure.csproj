@@ -28,7 +28,7 @@
       </PackageReference>
       <PackageReference Include="Refit" Version="6.0.94" />
       <PackageReference Include="Refit.Newtonsoft.Json" Version="6.0.94" />
-      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     </ItemGroup>
 
     <ItemGroup>
