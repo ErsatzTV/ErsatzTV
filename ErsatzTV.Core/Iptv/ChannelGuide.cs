@@ -200,10 +200,10 @@ namespace ErsatzTV.Core.Iptv
 
                         if (!isSameCustomShow)
                         {
-                            int s = Optional(episode.Season?.SeasonNumber).IfNone(0);
+                            int s = Optional(episode.Season?.SeasonNumber).IfNone(-1);
                             // TODO: multi-episode?
                             int e = episode.EpisodeMetadata.Head().EpisodeNumber;
-                            if (s > 0 && e > 0)
+                            if (s >= 0 && e > 0)
                             {
                                 xml.WriteStartElement("episode-num");
                                 xml.WriteAttributeString("system", "onscreen");
