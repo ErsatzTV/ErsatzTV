@@ -23,6 +23,18 @@ namespace ErsatzTV.Core.Tests.FFmpeg
     [Explicit]
     public class TranscodingTests
     {
+        [Test]
+        [Explicit]
+        public void DeleteTestVideos()
+        {
+            foreach (string file in Directory.GetFiles(TestContext.CurrentContext.TestDirectory, "*.mkv"))
+            {
+                File.Delete(file);
+            }
+
+            Assert.Pass();
+        }
+
         private class TestData
         {
             public static string[] InputCodecs =
@@ -37,6 +49,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 "yuv420p",
                 "yuv420p10le",
+                "yuvj420p",
                 "yuv444p",
                 "yuv444p10le"
             };
@@ -83,31 +96,42 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
         [Test, Combinatorial]
         public async Task Transcode(
-            [ValueSource(typeof(TestData), nameof(TestData.InputCodecs))] string inputCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.InputPixelFormats))] string inputPixelFormat,
-            [ValueSource(typeof(TestData), nameof(TestData.Resolutions))] Resolution profileResolution,
-            [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.InputCodecs))]
+            string inputCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.InputPixelFormats))]
+            string inputPixelFormat,
+            [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
+            Resolution profileResolution,
+            // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
-            // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))]
+            string profileCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))]
+            HardwareAccelerationKind profileAcceleration)
         {
-            string file = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.mkv");
+            string name = GetStringSha256Hash(
+                $"{inputCodec}_{inputPixelFormat}_{profileResolution}_{profileCodec}_{profileAcceleration}");
 
-            var args = $"-y -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -f lavfi -i testsrc=duration=1:size=1920x1080:rate=30 -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {file}";
-            var p1 = new Process
+            string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
+            if (!File.Exists(file))
             {
-                StartInfo = new ProcessStartInfo
+                var args =
+                    $"-y -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -f lavfi -i testsrc=duration=1:size=1920x1080:rate=30 -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {file}";
+                var p1 = new Process
                 {
-                    FileName = "ffmpeg",
-                    Arguments = args
-                }
-            };
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "ffmpeg",
+                        Arguments = args
+                    }
+                };
 
-            p1.Start();
-            await p1.WaitForExitAsync();
-            p1.ExitCode.Should().Be(0);
+                p1.Start();
+                await p1.WaitForExitAsync();
+                p1.ExitCode.Should().Be(0);
+            }
 
             var service = new FFmpegProcessService(
                 new FFmpegPlaybackSettingsCalculator(),
@@ -115,7 +139,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 new Mock<IImageCache>().Object);
 
             MediaVersion v = new MediaVersion();
-            
+
             var metadataRepository = new Mock<IMetadataRepository>();
             metadataRepository
                 .Setup(r => r.UpdateLocalStatistics(It.IsAny<int>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
@@ -141,7 +165,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                         }
                     }
                 });
-            
+
             DateTimeOffset now = DateTimeOffset.Now;
 
             Process process = await service.ForPlayoutItem(
@@ -164,14 +188,41 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 None);
 
             process.StartInfo.RedirectStandardError = true;
-            
+
             process.Start().Should().BeTrue();
 
             await process.StandardOutput.ReadToEndAsync();
             string error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
 
-            process.ExitCode.Should().Be(0, error);
+            if (profileAcceleration == HardwareAccelerationKind.Vaapi && error.Contains("No support for codec"))
+            {
+                process.ExitCode.Should().Be(1);
+                Assert.Warn("Unsupported on this hardware");
+            }
+            else if (error.Contains("Impossible to convert between"))
+            {
+                process.ExitCode.Should().Be(1);
+                IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
+                Assert.Fail($"Transcode failure: ffmpeg {string.Join(" ", quotedArgs)}");
+            }
+            else
+            {
+                process.ExitCode.Should().Be(0, error);
+            }
+        }
+        
+        private static string GetStringSha256Hash(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return string.Empty;
+            }
+
+            using var sha = new System.Security.Cryptography.SHA256Managed();
+            byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
+            byte[] hash = sha.ComputeHash(textData);
+            return BitConverter.ToString(hash).Replace("-", string.Empty);
         }
 
         private class FakeStreamSelector : IFFmpegStreamSelector
