@@ -8,5 +8,7 @@ namespace ErsatzTV.Core.Domain
         public string Name { get; set; }
         public int Height { get; set; }
         public int Width { get; set; }
+
+        public override string ToString() => $"{Width}x{Height}";
     }
 }
