@@ -20,6 +20,7 @@ using static LanguageExt.Prelude;
 namespace ErsatzTV.Core.Tests.FFmpeg
 {
     [TestFixture]
+    [Explicit]
     public class TranscodingTests
     {
         private class TestData
@@ -46,15 +47,37 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 new() { Width = 1280, Height = 720 }
             };
 
-            public static string[] Codecs =
+            public static string[] SoftwareCodecs =
             {
                 "libx264",
                 "libx265"
             };
 
-            public static HardwareAccelerationKind[] AccelerationKinds =
+            public static HardwareAccelerationKind[] NoAcceleration =
             {
                 HardwareAccelerationKind.None
+            };
+
+            public static string[] NvidiaCodecs =
+            {
+                "h264_nvenc",
+                "hevc_nvenc"
+            };
+
+            public static HardwareAccelerationKind[] NvidiaAcceleration =
+            {
+                HardwareAccelerationKind.Nvenc
+            };
+
+            public static string[] VaapiCodecs =
+            {
+                "h264_vaapi",
+                "hevc_vaapi"
+            };
+
+            public static HardwareAccelerationKind[] VaapiAcceleration =
+            {
+                HardwareAccelerationKind.Vaapi
             };
         }
 
@@ -63,8 +86,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             [ValueSource(typeof(TestData), nameof(TestData.InputCodecs))] string inputCodec,
             [ValueSource(typeof(TestData), nameof(TestData.InputPixelFormats))] string inputPixelFormat,
             [ValueSource(typeof(TestData), nameof(TestData.Resolutions))] Resolution profileResolution,
-            [ValueSource(typeof(TestData), nameof(TestData.Codecs))] string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.AccelerationKinds))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         {
             string file = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.mkv");
 
@@ -136,16 +163,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 None,
                 None);
 
-            // process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.RedirectStandardError = true;
             
             process.Start().Should().BeTrue();
 
             await process.StandardOutput.ReadToEndAsync();
+            string error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
 
-            // string err = await process.StandardError.ReadToEndAsync();
-
-            process.ExitCode.Should().Be(0);
+            process.ExitCode.Should().Be(0, error);
         }
 
         private class FakeStreamSelector : IFFmpegStreamSelector
