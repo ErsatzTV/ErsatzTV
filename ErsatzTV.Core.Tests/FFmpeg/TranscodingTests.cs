@@ -204,7 +204,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             if (profileAcceleration != HardwareAccelerationKind.None && unsupportedMessages.Any(error.Contains))
             {
                 IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
-                process.ExitCode.Should().Be(1, $"Error message with successful exit code? {quotedArgs}");
+                process.ExitCode.Should().Be(1, $"Error message with successful exit code? {string.Join(" ", quotedArgs)}");
                 Assert.Warn("Unsupported on this hardware");
             }
             else if (error.Contains("Impossible to convert between"))
