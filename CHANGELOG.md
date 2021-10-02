@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Include Specials/Season 0 `episode-num` entry in XMLTV
+- Fix some transcoding edge cases with VAAPI and pixel formats `yuv420p10le`, `yuv444p10le` and `yuv444p`
 
 ## [0.0.61-alpha] - 2021-09-30
 ### Fixed
