@@ -129,6 +129,20 @@ namespace ErsatzTV.Core.FFmpeg
                 }
             }
 
+            string[] h264hevc = { "h264", "hevc" };
+
+            if (acceleration == HardwareAccelerationKind.Vaapi && (_pixelFormat ?? string.Empty).EndsWith("p10le") &&
+                h264hevc.Contains(_inputCodec)
+                && (_pixelFormat != "yuv420p10le" || _inputCodec != "hevc"))
+            {
+                videoFilterQueue.Add("format=p010le,format=nv12|vaapi,hwupload");
+            }
+
+            if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat == "yuv444p" && h264hevc.Contains(_inputCodec))
+            {
+                videoFilterQueue.Add("format=nv12|vaapi,hwupload");
+            }
+
             _scaleToSize.IfSome(
                 size =>
                 {
@@ -138,7 +152,7 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Nvenc when _pixelFormat == "yuv420p10le" =>
                             $"hwdownload,format=p010le,format=nv12,hwupload,scale_npp={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Nvenc => $"scale_npp={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Vaapi => $"scale_vaapi=w={size.Width}:h={size.Height}",
+                        HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
 
