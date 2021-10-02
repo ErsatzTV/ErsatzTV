@@ -100,7 +100,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 new Mock<ILogger<LocalStatisticsProvider>>().Object);
 
             await localStatisticsProvider.RefreshStatistics(
-                "/usr/bin/ffprobe",
+                "ffprobe",
                 new Movie
                 {
                     MediaVersions = new List<MediaVersion>
@@ -118,7 +118,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             DateTimeOffset now = DateTimeOffset.Now;
 
             Process process = await service.ForPlayoutItem(
-                "/usr/bin/ffmpeg",
+                "ffmpeg",
                 false,
                 new Channel(Guid.NewGuid())
                 {
