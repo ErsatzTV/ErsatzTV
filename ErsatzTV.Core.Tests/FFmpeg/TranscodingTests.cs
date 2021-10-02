@@ -197,12 +197,10 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             if (profileAcceleration == HardwareAccelerationKind.Vaapi && error.Contains("No support for codec"))
             {
-                process.ExitCode.Should().Be(1);
                 Assert.Warn("Unsupported on this hardware");
             }
             else if (error.Contains("Impossible to convert between"))
             {
-                process.ExitCode.Should().Be(1);
                 IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
                 Assert.Fail($"Transcode failure: ffmpeg {string.Join(" ", quotedArgs)}");
             }

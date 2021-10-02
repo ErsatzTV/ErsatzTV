@@ -148,7 +148,7 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Nvenc when _pixelFormat == "yuv420p10le" =>
                             $"hwdownload,format=p010le,format=nv12,hwupload,scale_npp={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Nvenc => $"scale_npp={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Vaapi => $"scale_vaapi=w={size.Width}:h={size.Height}",
+                        HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
 
