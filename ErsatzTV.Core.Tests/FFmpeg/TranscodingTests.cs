@@ -197,8 +197,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 "No support for codec",
                 "No usable",
-                "Provided device doesn't support",
-                "Hardware is lacking required capabilities"
+                "Provided device doesn't support"
             };
             
             if (profileAcceleration != HardwareAccelerationKind.None && unsupportedMessages.Any(error.Contains))
