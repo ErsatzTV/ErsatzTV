@@ -195,7 +195,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             string error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
 
-            if (profileAcceleration == HardwareAccelerationKind.Vaapi && error.Contains("No support for codec"))
+            if (profileAcceleration == HardwareAccelerationKind.Vaapi && (error.Contains("No support for codec") || error.Contains("No usable")))
             {
                 Assert.Warn("Unsupported on this hardware");
             }

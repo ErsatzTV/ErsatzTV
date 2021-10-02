@@ -129,12 +129,16 @@ namespace ErsatzTV.Core.FFmpeg
                 }
             }
 
-            if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat.EndsWith("p10le") && _inputCodec != "mpeg2video")
+            string[] h264hevc = { "h264", "hevc" };
+
+            if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat.EndsWith("p10le") &&
+                h264hevc.Contains(_inputCodec)
+                && (_pixelFormat != "yuv420p10le" || _inputCodec != "hevc"))
             {
                 videoFilterQueue.Add("format=p010le,format=nv12|vaapi,hwupload");
             }
 
-            if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat == "yuv444p" && _inputCodec != "mpeg2video")
+            if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat == "yuv444p" && h264hevc.Contains(_inputCodec))
             {
                 videoFilterQueue.Add("format=nv12|vaapi,hwupload");
             }
