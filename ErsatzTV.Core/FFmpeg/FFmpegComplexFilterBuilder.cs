@@ -131,7 +131,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             string[] h264hevc = { "h264", "hevc" };
 
-            if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat.EndsWith("p10le") &&
+            if (acceleration == HardwareAccelerationKind.Vaapi && (_pixelFormat ?? string.Empty).EndsWith("p10le") &&
                 h264hevc.Contains(_inputCodec)
                 && (_pixelFormat != "yuv420p10le" || _inputCodec != "hevc"))
             {
