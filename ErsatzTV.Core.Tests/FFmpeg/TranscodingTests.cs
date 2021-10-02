@@ -104,12 +104,10 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             Resolution profileResolution,
             // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))]
-            string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))]
-            HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         {
             string name = GetStringSha256Hash(
                 $"{inputCodec}_{inputPixelFormat}_{profileResolution}_{profileCodec}_{profileAcceleration}");
@@ -195,7 +193,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             string error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
 
-            if (profileAcceleration == HardwareAccelerationKind.Vaapi && (error.Contains("No support for codec") || error.Contains("No usable")))
+            string[] unsupportedMessages =
+            {
+                "No support for codec",
+                "No usable",
+                "Provided device doesn't support",
+                "Hardware is lacking required capabilities"
+            };
+            
+            if (profileAcceleration == HardwareAccelerationKind.Vaapi && unsupportedMessages.Any(error.Contains))
             {
                 Assert.Warn("Unsupported on this hardware");
             }
