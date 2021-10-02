@@ -201,7 +201,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 "Hardware is lacking required capabilities"
             };
             
-            if (profileAcceleration == HardwareAccelerationKind.Vaapi && unsupportedMessages.Any(error.Contains))
+            if (profileAcceleration != HardwareAccelerationKind.None && unsupportedMessages.Any(error.Contains))
             {
                 Assert.Warn("Unsupported on this hardware");
             }
