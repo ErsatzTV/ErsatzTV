@@ -95,7 +95,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
         {
             string file = Path.Combine(TestContext.CurrentContext.TestDirectory, "test.mkv");
 
-            var args = $"-y -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -f lavfi -i testsrc=duration=3:size=1920x1080:rate=30 -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {file}";
+            var args = $"-y -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -f lavfi -i testsrc=duration=1:size=1920x1080:rate=30 -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {file}";
             var p1 = new Process
             {
                 StartInfo = new ProcessStartInfo
