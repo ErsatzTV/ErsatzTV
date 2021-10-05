@@ -156,6 +156,24 @@ namespace ErsatzTV.Core.Plex
             MediaVersion existingVersion = existing.MediaVersions.Head();
             MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
+            foreach (MediaFile incomingFile in incomingVersion.MediaFiles.HeadOrNone())
+            {
+                foreach (MediaFile existingFile in existingVersion.MediaFiles.HeadOrNone())
+                {
+                    if (incomingFile.Path != existingFile.Path)
+                    {
+                        _logger.LogDebug(
+                            "Plex movie has moved from {OldPath} to {NewPath}",
+                            existingFile.Path,
+                            incomingFile.Path);
+
+                        existingFile.Path = incomingFile.Path;
+
+                        await _movieRepository.UpdatePath(existingFile.Id, incomingFile.Path);
+                    }
+                }
+            }
+
             if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
             {
                 string localPath = _plexPathReplacementService.GetReplacementPlexPath(
