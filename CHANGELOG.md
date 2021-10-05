@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Support IMDB ids from Plex libraries, which may improve Trakt matching for some items
+
 ### Fixed
 - Include Specials/Season 0 `episode-num` entry in XMLTV
 - Fix some transcoding edge cases with VAAPI and pixel formats `yuv420p10le`, `yuv444p10le` and `yuv444p`
