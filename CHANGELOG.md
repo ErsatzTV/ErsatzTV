@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Include Specials/Season 0 `episode-num` entry in XMLTV
 - Fix some transcoding edge cases with VAAPI and pixel formats `yuv420p10le`, `yuv444p10le` and `yuv444p`
 - Update Plex movie and episode paths when they are changed within Plex
+- Always use `libx264` software encoder for error messages
 
 ## [0.0.61-alpha] - 2021-09-30
 ### Fixed

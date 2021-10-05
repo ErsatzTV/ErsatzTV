@@ -147,8 +147,8 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 ThreadCount = ffmpegProfile.ThreadCount,
                 FormatFlags = CommonFormatFlags,
-                VideoCodec = ffmpegProfile.VideoCodec,
-                AudioCodec = ffmpegProfile.AudioCodec
+                VideoCodec = "libx264",
+                AudioCodec = ffmpegProfile.AudioCodec,
             };
 
         private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
