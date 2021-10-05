@@ -4,12 +4,97 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Support IMDB ids from Plex libraries, which may improve Trakt matching for some items
+
+### Fixed
+- Include Specials/Season 0 `episode-num` entry in XMLTV
+- Fix some transcoding edge cases with VAAPI and pixel formats `yuv420p10le`, `yuv444p10le` and `yuv444p`
+- Update Plex movie and episode paths when they are changed within Plex
+
+## [0.0.61-alpha] - 2021-09-30
+### Fixed
+- Revert nvenc/cuda filter change from v60
+
+## [0.0.60-alpha] - 2021-09-25
+### Added
+- Add Trakt list support under `Lists` > `Trakt Lists`
+  - Trakt lists can be added by url or by `user/list`
+  - To re-download a Trakt list, simply add it again (no need to delete)
+  - See `Logs` for unmatched item details
+  - Trakt lists can only be scheduled by using Smart Collections
+- Add seasons to search index
+  - This is needed because Trakt lists can contain seasons 
+  - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
+
+### Fixed
+- Fix local television scanner to properly update episode metadata when NFO files have been added/changed
+- Properly detect ffmpeg nvenc (cuda) support in Hardware Acceleration health check
+- Fix nvenc/cuda filter for some yuv420p content
+
+## [0.0.59-alpha] - 2021-09-18
+### Added
+- Add `Health Checks` table to home page to identify and surface common misconfigurations
+  - `FFmpeg Version` checks `ffmpeg` and `ffprobe` versions
+  - `FFmpeg Reports` checks whether ffmpeg troubleshooting reports are enabled since they can use a lot of disk space over time
+  - `Hardware Acceleration` checks whether channels that transcode are using acceleration methods that ffmpeg claims to support
+  - `Movie Metadata` checks whether all movies have metadata (fallback metadata counts as metadata)
+  - `Episode Metadata` checks whether all episodes have metadata (fallback metadata counts as metadata)
+  - `Zero Duration` checks whether all movies and episodes have a valid (non-zero) duration
+  - `VAAPI Driver` checks whether a vaapi driver preference is configured when using the vaapi docker image
+- Add setting to each playout to schedule an automatic daily rebuild
+  - This is useful if the playout uses a smart collection with `released_onthisday`
+
+### Fixed
+- Fix docker vaapi support for newer Intel platforms (Gen 8+)
+  - This includes a new setting to force a particular vaapi driver (`iHD` or `i965`), as some Gen 8 or 9 hardware that is supported by both drivers will perform better with one or the other
+- Fix scanning and indexing local movies and episodes without NFO metadata
+- Fix displaying seasons for shows with no year (in metadata or in folder name)
+- Fix "direct play" in MPEG-TS mode (copy audio and video stream when `Transcode` is unchecked)
+
+## [0.0.58-alpha] - 2021-09-15
+### Added
+- Add `released_notinthelast` search field for relative release date queries
+  - Syntax is a number and a unit (days, weeks, months, years) like `1 week` or `2 years`
+- Add `released_onthisday` search field for historical queries
+  - Syntax is `released_onthisday:1` and will search for items released on this month number and day number in prior years
+- Add tooltip explaining `Keep Multi-Part Episodes Together`
+
+### Fixed
+- Properly display watermark when no other video filters (like scaling or padding) are required
+- Fix building some playouts in timezones with positive offsets (like UTC+2)
+- Fix `Shuffle In Order` so all collections/shows start from the earliest episode
+  - You may need to rebuild playouts to see this fixed behavior more quickly
+
+## [0.0.57-alpha] - 2021-09-10
+### Added
+- Add `released_inthelast` search field for relative release date queries
+  - Syntax is a number and a unit (days, weeks, months, years) like `1 week` or `2 years`
+- Allow adding smart collections to multi collections
+
+### Fixed
+- Fix loading artwork in Kodi
+  - Use fake image extension (`.jpg`) for artwork in M3U and XMLTV since Kodi detects MIME type from URL
+  - Enable HEAD requests for IPTV image paths since Kodi requires those
+
+## [0.0.56-alpha] - 2021-09-10
+### Added
+- Add Smart Collections
+  - Smart Collections use search queries and can be created from the search result page
+  - Smart Collections are re-evaluated every time playouts are extended or rebuilt to automatically include newly-matching items
+  - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
+- Allow `Shuffle In Order` with Collections and Smart Collections
+  - Episodes will be grouped by show, and music videos will be grouped by artist
+  - All movies will be a single group (multi-collections are probably better if `Shuffle In Order` is desired for movies)
+  - All groups will be be ordered chronologically (custom ordering is only supported in multi-collections)
+
 ### Fixed
 - Generate XMLTV that validates successfully
   - Properly order elements
   - Omit channels with no programmes
   - Properly identify channels using the format number.etv like `15.etv`
 - Fix building playouts when multi-part episode grouping is enabled and episodes are missing metadata
+- Fix incorrect total items count in `Multi Collections` table
 
 ## [0.0.55-alpha] - 2021-09-03
 ### Fixed
@@ -556,7 +641,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.55-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.61-alpha...HEAD
+[0.0.61-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.60-alpha...v0.0.61-alpha
+[0.0.60-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.59-alpha...v0.0.60-alpha
+[0.0.59-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.58-alpha...v0.0.59-alpha
+[0.0.58-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.57-alpha...v0.0.58-alpha
+[0.0.57-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.56-alpha...v0.0.57-alpha
+[0.0.56-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.55-alpha...v0.0.56-alpha
 [0.0.55-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.54-alpha...v0.0.55-alpha
 [0.0.54-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.53-alpha...v0.0.54-alpha
 [0.0.53-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.52-alpha...v0.0.53-alpha

@@ -14,7 +14,7 @@ namespace ErsatzTV.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "5.0.8");
+                .HasAnnotation("ProductVersion", "5.0.10");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -979,6 +979,27 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.ToTable("MultiCollectionItem");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.MultiCollectionSmartItem", b =>
+                {
+                    b.Property<int>("MultiCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SmartCollectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PlaybackOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ScheduleAsGroup")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("MultiCollectionId", "SmartCollectionId");
+
+                    b.HasIndex("SmartCollectionId");
+
+                    b.ToTable("MultiCollectionSmartItem");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoMetadata", b =>
                 {
                     b.Property<int>("Id")
@@ -1033,6 +1054,9 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<int>("ChannelId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<TimeSpan?>("DailyRebuildTime")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("ProgramScheduleId")
                         .HasColumnType("INTEGER");
@@ -1106,6 +1130,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("ProgramScheduleId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("SmartCollectionId")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CollectionId");
@@ -1117,6 +1144,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("PlayoutId");
 
                     b.HasIndex("ProgramScheduleId");
+
+                    b.HasIndex("SmartCollectionId");
 
                     b.ToTable("PlayoutProgramScheduleAnchor");
                 });
@@ -1218,6 +1247,9 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("ProgramScheduleId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("SmartCollectionId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<TimeSpan?>("StartTime")
                         .HasColumnType("TEXT");
 
@@ -1230,6 +1262,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("MultiCollectionId");
 
                     b.HasIndex("ProgramScheduleId");
+
+                    b.HasIndex("SmartCollectionId");
 
                     b.ToTable("ProgramScheduleItem");
                 });
@@ -1349,6 +1383,23 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.ToTable("ShowMetadata");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.SmartCollection", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Query")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SmartCollection");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.Studio", b =>
                 {
                     b.Property<int>("Id")
@@ -1454,6 +1505,96 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.HasIndex("ShowMetadataId");
 
                     b.ToTable("Tag");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TraktList", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ItemCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("List")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TraktId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("User")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TraktList");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TraktListItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Episode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MediaItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Rank")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Season")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TraktId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TraktListId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MediaItemId");
+
+                    b.HasIndex("TraktListId");
+
+                    b.ToTable("TraktListItem");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TraktListItemGuid", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Guid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TraktListItemId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TraktListItemId");
+
+                    b.ToTable("TraktListItemGuid");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Writer", b =>
@@ -2220,6 +2361,25 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("MultiCollection");
                 });
 
+            modelBuilder.Entity("ErsatzTV.Core.Domain.MultiCollectionSmartItem", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MultiCollection", "MultiCollection")
+                        .WithMany("MultiCollectionSmartItems")
+                        .HasForeignKey("MultiCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
+                        .WithMany("MultiCollectionSmartItems")
+                        .HasForeignKey("SmartCollectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MultiCollection");
+
+                    b.Navigation("SmartCollection");
+                });
+
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoMetadata", b =>
                 {
                     b.HasOne("ErsatzTV.Core.Domain.MusicVideo", "MusicVideo")
@@ -2338,6 +2498,10 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
+                        .WithMany()
+                        .HasForeignKey("SmartCollectionId");
+
                     b.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "EnumeratorState", b1 =>
                         {
                             b1.Property<int>("PlayoutProgramScheduleAnchorId")
@@ -2368,6 +2532,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Playout");
 
                     b.Navigation("ProgramSchedule");
+
+                    b.Navigation("SmartCollection");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.PlexConnection", b =>
@@ -2415,6 +2581,10 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ErsatzTV.Core.Domain.SmartCollection", "SmartCollection")
+                        .WithMany()
+                        .HasForeignKey("SmartCollectionId");
+
                     b.Navigation("Collection");
 
                     b.Navigation("MediaItem");
@@ -2422,6 +2592,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("MultiCollection");
 
                     b.Navigation("ProgramSchedule");
+
+                    b.Navigation("SmartCollection");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.SeasonMetadata", b =>
@@ -2512,6 +2684,35 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .WithMany("Tags")
                         .HasForeignKey("ShowMetadataId")
                         .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TraktListItem", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.MediaItem", "MediaItem")
+                        .WithMany("TraktListItems")
+                        .HasForeignKey("MediaItemId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ErsatzTV.Core.Domain.TraktList", "TraktList")
+                        .WithMany("Items")
+                        .HasForeignKey("TraktListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MediaItem");
+
+                    b.Navigation("TraktList");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TraktListItemGuid", b =>
+                {
+                    b.HasOne("ErsatzTV.Core.Domain.TraktListItem", "TraktListItem")
+                        .WithMany("Guids")
+                        .HasForeignKey("TraktListItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TraktListItem");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Writer", b =>
@@ -2897,6 +3098,8 @@ namespace ErsatzTV.Infrastructure.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.MediaItem", b =>
                 {
                     b.Navigation("CollectionItems");
+
+                    b.Navigation("TraktListItems");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MediaSource", b =>
@@ -2933,6 +3136,8 @@ namespace ErsatzTV.Infrastructure.Migrations
             modelBuilder.Entity("ErsatzTV.Core.Domain.MultiCollection", b =>
                 {
                     b.Navigation("MultiCollectionItems");
+
+                    b.Navigation("MultiCollectionSmartItems");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.MusicVideoMetadata", b =>
@@ -2992,6 +3197,21 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Navigation("Studios");
 
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.SmartCollection", b =>
+                {
+                    b.Navigation("MultiCollectionSmartItems");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TraktList", b =>
+                {
+                    b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("ErsatzTV.Core.Domain.TraktListItem", b =>
+                {
+                    b.Navigation("Guids");
                 });
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Artist", b =>

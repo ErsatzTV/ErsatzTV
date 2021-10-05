@@ -30,11 +30,10 @@
         }
         else
         {
-            <div style="display: flex; flex-direction: row;">
+            <div style="display: flex; flex-direction: row; align-items: center">
                 <MudText Typo="Typo.h4">@_data.Name</MudText>
                 <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                               Link="@($"/media/collections/{Id}/edit")"
-                               Style="margin-bottom: auto; margin-top: auto;"/>
+                               Link="@($"/media/collections/{Id}/edit")"/>
             </div>
             @if (_data.MovieCards.Any())
             {
@@ -242,7 +241,7 @@
 
         maybeResult.Match(
             result => _data = result,
-            error => _navigationManager.NavigateTo("404"));
+            _ => _navigationManager.NavigateTo("404"));
     }
 
     private IOrderedEnumerable<MovieCardViewModel> OrderMovies(List<MovieCardViewModel> movies)

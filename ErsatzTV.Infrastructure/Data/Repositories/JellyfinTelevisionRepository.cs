@@ -90,6 +90,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(m => m.ShowMetadata)
                 .ThenInclude(mm => mm.Guids)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .Filter(m => m.ItemId == show.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -284,7 +286,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        public async Task<Unit> Update(JellyfinSeason season)
+        public async Task<Option<JellyfinSeason>> Update(JellyfinSeason season)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<JellyfinSeason> maybeExisting = await dbContext.JellyfinSeasons
@@ -372,11 +374,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 {
                     metadata.Artwork.Remove(artworkToRemove);
                 }
+
+                await dbContext.SaveChangesAsync();
+                await dbContext.Entry(existing.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             }
 
-            await dbContext.SaveChangesAsync();
-
-            return Unit.Default;
+            return maybeExisting;
         }
 
         public async Task<bool> AddEpisode(JellyfinSeason season, JellyfinEpisode episode)
@@ -432,6 +435,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Writers)
                 .Include(m => m.Season)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .Filter(m => m.ItemId == episode.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();

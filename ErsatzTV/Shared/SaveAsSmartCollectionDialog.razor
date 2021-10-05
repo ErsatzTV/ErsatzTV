@@ -1,0 +1,119 @@
+﻿@using Microsoft.Extensions.Caching.Memory
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.MediaCollections.Queries
+@inject IMediator _mediator
+@inject IMemoryCache _memoryCache
+@inject ISnackbar _snackbar
+@inject ILogger<SaveAsSmartCollectionDialog> _logger
+
+<MudDialog>
+    <DialogContent>
+        <EditForm Model="@_dummyModel" OnSubmit="@(_ => Submit())">
+            <MudContainer Class="mb-6">
+                <MudText Class="mud-primary-text"
+                                Style="background-color: transparent; font-weight: bold"
+                                Text="Select the desired smart collection"/>
+            </MudContainer>
+            <MudSelect Label="Collection" @bind-Value="_selectedCollection" Class="mb-6 mx-4">
+                @foreach (SmartCollectionViewModel collection in _collections)
+                {
+                    <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string" Label="New Collection Name"
+                          Disabled="@(_selectedCollection != _newCollection)"
+                          @bind-Text="@_newCollectionName"
+                          Class="mb-6 mx-4">
+            </MudTextField>
+        </EditForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" ButtonType="ButtonType.Reset">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">
+            Save As Smart Collection
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    private readonly SmartCollectionViewModel _newCollection = new(-1, "(New Collection)", string.Empty);
+    private string _newCollectionName;
+
+    private List<SmartCollectionViewModel> _collections;
+
+    private SmartCollectionViewModel _selectedCollection;
+
+    private record DummyModel;
+
+    private readonly DummyModel _dummyModel = new();
+
+    private bool CanSubmit() =>
+        _selectedCollection != null && (_selectedCollection != _newCollection || !string.IsNullOrWhiteSpace(_newCollectionName));
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _collections = await _mediator.Send(new GetAllSmartCollections())
+            .Map(list => new[] { _newCollection }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());
+
+        if (_memoryCache.TryGetValue("SaveAsSmartCollectionDialog.SelectedCollectionId", out int id))
+        {
+            _selectedCollection = _collections.SingleOrDefault(c => c.Id == id) ?? _newCollection;
+        }
+        else
+        {
+            _selectedCollection = _newCollection;
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (!CanSubmit())
+        {
+            return;
+        }
+
+        if (_selectedCollection == _newCollection)
+        {
+            Either<BaseError, SmartCollectionViewModel> maybeResult =
+                await _mediator.Send(new CreateSmartCollection(string.Empty, _newCollectionName));
+
+            maybeResult.Match(
+                collection =>
+                {
+                    _memoryCache.Set("SaveAsSmartCollectionDialog.SelectedCollectionId", collection.Id);
+                    MudDialog.Close(DialogResult.Ok(collection));
+                },
+                error =>
+                {
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Error creating new collection: {Error}", error.Value);
+                    MudDialog.Close(DialogResult.Cancel());
+                });
+        }
+        else
+        {
+            _memoryCache.Set("SaveAsSmartCollectionDialog.SelectedCollectionId", _selectedCollection.Id);
+            MudDialog.Close(DialogResult.Ok(_selectedCollection));
+        }
+    }
+
+    private async Task Cancel(MouseEventArgs e)
+    {
+    // this is gross, but [enter] seems to sometimes trigger cancel instead of submit
+        if (e.Detail == 0)
+        {
+            await Submit();
+        }
+        else
+        {
+            MudDialog.Cancel();
+        }
+    }
+
+}

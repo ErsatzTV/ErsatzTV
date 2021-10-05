@@ -32,7 +32,7 @@ namespace ErsatzTV.Core.Iptv
                     .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                     .HeadOrNone()
                     .Match(
-                        artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}",
+                        artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}.jpg",
                         () => $"{_scheme}://{_host}/iptv/images/ersatztv-500.png");
 
                 string shortUniqueId = Convert.ToBase64String(channel.UniqueId.ToByteArray())

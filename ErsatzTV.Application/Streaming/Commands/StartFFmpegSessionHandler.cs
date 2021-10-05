@@ -33,6 +33,7 @@ namespace ErsatzTV.Application.Streaming.Commands
                 .MapT(_ => StartProcess(request))
                 // this weirdness is needed to maintain the error type (.ToEitherAsync() just gives BaseError)
                 .Bind(v => v.ToEither().MapLeft(seq => seq.Head()).MapAsync<BaseError, Task<Unit>, Unit>(identity));
+
         private async Task<Unit> StartProcess(StartFFmpegSession request)
         {
             await _channel.WriteAsync(request);

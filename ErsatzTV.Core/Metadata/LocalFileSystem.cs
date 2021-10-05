@@ -22,7 +22,7 @@ namespace ErsatzTV.Core.Metadata
         }
 
         public DateTime GetLastWriteTime(string path) =>
-            Try(File.GetLastWriteTimeUtc(path)).IfFail(() => DateTime.MinValue);
+            Try(File.GetLastWriteTimeUtc(path)).IfFail(() => SystemTime.MinValueUtc);
 
         public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
             Directory.Exists(libraryPath.Path);

@@ -15,7 +15,14 @@ namespace ErsatzTV.Core.Metadata
         {
             string fileName = Path.GetFileName(showFolder);
             var metadata = new ShowMetadata
-                { MetadataKind = MetadataKind.Fallback, Title = fileName ?? showFolder };
+            {
+                MetadataKind = MetadataKind.Fallback,
+                Title = fileName ?? showFolder,
+                Genres = new List<Genre>(),
+                Tags = new List<Tag>(),
+                Studios = new List<Studio>(),
+                Actors = new List<Actor>()
+            };
             return GetTelevisionShowMetadata(fileName, metadata);
         }
 
@@ -33,7 +40,7 @@ namespace ErsatzTV.Core.Metadata
             var baseMetadata = new EpisodeMetadata
             {
                 MetadataKind = MetadataKind.Fallback,
-                Title = fileName ?? path,
+                Title = Path.GetFileNameWithoutExtension(path) ?? path,
                 DateAdded = DateTime.UtcNow,
                 EpisodeNumber = 0,
                 Actors = new List<Actor>(),
@@ -54,7 +61,17 @@ namespace ErsatzTV.Core.Metadata
         {
             string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
             string fileName = Path.GetFileName(path);
-            var metadata = new MovieMetadata { MetadataKind = MetadataKind.Fallback, Title = fileName ?? path };
+            var metadata = new MovieMetadata
+            {
+                MetadataKind = MetadataKind.Fallback,
+                Title = Path.GetFileNameWithoutExtension(path) ?? path,
+                Genres = new List<Genre>(),
+                Tags = new List<Tag>(),
+                Studios = new List<Studio>(),
+                Actors = new List<Actor>(),
+                Directors = new List<Director>(),
+                Writers = new List<Writer>()
+            };
 
             return fileName != null ? GetMovieMetadata(fileName, metadata) : metadata;
         }
@@ -128,6 +145,7 @@ namespace ErsatzTV.Core.Metadata
                                 EpisodeNumber = episodeNumber,
                                 DateAdded = baseMetadata.DateAdded,
                                 DateUpdated = baseMetadata.DateAdded,
+                                Title = baseMetadata.Title,
                                 Actors = new List<Actor>(),
                                 Artwork = new List<Artwork>(),
                                 Directors = new List<Director>(),
@@ -164,12 +182,6 @@ namespace ErsatzTV.Core.Metadata
                     metadata.Title = match.Groups[1].Value.Trim();
                     metadata.Year = int.Parse(match.Groups[2].Value);
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
-                    metadata.Genres = new List<Genre>();
-                    metadata.Tags = new List<Tag>();
-                    metadata.Studios = new List<Studio>();
-                    metadata.Actors = new List<Actor>();
-                    metadata.Directors = new List<Director>();
-                    metadata.Writers = new List<Writer>();
                     metadata.DateUpdated = DateTime.UtcNow;
                 }
             }
@@ -214,10 +226,6 @@ namespace ErsatzTV.Core.Metadata
                     metadata.Title = match.Groups[1].Value;
                     metadata.Year = int.Parse(match.Groups[2].Value);
                     metadata.ReleaseDate = new DateTime(int.Parse(match.Groups[2].Value), 1, 1);
-                    metadata.Genres = new List<Genre>();
-                    metadata.Tags = new List<Tag>();
-                    metadata.Studios = new List<Studio>();
-                    metadata.Actors = new List<Actor>();
                     metadata.DateUpdated = DateTime.UtcNow;
                 }
             }

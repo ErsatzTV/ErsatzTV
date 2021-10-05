@@ -91,6 +91,11 @@ namespace ErsatzTV.Core.Scheduling
                                 await _mediaCollectionRepository.GetMultiCollectionItems(
                                     collectionKey.MultiCollectionId ?? 0);
                             return Tuple(collectionKey, multiCollectionItems);
+                        case ProgramScheduleItemCollectionType.SmartCollection:
+                            List<MediaItem> smartCollectionItems =
+                                await _mediaCollectionRepository.GetSmartCollectionItems(
+                                    collectionKey.SmartCollectionId ?? 0);
+                            return Tuple(collectionKey, smartCollectionItems);
                         default:
                             return Tuple(collectionKey, new List<MediaItem>());
                     }
@@ -98,9 +103,9 @@ namespace ErsatzTV.Core.Scheduling
 
             var collectionMediaItems = Map.createRange(tuples);
 
-            // using IDisposable scope = _logger.BeginScope(new { PlayoutId = playout.Id });
             _logger.LogDebug(
-                $"{(rebuild ? "Rebuilding" : "Building")} playout {{PlayoutId}} for channel {{ChannelNumber}} - {{ChannelName}}",
+                "{Action} playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
+                rebuild ? "Rebuilding" : "Building",
                 playout.Id,
                 playout.Channel.Number,
                 playout.Channel.Name);
@@ -369,9 +374,9 @@ namespace ErsatzTV.Core.Scheduling
                                         }
 
                                         bool willNotFinishInTime =
-                                            currentTime <= durationFinish.IfNone(DateTime.MinValue) &&
+                                            currentTime <= durationFinish.IfNone(SystemTime.MinValueUtc) &&
                                             currentTime + peekVersion.Duration >
-                                            durationFinish.IfNone(DateTime.MinValue);
+                                            durationFinish.IfNone(SystemTime.MinValueUtc);
                                         if (willNotFinishInTime)
                                         {
                                             _logger.LogDebug(
@@ -514,6 +519,7 @@ namespace ErsatzTV.Core.Scheduling
                         CollectionType = collectionKey.CollectionType,
                         CollectionId = collectionKey.CollectionId,
                         MultiCollectionId = collectionKey.MultiCollectionId,
+                        SmartCollectionId = collectionKey.SmartCollectionId,
                         MediaItemId = collectionKey.MediaItemId,
                         EnumeratorState = maybeEnumeratorState[collectionKey]
                     });
@@ -535,6 +541,7 @@ namespace ErsatzTV.Core.Scheduling
                      && a.CollectionType == collectionKey.CollectionType
                      && a.CollectionId == collectionKey.CollectionId
                      && a.MultiCollectionId == collectionKey.MultiCollectionId
+                     && a.SmartCollectionId == collectionKey.SmartCollectionId
                      && a.MediaItemId == collectionKey.MediaItemId);
 
             CollectionEnumeratorState state = maybeAnchor.Match(
@@ -606,6 +613,12 @@ namespace ErsatzTV.Core.Scheduling
                 result = await _mediaCollectionRepository.GetMultiCollectionCollections(
                     collectionKey.MultiCollectionId.Value);
             }
+            else
+            {
+                result = await _mediaCollectionRepository.GetFakeMultiCollectionCollections(
+                    collectionKey.CollectionId,
+                    collectionKey.SmartCollectionId);
+            }
 
             return result;
         }
@@ -661,6 +674,11 @@ namespace ErsatzTV.Core.Scheduling
                     CollectionType = item.CollectionType,
                     MultiCollectionId = item.MultiCollectionId
                 },
+                ProgramScheduleItemCollectionType.SmartCollection => new CollectionKey
+                {
+                    CollectionType = item.CollectionType,
+                    SmartCollectionId = item.SmartCollectionId
+                },
                 _ => throw new ArgumentOutOfRangeException(nameof(item))
             };
 
@@ -669,6 +687,7 @@ namespace ErsatzTV.Core.Scheduling
             public ProgramScheduleItemCollectionType CollectionType { get; set; }
             public int? CollectionId { get; set; }
             public int? MultiCollectionId { get; set; }
+            public int? SmartCollectionId { get; set; }
             public int? MediaItemId { get; set; }
         }
     }

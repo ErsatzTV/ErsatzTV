@@ -89,6 +89,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(i => i.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .OrderBy(i => i.MediaVersions.First().MediaFiles.First().Path)
                 .SingleOrDefaultAsync(i => i.MediaVersions.First().MediaFiles.First().Path == path);
 
@@ -129,6 +131,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mv => mv.Streams)
                 .Include(i => i.LibraryPath)
                 .ThenInclude(lp => lp.Library)
+                .Include(i => i.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .OrderBy(i => i.Key)
                 .SingleOrDefaultAsync(i => i.Key == item.Key);
 
@@ -315,6 +319,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Writers)
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Guids)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .Filter(m => m.ItemId == movie.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -570,6 +576,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MovieMetadata)
                 .ThenInclude(mm => mm.Guids)
                 .Filter(m => m.ItemId == movie.ItemId)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
 
@@ -766,6 +774,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "INSERT INTO Writer (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
+        public Task<Unit> UpdatePath(int mediaFileId, string path) =>
+            _dbConnection.ExecuteAsync(
+                "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
+                new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
+
         private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
             TvContext dbContext,
             int libraryPathId,
@@ -786,7 +799,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             },
                             Streams = new List<MediaStream>()
                         }
-                    }
+                    },
+                    TraktListItems = new List<TraktListItem>()
                 };
                 await dbContext.Movies.AddAsync(movie);
                 await dbContext.SaveChangesAsync();

@@ -16,18 +16,19 @@
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00014" />
       <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00014" />
       <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00014" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.9" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.9">
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.10" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.10">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.9" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="16.10.56">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.10" />
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.63">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Refit" Version="6.0.94" />
-      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
+      <PackageReference Include="Refit.Newtonsoft.Json" Version="6.0.94" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     </ItemGroup>
 
     <ItemGroup>

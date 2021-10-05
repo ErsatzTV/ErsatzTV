@@ -27,7 +27,7 @@ namespace ErsatzTV.Application.MediaCollections.Queries
             GetPagedMultiCollections request,
             CancellationToken cancellationToken)
         {
-            int count = await _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM Collection");
+            int count = await _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM MultiCollection");
 
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             List<MultiCollectionViewModel> page = await dbContext.MultiCollections.FromSqlRaw(

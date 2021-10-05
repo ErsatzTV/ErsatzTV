@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
@@ -20,7 +21,7 @@ namespace ErsatzTV.Application.MediaCards
                 showMetadata.Year?.ToString(),
                 showMetadata.SortTitle,
                 GetPoster(showMetadata, maybeJellyfin, maybeEmby));
-
+        
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(
             Season season,
             Option<JellyfinMediaSource> maybeJellyfin,
@@ -36,6 +37,26 @@ namespace ErsatzTV.Application.MediaCards
                     .IfNone(string.Empty),
                 season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString());
 
+        internal static TelevisionSeasonCardViewModel ProjectToViewModel(
+            SeasonMetadata seasonMetadata,
+            Option<JellyfinMediaSource> maybeJellyfin,
+            Option<EmbyMediaSource> maybeEmby)
+        {
+            string showTitle = seasonMetadata.Season.Show.ShowMetadata.HeadOrNone().Match(
+                m => m.Title ?? string.Empty,
+                () => string.Empty);
+
+            return new TelevisionSeasonCardViewModel(
+                showTitle,
+                seasonMetadata.SeasonId,
+                seasonMetadata.Season.SeasonNumber,
+                showTitle,
+                GetSeasonName(seasonMetadata.Season.SeasonNumber),
+                $"{showTitle}_{seasonMetadata.Season.SeasonNumber:0000}",
+                GetPoster(seasonMetadata, maybeJellyfin, maybeEmby),
+                seasonMetadata.Season.SeasonNumber == 0 ? "S" : seasonMetadata.Season.SeasonNumber.ToString());
+        }
+
         internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
             EpisodeMetadata episodeMetadata,
             Option<JellyfinMediaSource> maybeJellyfin,
@@ -43,7 +64,7 @@ namespace ErsatzTV.Application.MediaCards
             bool isSearchResult) =>
             new(
                 episodeMetadata.EpisodeId,
-                episodeMetadata.ReleaseDate ?? DateTime.MinValue,
+                episodeMetadata.ReleaseDate ?? SystemTime.MinValueUtc,
                 episodeMetadata.Episode.Season.Show.ShowMetadata.HeadOrNone().Match(
                     m => m.Title ?? string.Empty,
                     () => string.Empty),

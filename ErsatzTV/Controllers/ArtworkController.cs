@@ -35,7 +35,10 @@ namespace ErsatzTV.Controllers
             _httpClientFactory = httpClientFactory;
         }
 
+        [HttpHead("/iptv/artwork/posters/{fileName}")]
         [HttpGet("/iptv/artwork/posters/{fileName}")]
+        [HttpHead("/iptv/artwork/posters/{fileName}.jpg")]
+        [HttpGet("/iptv/artwork/posters/{fileName}.jpg")]
         [HttpGet("/artwork/posters/{fileName}")]
         public async Task<IActionResult> GetPoster(string fileName)
         {
@@ -67,8 +70,10 @@ namespace ErsatzTV.Controllers
         }
 
 
+        [HttpHead("/iptv/artwork/posters/jellyfin/{*path}")]
         [HttpGet("/iptv/artwork/posters/jellyfin/{*path}")]
         [HttpGet("/artwork/posters/jellyfin/{*path}")]
+        [HttpHead("/iptv/artwork/thumbnails/jellyfin/{*path}")]
         [HttpGet("/iptv/artwork/thumbnails/jellyfin/{*path}")]
         [HttpGet("/artwork/thumbnails/jellyfin/{*path}")]
         [HttpGet("/artwork/fanart/jellyfin/{*path}")]
@@ -82,8 +87,10 @@ namespace ErsatzTV.Controllers
             return GetJellyfinArtwork(path);
         }
 
+        [HttpHead("/iptv/artwork/posters/emby/{*path}")]
         [HttpGet("/iptv/artwork/posters/emby/{*path}")]
         [HttpGet("/artwork/posters/emby/{*path}")]
+        [HttpHead("/iptv/artwork/thumbnails/emby/{*path}")]
         [HttpGet("/iptv/artwork/thumbnails/emby/{*path}")]
         [HttpGet("/artwork/thumbnails/emby/{*path}")]
         [HttpGet("/artwork/fanart/emby/{*path}")]
@@ -97,6 +104,7 @@ namespace ErsatzTV.Controllers
             return GetEmbyArtwork(path);
         }
 
+        [HttpHead("/iptv/artwork/posters/plex/{plexMediaSourceId}/{*path}")]
         [HttpGet("/iptv/artwork/posters/plex/{plexMediaSourceId}/{*path}")]
         [HttpGet("/artwork/posters/plex/{plexMediaSourceId}/{*path}")]
         public Task<IActionResult> GetPlexPoster(int plexMediaSourceId, string path) =>
@@ -116,7 +124,10 @@ namespace ErsatzTV.Controllers
                 plexMediaSourceId,
                 $"photo/:/transcode?url=/{path}&height=220&width=392&minSize=1&upscale=0");
 
+        [HttpHead("/iptv/artwork/thumbnails/{fileName}")]
         [HttpGet("/iptv/artwork/thumbnails/{fileName}")]
+        [HttpHead("/iptv/artwork/thumbnails/{fileName}.jpg")]
+        [HttpGet("/iptv/artwork/thumbnails/{fileName}.jpg")]
         [HttpGet("/artwork/thumbnails/{fileName}")]
         public async Task<IActionResult> GetThumbnail(string fileName)
         {

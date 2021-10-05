@@ -34,7 +34,8 @@ namespace ErsatzTV.Core.FFmpeg
             string path,
             DateTimeOffset start,
             DateTimeOffset now,
-            Option<ChannelWatermark> globalWatermark)
+            Option<ChannelWatermark> globalWatermark,
+            Option<VaapiDriver> maybeVaapiDriver)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
@@ -58,6 +59,7 @@ namespace ErsatzTV.Core.FFmpeg
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports)
                 .WithThreads(playbackSettings.ThreadCount)
                 .WithHardwareAcceleration(playbackSettings.HardwareAcceleration)
+                .WithVaapiDriver(maybeVaapiDriver)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
@@ -169,7 +171,8 @@ namespace ErsatzTV.Core.FFmpeg
 
         private WatermarkOptions GetWatermarkOptions(Channel channel, Option<ChannelWatermark> globalWatermark)
         {
-            if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
+            if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && channel.FFmpegProfile.Transcode &&
+                channel.FFmpegProfile.NormalizeVideo)
             {
                 // check for channel watermark
                 if (channel.Watermark != null)

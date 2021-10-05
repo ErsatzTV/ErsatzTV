@@ -11,6 +11,8 @@ namespace ErsatzTV.Core.Tests.Fakes
     public class FakeTelevisionRepository : ITelevisionRepository
     {
         public Task<bool> AllShowsExist(List<int> showIds) => throw new NotSupportedException();
+        public Task<bool> AllSeasonsExist(List<int> seasonIds) => throw new NotSupportedException();
+
         public Task<bool> AllEpisodesExist(List<int> episodeIds) => throw new NotSupportedException();
 
         public Task<List<Show>> GetAllShows() => throw new NotSupportedException();
@@ -18,6 +20,8 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<Option<Show>> GetShow(int showId) => throw new NotSupportedException();
 
         public Task<List<ShowMetadata>> GetShowsForCards(List<int> ids) => throw new NotSupportedException();
+        public Task<List<SeasonMetadata>> GetSeasonsForCards(List<int> ids) => throw new NotSupportedException();
+
         public Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids) => throw new NotSupportedException();
 
         public Task<List<Episode>> GetShowItems(int showId) => throw new NotSupportedException();
@@ -32,8 +36,6 @@ namespace ErsatzTV.Core.Tests.Fakes
             throw new NotSupportedException();
 
         public Task<List<Episode>> GetSeasonItems(int seasonId) => throw new NotSupportedException();
-
-        public Task<Option<Episode>> GetEpisode(int episodeId) => throw new NotSupportedException();
 
         public Task<int> GetEpisodeCount(int seasonId) => throw new NotSupportedException();
 
@@ -95,5 +97,6 @@ namespace ErsatzTV.Core.Tests.Fakes
         public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) => throw new NotSupportedException();
 
         public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) => throw new NotSupportedException();
+        public Task<Unit> UpdatePath(int mediaFileId, string path) => throw new NotSupportedException();
     }
 }

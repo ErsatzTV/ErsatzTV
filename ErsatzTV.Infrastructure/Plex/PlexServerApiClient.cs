@@ -335,7 +335,8 @@ namespace ErsatzTV.Infrastructure.Plex
             {
                 Key = response.Key,
                 MovieMetadata = new List<MovieMetadata> { metadata },
-                MediaVersions = new List<MediaVersion> { version }
+                MediaVersions = new List<MediaVersion> { version },
+                TraktListItems = new List<TraktListItem>()
             };
 
             return movie;
@@ -507,7 +508,8 @@ namespace ErsatzTV.Infrastructure.Plex
             var show = new PlexShow
             {
                 Key = response.Key,
-                ShowMetadata = new List<ShowMetadata> { metadata }
+                ShowMetadata = new List<ShowMetadata> { metadata },
+                TraktListItems = new List<TraktListItem>()
             };
 
             return show;
@@ -661,7 +663,8 @@ namespace ErsatzTV.Infrastructure.Plex
             {
                 Key = response.Key,
                 SeasonNumber = response.Index,
-                SeasonMetadata = new List<SeasonMetadata> { metadata }
+                SeasonMetadata = new List<SeasonMetadata> { metadata },
+                TraktListItems = new List<TraktListItem>()
             };
 
             return season;
@@ -700,7 +703,8 @@ namespace ErsatzTV.Infrastructure.Plex
             {
                 Key = response.Key,
                 EpisodeMetadata = new List<EpisodeMetadata> { metadata },
-                MediaVersions = new List<MediaVersion> { version }
+                MediaVersions = new List<MediaVersion> { version },
+                TraktListItems = new List<TraktListItem>()
             };
 
             return episode;
@@ -796,6 +800,13 @@ namespace ErsatzTV.Infrastructure.Plex
                 guid.StartsWith("plex://movie"))
             {
                 return guid;
+            }
+            
+            if (guid.StartsWith("com.plexapp.agents.imdb"))
+            {
+                string strip1 = guid.Replace("com.plexapp.agents.imdb://", string.Empty);
+                string strip2 = strip1.Split("?").Head();
+                return $"imdb://{strip2}";
             }
 
             if (guid.StartsWith("com.plexapp.agents.thetvdb"))

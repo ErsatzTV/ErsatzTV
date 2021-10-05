@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -44,15 +45,17 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         {
             c.Name = request.Name;
             
-            // save name first so playouts don't get rebuild for a name change
+            // save name first so playouts don't get rebuilt for a name change
             await dbContext.SaveChangesAsync();
 
             var toAdd = request.Items
-                .Filter(i => c.MultiCollectionItems.All(i2 => i2.CollectionId != i.CollectionId))
-                .Map(
-                    i => new MultiCollectionItem
+                .Filter(i => i.CollectionId.HasValue)
+                // ReSharper disable once PossibleInvalidOperationException
+                .Filter(i => c.MultiCollectionItems.All(i2 => i2.CollectionId != i.CollectionId.Value))
+                .Map(i => new MultiCollectionItem
                     {
-                        CollectionId = i.CollectionId,
+                        // ReSharper disable once PossibleInvalidOperationException
+                        CollectionId = i.CollectionId.Value,
                         MultiCollectionId = c.Id,
                         ScheduleAsGroup = i.ScheduleAsGroup,
                         PlaybackOrder = i.PlaybackOrder
@@ -79,6 +82,40 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             // add new items
             c.MultiCollectionItems.AddRange(toAdd);
 
+            var toAddSmart = request.Items
+                .Filter(i => i.SmartCollectionId.HasValue)
+                // ReSharper disable once PossibleInvalidOperationException
+                .Filter(i => c.MultiCollectionSmartItems.All(i2 => i2.SmartCollectionId != i.SmartCollectionId.Value))
+                .Map(i => new MultiCollectionSmartItem
+                    {
+                        // ReSharper disable once PossibleInvalidOperationException
+                        SmartCollectionId = i.SmartCollectionId.Value,
+                        MultiCollectionId = c.Id,
+                        ScheduleAsGroup = i.ScheduleAsGroup,
+                        PlaybackOrder = i.PlaybackOrder
+                    })
+                .ToList();
+            var toRemoveSmart = c.MultiCollectionSmartItems
+                .Filter(i => request.Items.All(i2 => i2.SmartCollectionId != i.SmartCollectionId))
+                .ToList();
+            
+            // remove items that are no longer present
+            c.MultiCollectionSmartItems.RemoveAll(toRemoveSmart.Contains);
+            
+            // update existing items
+            foreach (MultiCollectionSmartItem item in c.MultiCollectionSmartItems)
+            {
+                foreach (UpdateMultiCollectionItem incoming in request.Items.Filter(
+                    i => i.SmartCollectionId == item.SmartCollectionId))
+                {
+                    item.ScheduleAsGroup = incoming.ScheduleAsGroup;
+                    item.PlaybackOrder = incoming.PlaybackOrder;
+                }
+            }
+
+            // add new items
+            c.MultiCollectionSmartItems.AddRange(toAddSmart);
+
             // rebuild playouts
             if (await dbContext.SaveChangesAsync() > 0)
             {
@@ -104,6 +141,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             UpdateMultiCollection updateCollection) =>
             dbContext.MultiCollections
                 .Include(mc => mc.MultiCollectionItems)
+                .Include(mc => mc.MultiCollectionSmartItems)
                 .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.MultiCollectionId)
                 .Map(o => o.ToValidation<BaseError>("MultiCollection does not exist."));
 

@@ -58,7 +58,7 @@ namespace ErsatzTV.Core.Iptv
                         .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                         .HeadOrNone()
                         .Match(
-                            artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}",
+                            artwork => $"{_scheme}://{_host}/iptv/logos/{artwork.Path}.jpg",
                             () => $"{_scheme}://{_host}/iptv/images/ersatztv-500.png");
                     xml.WriteAttributeString("src", logo);
                     xml.WriteEndElement(); // icon
@@ -200,10 +200,10 @@ namespace ErsatzTV.Core.Iptv
 
                         if (!isSameCustomShow)
                         {
-                            int s = Optional(episode.Season?.SeasonNumber).IfNone(0);
+                            int s = Optional(episode.Season?.SeasonNumber).IfNone(-1);
                             // TODO: multi-episode?
                             int e = episode.EpisodeMetadata.Head().EpisodeNumber;
-                            if (s > 0 && e > 0)
+                            if (s >= 0 && e > 0)
                             {
                                 xml.WriteStartElement("episode-num");
                                 xml.WriteAttributeString("system", "onscreen");
@@ -276,7 +276,7 @@ namespace ErsatzTV.Core.Iptv
                     _ => "posters"
                 };
 
-                artworkPath = $"{_scheme}://{_host}/iptv/artwork/{artworkFolder}/{artwork.Path}";
+                artworkPath = $"{_scheme}://{_host}/iptv/artwork/{artworkFolder}/{artwork.Path}.jpg";
             }
 
             return artworkPath;

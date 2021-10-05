@@ -7,6 +7,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.MediaCards.Mapper;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCards.Queries
 {
@@ -41,7 +42,7 @@ namespace ErsatzTV.Application.MediaCards.Queries
                 .GetPagedSeasons(request.TelevisionShowId, request.PageNumber, request.PageSize)
                 .Map(list => list.Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby)).ToList());
 
-            return new TelevisionSeasonCardResultsViewModel(count, results);
+            return new TelevisionSeasonCardResultsViewModel(count, results, None);
         }
     }
 }

@@ -74,7 +74,14 @@ The following fields are available for searching music videos:
 - `genre`: The music video genre
 - `library_name`: The name of the library that contains the music video
 - `language`: The music video audio stream language
+- `release_date`: The music video release date (YYYYMMDD)
 - `type`: Always `music_video`
+
+## Special Search Fields
+
+- `released_inthelast`: For any media type that supports `release_date`, `released_inthelast` takes a number and a unit (days, weeks, months, years) and returns items released between the specified time ago and now
+- `released_notinthelast`: For any media type that supports `release_date`, `released_notinthelast` takes a number and a unit (days, weeks, months, years) and returns items released before the specified time ago
+- `released_onthisday`: For any media type that supports `release_date`, `released_onthisday` takes any value (ignored) and will return items released on this month number and day number in previous years
 
 ## Sample Searches
 
@@ -97,3 +104,15 @@ The following fields are available for searching music videos:
 ### Lush Music
 
 `mood:lush`
+
+### Episodes from the past week
+
+`type:episode AND released_inthelast:"1 week"`
+
+### Episodes older than the past week
+
+`type:episode AND released_notinthelast:"1 week"`
+
+### Episodes released on this day
+
+`type:episode AND released_onthisday:1`

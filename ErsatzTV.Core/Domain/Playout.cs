@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace ErsatzTV.Core.Domain
 {
@@ -13,5 +14,6 @@ namespace ErsatzTV.Core.Domain
         public List<PlayoutItem> Items { get; set; }
         public PlayoutAnchor Anchor { get; set; }
         public List<PlayoutProgramScheduleAnchor> ProgramScheduleAnchors { get; set; }
+        public TimeSpan? DailyRebuildTime { get; set; }
     }
 }

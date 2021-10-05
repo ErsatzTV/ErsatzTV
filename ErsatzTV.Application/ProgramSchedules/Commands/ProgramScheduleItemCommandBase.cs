@@ -36,10 +36,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                         break;
                 }
             }
-            else if (item.PlaybackOrder == PlaybackOrder.ShuffleInOrder)
-            {
-                return BaseError.New("Invalid playback order: 'Shuffle In Order'");
-            }
 
             switch (item.PlayoutMode)
             {
@@ -113,6 +109,13 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     }
 
                     break;
+                case ProgramScheduleItemCollectionType.SmartCollection:
+                    if (item.SmartCollectionId is null)
+                    {
+                        return BaseError.New("[SmartCollection] is required for collection type 'SmartCollection'");
+                    }
+
+                    break;
                 default:
                     return BaseError.New("[CollectionType] is invalid");
             }
@@ -134,6 +137,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
+                    SmartCollectionId = item.SmartCollectionId,
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     CustomTitle = item.CustomTitle
@@ -146,6 +150,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
+                    SmartCollectionId = item.SmartCollectionId,
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     CustomTitle = item.CustomTitle
@@ -158,6 +163,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
+                    SmartCollectionId = item.SmartCollectionId,
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     Count = item.MultipleCount.GetValueOrDefault(),
@@ -171,6 +177,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
+                    SmartCollectionId = item.SmartCollectionId,
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     PlayoutDuration = FixDuration(item.PlayoutDuration.GetValueOrDefault()),

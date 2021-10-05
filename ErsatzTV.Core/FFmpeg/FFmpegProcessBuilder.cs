@@ -43,11 +43,23 @@ namespace ErsatzTV.Core.FFmpeg
         private readonly bool _saveReports;
         private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
         private bool _isConcat;
+        private VaapiDriver _vaapiDriver;
+        private HardwareAccelerationKind _hwAccel;
 
         public FFmpegProcessBuilder(string ffmpegPath, bool saveReports)
         {
             _ffmpegPath = ffmpegPath;
             _saveReports = saveReports;
+        }
+
+        public FFmpegProcessBuilder WithVaapiDriver(Option<VaapiDriver> maybeVaapiDriver)
+        {
+            foreach (VaapiDriver vaapiDriver in maybeVaapiDriver)
+            {
+                _vaapiDriver = vaapiDriver;
+            }
+
+            return this;
         }
 
         public FFmpegProcessBuilder WithThreads(int threads)
@@ -59,6 +71,8 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel)
         {
+            _hwAccel = hwAccel;
+
             switch (hwAccel)
             {
                 case HardwareAccelerationKind.Qsv:
@@ -450,6 +464,19 @@ namespace ErsatzTV.Core.FFmpeg
                 CreateNoWindow = true,
                 StandardOutputEncoding = Encoding.UTF8
             };
+
+            if (_hwAccel == HardwareAccelerationKind.Vaapi)
+            {
+                switch (_vaapiDriver)
+                {
+                    case VaapiDriver.i965:
+                        startInfo.EnvironmentVariables.Add("LIBVA_DRIVER_NAME", "i965");
+                        break;
+                    case VaapiDriver.iHD:
+                        startInfo.EnvironmentVariables.Add("LIBVA_DRIVER_NAME", "iHD");
+                        break;
+                }
+            }
 
             if (_saveReports)
             {

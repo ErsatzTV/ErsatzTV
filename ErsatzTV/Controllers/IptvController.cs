@@ -105,6 +105,8 @@ namespace ErsatzTV.Controllers
         }
 
         [HttpGet("iptv/logos/{fileName}")]
+        [HttpHead("iptv/logos/{fileName}.jpg")]
+        [HttpGet("iptv/logos/{fileName}.jpg")]
         public async Task<IActionResult> GetImage(string fileName)
         {
             Either<BaseError, CachedImagePathViewModel> cachedImagePath =

@@ -42,6 +42,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<Show> Shows { get; set; }
         public DbSet<ShowMetadata> ShowMetadata { get; set; }
         public DbSet<Season> Seasons { get; set; }
+        public DbSet<SeasonMetadata> SeasonMetadata { get; set; }
         public DbSet<Episode> Episodes { get; set; }
         public DbSet<EpisodeMetadata> EpisodeMetadata { get; set; }
         public DbSet<PlexMovie> PlexMovies { get; set; }
@@ -59,6 +60,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<Collection> Collections { get; set; }
         public DbSet<CollectionItem> CollectionItems { get; set; }
         public DbSet<MultiCollection> MultiCollections { get; set; }
+        public DbSet<SmartCollection> SmartCollections { get; set; }
         public DbSet<ProgramSchedule> ProgramSchedules { get; set; }
         public DbSet<ProgramScheduleItem> ProgramScheduleItems { get; set; }
         public DbSet<Playout> Playouts { get; set; }
@@ -67,6 +69,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<FFmpegProfile> FFmpegProfiles { get; set; }
         public DbSet<Resolution> Resolutions { get; set; }
         public DbSet<LanguageCode> LanguageCodes { get; set; }
+        public DbSet<TraktList> TraktLists { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.UseLoggerFactory(_loggerFactory);

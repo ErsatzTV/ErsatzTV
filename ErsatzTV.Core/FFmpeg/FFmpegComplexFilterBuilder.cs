@@ -129,6 +129,20 @@ namespace ErsatzTV.Core.FFmpeg
                 }
             }
 
+            string[] h264hevc = { "h264", "hevc" };
+
+            if (acceleration == HardwareAccelerationKind.Vaapi && (_pixelFormat ?? string.Empty).EndsWith("p10le") &&
+                h264hevc.Contains(_inputCodec)
+                && (_pixelFormat != "yuv420p10le" || _inputCodec != "hevc"))
+            {
+                videoFilterQueue.Add("format=p010le,format=nv12|vaapi,hwupload");
+            }
+
+            if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat == "yuv444p" && h264hevc.Contains(_inputCodec))
+            {
+                videoFilterQueue.Add("format=nv12|vaapi,hwupload");
+            }
+
             _scaleToSize.IfSome(
                 size =>
                 {
@@ -138,7 +152,7 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Nvenc when _pixelFormat == "yuv420p10le" =>
                             $"hwdownload,format=p010le,format=nv12,hwupload,scale_npp={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Nvenc => $"scale_npp={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Vaapi => $"scale_vaapi=w={size.Width}:h={size.Height}",
+                        HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
 
@@ -233,28 +247,39 @@ namespace ErsatzTV.Core.FFmpeg
                 complexFilter.Append(audioLabel);
             }
 
-            if (videoFilterQueue.Any())
+            if (videoFilterQueue.Any() || !string.IsNullOrWhiteSpace(watermarkOverlay))
             {
                 if (hasAudioFilters)
                 {
                     complexFilter.Append(';');
                 }
 
-                complexFilter.Append($"[{videoLabel}]");
-                var filters = string.Join(",", videoFilterQueue);
-                complexFilter.Append(filters);
+                if (videoFilterQueue.Any())
+                {
+                    complexFilter.Append($"[{videoLabel}]");
+                    var filters = string.Join(",", videoFilterQueue);
+                    complexFilter.Append(filters);
+                }
 
                 if (!string.IsNullOrWhiteSpace(watermarkOverlay))
                 {
-                    complexFilter.Append("[vt]");
+                    if (videoFilterQueue.Any())
+                    {
+                        complexFilter.Append("[vt];");
+                    }
+
                     var watermarkLabel = "[1:v]";
                     if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
                     {
-                        complexFilter.Append($";{watermarkLabel}{watermarkPreprocess}[wmp]");
+                        complexFilter.Append($"{watermarkLabel}{watermarkPreprocess}[wmp];");
                         watermarkLabel = "[wmp]";
                     }
 
-                    complexFilter.Append($";[vt]{watermarkLabel}{watermarkOverlay}");
+                    complexFilter.Append(
+                        videoFilterQueue.Any()
+                            ? $"[vt]{watermarkLabel}{watermarkOverlay}"
+                            : $"[{videoLabel}]{watermarkLabel}{watermarkOverlay}");
+
                     if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None)
                     {
                         complexFilter.Append(",hwupload");

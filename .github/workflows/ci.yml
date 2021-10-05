@@ -49,7 +49,7 @@ jobs:
           tag=$(git describe --tags --abbrev=0)
           tag2="${tag:1}"
           short=$(git rev-parse --short HEAD)
-          final="${tag2/prealpha/$short}"
+          final="${tag2/alpha/$short}"
           echo "GIT_TAG=${final}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx Base

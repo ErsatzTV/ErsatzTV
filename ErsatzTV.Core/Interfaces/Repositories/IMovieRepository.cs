@@ -33,5 +33,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Option<EmbyMovie>> UpdateEmby(EmbyMovie movie);
         Task<bool> AddDirector(MovieMetadata metadata, Director director);
         Task<bool> AddWriter(MovieMetadata metadata, Writer writer);
+        Task<Unit> UpdatePath(int mediaFileId, string path);
     }
 }

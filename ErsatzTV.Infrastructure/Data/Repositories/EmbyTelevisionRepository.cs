@@ -90,6 +90,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Artwork)
                 .Include(m => m.ShowMetadata)
                 .ThenInclude(mm => mm.Guids)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .Filter(m => m.ItemId == show.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();
@@ -267,7 +269,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             }
         }
 
-        public async Task<Unit> Update(EmbySeason season)
+        public async Task<Option<EmbySeason>> Update(EmbySeason season)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<EmbySeason> maybeExisting = await dbContext.EmbySeasons
@@ -376,7 +378,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
             await dbContext.SaveChangesAsync();
 
-            return Unit.Default;
+            return maybeExisting;
         }
 
         public async Task<bool> AddEpisode(EmbySeason season, EmbyEpisode episode)
@@ -432,6 +434,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.EpisodeMetadata)
                 .ThenInclude(mm => mm.Writers)
                 .Include(m => m.Season)
+                .Include(m => m.TraktListItems)
+                .ThenInclude(tli => tli.TraktList)
                 .Filter(m => m.ItemId == episode.ItemId)
                 .OrderBy(m => m.ItemId)
                 .SingleOrDefaultAsync();

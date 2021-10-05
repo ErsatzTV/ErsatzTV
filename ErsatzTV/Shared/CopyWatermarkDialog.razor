@@ -2,7 +2,7 @@
 @using ErsatzTV.Application.Watermarks.Commands
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
-@inject ILogger<AddToCollectionDialog> _logger
+@inject ILogger<CopyWatermarkDialog> _logger
 
 <MudDialog>
     <DialogContent>
@@ -12,10 +12,10 @@
                     Enter a name for the new Watermark
                 </MudText>
             </MudContainer>
-            <MudTextFieldString Label="New Watermark Name"
-                                @bind-Text="@_newWatermarkName"
-                                Class="mb-6 mx-4">
-            </MudTextFieldString>
+            <MudTextField T="string" Label="New Watermark Name"
+                          @bind-Text="@_newWatermarkName"
+                          Class="mb-6 mx-4">
+            </MudTextField>
         </EditForm>
     </DialogContent>
     <DialogActions>

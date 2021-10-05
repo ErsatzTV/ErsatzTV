@@ -9,10 +9,12 @@ namespace ErsatzTV.Core.Interfaces.Repositories
     public interface ITelevisionRepository
     {
         Task<bool> AllShowsExist(List<int> showIds);
+        Task<bool> AllSeasonsExist(List<int> seasonIds);
         Task<bool> AllEpisodesExist(List<int> episodeIds);
         Task<List<Show>> GetAllShows();
         Task<Option<Show>> GetShow(int showId);
         Task<List<ShowMetadata>> GetShowsForCards(List<int> ids);
+        Task<List<SeasonMetadata>> GetSeasonsForCards(List<int> ids);
         Task<List<EpisodeMetadata>> GetEpisodesForCards(List<int> ids);
         Task<List<Episode>> GetShowItems(int showId);
         Task<List<Season>> GetAllSeasons();
@@ -49,5 +51,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata);
         Task<bool> AddDirector(EpisodeMetadata metadata, Director director);
         Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer);
+        Task<Unit> UpdatePath(int mediaFileId, string path);
     }
 }

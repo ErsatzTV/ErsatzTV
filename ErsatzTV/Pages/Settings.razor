@@ -11,6 +11,7 @@
 @using ErsatzTV.Application.Configuration.Commands
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Application.Watermarks.Queries
+@using ErsatzTV.Core.FFmpeg
 @using Microsoft.AspNetCore.Components
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
@@ -55,6 +56,12 @@
                         @foreach (WatermarkViewModel watermark in _watermarks)
                         {
                             <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="VAAPI Driver" @bind-Value="_ffmpegSettings.VaapiDriver" For="@(() => _ffmpegSettings.VaapiDriver)">
+                        @foreach (VaapiDriver driver in Enum.GetValues<VaapiDriver>())
+                        {
+                            <MudSelectItem Value="@driver">@driver</MudSelectItem>
                         }
                     </MudSelect>
                 </MudForm>

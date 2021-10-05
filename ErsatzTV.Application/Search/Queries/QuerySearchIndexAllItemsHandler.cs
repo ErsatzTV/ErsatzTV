@@ -21,6 +21,7 @@ namespace ErsatzTV.Application.Search.Queries
             new(
                 await GetIds("movie", request.Query),
                 await GetIds("show", request.Query),
+                await GetIds("season", request.Query),
                 await GetIds("episode", request.Query),
                 await GetIds("artist", request.Query),
                 await GetIds("music_video", request.Query));

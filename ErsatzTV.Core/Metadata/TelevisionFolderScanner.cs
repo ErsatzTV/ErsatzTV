@@ -184,6 +184,9 @@ namespace ErsatzTV.Core.Metadata
                             {
                                 await ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder);
                                 await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
+
+                                season.Show = show;
+                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { season });
                             },
                             error =>
                             {
@@ -322,7 +325,7 @@ namespace ErsatzTV.Core.Metadata
                     async () =>
                     {
                         bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
-                            m => m.DateUpdated == DateTime.MinValue,
+                            m => m.DateUpdated == SystemTime.MinValueUtc,
                             true);
 
                         if (shouldUpdate)

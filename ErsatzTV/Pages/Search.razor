@@ -5,7 +5,6 @@
 @using ErsatzTV.Application.Search
 @using ErsatzTV.Application.Search.Queries
 @using ErsatzTV.Extensions
-@using Microsoft.AspNetCore.WebUtilities
 @using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<Search>
 @inject NavigationManager _navigationManager
@@ -45,6 +44,11 @@
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#shows")" Style="margin-bottom: auto; margin-top: auto">@_shows.Count Shows</MudLink>
             }
 
+            if (_seasons?.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#seasons")" Style="margin-bottom: auto; margin-top: auto">@_seasons.Count Seasons</MudLink>
+            }
+
             if (_episodes?.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#episodes")" Style="margin-bottom: auto; margin-top: auto">@_episodes.Count Episodes</MudLink>
@@ -60,12 +64,22 @@
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
             }
             <div style="margin-left: auto">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@AddAllToCollection">
-                    Add All To Collection
-                </MudButton>
+                <MudTooltip Text="Add All To Collection">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="@AddAllToCollection">
+                        Add All
+                    </MudButton>
+                </MudTooltip>
+                <MudTooltip Text="Save As Smart Collection">
+                    <MudButton Class="ml-3" Variant="Variant.Filled"
+                               Color="Color.Secondary"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               OnClick="@SaveAsSmartCollection">
+                        Save As
+                    </MudButton>
+                </MudTooltip>
             </div>
         }
     </div>
@@ -117,6 +131,33 @@
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
+                           AddToCollectionClicked="@AddToCollection"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
+    
+    @if (_seasons?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "seasons" } })">
+                Seasons
+            </MudText>
+            @if (_seasons.Count > 50)
+            {
+                <MudLink Href="@GetSeasonsLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (TelevisionSeasonCardViewModel card in _seasons.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
                            AddToCollectionClicked="@AddToCollection"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
@@ -214,6 +255,7 @@
     private string _query;
     private MovieCardResultsViewModel _movies;
     private TelevisionShowCardResultsViewModel _shows;
+    private TelevisionSeasonCardResultsViewModel _seasons;
     private TelevisionEpisodeCardResultsViewModel _episodes;
     private MusicVideoCardResultsViewModel _musicVideos;
     private ArtistCardResultsViewModel _artists;
@@ -225,6 +267,7 @@
         {
             _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
             _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50));
+            _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50));
             _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50));
             _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50));
             _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50));
@@ -237,6 +280,7 @@
         {
             return _movies.Cards.OrderBy(m => m.SortTitle)
                 .Append<MediaCardViewModel>(_shows.Cards.OrderBy(s => s.SortTitle))
+                .Append(_seasons.Cards.OrderBy(s => s.SortTitle))
                 .Append(_episodes.Cards.OrderBy(ep => ep.SortTitle))
                 .Append(_artists.Cards.OrderBy(a => a.SortTitle))
                 .Append(_musicVideos.Cards.OrderBy(mv => mv.SortTitle))
@@ -375,6 +419,17 @@
         }
         return uri;
     }
+    
+    private string GetSeasonsLink()
+    {
+        var uri = "/media/tv/seasons/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
+        }
+        return uri;
+    }
 
     private string GetEpisodesLink()
     {
@@ -412,7 +467,43 @@
     private async Task AddAllToCollection(MouseEventArgs _)
     {
         SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query));
-        await AddItemsToCollection(results.MovieIds, results.ShowIds, results.EpisodeIds, results.ArtistIds, results.MusicVideoIds, "search results");
+        await AddItemsToCollection(
+            results.MovieIds,
+            results.ShowIds,
+            results.SeasonIds,
+            results.EpisodeIds,
+            results.ArtistIds,
+            results.MusicVideoIds,
+            "search results");
+    }
+
+    private async Task SaveAsSmartCollection(MouseEventArgs _)
+    {
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<SaveAsSmartCollectionDialog>("Save As Smart Collection", options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled && result.Data is SmartCollectionViewModel collection)
+        {
+            var request = new UpdateSmartCollection(
+                collection.Id,
+                _query);
+
+            Either<BaseError, Unit> updateResult = await Mediator.Send(request);
+            updateResult.Match(
+                Left: error =>
+                {
+                    Snackbar.Add($"Unexpected error saving smart collection: {error.Value}");
+                    Logger.LogError("Unexpected error saving smart collection: {Error}", error.Value);
+                },
+                Right: _ =>
+                {
+                    Snackbar.Add(
+                        $"Saved smart collection {collection.Name}",
+                        Severity.Success);
+                    ClearSelection();
+                });
+        }
     }
 
 }

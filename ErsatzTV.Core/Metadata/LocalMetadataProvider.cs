@@ -206,19 +206,19 @@ namespace ErsatzTV.Core.Metadata
                 updated = await _metadataRepository.Add(metadata) || updated;
             }
 
-            foreach (EpisodeMetadata metadata in toUpdate)
+            foreach (EpisodeMetadata existing in toUpdate)
             {
-                Option<EpisodeMetadata> maybeExisting =
-                    episode.EpisodeMetadata.Find(em => em.EpisodeNumber == metadata.EpisodeNumber);
-                updated = await maybeExisting.Match(
-                    async existing =>
+                Option<EpisodeMetadata> maybeIncoming =
+                    episodeMetadata.Find(em => em.EpisodeNumber == existing.EpisodeNumber);
+                updated = await maybeIncoming.Match(
+                    async metadata =>
                     {
                         existing.Outline = metadata.Outline;
                         existing.Plot = metadata.Plot;
                         existing.Tagline = metadata.Tagline;
                         existing.Title = metadata.Title;
 
-                        if (existing.DateAdded == DateTime.MinValue)
+                        if (existing.DateAdded == SystemTime.MinValueUtc)
                         {
                             existing.DateAdded = metadata.DateAdded;
                         }
@@ -318,7 +318,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
 
-                    if (existing.DateAdded == DateTime.MinValue)
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }
@@ -423,7 +423,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Tagline = metadata.Tagline;
                     existing.Title = metadata.Title;
 
-                    if (existing.DateAdded == DateTime.MinValue)
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }
@@ -486,7 +486,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Disambiguation = metadata.Disambiguation;
                     existing.Biography = metadata.Biography;
 
-                    if (existing.DateAdded == DateTime.MinValue)
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }
@@ -581,7 +581,7 @@ namespace ErsatzTV.Core.Metadata
                     existing.Plot = metadata.Plot;
                     existing.Album = metadata.Album;
 
-                    if (existing.DateAdded == DateTime.MinValue)
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
                         existing.DateAdded = metadata.DateAdded;
                     }
