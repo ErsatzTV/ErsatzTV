@@ -774,6 +774,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "INSERT INTO Writer (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
                 new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
+        public Task<Unit> UpdatePath(int mediaFileId, string path) =>
+            _dbConnection.ExecuteAsync(
+                "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
+                new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
+
         private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
             TvContext dbContext,
             int libraryPathId,
