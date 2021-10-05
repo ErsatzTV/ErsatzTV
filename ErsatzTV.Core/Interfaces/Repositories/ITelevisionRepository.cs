@@ -51,5 +51,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata);
         Task<bool> AddDirector(EpisodeMetadata metadata, Director director);
         Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer);
+        Task<Unit> UpdatePath(int mediaFileId, string path);
     }
 }

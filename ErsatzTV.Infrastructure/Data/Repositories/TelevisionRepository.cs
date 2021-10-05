@@ -568,6 +568,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 "INSERT INTO Writer (Name, EpisodeMetadataId) VALUES (@Name, @MetadataId)",
                 new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
 
+        public Task<Unit> UpdatePath(int mediaFileId, string path) =>
+            _dbConnection.ExecuteAsync(
+                "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
+                new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
+
         public async Task<List<Episode>> GetShowItems(int showId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
