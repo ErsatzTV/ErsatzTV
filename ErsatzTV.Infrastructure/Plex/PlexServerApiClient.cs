@@ -801,6 +801,13 @@ namespace ErsatzTV.Infrastructure.Plex
             {
                 return guid;
             }
+            
+            if (guid.StartsWith("com.plexapp.agents.imdb"))
+            {
+                string strip1 = guid.Replace("com.plexapp.agents.imdb://", string.Empty);
+                string strip2 = strip1.Split("?").Head();
+                return $"imdb://{strip2}";
+            }
 
             if (guid.StartsWith("com.plexapp.agents.thetvdb"))
             {
