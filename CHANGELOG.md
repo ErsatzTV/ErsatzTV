@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Use latest iHD driver (21.2.3 vs 20.1.1) in vaapi docker images
 
+### Fixed
+- Add downsampling to support transcoding 10-bit HEVC content with the h264_vaapi encoder
+
 ## [0.0.62-alpha] - 2021-10-05
 ### Added
 - Support IMDB ids from Plex libraries, which may improve Trakt matching for some items
