@@ -21,6 +21,7 @@ namespace ErsatzTV.Core.FFmpeg
         private Option<IDisplaySize> _scaleToSize = None;
         private Option<ChannelWatermark> _watermark;
         private string _pixelFormat;
+        private string _videoEncoder;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -74,6 +75,12 @@ namespace ErsatzTV.Core.FFmpeg
         {
             _watermark = watermark;
             _resolution = resolution;
+            return this;
+        }
+
+        public FFmpegComplexFilterBuilder WithVideoEncoder(string videoEncoder)
+        {
+            _videoEncoder = videoEncoder;
             return this;
         }
 
@@ -245,6 +252,13 @@ namespace ErsatzTV.Core.FFmpeg
                 complexFilter.Append(string.Join(",", audioFilterQueue));
                 audioLabel = "[a]";
                 complexFilter.Append(audioLabel);
+            }
+
+            // vaapi downsample 10bit hevc to 8bit h264
+            if (acceleration == HardwareAccelerationKind.Vaapi && !videoFilterQueue.Any() &&
+                _pixelFormat == "yuv420p10le" && _videoEncoder.StartsWith("h264"))
+            {
+                videoFilterQueue.Add("scale_vaapi=format=nv12");
             }
 
             if (videoFilterQueue.Any() || !string.IsNullOrWhiteSpace(watermarkOverlay))

@@ -82,7 +82,7 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     builder = builder
-                        .WithFilterComplex(videoStream, maybeAudioStream);
+                        .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
                 },
                 () =>
                 {
@@ -91,18 +91,18 @@ namespace ErsatzTV.Core.FFmpeg
                         builder = builder
                             .WithDeinterlace(playbackSettings.Deinterlace)
                             .WithBlackBars(channel.FFmpegProfile.Resolution)
-                            .WithFilterComplex(videoStream, maybeAudioStream);
+                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
                     }
                     else if (playbackSettings.Deinterlace)
                     {
                         builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
                             .WithAlignedAudio(playbackSettings.AudioDuration)
-                            .WithFilterComplex(videoStream, maybeAudioStream);
+                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
                     }
                     else
                     {
                         builder = builder
-                            .WithFilterComplex(videoStream, maybeAudioStream);
+                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
                     }
                 });
 

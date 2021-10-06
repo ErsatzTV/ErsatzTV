@@ -402,8 +402,13 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithFilterComplex(MediaStream videoStream, Option<MediaStream> maybeAudioStream)
+        public FFmpegProcessBuilder WithFilterComplex(
+            MediaStream videoStream,
+            Option<MediaStream> maybeAudioStream,
+            string videoCodec)
         {
+            _complexFilterBuilder = _complexFilterBuilder.WithVideoEncoder(videoCodec);
+
             int videoStreamIndex = videoStream.Index;
             Option<int> maybeIndex = maybeAudioStream.Map(ms => ms.Index);
 
