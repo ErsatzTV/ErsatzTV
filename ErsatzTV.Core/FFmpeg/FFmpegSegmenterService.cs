@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
@@ -9,7 +11,7 @@ namespace ErsatzTV.Core.FFmpeg
 {
     public class FFmpegSegmenterService : IFFmpegSegmenterService
     {
-        private static readonly ConcurrentDictionary<string, Process> Processes = new();
+        private static readonly ConcurrentDictionary<string, ProcessAndToken> Processes = new();
 
         private readonly ILogger<FFmpegSegmenterService> _logger;
 
@@ -18,16 +20,55 @@ namespace ErsatzTV.Core.FFmpeg
         public bool ProcessExistsForChannel(string channelNumber) =>
             Processes.ContainsKey(channelNumber);
 
-        public bool TryAdd(string channelNumber, Process process) =>
-            Processes.TryAdd(channelNumber, process);
+        public bool TryAdd(string channelNumber, Process process)
+        {
+            var cts = new CancellationTokenSource();
+            var processAndToken = new ProcessAndToken(process, cts, DateTimeOffset.Now);
+            if (Processes.TryAdd(channelNumber, processAndToken))
+            {
+                CancellationToken token = cts.Token;
+                token.Register(process.Kill);
+                return true;
+            }
+
+            return false;
+        }
+
+        public void TouchChannel(string channelNumber)
+        {
+            if (Processes.TryGetValue(channelNumber, out ProcessAndToken processAndToken))
+            {
+                ProcessAndToken newValue = processAndToken with { LastAccess = DateTimeOffset.Now };
+                if (!Processes.TryUpdate(channelNumber, newValue, processAndToken))
+                {
+                    _logger.LogWarning("Failed to update last access for channel {Channel}", channelNumber);
+                }
+            }
+        }
+
+        public void CleanUpSessions()
+        {
+            foreach ((string key, (_, CancellationTokenSource cts, DateTimeOffset lastAccess)) in Processes.ToList())
+            {
+                // TODO: configure this time span? 5 min?
+                if (DateTimeOffset.Now.Subtract(lastAccess) > TimeSpan.FromMinutes(2))
+                {
+                    _logger.LogDebug("Cleaning up ffmpeg session for channel {Channel}", key);
+
+                    cts.Cancel();
+                    Processes.TryRemove(key, out _);
+                }
+            }
+        }
 
         public Unit KillAll()
         {
-            foreach ((string _, Process process) in Processes)
+            foreach ((string key, ProcessAndToken processAndToken) in Processes.ToList())
             {
                 try
                 {
-                    process.Kill();
+                    processAndToken.TokenSource.Cancel();
+                    Processes.TryRemove(key, out _);
                 }
                 catch (Exception ex)
                 {
@@ -37,5 +78,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             return Unit.Default;
         }
+
+        private record ProcessAndToken(Process Process, CancellationTokenSource TokenSource, DateTimeOffset LastAccess);
     }
 }

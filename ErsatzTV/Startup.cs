@@ -7,7 +7,7 @@ using Blazored.LocalStorage;
 using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
-using ErsatzTV.Application.Logs.Queries;
+using ErsatzTV.Application.Streaming.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.FFmpeg;
@@ -218,6 +218,9 @@ namespace ErsatzTV
                     OnPrepareResponse = ctx =>
                     {
                         Log.Logger.Information("Transcode access: {Test}", ctx.File.PhysicalPath);
+                        ChannelWriter<IFFmpegWorkerRequest> writer = app.ApplicationServices
+                            .GetRequiredService<ChannelWriter<IFFmpegWorkerRequest>>();
+                        writer.TryWrite(new TouchFFmpegSession(ctx.File.PhysicalPath));
                     }
                 });
 
@@ -323,6 +326,7 @@ namespace ErsatzTV
             services.AddHostedService<WorkerService>();
             services.AddHostedService<SchedulerService>();
             services.AddHostedService<FFmpegWorkerService>();
+            services.AddHostedService<FFmpegSchedulerService>();
         }
 
         private void AddChannel<TMessageType>(IServiceCollection services)

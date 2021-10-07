@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application;
-using ErsatzTV.Application.Maintenance.Commands;
-using ErsatzTV.Application.MediaSources.Commands;
-using ErsatzTV.Application.Playouts.Commands;
-using ErsatzTV.Application.Search.Commands;
 using ErsatzTV.Application.Streaming.Commands;
 using ErsatzTV.Application.Streaming.Queries;
 using ErsatzTV.Core;
@@ -17,7 +14,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Unit = LanguageExt.Unit;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Services
 {
@@ -54,6 +51,15 @@ namespace ErsatzTV.Services
                     // TODO: wait for signal to stop process
                     switch (request)
                     {
+                        case TouchFFmpegSession touchFFmpegSession:
+                            foreach (DirectoryInfo parent in Optional(Directory.GetParent(touchFFmpegSession.Path)))
+                            {
+                                _ffmpegSegmenterService.TouchChannel(parent.Name);
+                            }
+                            break;
+                        case CleanUpFFmpegSessions:
+                            _ffmpegSegmenterService.CleanUpSessions();
+                            break;
                         // wait for signal to start process
                         case StartFFmpegSession startFFmpegSession:
                             // TODO: see if this gets called with each playlist refresh
