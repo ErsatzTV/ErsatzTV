@@ -26,6 +26,7 @@ using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.FFmpeg
 {
@@ -41,15 +42,17 @@ namespace ErsatzTV.Core.FFmpeg
         private readonly List<string> _arguments = new();
         private readonly string _ffmpegPath;
         private readonly bool _saveReports;
+        private readonly ILogger _logger;
         private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
         private bool _isConcat;
         private VaapiDriver _vaapiDriver;
         private HardwareAccelerationKind _hwAccel;
 
-        public FFmpegProcessBuilder(string ffmpegPath, bool saveReports)
+        public FFmpegProcessBuilder(string ffmpegPath, bool saveReports, ILogger logger)
         {
             _ffmpegPath = ffmpegPath;
             _saveReports = saveReports;
+            _logger = logger;
         }
 
         public FFmpegProcessBuilder WithVaapiDriver(Option<VaapiDriver> maybeVaapiDriver)
@@ -307,16 +310,34 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHls(string channelNumber)
+        public FFmpegProcessBuilder WithHls(string channelNumber, MediaVersion mediaVersion)
         {
+            if (!int.TryParse(mediaVersion.RFrameRate, out int frameRate))
+            {
+                string[] split = mediaVersion.RFrameRate.Split("/");
+                if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
+                {
+                    frameRate = (int)(left / (double)right);
+                }
+                else
+                {
+                    _logger.LogInformation("Unable to detect framerate, using {FrameRate}", 24);
+                    frameRate = 24;
+                }
+            }
+
             _arguments.AddRange(
                 new[]
                 {
+                    "-g", $"{frameRate * 2}",
+                    "-keyint_min", $"{frameRate * 2}",
+                    // "-force_key_frames",
+                    // "expr:gte(t,n_forced*2)",
                     "-f", "hls",
                     "-hls_time", "2",
                     "-hls_list_size", "10",
                     "-segment_list_flags", "+live",
-                    "-hls_flags", "delete_segments",
+                    "-hls_flags", "delete_segments+program_date_time",
                     Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8")
                 });
 
@@ -331,7 +352,7 @@ namespace ErsatzTV.Core.FFmpeg
                 "-flags", "cgop",
                 "-sc_threshold", "0" // disable scene change detection
             };
-            
+
             // TODO: use framerate from playbackSettings to calc keyframes
 
             string[] videoBitrateArgs = playbackSettings.VideoBitrate.Match(
