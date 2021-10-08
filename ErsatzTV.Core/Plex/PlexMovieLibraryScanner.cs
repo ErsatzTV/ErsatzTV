@@ -183,7 +183,7 @@ namespace ErsatzTV.Core.Plex
                 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                 Either<BaseError, bool> refreshResult =
-                    await _localStatisticsProvider.RefreshStatistics(ffprobePath, incoming, localPath);
+                    await _localStatisticsProvider.RefreshStatistics(ffprobePath, existing, localPath);
                 
                 await refreshResult.Match(
                     async _ =>
