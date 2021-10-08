@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.0.63-alpha] - 2021-10-08
 ### Added
 - Add *experimental* streaming mode `HLS Segmenter` (most similar to `HLS Hybrid`) 
   - This mode is intended to increase client compatibility and reduce issues at program boundaries
+  - If you want the temporary transcode files to be located on a particular drive, the docker path is `/root/.local/share/etv-transcode`
 - Store frame rate with media statistics; this is needed to support HLS Segmenter
   - This requires re-ingesting statistics for all media items the first time this version is launched
 
@@ -657,7 +660,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.62-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.63-alpha...HEAD
+[0.0.63-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.62-alpha...v0.0.63-alpha
 [0.0.62-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.61-alpha...v0.0.62-alpha
 [0.0.61-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.60-alpha...v0.0.61-alpha
 [0.0.60-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.59-alpha...v0.0.60-alpha
