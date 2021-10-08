@@ -7,7 +7,7 @@ using Blazored.LocalStorage;
 using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
-using ErsatzTV.Application.Logs.Queries;
+using ErsatzTV.Application.Streaming.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.FFmpeg;
@@ -56,10 +56,12 @@ using MediatR;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -76,6 +78,16 @@ namespace ErsatzTV
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors(
+                o => o.AddPolicy(
+                    "AllowAll",
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                            .AllowAnyMethod()
+                            .AllowAnyHeader();
+                    }));
+
             services.AddControllers(
                     options =>
                     {
@@ -121,6 +133,11 @@ namespace ErsatzTV
             if (!Directory.Exists(FileSystemLayout.AppDataFolder))
             {
                 Directory.CreateDirectory(FileSystemLayout.AppDataFolder);
+            }
+
+            if (!Directory.Exists(FileSystemLayout.TranscodeFolder))
+            {
+                Directory.CreateDirectory(FileSystemLayout.TranscodeFolder);
             }
 
             Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
@@ -183,9 +200,29 @@ namespace ErsatzTV
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseCors("AllowAll");
+
             // app.UseSerilogRequestLogging();
 
             app.UseStaticFiles();
+
+            var extensionProvider = new FileExtensionContentTypeProvider();
+            extensionProvider.Mappings.Add(".m3u8", "application/vnd.apple.mpegurl");
+
+            app.UseStaticFiles(
+                new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(FileSystemLayout.TranscodeFolder),
+                    RequestPath = "/iptv/session",
+                    ContentTypeProvider = extensionProvider,
+                    OnPrepareResponse = ctx =>
+                    {
+                        // Log.Logger.Information("Transcode access: {Test}", ctx.File.PhysicalPath);
+                        ChannelWriter<IFFmpegWorkerRequest> writer = app.ApplicationServices
+                            .GetRequiredService<ChannelWriter<IFFmpegWorkerRequest>>();
+                        writer.TryWrite(new TouchFFmpegSession(ctx.File.PhysicalPath));
+                    }
+                });
 
             app.UseRouting();
 
@@ -206,10 +243,12 @@ namespace ErsatzTV
             services.AddSingleton<ITraktApiClient, TraktApiClient>();
             services.AddSingleton<IEntityLocker, EntityLocker>();
             services.AddSingleton<ISearchIndex, SearchIndex>();
+            services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
             AddChannel<IJellyfinBackgroundServiceRequest>(services);
             AddChannel<IEmbyBackgroundServiceRequest>(services);
+            AddChannel<IFFmpegWorkerRequest>(services);
             
             services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
             services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
@@ -286,6 +325,8 @@ namespace ErsatzTV
             services.AddHostedService<FFmpegLocatorService>();
             services.AddHostedService<WorkerService>();
             services.AddHostedService<SchedulerService>();
+            services.AddHostedService<FFmpegWorkerService>();
+            services.AddHostedService<FFmpegSchedulerService>();
         }
 
         private void AddChannel<TMessageType>(IServiceCollection services)

@@ -133,6 +133,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         existing.Width = incoming.Width;
                         existing.Height = incoming.Height;
                         existing.VideoScanKind = incoming.VideoScanKind;
+                        existing.RFrameRate = incoming.RFrameRate;
                     }
 
                     var toAdd = incoming.Streams.Filter(s => existing.Streams.All(es => es.Index != s.Index)).ToList();

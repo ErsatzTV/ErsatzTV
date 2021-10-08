@@ -134,7 +134,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             var service = new FFmpegProcessService(
                 new FFmpegPlaybackSettingsCalculator(),
                 new FakeStreamSelector(),
-                new Mock<IImageCache>().Object);
+                new Mock<IImageCache>().Object,
+                new Mock<ILogger<FFmpegProcessService>>().Object);
 
             MediaVersion v = new MediaVersion();
 

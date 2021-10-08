@@ -13,6 +13,7 @@ namespace ErsatzTV.Core.Domain
         public TimeSpan Duration { get; set; }
         public string SampleAspectRatio { get; set; }
         public string DisplayAspectRatio { get; set; }
+        public string RFrameRate { get; set; }
         public VideoScanKind VideoScanKind { get; set; }
         public DateTime DateAdded { get; set; }
         public DateTime DateUpdated { get; set; }

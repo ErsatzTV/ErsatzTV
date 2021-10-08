@@ -6,6 +6,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg
@@ -14,16 +15,19 @@ namespace ErsatzTV.Core.FFmpeg
     {
         private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
         private readonly IImageCache _imageCache;
+        private readonly ILogger<FFmpegProcessService> _logger;
         private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
         public FFmpegProcessService(
             FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
             IFFmpegStreamSelector ffmpegStreamSelector,
-            IImageCache imageCache)
+            IImageCache imageCache,
+            ILogger<FFmpegProcessService> logger)
         {
             _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
             _ffmpegStreamSelector = ffmpegStreamSelector;
             _imageCache = imageCache;
+            _logger = logger;
         }
 
         public async Task<Process> ForPlayoutItem(
@@ -56,7 +60,7 @@ namespace ErsatzTV.Core.FFmpeg
                 p => _imageCache.IsAnimated(p),
                 () => Task.FromResult(false));
 
-            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports)
+            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
                 .WithHardwareAcceleration(playbackSettings.HardwareAcceleration)
                 .WithVaapiDriver(maybeVaapiDriver)
@@ -106,12 +110,21 @@ namespace ErsatzTV.Core.FFmpeg
                     }
                 });
 
-            return builder.WithPlaybackArgs(playbackSettings)
+            builder = builder.WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel, maybeAudioStream)
-                .WithFormat("mpegts")
-                .WithDuration(start + version.Duration - now)
-                .WithPipe()
-                .Build();
+                .WithDuration(start + version.Duration - now);
+
+            switch (channel.StreamingMode)
+            {
+                // HLS needs to segment and generate playlist
+                case StreamingMode.HttpLiveStreamingSegmenter:
+                    return builder.WithHls(channel.Number, version)
+                        .Build();
+                default:
+                    return builder.WithFormat("mpegts")
+                        .WithPipe()
+                        .Build();
+            }
         }
 
         public Process ForError(string ffmpegPath, Channel channel, Option<TimeSpan> duration, string errorMessage)
@@ -121,7 +134,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             IDisplaySize desiredResolution = channel.FFmpegProfile.Resolution;
 
-            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false)
+            FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
@@ -144,7 +157,7 @@ namespace ErsatzTV.Core.FFmpeg
         {
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
 
-            return new FFmpegProcessBuilder(ffmpegPath, saveReports)
+            return new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
