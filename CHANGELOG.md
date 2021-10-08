@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [0.0.63-alpha] - 2021-10-08
+## [0.1.0-alpha] - 2021-10-08
 ### Added
 - Add *experimental* streaming mode `HLS Segmenter` (most similar to `HLS Hybrid`) 
   - This mode is intended to increase client compatibility and reduce issues at program boundaries
@@ -660,8 +660,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.63-alpha...HEAD
-[0.0.63-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.62-alpha...v0.0.63-alpha
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.0-alpha...HEAD
+[0.1.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.62-alpha...v0.1.0-alpha
 [0.0.62-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.61-alpha...v0.0.62-alpha
 [0.0.61-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.60-alpha...v0.0.61-alpha
 [0.0.60-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.59-alpha...v0.0.60-alpha
