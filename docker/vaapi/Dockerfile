@@ -1,10 +1,4 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:5.0-focal-amd64 AS dotnet-runtime
-
-FROM jrottenberg/ffmpeg:4.3-vaapi2004 AS runtime-base
-COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev tzdata intel-media-va-driver-non-free libva-x11-2
-
-# https://hub.docker.com/_/microsoft-dotnet
+﻿# https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 RUN apt-get update && apt-get install -y ca-certificates
 WORKDIR /source
@@ -29,7 +23,7 @@ ARG INFO_VERSION="unknown"
 RUN dotnet publish -c release -o /app -r linux-x64 --self-contained false --no-restore /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
-FROM runtime-base
+FROM jasongdove/ffmpeg:4.3-vaapi2004 AS runtime-base
 WORKDIR /app
 EXPOSE 8409
 COPY --from=build /app ./

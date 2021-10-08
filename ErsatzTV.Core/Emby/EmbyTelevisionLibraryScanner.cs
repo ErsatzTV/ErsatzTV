@@ -326,6 +326,7 @@ namespace ErsatzTV.Core.Emby
         {
             foreach (EmbyEpisode incoming in episodes)
             {
+                EmbyEpisode incomingEpisode = incoming;
                 var updateStatistics = false;
 
                 Option<EmbyItemEtag> maybeExisting = existingEpisodes.Find(ie => ie.ItemId == incoming.ItemId);
@@ -349,12 +350,14 @@ namespace ErsatzTV.Core.Emby
                             incoming.SeasonId = season.Id;
                             incoming.LibraryPathId = library.Paths.Head().Id;
 
-                            Option<EmbyEpisode> updated = await _televisionRepository.Update(incoming);
-                            if (updated.IsSome)
+                            Option<EmbyEpisode> maybeUpdated = await _televisionRepository.Update(incoming);
+                            foreach (EmbyEpisode updated in maybeUpdated)
                             {
                                 await _searchIndex.UpdateItems(
                                     _searchRepository,
-                                    new List<MediaItem> { updated.ValueUnsafe() });
+                                    new List<MediaItem> { updated });
+
+                                incomingEpisode = updated;
                             }
                         }
                         catch (Exception ex)
@@ -403,7 +406,7 @@ namespace ErsatzTV.Core.Emby
 
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                     Either<BaseError, bool> refreshResult =
-                        await _localStatisticsProvider.RefreshStatistics(ffprobePath, incoming, localPath);
+                        await _localStatisticsProvider.RefreshStatistics(ffprobePath, incomingEpisode, localPath);
 
                     refreshResult.Match(
                         _ => { },
