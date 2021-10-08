@@ -317,7 +317,7 @@ namespace ErsatzTV.Core.FFmpeg
                 string[] split = mediaVersion.RFrameRate.Split("/");
                 if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
                 {
-                    frameRate = (int)(left / (double)right);
+                    frameRate = (int)Math.Round(left / (double)right);
                 }
                 else
                 {
