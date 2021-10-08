@@ -50,16 +50,9 @@ namespace ErsatzTV.Application.Streaming.Commands
             return Unit.Default;
         }
 
-        private async Task<Validation<BaseError, Unit>> Validate(StartFFmpegSession request)
-        {
-            Validation<BaseError, Unit> existResult = await ProcessMustNotExist(request);
-            if (existResult.IsFail)
-            {
-                return existResult;
-            }
-
-            return await FolderMustBeEmpty(request);
-        }
+        private Task<Validation<BaseError, Unit>> Validate(StartFFmpegSession request) =>
+            ProcessMustNotExist(request)
+                .BindT(_ => FolderMustBeEmpty(request));
 
         private Task<Validation<BaseError, Unit>> ProcessMustNotExist(StartFFmpegSession request) =>
             Optional(_ffmpegSegmenterService.ProcessExistsForChannel(request.ChannelNumber))
@@ -71,7 +64,7 @@ namespace ErsatzTV.Application.Streaming.Commands
         private Task<Validation<BaseError, Unit>> FolderMustBeEmpty(StartFFmpegSession request)
         {
             string folder = Path.Combine(FileSystemLayout.TranscodeFolder, request.ChannelNumber);
-            _logger.LogInformation("Preparing transcode folder {Folder}", folder);
+            _logger.LogDebug("Preparing transcode folder {Folder}", folder);
 
             _localFileSystem.EnsureFolderExists(folder);
             _localFileSystem.EmptyFolder(folder);
