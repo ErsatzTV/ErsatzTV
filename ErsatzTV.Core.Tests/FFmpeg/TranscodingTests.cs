@@ -146,7 +146,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             var localStatisticsProvider = new LocalStatisticsProvider(
                 metadataRepository.Object,
-                new LocalFileSystem(),
+                new LocalFileSystem(new Mock<ILogger<LocalFileSystem>>().Object),
                 new Mock<ILogger<LocalStatisticsProvider>>().Object);
 
             await localStatisticsProvider.RefreshStatistics(
