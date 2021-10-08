@@ -353,8 +353,6 @@ namespace ErsatzTV.Core.FFmpeg
                 "-sc_threshold", "0" // disable scene change detection
             };
 
-            // TODO: use framerate from playbackSettings to calc keyframes
-
             string[] videoBitrateArgs = playbackSettings.VideoBitrate.Match(
                 bitrate =>
                     new[]

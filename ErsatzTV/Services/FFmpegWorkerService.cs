@@ -51,7 +51,6 @@ namespace ErsatzTV.Services
                     using IServiceScope scope = _serviceScopeFactory.CreateScope();
                     IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-                    // TODO: wait for signal to stop process
                     switch (request)
                     {
                         case TouchFFmpegSession touchFFmpegSession:
@@ -63,10 +62,7 @@ namespace ErsatzTV.Services
                         case CleanUpFFmpegSessions:
                             _ffmpegSegmenterService.CleanUpSessions();
                             break;
-                        // wait for signal to start process
                         case StartFFmpegSession startFFmpegSession:
-                            // TODO: see if this gets called with each playlist refresh
-                            // TODO: don't use realtime (maybe fast for x seconds, then realtime - in the future)
                             _logger.LogInformation("Starting ffmpeg session");
 
                             if (!_ffmpegSegmenterService.ProcessExistsForChannel(startFFmpegSession.ChannelNumber))
