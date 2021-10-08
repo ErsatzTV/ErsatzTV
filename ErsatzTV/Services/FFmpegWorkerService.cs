@@ -21,17 +21,20 @@ namespace ErsatzTV.Services
     public class FFmpegWorkerService : BackgroundService
     {
         private readonly ChannelReader<IFFmpegWorkerRequest> _channel;
+        private readonly ChannelWriter<IFFmpegWorkerRequest> _channelWriter;
         private readonly ILogger<FFmpegWorkerService> _logger;
         private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
         private readonly IServiceScopeFactory _serviceScopeFactory;
 
         public FFmpegWorkerService(
             ChannelReader<IFFmpegWorkerRequest> channel,
+            ChannelWriter<IFFmpegWorkerRequest> channelWriter,
             IServiceScopeFactory serviceScopeFactory,
             ILogger<FFmpegWorkerService> logger,
             IFFmpegSegmenterService ffmpegSegmenterService)
         {
             _channel = channel;
+            _channelWriter = channelWriter;
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
             _ffmpegSegmenterService = ffmpegSegmenterService;
@@ -68,7 +71,10 @@ namespace ErsatzTV.Services
 
                             if (!_ffmpegSegmenterService.ProcessExistsForChannel(startFFmpegSession.ChannelNumber))
                             {
-                                var req = new GetPlayoutItemProcessByChannelNumber(startFFmpegSession.ChannelNumber, "segmenter");
+                                var req = new GetPlayoutItemProcessByChannelNumber(
+                                    startFFmpegSession.ChannelNumber,
+                                    "segmenter",
+                                    startFFmpegSession.StartAtZero);
                                 Either<BaseError, Process> maybeProcess = await mediator.Send(req, cancellationToken);
                                 maybeProcess.Match(
                                     process =>
@@ -80,6 +86,15 @@ namespace ErsatzTV.Services
                                                 string.Join(" ", process.StartInfo.ArgumentList));
 
                                             process.Start();
+                                            process.EnableRaisingEvents = true;
+                                            process.Exited += (_, _) =>
+                                            {
+                                                if (process.ExitCode == 0)
+                                                {
+                                                    _channelWriter.TryWrite(
+                                                        new StartFFmpegSession(startFFmpegSession.ChannelNumber, true));
+                                                }
+                                            };
                                         }
                                     },
                                     _ => { });

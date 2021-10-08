@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -17,8 +18,19 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegSegmenterService(ILogger<FFmpegSegmenterService> logger) => _logger = logger;
 
-        public bool ProcessExistsForChannel(string channelNumber) =>
-            Processes.ContainsKey(channelNumber);
+        public bool ProcessExistsForChannel(string channelNumber)
+        {
+            if (Processes.TryGetValue(channelNumber, out ProcessAndToken processAndToken))
+            {
+                if (!processAndToken.Process.HasExited || !Processes.TryRemove(
+                    new KeyValuePair<string, ProcessAndToken>(channelNumber, processAndToken)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         public bool TryAdd(string channelNumber, Process process)
         {

@@ -50,7 +50,7 @@ namespace ErsatzTV.Application.Streaming.Queries
 
         protected override async Task<Either<BaseError, Process>> GetProcess(
             TvContext dbContext,
-            GetPlayoutItemProcessByChannelNumber _,
+            GetPlayoutItemProcessByChannelNumber request,
             Channel channel,
             string ffmpegPath)
         {
@@ -111,7 +111,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                             version,
                             playoutItemWithPath.Path,
                             playoutItemWithPath.PlayoutItem.StartOffset,
-                            now,
+                            request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
                             maybeGlobalWatermark,
                             maybeVaapiDriver));
                 },

@@ -217,7 +217,7 @@ namespace ErsatzTV
                     ContentTypeProvider = extensionProvider,
                     OnPrepareResponse = ctx =>
                     {
-                        Log.Logger.Information("Transcode access: {Test}", ctx.File.PhysicalPath);
+                        // Log.Logger.Information("Transcode access: {Test}", ctx.File.PhysicalPath);
                         ChannelWriter<IFFmpegWorkerRequest> writer = app.ApplicationServices
                             .GetRequiredService<ChannelWriter<IFFmpegWorkerRequest>>();
                         writer.TryWrite(new TouchFFmpegSession(ctx.File.PhysicalPath));

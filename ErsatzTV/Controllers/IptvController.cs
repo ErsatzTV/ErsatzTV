@@ -73,7 +73,7 @@ namespace ErsatzTV.Controllers
             switch (mode)
             {
                 case "segmenter":
-                    Either<BaseError, Unit> result = await _mediator.Send(new StartFFmpegSession(channelNumber));
+                    Either<BaseError, Unit> result = await _mediator.Send(new StartFFmpegSession(channelNumber, false));
                     return result.Match<IActionResult>(
                         _ => Redirect($"/iptv/session/{channelNumber}/live.m3u8"),
                         error =>
