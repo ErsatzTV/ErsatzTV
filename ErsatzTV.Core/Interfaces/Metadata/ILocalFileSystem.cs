@@ -15,5 +15,6 @@ namespace ErsatzTV.Core.Interfaces.Metadata
         IEnumerable<string> ListFiles(string folder);
         bool FileExists(string path);
         Task<Either<BaseError, Unit>> CopyFile(string source, string destination);
+        Unit EmptyFolder(string folder);
     }
 }

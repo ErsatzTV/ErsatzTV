@@ -188,6 +188,7 @@ namespace ErsatzTV.Core.Metadata
                             version.Width = videoStream.width;
                             version.Height = videoStream.height;
                             version.VideoScanKind = ScanKindFromFieldOrder(videoStream.field_order);
+                            version.RFrameRate = videoStream.r_frame_rate;
 
                             var stream = new MediaStream
                             {

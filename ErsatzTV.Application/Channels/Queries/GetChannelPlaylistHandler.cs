@@ -28,6 +28,10 @@ namespace ErsatzTV.Application.Channels.Queries
             {
                 switch (mode.ToLowerInvariant())
                 {
+                    case "segmenter":
+                        channel.StreamingMode = StreamingMode.HttpLiveStreamingSegmenter;
+                        result.Add(channel);
+                        break;
                     case "hls-direct":
                         channel.StreamingMode = StreamingMode.HttpLiveStreamingDirect;
                         result.Add(channel);

@@ -32,6 +32,7 @@
                         <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingHybrid)">HLS Hybrid</MudSelectItem>
+                        <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
                     </MudSelect>
                     <MudSelect Class="mt-3" Label="FFmpeg Profile" @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
                                Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)">

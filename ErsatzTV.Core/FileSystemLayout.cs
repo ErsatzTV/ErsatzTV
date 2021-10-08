@@ -11,6 +11,13 @@ namespace ErsatzTV.Core
                 Environment.SpecialFolderOption.Create),
             "ersatztv");
 
+        // TODO: find a different spot for this; configurable?
+        public static readonly string TranscodeFolder = Path.Combine(
+            Environment.GetFolderPath(
+                Environment.SpecialFolder.LocalApplicationData,
+                Environment.SpecialFolderOption.Create),
+            "etv-transcode");
+
         public static readonly string DatabasePath = Path.Combine(AppDataFolder, "ersatztv.sqlite3");
 
         public static readonly string LogDatabasePath = Path.Combine(AppDataFolder, "logs.sqlite3");

@@ -4,7 +4,8 @@
     {
         public GetConcatProcessByChannelNumber(string scheme, string host, string channelNumber) : base(
             channelNumber,
-            "ts")
+            "ts",
+            false)
         {
             Scheme = scheme;
             Host = host;

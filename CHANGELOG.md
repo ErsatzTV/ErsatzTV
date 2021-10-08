@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add *experimental* streaming mode `HLS Segmenter` (most similar to `HLS Hybrid`) 
+  - This mode is intended to increase client compatibility and reduce issues at program boundaries
+- Store frame rate with media statistics; this is needed to support HLS Segmenter
+  - This requires re-ingesting statistics for all media items the first time this version is launched
+
 ### Changed
 - Use latest iHD driver (21.2.3 vs 20.1.1) in vaapi docker images
 
