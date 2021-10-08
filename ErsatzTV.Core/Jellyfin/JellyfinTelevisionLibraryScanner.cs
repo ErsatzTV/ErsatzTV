@@ -327,6 +327,8 @@ namespace ErsatzTV.Core.Jellyfin
         {
             foreach (JellyfinEpisode incoming in episodes)
             {
+                JellyfinEpisode incomingEpisode = incoming;
+                
                 var updateStatistics = false;
 
                 Option<JellyfinItemEtag> maybeExisting = existingEpisodes.Find(ie => ie.ItemId == incoming.ItemId);
@@ -350,12 +352,14 @@ namespace ErsatzTV.Core.Jellyfin
                             incoming.SeasonId = season.Id;
                             incoming.LibraryPathId = library.Paths.Head().Id;
 
-                            Option<JellyfinEpisode> updated = await _televisionRepository.Update(incoming);
-                            if (updated.IsSome)
+                            Option<JellyfinEpisode> maybeUpdated = await _televisionRepository.Update(incoming);
+                            foreach (JellyfinEpisode updated in maybeUpdated)
                             {
                                 await _searchIndex.UpdateItems(
                                     _searchRepository,
-                                    new List<MediaItem> { updated.ValueUnsafe() });
+                                    new List<MediaItem> { updated });
+
+                                incomingEpisode = updated;
                             }
                         }
                         catch (Exception ex)
@@ -404,7 +408,7 @@ namespace ErsatzTV.Core.Jellyfin
 
                     _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                     Either<BaseError, bool> refreshResult =
-                        await _localStatisticsProvider.RefreshStatistics(ffprobePath, incoming, localPath);
+                        await _localStatisticsProvider.RefreshStatistics(ffprobePath, incomingEpisode, localPath);
 
                     refreshResult.Match(
                         _ => { },

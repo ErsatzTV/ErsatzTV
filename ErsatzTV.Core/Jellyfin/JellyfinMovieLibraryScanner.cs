@@ -96,6 +96,8 @@ namespace ErsatzTV.Core.Jellyfin
 
                     foreach (JellyfinMovie incoming in validMovies)
                     {
+                        JellyfinMovie incomingMovie = incoming;
+
                         decimal percentCompletion = (decimal) validMovies.IndexOf(incoming) / validMovies.Count;
                         await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
@@ -122,12 +124,14 @@ namespace ErsatzTV.Core.Jellyfin
 
                                     updateStatistics = true;
                                     incoming.LibraryPathId = library.Paths.Head().Id;
-                                    Option<JellyfinMovie> updated = await _movieRepository.UpdateJellyfin(incoming);
-                                    if (updated.IsSome)
+                                    Option<JellyfinMovie> maybeUpdated = await _movieRepository.UpdateJellyfin(incoming);
+                                    foreach (JellyfinMovie updated in maybeUpdated)
                                     {
                                         await _searchIndex.UpdateItems(
                                             _searchRepository,
-                                            new List<MediaItem> { updated.ValueUnsafe() });
+                                            new List<MediaItem> { updated });
+
+                                        incomingMovie = updated;
                                     }
                                 }
                                 catch (Exception ex)
@@ -174,12 +178,12 @@ namespace ErsatzTV.Core.Jellyfin
 
                             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                             Either<BaseError, bool> refreshResult =
-                                await _localStatisticsProvider.RefreshStatistics(ffprobePath, incoming, localPath);
+                                await _localStatisticsProvider.RefreshStatistics(ffprobePath, incomingMovie, localPath);
 
                             await refreshResult.Match(
                                 async _ =>
                                 {
-                                    Option<MediaItem> updated = await _searchRepository.GetItemToIndex(incoming.Id);
+                                    Option<MediaItem> updated = await _searchRepository.GetItemToIndex(incomingMovie.Id);
                                     if (updated.IsSome)
                                     {
                                         await _searchIndex.UpdateItems(
