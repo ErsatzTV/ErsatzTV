@@ -39,7 +39,7 @@ namespace ErsatzTV.Application.Streaming.Commands
             await _channel.WriteAsync(request);
 
             // TODO: find some other way to let ffmpeg get ahead
-            await Task.Delay(TimeSpan.FromSeconds(10));
+            await Task.Delay(TimeSpan.FromSeconds(5));
 
             return Unit.Default;
         }

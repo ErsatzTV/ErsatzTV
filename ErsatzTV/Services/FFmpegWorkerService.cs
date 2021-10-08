@@ -63,7 +63,9 @@ namespace ErsatzTV.Services
                             _ffmpegSegmenterService.CleanUpSessions();
                             break;
                         case StartFFmpegSession startFFmpegSession:
-                            _logger.LogInformation("Starting ffmpeg session");
+                            _logger.LogInformation(
+                                "Starting ffmpeg session for channel {Channel}",
+                                startFFmpegSession.ChannelNumber);
 
                             if (!_ffmpegSegmenterService.ProcessExistsForChannel(startFFmpegSession.ChannelNumber))
                             {
@@ -89,6 +91,13 @@ namespace ErsatzTV.Services
                                                 {
                                                     _channelWriter.TryWrite(
                                                         new StartFFmpegSession(startFFmpegSession.ChannelNumber, true));
+                                                }
+                                                else
+                                                {
+                                                    _logger.LogDebug(
+                                                        "hls segmenter for channel {Channel} exited with code {ExitCode}",
+                                                        startFFmpegSession.ChannelNumber,
+                                                        process.ExitCode);
                                                 }
                                             };
                                         }
