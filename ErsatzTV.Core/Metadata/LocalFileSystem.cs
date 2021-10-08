@@ -5,17 +5,32 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata
 {
     public class LocalFileSystem : ILocalFileSystem
     {
+        private readonly ILogger<LocalFileSystem> _logger;
+
+        public LocalFileSystem(ILogger<LocalFileSystem> logger)
+        {
+            _logger = logger;
+        }
+
         public Unit EnsureFolderExists(string folder)
         {
-            if (!Directory.Exists(folder))
+            try
             {
-                Directory.CreateDirectory(folder);
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to ensure folder exists at {Folder}", folder);
             }
 
             return Unit.Default;
@@ -59,14 +74,21 @@ namespace ErsatzTV.Core.Metadata
 
         public Unit EmptyFolder(string folder)
         {
-            foreach (string file in Directory.GetFiles(folder))
+            try
             {
-                File.Delete(file);
-            }
+                foreach (string file in Directory.GetFiles(folder))
+                {
+                    File.Delete(file);
+                }
 
-            foreach (string directory in Directory.GetDirectories(folder))
+                foreach (string directory in Directory.GetDirectories(folder))
+                {
+                    Directory.Delete(directory, true);
+                }
+            }
+            catch (Exception ex)
             {
-                Directory.Delete(directory, true);
+                _logger.LogWarning(ex, "Failed to empty folder at {Folder}", folder);
             }
 
             return Unit.Default;
