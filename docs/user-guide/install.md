@@ -51,27 +51,36 @@ docker run -d \
 
 ### Unraid Docker
 
- 1. Install the Commuinity Applications plugin by pasting the following URL in the Plugins / Install Plugin section of UnRAID  
+1. Install the Commuinity Applications plugin by pasting the following URL in the Plugins / Install Plugin section of UnRAID  
 
-```
-https://raw.githubusercontent.com/Squidly271/community.applications/master/plugins/community.applications.plg
-```  
+    ```
+    https://raw.githubusercontent.com/Squidly271/community.applications/master/plugins/community.applications.plg
+    ```  
 
- ![Community Applications Install](../images/unraid-install-community-apps.png)  
+    ![Community Applications Install](../images/unraid-install-community-apps.png)
+
 2. Click on the `Apps` tab in UnRAID, search for `ersatztv`, and click the `install` button.
 
-![Search Community Applications ErsatzTV](../images/unraid-docker-install-ersatz.png)
+    ![Search Community Applications ErsatzTV](../images/unraid-docker-install-ersatz.png)
+
 3. Choose an appropriate branch (Use `vaapi` for video acceleration for AMD GPUs and Intel CPUs with QuickSync, use `nvidia` for video acceleration for nVidia GPUs)
 
-![ErsatzTV Docker branches](../images/unraid-docker-ersatz-branches.png)
-	<div align="center">`VAAPI` and `nVidia` branches are for hardware acceleration. See [latest release tags](install.md#latest-release-tags)</div>
-4. Map your path to shared media
+    ![ErsatzTV Docker branches](../images/unraid-docker-ersatz-branches.png)
+    `VAAPI` and `nVidia` branches are for hardware acceleration. See [latest release tags](install.md#latest-release-tags)
 
-![Media Mapping](../images/unraid-docker-media-map.png)
-5. <B>OPTIONAL</B> In advanced view, add extra parameters for video acceleration. **NOTE** The [nVidia-Driver plugin](https://forums.unraid.net/topic/98978-plugin-nvidia-driver/) must be installed prior to this step.
+4. Map your path to ErsatzTV configuration data
 
-![Adding video acceleration options](../images/unraid-docker-ersatz-hwtranscoding.png)
-6. Open your browser to `http://[docker-ip]:8409` (First run may take a few minutes to be available.)
+    ![Media Mapping](../images/unraid-path-to-configuration-data.png)
+
+5. Add another path for each media share
+
+    ![Media Mapping](../images/unraid-path-to-media-share.png)
+
+6. **OPTIONAL** In advanced view, add extra parameters for video acceleration. **NOTE** The [nVidia-Driver plugin](https://forums.unraid.net/topic/98978-plugin-nvidia-driver/) must be installed prior to this step.
+
+    ![Adding video acceleration options](../images/unraid-docker-ersatz-hwtranscoding.png)
+
+7. Open your browser to `http://[docker-ip]:8409` (First run may take a few minutes to be available.)
 
 ## Windows
 

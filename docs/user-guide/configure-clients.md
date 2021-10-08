@@ -15,6 +15,8 @@ For all clients, the `M3U` and/or the `XMLTV` urls are needed and can be copied 
 
 A [Plex Pass](https://www.plex.tv/plex-pass/) is required for ErsatzTV to work with Plex.
 
+The only channel streaming mode supported directly by Plex clients is `MPEG-TS`.
+
 ### Add DVR
 
 From Plex Settings, click `Live TV & DVR` and  `Set Up Plex DVR` to add a new DVR.
