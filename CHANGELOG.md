@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Add downsampling to support transcoding 10-bit HEVC content with the h264_vaapi encoder
 - Fix updating statistics when media items are replaced
+- Fix XMLTV generation when scheduled episode is missing metadata
 
 ## [0.0.62-alpha] - 2021-10-05
 ### Added
