@@ -202,7 +202,7 @@ namespace ErsatzTV.Core.Iptv
                         {
                             int s = Optional(episode.Season?.SeasonNumber).IfNone(-1);
                             // TODO: multi-episode?
-                            int e = episode.EpisodeMetadata.Head().EpisodeNumber;
+                            int e = episode.EpisodeMetadata.HeadOrNone().Match(em => em.EpisodeNumber, -1);
                             if (s >= 0 && e > 0)
                             {
                                 xml.WriteStartElement("episode-num");
