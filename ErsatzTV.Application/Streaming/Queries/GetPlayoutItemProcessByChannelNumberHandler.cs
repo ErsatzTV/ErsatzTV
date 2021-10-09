@@ -54,7 +54,12 @@ namespace ErsatzTV.Application.Streaming.Queries
             Channel channel,
             string ffmpegPath)
         {
-            DateTimeOffset now = DateTimeOffset.Now;
+            DateTimeOffset now = request.Mode switch
+            {
+                "segmenter" => DateTimeOffset.Now + FFmpegSegmenterService.SegmenterDelay,
+                _ => DateTimeOffset.Now
+            };
+            
             Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Episode).MediaVersions)
@@ -113,7 +118,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                             playoutItemWithPath.PlayoutItem.StartOffset,
                             request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
                             maybeGlobalWatermark,
-                            maybeVaapiDriver));
+                            maybeVaapiDriver,
+                            request.StartAtZero));
                 },
                 async error =>
                 {
