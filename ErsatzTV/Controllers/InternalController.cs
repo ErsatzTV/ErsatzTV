@@ -33,27 +33,29 @@ namespace ErsatzTV.Controllers
             string channelNumber,
             [FromQuery]
             string mode = "mixed") =>
-            _mediator.Send(new GetPlayoutItemProcessByChannelNumber(channelNumber, mode, DateTimeOffset.Now, false)).Map(
-                result =>
-                    result.Match<IActionResult>(
-                        processModel =>
-                        {
-                            Process process = processModel.Process;
-                            
-                            _logger.LogDebug(
-                                "ffmpeg arguments {FFmpegArguments}",
-                                string.Join(" ", process.StartInfo.ArgumentList));
-                            process.Start();
-                            return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
-                        },
-                        error =>
-                        {
-                            _logger.LogError(
-                                "Failed to create stream for channel {ChannelNumber}: {Error}",
-                                channelNumber,
-                                error.Value);
-                            return BadRequest(error.Value);
-                        }
-                    ));
+            _mediator.Send(
+                    new GetPlayoutItemProcessByChannelNumber(channelNumber, mode, DateTimeOffset.Now, false, true))
+                .Map(
+                    result =>
+                        result.Match<IActionResult>(
+                            processModel =>
+                            {
+                                Process process = processModel.Process;
+
+                                _logger.LogDebug(
+                                    "ffmpeg arguments {FFmpegArguments}",
+                                    string.Join(" ", process.StartInfo.ArgumentList));
+                                process.Start();
+                                return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
+                            },
+                            error =>
+                            {
+                                _logger.LogError(
+                                    "Failed to create stream for channel {ChannelNumber}: {Error}",
+                                    channelNumber,
+                                    error.Value);
+                                return BadRequest(error.Value);
+                            }
+                        ));
     }
 }

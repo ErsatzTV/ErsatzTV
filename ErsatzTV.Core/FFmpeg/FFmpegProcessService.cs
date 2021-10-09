@@ -40,7 +40,8 @@ namespace ErsatzTV.Core.FFmpeg
             DateTimeOffset now,
             Option<ChannelWatermark> globalWatermark,
             Option<VaapiDriver> maybeVaapiDriver,
-            bool startAtZero)
+            bool startAtZero,
+            bool hlsRealtime)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
@@ -120,7 +121,7 @@ namespace ErsatzTV.Core.FFmpeg
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
                     return builder.WithHls(channel.Number, version, startAtZero)
-                        .WithRealtimeOutput(startAtZero)
+                        .WithRealtimeOutput(hlsRealtime)
                         .Build();
                 default:
                     return builder.WithFormat("mpegts")

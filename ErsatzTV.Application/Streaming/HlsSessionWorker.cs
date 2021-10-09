@@ -57,7 +57,7 @@ namespace ErsatzTV.Application.Streaming
                 _transcodedUntil = DateTimeOffset.Now;
 
                 // start initial transcode WITHOUT realtime throttle
-                if (!await Transcode(channelNumber, true, cancellationToken))
+                if (!await Transcode(channelNumber, true, false, cancellationToken))
                 {
                     return;
                 }
@@ -71,15 +71,20 @@ namespace ErsatzTV.Application.Streaming
                         return;
                     }
 
-                    if (DateTimeOffset.Now + TimeSpan.FromMinutes(1) > _transcodedUntil)
+                    var transcodedBuffer = TimeSpan.FromSeconds(
+                        Math.Max(0, _transcodedUntil.Subtract(DateTimeOffset.Now).TotalSeconds));
+                    if (transcodedBuffer <= TimeSpan.FromMinutes(1))
                     {
-                        if (!await Transcode(channelNumber, false, cancellationToken))
+                        // only use realtime encoding when we're at least 30 seconds ahead
+                        bool realtime = transcodedBuffer >= TimeSpan.FromSeconds(30);
+                        if (!await Transcode(channelNumber, false, realtime, cancellationToken))
                         {
                             return;
                         }
                     }
                     else
                     {
+                        // TODO: delete old segments, trim playlist
                         await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
                     }
                 }
@@ -90,7 +95,7 @@ namespace ErsatzTV.Application.Streaming
             }
         }
 
-        private async Task<bool> Transcode(string channelNumber, bool firstProcess, CancellationToken cancellationToken)
+        private async Task<bool> Transcode(string channelNumber, bool firstProcess, bool realtime, CancellationToken cancellationToken)
         {
             try
             {
@@ -101,7 +106,8 @@ namespace ErsatzTV.Application.Streaming
                     channelNumber,
                     "segmenter",
                     firstProcess ? DateTimeOffset.Now : _transcodedUntil.AddSeconds(1),
-                    !firstProcess);
+                    !firstProcess,
+                    realtime);
 
                 // _logger.LogInformation("Request {@Request}", request);
 
@@ -121,6 +127,9 @@ namespace ErsatzTV.Application.Streaming
 
                 foreach (PlayoutItemProcessModel processModel in result.RightAsEnumerable())
                 {
+                    // TODO: delete old segments, trim playlist
+                    // TODO: insert discontinuity if needed (if playlist already exists)
+
                     Process process = processModel.Process;
 
                     _logger.LogDebug(

@@ -8,7 +8,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             channelNumber,
             "ts",
             DateTimeOffset.Now,
-            false)
+            false,
+            true)
         {
             Scheme = scheme;
             Host = host;

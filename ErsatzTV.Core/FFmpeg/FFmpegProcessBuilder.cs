@@ -109,7 +109,10 @@ namespace ErsatzTV.Core.FFmpeg
         {
             if (realtimeOutput)
             {
-                _arguments.Add("-re");
+                if (!_arguments.Contains("-re"))
+                {
+                    _arguments.Add("-re");
+                }
             }
             else
             {

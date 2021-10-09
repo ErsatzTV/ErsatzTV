@@ -8,11 +8,13 @@ namespace ErsatzTV.Application.Streaming.Queries
             string channelNumber,
             string mode,
             DateTimeOffset now,
-            bool startAtZero) : base(
+            bool startAtZero,
+            bool hlsRealtime) : base(
             channelNumber,
             mode,
             now,
-            startAtZero)
+            startAtZero,
+            hlsRealtime)
         {
         }
     }
