@@ -12,6 +12,8 @@ namespace ErsatzTV.Core.FFmpeg
 {
     public class FFmpegSegmenterService : IFFmpegSegmenterService
     {
+        public static readonly TimeSpan SegmenterDelay = TimeSpan.FromSeconds(3);
+        
         private static readonly ConcurrentDictionary<string, ProcessAndToken> Processes = new();
 
         private readonly ILogger<FFmpegSegmenterService> _logger;
