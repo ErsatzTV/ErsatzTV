@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -14,7 +13,7 @@ using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
-    public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseError, Process>>
+    public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseError, PlayoutItemProcessModel>>
         where T : FFmpegProcessRequest
     {
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -22,16 +21,16 @@ namespace ErsatzTV.Application.Streaming.Queries
         protected FFmpegProcessHandler(IDbContextFactory<TvContext> dbContextFactory) =>
             _dbContextFactory = dbContextFactory;
 
-        public async Task<Either<BaseError, Process>> Handle(T request, CancellationToken cancellationToken)
+        public async Task<Either<BaseError, PlayoutItemProcessModel>> Handle(T request, CancellationToken cancellationToken)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Validation<BaseError, Tuple<Channel, string>> validation = await Validate(dbContext, request);
             return await validation.Match(
                 tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2),
-                error => Task.FromResult<Either<BaseError, Process>>(error.Join()));
+                error => Task.FromResult<Either<BaseError, PlayoutItemProcessModel>>(error.Join()));
         }
 
-        protected abstract Task<Either<BaseError, Process>> GetProcess(
+        protected abstract Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
             TvContext dbContext,
             T request,
             Channel channel,

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Application;
@@ -53,8 +54,10 @@ namespace ErsatzTV.Controllers
             _mediator.Send(new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
                 .Map(
                     result => result.Match<IActionResult>(
-                        process =>
+                        processModel =>
                         {
+                            Process process = processModel.Process;
+                            
                             _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
                             // _logger.LogDebug(
                             //     "ffmpeg concat arguments {FFmpegArguments}",
@@ -80,7 +83,7 @@ namespace ErsatzTV.Controllers
                         {
                             switch (error)
                             {
-                                case ChannelHasProcess:
+                                case ChannelSessionAlreadyActive:
                                     return RedirectPreserveMethod($"/iptv/session/{channelNumber}/live.m3u8");
                                 default:
                                     _logger.LogWarning(

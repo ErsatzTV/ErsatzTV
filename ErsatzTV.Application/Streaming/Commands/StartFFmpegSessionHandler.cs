@@ -1,14 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
@@ -16,21 +15,21 @@ namespace ErsatzTV.Application.Streaming.Commands
 {
     public class StartFFmpegSessionHandler : MediatR.IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
     {
-        private readonly ChannelWriter<IFFmpegWorkerRequest> _channel;
         private readonly ILogger<StartFFmpegSessionHandler> _logger;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
         private readonly ILocalFileSystem _localFileSystem;
 
         public StartFFmpegSessionHandler(
-            IFFmpegSegmenterService ffmpegSegmenterService,
             ILocalFileSystem localFileSystem,
-            ChannelWriter<IFFmpegWorkerRequest> channel,
-            ILogger<StartFFmpegSessionHandler> logger)
+            ILogger<StartFFmpegSessionHandler> logger,
+            IServiceScopeFactory serviceScopeFactory,
+            IFFmpegSegmenterService ffmpegSegmenterService)
         {
-            _ffmpegSegmenterService = ffmpegSegmenterService;
             _localFileSystem = localFileSystem;
-            _channel = channel;
             _logger = logger;
+            _serviceScopeFactory = serviceScopeFactory;
+            _ffmpegSegmenterService = ffmpegSegmenterService;
         }
 
         public Task<Either<BaseError, Unit>> Handle(StartFFmpegSession request, CancellationToken cancellationToken) =>
@@ -43,24 +42,51 @@ namespace ErsatzTV.Application.Streaming.Commands
 
         private async Task<Unit> StartProcess(StartFFmpegSession request)
         {
-            await _channel.WriteAsync(request);
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            HlsSessionWorker worker = scope.ServiceProvider.GetRequiredService<HlsSessionWorker>();
+            _ffmpegSegmenterService.SessionWorkers.AddOrUpdate(request.ChannelNumber, _ => worker, (_, _) => worker);
 
-            // TODO: find some other way to let ffmpeg get ahead
-            await Task.Delay(FFmpegSegmenterService.SegmenterDelay);
+            // fire and forget worker
+            _ = worker.Run(request.ChannelNumber)
+                .ContinueWith(
+                    _ => _ffmpegSegmenterService.SessionWorkers.TryRemove(
+                        request.ChannelNumber,
+                        out IHlsSessionWorker _),
+                    TaskScheduler.Default);
+
+            string playlistFileName = Path.Combine(
+                FileSystemLayout.TranscodeFolder,
+                request.ChannelNumber,
+                "live.m3u8");
+
+            while (!File.Exists(playlistFileName))
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
+            }
 
             return Unit.Default;
         }
 
         private Task<Validation<BaseError, Unit>> Validate(StartFFmpegSession request) =>
-            ProcessMustNotExist(request)
+            SessionMustBeInactive(request)
                 .BindT(_ => FolderMustBeEmpty(request));
 
-        private Task<Validation<BaseError, Unit>> ProcessMustNotExist(StartFFmpegSession request) =>
-            Optional(_ffmpegSegmenterService.ProcessExistsForChannel(request.ChannelNumber))
-                .Filter(exists => exists == false)
+        private Task<Validation<BaseError, Unit>> SessionMustBeInactive(StartFFmpegSession request)
+        {
+            var result = Optional(_ffmpegSegmenterService.SessionWorkers.TryAdd(request.ChannelNumber, null))
+                .Filter(success => success)
                 .Map(_ => Unit.Default)
-                .ToValidation<BaseError>(new ChannelHasProcess())
-                .AsTask();
+                .ToValidation<BaseError>(new ChannelSessionAlreadyActive());
+
+            if (result.IsFail && _ffmpegSegmenterService.SessionWorkers.TryGetValue(
+                request.ChannelNumber,
+                out IHlsSessionWorker worker))
+            {
+                worker?.Touch();
+            }
+
+            return result.AsTask();
+        }
 
         private Task<Validation<BaseError, Unit>> FolderMustBeEmpty(StartFFmpegSession request)
         {

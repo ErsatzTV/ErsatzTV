@@ -120,6 +120,7 @@ namespace ErsatzTV.Core.FFmpeg
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
                     return builder.WithHls(channel.Number, version, startAtZero)
+                        .WithRealtimeOutput(startAtZero)
                         .Build();
                 default:
                     return builder.WithFormat("mpegts")

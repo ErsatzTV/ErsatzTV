@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using ErsatzTV.Application.Streaming.Queries;
 using ErsatzTV.Extensions;
 using LanguageExt;
@@ -31,11 +33,13 @@ namespace ErsatzTV.Controllers
             string channelNumber,
             [FromQuery]
             string mode = "mixed") =>
-            _mediator.Send(new GetPlayoutItemProcessByChannelNumber(channelNumber, mode, false)).Map(
+            _mediator.Send(new GetPlayoutItemProcessByChannelNumber(channelNumber, mode, DateTimeOffset.Now, false)).Map(
                 result =>
                     result.Match<IActionResult>(
-                        process =>
+                        processModel =>
                         {
+                            Process process = processModel.Process;
+                            
                             _logger.LogDebug(
                                 "ffmpeg arguments {FFmpegArguments}",
                                 string.Join(" ", process.StartInfo.ArgumentList));
