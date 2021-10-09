@@ -5,6 +5,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
@@ -45,7 +46,7 @@ namespace ErsatzTV.Application.Streaming.Commands
             await _channel.WriteAsync(request);
 
             // TODO: find some other way to let ffmpeg get ahead
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(FFmpegSegmenterService.SegmenterDelay);
 
             return Unit.Default;
         }

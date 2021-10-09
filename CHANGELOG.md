@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- Reduce initial `HLS Segmenter` delay from 5 seconds to 3 seconds
 
 ## [0.1.0-alpha] - 2021-10-08
 ### Added

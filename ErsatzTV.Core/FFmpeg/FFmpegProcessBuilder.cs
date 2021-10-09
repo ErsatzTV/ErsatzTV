@@ -310,8 +310,11 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHls(string channelNumber, MediaVersion mediaVersion)
+        public FFmpegProcessBuilder WithHls(string channelNumber, MediaVersion mediaVersion, bool startAtZero)
         {
+            const int INITIAL_SEGMENT_SECONDS = 1;
+            const int SUBSEQUENT_SEGMENT_SECONDS = 2;
+            
             if (!int.TryParse(mediaVersion.RFrameRate, out int frameRate))
             {
                 string[] split = (mediaVersion.RFrameRate ?? string.Empty).Split("/");
@@ -326,15 +329,17 @@ namespace ErsatzTV.Core.FFmpeg
                 }
             }
 
+            int segmentSeconds = startAtZero ? SUBSEQUENT_SEGMENT_SECONDS : INITIAL_SEGMENT_SECONDS;
+            
             _arguments.AddRange(
                 new[]
                 {
-                    "-g", $"{frameRate * 2}",
-                    "-keyint_min", $"{frameRate * 2}",
-                    // "-force_key_frames",
-                    // "expr:gte(t,n_forced*2)",
+                    "-use_wallclock_as_timestamps", "1",
+                    "-g", $"{frameRate * segmentSeconds}",
+                    "-keyint_min", $"{frameRate * segmentSeconds}",
+                    "-force_key_frames", $"expr:gte(t,n_forced*{segmentSeconds})",
                     "-f", "hls",
-                    "-hls_time", "2",
+                    "-hls_time", $"{segmentSeconds}",
                     "-hls_list_size", "10",
                     "-segment_list_flags", "+live",
                     "-hls_flags", "delete_segments+program_date_time+append_list+discont_start+omit_endlist",
