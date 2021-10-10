@@ -71,6 +71,7 @@ The following fields are available for searching artists:
 The following fields are available for searching music videos:
 
 - `title`: The music video title
+- `album`: The music video album
 - `genre`: The music video genre
 - `library_name`: The name of the library that contains the music video
 - `language`: The music video audio stream language
