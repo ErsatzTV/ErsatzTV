@@ -13,10 +13,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="AsyncFixer" Version="1.5.1">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
       <PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
       <PackageReference Include="FluentValidation" Version="10.3.3" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="10.3.3" />

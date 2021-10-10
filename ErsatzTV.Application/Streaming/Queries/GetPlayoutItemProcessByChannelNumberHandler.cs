@@ -48,17 +48,13 @@ namespace ErsatzTV.Application.Streaming.Queries
             _runtimeInfo = runtimeInfo;
         }
 
-        protected override async Task<Either<BaseError, Process>> GetProcess(
+        protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
             TvContext dbContext,
             GetPlayoutItemProcessByChannelNumber request,
             Channel channel,
             string ffmpegPath)
         {
-            DateTimeOffset now = request.Mode switch
-            {
-                "segmenter" => DateTimeOffset.Now + FFmpegSegmenterService.SegmenterDelay,
-                _ => DateTimeOffset.Now
-            };
+            DateTimeOffset now = request.Now;
             
             Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
@@ -108,18 +104,22 @@ namespace ErsatzTV.Application.Streaming.Queries
                         .GetValue<int>(ConfigElementKey.FFmpegVaapiDriver)
                         .MapT(i => (VaapiDriver)i);
 
-                    return Right<BaseError, Process>(
-                        await _ffmpegProcessService.ForPlayoutItem(
-                            ffmpegPath,
-                            saveReports,
-                            channel,
-                            version,
-                            playoutItemWithPath.Path,
-                            playoutItemWithPath.PlayoutItem.StartOffset,
-                            request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
-                            maybeGlobalWatermark,
-                            maybeVaapiDriver,
-                            request.StartAtZero));
+                    Process process = await _ffmpegProcessService.ForPlayoutItem(
+                        ffmpegPath,
+                        saveReports,
+                        channel,
+                        version,
+                        playoutItemWithPath.Path,
+                        playoutItemWithPath.PlayoutItem.StartOffset,
+                        request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
+                        maybeGlobalWatermark,
+                        maybeVaapiDriver,
+                        request.StartAtZero,
+                        request.HlsRealtime);
+
+                    var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
+
+                    return Right<BaseError, PlayoutItemProcessModel>(result);
                 },
                 async error =>
                 {
@@ -138,16 +138,21 @@ namespace ErsatzTV.Application.Streaming.Queries
                                 .MapT(pi => pi.StartOffset - now),
                             () => Option<TimeSpan>.None.AsTask());
 
+                    DateTimeOffset finish = maybeDuration.Match(d => now.Add(d), () => now);
+
                     switch (error)
                     {
                         case UnableToLocatePlayoutItem:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                return _ffmpegProcessService.ForError(
+                                Process errorProcess = _ffmpegProcessService.ForError(
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
                                     "Channel is Offline");
+
+
+                                return new PlayoutItemProcessModel(errorProcess, finish);
                             }
                             else
                             {
@@ -159,7 +164,13 @@ namespace ErsatzTV.Application.Streaming.Queries
                         case PlayoutItemDoesNotExistOnDisk:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                return _ffmpegProcessService.ForError(ffmpegPath, channel, maybeDuration, error.Value);
+                                Process errorProcess = _ffmpegProcessService.ForError(
+                                    ffmpegPath,
+                                    channel,
+                                    maybeDuration,
+                                    error.Value);
+
+                                return new PlayoutItemProcessModel(errorProcess, finish);
                             }
                             else
                             {
@@ -171,11 +182,13 @@ namespace ErsatzTV.Application.Streaming.Queries
                         default:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                return _ffmpegProcessService.ForError(
+                                Process errorProcess = _ffmpegProcessService.ForError(
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
                                     "Channel is Offline");
+
+                                return new PlayoutItemProcessModel(errorProcess, finish);
                             }
                             else
                             {
