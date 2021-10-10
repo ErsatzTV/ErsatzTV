@@ -349,7 +349,7 @@ namespace ErsatzTV.Core.FFmpeg
                     "-hls_time", $"{segmentSeconds}",
                     "-hls_list_size", "0",
                     "-segment_list_flags", "+live",
-                    "-hls_flags", "program_date_time+append_list+discont_start+omit_endlist",
+                    "-hls_flags", "program_date_time+append_list+omit_endlist+independent_segments",
                     Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8")
                 });
 

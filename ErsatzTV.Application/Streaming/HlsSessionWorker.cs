@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using ErsatzTV.Application.Streaming.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using LanguageExt;
 using MediatR;
@@ -22,12 +24,15 @@ namespace ErsatzTV.Application.Streaming
         private DateTimeOffset _transcodedUntil;
         private readonly Timer _timer = new(TimeSpan.FromMinutes(2).TotalMilliseconds) { AutoReset = false };
         private readonly object _sync = new();
+        private DateTimeOffset _playlistStart;
 
         public HlsSessionWorker(IServiceScopeFactory serviceScopeFactory, ILogger<HlsSessionWorker> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
         }
+
+        public DateTimeOffset PlaylistStart => _playlistStart;
 
         public void Touch()
         {
@@ -55,6 +60,7 @@ namespace ErsatzTV.Application.Streaming
 
                 Touch();
                 _transcodedUntil = DateTimeOffset.Now;
+                _playlistStart = _transcodedUntil;
 
                 // start initial transcode WITHOUT realtime throttle
                 if (!await Transcode(channelNumber, true, false, cancellationToken))
@@ -84,7 +90,7 @@ namespace ErsatzTV.Application.Streaming
                     }
                     else
                     {
-                        // TODO: delete old segments, trim playlist
+                        await TrimAndDelete(channelNumber, cancellationToken);
                         await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
                     }
                 }
@@ -127,9 +133,8 @@ namespace ErsatzTV.Application.Streaming
 
                 foreach (PlayoutItemProcessModel processModel in result.RightAsEnumerable())
                 {
-                    // TODO: delete old segments, trim playlist
-                    // TODO: insert discontinuity if needed (if playlist already exists)
-
+                    await TrimAndDelete(channelNumber, cancellationToken);
+                    
                     Process process = processModel.Process;
 
                     _logger.LogDebug(
@@ -163,6 +168,40 @@ namespace ErsatzTV.Application.Streaming
             }
 
             return true;
+        }
+        
+        private async Task TrimAndDelete(string channelNumber, CancellationToken cancellationToken)
+        {
+            string playlistFileName = Path.Combine(
+                FileSystemLayout.TranscodeFolder,
+                channelNumber,
+                "live.m3u8");
+
+            if (File.Exists(playlistFileName))
+            {
+                // trim playlist and insert discontinuity before appending with new ffmpeg process
+                string[] lines = await File.ReadAllLinesAsync(playlistFileName, cancellationToken);
+                TrimPlaylistResult trimResult = HlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
+                    _playlistStart,
+                    DateTimeOffset.Now.AddMinutes(-1),
+                    lines);
+                await File.WriteAllTextAsync(playlistFileName, trimResult.Playlist, cancellationToken);
+
+                // delete old segments
+                foreach (string file in Directory.GetFiles(
+                    Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber),
+                    "*.ts"))
+                {
+                    string fileName = Path.GetFileName(file);
+                    if (fileName.StartsWith("live") && int.Parse(fileName.Replace("live", string.Empty).Split('.')[0]) <
+                        int.Parse(trimResult.Sequence))
+                    {
+                        File.Delete(file);
+                    }
+                }
+
+                _playlistStart = trimResult.PlaylistStart;
+            }
         }
     }
 }
