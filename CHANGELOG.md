@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.1.1-alpha] - 2021-10-10
 ### Added
 - Add music video album to search index
   - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
@@ -667,7 +669,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.0-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.1-alpha...HEAD
+[0.1.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.0-alpha...v0.1.1-alpha
 [0.1.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.62-alpha...v0.1.0-alpha
 [0.0.62-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.61-alpha...v0.0.62-alpha
 [0.0.61-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.60-alpha...v0.0.61-alpha
