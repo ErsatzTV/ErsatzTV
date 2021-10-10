@@ -337,7 +337,7 @@ namespace ErsatzTV.Core.FFmpeg
             }
 
             int segmentSeconds = startAtZero ? SUBSEQUENT_SEGMENT_SECONDS : INITIAL_SEGMENT_SECONDS;
-            
+
             _arguments.AddRange(
                 new[]
                 {
@@ -349,6 +349,8 @@ namespace ErsatzTV.Core.FFmpeg
                     "-hls_time", $"{segmentSeconds}",
                     "-hls_list_size", "0",
                     "-segment_list_flags", "+live",
+                    "-hls_segment_filename",
+                    Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live%06d.ts"),
                     "-hls_flags", "program_date_time+append_list+omit_endlist+independent_segments",
                     Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8")
                 });
