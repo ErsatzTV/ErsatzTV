@@ -16,7 +16,7 @@ namespace ErsatzTV.Core.FFmpeg
             DateTimeOffset nextPlaylistStart = DateTimeOffset.MaxValue;
             
             var discontinuitySequence = 0;
-            var startSequence = "0";
+            var startSequence = 0;
             var output = new StringBuilder();
             var started = false;
             var i = 0;
@@ -67,10 +67,10 @@ namespace ErsatzTV.Core.FFmpeg
 
                 if (!started)
                 {
-                    startSequence = lines[i + 2].Replace("live", string.Empty).Split('.')[0];
+                    startSequence = int.Parse(lines[i + 2].Replace("live", string.Empty).Split('.')[0]);
 
                     output.AppendLine("#EXTM3U");
-                    output.AppendLine("#EXT-X-VERSION:3");
+                    output.AppendLine("#EXT-X-VERSION:6");
                     output.AppendLine("#EXT-X-TARGETDURATION:4");
                     output.AppendLine($"#EXT-X-MEDIA-SEQUENCE:{startSequence}");
                     output.AppendLine($"#EXT-X-DISCONTINUITY-SEQUENCE:{discontinuitySequence}");
@@ -107,5 +107,5 @@ namespace ErsatzTV.Core.FFmpeg
         }
     }
 
-    public record TrimPlaylistResult(DateTimeOffset PlaylistStart, string Sequence, string Playlist);
+    public record TrimPlaylistResult(DateTimeOffset PlaylistStart, int Sequence, string Playlist);
 }

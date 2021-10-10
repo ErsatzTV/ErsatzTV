@@ -319,8 +319,7 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithHls(string channelNumber, MediaVersion mediaVersion, bool startAtZero)
         {
-            const int INITIAL_SEGMENT_SECONDS = 4;
-            const int SUBSEQUENT_SEGMENT_SECONDS = 4;
+            const int SEGMENT_SECONDS = 4;
             
             if (!int.TryParse(mediaVersion.RFrameRate, out int frameRate))
             {
@@ -336,17 +335,15 @@ namespace ErsatzTV.Core.FFmpeg
                 }
             }
 
-            int segmentSeconds = startAtZero ? SUBSEQUENT_SEGMENT_SECONDS : INITIAL_SEGMENT_SECONDS;
-
             _arguments.AddRange(
                 new[]
                 {
                     "-use_wallclock_as_timestamps", "1",
-                    "-g", $"{frameRate * segmentSeconds}",
-                    "-keyint_min", $"{frameRate * segmentSeconds}",
-                    "-force_key_frames", $"expr:gte(t,n_forced*{segmentSeconds})",
+                    "-g", $"{frameRate * SEGMENT_SECONDS}",
+                    "-keyint_min", $"{frameRate * SEGMENT_SECONDS}",
+                    "-force_key_frames", $"expr:gte(t,n_forced*{SEGMENT_SECONDS})",
                     "-f", "hls",
-                    "-hls_time", $"{segmentSeconds}",
+                    "-hls_time", $"{SEGMENT_SECONDS}",
                     "-hls_list_size", "0",
                     "-segment_list_flags", "+live",
                     "-hls_segment_filename",
