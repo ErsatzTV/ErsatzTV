@@ -194,7 +194,7 @@ namespace ErsatzTV.Application.Streaming
                 {
                     string fileName = Path.GetFileName(file);
                     if (fileName.StartsWith("live") && int.Parse(fileName.Replace("live", string.Empty).Split('.')[0]) <
-                        int.Parse(trimResult.Sequence))
+                        trimResult.Sequence)
                     {
                         File.Delete(file);
                     }
