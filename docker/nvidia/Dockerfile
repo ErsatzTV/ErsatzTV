@@ -23,7 +23,7 @@ ARG INFO_VERSION="unknown"
 RUN dotnet publish -c release -o /app -r linux-x64 --self-contained false --no-restore /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
-FROM jasongdove/ffmpeg:4.3-nvidia1804 AS runtime-base
+FROM jasongdove/ffmpeg:4.3-nvidia2004 AS runtime-base
 WORKDIR /app
 EXPOSE 8409
 COPY --from=build /app ./
