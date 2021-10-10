@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
@@ -101,6 +100,7 @@ namespace ErsatzTV.Application.MediaCards
                 musicVideoMetadata.MusicVideo.Artist.ArtistMetadata.Head().Title,
                 musicVideoMetadata.SortTitle,
                 musicVideoMetadata.Plot,
+                musicVideoMetadata.Album,
                 GetThumbnail(musicVideoMetadata, None, None));
 
         internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>

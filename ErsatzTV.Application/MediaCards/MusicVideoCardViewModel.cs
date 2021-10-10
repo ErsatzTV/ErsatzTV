@@ -7,6 +7,7 @@
         string Subtitle,
         string SortTitle,
         string Plot,
+        string Album,
         string Poster) : MediaCardViewModel(
         MusicVideoId,
         Title,
