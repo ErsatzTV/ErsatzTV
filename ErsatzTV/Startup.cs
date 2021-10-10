@@ -7,6 +7,7 @@ using Blazored.LocalStorage;
 using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
+using ErsatzTV.Application.Streaming;
 using ErsatzTV.Application.Streaming.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
@@ -300,6 +301,7 @@ namespace ErsatzTV
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
             services.AddScoped<FFmpegProcessService>();
+            services.AddScoped<HlsSessionWorker>();
             services.AddScoped<IGitHubApiClient, GitHubApiClient>();
             services.AddScoped<IHtmlSanitizer, HtmlSanitizer>(
                 _ =>
@@ -326,7 +328,6 @@ namespace ErsatzTV
             services.AddHostedService<WorkerService>();
             services.AddHostedService<SchedulerService>();
             services.AddHostedService<FFmpegWorkerService>();
-            services.AddHostedService<FFmpegSchedulerService>();
         }
 
         private void AddChannel<TMessageType>(IServiceCollection services)

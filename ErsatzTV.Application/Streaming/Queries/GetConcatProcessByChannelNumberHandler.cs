@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
@@ -27,7 +28,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             _runtimeInfo = runtimeInfo;
         }
 
-        protected override async Task<Either<BaseError, Process>> GetProcess(
+        protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
             TvContext dbContext,
             GetConcatProcessByChannelNumber request,
             Channel channel,
@@ -37,12 +38,14 @@ namespace ErsatzTV.Application.Streaming.Queries
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
-            return _ffmpegProcessService.ConcatChannel(
+            Process process = _ffmpegProcessService.ConcatChannel(
                 ffmpegPath,
                 saveReports,
                 channel,
                 request.Scheme,
                 request.Host);
+
+            return new PlayoutItemProcessModel(process, DateTimeOffset.MaxValue);
         }
     }
 }

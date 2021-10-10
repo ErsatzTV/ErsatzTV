@@ -1,6 +1,7 @@
-using System.Threading.Channels;
+using System;
+using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
-using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
 using ErsatzTV.Application.Images;
 using ErsatzTV.Application.Images.Queries;
@@ -9,6 +10,8 @@ using ErsatzTV.Application.Streaming.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Iptv;
 using LanguageExt;
 using MediatR;
@@ -22,18 +25,18 @@ namespace ErsatzTV.Controllers
     [ApiExplorerSettings(IgnoreApi = true)]
     public class IptvController : ControllerBase
     {
-        private readonly ChannelWriter<IFFmpegWorkerRequest> _channel;
+        private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
         private readonly ILogger<IptvController> _logger;
         private readonly IMediator _mediator;
 
         public IptvController(
             IMediator mediator,
             ILogger<IptvController> logger,
-            ChannelWriter<IFFmpegWorkerRequest> channel)
+            IFFmpegSegmenterService ffmpegSegmenterService)
         {
             _mediator = mediator;
             _logger = logger;
-            _channel = channel;
+            _ffmpegSegmenterService = ffmpegSegmenterService;
         }
 
         [HttpGet("iptv/channels.m3u")]
@@ -53,8 +56,10 @@ namespace ErsatzTV.Controllers
             _mediator.Send(new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
                 .Map(
                     result => result.Match<IActionResult>(
-                        process =>
+                        processModel =>
                         {
+                            Process process = processModel.Process;
+                            
                             _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
                             // _logger.LogDebug(
                             //     "ffmpeg concat arguments {FFmpegArguments}",
@@ -63,6 +68,26 @@ namespace ErsatzTV.Controllers
                             return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
                         },
                         error => BadRequest(error.Value)));
+
+        [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
+        public async Task<IActionResult> GetLivePlaylist(string channelNumber)
+        {
+            if (_ffmpegSegmenterService.SessionWorkers.TryGetValue(channelNumber, out IHlsSessionWorker worker))
+            {
+                DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
+            
+                string fileName = Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8");
+                if (System.IO.File.Exists(fileName))
+                {
+                    string[] input = await System.IO.File.ReadAllLinesAsync(fileName);
+
+                    TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
+                    return Content(result.Playlist, "application/vnd.apple.mpegurl");
+                }
+            }
+
+            return NotFound();
+        }
 
         [HttpGet("iptv/channel/{channelNumber}.m3u8")]
         public async Task<IActionResult> GetHttpLiveStreamingVideo(
@@ -75,13 +100,13 @@ namespace ErsatzTV.Controllers
                 case "segmenter":
                     Either<BaseError, Unit> result = await _mediator.Send(new StartFFmpegSession(channelNumber, false));
                     return result.Match<IActionResult>(
-                        _ => Redirect($"/iptv/session/{channelNumber}/live.m3u8"),
+                        _ => Redirect($"/iptv/session/{channelNumber}/hls.m3u8"),
                         error =>
                         {
                             switch (error)
                             {
-                                case ChannelHasProcess:
-                                    return RedirectPreserveMethod($"/iptv/session/{channelNumber}/live.m3u8");
+                                case ChannelSessionAlreadyActive:
+                                    return RedirectPreserveMethod($"/iptv/session/{channelNumber}/hls.m3u8");
                                 default:
                                     _logger.LogWarning(
                                         "Failed to start segmenter for channel {ChannelNumber}: {Error}",

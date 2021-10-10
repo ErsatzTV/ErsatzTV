@@ -7,10 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="AsyncFixer" Version="1.5.1">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
       <PackageReference Include="MediatR" Version="9.0.0" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="5.0.0" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.63">

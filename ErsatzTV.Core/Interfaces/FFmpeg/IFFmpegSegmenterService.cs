@@ -1,14 +1,11 @@
-﻿using System.Diagnostics;
-using LanguageExt;
+﻿using System.Collections.Concurrent;
 
 namespace ErsatzTV.Core.Interfaces.FFmpeg
 {
     public interface IFFmpegSegmenterService
     {
-        bool ProcessExistsForChannel(string channelNumber);
-        bool TryAdd(string channelNumber, Process process);
+        ConcurrentDictionary<string, IHlsSessionWorker> SessionWorkers { get; }
+
         void TouchChannel(string channelNumber);
-        void CleanUpSessions();
-        Unit KillAll();
     }
 }

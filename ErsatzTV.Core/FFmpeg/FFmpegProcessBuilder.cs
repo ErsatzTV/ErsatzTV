@@ -109,7 +109,14 @@ namespace ErsatzTV.Core.FFmpeg
         {
             if (realtimeOutput)
             {
-                _arguments.Add("-re");
+                if (!_arguments.Contains("-re"))
+                {
+                    _arguments.Add("-re");
+                }
+            }
+            else
+            {
+                _arguments.RemoveAll(s => s == "-re");
             }
 
             return this;
@@ -312,8 +319,8 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithHls(string channelNumber, MediaVersion mediaVersion, bool startAtZero)
         {
-            const int INITIAL_SEGMENT_SECONDS = 1;
-            const int SUBSEQUENT_SEGMENT_SECONDS = 2;
+            const int INITIAL_SEGMENT_SECONDS = 4;
+            const int SUBSEQUENT_SEGMENT_SECONDS = 4;
             
             if (!int.TryParse(mediaVersion.RFrameRate, out int frameRate))
             {
@@ -340,9 +347,9 @@ namespace ErsatzTV.Core.FFmpeg
                     "-force_key_frames", $"expr:gte(t,n_forced*{segmentSeconds})",
                     "-f", "hls",
                     "-hls_time", $"{segmentSeconds}",
-                    "-hls_list_size", "10",
+                    "-hls_list_size", "0",
                     "-segment_list_flags", "+live",
-                    "-hls_flags", "delete_segments+program_date_time+append_list+discont_start+omit_endlist",
+                    "-hls_flags", "program_date_time+append_list+omit_endlist+independent_segments",
                     Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8")
                 });
 
