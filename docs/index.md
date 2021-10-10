@@ -10,5 +10,6 @@ Want to say thanks? Consider [sponsorship on GitHub](https://github.com/sponsors
 
 1. [Install ErsatzTV](user-guide/install.md)
 2. [Add Media Items](user-guide/add-media-items.md)
-3. [Create Channels](user-guide/create-channels.md)
-4. [Configure Clients](user-guide/configure-clients.md)
+3. [Create Collections](user-guide/create-collections.md)
+4. [Create Channels](user-guide/create-channels.md)
+5. [Configure Clients](user-guide/configure-clients.md)
