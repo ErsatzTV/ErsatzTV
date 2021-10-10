@@ -139,6 +139,13 @@
                 <MudCardContent Class="ml-3">
                     <div style="display: flex; flex-direction: column; height: 100%">
                         <MudText Typo="Typo.h4">@musicVideo.Title</MudText>
+                        @if (!string.IsNullOrWhiteSpace(musicVideo.Album))
+                        {
+                            <div style="display: flex; flex-direction: row">
+                                <MudText GutterBottom="true">Album:&nbsp;</MudText>
+                                <MudLink Href="@(@$"album:""{musicVideo.Album}""".GetRelativeSearchQuery())">@musicVideo.Album</MudLink>
+                            </div>
+                        }
                         <MudText Style="flex-grow: 1">@musicVideo.Plot</MudText>
                         <div class="mt-6">
                             <MudButton Variant="Variant.Filled"

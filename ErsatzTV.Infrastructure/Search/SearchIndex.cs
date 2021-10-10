@@ -52,6 +52,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string DirectorField = "director";
         private const string WriterField = "writer";
         private const string TraktListField = "trakt_list";
+        private const string AlbumField = "album";
 
         public const string MovieType = "movie";
         public const string ShowType = "show";
@@ -74,7 +75,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 16;
+        public int Version => 17;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -622,6 +623,11 @@ namespace ErsatzTV.Infrastructure.Search
                                 ReleaseDateField,
                                 metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                                 Field.Store.NO));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(metadata.Album))
+                    {
+                        doc.Add(new TextField(AlbumField, metadata.Album, Field.Store.NO));
                     }
 
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
