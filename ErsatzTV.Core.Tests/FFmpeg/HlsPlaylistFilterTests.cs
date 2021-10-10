@@ -26,7 +26,7 @@ live001137.ts
 live001138.ts
 #EXTINF:4.000000,
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
-live001139.ts".Split("\n");
+live001139.ts".Split(Environment.NewLine);
 
             TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(-30), input);
 
@@ -70,7 +70,7 @@ live001137.ts
 live001138.ts
 #EXTINF:4.000000,
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
-live001139.ts".Split("\n");
+live001139.ts".Split(Environment.NewLine);
 
             TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(-30), input, 2);
 
@@ -111,7 +111,7 @@ live001137.ts
 live001138.ts
 #EXTINF:4.000000,
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
-live001139.ts".Split("\n");
+live001139.ts".Split(Environment.NewLine);
 
             TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(
                 start,
@@ -161,7 +161,7 @@ live001137.ts
 live001138.ts
 #EXTINF:4.000000,
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
-live001139.ts".Split("\n");
+live001139.ts".Split(Environment.NewLine);
 
             TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(6), input);
 
@@ -200,7 +200,7 @@ live001137.ts
 live001138.ts
 #EXTINF:4.000000,
 #EXT-X-PROGRAM-DATE-TIME:2021-10-08T08:34:57.320-0500
-live001139.ts".Split("\n");
+live001139.ts".Split(Environment.NewLine);
 
             TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(start, start.AddSeconds(6), input);
 
