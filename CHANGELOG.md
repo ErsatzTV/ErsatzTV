@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Remove forced initial delay from `HLS Segmenter` streaming mode
+- Upgrade nvidia docker image from 18.04 to 20.04
 
 ## [0.1.0-alpha] - 2021-10-08
 ### Added
