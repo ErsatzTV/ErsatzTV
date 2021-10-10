@@ -3,6 +3,7 @@ nav:
   - 'Quick Start':
     - 'Install ErsatzTV': 'user-guide/install.md'
     - 'Add Media Items': 'user-guide/add-media-items.md'
+    - 'Create Collections': 'user-guide/create-collections.md'
     - 'Create Channels': 'user-guide/create-channels.md'
     - 'Configure Clients': 'user-guide/configure-clients.md'
   - 'Advanced':
