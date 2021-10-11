@@ -234,6 +234,8 @@ namespace ErsatzTV.Core.FFmpeg
 
             _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
 
+            string outputPixelFormat = null;
+            
             if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None &&
                 string.IsNullOrWhiteSpace(watermarkOverlay))
             {
@@ -243,6 +245,19 @@ namespace ErsatzTV.Core.FFmpeg
                     _ => "hwupload"
                 };
                 videoFilterQueue.Add(upload);
+            }
+
+            if (!usesSoftwareFilters && string.IsNullOrWhiteSpace(watermarkOverlay))
+            {
+                switch (acceleration, _videoEncoder, _pixelFormat)
+                {
+                    case (HardwareAccelerationKind.Nvenc, "h264_nvenc", "yuv420p10le"):
+                        outputPixelFormat = "yuv420p";
+                        break;
+                    case (HardwareAccelerationKind.Nvenc, "h264_nvenc", "yuv444p10le"):
+                        outputPixelFormat = "yuv444p";
+                        break;
+                }
             }
 
             bool hasAudioFilters = audioFilterQueue.Any();
@@ -307,7 +322,7 @@ namespace ErsatzTV.Core.FFmpeg
             var filterResult = complexFilter.ToString();
             return string.IsNullOrWhiteSpace(filterResult)
                 ? Option<FFmpegComplexFilter>.None
-                : new FFmpegComplexFilter(filterResult, videoLabel, audioLabel);
+                : new FFmpegComplexFilter(filterResult, videoLabel, audioLabel, outputPixelFormat);
         }
     }
 }
