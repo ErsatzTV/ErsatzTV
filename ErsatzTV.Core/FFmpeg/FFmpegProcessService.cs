@@ -64,7 +64,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
-                .WithHardwareAcceleration(playbackSettings.HardwareAcceleration)
+                .WithHardwareAcceleration(playbackSettings.HardwareAcceleration, videoStream.PixelFormat)
                 .WithVaapiDriver(maybeVaapiDriver)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)

@@ -205,9 +205,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             
             if (profileAcceleration != HardwareAccelerationKind.None && unsupportedMessages.Any(error.Contains))
             {
-                IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
+                var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
                 process.ExitCode.Should().Be(1, $"Error message with successful exit code? {string.Join(" ", quotedArgs)}");
-                Assert.Warn("Unsupported on this hardware");
+                Assert.Warn($"Unsupported on this hardware: ffmpeg {string.Join(" ", quotedArgs)}");
             }
             else if (error.Contains("Impossible to convert between"))
             {
@@ -216,7 +216,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
             else
             {
-                process.ExitCode.Should().Be(0, error);
+                IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
+                process.ExitCode.Should().Be(0, error + Environment.NewLine + string.Join(" ", quotedArgs));
             }
         }
         
