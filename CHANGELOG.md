@@ -4,8 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Include more cuda (nvidia) filters in docker image
+- Enable deinterlacing with nvidia using new `yadif_cuda` filter
+
 ### Fixed
-- Fix some transcoding edge cases with NVIDIA and pixel format `yuv420p10le`
+- Fix some transcoding edge cases with nvidia and pixel format `yuv420p10le`
 
 ## [0.1.1-alpha] - 2021-10-10
 ### Added

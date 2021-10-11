@@ -125,7 +125,7 @@ namespace ErsatzTV.Core.FFmpeg
                 string filter = acceleration switch
                 {
                     HardwareAccelerationKind.Qsv => "deinterlace_qsv",
-                    HardwareAccelerationKind.Nvenc => "", // TODO: yadif_cuda support in docker
+                    HardwareAccelerationKind.Nvenc => "yadif_cuda",
                     HardwareAccelerationKind.Vaapi => "deinterlace_vaapi",
                     _ => "yadif=1"
                 };

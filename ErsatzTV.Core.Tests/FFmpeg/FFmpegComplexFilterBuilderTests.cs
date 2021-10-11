@@ -341,43 +341,24 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             [Test]
-            // TODO: get yadif_cuda working in docker
-            // [TestCase(true, false, false, "[0:V]yadif_cuda[v]", "[v]")]
-            // [TestCase(
-            //     true,
-            //     true,
-            //     false,
-            //     "[0:V]yadif_cuda,scale_npp=1920:1000:format=yuv420p,hwdownload,setsar=1,hwupload[v]",
-            //     "[v]")]
-            // [TestCase(
-            //     true,
-            //     false,
-            //     true,
-            //     "[0:V]yadif_cuda,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
-            //     "[v]")]
-            // [TestCase(
-            //     true,
-            //     true,
-            //     true,
-            //     "[0:V]yadif_cuda,scale_npp=1920:1000:format=yuv420p,hwdownload,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
-            //     "[v]")]
+            [TestCase(true, false, false, "[0:0]yadif_cuda[v]", "[v]")]
             [TestCase(
                 true,
                 true,
                 false,
-                "[0:0]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,hwupload[v]",
+                "[0:0]yadif_cuda,scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,hwupload[v]",
                 "[v]")]
             [TestCase(
                 true,
                 false,
                 true,
-                "[0:0]hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:0]yadif_cuda,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 true,
                 true,
                 true,
-                "[0:0]scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
+                "[0:0]yadif_cuda,scale_npp=1920:1000,hwdownload,format=nv12,setsar=1,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,hwupload[v]",
                 "[v]")]
             [TestCase(
                 false,
