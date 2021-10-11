@@ -47,6 +47,7 @@ namespace ErsatzTV.Core.FFmpeg
         private bool _isConcat;
         private VaapiDriver _vaapiDriver;
         private HardwareAccelerationKind _hwAccel;
+        private string _outputPixelFormat;
 
         public FFmpegProcessBuilder(string ffmpegPath, bool saveReports, ILogger logger)
         {
@@ -72,7 +73,7 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel, string pixelFormat)
+        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel, string pixelFormat, string encoder)
         {
             _hwAccel = hwAccel;
 
@@ -85,10 +86,11 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("qsv=qsv:MFX_IMPL_hw_any");
                     break;
                 case HardwareAccelerationKind.Nvenc:
-                    string outputFormat = pixelFormat switch
+                    string outputFormat = (encoder, pixelFormat) switch
                     {
-                        "yuv420p10le" => "p010le",
-                        // "yuv444p10le" => "p016le",
+                        ("hevc_nvenc", "yuv420p10le") => "p010le",
+                        ("h264_nvenc", "yuv420p10le") => "p010le",
+                        // ("hevc_nvenc", "yuv444p10le") => "p016le",
                         _ => "cuda"
                     };
                     
@@ -371,6 +373,11 @@ namespace ErsatzTV.Core.FFmpeg
                 "-sc_threshold", "0" // disable scene change detection
             };
 
+            if (!string.IsNullOrWhiteSpace(_outputPixelFormat))
+            {
+                arguments.AddRange(new[] { "-pix_fmt", _outputPixelFormat });
+            }
+
             string[] videoBitrateArgs = playbackSettings.VideoBitrate.Match(
                 bitrate =>
                     new[]
@@ -478,6 +485,11 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add(filter.ComplexFilter);
                     videoLabel = filter.VideoLabel;
                     audioLabel = filter.AudioLabel;
+
+                    if (!string.IsNullOrWhiteSpace(filter.PixelFormat))
+                    {
+                        _outputPixelFormat = filter.PixelFormat;
+                    }
                 });
 
             _arguments.Add("-map");
