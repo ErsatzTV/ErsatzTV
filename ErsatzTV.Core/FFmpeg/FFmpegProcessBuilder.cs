@@ -72,7 +72,7 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel)
+        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel, string pixelFormat)
         {
             _hwAccel = hwAccel;
 
@@ -85,10 +85,17 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("qsv=qsv:MFX_IMPL_hw_any");
                     break;
                 case HardwareAccelerationKind.Nvenc:
+                    string outputFormat = pixelFormat switch
+                    {
+                        "yuv420p10le" => "p010le",
+                        // "yuv444p10le" => "p016le",
+                        _ => "cuda"
+                    };
+                    
                     _arguments.Add("-hwaccel");
                     _arguments.Add("cuda");
                     _arguments.Add("-hwaccel_output_format");
-                    _arguments.Add("cuda");
+                    _arguments.Add(outputFormat);
                     break;
                 case HardwareAccelerationKind.Vaapi:
                     _arguments.Add("-hwaccel");
