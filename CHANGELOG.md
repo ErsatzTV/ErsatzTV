@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Include more cuda (nvidia) filters in docker image
 - Enable deinterlacing with nvidia using new `yadif_cuda` filter
 
+### Changed
+- Upgrade ffmpeg from 4.3 to 4.4 in all docker images
+
 ### Fixed
 - Fix some transcoding edge cases with nvidia and pixel format `yuv420p10le`
 
