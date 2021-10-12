@@ -206,6 +206,10 @@ namespace ErsatzTV.Core.FFmpeg
                         ChannelWatermarkLocation.BottomLeft => $"x={horizontalMargin}:y=H-h-{verticalMargin}",
                         ChannelWatermarkLocation.TopLeft => $"x={horizontalMargin}:y={verticalMargin}",
                         ChannelWatermarkLocation.TopRight => $"x=W-w-{horizontalMargin}:y={verticalMargin}",
+                        ChannelWatermarkLocation.TopMiddle => $"x=(W-w)/2:y={verticalMargin}",
+                        ChannelWatermarkLocation.RightMiddle => $"x=W-w-{horizontalMargin}:y=(H-h)/2",
+                        ChannelWatermarkLocation.BottomMiddle => $"x=(W-w)/2:y=H-h-{verticalMargin}",
+                        ChannelWatermarkLocation.LeftMiddle => $"x={horizontalMargin}:y=(H-h)/2",
                         _ => $"x=W-w-{horizontalMargin}:y=H-h-{verticalMargin}"
                     };
 

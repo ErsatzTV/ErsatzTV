@@ -22,7 +22,11 @@
         BottomRight = 0,
         BottomLeft = 1,
         TopRight = 2,
-        TopLeft = 3
+        TopLeft = 3,
+        TopMiddle = 4,
+        RightMiddle = 5,
+        BottomMiddle = 6,
+        LeftMiddle = 7
     }
 
     public enum ChannelWatermarkSize
