@@ -31,6 +31,10 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId);
             Option<int> vaapiDriver =
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegVaapiDriver);
+            Option<int> hlsSegmenterIdleTimeout =
+                await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout);
+            Option<int> workAheadSegmenterLimit =
+                await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters);
 
             var result = new FFmpegSettingsViewModel
             {
@@ -39,7 +43,9 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 DefaultFFmpegProfileId = await defaultFFmpegProfileId.IfNoneAsync(0),
                 SaveReports = await saveReports.IfNoneAsync(false),
                 PreferredLanguageCode = await preferredLanguageCode.IfNoneAsync("eng"),
-                VaapiDriver = (VaapiDriver)await vaapiDriver.IfNoneAsync(0)
+                VaapiDriver = (VaapiDriver)await vaapiDriver.IfNoneAsync(0),
+                HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
+                WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
             };
 
             foreach (int watermarkId in watermark)

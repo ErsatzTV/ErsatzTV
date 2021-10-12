@@ -6,23 +6,27 @@ using System.Threading.Tasks;
 using System.Timers;
 using ErsatzTV.Application.Streaming.Queries;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Streaming
 {
     public class HlsSessionWorker : IHlsSessionWorker
     {
+        private static int _workAheadCount;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<HlsSessionWorker> _logger;
         private DateTimeOffset _lastAccess;
         private DateTimeOffset _transcodedUntil;
-        private readonly Timer _timer = new(TimeSpan.FromMinutes(2).TotalMilliseconds) { AutoReset = false };
+        private Timer _timer;
         private readonly object _sync = new();
         private DateTimeOffset _playlistStart;
 
@@ -40,19 +44,23 @@ namespace ErsatzTV.Application.Streaming
             {
                 _lastAccess = DateTimeOffset.Now;
 
-                _timer.Stop();
-                _timer.Start();
+                _timer?.Stop();
+                _timer?.Start();
             }
         }
 
-        public async Task Run(string channelNumber)
+        public async Task Run(string channelNumber, TimeSpan idleTimeout)
         {
             var cts = new CancellationTokenSource();
             void Cancel(object o, ElapsedEventArgs e) => cts.Cancel();
 
             try
             {
-                _timer.Elapsed += Cancel;
+                lock (_sync)
+                {
+                    _timer = new Timer(idleTimeout.TotalMilliseconds) { AutoReset = false };
+                    _timer.Elapsed += Cancel;
+                }
 
                 CancellationToken cancellationToken = cts.Token;
 
@@ -62,16 +70,15 @@ namespace ErsatzTV.Application.Streaming
                 _transcodedUntil = DateTimeOffset.Now;
                 _playlistStart = _transcodedUntil;
 
-                // start initial transcode WITHOUT realtime throttle
-                if (!await Transcode(channelNumber, true, false, cancellationToken))
+                bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
+                if (!await Transcode(channelNumber, true, !initialWorkAhead, cancellationToken))
                 {
                     return;
                 }
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    // TODO: configurable? 5 minutes?
-                    if (DateTimeOffset.Now - _lastAccess > TimeSpan.FromMinutes(2))
+                    if (DateTimeOffset.Now - _lastAccess > idleTimeout)
                     {
                         _logger.LogInformation("Stopping idle HLS session for channel {Channel}", channelNumber);
                         return;
@@ -83,7 +90,9 @@ namespace ErsatzTV.Application.Streaming
                     {
                         // only use realtime encoding when we're at least 30 seconds ahead
                         bool realtime = transcodedBuffer >= TimeSpan.FromSeconds(30);
-                        if (!await Transcode(channelNumber, false, realtime, cancellationToken))
+                        bool subsequentWorkAhead =
+                            !realtime && Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
+                        if (!await Transcode(channelNumber, false, !subsequentWorkAhead, cancellationToken))
                         {
                             return;
                         }
@@ -97,7 +106,10 @@ namespace ErsatzTV.Application.Streaming
             }
             finally
             {
-                _timer.Elapsed -= Cancel;
+                lock (_sync)
+                {
+                    _timer.Elapsed -= Cancel;
+                }
             }
         }
 
@@ -105,6 +117,18 @@ namespace ErsatzTV.Application.Streaming
         {
             try
             {
+                if (!realtime)
+                {
+                    Interlocked.Increment(ref _workAheadCount);
+                    _logger.LogInformation("HLS segmenter will work ahead for channel {Channel}", channelNumber);
+                }
+                else
+                {
+                    _logger.LogInformation(
+                        "HLS segmenter will NOT work ahead for channel {Channel}",
+                        channelNumber);
+                }
+
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
@@ -134,7 +158,7 @@ namespace ErsatzTV.Application.Streaming
                 foreach (PlayoutItemProcessModel processModel in result.RightAsEnumerable())
                 {
                     await TrimAndDelete(channelNumber, cancellationToken);
-                    
+
                     Process process = processModel.Process;
 
                     _logger.LogDebug(
@@ -165,6 +189,10 @@ namespace ErsatzTV.Application.Streaming
             {
                 _logger.LogError(ex, "Error transcoding channel {Channel}", channelNumber);
                 return false;
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _workAheadCount);
             }
 
             return true;
@@ -202,6 +230,14 @@ namespace ErsatzTV.Application.Streaming
 
                 _playlistStart = trimResult.PlaylistStart;
             }
+        }
+
+        private async Task<int> GetWorkAheadLimit()
+        {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
+            return await repo.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters)
+                .Map(maybeCount => maybeCount.Match(identity, () => 1));
         }
     }
 }

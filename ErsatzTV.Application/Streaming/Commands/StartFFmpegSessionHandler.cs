@@ -3,9 +3,11 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
+using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -18,18 +20,21 @@ namespace ErsatzTV.Application.Streaming.Commands
         private readonly ILogger<StartFFmpegSessionHandler> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+        private readonly IConfigElementRepository _configElementRepository;
         private readonly ILocalFileSystem _localFileSystem;
 
         public StartFFmpegSessionHandler(
             ILocalFileSystem localFileSystem,
             ILogger<StartFFmpegSessionHandler> logger,
             IServiceScopeFactory serviceScopeFactory,
-            IFFmpegSegmenterService ffmpegSegmenterService)
+            IFFmpegSegmenterService ffmpegSegmenterService,
+            IConfigElementRepository configElementRepository)
         {
             _localFileSystem = localFileSystem;
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
             _ffmpegSegmenterService = ffmpegSegmenterService;
+            _configElementRepository = configElementRepository;
         }
 
         public Task<Either<BaseError, Unit>> Handle(StartFFmpegSession request, CancellationToken cancellationToken) =>
@@ -42,12 +47,16 @@ namespace ErsatzTV.Application.Streaming.Commands
 
         private async Task<Unit> StartProcess(StartFFmpegSession request)
         {
+            TimeSpan idleTimeout = await _configElementRepository
+                .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout)
+                .Map(maybeTimeout => maybeTimeout.Match(i => TimeSpan.FromSeconds(i), () => TimeSpan.FromMinutes(1)));
+            
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             HlsSessionWorker worker = scope.ServiceProvider.GetRequiredService<HlsSessionWorker>();
             _ffmpegSegmenterService.SessionWorkers.AddOrUpdate(request.ChannelNumber, _ => worker, (_, _) => worker);
 
             // fire and forget worker
-            _ = worker.Run(request.ChannelNumber)
+            _ = worker.Run(request.ChannelNumber, idleTimeout)
                 .ContinueWith(
                     _ => _ffmpegSegmenterService.SessionWorkers.TryRemove(
                         request.ChannelNumber,
