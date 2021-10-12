@@ -12,6 +12,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     build-essential \
     cmake \
     wget \
+    mesa-va-drivers \
     && mkdir /tmp/intel && cd /tmp/intel \
     && wget -O - https://github.com/intel/libva/archive/refs/tags/2.12.0.tar.gz | tar zxf - \
     && cd libva-2.12.0 \
@@ -36,4 +37,4 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     && apt autoremove -y \
     && rm -rf /tmp/intel \
     && rm -rf /var/lib/apt/lists/* \
-    && mv /usr/lib/x86_64-linux-gnu/dri/i* /usr/local/lib/dri/
+    && mv /usr/lib/x86_64-linux-gnu/dri/* /usr/local/lib/dri/

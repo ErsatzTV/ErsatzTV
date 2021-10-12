@@ -7,6 +7,7 @@ namespace ErsatzTV.Core.FFmpeg
     {
         Default = 0,
         iHD = 1,
-        i965 = 2
+        i965 = 2,
+        RadeonSI = 3
     }
 }

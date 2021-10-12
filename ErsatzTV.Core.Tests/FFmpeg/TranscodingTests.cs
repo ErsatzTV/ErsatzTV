@@ -186,7 +186,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 now,
                 now,
                 None,
-                None,
+                VaapiDriver.Default,
+                "/dev/dri/renderD128",
                 false,
                 false);
 

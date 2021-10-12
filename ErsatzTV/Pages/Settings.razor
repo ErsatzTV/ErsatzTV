@@ -58,12 +58,6 @@
                             <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSelect Class="mt-3" Label="VAAPI Driver" @bind-Value="_ffmpegSettings.VaapiDriver" For="@(() => _ffmpegSettings.VaapiDriver)">
-                        @foreach (VaapiDriver driver in Enum.GetValues<VaapiDriver>())
-                        {
-                            <MudSelectItem Value="@driver">@driver</MudSelectItem>
-                        }
-                    </MudSelect>
                     <MudElement HtmlTag="div" Class="mt-3">
                         <MudTextField T="int"
                                       Label="HLS Segmenter Idle Timeout"

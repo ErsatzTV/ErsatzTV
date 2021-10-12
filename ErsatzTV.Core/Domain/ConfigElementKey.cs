@@ -13,7 +13,6 @@
         public static ConfigElementKey FFmpegSaveReports => new("ffmpeg.save_reports");
         public static ConfigElementKey FFmpegPreferredLanguageCode => new("ffmpeg.preferred_language_code");
         public static ConfigElementKey FFmpegGlobalWatermarkId => new("ffmpeg.global_watermark_id");
-        public static ConfigElementKey FFmpegVaapiDriver => new("ffmpeg.vaapi_driver");
         public static ConfigElementKey FFmpegSegmenterTimeout => new("ffmpeg.segmenter.timeout_seconds");
         public static ConfigElementKey FFmpegWorkAheadSegmenters => new("ffmpeg.segmenter.work_ahead_limit");
         public static ConfigElementKey SearchIndexVersion => new("search_index.version");
