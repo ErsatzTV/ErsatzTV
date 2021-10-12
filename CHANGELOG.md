@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This setting must be greater than or equal to 0
 - Add more watermark locations ("middle" of each side)
 - Add `VAAPI Device` setting to ffmpeg profile to support installations with multiple video cards
-- Add `RadeonSI` option for `VAAPI Driver`, and add include mesa drivers in vaapi docker image
+- Add `RadeonSI` option for `VAAPI Driver` and include mesa drivers in vaapi docker image
 
 ### Changed
 - Upgrade ffmpeg from 4.3 to 4.4 in all docker images
