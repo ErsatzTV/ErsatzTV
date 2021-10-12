@@ -32,13 +32,6 @@ namespace ErsatzTV.Core.FFmpeg
 {
     internal class FFmpegProcessBuilder
     {
-        private static readonly Dictionary<string, string> QsvMap = new()
-        {
-            { "h264", "h264_qsv" },
-            { "hevc", "hevc_qsv" },
-            { "mpeg2video", "mpeg2_qsv" }
-        };
-
         private readonly List<string> _arguments = new();
         private readonly string _ffmpegPath;
         private readonly bool _saveReports;
@@ -208,12 +201,12 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithInputCodec(string input, HardwareAccelerationKind hwAccel, string codec, string pixelFormat)
+        public FFmpegProcessBuilder WithInputCodec(string input, string decoder, string codec, string pixelFormat)
         {
-            if (hwAccel == HardwareAccelerationKind.Qsv && QsvMap.TryGetValue(codec, out string qsvCodec))
+            if (!string.IsNullOrWhiteSpace(decoder))
             {
                 _arguments.Add("-c:v");
-                _arguments.Add(qsvCodec);
+                _arguments.Add(decoder);
             }
 
             _complexFilterBuilder = _complexFilterBuilder
