@@ -153,7 +153,7 @@
             vaapiDevices = new List<string> { "/dev/dri/renderD128" };
         }
 
-        _vaapiDevices = vaapiDevices;
+        _vaapiDevices = vaapiDevices.OrderBy(s => s).ToList();
     }
 
     private bool IsEdit => Id != 0;

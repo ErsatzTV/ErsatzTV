@@ -45,6 +45,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                     ThreadCount = threadCount,
                     Transcode = request.Transcode,
                     HardwareAcceleration = request.HardwareAcceleration,
+                    VaapiDriver = request.VaapiDriver,
+                    VaapiDevice = request.VaapiDevice,
                     ResolutionId = resolutionId,
                     NormalizeVideo = request.NormalizeVideo,
                     VideoCodec = request.VideoCodec,
