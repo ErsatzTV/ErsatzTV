@@ -128,6 +128,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
                 p1.Start();
                 await p1.WaitForExitAsync();
+                // ReSharper disable once MethodHasAsyncOverload
+                p1.WaitForExit();
                 p1.ExitCode.Should().Be(0);
             }
 
@@ -192,9 +194,11 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             process.Start().Should().BeTrue();
 
-            await process.StandardOutput.ReadToEndAsync();
+            process.BeginOutputReadLine();
             string error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
+            // ReSharper disable once MethodHasAsyncOverload
+            process.WaitForExit();
 
             string[] unsupportedMessages =
             {
