@@ -102,6 +102,24 @@ namespace ErsatzTV.Core.FFmpeg
                         result.VideoCodec = ffmpegProfile.VideoCodec;
                         result.VideoBitrate = ffmpegProfile.VideoBitrate;
                         result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
+
+                        result.VideoDecoder =
+                            (result.HardwareAcceleration, videoStream.Codec, videoStream.PixelFormat) switch
+                            {
+                                (HardwareAccelerationKind.Nvenc, "h264", "yuv420p10le" or "yuv444p10le") => "h264",
+                                (HardwareAccelerationKind.Nvenc, "hevc", "yuv420p10le" or "yuv444p10le") => "hevc",
+                                (HardwareAccelerationKind.Nvenc, "mpeg2video", "yuv420p10le" or "yuv444p10le") =>
+                                    "mpeg2",
+                                (HardwareAccelerationKind.Nvenc, "mpeg4", "yuv420p10le" or "yuv444p10le") => "mpeg4",
+                                (HardwareAccelerationKind.Nvenc, "h264", _) => "h264_cuvid",
+                                (HardwareAccelerationKind.Nvenc, "hevc", _) => "hevc_cuvid",
+                                (HardwareAccelerationKind.Nvenc, "mpeg2video", _) => "mpeg2_cuvid",
+                                (HardwareAccelerationKind.Nvenc, "mpeg4", _) => "mpeg4_cuvid",
+                                (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
+                                (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
+                                (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
+                                _ => null
+                            };
                     }
                     else
                     {
