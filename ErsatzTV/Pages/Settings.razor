@@ -64,6 +64,24 @@
                             <MudSelectItem Value="@driver">@driver</MudSelectItem>
                         }
                     </MudSelect>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTextField T="int"
+                                      Label="HLS Segmenter Idle Timeout"
+                                      @bind-Value="_ffmpegSettings.HlsSegmenterIdleTimeout"
+                                      Validation="@(new Func<int, string>(ValidateHlsSegmenterIdleTimeout))"
+                                      Required="true"
+                                      RequiredError="HLS Segmenter idle timeout is required!"
+                                      Adornment="Adornment.End"
+                                      AdornmentText="Seconds"/>
+                    </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTextField T="int"
+                                      Label="Work-Ahead HLS Segmenter Limit"
+                                      @bind-Value="_ffmpegSettings.WorkAheadSegmenterLimit"
+                                      Validation="@(new Func<int, string>(ValidateWorkAheadSegmenterLimit))"
+                                      Required="true"
+                                      RequiredError="Work-ahead HLS Segmenter limit is required!"/>
+                    </MudElement>
                 </MudForm>
             </MudCardContent>
             <MudCardActions>
@@ -168,6 +186,10 @@
     private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval <= 0 ? "Library refresh interval must be greater than zero" : null;
     
     private static string ValidatePlayoutDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "Days to build must be greater than zero" : null;
+
+    private static string ValidateHlsSegmenterIdleTimeout(int idleTimeout) => idleTimeout < 30 ? "HLS Segmenter idle timeout must be greater than or equal to 30" : null;
+
+    private static string ValidateWorkAheadSegmenterLimit(int limit) => limit < 0 ? "Work-Ahead HLS Segmenter limit must be greater than or equal to 0" : null;
 
     private async Task LoadFFmpegProfilesAsync() =>
         _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());

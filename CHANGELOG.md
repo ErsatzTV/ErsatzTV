@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Include more cuda (nvidia) filters in docker image
 - Enable deinterlacing with nvidia using new `yadif_cuda` filter
+- Add two HLS Segmenter settings: idle timeout and work-ahead limit
+  - `HLS Segmenter Idle Timeout` - the number of seconds to keep transcoding a channel while no requests have been received from any client
+    - This setting must be greater than or equal to 30 (seconds)
+  - `Work-Ahead HLS Segmenter Limit` - the number of segmenters (channels) that will work-ahead simultaneously (if multiple channels are being watched)
+    - "working ahead" means transcoding at full speed, which can take a lot of resources
+    - This setting must be greater than or equal to 0
 
 ### Changed
 - Upgrade ffmpeg from 4.3 to 4.4 in all docker images

@@ -119,6 +119,14 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 ConfigElementKey.FFmpegVaapiDriver,
                 (int)request.Settings.VaapiDriver);
 
+            await _configElementRepository.Upsert(
+                ConfigElementKey.FFmpegSegmenterTimeout,
+                request.Settings.HlsSegmenterIdleTimeout);
+
+            await _configElementRepository.Upsert(
+                ConfigElementKey.FFmpegWorkAheadSegmenters,
+                request.Settings.WorkAheadSegmenterLimit);
+
             return Unit.Default;
         }
     }
