@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Upgrade ffmpeg from 4.3 to 4.4 in all docker images
+  - Upgrading from 4.3 to 4.4 is recommended for all installations
 
 ### Fixed
 - Fix some transcoding edge cases with nvidia and pixel format `yuv420p10le`
