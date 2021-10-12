@@ -11,5 +11,7 @@ namespace ErsatzTV.Application.FFmpegProfiles
         public bool SaveReports { get; set; }
         public int? GlobalWatermarkId { get; set; }
         public VaapiDriver VaapiDriver { get; set; }
+        public int HlsSegmenterIdleTimeout { get; set; }
+        public int WorkAheadSegmenterLimit { get; set; }
     }
 }
