@@ -56,9 +56,13 @@
                                For="@(() => _model.Location)"
                                Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
                         <MudSelectItem Value="@(ChannelWatermarkLocation.BottomRight)">Bottom Right</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.BottomMiddle)">Bottom Middle</MudSelectItem>
                         <MudSelectItem Value="@(ChannelWatermarkLocation.BottomLeft)">Bottom Left</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopRight)">Top Right</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.LeftMiddle)">Left Middle</MudSelectItem>
                         <MudSelectItem Value="@(ChannelWatermarkLocation.TopLeft)">Top Left</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopMiddle)">Top Middle</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopRight)">Top Right</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkLocation.RightMiddle)">Right Middle</MudSelectItem>
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
                         <MudItem xs="6">
