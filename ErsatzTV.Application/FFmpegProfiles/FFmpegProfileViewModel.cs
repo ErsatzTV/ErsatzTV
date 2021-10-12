@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Application.Resolutions;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
 
 namespace ErsatzTV.Application.FFmpegProfiles
 {
@@ -9,6 +10,8 @@ namespace ErsatzTV.Application.FFmpegProfiles
         int ThreadCount,
         bool Transcode,
         HardwareAccelerationKind HardwareAcceleration,
+        VaapiDriver VaapiDriver,
+        string VaapiDevice,
         ResolutionViewModel Resolution,
         bool NormalizeVideo,
         string VideoCodec,

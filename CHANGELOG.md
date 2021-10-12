@@ -14,10 +14,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - "working ahead" means transcoding at full speed, which can take a lot of resources
     - This setting must be greater than or equal to 0
 - Add more watermark locations ("middle" of each side)
+- Add `VAAPI Device` setting to ffmpeg profile to support installations with multiple video cards
+- Add `RadeonSI` option for `VAAPI Driver`, and add include mesa drivers in vaapi docker image
 
 ### Changed
 - Upgrade ffmpeg from 4.3 to 4.4 in all docker images
   - Upgrading from 4.3 to 4.4 is recommended for all installations
+- Move `VAAPI Driver` from settings page to ffmpeg profile to support installations with multiple video cards
 
 ### Fixed
 - Fix some transcoding edge cases with nvidia and pixel format `yuv420p10le`

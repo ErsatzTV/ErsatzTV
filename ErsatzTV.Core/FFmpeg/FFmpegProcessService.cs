@@ -39,7 +39,8 @@ namespace ErsatzTV.Core.FFmpeg
             DateTimeOffset start,
             DateTimeOffset now,
             Option<ChannelWatermark> globalWatermark,
-            Option<VaapiDriver> maybeVaapiDriver,
+            VaapiDriver vaapiDriver,
+            string vaapiDevice,
             bool startAtZero,
             bool hlsRealtime)
         {
@@ -64,8 +65,8 @@ namespace ErsatzTV.Core.FFmpeg
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
+                .WithVaapiDriver(vaapiDriver, vaapiDevice)
                 .WithHardwareAcceleration(playbackSettings.HardwareAcceleration, videoStream.PixelFormat, playbackSettings.VideoCodec)
-                .WithVaapiDriver(maybeVaapiDriver)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)

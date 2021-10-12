@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿using ErsatzTV.Core.FFmpeg;
+
+namespace ErsatzTV.Core.Domain
 {
     public record FFmpegProfile
     {
@@ -7,6 +9,8 @@
         public int ThreadCount { get; set; }
         public bool Transcode { get; set; }
         public HardwareAccelerationKind HardwareAcceleration { get; set; }
+        public VaapiDriver VaapiDriver { get; set; }
+        public string VaapiDevice { get; set; }
         public int ResolutionId { get; set; }
         public Resolution Resolution { get; set; }
         public string VideoCodec { get; set; }
@@ -39,7 +43,8 @@
                 AudioChannels = 2,
                 AudioSampleRate = 48,
                 NormalizeVideo = true,
-                NormalizeAudio = true
+                NormalizeAudio = true,
+                HardwareAcceleration = HardwareAccelerationKind.None
             };
     }
 }

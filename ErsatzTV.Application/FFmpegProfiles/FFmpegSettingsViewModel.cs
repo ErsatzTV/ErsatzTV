@@ -1,6 +1,4 @@
-﻿using ErsatzTV.Core.FFmpeg;
-
-namespace ErsatzTV.Application.FFmpegProfiles
+﻿namespace ErsatzTV.Application.FFmpegProfiles
 {
     public class FFmpegSettingsViewModel
     {
@@ -10,7 +8,6 @@ namespace ErsatzTV.Application.FFmpegProfiles
         public string PreferredLanguageCode { get; set; }
         public bool SaveReports { get; set; }
         public int? GlobalWatermarkId { get; set; }
-        public VaapiDriver VaapiDriver { get; set; }
         public int HlsSegmenterIdleTimeout { get; set; }
         public int WorkAheadSegmenterLimit { get; set; }
     }

@@ -1,10 +1,14 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Infrastructure.Data;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -35,6 +39,18 @@ namespace ErsatzTV.Services.RunOnce
                 _logger.LogInformation("Disabling ffmpeg reports on Windows platform");
                 IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
                 await repo.Upsert(ConfigElementKey.FFmpegSaveReports, false);
+            }
+            
+            if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Linux))
+            {
+                ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
+                IMemoryCache memoryCache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
+
+                var devices = localFileSystem.ListFiles("/dev/dri")
+                    .Filter(s => s.StartsWith("/dev/dri/render"))
+                    .ToList();
+
+                memoryCache.Set("ffmpeg.render_devices", devices);
             }
         }
 
