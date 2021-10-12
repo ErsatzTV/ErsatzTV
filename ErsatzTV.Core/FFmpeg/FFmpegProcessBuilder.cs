@@ -39,6 +39,7 @@ namespace ErsatzTV.Core.FFmpeg
         private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
         private bool _isConcat;
         private VaapiDriver _vaapiDriver;
+        private string _vaapiDevice;
         private HardwareAccelerationKind _hwAccel;
         private string _outputPixelFormat;
 
@@ -49,12 +50,16 @@ namespace ErsatzTV.Core.FFmpeg
             _logger = logger;
         }
 
-        public FFmpegProcessBuilder WithVaapiDriver(Option<VaapiDriver> maybeVaapiDriver)
+        public FFmpegProcessBuilder WithVaapiDriver(VaapiDriver vaapiDriver, string vaapiDevice)
         {
-            foreach (VaapiDriver vaapiDriver in maybeVaapiDriver)
+            if (vaapiDriver != VaapiDriver.Default)
             {
                 _vaapiDriver = vaapiDriver;
             }
+
+            _vaapiDevice = string.IsNullOrWhiteSpace(vaapiDevice)
+                ? "/dev/dri/renderD128"
+                : vaapiDevice;
 
             return this;
         }
@@ -96,7 +101,7 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("-hwaccel");
                     _arguments.Add("vaapi");
                     _arguments.Add("-vaapi_device");
-                    _arguments.Add("/dev/dri/renderD128");
+                    _arguments.Add(_vaapiDevice);
                     _arguments.Add("-hwaccel_output_format");
                     _arguments.Add("vaapi");
                     break;
@@ -521,6 +526,9 @@ namespace ErsatzTV.Core.FFmpeg
                         break;
                     case VaapiDriver.iHD:
                         startInfo.EnvironmentVariables.Add("LIBVA_DRIVER_NAME", "iHD");
+                        break;
+                    case VaapiDriver.RadeonSI:
+                        startInfo.EnvironmentVariables.Add("LIBVA_DRIVER_NAME", "radeonsi");
                         break;
                 }
             }

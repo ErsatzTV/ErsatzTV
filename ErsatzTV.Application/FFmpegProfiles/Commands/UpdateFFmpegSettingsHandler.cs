@@ -116,10 +116,6 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             }
 
             await _configElementRepository.Upsert(
-                ConfigElementKey.FFmpegVaapiDriver,
-                (int)request.Settings.VaapiDriver);
-
-            await _configElementRepository.Upsert(
                 ConfigElementKey.FFmpegSegmenterTimeout,
                 request.Settings.HlsSegmenterIdleTimeout);
 

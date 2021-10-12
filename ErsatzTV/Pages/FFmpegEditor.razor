@@ -5,10 +5,14 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Commands
 @using ErsatzTV.Application.FFmpegProfiles.Queries
+@using ErsatzTV.Core.FFmpeg
+@using Microsoft.AspNetCore.Components
+@using Microsoft.Extensions.Caching.Memory
 @inject NavigationManager _navigationManager
 @inject ILogger<FFmpegEditor> _logger
 @inject ISnackbar _snackbar
 @inject IMediator _mediator
+@inject IMemoryCache _memoryCache
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
     <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
@@ -55,6 +59,22 @@
                                         @foreach (HardwareAccelerationKind hwAccel in Enum.GetValues<HardwareAccelerationKind>())
                                         {
                                             <MudSelectItem Value="@hwAccel">@hwAccel</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)" Label="VAAPI Driver" @bind-Value="_model.VaapiDriver" For="@(() => _model.VaapiDriver)">
+                                        @foreach (VaapiDriver driver in Enum.GetValues<VaapiDriver>())
+                                        {
+                                            <MudSelectItem Value="@driver">@driver</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudSelect Disabled="@(_model.HardwareAcceleration != HardwareAccelerationKind.Vaapi)" Label="VAAPI Device" @bind-Value="_model.VaapiDevice" For="@(() => _model.VaapiDevice)">
+                                        @foreach (string device in _vaapiDevices)
+                                        {
+                                            <MudSelectItem Value="@device">@device</MudSelectItem>
                                         }
                                     </MudSelect>
                                 </MudElement>
@@ -107,6 +127,7 @@
     private ValidationMessageStore _messageStore;
 
     private List<ResolutionViewModel> _resolutions;
+    private List<string> _vaapiDevices;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -126,6 +147,13 @@
 
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
+
+        if (!_memoryCache.TryGetValue("ffmpeg.render_devices", out List<string> vaapiDevices))
+        {
+            vaapiDevices = new List<string> { "/dev/dri/renderD128" };
+        }
+
+        _vaapiDevices = vaapiDevices;
     }
 
     private bool IsEdit => Id != 0;

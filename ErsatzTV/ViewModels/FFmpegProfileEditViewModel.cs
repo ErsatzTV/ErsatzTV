@@ -2,6 +2,7 @@
 using ErsatzTV.Application.FFmpegProfiles.Commands;
 using ErsatzTV.Application.Resolutions;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
 
 namespace ErsatzTV.ViewModels
 {
@@ -27,6 +28,8 @@ namespace ErsatzTV.ViewModels
             ThreadCount = viewModel.ThreadCount;
             Transcode = viewModel.Transcode;
             HardwareAcceleration = viewModel.HardwareAcceleration;
+            VaapiDriver = viewModel.VaapiDriver;
+            VaapiDevice = viewModel.VaapiDevice;
             VideoBitrate = viewModel.VideoBitrate;
             VideoBufferSize = viewModel.VideoBufferSize;
             VideoCodec = viewModel.VideoCodec;
@@ -46,6 +49,8 @@ namespace ErsatzTV.ViewModels
         public int ThreadCount { get; set; }
         public bool Transcode { get; set; }
         public HardwareAccelerationKind HardwareAcceleration { get; set; }
+        public VaapiDriver VaapiDriver { get; set; }
+        public string VaapiDevice { get; set; }
         public int VideoBitrate { get; set; }
         public int VideoBufferSize { get; set; }
         public string VideoCodec { get; set; }
