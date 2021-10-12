@@ -49,7 +49,7 @@ namespace ErsatzTV.Application.Streaming.Commands
         {
             TimeSpan idleTimeout = await _configElementRepository
                 .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout)
-                .Map(maybeTimeout => maybeTimeout.Match(i => TimeSpan.FromSeconds(i), () => TimeSpan.FromMinutes(2)));
+                .Map(maybeTimeout => maybeTimeout.Match(i => TimeSpan.FromSeconds(i), () => TimeSpan.FromMinutes(1)));
             
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             HlsSessionWorker worker = scope.ServiceProvider.GetRequiredService<HlsSessionWorker>();
