@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Work-Ahead HLS Segmenter Limit` - the number of segmenters (channels) that will work-ahead simultaneously (if multiple channels are being watched)
     - "working ahead" means transcoding at full speed, which can take a lot of resources
     - This setting must be greater than or equal to 0
+- Add more watermark locations ("middle" of each side)
 
 ### Changed
 - Upgrade ffmpeg from 4.3 to 4.4 in all docker images
