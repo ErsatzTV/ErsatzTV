@@ -19,6 +19,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         PlaybackOrder PlaybackOrder,
         int? MultipleCount,
         TimeSpan? PlayoutDuration,
-        bool? OfflineTail,
+        TailMode TailMode,
+        ProgramScheduleItemCollectionType TailCollectionType,
+        int? TailCollectionId,
+        int? TailMultiCollectionId,
+        int? TailSmartCollectionId,
+        int? TailMediaItemId,
         string CustomTitle) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
 }

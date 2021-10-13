@@ -385,7 +385,7 @@ namespace ErsatzTV.Core.Scheduling
                                             index++;
                                             customGroup = false;
 
-                                            if (duration.OfflineTail)
+                                            if (duration.TailMode == TailMode.Offline)
                                             {
                                                 durationFinish.Do(f => currentTime = f);
                                             }
