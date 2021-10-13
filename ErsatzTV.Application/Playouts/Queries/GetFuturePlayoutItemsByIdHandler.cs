@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,21 +12,23 @@ using static ErsatzTV.Application.Playouts.Mapper;
 
 namespace ErsatzTV.Application.Playouts.Queries
 {
-    public class GetPlayoutItemsByIdHandler : IRequestHandler<GetPlayoutItemsById, PagedPlayoutItemsViewModel>
+    public class GetFuturePlayoutItemsByIdHandler : IRequestHandler<GetFuturePlayoutItemsById, PagedPlayoutItemsViewModel>
     {
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public GetPlayoutItemsByIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+        public GetFuturePlayoutItemsByIdHandler(IDbContextFactory<TvContext> dbContextFactory) =>
             _dbContextFactory = dbContextFactory;
 
         public async Task<PagedPlayoutItemsViewModel> Handle(
-            GetPlayoutItemsById request,
+            GetFuturePlayoutItemsById request,
             CancellationToken cancellationToken)
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
             int totalCount = await dbContext.PlayoutItems
                 .CountAsync(i => i.PlayoutId == request.PlayoutId, cancellationToken);
+
+            DateTime now = DateTimeOffset.Now.UtcDateTime;
             
             List<PlayoutItemViewModel> page = await dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
@@ -50,6 +53,7 @@ namespace ErsatzTV.Application.Playouts.Queries
                 .ThenInclude(mi => (mi as Episode).Season.Show)
                 .ThenInclude(s => s.ShowMetadata)
                 .Filter(i => i.PlayoutId == request.PlayoutId)
+                .Filter(i => i.Finish >= now)
                 .OrderBy(i => i.Start)
                 .Skip(request.PageNum * request.PageSize)
                 .Take(request.PageSize)

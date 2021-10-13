@@ -281,7 +281,8 @@ namespace ErsatzTV.Core.Scheduling
                             MediaItemId = mediaItem.Id,
                             Start = itemStartTime.UtcDateTime,
                             Finish = itemStartTime.UtcDateTime + version.Duration,
-                            CustomGroup = customGroup
+                            CustomGroup = customGroup,
+                            IsFiller = inDurationFiller
                         };
 
                         if (!string.IsNullOrWhiteSpace(scheduleItem.CustomTitle))
@@ -425,6 +426,8 @@ namespace ErsatzTV.Core.Scheduling
                                                          collectionEnumerators))
                                             {
                                                 inDurationFiller = true;
+                                                durationFinish.Do(
+                                                    f => playoutItem.GuideFinish = f.UtcDateTime);
                                                 _logger.LogDebug("Starting filler");
                                             }
                                         }
@@ -442,7 +445,8 @@ namespace ErsatzTV.Core.Scheduling
             playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
 
             // remove any items outside the desired range
-            playout.Items.RemoveAll(old => old.FinishOffset < playoutStart || old.StartOffset > playoutFinish);
+            playout.Items.RemoveAll(
+                old => old.FinishOffset < playoutStart.AddHours(-4) || old.StartOffset > playoutFinish);
 
             DateTimeOffset minCurrentTime = currentTime;
             if (playout.Items.Any())
