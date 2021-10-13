@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,8 +39,9 @@ namespace ErsatzTV.Services.RunOnce
                 IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
                 await repo.Upsert(ConfigElementKey.FFmpegSaveReports, false);
             }
-            
-            if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Linux))
+
+            if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Linux) &&
+                System.IO.Directory.Exists("/dev/dri"))
             {
                 ILocalFileSystem localFileSystem = scope.ServiceProvider.GetRequiredService<ILocalFileSystem>();
                 IMemoryCache memoryCache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
