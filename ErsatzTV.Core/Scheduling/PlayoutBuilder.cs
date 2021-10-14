@@ -412,8 +412,11 @@ namespace ErsatzTV.Core.Scheduling
 
                                             if (duration.TailMode != TailMode.Filler || inDurationFiller)
                                             {
-                                                _logger.LogDebug("Done with filler");
-                                                durationFinish.Do(f => currentTime = f);
+                                                if (duration.TailMode != TailMode.None)
+                                                {
+                                                    durationFinish.Do(f => currentTime = f);
+                                                }
+
                                                 durationFinish = None;
                                                 inDurationFiller = false;
                                                 customGroup = false;
@@ -428,7 +431,6 @@ namespace ErsatzTV.Core.Scheduling
                                                 inDurationFiller = true;
                                                 durationFinish.Do(
                                                     f => playoutItem.GuideFinish = f.UtcDateTime);
-                                                _logger.LogDebug("Starting filler");
                                             }
                                         }
                                     }
