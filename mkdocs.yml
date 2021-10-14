@@ -9,6 +9,7 @@ nav:
   - 'Advanced':
     - 'Local Libraries': 'user-guide/local-libraries.md'
     - 'Search': 'user-guide/search.md'
+    - 'Sample Schedules': 'user-guide/sample-schedules.md'
 theme:
   name: material
   palette:
