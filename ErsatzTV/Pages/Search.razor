@@ -63,6 +63,11 @@
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")" Style="margin-bottom: auto; margin-top: auto">@_musicVideos.Count Music Videos</MudLink>
             }
+
+            if (_otherVideos?.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#other_videos")" Style="margin-bottom: auto; margin-top: auto">@_otherVideos.Count Other Videos</MudLink>
+            }
             <div style="margin-left: auto">
                 <MudTooltip Text="Add All To Collection">
                     <MudButton Variant="Variant.Filled"
@@ -249,6 +254,34 @@
             }
         </MudContainer>
     }
+    
+    @if (_otherVideos?.Count > 0)
+    {
+        <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+            <MudText Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "other_videos" } })">
+                Other Videos
+            </MudText>
+            @if (_otherVideos.Count > 50)
+            {
+                <MudLink Href="@GetOtherVideosLink()" Class="ml-4">See All >></MudLink>
+            }
+        </div>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (OtherVideoCardViewModel card in _otherVideos.Cards.OrderBy(s => s.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           AddToCollectionClicked="@AddToCollection"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 @code {
@@ -258,6 +291,7 @@
     private TelevisionSeasonCardResultsViewModel _seasons;
     private TelevisionEpisodeCardResultsViewModel _episodes;
     private MusicVideoCardResultsViewModel _musicVideos;
+    private OtherVideoCardResultsViewModel _otherVideos;
     private ArtistCardResultsViewModel _artists;
 
     protected override async Task OnInitializedAsync()
@@ -270,6 +304,7 @@
             _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50));
             _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50));
             _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50));
+            _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50));
             _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50));
         }
     }
@@ -284,6 +319,7 @@
                 .Append(_episodes.Cards.OrderBy(ep => ep.SortTitle))
                 .Append(_artists.Cards.OrderBy(a => a.SortTitle))
                 .Append(_musicVideos.Cards.OrderBy(mv => mv.SortTitle))
+                .Append(_otherVideos.Cards.OrderBy(ov => ov.SortTitle))
                 .ToList();
         }
 
@@ -396,6 +432,27 @@
                     Right: _ => Snackbar.Add($"Added {musicVideo.Title} to collection {collection.Name}", Severity.Success));
             }
         }
+        
+        if (card is OtherVideoCardViewModel otherVideo)
+        {
+            var parameters = new DialogParameters { { "EntityType", "other video" }, { "EntityName", otherVideo.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddOtherVideoToCollection(collection.Id, otherVideo.OtherVideoId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding other video to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding other video to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {otherVideo.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
     }
 
     private string GetMoviesLink()
@@ -463,6 +520,17 @@
         }
         return uri;
     }
+    
+    private string GetOtherVideosLink()
+    {
+        var uri = "/media/other/videos/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
+        }
+        return uri;
+    }
 
     private async Task AddAllToCollection(MouseEventArgs _)
     {
@@ -474,6 +542,7 @@
             results.EpisodeIds,
             results.ArtistIds,
             results.MusicVideoIds,
+            results.OtherVideoIds,
             "search results");
     }
 

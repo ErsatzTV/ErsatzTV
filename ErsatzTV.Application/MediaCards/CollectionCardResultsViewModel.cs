@@ -9,7 +9,8 @@ namespace ErsatzTV.Application.MediaCards
         List<TelevisionSeasonCardViewModel> SeasonCards,
         List<TelevisionEpisodeCardViewModel> EpisodeCards,
         List<ArtistCardViewModel> ArtistCards,
-        List<MusicVideoCardViewModel> MusicVideoCards)
+        List<MusicVideoCardViewModel> MusicVideoCards,
+        List<OtherVideoCardViewModel> OtherVideoCards)
     {
         public bool UseCustomPlaybackOrder { get; set; }
     }

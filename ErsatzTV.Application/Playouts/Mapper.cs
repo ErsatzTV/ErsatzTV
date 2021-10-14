@@ -37,6 +37,9 @@ namespace ErsatzTV.Application.Playouts
                     return mv.MusicVideoMetadata.HeadOrNone()
                         .Map(mvm => $"{artistName}{mvm.Title}")
                         .IfNone("[unknown music video]");
+                case OtherVideo ov:
+                    return ov.OtherVideoMetadata.HeadOrNone().Map(ovm => ovm.Title ?? string.Empty)
+                        .IfNone("[unknown video]");
                 default:
                     return string.Empty;
             }
@@ -49,6 +52,7 @@ namespace ErsatzTV.Application.Playouts
                 Movie m => m.MediaVersions.Head(),
                 Episode e => e.MediaVersions.Head(),
                 MusicVideo mv => mv.MediaVersions.Head(),
+                OtherVideo ov => ov.MediaVersions.Head(),
                 _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
             };
 

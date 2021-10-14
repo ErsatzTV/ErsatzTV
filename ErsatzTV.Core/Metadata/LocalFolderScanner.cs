@@ -73,6 +73,7 @@ namespace ErsatzTV.Core.Metadata
                     Movie m => m.MediaVersions.Head(),
                     Episode e => e.MediaVersions.Head(),
                     MusicVideo mv => mv.MediaVersions.Head(),
+                    OtherVideo ov => ov.MediaVersions.Head(),
                     _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                 };
 

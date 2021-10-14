@@ -59,6 +59,10 @@
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#music_videos")">@_data.MusicVideoCards.Count Music Videos</MudLink>
             }
+            @if (_data.OtherVideoCards.Any())
+            {
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#other_videos")">@_data.OtherVideoCards.Count Other Videos</MudLink>
+            }
             @if (SupportsCustomOrdering())
             {
                 <div style="margin-left: auto">
@@ -220,6 +224,30 @@
             }
         </MudContainer>
     }
+    
+    @if (_data.OtherVideoCards.Any())
+    {
+        <MudText GutterBottom="true"
+                 Typo="Typo.h4"
+                 Style="scroll-margin-top: 160px"
+                 UserAttributes="@(new Dictionary<string, object> { { "id", "other_videos" } })">
+            Other Videos
+        </MudText>
+
+        <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+            @foreach (OtherVideoCardViewModel card in _data.OtherVideoCards.OrderBy(e => e.SortTitle))
+            {
+                <MediaCard Data="@card"
+                           Link=""
+                           ArtworkKind="ArtworkKind.Thumbnail"
+                           DeleteClicked="@RemoveOtherVideoFromCollection"
+                           SelectColor="@Color.Error"
+                           SelectClicked="@(e => SelectClicked(card, e))"
+                           IsSelected="@IsSelected(card)"
+                           IsSelectMode="@IsSelectMode()"/>
+            }
+        </MudContainer>
+    }
 </MudContainer>
 
 @code {
@@ -278,6 +306,7 @@
                 .Append(_data.EpisodeCards.OrderBy(ep => ep.Aired))
                 .Append(_data.ArtistCards.OrderBy(a => a.SortTitle))
                 .Append(_data.MusicVideoCards.OrderBy(mv => mv.SortTitle))
+                .Append(_data.OtherVideoCards.OrderBy(ov => ov.SortTitle))
                 .ToList();
         }
 
@@ -360,6 +389,19 @@
         };
 
         await RemoveItemsWithConfirmation("episode", $"{episode.ShowTitle} - {episode.Title}", request);
+    }
+    
+    private async Task RemoveOtherVideoFromCollection(MediaCardViewModel vm)
+    {
+        if (vm is OtherVideoCardViewModel otherVideo)
+        {
+            var request = new RemoveItemsFromCollection(Id)
+            {
+                MediaItemIds = new List<int> { otherVideo.OtherVideoId }
+            };
+
+            await RemoveItemsWithConfirmation("other video", $"{otherVideo.Title}", request);
+        }
     }
 
     private async Task RemoveItemsWithConfirmation(

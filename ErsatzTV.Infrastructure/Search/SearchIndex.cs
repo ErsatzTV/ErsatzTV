@@ -60,6 +60,7 @@ namespace ErsatzTV.Infrastructure.Search
         public const string ArtistType = "artist";
         public const string MusicVideoType = "music_video";
         public const string EpisodeType = "episode";
+        public const string OtherVideoType = "other_video";
         private readonly List<CultureInfo> _cultureInfos;
 
         private readonly ILogger<SearchIndex> _logger;
@@ -120,6 +121,9 @@ namespace ErsatzTV.Infrastructure.Search
                         break;
                     case Episode episode:
                         await UpdateEpisode(searchRepository, episode);
+                        break;
+                    case OtherVideo otherVideo:
+                        await UpdateOtherVideo(searchRepository, otherVideo);
                         break;
                 }
             }
@@ -217,6 +221,9 @@ namespace ErsatzTV.Infrastructure.Search
                             break;
                         case Episode episode:
                             await UpdateEpisode(searchRepository, episode);
+                            break;
+                        case OtherVideo otherVideo:
+                            await UpdateOtherVideo(searchRepository, otherVideo);
                             break;
                     }
                 }
@@ -747,6 +754,44 @@ namespace ErsatzTV.Infrastructure.Search
                 }
             }
         }
+        
+        private async Task UpdateOtherVideo(ISearchRepository searchRepository, OtherVideo otherVideo)
+        {
+            Option<OtherVideoMetadata> maybeMetadata = otherVideo.OtherVideoMetadata.HeadOrNone();
+            if (maybeMetadata.IsSome)
+            {
+                OtherVideoMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                try
+                {
+                    var doc = new Document
+                    {
+                        new StringField(IdField, otherVideo.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, OtherVideoType, Field.Store.YES),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                        new TextField(LibraryNameField, otherVideo.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(LibraryIdField, otherVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    };
+
+                    await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
+
+                    foreach (Tag tag in metadata.Tags)
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    _writer.UpdateDocument(new Term(IdField, otherVideo.Id.ToString()), doc);
+                }
+                catch (Exception ex)
+                {
+                    metadata.OtherVideo = null;
+                    _logger.LogWarning(ex, "Error indexing other video with metadata {@Metadata}", metadata);
+                }
+            }
+        }
 
         private SearchItem ProjectToSearchItem(Document doc) => new(
             doc.Get(TypeField),
@@ -773,6 +818,7 @@ namespace ErsatzTV.Infrastructure.Search
                 EpisodeMetadata em =>
                     $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}"
                         .ToLowerInvariant(),
+                OtherVideoMetadata ovm => $"{ovm.OriginalTitle}".ToLowerInvariant(),
                 _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
             };
         
