@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.1.3-alpha] - 2021-10-12
+### Fixed
+- Fix startup bug for nvidia docker installations
+
 ## [0.1.2-alpha] - 2021-10-12
 ### Added
 - Include more cuda (nvidia) filters in docker image
@@ -691,7 +695,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.2-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.3-alpha...HEAD
+[0.1.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.2-alpha...v0.1.3-alpha
 [0.1.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.1-alpha...v0.1.2-alpha
 [0.1.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.0-alpha...v0.1.1-alpha
 [0.1.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.0.62-alpha...v0.1.0-alpha
