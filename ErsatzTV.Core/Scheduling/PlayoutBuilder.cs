@@ -118,14 +118,14 @@ namespace ErsatzTV.Core.Scheduling
                 {
                     bool isZero = item switch
                     {
-                        Movie m => await m.MediaVersions.Map(v => v.Duration).HeadOrNone().IfNoneAsync(TimeSpan.Zero) ==
-                                   TimeSpan.Zero,
+                        Movie m => await m.MediaVersions.Map(v => v.Duration).HeadOrNone()
+                            .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
                         Episode e => await e.MediaVersions.Map(v => v.Duration).HeadOrNone()
-                                         .IfNoneAsync(TimeSpan.Zero) ==
-                                     TimeSpan.Zero,
+                            .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
                         MusicVideo mv => await mv.MediaVersions.Map(v => v.Duration).HeadOrNone()
-                                             .IfNoneAsync(TimeSpan.Zero) ==
-                                         TimeSpan.Zero,
+                            .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
+                        OtherVideo ov => await ov.MediaVersions.Map(v => v.Duration).HeadOrNone()
+                            .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
                         _ => true
                     };
 
@@ -160,12 +160,14 @@ namespace ErsatzTV.Core.Scheduling
                 c => c.Value.Any(
                     mi => mi switch
                     {
-                        Movie m => m.MediaVersions.HeadOrNone().Map(mv => mv.Duration).IfNone(TimeSpan.Zero) ==
-                                   TimeSpan.Zero,
-                        Episode e => e.MediaVersions.HeadOrNone().Map(mv => mv.Duration).IfNone(TimeSpan.Zero) ==
-                                     TimeSpan.Zero,
-                        MusicVideo mv => mv.MediaVersions.HeadOrNone().Map(v => v.Duration).IfNone(TimeSpan.Zero) ==
-                                         TimeSpan.Zero,
+                        Movie m => m.MediaVersions.HeadOrNone().Map(mv => mv.Duration)
+                            .IfNone(TimeSpan.Zero) == TimeSpan.Zero,
+                        Episode e => e.MediaVersions.HeadOrNone().Map(mv => mv.Duration)
+                            .IfNone(TimeSpan.Zero) == TimeSpan.Zero,
+                        MusicVideo mv => mv.MediaVersions.HeadOrNone().Map(v => v.Duration)
+                            .IfNone(TimeSpan.Zero) == TimeSpan.Zero,
+                        OtherVideo ov => ov.MediaVersions.HeadOrNone().Map(v => v.Duration)
+                            .IfNone(TimeSpan.Zero) == TimeSpan.Zero,
                         _ => true
                     })).Map(c => c.Key);
             if (zeroDurationCollection.IsSome)
@@ -273,6 +275,7 @@ namespace ErsatzTV.Core.Scheduling
                             Movie m => m.MediaVersions.Head(),
                             Episode e => e.MediaVersions.Head(),
                             MusicVideo mv => mv.MediaVersions.Head(),
+                            OtherVideo mv => mv.MediaVersions.Head(),
                             _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                         };
 
@@ -344,6 +347,7 @@ namespace ErsatzTV.Core.Scheduling
                                             Movie m => m.MediaVersions.Head(),
                                             Episode e => e.MediaVersions.Head(),
                                             MusicVideo mv => mv.MediaVersions.Head(),
+                                            OtherVideo ov => ov.MediaVersions.Head(),
                                             _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                                         };
 
@@ -384,6 +388,7 @@ namespace ErsatzTV.Core.Scheduling
                                             Movie m => m.MediaVersions.Head(),
                                             Episode e => e.MediaVersions.Head(),
                                             MusicVideo mv => mv.MediaVersions.Head(),
+                                            OtherVideo ov => ov.MediaVersions.Head(),
                                             _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                                         };
 
@@ -502,6 +507,7 @@ namespace ErsatzTV.Core.Scheduling
                             Movie m => m.MediaVersions.Head(),
                             Episode e => e.MediaVersions.Head(),
                             MusicVideo mv => mv.MediaVersions.Head(),
+                            OtherVideo ov => ov.MediaVersions.Head(),
                             _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
                         };
 
@@ -734,6 +740,10 @@ namespace ErsatzTV.Core.Scheduling
                     return mv.MusicVideoMetadata.HeadOrNone()
                         .Map(mvm => $"{artistName}{mvm.Title}")
                         .IfNone("[unknown music video]");
+                case OtherVideo ov:
+                    return ov.OtherVideoMetadata.HeadOrNone().Match(
+                        ovm => ovm.Title ?? string.Empty,
+                        () => "[unknown video]");
                 default:
                     return string.Empty;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -8,6 +9,7 @@ using ErsatzTV.Application.MediaSources.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
+using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
@@ -22,15 +24,18 @@ namespace ErsatzTV.Application.Libraries.Commands
     {
         private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
         private readonly IEntityLocker _entityLocker;
+        private readonly ISearchIndex _searchIndex;
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
         public UpdateLocalLibraryHandler(
             ChannelWriter<IBackgroundServiceRequest> workerChannel,
             IEntityLocker entityLocker,
+            ISearchIndex searchIndex,
             IDbContextFactory<TvContext> dbContextFactory)
         {
             _workerChannel = workerChannel;
             _entityLocker = entityLocker;
+            _searchIndex = searchIndex;
             _dbContextFactory = dbContextFactory;
         }
 
@@ -56,10 +61,21 @@ namespace ErsatzTV.Application.Libraries.Commands
                 .Filter(ep => incoming.Paths.All(p => NormalizePath(p.Path) != NormalizePath(ep.Path)))
                 .ToList();
 
+            var toRemoveIds = toRemove.Map(lp => lp.Id).ToList();
+
+            List<int> itemsToRemove = await dbContext.MediaItems
+                .Filter(mi => toRemoveIds.Contains(mi.LibraryPathId))
+                .Map(mi => mi.Id)
+                .ToListAsync();
+            
             existing.Paths.RemoveAll(toRemove.Contains);
             existing.Paths.AddRange(toAdd);
 
-            await dbContext.SaveChangesAsync();
+            if (await dbContext.SaveChangesAsync() > 0)
+            {
+                await _searchIndex.RemoveItems(itemsToRemove);
+                _searchIndex.Commit();
+            }
 
             if (toAdd.Count > 0 || toRemove.Count > 0 && _entityLocker.LockLibrary(existing.Id))
             {

@@ -103,6 +103,13 @@ namespace ErsatzTV.Application.MediaCards
                 musicVideoMetadata.Album,
                 GetThumbnail(musicVideoMetadata, None, None));
 
+        internal static OtherVideoCardViewModel ProjectToViewModel(OtherVideoMetadata otherVideoMetadata) =>
+            new(
+                otherVideoMetadata.OtherVideoId,
+                otherVideoMetadata.Title,
+                otherVideoMetadata.OriginalTitle,
+                otherVideoMetadata.SortTitle);
+
         internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>
             new(
                 artistMetadata.ArtistId,
@@ -133,6 +140,8 @@ namespace ErsatzTV.Application.MediaCards
                     .ToList(),
                 collection.MediaItems.OfType<Artist>().Map(a => ProjectToViewModel(a.ArtistMetadata.Head())).ToList(),
                 collection.MediaItems.OfType<MusicVideo>().Map(mv => ProjectToViewModel(mv.MusicVideoMetadata.Head()))
+                    .ToList(),
+                collection.MediaItems.OfType<OtherVideo>().Map(mv => ProjectToViewModel(mv.OtherVideoMetadata.Head()))
                     .ToList()) { UseCustomPlaybackOrder = collection.UseCustomPlaybackOrder };
 
         internal static ActorCardViewModel ProjectToViewModel(

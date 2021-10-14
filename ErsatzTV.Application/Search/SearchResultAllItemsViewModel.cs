@@ -8,5 +8,6 @@ namespace ErsatzTV.Application.Search
         List<int> SeasonIds,
         List<int> EpisodeIds,
         List<int> ArtistIds,
-        List<int> MusicVideoIds);
+        List<int> MusicVideoIds,
+        List<int> OtherVideoIds);
 }

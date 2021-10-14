@@ -54,6 +54,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             result.AddRange(await GetEpisodeItems(dbContext, collectionId));
             result.AddRange(await GetArtistItems(dbContext, collectionId));
             result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
+            result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
 
             return result.Distinct().ToList();
         }
@@ -79,6 +80,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     result.AddRange(await GetEpisodeItems(dbContext, collectionId));
                     result.AddRange(await GetArtistItems(dbContext, collectionId));
                     result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
+                    result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
                 }
 
                 foreach (int smartCollectionId in multiCollection.SmartCollections.Map(c => c.Id))
@@ -137,6 +139,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     .Map(i => i.Id)
                     .ToList();
                 result.AddRange(await GetEpisodeItems(dbContext, episodeIds));
+
+                var otherVideoIds = searchResults.Items
+                    .Filter(i => i.Type == SearchIndex.OtherVideoType)
+                    .Map(i => i.Id)
+                    .ToList();
+                result.AddRange(await GetOtherVideoItems(dbContext, otherVideoIds));
             }
 
             return result;
@@ -409,6 +417,24 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
                 .Filter(m => musicVideoIds.Contains(m.Id))
+                .ToListAsync();
+        
+        private async Task<List<OtherVideo>> GetOtherVideoItems(TvContext dbContext, int collectionId)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT o.Id FROM CollectionItem ci
+            INNER JOIN OtherVideo o ON o.Id = ci.MediaItemId
+            WHERE ci.CollectionId = @CollectionId",
+                new { CollectionId = collectionId });
+
+            return await GetOtherVideoItems(dbContext, ids);
+        }
+
+        private static Task<List<OtherVideo>> GetOtherVideoItems(TvContext dbContext, IEnumerable<int> otherVideoIds) =>
+            dbContext.OtherVideos
+                .Include(m => m.OtherVideoMetadata)
+                .Include(m => m.MediaVersions)
+                .Filter(m => otherVideoIds.Contains(m.Id))
                 .ToListAsync();
 
         private async Task<List<Episode>> GetShowItems(TvContext dbContext, int collectionId)

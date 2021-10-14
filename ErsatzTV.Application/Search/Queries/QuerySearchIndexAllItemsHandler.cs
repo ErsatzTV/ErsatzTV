@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Interfaces.Search;
+using ErsatzTV.Infrastructure.Search;
 using LanguageExt;
 using MediatR;
 
@@ -19,12 +20,13 @@ namespace ErsatzTV.Application.Search.Queries
             QuerySearchIndexAllItems request,
             CancellationToken cancellationToken) =>
             new(
-                await GetIds("movie", request.Query),
-                await GetIds("show", request.Query),
-                await GetIds("season", request.Query),
-                await GetIds("episode", request.Query),
-                await GetIds("artist", request.Query),
-                await GetIds("music_video", request.Query));
+                await GetIds(SearchIndex.MovieType, request.Query),
+                await GetIds(SearchIndex.ShowType, request.Query),
+                await GetIds(SearchIndex.SeasonType, request.Query),
+                await GetIds(SearchIndex.EpisodeType, request.Query),
+                await GetIds(SearchIndex.ArtistType, request.Query),
+                await GetIds(SearchIndex.MusicVideoType, request.Query),
+                await GetIds(SearchIndex.OtherVideoType, request.Query));
 
         private Task<List<int>> GetIds(string type, string query) =>
             _searchIndex.Search($"type:{type} AND ({query})", 0, 0)
