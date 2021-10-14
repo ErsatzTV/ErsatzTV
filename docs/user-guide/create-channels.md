@@ -55,12 +55,13 @@ Schedule items can contain the following collection types:
 - `Television Season`: Select a specific season of a television show.
 - `Artist`: Select all music videos for a specific artist.
 - `Multi Collection`: Select all collections within a multi-collection.
+- `Smart Collection`: Select all items that match a saved search query.
 
 #### Collection
 
 Based on the selected collection type, select the desired collection.
 
-### Playback Order
+#### Playback Order
 
 Select the desired playback order for media items within the selected collection:
 
@@ -74,10 +75,25 @@ Select how you want this schedule item to behave every time it is selected for p
 
 - `One`: Play one media item from the collection before advancing to the next schedule item.
 - `Multiple`: Play the specified `Multiple Count` of media items from the collection before advancing to the next schedule item.
-- `Duration`: Play the maximum number of complete media items that will fit in the specified `Playout Duration` before either going offline for the remainder of the playout duration (an `Offline Tail`), or immediately advancing to the next schedule item.
+- `Duration`: Play the maximum number of complete media items that will fit in the specified `Playout Duration`
 - `Flood`: Play media items from the collection either forever or until the next schedule item's start time, if one exists.
 
 Click `Save Changes` to save all changes made to the schedule's items.
+
+#### Tail Mode (Duration)
+
+Select how you want this duration schedule item to behave when no more complete media items will fit in the specified `Playout Duration`:
+
+- `(none)`: Immediately advance to the next schedule item
+- `Offline`: Show the ETV offline image for the remainder of the `Playout Duration`
+- `Filler`: Fill the remainder of the `Playout Duration` with the specified collection, followed by the ETV offline image if needed
+
+#### Guide Mode
+
+Select how you want this schedule item to behave in the channel guide:
+
+- `Normal`: show all scheduled items in the channel guide
+- `Filler`: hide all scheduled items from the channel guide, and extend the end time for the previous item in the guide
 
 ## Create Playout
 

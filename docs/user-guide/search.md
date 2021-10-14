@@ -78,6 +78,14 @@ The following fields are available for searching music videos:
 - `release_date`: The music video release date (YYYYMMDD)
 - `type`: Always `music_video`
 
+### Other Videos
+
+The following fields are available for searching other videos:
+
+- `title`: The filename of the video (without extension)
+- `tag`: All of the video's parent folders
+- `type`: Always `other_video`
+
 ## Special Search Fields
 
 - `released_inthelast`: For any media type that supports `release_date`, `released_inthelast` takes a number and a unit (days, weeks, months, years) and returns items released between the specified time ago and now

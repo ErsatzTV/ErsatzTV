@@ -107,3 +107,21 @@ ErsatzTV will read the following fields from the artist NFO:
 ### Artist Fallback Metadata
 
 When no artist NFO is found, the artist metadata will only contain a name, which will be the exact name of the artist subfolder.
+
+## Other Videos
+
+### Folder Layout
+
+The `Other Videos` library has no folder requirements, but folders can be a useful source of metadata.
+
+### Other Video Fallback Metadata
+
+Other videos will have a tag added to their metadata for every containing folder, including the top-level folder. As an example, consider adding a commercials folder with the following files:
+
+- `Commercials\1990\Cars\1990 Car Commercial 1.mkv`
+- `Commercials\1992\Cars\1992 Car Commercial 1.mkv`
+
+Your other video library will then have two media items with the following metadata:
+
+1. title: `1990 Car Commercial 1`, tags: `Commercials`, `1990`, `Cars`
+2. title: `1992 Car Commercial 1`, tags: `Commercials`, `1992`, `Cars`
