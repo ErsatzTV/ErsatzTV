@@ -4,6 +4,7 @@
     {
         Movies = 1,
         Shows = 2,
-        MusicVideos = 3
+        MusicVideos = 3,
+        OtherVideos = 4
     }
 }

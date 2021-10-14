@@ -26,6 +26,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
         private readonly IMediator _mediator;
         private readonly IMovieFolderScanner _movieFolderScanner;
         private readonly IMusicVideoFolderScanner _musicVideoFolderScanner;
+        private readonly IOtherVideoFolderScanner _otherVideoFolderScanner;
         private readonly ITelevisionFolderScanner _televisionFolderScanner;
 
         public ScanLocalLibraryHandler(
@@ -34,6 +35,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             IMovieFolderScanner movieFolderScanner,
             ITelevisionFolderScanner televisionFolderScanner,
             IMusicVideoFolderScanner musicVideoFolderScanner,
+            IOtherVideoFolderScanner otherVideoFolderScanner,
             IEntityLocker entityLocker,
             IMediator mediator,
             ILogger<ScanLocalLibraryHandler> logger)
@@ -43,6 +45,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
             _movieFolderScanner = movieFolderScanner;
             _televisionFolderScanner = televisionFolderScanner;
             _musicVideoFolderScanner = musicVideoFolderScanner;
+            _otherVideoFolderScanner = otherVideoFolderScanner;
             _entityLocker = entityLocker;
             _mediator = mediator;
             _logger = logger;
@@ -102,6 +105,13 @@ namespace ErsatzTV.Application.MediaSources.Commands
                             break;
                         case LibraryMediaKind.MusicVideos:
                             await _musicVideoFolderScanner.ScanFolder(
+                                libraryPath,
+                                ffprobePath,
+                                progressMin,
+                                progressMax);
+                            break;
+                        case LibraryMediaKind.OtherVideos:
+                            await _otherVideoFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffprobePath,
                                 progressMin,

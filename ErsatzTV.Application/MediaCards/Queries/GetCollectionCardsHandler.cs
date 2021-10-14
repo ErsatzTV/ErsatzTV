@@ -80,6 +80,9 @@ namespace ErsatzTV.Application.MediaCards.Queries
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as Episode).Season)
                 .ThenInclude(s => s.SeasonMetadata)
+                .Include(c => c.MediaItems)
+                .ThenInclude(i => (i as OtherVideo).OtherVideoMetadata)
+                .ThenInclude(ovm => ovm.Artwork)
                 .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
                 .Map(c => c.ToEither(BaseError.New("Unable to load collection")))
                 .MapT(c => ProjectToViewModel(c, maybeJellyfin, maybeEmby));

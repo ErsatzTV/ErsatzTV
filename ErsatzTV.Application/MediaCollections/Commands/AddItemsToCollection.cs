@@ -12,5 +12,6 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         List<int> SeasonIds,
         List<int> EpisodeIds,
         List<int> ArtistIds,
-        List<int> MusicVideoIds) : MediatR.IRequest<Either<BaseError, Unit>>;
+        List<int> MusicVideoIds,
+        List<int> OtherVideoIds) : MediatR.IRequest<Either<BaseError, Unit>>;
 }

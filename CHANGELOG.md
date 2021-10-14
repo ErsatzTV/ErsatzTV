@@ -5,9 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Fixed
-- Fix error message/offline continuity with channels that use HLS Segmenter
+- Fix error message/offline stream continuity with channels that use HLS Segmenter
+- Fix removing items from search index when folders are removed from local libraries
 
 ### Added
+- Add `Other Video` local libraries
+  - Other video items require no metadata or particular folder layout, and will have tags added for each containing folder
+  - For Example, a video at `commercials/sd/1990/whatever.mkv` will have the tags `commercials`, `sd` and `1990`, and the title `whatever`
 - Add filler `Tail Mode` option to `Duration` playout mode (in addition to existing `Offline` option)
   - Filler collection will always be randomized (to fill as much time as possible)
   - Filler will be hidden from channel guide, but visible in playout details in ErsatzTV

@@ -39,6 +39,7 @@ namespace ErsatzTV.Core.Metadata
                     Movie m => m.MediaVersions.Head().MediaFiles.Head().Path,
                     Episode e => e.MediaVersions.Head().MediaFiles.Head().Path,
                     MusicVideo mv => mv.MediaVersions.Head().MediaFiles.Head().Path,
+                    OtherVideo ov => ov.MediaVersions.Head().MediaFiles.Head().Path,
                     _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                 };
 
@@ -82,6 +83,7 @@ namespace ErsatzTV.Core.Metadata
                 Movie m => m.MediaVersions.Head(),
                 Episode e => e.MediaVersions.Head(),
                 MusicVideo mv => mv.MediaVersions.Head(),
+                OtherVideo ov => ov.MediaVersions.Head(),
                 _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
             };
 
