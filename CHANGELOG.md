@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.1.4-alpha] - 2021-10-14
 ### Fixed
 - Fix error message/offline stream continuity with channels that use HLS Segmenter
 - Fix removing items from search index when folders are removed from local libraries
@@ -20,7 +22,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Normal` guide mode will show all scheduled items in the channel guide (xmltv)
   - `Filler` guide mode will hide all scheduled items from the channel guide, and extend the end time for the previous item in the guide
 
-## [0.1.3-alpha] - 2021-10-12
+## [0.1.3-alpha] - 2021-10-13
 ### Fixed
 - Fix startup bug for some docker installations
 
@@ -710,7 +712,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.3-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.4-alpha...HEAD
+[0.1.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.3-alpha...v0.1.4-alpha
 [0.1.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.2-alpha...v0.1.3-alpha
 [0.1.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.1-alpha...v0.1.2-alpha
 [0.1.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.0-alpha...v0.1.1-alpha
