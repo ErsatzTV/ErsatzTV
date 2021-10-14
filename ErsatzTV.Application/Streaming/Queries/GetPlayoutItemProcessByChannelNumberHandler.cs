@@ -111,7 +111,6 @@ namespace ErsatzTV.Application.Streaming.Queries
                         maybeGlobalWatermark,
                         channel.FFmpegProfile.VaapiDriver,
                         channel.FFmpegProfile.VaapiDevice,
-                        request.StartAtZero,
                         request.HlsRealtime);
 
                     var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
@@ -146,7 +145,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
-                                    "Channel is Offline");
+                                    "Channel is Offline",
+                                    request.HlsRealtime);
 
 
                                 return new PlayoutItemProcessModel(errorProcess, finish);
@@ -165,7 +165,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
-                                    error.Value);
+                                    error.Value,
+                                    request.HlsRealtime);
 
                                 return new PlayoutItemProcessModel(errorProcess, finish);
                             }
@@ -183,7 +184,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
-                                    "Channel is Offline");
+                                    "Channel is Offline",
+                                    request.HlsRealtime);
 
                                 return new PlayoutItemProcessModel(errorProcess, finish);
                             }

@@ -19,7 +19,12 @@ namespace ErsatzTV.Application.ProgramSchedules
             NamedMediaItemViewModel mediaItem,
             PlaybackOrder playbackOrder,
             TimeSpan playoutDuration,
-            bool offlineTail,
+            TailMode tailMode,
+            ProgramScheduleItemCollectionType tailCollectionType,
+            MediaCollectionViewModel tailCollection,
+            MultiCollectionViewModel tailMultiCollection,
+            SmartCollectionViewModel tailSmartCollection,
+            NamedMediaItemViewModel tailMediaItem,
             string customTitle) : base(
             id,
             index,
@@ -35,10 +40,22 @@ namespace ErsatzTV.Application.ProgramSchedules
             customTitle)
         {
             PlayoutDuration = playoutDuration;
-            OfflineTail = offlineTail;
+            TailMode = tailMode;
+            TailCollectionType = tailCollectionType;
+            TailCollection = tailCollection;
+            TailMultiCollection = tailMultiCollection;
+            TailSmartCollection = tailSmartCollection;
+            TailMediaItem = tailMediaItem;
         }
 
         public TimeSpan PlayoutDuration { get; }
-        public bool OfflineTail { get; }
+        public TailMode TailMode { get; }
+        public ProgramScheduleItemCollectionType TailCollectionType { get; }
+
+        public MediaCollectionViewModel TailCollection { get; }
+        public MultiCollectionViewModel TailMultiCollection { get; }
+        public SmartCollectionViewModel TailSmartCollection { get; }
+        public NamedMediaItemViewModel TailMediaItem { get; }
+
     }
 }

@@ -159,14 +159,24 @@ namespace ErsatzTV.Core.FFmpeg
             return result;
         }
 
-        public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile) =>
-            new()
+        public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile)
+        {
+            string softwareCodec = ffmpegProfile.VideoCodec switch
+            {
+                { } c when c.Contains("hevc") || c.Contains("265") => "libx265",
+                { } c when c.Contains("264") => "libx264",
+                { } c when c.Contains("mpeg2") => "mpeg2video",
+                _ => "libx264"
+            };
+            
+            return new FFmpegPlaybackSettings
             {
                 ThreadCount = ffmpegProfile.ThreadCount,
                 FormatFlags = CommonFormatFlags,
-                VideoCodec = "libx264",
+                VideoCodec = softwareCodec,
                 AudioCodec = ffmpegProfile.AudioCodec,
             };
+        }
 
         private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
             ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo &&

@@ -4,10 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix error message/offline continuity with channels that use HLS Segmenter
+
+### Added
+- Add filler `Tail Mode` option to `Duration` playout mode (in addition to existing `Offline` option)
+  - Filler collection will always be randomized (to fill as much time as possible)
+  - Filler will be hidden from channel guide, but visible in playout details in ErsatzTV
+  - Unfilled time will show offline image
 
 ## [0.1.3-alpha] - 2021-10-12
 ### Fixed
-- Fix startup bug for nvidia docker installations
+- Fix startup bug for some docker installations
 
 ## [0.1.2-alpha] - 2021-10-12
 ### Added

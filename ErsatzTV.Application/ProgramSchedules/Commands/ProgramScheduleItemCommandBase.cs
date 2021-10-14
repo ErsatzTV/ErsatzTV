@@ -55,11 +55,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                         return BaseError.New("[PlayoutDuration] is required for playout mode 'duration'");
                     }
 
-                    if (item.OfflineTail is null)
-                    {
-                        return BaseError.New("[OfflineTail] is required for playout mode 'duration'");
-                    }
-
                     break;
                 default:
                     return BaseError.New("[PlayoutMode] is invalid");
@@ -181,7 +176,12 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     PlayoutDuration = FixDuration(item.PlayoutDuration.GetValueOrDefault()),
-                    OfflineTail = item.OfflineTail.GetValueOrDefault(),
+                    TailMode = item.TailMode,
+                    TailCollectionType = item.TailCollectionType,
+                    TailCollectionId = item.TailCollectionId,
+                    TailMultiCollectionId = item.TailMultiCollectionId,
+                    TailSmartCollectionId = item.TailSmartCollectionId,
+                    TailMediaItemId = item.TailMediaItemId,
                     CustomTitle = item.CustomTitle
                 },
                 _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")

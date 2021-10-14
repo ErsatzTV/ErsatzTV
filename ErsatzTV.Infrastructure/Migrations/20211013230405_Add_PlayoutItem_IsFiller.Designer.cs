@@ -3,14 +3,16 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20211013230405_Add_PlayoutItem_IsFiller")]
+    partial class Add_PlayoutItem_IsFiller
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1095,9 +1097,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("Finish")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("GuideFinish")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsFiller")

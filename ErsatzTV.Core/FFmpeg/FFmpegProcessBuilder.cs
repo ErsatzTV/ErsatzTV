@@ -324,22 +324,29 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHls(string channelNumber, MediaVersion mediaVersion, bool startAtZero)
+        public FFmpegProcessBuilder WithHls(string channelNumber, Option<MediaVersion> mediaVersion)
         {
             const int SEGMENT_SECONDS = 4;
-            
-            if (!int.TryParse(mediaVersion.RFrameRate, out int frameRate))
+
+            var frameRate = 24;
+
+            foreach (MediaVersion version in mediaVersion)
             {
-                string[] split = (mediaVersion.RFrameRate ?? string.Empty).Split("/");
-                if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
+                if (!int.TryParse(version.RFrameRate, out int fr))
                 {
-                    frameRate = (int)Math.Round(left / (double)right);
+                    string[] split = (version.RFrameRate ?? string.Empty).Split("/");
+                    if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
+                    {
+                        fr = (int)Math.Round(left / (double)right);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Unable to detect framerate, using {FrameRate}", 24);
+                        fr = 24;
+                    }
                 }
-                else
-                {
-                    _logger.LogInformation("Unable to detect framerate, using {FrameRate}", 24);
-                    frameRate = 24;
-                }
+
+                frameRate = fr;
             }
 
             _arguments.AddRange(

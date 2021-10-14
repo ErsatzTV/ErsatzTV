@@ -709,7 +709,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     CollectionId = fixedCollection.Id,
                     StartTime = TimeSpan.FromHours(2),
                     PlayoutDuration = TimeSpan.FromHours(2),
-                    OfflineTail = false, // immediately continue
+                    TailMode = TailMode.None, // immediately continue
                     PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
@@ -807,7 +807,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     CollectionId = dynamicCollection.Id,
                     StartTime = null,
                     PlayoutDuration = TimeSpan.FromHours(2),
-                    OfflineTail = false, // immediately continue
+                    TailMode = TailMode.None, // immediately continue
                     PlaybackOrder = PlaybackOrder.Chronological
                 }
             };
@@ -1089,7 +1089,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     CollectionId = collectionOne.Id,
                     StartTime = null,
                     PlayoutDuration = TimeSpan.FromHours(3),
-                    OfflineTail = false,
+                    TailMode = TailMode.None,
                     PlaybackOrder = PlaybackOrder.Chronological
                 },
                 new ProgramScheduleItemDuration
@@ -1100,7 +1100,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     CollectionId = collectionTwo.Id,
                     StartTime = null,
                     PlayoutDuration = TimeSpan.FromHours(3),
-                    OfflineTail = false,
+                    TailMode = TailMode.None,
                     PlaybackOrder = PlaybackOrder.Chronological
                 }
             };

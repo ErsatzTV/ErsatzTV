@@ -182,7 +182,7 @@
         if (_selectedPlayoutId.HasValue)
         {
             PagedPlayoutItemsViewModel data =
-                await _mediator.Send(new GetPlayoutItemsById(_selectedPlayoutId.Value, state.Page, state.PageSize));
+                await _mediator.Send(new GetFuturePlayoutItemsById(_selectedPlayoutId.Value, state.Page, state.PageSize));
             return new TableData<PlayoutItemViewModel>
             {
                 TotalItems = data.TotalCount,
