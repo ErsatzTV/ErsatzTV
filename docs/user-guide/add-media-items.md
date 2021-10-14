@@ -11,7 +11,7 @@ With local libraries, ErsatzTV will read metadata from [NFO files](https://kodi.
 
 ### Add Libraries
 
-ErsatzTV provides three local libraries by default, one for each supported media kind: `Movies`, `Shows` and `Music Videos`.
+ErsatzTV provides four local libraries by default, one for each supported media kind: `Movies`, `Shows`, `Music Videos` and `Other Videos`.
 Additional libraries can be added under `Media Sources` > `Local`.
 
 ### Add Media Items
