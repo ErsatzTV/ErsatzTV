@@ -52,7 +52,7 @@ namespace ErsatzTV.Core.Scheduling
             bool rebuild = false)
         {
             var collectionKeys = playout.ProgramSchedule.Items
-                .Map(CollectionKeyForItem)
+                .SelectMany(CollectionKeysForItem)
                 .Distinct()
                 .ToList();
 
@@ -192,9 +192,11 @@ namespace ErsatzTV.Core.Scheduling
             var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
             foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
             {
-                PlaybackOrder playbackOrder = sortedScheduleItems
-                    .First(item => CollectionKeyForItem(item) == collectionKey)
-                    .PlaybackOrder;
+                // use configured playback order for primary collection, shuffle for filler
+                Option<ProgramScheduleItem> maybeScheduleItem = sortedScheduleItems
+                    .FirstOrDefault(item => CollectionKeyForItem(item) == collectionKey);
+                PlaybackOrder playbackOrder = maybeScheduleItem
+                    .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
                 IMediaCollectionEnumerator enumerator =
                     await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems, playbackOrder);
                 collectionEnumerators.Add(collectionKey, enumerator);
@@ -219,6 +221,7 @@ namespace ErsatzTV.Core.Scheduling
             Option<int> multipleRemaining = Optional(startAnchor.MultipleRemaining);
             Option<DateTimeOffset> durationFinish = startAnchor.DurationFinishOffset;
             bool inFlood = startAnchor.InFlood;
+            bool inDurationFiller = startAnchor.InDurationFiller;
 
             bool customGroup = multipleRemaining.IsSome || durationFinish.IsSome;
 
@@ -234,16 +237,33 @@ namespace ErsatzTV.Core.Scheduling
                     currentTime,
                     multipleRemaining.IsSome,
                     durationFinish.IsSome,
-                    inFlood);
+                    inFlood,
+                    inDurationFiller);
+                
+                Option<CollectionKey> maybeTailCollectionKey = Option<CollectionKey>.None;
+                if (inDurationFiller && scheduleItem is ProgramScheduleItemDuration
+                {
+                    TailMode: TailMode.Filler
+                })
+                {
+                    maybeTailCollectionKey = TailCollectionKeyForItem(scheduleItem);
+                }
 
                 IMediaCollectionEnumerator enumerator = collectionEnumerators[CollectionKeyForItem(scheduleItem)];
+                foreach (CollectionKey tailCollectionKey in maybeTailCollectionKey)
+                {
+                    enumerator = collectionEnumerators[tailCollectionKey];
+                }
+
                 await enumerator.Current.IfSomeAsync(
                     mediaItem =>
                     {
                         _logger.LogDebug(
                             "Scheduling media item: {ScheduleItemNumber} / {CollectionType} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
                             scheduleItem.Index,
-                            scheduleItem.CollectionType,
+                            inDurationFiller
+                                ? (scheduleItem as ProgramScheduleItemDuration)?.TailCollectionType
+                                : scheduleItem.CollectionType,
                             mediaItem.Id,
                             DisplayTitle(mediaItem),
                             itemStartTime);
@@ -261,7 +281,8 @@ namespace ErsatzTV.Core.Scheduling
                             MediaItemId = mediaItem.Id,
                             Start = itemStartTime.UtcDateTime,
                             Finish = itemStartTime.UtcDateTime + version.Duration,
-                            CustomGroup = customGroup
+                            CustomGroup = customGroup,
+                            IsFiller = inDurationFiller
                         };
 
                         if (!string.IsNullOrWhiteSpace(scheduleItem.CustomTitle))
@@ -383,14 +404,34 @@ namespace ErsatzTV.Core.Scheduling
                                                 "Advancing to next schedule item after playout mode {PlayoutMode}",
                                                 "Duration");
                                             index++;
-                                            customGroup = false;
 
-                                            if (duration.OfflineTail)
+                                            if (duration.TailMode == TailMode.Offline)
                                             {
                                                 durationFinish.Do(f => currentTime = f);
                                             }
 
-                                            durationFinish = None;
+                                            if (duration.TailMode != TailMode.Filler || inDurationFiller)
+                                            {
+                                                if (duration.TailMode != TailMode.None)
+                                                {
+                                                    durationFinish.Do(f => currentTime = f);
+                                                }
+
+                                                durationFinish = None;
+                                                inDurationFiller = false;
+                                                customGroup = false;
+                                            }
+                                            else if (duration.TailMode == TailMode.Filler &&
+                                                     WillFinishFillerInTime(
+                                                         scheduleItem,
+                                                         currentTime,
+                                                         durationFinish,
+                                                         collectionEnumerators))
+                                            {
+                                                inDurationFiller = true;
+                                                durationFinish.Do(
+                                                    f => playoutItem.GuideFinish = f.UtcDateTime);
+                                            }
                                         }
                                     }
                                 );
@@ -406,7 +447,8 @@ namespace ErsatzTV.Core.Scheduling
             playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
 
             // remove any items outside the desired range
-            playout.Items.RemoveAll(old => old.FinishOffset < playoutStart || old.StartOffset > playoutFinish);
+            playout.Items.RemoveAll(
+                old => old.FinishOffset < playoutStart.AddHours(-4) || old.StartOffset > playoutFinish);
 
             DateTimeOffset minCurrentTime = currentTime;
             if (playout.Items.Any())
@@ -425,10 +467,59 @@ namespace ErsatzTV.Core.Scheduling
                 NextStart = GetStartTimeAfter(nextScheduleItem, minCurrentTime).UtcDateTime,
                 MultipleRemaining = multipleRemaining.IsSome ? multipleRemaining.ValueUnsafe() : null,
                 DurationFinish = durationFinish.IsSome ? durationFinish.ValueUnsafe().UtcDateTime : null,
-                InFlood = inFlood
+                InFlood = inFlood,
+                InDurationFiller = inDurationFiller
             };
 
             return playout;
+        }
+
+        private static bool WillFinishFillerInTime(
+            ProgramScheduleItem scheduleItem,
+            DateTimeOffset currentTime,
+            Option<DateTimeOffset> durationFinish,
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators)
+        {
+            Option<CollectionKey> maybeTailCollectionKey = Option<CollectionKey>.None;
+            if (scheduleItem is ProgramScheduleItemDuration
+            {
+                TailMode: TailMode.Filler
+            })
+            {
+                maybeTailCollectionKey = TailCollectionKeyForItem(scheduleItem);
+            }
+
+            foreach (CollectionKey collectionKey in maybeTailCollectionKey)
+            {
+                IMediaCollectionEnumerator enumerator = collectionEnumerators[collectionKey];
+                Option<int> firstId = enumerator.Current.Map(i => i.Id);
+                while (true)
+                {
+                    foreach (MediaItem peekMediaItem in enumerator.Current)
+                    {
+                        MediaVersion peekVersion = peekMediaItem switch
+                        {
+                            Movie m => m.MediaVersions.Head(),
+                            Episode e => e.MediaVersions.Head(),
+                            MusicVideo mv => mv.MediaVersions.Head(),
+                            _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
+                        };
+
+                        if (currentTime + peekVersion.Duration <= durationFinish.IfNone(SystemTime.MinValueUtc))
+                        {
+                            return true;
+                        }
+                    }
+
+                    enumerator.MoveNext();
+                    if (enumerator.Current.Map(i => i.Id) == firstId)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static PlayoutAnchor FindStartAnchor(
@@ -465,14 +556,16 @@ namespace ErsatzTV.Core.Scheduling
             DateTimeOffset start,
             bool inMultiple = false,
             bool inDuration = false,
-            bool inFlood = false)
+            bool inFlood = false,
+            bool inDurationFiller = false)
         {
             switch (item.StartType)
             {
                 case StartType.Fixed:
                     if (item is ProgramScheduleItemMultiple && inMultiple ||
                         item is ProgramScheduleItemDuration && inDuration ||
-                        item is ProgramScheduleItemFlood && inFlood)
+                        item is ProgramScheduleItemFlood && inFlood ||
+                        item is ProgramScheduleItemDuration && inDurationFiller)
                     {
                         return start;
                     }
@@ -646,6 +739,13 @@ namespace ErsatzTV.Core.Scheduling
             }
         }
 
+        private static List<CollectionKey> CollectionKeysForItem(ProgramScheduleItem item)
+        {
+            var result = new List<CollectionKey> { CollectionKeyForItem(item) };
+            result.AddRange(TailCollectionKeyForItem(item));
+            return result;
+        }
+
         private static CollectionKey CollectionKeyForItem(ProgramScheduleItem item) =>
             item.CollectionType switch
             {
@@ -681,6 +781,49 @@ namespace ErsatzTV.Core.Scheduling
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(item))
             };
+
+        private static Option<CollectionKey> TailCollectionKeyForItem(ProgramScheduleItem item)
+        {
+            if (item is ProgramScheduleItemDuration { TailMode: TailMode.Filler } duration)
+            {
+                return duration.TailCollectionType switch
+                {
+                    ProgramScheduleItemCollectionType.Collection => new CollectionKey
+                    {
+                        CollectionType = duration.TailCollectionType,
+                        CollectionId = duration.TailCollectionId
+                    },
+                    ProgramScheduleItemCollectionType.TelevisionShow => new CollectionKey
+                    {
+                        CollectionType = duration.TailCollectionType,
+                        MediaItemId = duration.TailMediaItemId
+                    },
+                    ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
+                    {
+                        CollectionType = duration.TailCollectionType,
+                        MediaItemId = duration.TailMediaItemId
+                    },
+                    ProgramScheduleItemCollectionType.Artist => new CollectionKey
+                    {
+                        CollectionType = duration.TailCollectionType,
+                        MediaItemId = duration.TailMediaItemId
+                    },
+                    ProgramScheduleItemCollectionType.MultiCollection => new CollectionKey
+                    {
+                        CollectionType = duration.TailCollectionType,
+                        MultiCollectionId = duration.TailMultiCollectionId
+                    },
+                    ProgramScheduleItemCollectionType.SmartCollection => new CollectionKey
+                    {
+                        CollectionType = duration.TailCollectionType,
+                        SmartCollectionId = duration.TailSmartCollectionId
+                    },
+                    _ => throw new ArgumentOutOfRangeException(nameof(item))
+                };
+            }
+
+            return None;
+        }
 
         private class CollectionKey : Record<CollectionKey>
         {

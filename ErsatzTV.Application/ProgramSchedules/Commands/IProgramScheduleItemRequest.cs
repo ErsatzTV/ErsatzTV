@@ -15,7 +15,12 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         PlaybackOrder PlaybackOrder { get; }
         int? MultipleCount { get; }
         TimeSpan? PlayoutDuration { get; }
-        bool? OfflineTail { get; }
+        TailMode TailMode { get; }
+        ProgramScheduleItemCollectionType TailCollectionType { get; }
+        int? TailCollectionId { get; }
+        int? TailMultiCollectionId { get; }
+        int? TailSmartCollectionId { get; }
+        int? TailMediaItemId { get; }
         string CustomTitle { get; }
     }
 }

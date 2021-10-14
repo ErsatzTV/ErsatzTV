@@ -70,13 +70,19 @@ namespace ErsatzTV.Core.Iptv
             foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(kvp => kvp.Key.Number))
             {
                 var i = 0;
+                while (i < sorted.Count && sorted[i].IsFiller)
+                {
+                    i++;
+                }
+
                 while (i < sorted.Count)
                 {
                     PlayoutItem startItem = sorted[i];
                     bool hasCustomTitle = !string.IsNullOrWhiteSpace(startItem.CustomTitle);
 
                     int finishIndex = i;
-                    while (hasCustomTitle && finishIndex + 1 < sorted.Count && sorted[finishIndex + 1].CustomGroup)
+                    while (finishIndex + 1 < sorted.Count && (hasCustomTitle && sorted[finishIndex + 1].CustomGroup ||
+                                                              sorted[finishIndex + 1].IsFiller))
                     {
                         finishIndex++;
                     }
@@ -97,10 +103,10 @@ namespace ErsatzTV.Core.Iptv
                     PlayoutItem finishItem = sorted[finishIndex];
                     i = finishIndex;
 
-                    // ReSharper disable once StringLiteralTypo
                     string start = startItem.StartOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
-                    // ReSharper disable once StringLiteralTypo
-                    string stop = finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
+                    string stop = startItem.GuideFinishOffset.HasValue
+                        ? startItem.GuideFinishOffset.Value.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty)
+                        : finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
 
                     string title = GetTitle(startItem);
                     string subtitle = GetSubtitle(startItem);

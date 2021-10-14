@@ -12,9 +12,9 @@ namespace ErsatzTV.ViewModels
     {
         private ProgramScheduleItemCollectionType _collectionType;
         private int? _multipleCount;
-        private bool? _offlineTail;
         private TimeSpan? _playoutDuration;
         private TimeSpan? _startTime;
+        private ProgramScheduleItemCollectionType _tailCollectionType;
 
         public int Id { get; set; }
         public int Index { get; set; }
@@ -40,10 +40,12 @@ namespace ErsatzTV.ViewModels
                     Collection = null;
                     MultiCollection = null;
                     MediaItem = null;
+                    SmartCollection = null;
 
                     OnPropertyChanged(nameof(Collection));
                     OnPropertyChanged(nameof(MultiCollection));
                     OnPropertyChanged(nameof(MediaItem));
+                    OnPropertyChanged(nameof(SmartCollection));
                 }
 
                 if (_collectionType == ProgramScheduleItemCollectionType.MultiCollection)
@@ -83,11 +85,34 @@ namespace ErsatzTV.ViewModels
             set => _playoutDuration = value;
         }
 
-        public bool? OfflineTail
+        public TailMode TailMode { get; set; }
+        
+        public ProgramScheduleItemCollectionType TailCollectionType
         {
-            get => PlayoutMode == PlayoutMode.Duration ? _offlineTail : null;
-            set => _offlineTail = value;
+            get => _tailCollectionType;
+            set
+            {
+                if (_tailCollectionType != value)
+                {
+                    _tailCollectionType = value;
+
+                    TailCollection = null;
+                    TailMultiCollection = null;
+                    TailMediaItem = null;
+                    TailSmartCollection = null;
+
+                    OnPropertyChanged(nameof(TailCollection));
+                    OnPropertyChanged(nameof(TailMultiCollection));
+                    OnPropertyChanged(nameof(TailMediaItem));
+                    OnPropertyChanged(nameof(TailSmartCollection));
+                }
+            }
         }
+        
+        public MediaCollectionViewModel TailCollection { get; set; }
+        public MultiCollectionViewModel TailMultiCollection { get; set; }
+        public SmartCollectionViewModel TailSmartCollection { get; set; }
+        public NamedMediaItemViewModel TailMediaItem { get; set; }
 
         public string CustomTitle { get; set; }
 

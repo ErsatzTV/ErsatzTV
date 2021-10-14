@@ -41,7 +41,6 @@ namespace ErsatzTV.Core.FFmpeg
             Option<ChannelWatermark> globalWatermark,
             VaapiDriver vaapiDriver,
             string vaapiDevice,
-            bool startAtZero,
             bool hlsRealtime)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
@@ -121,7 +120,7 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
-                    return builder.WithHls(channel.Number, version, startAtZero)
+                    return builder.WithHls(channel.Number, version)
                         .WithRealtimeOutput(hlsRealtime)
                         .Build();
                 default:
@@ -131,7 +130,12 @@ namespace ErsatzTV.Core.FFmpeg
             }
         }
 
-        public Process ForError(string ffmpegPath, Channel channel, Option<TimeSpan> duration, string errorMessage)
+        public Process ForError(
+            string ffmpegPath,
+            Channel channel,
+            Option<TimeSpan> duration,
+            string errorMessage,
+            bool hlsRealtime)
         {
             FFmpegPlaybackSettings playbackSettings =
                 _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
@@ -149,12 +153,22 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithErrorText(desiredResolution, errorMessage)
                 .WithPixfmt("yuv420p")
                 .WithPlaybackArgs(playbackSettings)
-                .WithMetadata(channel, None)
-                .WithFormat("mpegts");
+                .WithMetadata(channel, None);
 
             duration.IfSome(d => builder = builder.WithDuration(d));
 
-            return builder.WithPipe().Build();
+            switch (channel.StreamingMode)
+            {
+                // HLS needs to segment and generate playlist
+                case StreamingMode.HttpLiveStreamingSegmenter:
+                    return builder.WithHls(channel.Number, None)
+                        .WithRealtimeOutput(hlsRealtime)
+                        .Build();
+                default:
+                    return builder.WithFormat("mpegts")
+                        .WithPipe()
+                        .Build();
+            }
         }
 
         public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
