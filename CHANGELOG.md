@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Filler collection will always be randomized (to fill as much time as possible)
   - Filler will be hidden from channel guide, but visible in playout details in ErsatzTV
   - Unfilled time will show offline image
+- Add `Guide Mode` option to all schedule items
+  - `Normal` guide mode will show all scheduled items in the channel guide (xmltv)
+  - `Filler` guide mode will hide all scheduled items from the channel guide, and extend the end time for the previous item in the guide
 
 ## [0.1.3-alpha] - 2021-10-12
 ### Fixed
