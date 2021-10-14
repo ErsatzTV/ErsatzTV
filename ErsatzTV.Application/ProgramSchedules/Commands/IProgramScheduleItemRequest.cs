@@ -22,5 +22,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? TailSmartCollectionId { get; }
         int? TailMediaItemId { get; }
         string CustomTitle { get; }
+        GuideMode GuideMode { get; }
     }
 }

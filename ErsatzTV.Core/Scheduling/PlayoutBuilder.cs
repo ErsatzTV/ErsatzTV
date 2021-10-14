@@ -285,7 +285,7 @@ namespace ErsatzTV.Core.Scheduling
                             Start = itemStartTime.UtcDateTime,
                             Finish = itemStartTime.UtcDateTime + version.Duration,
                             CustomGroup = customGroup,
-                            IsFiller = inDurationFiller
+                            IsFiller = inDurationFiller || scheduleItem.GuideMode == GuideMode.Filler
                         };
 
                         if (!string.IsNullOrWhiteSpace(scheduleItem.CustomTitle))

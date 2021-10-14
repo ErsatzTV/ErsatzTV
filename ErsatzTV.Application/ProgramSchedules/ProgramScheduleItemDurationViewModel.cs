@@ -25,7 +25,8 @@ namespace ErsatzTV.Application.ProgramSchedules
             MultiCollectionViewModel tailMultiCollection,
             SmartCollectionViewModel tailSmartCollection,
             NamedMediaItemViewModel tailMediaItem,
-            string customTitle) : base(
+            string customTitle,
+            GuideMode guideMode) : base(
             id,
             index,
             startType,
@@ -37,7 +38,8 @@ namespace ErsatzTV.Application.ProgramSchedules
             smartCollection,
             mediaItem,
             playbackOrder,
-            customTitle)
+            customTitle,
+            guideMode)
         {
             PlayoutDuration = playoutDuration;
             TailMode = tailMode;

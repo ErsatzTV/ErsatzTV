@@ -116,6 +116,8 @@ namespace ErsatzTV.ViewModels
 
         public string CustomTitle { get; set; }
 
+        public GuideMode GuideMode { get; set; }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]

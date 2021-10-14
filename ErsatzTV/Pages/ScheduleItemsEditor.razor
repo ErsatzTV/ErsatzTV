@@ -255,6 +255,10 @@
                                                  Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration || _selectedItem.TailMode != TailMode.Filler)"/>
                             }
                             <MudTextField Class="mt-3" Label="Custom Title" @bind-Value="@_selectedItem.CustomTitle" For="@(() => _selectedItem.CustomTitle)"/>
+                            <MudSelect Class="mt-3" Label="Guide Mode" @bind-Value="@_selectedItem.GuideMode" For="@(() => _selectedItem.GuideMode)">
+                                <MudSelectItem Value="@GuideMode.Normal">Normal</MudSelectItem>
+                                <MudSelectItem Value="@GuideMode.Filler">Filler</MudSelectItem>
+                            </MudSelect>
                         </MudCardContent>
                     </MudCard>
                 </EditForm>
@@ -343,6 +347,7 @@
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
             CustomTitle = item.CustomTitle,
+            GuideMode = item.GuideMode
         };
 
         switch (item)
@@ -438,7 +443,8 @@
             item.TailMultiCollection?.Id,
             item.TailSmartCollection?.Id,
             item.TailMediaItem?.MediaItemId,
-            item.CustomTitle)).ToList();
+            item.CustomTitle,
+            item.GuideMode)).ToList();
 
         Seq<BaseError> errorMessages = await _mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
 
