@@ -26,7 +26,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? TailMultiCollectionId,
         int? TailSmartCollectionId,
         int? TailMediaItemId,
-        string CustomTitle) : IProgramScheduleItemRequest;
+        string CustomTitle,
+        GuideMode GuideMode) : IProgramScheduleItemRequest;
 
     public record ReplaceProgramScheduleItems
         (int ProgramScheduleId, List<ReplaceProgramScheduleItem> Items) : IRequest<

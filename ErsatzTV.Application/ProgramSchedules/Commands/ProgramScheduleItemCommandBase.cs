@@ -135,7 +135,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     SmartCollectionId = item.SmartCollectionId,
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
-                    CustomTitle = item.CustomTitle
+                    CustomTitle = item.CustomTitle,
+                    GuideMode = item.GuideMode
                 },
                 PlayoutMode.One => new ProgramScheduleItemOne
                 {
@@ -148,7 +149,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     SmartCollectionId = item.SmartCollectionId,
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
-                    CustomTitle = item.CustomTitle
+                    CustomTitle = item.CustomTitle,
+                    GuideMode = item.GuideMode
                 },
                 PlayoutMode.Multiple => new ProgramScheduleItemMultiple
                 {
@@ -162,7 +164,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     Count = item.MultipleCount.GetValueOrDefault(),
-                    CustomTitle = item.CustomTitle
+                    CustomTitle = item.CustomTitle,
+                    GuideMode = item.GuideMode
                 },
                 PlayoutMode.Duration => new ProgramScheduleItemDuration
                 {
@@ -182,7 +185,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     TailMultiCollectionId = item.TailMultiCollectionId,
                     TailSmartCollectionId = item.TailSmartCollectionId,
                     TailMediaItemId = item.TailMediaItemId,
-                    CustomTitle = item.CustomTitle
+                    CustomTitle = item.CustomTitle,
+                    GuideMode = item.GuideMode
                 },
                 _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
             };

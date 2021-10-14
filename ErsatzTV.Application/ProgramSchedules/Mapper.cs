@@ -58,7 +58,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                             Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
                             _ => null
                         },
-                        duration.CustomTitle),
+                        duration.CustomTitle,
+                        duration.GuideMode),
                 ProgramScheduleItemFlood flood =>
                     new ProgramScheduleItemFloodViewModel(
                         flood.Id,
@@ -83,7 +84,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                             _ => null
                         },
                         flood.PlaybackOrder,
-                        flood.CustomTitle),
+                        flood.CustomTitle,
+                        flood.GuideMode),
                 ProgramScheduleItemMultiple multiple =>
                     new ProgramScheduleItemMultipleViewModel(
                         multiple.Id,
@@ -109,7 +111,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                         },
                         multiple.PlaybackOrder,
                         multiple.Count,
-                        multiple.CustomTitle),
+                        multiple.CustomTitle,
+                        multiple.GuideMode),
                 ProgramScheduleItemOne one =>
                     new ProgramScheduleItemOneViewModel(
                         one.Id,
@@ -134,7 +137,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                             _ => null
                         },
                         one.PlaybackOrder,
-                        one.CustomTitle),
+                        one.CustomTitle,
+                        one.GuideMode),
                 _ => throw new NotSupportedException(
                     $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")
             };

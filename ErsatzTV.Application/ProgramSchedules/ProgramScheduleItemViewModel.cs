@@ -17,7 +17,8 @@ namespace ErsatzTV.Application.ProgramSchedules
         SmartCollectionViewModel SmartCollection,
         NamedMediaItemViewModel MediaItem,
         PlaybackOrder PlaybackOrder,
-        string CustomTitle)
+        string CustomTitle,
+        GuideMode GuideMode)
     {
         public string Name => CollectionType switch
         {

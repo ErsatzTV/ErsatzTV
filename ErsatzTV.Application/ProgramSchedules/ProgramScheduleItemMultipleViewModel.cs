@@ -19,7 +19,8 @@ namespace ErsatzTV.Application.ProgramSchedules
             NamedMediaItemViewModel mediaItem,
             PlaybackOrder playbackOrder,
             int count,
-            string customTitle) : base(
+            string customTitle,
+            GuideMode guideMode) : base(
             id,
             index,
             startType,
@@ -31,7 +32,8 @@ namespace ErsatzTV.Application.ProgramSchedules
             smartCollection,
             mediaItem,
             playbackOrder,
-            customTitle) =>
+            customTitle,
+            guideMode) =>
             Count = count;
 
         public int Count { get; }
