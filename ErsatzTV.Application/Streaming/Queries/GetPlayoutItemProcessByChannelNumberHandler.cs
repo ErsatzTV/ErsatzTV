@@ -75,6 +75,12 @@ namespace ErsatzTV.Application.Streaming.Queries
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as OtherVideo).MediaVersions)
+                .ThenInclude(ov => ov.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as OtherVideo).MediaVersions)
+                .ThenInclude(ov => ov.Streams)
                 .ForChannelAndTime(channel.Id, now)
                 .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
                 .BindT(ValidatePlayoutItemPath);
@@ -87,6 +93,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         Movie m => m.MediaVersions.Head(),
                         Episode e => e.MediaVersions.Head(),
                         MusicVideo mv => mv.MediaVersions.Head(),
+                        OtherVideo ov => ov.MediaVersions.Head(),
                         _ => throw new ArgumentOutOfRangeException(nameof(playoutItemWithPath))
                     };
 
@@ -219,6 +226,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                 Movie m => m.MediaVersions.Head(),
                 Episode e => e.MediaVersions.Head(),
                 MusicVideo mv => mv.MediaVersions.Head(),
+                OtherVideo ov => ov.MediaVersions.Head(),
                 _ => throw new ArgumentOutOfRangeException(nameof(playoutItem))
             };
 
