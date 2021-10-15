@@ -10,10 +10,7 @@ namespace ErsatzTV.Infrastructure.Migrations
             migrationBuilder.Sql(
                 @"INSERT INTO Library (Name, MediaKind, MediaSourceId)
                 SELECT 'Other Videos', 4, Id FROM
-                (SELECT LMS.Id FROM LocalMediaSource LMS
-                INNER JOIN Library L on L.MediaSourceId = LMS.Id
-                INNER JOIN LocalLibrary LL on L.Id = LL.Id
-                WHERE L.Name = 'Movies')");
+                (SELECT LMS.Id FROM LocalMediaSource LMS LIMIT 1)");
             migrationBuilder.Sql("INSERT INTO LocalLibrary (Id) Values (last_insert_rowid())");
         }
 
