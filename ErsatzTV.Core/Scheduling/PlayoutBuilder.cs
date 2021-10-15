@@ -215,6 +215,15 @@ namespace ErsatzTV.Core.Scheduling
                 playout.Channel.Number,
                 playout.Channel.Name,
                 currentTime);
+            
+            // removing any items scheduled past the start anchor
+            // this could happen if the app was closed after scheduling items
+            // but before saving the anchor
+            int removed = playout.Items.RemoveAll(pi => pi.StartOffset >= currentTime);
+            if (removed > 0)
+            {
+                _logger.LogWarning("Removed {Count} schedule items beyond current start anchor", removed);
+            }
 
             // start with the previously-decided schedule item
             int index = sortedScheduleItems.IndexOf(startAnchor.NextScheduleItem);
