@@ -230,7 +230,13 @@ namespace ErsatzTV.Core.Emby
                         foreach (EmbySeason updated in await _televisionRepository.Update(incoming))
                         {
                             incoming.Show = show;
-                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated });
+                            
+                            foreach (MediaItem toIndex in await _searchRepository.GetItemToIndex(updated.Id))
+                            {
+                                await _searchIndex.UpdateItems(
+                                    _searchRepository,
+                                    new List<MediaItem> { toIndex });
+                            }
                         }
                     },
                     async () =>

@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix double scheduling; this could happen if the app was shutdown during a playout build
+- Fix updating Jellyfin and Emby TV seasons
 
 ## [0.1.4-alpha] - 2021-10-14
 ### Fixed
