@@ -6,6 +6,12 @@ namespace ErsatzTV.Infrastructure.Plex
 {
     public interface IPlexServerApi
     {
+        [Get("/")]
+        [Headers("Accept: application/json")]
+        public Task Ping(
+            [Query] [AliasAs("X-Plex-Token")]
+            string token);
+
         [Get("/library/sections")]
         [Headers("Accept: application/json")]
         public Task<PlexMediaContainerResponse<PlexMediaContainerDirectoryContent<PlexLibraryResponse>>> GetLibraries(
