@@ -113,55 +113,30 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task Update(
             PlexMediaSource plexMediaSource,
-            List<PlexConnection> sortedConnections,
             List<PlexConnection> toAdd,
             List<PlexConnection> toDelete)
         {
-            await _dbConnection.ExecuteAsync(
-                @"UPDATE PlexMediaSource SET
-                  ProductVersion = @ProductVersion,
-                  Platform = @Platform,
-                  PlatformVersion = @PlatformVersion,
-                  ServerName = @ServerName
-                  WHERE Id = @Id",
-                new
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            dbContext.Entry(plexMediaSource).State = EntityState.Modified;
+
+            if (toAdd.Any() || toDelete.Any())
+            {
+                plexMediaSource.Connections.Clear();
+                await dbContext.Entry(plexMediaSource).Collection(pms => pms.Connections).LoadAsync();
+
+                plexMediaSource.Connections.AddRange(toAdd);
+                plexMediaSource.Connections.RemoveAll(toDelete.Contains);
+            }
+            else
+            {
+                foreach (PlexConnection connection in plexMediaSource.Connections)
                 {
-                    plexMediaSource.ProductVersion,
-                    plexMediaSource.Platform,
-                    plexMediaSource.PlatformVersion,
-                    plexMediaSource.ServerName,
-                    plexMediaSource.Id
-                });
-
-            foreach (PlexConnection add in toAdd)
-            {
-                await _dbConnection.ExecuteAsync(
-                    @"INSERT INTO PlexConnection (IsActive, Uri, PlexMediaSourceId)
-                    VALUES (0, @Uri, @PlexMediaSourceId)",
-                    new { add.Uri, PlexMediaSourceId = plexMediaSource.Id });
+                    dbContext.Entry(connection).State = EntityState.Modified;
+                }
             }
 
-            foreach (PlexConnection delete in toDelete)
-            {
-                await _dbConnection.ExecuteAsync(
-                    @"DELETE FROM PlexConnection WHERE Id = @Id",
-                    new { delete.Id });
-            }
-
-            int activeCount = await _dbConnection.QuerySingleAsync<int>(
-                @"SELECT COUNT(*) FROM PlexConnection WHERE IsActive = 1 AND PlexMediaSourceId = @PlexMediaSourceId",
-                new { PlexMediaSourceId = plexMediaSource.Id });
-            if (activeCount == 0)
-            {
-                Option<PlexConnection> toActivate =
-                    sortedConnections.FirstOrDefault(c => toDelete.All(d => d.Id != c.Id));
-
-                // update on uri because connections from Plex API don't have our local ids
-                await toActivate.IfSomeAsync(
-                    async c => await _dbConnection.ExecuteAsync(
-                        @"UPDATE PlexConnection SET IsActive = 1 WHERE Uri = @Uri",
-                        new { c.Uri }));
-            }
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task<List<int>> UpdateLibraries(

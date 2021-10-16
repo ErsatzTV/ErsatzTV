@@ -30,6 +30,28 @@ namespace ErsatzTV.Infrastructure.Plex
             _logger = logger;
         }
 
+        public async Task<bool> Ping(
+            PlexConnection connection,
+            PlexServerAuthToken token)
+        {
+            try
+            {
+                IPlexServerApi service = RestService.For<IPlexServerApi>(
+                    new HttpClient
+                    {
+                        BaseAddress = new Uri(connection.Uri),
+                        Timeout = TimeSpan.FromSeconds(5)
+                    });
+
+                await service.Ping(token.AuthToken);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         public async Task<Either<BaseError, List<PlexLibrary>>> GetLibraries(
             PlexConnection connection,
             PlexServerAuthToken token)

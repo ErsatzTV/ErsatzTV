@@ -9,6 +9,10 @@ namespace ErsatzTV.Core.Interfaces.Plex
 {
     public interface IPlexServerApiClient
     {
+        Task<bool> Ping(
+            PlexConnection connection,
+            PlexServerAuthToken token);
+        
         Task<Either<BaseError, List<PlexLibrary>>> GetLibraries(
             PlexConnection connection,
             PlexServerAuthToken token);

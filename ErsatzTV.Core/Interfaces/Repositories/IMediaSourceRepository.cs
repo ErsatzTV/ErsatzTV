@@ -18,7 +18,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
 
         Task Update(
             PlexMediaSource plexMediaSource,
-            List<PlexConnection> prioritizedConnections,
             List<PlexConnection> toAdd,
             List<PlexConnection> toDelete);
 
