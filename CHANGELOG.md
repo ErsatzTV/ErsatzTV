@@ -9,8 +9,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix updating Jellyfin and Emby TV seasons
 - Fix updating Jellyfin and Emby artwork
 
+### Added
+- Add new filler system
+  - `Pre-Roll Filler` plays before each media item
+  - `Mid-Roll Filler` plays between media item chapters
+  - `Post-Roll Filler` plays after each media item
+  - `Fallback Filler` loops instead of default offline image to fill any remaining gaps
+- Store chapter details with media statistics; this is needed to support mid-roll filler
+    - This requires re-ingesting statistics for all media items the first time this version is launched
+
 ### Changed
+- Remove filler `Tail Mode` from `Duration` playout mode
 - Automatically find working Plex address on startup
+- Automatically select schedule item in schedules that contain only one item
 
 ## [0.1.4-alpha] - 2021-10-14
 ### Fixed

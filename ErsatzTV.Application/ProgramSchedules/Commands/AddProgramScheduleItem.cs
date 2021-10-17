@@ -26,5 +26,9 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? TailSmartCollectionId,
         int? TailMediaItemId,
         string CustomTitle,
-        GuideMode GuideMode) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
+        GuideMode GuideMode,
+        int? PreRollFillerId,
+        int? MidRollFillerId,
+        int? PostRollFillerId,
+        int? FallbackFillerId) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
 }

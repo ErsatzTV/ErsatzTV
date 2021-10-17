@@ -117,6 +117,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             Option<MediaVersion> maybeVersion = await dbContext.MediaVersions
                 .Include(v => v.Streams)
+                .Include(v => v.Chapters)
                 .OrderBy(v => v.Id)
                 .SingleOrDefaultAsync(v => v.Id == mediaVersionId)
                 .Map(Optional);
@@ -160,6 +161,31 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         existingStream.Title = incomingStream.Title;
                         existingStream.Default = incomingStream.Default;
                         existingStream.Forced = incomingStream.Forced;
+                    }
+                    
+                    var chaptersToAdd = incoming.Chapters
+                        .Filter(s => existing.Chapters.All(es => es.ChapterId != s.ChapterId))
+                        .ToList();
+                    var chaptersToRemove = existing.Chapters
+                        .Filter(es => incoming.Chapters.All(s => s.ChapterId != es.ChapterId))
+                        .ToList();
+                    var chaptersToUpdate = incoming.Chapters.Except(chaptersToAdd).ToList();
+
+                    // add
+                    existing.Chapters.AddRange(chaptersToAdd);
+
+                    // remove
+                    existing.Chapters.RemoveAll(chaptersToRemove.Contains);
+
+                    // update
+                    foreach (MediaChapter incomingChapter in chaptersToUpdate)
+                    {
+                        MediaChapter existingChapter = existing.Chapters
+                            .First(s => s.ChapterId == incomingChapter.ChapterId);
+
+                        existingChapter.StartTime = incomingChapter.StartTime;
+                        existingChapter.EndTime = incomingChapter.EndTime;
+                        existingChapter.Title = incomingChapter.Title;
                     }
 
                     return await dbContext.SaveChangesAsync() > 0;

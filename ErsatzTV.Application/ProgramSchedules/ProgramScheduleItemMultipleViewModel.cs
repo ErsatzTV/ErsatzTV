@@ -1,4 +1,5 @@
 ﻿using System;
+using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
@@ -20,7 +21,11 @@ namespace ErsatzTV.Application.ProgramSchedules
             PlaybackOrder playbackOrder,
             int count,
             string customTitle,
-            GuideMode guideMode) : base(
+            GuideMode guideMode,
+            FillerPresetViewModel preRollFiller,
+            FillerPresetViewModel midRollFiller,
+            FillerPresetViewModel postRollFiller,
+            FillerPresetViewModel fallbackFiller) : base(
             id,
             index,
             startType,
@@ -33,7 +38,11 @@ namespace ErsatzTV.Application.ProgramSchedules
             mediaItem,
             playbackOrder,
             customTitle,
-            guideMode) =>
+            guideMode,
+            preRollFiller,
+            midRollFiller,
+            postRollFiller,
+            fallbackFiller) =>
             Count = count;
 
         public int Count { get; }

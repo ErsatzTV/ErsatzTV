@@ -7,6 +7,9 @@
 @using ErsatzTV.Application.ProgramSchedules.Queries
 @using ErsatzTV.Application.Television.Queries
 @using ErsatzTV.Application.Artists.Queries
+@using ErsatzTV.Application.Filler
+@using ErsatzTV.Application.Filler.Queries
+@using ErsatzTV.Core.Domain.Filler
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger
 @inject ISnackbar _snackbar
@@ -81,10 +84,10 @@
 
     @if (_selectedItem is not null)
     {
-        <div style="display: flex; flex-direction: row;" class="mt-6">
-            <div style="flex-grow: 1; max-width: 400px;">
-                <EditForm Model="_selectedItem">
-                    <FluentValidator/>
+        <EditForm Model="_selectedItem">
+            <FluentValidator/>
+            <div style="display: flex; flex-direction: row;" class="mt-6">
+                <div style="flex-grow: 1; max-width: 400px;" class="mr-6">
                     <MudCard>
                         <MudCardContent>
                             <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
@@ -261,28 +264,43 @@
                             </MudSelect>
                         </MudCardContent>
                     </MudCard>
-                </EditForm>
+                </div>
+                <div style="flex-grow: 1; max-width: 400px;">
+                    <MudCard>
+                        <MudCardContent>
+                            <MudAutocomplete Class="mt-3"
+                                             T="FillerPresetViewModel"
+                                             Label="Pre-Roll Filler"
+                                             @bind-value="_selectedItem.PreRollFiller"
+                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.PreRoll, arg))"
+                                             ToStringFunc="@(c => c?.Name)"
+                                             ResetValueOnEmptyText="true"/>
+                            <MudAutocomplete Class="mt-3"
+                                             T="FillerPresetViewModel"
+                                             Label="Mid-Roll Filler"
+                                             @bind-value="_selectedItem.MidRollFiller"
+                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.MidRoll, arg))"
+                                             ToStringFunc="@(c => c?.Name)"
+                                             ResetValueOnEmptyText="true"/>
+                            <MudAutocomplete Class="mt-3"
+                                             T="FillerPresetViewModel"
+                                             Label="Post-Roll Filler"
+                                             @bind-value="_selectedItem.PostRollFiller"
+                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.PostRoll, arg))"
+                                             ToStringFunc="@(c => c?.Name)"
+                                             ResetValueOnEmptyText="true"/>
+                            <MudAutocomplete Class="mt-3"
+                                             T="FillerPresetViewModel"
+                                             Label="Fallback Filler"
+                                             @bind-value="_selectedItem.FallbackFiller"
+                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.Fallback, arg))"
+                                             ToStringFunc="@(c => c?.Name)"
+                                             ResetValueOnEmptyText="true"/>
+                            </MudCardContent>
+                    </MudCard>
+                </div>
             </div>
-            <div style="max-width: 600px;" class="ml-6">
-                <MudCard>
-                    <MudCardContent>
-                        <MudText Class="mt-3" Typo="Typo.h6">
-                            Start Type
-                        </MudText>
-                        <MudText Class="mt-3">
-                            A <b>fixed</b> start type requires a <b>start time</b>, while a <b>dynamic</b> start type means the schedule item will start immediately after the preceding schedule item.
-                        </MudText>
-                        <MudText Class="mt-3 mb-2" Typo="Typo.h6">Playout Mode</MudText>
-                        <ul class="mud-typography-body1">
-                            <li><b>One</b> - to play one media item from the collection before advancing to the next schedule item.</li>
-                            <li><b>Multiple</b> - to play a specified <b>count</b> of media items from the collection before advancing to the next schedule item. A count of <b>0</b> is a special case that will automatically and always equal the number of items in the collection, so each item from the collection will be played once before advancing.</li>
-                            <li><b>Duration</b> - to play the maximum number of complete media items that will fit in the specified <b>playout duration</b>, before either going offline for the remainder of the <b>playout duration</b> (an <b>offline tail</b>), or immediately advancing to the next schedule item.</li>
-                            <li><b>Flood</b> - to play media items from the collection forever, or until the next schedule item's <b>start time</b> if one exists.</li>
-                        </ul>
-                    </MudCardContent>
-                </MudCard>
-            </div>
-        </div>
+        </EditForm>
     }
 </MudContainer>
 
@@ -298,6 +316,7 @@
     private List<NamedMediaItemViewModel> _televisionShows;
     private List<NamedMediaItemViewModel> _televisionSeasons;
     private List<NamedMediaItemViewModel> _artists;
+    private List<FillerPresetViewModel> _fillerPresets;
 
     private ProgramScheduleItemEditViewModel _selectedItem;
 
@@ -318,17 +337,27 @@
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
         _artists = await _mediator.Send(new GetAllArtists())
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _fillerPresets = await _mediator.Send(new GetAllFillerPresets())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         string name = string.Empty;
         Option<ProgramScheduleViewModel> maybeSchedule = await _mediator.Send(new GetProgramScheduleById(Id));
         maybeSchedule.IfSome(vm => name = vm.Name);
 
         Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await _mediator.Send(new GetProgramScheduleItems(Id));
-        maybeResults.IfSome(items => _schedule = new ProgramScheduleItemsEditViewModel
+        foreach (IEnumerable<ProgramScheduleItemViewModel> items in maybeResults)
         {
-            Name = name,
-            Items = items.Map(ProjectToEditViewModel).ToList()
-        });
+            _schedule = new ProgramScheduleItemsEditViewModel
+            {
+                Name = name,
+                Items = items.Map(ProjectToEditViewModel).ToList()
+            };
+
+            if (_schedule.Items.Count == 1)
+            {
+                _selectedItem = _schedule.Items.Head();
+            }
+        }
     }
 
     private ProgramScheduleItemEditViewModel ProjectToEditViewModel(ProgramScheduleItemViewModel item)
@@ -347,7 +376,11 @@
             MediaItem = item.MediaItem,
             PlaybackOrder = item.PlaybackOrder,
             CustomTitle = item.CustomTitle,
-            GuideMode = item.GuideMode
+            GuideMode = item.GuideMode,
+            PreRollFiller = item.PreRollFiller,
+            MidRollFiller = item.MidRollFiller,
+            PostRollFiller = item.PostRollFiller,
+            FallbackFiller = item.FallbackFiller
         };
 
         switch (item)
@@ -422,6 +455,9 @@
     private Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value) =>
         _artists.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
+    private Task<IEnumerable<FillerPresetViewModel>> SearchFillerPresets(FillerKind fillerKind, string value) =>
+        _fillerPresets.Filter(p => p.FillerKind == fillerKind && p.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
     private async Task SaveChanges()
     {
         var items = _schedule.Items.Map(item => new ReplaceProgramScheduleItem(
@@ -444,7 +480,11 @@
             item.TailSmartCollection?.Id,
             item.TailMediaItem?.MediaItemId,
             item.CustomTitle,
-            item.GuideMode)).ToList();
+            item.GuideMode,
+            item.PreRollFiller?.Id,
+            item.MidRollFiller?.Id,
+            item.PostRollFiller?.Id,
+            item.FallbackFiller?.Id)).ToList();
 
         Seq<BaseError> errorMessages = await _mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
 

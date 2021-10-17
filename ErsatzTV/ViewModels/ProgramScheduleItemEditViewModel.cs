@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ErsatzTV.Annotations;
+using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
@@ -59,6 +60,10 @@ namespace ErsatzTV.ViewModels
         public MultiCollectionViewModel MultiCollection { get; set; }
         public SmartCollectionViewModel SmartCollection { get; set; }
         public NamedMediaItemViewModel MediaItem { get; set; }
+        public FillerPresetViewModel PreRollFiller { get; set; }
+        public FillerPresetViewModel MidRollFiller { get; set; }
+        public FillerPresetViewModel PostRollFiller { get; set; }
+        public FillerPresetViewModel FallbackFiller { get; set; }
 
         public string CollectionName => CollectionType switch
         {

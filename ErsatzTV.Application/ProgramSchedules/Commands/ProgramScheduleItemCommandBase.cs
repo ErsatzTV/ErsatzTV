@@ -136,7 +136,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     CustomTitle = item.CustomTitle,
-                    GuideMode = item.GuideMode
+                    GuideMode = item.GuideMode,
+                    PreRollFillerId = item.PreRollFillerId,
+                    MidRollFillerId = item.MidRollFillerId,
+                    PostRollFillerId = item.PostRollFillerId,
+                    FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.One => new ProgramScheduleItemOne
                 {
@@ -150,7 +154,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     CustomTitle = item.CustomTitle,
-                    GuideMode = item.GuideMode
+                    GuideMode = item.GuideMode,
+                    PreRollFillerId = item.PreRollFillerId,
+                    MidRollFillerId = item.MidRollFillerId,
+                    PostRollFillerId = item.PostRollFillerId,
+                    FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.Multiple => new ProgramScheduleItemMultiple
                 {
@@ -165,7 +173,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     PlaybackOrder = item.PlaybackOrder,
                     Count = item.MultipleCount.GetValueOrDefault(),
                     CustomTitle = item.CustomTitle,
-                    GuideMode = item.GuideMode
+                    GuideMode = item.GuideMode,
+                    PreRollFillerId = item.PreRollFillerId,
+                    MidRollFillerId = item.MidRollFillerId,
+                    PostRollFillerId = item.PostRollFillerId,
+                    FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.Duration => new ProgramScheduleItemDuration
                 {
@@ -186,7 +198,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     TailSmartCollectionId = item.TailSmartCollectionId,
                     TailMediaItemId = item.TailMediaItemId,
                     CustomTitle = item.CustomTitle,
-                    GuideMode = item.GuideMode
+                    GuideMode = item.GuideMode,
+                    PreRollFillerId = item.PreRollFillerId,
+                    MidRollFillerId = item.MidRollFillerId,
+                    PostRollFillerId = item.PostRollFillerId,
+                    FallbackFillerId = item.FallbackFillerId
                 },
                 _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
             };

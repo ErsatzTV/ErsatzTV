@@ -59,7 +59,19 @@ namespace ErsatzTV.Application.ProgramSchedules
                             _ => null
                         },
                         duration.CustomTitle,
-                        duration.GuideMode),
+                        duration.GuideMode,
+                        duration.PreRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(duration.PreRollFiller)
+                            : null,
+                        duration.MidRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(duration.MidRollFiller)
+                            : null,
+                        duration.PostRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(duration.PostRollFiller)
+                            : null,
+                        duration.FallbackFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(duration.FallbackFiller)
+                            : null),
                 ProgramScheduleItemFlood flood =>
                     new ProgramScheduleItemFloodViewModel(
                         flood.Id,
@@ -85,7 +97,19 @@ namespace ErsatzTV.Application.ProgramSchedules
                         },
                         flood.PlaybackOrder,
                         flood.CustomTitle,
-                        flood.GuideMode),
+                        flood.GuideMode,
+                        flood.PreRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(flood.PreRollFiller)
+                            : null,
+                        flood.MidRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(flood.MidRollFiller)
+                            : null,
+                        flood.PostRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(flood.PostRollFiller)
+                            : null,
+                        flood.FallbackFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(flood.FallbackFiller)
+                            : null),
                 ProgramScheduleItemMultiple multiple =>
                     new ProgramScheduleItemMultipleViewModel(
                         multiple.Id,
@@ -112,7 +136,19 @@ namespace ErsatzTV.Application.ProgramSchedules
                         multiple.PlaybackOrder,
                         multiple.Count,
                         multiple.CustomTitle,
-                        multiple.GuideMode),
+                        multiple.GuideMode,
+                        multiple.PreRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(multiple.PreRollFiller)
+                            : null,
+                        multiple.MidRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(multiple.MidRollFiller)
+                            : null,
+                        multiple.PostRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(multiple.PostRollFiller)
+                            : null,
+                        multiple.FallbackFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(multiple.FallbackFiller)
+                            : null),
                 ProgramScheduleItemOne one =>
                     new ProgramScheduleItemOneViewModel(
                         one.Id,
@@ -138,7 +174,19 @@ namespace ErsatzTV.Application.ProgramSchedules
                         },
                         one.PlaybackOrder,
                         one.CustomTitle,
-                        one.GuideMode),
+                        one.GuideMode,
+                        one.PreRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(one.PreRollFiller)
+                            : null,
+                        one.MidRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(one.MidRollFiller)
+                            : null,
+                        one.PostRollFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(one.PostRollFiller)
+                            : null,
+                        one.FallbackFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(one.FallbackFiller)
+                            : null),
                 _ => throw new NotSupportedException(
                     $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")
             };

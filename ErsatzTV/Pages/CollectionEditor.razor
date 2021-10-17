@@ -36,7 +36,7 @@
     private readonly CollectionEditViewModel _model = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
-
+    
     protected override async Task OnParametersSetAsync()
     {
         if (IsEdit)
@@ -59,7 +59,7 @@
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
     }
-
+    
     private bool IsEdit => Id != 0;
 
     private async Task HandleSubmitAsync()

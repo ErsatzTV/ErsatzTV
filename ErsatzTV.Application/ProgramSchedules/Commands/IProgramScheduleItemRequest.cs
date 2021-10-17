@@ -23,5 +23,9 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? TailMediaItemId { get; }
         string CustomTitle { get; }
         GuideMode GuideMode { get; }
+        int? PreRollFillerId { get; }
+        int? MidRollFillerId { get; }
+        int? PostRollFillerId { get; }
+        int? FallbackFillerId { get; }
     }
 }

@@ -1,0 +1,220 @@
+﻿@page "/media/filler/presets/{Id:int}/edit"
+@page "/media/filler/presets/add"
+@using ErsatzTV.Application.Filler
+@using ErsatzTV.Application.Filler.Queries
+@using ErsatzTV.Application.Television.Queries
+@using ErsatzTV.Application.Artists.Queries
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.MediaCollections.Queries
+@using ErsatzTV.Application.MediaItems
+@using ErsatzTV.Core.Domain.Filler
+@using Microsoft.AspNetCore.Components
+@inject NavigationManager _navigationManager
+@inject ILogger<FillerPresetEditor> _logger
+@inject ISnackbar _snackbar
+@inject IMediator _mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div style="max-width: 400px;">
+        <MudText Typo="Typo.h4" Class="mb-4">@(IsEdit ? "Edit Filler Preset" : "Add Filler Preset")</MudText>
+
+        <EditForm EditContext="_editContext" OnSubmit="@HandleSubmitAsync">
+            <FluentValidator/>
+            <MudCard>
+                <MudCardContent>
+                    <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudSelect Class="mt-3" Label="Filler Kind" @bind-Value="_model.FillerKind" For="@(() => _model.FillerKind)">
+                        <MudSelectItem Value="@(FillerKind.PreRoll)">Pre-Roll</MudSelectItem>
+                        <MudSelectItem Value="@(FillerKind.MidRoll)">Mid-Roll</MudSelectItem>
+                        <MudSelectItem Value="@(FillerKind.PostRoll)">Post-Roll</MudSelectItem>
+                        <MudSelectItem Value="@(FillerKind.Fallback)">Fallback</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="Filler Mode" @bind-Value="_model.FillerMode" For="@(() => _model.FillerMode)"
+                               Disabled="@(_model.FillerKind == FillerKind.Fallback)">
+                        <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
+                        <MudSelectItem Value="@(FillerMode.Multiple)">Multiple</MudSelectItem>
+                        <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>
+                    </MudSelect>
+                    <MudTimePicker Class="mt-3" Label="Filler Duration" @bind-Time="@_model.Duration" For="@(() => _model.Duration)" Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
+                    <MudTextField Class="mt-3" Label="Filler Count" @bind-Value="@_model.Count" For="@(() => _model.Count)" Disabled="@(_model.FillerMode != FillerMode.Multiple)"/>
+                    <MudSelect Class="mt-3" Label="Filler Collection Type" @bind-Value="_model.CollectionType" For="@(() => _model.CollectionType)">
+                        @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
+                        {
+                            <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
+                        }
+                    </MudSelect>
+                    @if (_model.CollectionType == ProgramScheduleItemCollectionType.Collection)
+                    {
+                        <MudAutocomplete Class="mt-3"
+                                         T="MediaCollectionViewModel"
+                                         Label="Collection"
+                                         @bind-value="_model.Collection"
+                                         SearchFunc="@SearchMediaCollections"
+                                         ToStringFunc="@(c => c?.Name)"/>
+                    }
+                    @if (_model.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
+                    {
+                        <MudAutocomplete Class="mt-3"
+                                         T="MultiCollectionViewModel"
+                                         Label="Multi Collection"
+                                         @bind-value="_model.MultiCollection"
+                                         SearchFunc="@SearchMultiCollections"
+                                         ToStringFunc="@(c => c?.Name)"/>
+                    }
+                    @if (_model.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
+                    {
+                        <MudAutocomplete Class="mt-3"
+                                         T="SmartCollectionViewModel"
+                                         Label="Smart Collection"
+                                         @bind-value="_model.SmartCollection"
+                                         SearchFunc="@SearchSmartCollections"
+                                         ToStringFunc="@(c => c?.Name)"/>
+                    }
+                    @if (_model.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
+                    {
+                        <MudAutocomplete Class="mt-3"
+                                         T="NamedMediaItemViewModel"
+                                         Label="Television Show"
+                                         @bind-value="_model.MediaItem"
+                                         SearchFunc="@SearchTelevisionShows"
+                                         ToStringFunc="@(s => s?.Name)"/>
+                    }
+                    @if (_model.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
+                    {
+                        <MudAutocomplete Class="mt-3"
+                                         T="NamedMediaItemViewModel"
+                                         Label="Television Season"
+                                         @bind-value="_model.MediaItem"
+                                         SearchFunc="@SearchTelevisionSeasons"
+                                         ToStringFunc="@(s => s?.Name)"/>
+                    }
+                    @if (_model.CollectionType == ProgramScheduleItemCollectionType.Artist)
+                    {
+                        <MudAutocomplete Class="mt-3"
+                                         T="NamedMediaItemViewModel"
+                                         Label="Artist"
+                                         @bind-value="_model.MediaItem"
+                                         SearchFunc="@SearchArtists"
+                                         ToStringFunc="@(s => s?.Name)"/>
+                    }
+                </MudCardContent>
+                <MudCardActions>
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">
+                        @(IsEdit ? "Save Changes" : "Add Filler Preset")
+                    </MudButton>
+                </MudCardActions>
+            </MudCard>
+        </EditForm>
+    </div>
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+    
+    private readonly FillerPresetEditViewModel _model = new();
+    private EditContext _editContext;
+    private ValidationMessageStore _messageStore;
+    
+    private List<MediaCollectionViewModel> _mediaCollections;
+    private List<MultiCollectionViewModel> _multiCollections;
+    private List<SmartCollectionViewModel> _smartCollections;
+    private List<NamedMediaItemViewModel> _televisionShows;
+    private List<NamedMediaItemViewModel> _televisionSeasons;
+    private List<NamedMediaItemViewModel> _artists;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _mediaCollections = await _mediator.Send(new GetAllCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _multiCollections = await _mediator.Send(new GetAllMultiCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _smartCollections = await _mediator.Send(new GetAllSmartCollections())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _televisionShows = await _mediator.Send(new GetAllTelevisionShows())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _artists = await _mediator.Send(new GetAllArtists())
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+
+        if (IsEdit)
+        {
+            Option<FillerPresetViewModel> maybeFillerPreset = await _mediator.Send(new GetFillerPresetById(Id));
+            maybeFillerPreset.IfSome(fillerPreset =>
+            {
+                _model.Id = fillerPreset.Id;
+                _model.Name = fillerPreset.Name;
+                _model.FillerKind = fillerPreset.FillerKind;
+                _model.FillerMode = fillerPreset.FillerMode;
+                _model.Duration = fillerPreset.Duration;
+                _model.Count = fillerPreset.Count;
+                _model.PadToNearestMinute = fillerPreset.PadToNearestMinute;
+                _model.CollectionType = fillerPreset.CollectionType;
+                _model.Collection = fillerPreset.CollectionId.HasValue
+                    ? _mediaCollections.Find(c => c.Id == fillerPreset.CollectionId.Value)
+                    : null;
+                _model.MultiCollection = fillerPreset.MultiCollectionId.HasValue
+                    ? _multiCollections.Find(c => c.Id == fillerPreset.MultiCollectionId.Value)
+                    : null;
+                _model.SmartCollection = fillerPreset.SmartCollectionId.HasValue
+                    ? _smartCollections.Find(c => c.Id == fillerPreset.SmartCollectionId.Value)
+                    : null;
+                _model.MediaItem = fillerPreset.MediaItemId.HasValue
+                    ? _televisionShows.Append(_televisionSeasons).Append(_artists).ToList().Find(vm => vm.MediaItemId == fillerPreset.MediaItemId.Value)
+                    : null;
+            });
+        }
+        else
+        {
+            _model.Name = "New Filler Preset";
+            _model.FillerKind = FillerKind.PreRoll;
+            _model.FillerMode = FillerMode.Duration;
+        }
+    }
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_model);
+        _messageStore = new ValidationMessageStore(_editContext);
+    }
+    
+    private bool IsEdit => Id != 0;
+    
+    private async Task HandleSubmitAsync()
+    {
+        _messageStore.Clear();
+        if (_editContext.Validate())
+        {
+            IRequest<Either<BaseError, LanguageExt.Unit>> request = IsEdit ? _model.ToEdit() : _model.ToUpdate();
+
+            Seq<BaseError> errorMessage = await _mediator.Send(request)
+                .Map(result => result.LeftToSeq());
+
+            errorMessage.HeadOrNone().Match(
+                error =>
+                {
+                    _snackbar.Add(error.Value, Severity.Error);
+                    _logger.LogError("Error saving filler preset: {Error}", error.Value);
+                },
+                () => _navigationManager.NavigateTo("/media/filler/presets"));
+        }
+    }
+
+    private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
+        _mediaCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value) =>
+        _multiCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value) =>
+        _smartCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value) =>
+        _televisionShows.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value) =>
+        _televisionSeasons.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+
+    private Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value) =>
+        _artists.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
+}

@@ -27,6 +27,12 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .HasForeignKey(i => i.TailMultiCollectionId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
+
+            builder.HasOne(i => i.TailSmartCollection)
+                .WithMany()
+                .HasForeignKey(i => i.TailSmartCollectionId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(false);
         }
     }
 }
