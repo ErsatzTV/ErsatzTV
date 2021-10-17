@@ -9,7 +9,7 @@ namespace ErsatzTV.Core.Scheduling
 {
     public class SchedulerOne : SchedulerBase
     {
-        protected override Tuple<PlayoutBuilderState, PlayoutItem> ScheduleImpl(
+        protected override Tuple<PlayoutBuilderState, List<PlayoutItem>> ScheduleImpl(
             PlayoutBuilderState playoutBuilderState,
             Map<CollectionKey, List<MediaItem>> collectionMediaItems,
             ProgramScheduleItem scheduleItem,
@@ -38,8 +38,8 @@ namespace ErsatzTV.Core.Scheduling
                 ScheduleItemIndex = playoutBuilderState.ScheduleItemIndex + 1,
                 CustomGroup = false
             };
-            
-            return Tuple(nextState, playoutItem);
+
+            return Tuple(nextState, new List<PlayoutItem> { playoutItem });
         }
     }
 }

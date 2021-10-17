@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt;
@@ -11,7 +10,7 @@ namespace ErsatzTV.Core.Scheduling
 {
     public abstract class SchedulerBase : IScheduler
     {
-        public async Task<Tuple<PlayoutBuilderState, Option<PlayoutItem>>> Schedule(
+        public Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
             PlayoutBuilderState playoutBuilderState,
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             Map<CollectionKey, List<MediaItem>> collectionMediaItems,
@@ -40,11 +39,14 @@ namespace ErsatzTV.Core.Scheduling
                     _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
                 };
 
-                (PlayoutBuilderState newState, PlayoutItem playoutItem) =
+                (PlayoutBuilderState newState, List<PlayoutItem> playoutItems) =
                     ScheduleImpl(playoutBuilderState, collectionMediaItems, scheduleItem, mediaItem, version, itemStartTime, logger); 
                 if (!string.IsNullOrWhiteSpace(scheduleItem.CustomTitle))
                 {
-                    playoutItem.CustomTitle = scheduleItem.CustomTitle;
+                    foreach (PlayoutItem playoutItem in playoutItems)
+                    {
+                        playoutItem.CustomTitle = scheduleItem.CustomTitle;
+                    }
                 }
                 
                 enumerator.MoveNext();
@@ -57,15 +59,15 @@ namespace ErsatzTV.Core.Scheduling
                         collectionEnumerators,
                         sortedScheduleItems,
                         scheduleItem,
-                        playoutItem,
+                        playoutItems,
                         itemStartTime,
                         logger);
                 }
 
-                return Tuple(newState, Some(playoutItem));
+                return Tuple(newState, playoutItems);
             }
 
-            return Tuple(playoutBuilderState, Option<PlayoutItem>.None);
+            return Tuple(playoutBuilderState, new List<PlayoutItem>());
         }
 
         protected virtual IMediaCollectionEnumerator GetEnumerator(
@@ -80,12 +82,12 @@ namespace ErsatzTV.Core.Scheduling
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             List<ProgramScheduleItem> sortedScheduleItems,
             ProgramScheduleItem scheduleItem,
-            PlayoutItem playoutItem,
+            List<PlayoutItem> playoutItems,
             DateTimeOffset itemStartTime,
             ILogger logger) =>
             playoutBuilderState;
 
-        protected abstract Tuple<PlayoutBuilderState, PlayoutItem> ScheduleImpl(
+        protected abstract Tuple<PlayoutBuilderState, List<PlayoutItem>> ScheduleImpl(
             PlayoutBuilderState playoutBuilderState,
             Map<CollectionKey, List<MediaItem>> collectionMediaItems,
             ProgramScheduleItem scheduleItem,
@@ -114,7 +116,6 @@ namespace ErsatzTV.Core.Scheduling
                     DateTimeOffset result = start.Date + startTime;
                     // need to wrap to the next day if appropriate
                     return start.TimeOfDay > startTime ? result.AddDays(1) : result;
-                case StartType.Dynamic:
                 default:
                     return start;
             }

@@ -155,7 +155,7 @@ namespace ErsatzTV.Core.Scheduling
                     _ => schedulerOne
                 };
 
-                (PlayoutBuilderState nextState, Option<PlayoutItem> maybePlayoutItem) = await scheduler.Schedule(
+                (PlayoutBuilderState nextState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                     playoutBuilderState,
                     collectionEnumerators,
                     collectionMediaItems,
@@ -163,7 +163,7 @@ namespace ErsatzTV.Core.Scheduling
                     scheduleItem,
                     _logger);
 
-                foreach (PlayoutItem playoutItem in maybePlayoutItem)
+                foreach (PlayoutItem playoutItem in playoutItems)
                 {
                     playout.Items.Add(playoutItem);
                 }
