@@ -233,7 +233,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
 
                 var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();
-                foreach (Artwork artworkToRemove in metadata.Artwork.Filter(a => !paths.Contains(a.Path)))
+                foreach (Artwork artworkToRemove in metadata.Artwork
+                    .Filter(a => !paths.Contains(a.Path))
+                    .ToList())
                 {
                     metadata.Artwork.Remove(artworkToRemove);
                 }
@@ -370,7 +372,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
 
                 var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();
-                foreach (Artwork artworkToRemove in metadata.Artwork.Filter(a => !paths.Contains(a.Path)))
+                foreach (Artwork artworkToRemove in metadata.Artwork
+                    .Filter(a => !paths.Contains(a.Path))
+                    .ToList())
                 {
                     metadata.Artwork.Remove(artworkToRemove);
                 }
@@ -526,7 +530,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 }
 
                 var paths = incomingMetadata.Artwork.Map(a => a.Path).ToList();
-                foreach (Artwork artworkToRemove in metadata.Artwork.Filter(a => !paths.Contains(a.Path)))
+                foreach (Artwork artworkToRemove in metadata.Artwork
+                    .Filter(a => !paths.Contains(a.Path))
+                    .ToList())
                 {
                     metadata.Artwork.Remove(artworkToRemove);
                 }

@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix double scheduling; this could happen if the app was shutdown during a playout build
 - Fix updating Jellyfin and Emby TV seasons
+- Fix updating Jellyfin and Emby artwork
 
 ### Changed
 - Automatically find working Plex address on startup
