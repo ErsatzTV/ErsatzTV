@@ -81,7 +81,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Option<PlexMediaSource>> GetPlexByLibraryId(int plexLibraryId)
         {
-            int? id = await _dbConnection.QuerySingleAsync<int?>(
+            int? id = await _dbConnection.QuerySingleOrDefaultAsync<int?>(
                 @"SELECT L.MediaSourceId FROM Library L
                 INNER JOIN PlexLibrary PL on L.Id = PL.Id
                 WHERE L.Id = @PlexLibraryId",
@@ -562,7 +562,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Option<JellyfinMediaSource>> GetJellyfinByLibraryId(int jellyfinLibraryId)
         {
-            int? id = await _dbConnection.QuerySingleAsync<int?>(
+            int? id = await _dbConnection.QuerySingleOrDefaultAsync<int?>(
                 @"SELECT L.MediaSourceId FROM Library L
                 INNER JOIN JellyfinLibrary PL on L.Id = PL.Id
                 WHERE L.Id = @JellyfinLibraryId",
@@ -745,7 +745,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Option<EmbyMediaSource>> GetEmbyByLibraryId(int embyLibraryId)
         {
-            int? id = await _dbConnection.QuerySingleAsync<int?>(
+            int? id = await _dbConnection.QuerySingleOrDefaultAsync<int?>(
                 @"SELECT L.MediaSourceId FROM Library L
                 INNER JOIN EmbyLibrary PL on L.Id = PL.Id
                 WHERE L.Id = @EmbyLibraryId",
