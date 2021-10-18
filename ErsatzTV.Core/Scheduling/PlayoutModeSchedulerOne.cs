@@ -17,7 +17,8 @@ namespace ErsatzTV.Core.Scheduling
             DateTimeOffset hardStop,
             ILogger logger)
         {
-            IMediaCollectionEnumerator contentEnumerator = collectionEnumerators[CollectionKeyForItem(scheduleItem)];
+            IMediaCollectionEnumerator contentEnumerator =
+                collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
             foreach (MediaItem mediaItem in contentEnumerator.Current)
             {
                 // find when we should start this item, based on the current time

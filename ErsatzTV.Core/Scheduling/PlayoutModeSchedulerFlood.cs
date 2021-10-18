@@ -30,7 +30,8 @@ namespace ErsatzTV.Core.Scheduling
             PlayoutBuilderState nextState = playoutBuilderState;
             var willFinishInTime = true;
 
-            IMediaCollectionEnumerator contentEnumerator = collectionEnumerators[CollectionKeyForItem(scheduleItem)];
+            IMediaCollectionEnumerator contentEnumerator =
+                collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
             while (contentEnumerator.Current.IsSome && nextState.CurrentTime < hardStop && willFinishInTime)
             {
                 MediaItem mediaItem = contentEnumerator.Current.ValueUnsafe();

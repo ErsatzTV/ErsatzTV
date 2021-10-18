@@ -95,9 +95,7 @@ namespace ErsatzTV.Core.Scheduling
             {
                 // use configured playback order for primary collection, shuffle for filler
                 Option<ProgramScheduleItem> maybeScheduleItem = sortedScheduleItems
-                    .FirstOrDefault(
-                        item => PlayoutModeSchedulerBase<ProgramScheduleItem>.CollectionKeyForItem(item) ==
-                                collectionKey);
+                    .FirstOrDefault(item => CollectionKey.ForScheduleItem(item) == collectionKey);
                 PlaybackOrder playbackOrder = maybeScheduleItem
                     .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
                 IMediaCollectionEnumerator enumerator =
@@ -515,28 +513,27 @@ namespace ErsatzTV.Core.Scheduling
         {
             var result = new List<CollectionKey>
             {
-                PlayoutModeSchedulerBase<ProgramScheduleItem>.CollectionKeyForItem(item)
+                CollectionKey.ForScheduleItem(item)
             };
-            result.AddRange(PlayoutModeSchedulerBase<ProgramScheduleItem>.TailCollectionKeyForItem(item));
 
             if (item.PreRollFiller != null)
             {
-                result.Add(PlayoutModeSchedulerBase<ProgramScheduleItem>.FillerCollectionKey(item.PreRollFiller));
+                result.Add(CollectionKey.ForFillerPreset(item.PreRollFiller));
             }
 
             if (item.MidRollFiller != null)
             {
-                result.Add(PlayoutModeSchedulerBase<ProgramScheduleItem>.FillerCollectionKey(item.MidRollFiller));
+                result.Add(CollectionKey.ForFillerPreset(item.MidRollFiller));
             }
 
             if (item.PostRollFiller != null)
             {
-                result.Add(PlayoutModeSchedulerBase<ProgramScheduleItem>.FillerCollectionKey(item.PostRollFiller));
+                result.Add(CollectionKey.ForFillerPreset(item.PostRollFiller));
             }
 
             if (item.FallbackFiller != null)
             {
-                result.Add(PlayoutModeSchedulerBase<ProgramScheduleItem>.FillerCollectionKey(item.FallbackFiller));
+                result.Add(CollectionKey.ForFillerPreset(item.FallbackFiller));
             }
 
             return result;

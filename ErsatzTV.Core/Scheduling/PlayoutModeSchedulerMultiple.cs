@@ -37,11 +37,12 @@ namespace ErsatzTV.Core.Scheduling
             {
                 nextState = nextState with
                 {
-                    MultipleRemaining = _collectionMediaItems[CollectionKeyForItem(scheduleItem)].Count
+                    MultipleRemaining = _collectionMediaItems[CollectionKey.ForScheduleItem(scheduleItem)].Count
                 };
             }
 
-            IMediaCollectionEnumerator contentEnumerator = collectionEnumerators[CollectionKeyForItem(scheduleItem)];
+            IMediaCollectionEnumerator contentEnumerator =
+                collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
             while (contentEnumerator.Current.IsSome && nextState.MultipleRemaining > 0 &&
                    nextState.CurrentTime < hardStop)
             {
