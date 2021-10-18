@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug with `Duration` mode scheduling when media items are too long to fit in the requested duration
 - Fix bug with `Duration` mode scheduling with `Filler` tail mode where other duration items in the schedule would be skipped
 
+### Added
+- Include music video thumbnails in channel guide (xmltv)
+
 ### Changed
 - Automatically find working Plex address on startup
 - Change default log level from `Debug` to `Information`
