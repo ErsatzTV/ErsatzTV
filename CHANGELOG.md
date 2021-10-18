@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add new filler system
+    - `Pre-Roll Filler` plays before each media item
+    - `Mid-Roll Filler` plays between media item chapters
+    - `Post-Roll Filler` plays after each media item
+    - `Fallback Filler` loops instead of default offline image to fill any remaining gaps
+- Store chapter details with media statistics; this is needed to support mid-roll filler
+    - This requires re-ingesting statistics for all media items the first time this version is launched
+
+### Changed
+- Remove filler `Tail Mode` from `Duration` playout mode
+
+## [0.1.5-alpha] - 2021-10-18
 ### Fixed
 - Fix double scheduling; this could happen if the app was shutdown during a playout build
 - Fix updating Jellyfin and Emby TV seasons
@@ -12,16 +25,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug with `Duration` mode scheduling when media items are too long to fit in the requested duration
 
 ### Added
-- Add new filler system
-  - `Pre-Roll Filler` plays before each media item
-  - `Mid-Roll Filler` plays between media item chapters
-  - `Post-Roll Filler` plays after each media item
-  - `Fallback Filler` loops instead of default offline image to fill any remaining gaps
-- Store chapter details with media statistics; this is needed to support mid-roll filler
-    - This requires re-ingesting statistics for all media items the first time this version is launched
+- Include music video thumbnails in channel guide (xmltv)
 
 ### Changed
-- Remove filler `Tail Mode` from `Duration` playout mode
 - Automatically find working Plex address on startup
 - Automatically select schedule item in schedules that contain only one item
 - Change default log level from `Debug` to `Information`
@@ -735,7 +741,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.4-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.5-alpha...HEAD
+[0.1.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.4-alpha...v0.1.5-alpha
 [0.1.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.3-alpha...v0.1.4-alpha
 [0.1.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.2-alpha...v0.1.3-alpha
 [0.1.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.1-alpha...v0.1.2-alpha
