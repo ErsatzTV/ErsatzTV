@@ -302,9 +302,20 @@ namespace ErsatzTV.Core.Scheduling
                             playoutItem.CustomTitle = scheduleItem.CustomTitle;
                         }
 
-                        currentTime = itemStartTime + version.Duration;
                         enumerator.MoveNext();
+                        
+                        if (scheduleItem is ProgramScheduleItemDuration d &&
+                            version.Duration > d.PlayoutDuration)
+                        {
+                            _logger.LogWarning(
+                                "Skipping playout item {Title} with duration {Duration} that is longer than schedule item duration {PlayoutDuration}",
+                                DisplayTitle(mediaItem),
+                                version.Duration,
+                                d.PlayoutDuration);
+                            return;
+                        }
 
+                        currentTime = itemStartTime + version.Duration;
                         playout.Items.Add(playoutItem);
 
                         switch (scheduleItem)
@@ -442,6 +453,10 @@ namespace ErsatzTV.Core.Scheduling
                                                          durationFinish,
                                                          collectionEnumerators))
                                             {
+                                                // if we're starting filler, we don't actually need to move
+                                                // to the next schedule item yet
+                                                index--;
+
                                                 inDurationFiller = true;
                                                 durationFinish.Do(
                                                     f => playoutItem.GuideFinish = f.UtcDateTime);
