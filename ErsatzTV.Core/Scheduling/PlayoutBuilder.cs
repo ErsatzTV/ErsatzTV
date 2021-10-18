@@ -95,7 +95,9 @@ namespace ErsatzTV.Core.Scheduling
             {
                 // use configured playback order for primary collection, shuffle for filler
                 Option<ProgramScheduleItem> maybeScheduleItem = sortedScheduleItems
-                    .FirstOrDefault(item => SchedulerBase.CollectionKeyForItem(item) == collectionKey);
+                    .FirstOrDefault(
+                        item => PlayoutModeSchedulerBase<ProgramScheduleItem>.CollectionKeyForItem(item) ==
+                                collectionKey);
                 PlaybackOrder playbackOrder = maybeScheduleItem
                     .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
                 IMediaCollectionEnumerator enumerator =
@@ -135,10 +137,10 @@ namespace ErsatzTV.Core.Scheduling
                 Optional(startAnchor.MultipleRemaining).IsSome || startAnchor.DurationFinishOffset.IsSome,
                 currentTime);
 
-            var schedulerOne = new SchedulerOne();
-            var schedulerMultiple = new SchedulerMultiple();
-            var schedulerDuration = new SchedulerDuration();
-            var schedulerFlood = new SchedulerFlood();
+            var schedulerOne = new PlayoutModeSchedulerOne();
+            var schedulerMultiple = new PlayoutModeSchedulerMultiple(collectionMediaItems);
+            var schedulerDuration = new PlayoutModeSchedulerDuration();
+            var schedulerFlood = new PlayoutModeSchedulerFlood(sortedScheduleItems);
 
             // loop until we're done filling the desired amount of time
             while (playoutBuilderState.CurrentTime < playoutFinish)
@@ -147,21 +149,43 @@ namespace ErsatzTV.Core.Scheduling
                 ProgramScheduleItem scheduleItem =
                     sortedScheduleItems[playoutBuilderState.ScheduleItemIndex % sortedScheduleItems.Count];
 
-                IScheduler scheduler = scheduleItem switch
+                ProgramScheduleItem nextScheduleItem =
+                    sortedScheduleItems[(playoutBuilderState.ScheduleItemIndex + 1) % sortedScheduleItems.Count];
+
+                Tuple<PlayoutBuilderState, List<PlayoutItem>> result = scheduleItem switch
                 {
-                    ProgramScheduleItemMultiple => schedulerMultiple,
-                    ProgramScheduleItemDuration => schedulerDuration,
-                    ProgramScheduleItemFlood => schedulerFlood,
-                    _ => schedulerOne
+                    ProgramScheduleItemMultiple multiple => schedulerMultiple.Schedule(
+                        playoutBuilderState,
+                        collectionEnumerators,
+                        multiple,
+                        nextScheduleItem,
+                        playoutFinish,
+                        _logger),
+                    ProgramScheduleItemDuration duration => schedulerDuration.Schedule(
+                        playoutBuilderState,
+                        collectionEnumerators,
+                        duration,
+                        nextScheduleItem,
+                        playoutFinish,
+                        _logger),
+                    ProgramScheduleItemFlood flood => schedulerFlood.Schedule(
+                        playoutBuilderState,
+                        collectionEnumerators,
+                        flood,
+                        nextScheduleItem,
+                        playoutFinish,
+                        _logger),
+                    ProgramScheduleItemOne one => schedulerOne.Schedule(
+                        playoutBuilderState,
+                        collectionEnumerators,
+                        one,
+                        nextScheduleItem,
+                        playoutFinish,
+                        _logger),
+                    _ => throw new ArgumentOutOfRangeException(nameof(scheduleItem))
                 };
 
-                (PlayoutBuilderState nextState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
-                    playoutBuilderState,
-                    collectionEnumerators,
-                    collectionMediaItems,
-                    sortedScheduleItems,
-                    scheduleItem,
-                    _logger);
+                (PlayoutBuilderState nextState, List<PlayoutItem> playoutItems) = result;
 
                 foreach (PlayoutItem playoutItem in playoutItems)
                 {
@@ -172,7 +196,7 @@ namespace ErsatzTV.Core.Scheduling
             }
 
             // once more to get playout anchor
-            ProgramScheduleItem nextScheduleItem =
+            ProgramScheduleItem anchorScheduleItem =
                 sortedScheduleItems[playoutBuilderState.ScheduleItemIndex % sortedScheduleItems.Count];
 
             // build program schedule anchors
@@ -182,21 +206,20 @@ namespace ErsatzTV.Core.Scheduling
             playout.Items.RemoveAll(
                 old => old.FinishOffset < playoutStart.AddHours(-4) || old.StartOffset > playoutFinish);
 
-            DateTimeOffset minCurrentTime = playoutBuilderState.CurrentTime;
             if (playout.Items.Any())
             {
                 DateTimeOffset maxStartTime = playout.Items.Max(i => i.FinishOffset);
                 if (maxStartTime < playoutBuilderState.CurrentTime)
                 {
-                    minCurrentTime = maxStartTime;
+                    playoutBuilderState = playoutBuilderState with { CurrentTime = maxStartTime };
                 }
             }
 
             playout.Anchor = new PlayoutAnchor
             {
-                NextScheduleItem = nextScheduleItem,
-                NextScheduleItemId = nextScheduleItem.Id,
-                NextStart = SchedulerBase.GetStartTimeAfter(playoutBuilderState, nextScheduleItem, minCurrentTime)
+                NextScheduleItem = anchorScheduleItem,
+                NextScheduleItemId = anchorScheduleItem.Id,
+                NextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(playoutBuilderState, anchorScheduleItem)
                     .UtcDateTime,
                 MultipleRemaining = playoutBuilderState.MultipleRemaining.IsSome
                     ? playoutBuilderState.MultipleRemaining.ValueUnsafe()
@@ -461,7 +484,7 @@ namespace ErsatzTV.Core.Scheduling
             return result;
         }
 
-        private static string DisplayTitle(MediaItem mediaItem)
+        internal static string DisplayTitle(MediaItem mediaItem)
         {
             switch (mediaItem)
             {
@@ -490,8 +513,32 @@ namespace ErsatzTV.Core.Scheduling
 
         private static List<CollectionKey> CollectionKeysForItem(ProgramScheduleItem item)
         {
-            var result = new List<CollectionKey> { SchedulerBase.CollectionKeyForItem(item) };
-            result.AddRange(SchedulerBase.TailCollectionKeyForItem(item));
+            var result = new List<CollectionKey>
+            {
+                PlayoutModeSchedulerBase<ProgramScheduleItem>.CollectionKeyForItem(item)
+            };
+            result.AddRange(PlayoutModeSchedulerBase<ProgramScheduleItem>.TailCollectionKeyForItem(item));
+
+            if (item.PreRollFiller != null)
+            {
+                result.Add(PlayoutModeSchedulerBase<ProgramScheduleItem>.FillerCollectionKey(item.PreRollFiller));
+            }
+
+            if (item.MidRollFiller != null)
+            {
+                result.Add(PlayoutModeSchedulerBase<ProgramScheduleItem>.FillerCollectionKey(item.MidRollFiller));
+            }
+
+            if (item.PostRollFiller != null)
+            {
+                result.Add(PlayoutModeSchedulerBase<ProgramScheduleItem>.FillerCollectionKey(item.PostRollFiller));
+            }
+
+            if (item.FallbackFiller != null)
+            {
+                result.Add(PlayoutModeSchedulerBase<ProgramScheduleItem>.FillerCollectionKey(item.FallbackFiller));
+            }
+
             return result;
         }
     }
