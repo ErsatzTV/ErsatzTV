@@ -175,6 +175,39 @@ namespace ErsatzTV.Core.Iptv
                         }
                     }
 
+                    if (!hasCustomTitle && startItem.MediaItem is MusicVideo musicVideo)
+                    {
+                        foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
+                        {
+                            if (metadata.Year.HasValue)
+                            {
+                                xml.WriteStartElement("date");
+                                xml.WriteString(metadata.Year.Value.ToString());
+                                xml.WriteEndElement(); // date
+                            }
+                        }
+
+                        xml.WriteStartElement("category");
+                        xml.WriteAttributeString("lang", "en");
+                        xml.WriteString("Music");
+                        xml.WriteEndElement(); // category
+
+                        foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
+                        {
+                            string thumbnail = Optional(metadata.Artwork).Flatten()
+                                .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
+                                .HeadOrNone()
+                                .Match(a => GetArtworkUrl(a, ArtworkKind.Thumbnail), () => string.Empty);
+
+                            if (!string.IsNullOrWhiteSpace(thumbnail))
+                            {
+                                xml.WriteStartElement("icon");
+                                xml.WriteAttributeString("src", thumbnail);
+                                xml.WriteEndElement(); // icon
+                            }
+                        }
+                    }
+
                     if (startItem.MediaItem is Episode episode && (!hasCustomTitle || isSameCustomShow))
                     {
                         Option<ShowMetadata> maybeMetadata =
