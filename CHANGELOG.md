@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.1.5-alpha] - 2021-10-18
 ### Fixed
 - Fix double scheduling; this could happen if the app was shutdown during a playout build
 - Fix updating Jellyfin and Emby TV seasons
@@ -728,7 +730,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.4-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.5-alpha...HEAD
+[0.1.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.4-alpha...v0.1.5-alpha
 [0.1.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.3-alpha...v0.1.4-alpha
 [0.1.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.2-alpha...v0.1.3-alpha
 [0.1.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.1-alpha...v0.1.2-alpha
