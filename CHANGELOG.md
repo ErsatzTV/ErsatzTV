@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix double scheduling; this could happen if the app was shutdown during a playout build
 - Fix updating Jellyfin and Emby TV seasons
 - Fix updating Jellyfin and Emby artwork
+- Fix Plex, Jellyfin, Emby worker crash attempting to sync library that no longer exists
+- Fix bug with `Duration` mode scheduling when media items are too long to fit in the requested duration
 
 ### Added
 - Add new filler system
@@ -22,6 +24,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove filler `Tail Mode` from `Duration` playout mode
 - Automatically find working Plex address on startup
 - Automatically select schedule item in schedules that contain only one item
+- Change default log level from `Debug` to `Information`
+  - The `Debug` log level can be enabled in the `appsettings.json` file for non-docker installs
+  - The `Debug` log level can be enabled by setting the environment variable `Serilog:MinimumLevel=Debug` for docker installs
 
 ## [0.1.4-alpha] - 2021-10-14
 ### Fixed
