@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace ErsatzTV.Core.Domain
 {
+    [DebuggerDisplay("{MediaItemId} - {Start} - {Finish}")]
     public class PlayoutItem
     {
         public int Id { get; set; }
