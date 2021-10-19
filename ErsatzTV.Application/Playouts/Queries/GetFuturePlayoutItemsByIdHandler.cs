@@ -26,7 +26,7 @@ namespace ErsatzTV.Application.Playouts.Queries
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
             int totalCount = await dbContext.PlayoutItems
-                .CountAsync(i => i.PlayoutId == request.PlayoutId, cancellationToken);
+                .CountAsync(i => i.PlayoutId == request.PlayoutId && (request.ShowFiller || i.IsFiller == false), cancellationToken);
 
             DateTime now = DateTimeOffset.Now.UtcDateTime;
             
@@ -58,6 +58,7 @@ namespace ErsatzTV.Application.Playouts.Queries
                 .ThenInclude(mi => (mi as OtherVideo).MediaVersions)
                 .Filter(i => i.PlayoutId == request.PlayoutId)
                 .Filter(i => i.Finish >= now)
+                .Filter(i => request.ShowFiller || i.IsFiller == false)
                 .OrderBy(i => i.Start)
                 .Skip(request.PageNum * request.PageSize)
                 .Take(request.PageSize)

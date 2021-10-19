@@ -25,6 +25,7 @@
         public static ConfigElementKey SchedulesDetailPageSize => new("pages.schedules.detail_page_size");
         public static ConfigElementKey PlayoutsPageSize => new("pages.playouts.page_size");
         public static ConfigElementKey PlayoutsDetailPageSize => new("pages.playouts.detail_page_size");
+        public static ConfigElementKey PlayoutsDetailShowFiller => new("pages.playouts.detail_show_filler");
         public static ConfigElementKey LogsPageSize => new("pages.logs.page_size");
         public static ConfigElementKey TraktListsPageSize => new("pages.trakt.lists_page_size");
         public static ConfigElementKey FillerPresetsPageSize => new("pages.filler_presets.page_size");

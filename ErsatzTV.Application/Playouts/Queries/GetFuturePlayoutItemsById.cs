@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using MediatR;
+﻿using MediatR;
 
 namespace ErsatzTV.Application.Playouts.Queries
 {
-    public record GetFuturePlayoutItemsById(int PlayoutId, int PageNum, int PageSize) : IRequest<PagedPlayoutItemsViewModel>;
+    public record GetFuturePlayoutItemsById(int PlayoutId, bool ShowFiller, int PageNum, int PageSize) : IRequest<PagedPlayoutItemsViewModel>;
 }
