@@ -25,10 +25,10 @@ namespace ErsatzTV.Application.Playouts.Queries
         {
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
-            int totalCount = await dbContext.PlayoutItems
-                .CountAsync(i => i.PlayoutId == request.PlayoutId && (request.ShowFiller || i.IsFiller == false), cancellationToken);
-
             DateTime now = DateTimeOffset.Now.UtcDateTime;
+
+            int totalCount = await dbContext.PlayoutItems
+                .CountAsync(i => i.Finish >= now && i.PlayoutId == request.PlayoutId && (request.ShowFiller || i.IsFiller == false), cancellationToken);
             
             List<PlayoutItemViewModel> page = await dbContext.PlayoutItems
                 .Include(i => i.MediaItem)

@@ -77,7 +77,7 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Start Time">
-                    @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
+                    @(context.StartType == StartType.Fixed ? context.StartTime == null ? string.Empty : DateTime.Today.Add(context.StartTime.Value).ToShortTimeString() : "Dynamic")
                 </MudTd>
                 <MudTd DataLabel="Collection">@context.Name</MudTd>
                 <MudTd DataLabel="Playout Mode">@context.PlayoutMode</MudTd>

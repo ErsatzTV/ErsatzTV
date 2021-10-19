@@ -39,7 +39,7 @@
         <RowTemplate>
             <MudTd DataLabel="Start Time">
                 <MudText Typo="@(context == _selectedItem ? Typo.subtitle2 : Typo.body2)">
-                    @(context.StartType == StartType.Fixed ? context.StartTime?.ToString(@"hh\:mm") ?? string.Empty : "Dynamic")
+                    @(context.StartType == StartType.Fixed ? context.StartTime == null ? string.Empty : DateTime.Today.Add(context.StartTime.Value).ToShortTimeString() : "Dynamic")
                 </MudText>
             </MudTd>
             <MudTd DataLabel="Collection">
