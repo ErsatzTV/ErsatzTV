@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix generated streams with mpeg2video
 
+### Changed
+- Change some debug log messages to info so they show by default again
+
 ## [0.1.5-alpha] - 2021-10-18
 ### Fixed
 - Fix double scheduling; this could happen if the app was shutdown during a playout build
