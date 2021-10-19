@@ -31,6 +31,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             FillerPresetViewModel preRollFiller,
             FillerPresetViewModel midRollFiller,
             FillerPresetViewModel postRollFiller,
+            FillerPresetViewModel tailFiller,
             FillerPresetViewModel fallbackFiller) : base(
             id,
             index,
@@ -48,6 +49,7 @@ namespace ErsatzTV.Application.ProgramSchedules
             preRollFiller,
             midRollFiller,
             postRollFiller,
+            tailFiller,
             fallbackFiller)
         {
             PlayoutDuration = playoutDuration;

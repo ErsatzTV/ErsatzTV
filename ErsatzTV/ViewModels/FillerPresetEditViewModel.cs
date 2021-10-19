@@ -27,7 +27,7 @@ namespace ErsatzTV.ViewModels
             set
             {
                 _fillerKind = value;
-                if (_fillerKind == FillerKind.Fallback)
+                if (_fillerKind is FillerKind.Fallback or FillerKind.Tail)
                 {
                     FillerMode = FillerMode.None;
                 }
@@ -36,7 +36,7 @@ namespace ErsatzTV.ViewModels
 
         public FillerMode FillerMode
         {
-            get => FillerKind == FillerKind.Fallback ? FillerMode.None : _fillerMode;
+            get => FillerKind is FillerKind.Fallback or FillerKind.Tail ? FillerMode.None : _fillerMode;
             set => _fillerMode = value;
         }
 

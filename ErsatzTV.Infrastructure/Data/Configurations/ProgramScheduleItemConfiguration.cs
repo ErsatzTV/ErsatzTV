@@ -37,25 +37,31 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
             builder.HasOne(i => i.PreRollFiller)
                 .WithMany()
                 .HasForeignKey(i => i.PreRollFillerId)
-                .OnDelete(DeleteBehavior.Cascade)
+                .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
 
             builder.HasOne(i => i.MidRollFiller)
                 .WithMany()
                 .HasForeignKey(i => i.MidRollFillerId)
-                .OnDelete(DeleteBehavior.Cascade)
+                .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
 
             builder.HasOne(i => i.PostRollFiller)
                 .WithMany()
                 .HasForeignKey(i => i.PostRollFillerId)
-                .OnDelete(DeleteBehavior.Cascade)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            builder.HasOne(i => i.TailFiller)
+                .WithMany()
+                .HasForeignKey(i => i.TailFillerId)
+                .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
 
             builder.HasOne(i => i.FallbackFiller)
                 .WithMany()
                 .HasForeignKey(i => i.FallbackFillerId)
-                .OnDelete(DeleteBehavior.Cascade)
+                .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
         }
     }

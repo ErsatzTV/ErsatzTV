@@ -23,6 +23,7 @@ namespace ErsatzTV.Application.ProgramSchedules
         FillerPresetViewModel PreRollFiller,
         FillerPresetViewModel MidRollFiller,
         FillerPresetViewModel PostRollFiller,
+        FillerPresetViewModel TailFiller,
         FillerPresetViewModel FallbackFiller)
     {
         public string Name => CollectionType switch

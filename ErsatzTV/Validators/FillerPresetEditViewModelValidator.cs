@@ -13,7 +13,7 @@ namespace ErsatzTV.Validators
             RuleFor(fp => fp.FillerKind).NotEqual(FillerKind.None);
         
             When(
-                fp => fp.FillerKind != FillerKind.Fallback,
+                fp => fp.FillerKind != FillerKind.Fallback && fp.FillerKind != FillerKind.Tail,
                 () => RuleFor(fp => fp.FillerMode).NotEqual(FillerMode.None));
             When(
                 fp => fp.FillerMode == FillerMode.Multiple,

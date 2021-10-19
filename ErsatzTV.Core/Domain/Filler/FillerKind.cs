@@ -6,6 +6,7 @@
         PreRoll = 1,
         MidRoll = 2,
         PostRoll = 3,
-        Fallback = 4
+        Tail = 4,
+        Fallback = 5
     }
 }

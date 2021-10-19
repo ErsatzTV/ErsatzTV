@@ -69,6 +69,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         duration.PostRollFiller != null
                             ? Filler.Mapper.ProjectToViewModel(duration.PostRollFiller)
                             : null,
+                        duration.TailFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(duration.TailFiller)
+                            : null,
                         duration.FallbackFiller != null
                             ? Filler.Mapper.ProjectToViewModel(duration.FallbackFiller)
                             : null),
@@ -106,6 +109,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                             : null,
                         flood.PostRollFiller != null
                             ? Filler.Mapper.ProjectToViewModel(flood.PostRollFiller)
+                            : null,
+                        flood.TailFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(flood.TailFiller)
                             : null,
                         flood.FallbackFiller != null
                             ? Filler.Mapper.ProjectToViewModel(flood.FallbackFiller)
@@ -146,6 +152,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                         multiple.PostRollFiller != null
                             ? Filler.Mapper.ProjectToViewModel(multiple.PostRollFiller)
                             : null,
+                        multiple.TailFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(multiple.TailFiller)
+                            : null,
                         multiple.FallbackFiller != null
                             ? Filler.Mapper.ProjectToViewModel(multiple.FallbackFiller)
                             : null),
@@ -183,6 +192,9 @@ namespace ErsatzTV.Application.ProgramSchedules
                             : null,
                         one.PostRollFiller != null
                             ? Filler.Mapper.ProjectToViewModel(one.PostRollFiller)
+                            : null,
+                        one.TailFiller != null
+                            ? Filler.Mapper.ProjectToViewModel(one.TailFiller)
                             : null,
                         one.FallbackFiller != null
                             ? Filler.Mapper.ProjectToViewModel(one.FallbackFiller)

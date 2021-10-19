@@ -31,6 +31,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? PreRollFillerId,
         int? MidRollFillerId,
         int? PostRollFillerId,
+        int? TailFillerId,
         int? FallbackFillerId) : IProgramScheduleItemRequest;
 
     public record ReplaceProgramScheduleItems

@@ -63,6 +63,7 @@ namespace ErsatzTV.ViewModels
         public FillerPresetViewModel PreRollFiller { get; set; }
         public FillerPresetViewModel MidRollFiller { get; set; }
         public FillerPresetViewModel PostRollFiller { get; set; }
+        public FillerPresetViewModel TailFiller { get; set; }
         public FillerPresetViewModel FallbackFiller { get; set; }
 
         public string CollectionName => CollectionType switch

@@ -27,10 +27,11 @@
                         <MudSelectItem Value="@(FillerKind.PreRoll)">Pre-Roll</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.MidRoll)">Mid-Roll</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.PostRoll)">Post-Roll</MudSelectItem>
+                        <MudSelectItem Value="@(FillerKind.Tail)">Tail</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.Fallback)">Fallback</MudSelectItem>
                     </MudSelect>
                     <MudSelect Class="mt-3" Label="Filler Mode" @bind-Value="_model.FillerMode" For="@(() => _model.FillerMode)"
-                               Disabled="@(_model.FillerKind == FillerKind.Fallback)">
+                               Disabled="@(_model.FillerKind is FillerKind.Fallback or FillerKind.Tail)">
                         <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
                         <MudSelectItem Value="@(FillerMode.Multiple)">Multiple</MudSelectItem>
                         <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>

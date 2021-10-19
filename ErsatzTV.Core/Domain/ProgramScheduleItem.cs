@@ -29,6 +29,8 @@ namespace ErsatzTV.Core.Domain
         public FillerPreset MidRollFiller { get; set; }
         public int? PostRollFillerId { get; set; }
         public FillerPreset PostRollFiller { get; set; }
+        public int? TailFillerId { get; set; }
+        public FillerPreset TailFiller { get; set; }
         public int? FallbackFillerId { get; set; }
         public FillerPreset FallbackFiller { get; set; }
     }

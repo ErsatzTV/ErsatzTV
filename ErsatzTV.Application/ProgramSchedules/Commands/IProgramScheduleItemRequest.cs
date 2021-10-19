@@ -26,6 +26,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? PreRollFillerId { get; }
         int? MidRollFillerId { get; }
         int? PostRollFillerId { get; }
+        int? TailFillerId { get; }
         int? FallbackFillerId { get; }
     }
 }

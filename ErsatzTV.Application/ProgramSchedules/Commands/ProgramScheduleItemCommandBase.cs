@@ -140,6 +140,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     PreRollFillerId = item.PreRollFillerId,
                     MidRollFillerId = item.MidRollFillerId,
                     PostRollFillerId = item.PostRollFillerId,
+                    TailFillerId = item.TailFillerId,
                     FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.One => new ProgramScheduleItemOne
@@ -158,6 +159,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     PreRollFillerId = item.PreRollFillerId,
                     MidRollFillerId = item.MidRollFillerId,
                     PostRollFillerId = item.PostRollFillerId,
+                    TailFillerId = item.TailFillerId,
                     FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.Multiple => new ProgramScheduleItemMultiple
@@ -177,6 +179,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     PreRollFillerId = item.PreRollFillerId,
                     MidRollFillerId = item.MidRollFillerId,
                     PostRollFillerId = item.PostRollFillerId,
+                    TailFillerId = item.TailFillerId,
                     FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.Duration => new ProgramScheduleItemDuration
@@ -202,6 +205,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     PreRollFillerId = item.PreRollFillerId,
                     MidRollFillerId = item.MidRollFillerId,
                     PostRollFillerId = item.PostRollFillerId,
+                    TailFillerId = item.TailFillerId,
                     FallbackFillerId = item.FallbackFillerId
                 },
                 _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")

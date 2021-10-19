@@ -52,6 +52,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
                 .Include(i => i.PreRollFiller)
                 .Include(i => i.MidRollFiller)
                 .Include(i => i.PostRollFiller)
+                .Include(i => i.TailFiller)
                 .Include(i => i.FallbackFiller)
                 .ToListAsync(cancellationToken)
                 .Map(programScheduleItems => programScheduleItems.Map(ProjectToViewModel).ToList());
