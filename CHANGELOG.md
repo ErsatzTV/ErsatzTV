@@ -13,13 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - `Pre-Roll Filler` plays before each media item
     - `Mid-Roll Filler` plays between media item chapters
     - `Post-Roll Filler` plays after each media item
+    - `Tail Filler` plays after all media items, until the next media item
     - `Fallback Filler` loops instead of default offline image to fill any remaining gaps
 - Store chapter details with media statistics; this is needed to support mid-roll filler
     - This requires re-ingesting statistics for all media items the first time this version is launched
 - Add switch to show/hide filler in playout detail table
 
 ### Changed
-- Remove filler `Tail Mode` from `Duration` playout mode
+- Remove tail collection options from `Duration` playout mode
 - Show localized start time in schedule items tables
 
 ## [0.1.5-alpha] - 2021-10-18

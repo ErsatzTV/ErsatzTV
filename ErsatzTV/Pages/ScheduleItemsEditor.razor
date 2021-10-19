@@ -191,72 +191,6 @@
                                 <MudSelectItem Value="@TailMode.Offline">Offline</MudSelectItem>
                                 <MudSelectItem Value="@TailMode.Filler">Filler</MudSelectItem>
                             </MudSelect>
-                            <MudSelect Class="mt-3" Label="Tail Collection Type" @bind-Value="_selectedItem.TailCollectionType" For="@(() => _selectedItem.TailCollectionType)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration || _selectedItem.TailMode != TailMode.Filler)">
-                                @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
-                                {
-                                    <MudSelectItem Value="@collectionType">@collectionType</MudSelectItem>
-                                }
-                            </MudSelect>
-                            @if (_selectedItem.TailCollectionType == ProgramScheduleItemCollectionType.Collection)
-                            {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="MediaCollectionViewModel"
-                                                 Label="Collection"
-                                                 @bind-value="_selectedItem.TailCollection"
-                                                 SearchFunc="@SearchMediaCollections"
-                                                 ToStringFunc="@(c => c?.Name)"
-                                                 Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration || _selectedItem.TailMode != TailMode.Filler)"/>
-                            }
-                            @if (_selectedItem.TailCollectionType == ProgramScheduleItemCollectionType.MultiCollection)
-                            {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="MultiCollectionViewModel"
-                                                 Label="Multi Collection"
-                                                 @bind-value="_selectedItem.TailMultiCollection"
-                                                 SearchFunc="@SearchMultiCollections"
-                                                 ToStringFunc="@(c => c?.Name)"
-                                                 Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration || _selectedItem.TailMode != TailMode.Filler)"/>
-                            }
-                            @if (_selectedItem.TailCollectionType == ProgramScheduleItemCollectionType.SmartCollection)
-                            {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="SmartCollectionViewModel"
-                                                 Label="Smart Collection"
-                                                 @bind-value="_selectedItem.TailSmartCollection"
-                                                 SearchFunc="@SearchSmartCollections"
-                                                 ToStringFunc="@(c => c?.Name)"
-                                                 Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration || _selectedItem.TailMode != TailMode.Filler)"/>
-                            }
-                            @if (_selectedItem.TailCollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
-                            {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="NamedMediaItemViewModel"
-                                                 Label="Television Show"
-                                                 @bind-value="_selectedItem.TailMediaItem"
-                                                 SearchFunc="@SearchTelevisionShows"
-                                                 ToStringFunc="@(s => s?.Name)"
-                                                 Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration || _selectedItem.TailMode != TailMode.Filler)"/>
-                            }
-                            @if (_selectedItem.TailCollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
-                            {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="NamedMediaItemViewModel"
-                                                 Label="Television Season"
-                                                 @bind-value="_selectedItem.TailMediaItem"
-                                                 SearchFunc="@SearchTelevisionSeasons"
-                                                 ToStringFunc="@(s => s?.Name)"
-                                                 Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration || _selectedItem.TailMode != TailMode.Filler)"/>
-                            }
-                            @if (_selectedItem.TailCollectionType == ProgramScheduleItemCollectionType.Artist)
-                            {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="NamedMediaItemViewModel"
-                                                 Label="Artist"
-                                                 @bind-value="_selectedItem.TailMediaItem"
-                                                 SearchFunc="@SearchArtists"
-                                                 ToStringFunc="@(s => s?.Name)"
-                                                 Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration || _selectedItem.TailMode != TailMode.Filler)"/>
-                            }
                             <MudTextField Class="mt-3" Label="Custom Title" @bind-Value="@_selectedItem.CustomTitle" For="@(() => _selectedItem.CustomTitle)"/>
                             <MudSelect Class="mt-3" Label="Guide Mode" @bind-Value="@_selectedItem.GuideMode" For="@(() => _selectedItem.GuideMode)">
                                 <MudSelectItem Value="@GuideMode.Normal">Normal</MudSelectItem>
@@ -399,11 +333,6 @@
             case ProgramScheduleItemDurationViewModel duration:
                 result.PlayoutDuration = duration.PlayoutDuration;
                 result.TailMode = duration.TailMode;
-                result.TailCollectionType = duration.TailCollectionType;
-                result.TailCollection = duration.TailCollection;
-                result.TailMultiCollection = duration.TailMultiCollection;
-                result.TailSmartCollection = duration.TailSmartCollection;
-                result.TailMediaItem = duration.TailMediaItem;
                 break;
         }
 
@@ -482,11 +411,6 @@
             item.MultipleCount,
             item.PlayoutDuration,
             item.TailMode,
-            item.TailCollectionType,
-            item.TailCollection?.Id,
-            item.TailMultiCollection?.Id,
-            item.TailSmartCollection?.Id,
-            item.TailMediaItem?.MediaItemId,
             item.CustomTitle,
             item.GuideMode,
             item.PreRollFiller?.Id,

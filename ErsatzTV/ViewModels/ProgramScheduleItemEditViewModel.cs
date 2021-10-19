@@ -15,7 +15,6 @@ namespace ErsatzTV.ViewModels
         private int? _multipleCount;
         private TimeSpan? _playoutDuration;
         private TimeSpan? _startTime;
-        private ProgramScheduleItemCollectionType _tailCollectionType;
 
         public int Id { get; set; }
         public int Index { get; set; }
@@ -93,33 +92,6 @@ namespace ErsatzTV.ViewModels
 
         public TailMode TailMode { get; set; }
         
-        public ProgramScheduleItemCollectionType TailCollectionType
-        {
-            get => _tailCollectionType;
-            set
-            {
-                if (_tailCollectionType != value)
-                {
-                    _tailCollectionType = value;
-
-                    TailCollection = null;
-                    TailMultiCollection = null;
-                    TailMediaItem = null;
-                    TailSmartCollection = null;
-
-                    OnPropertyChanged(nameof(TailCollection));
-                    OnPropertyChanged(nameof(TailMultiCollection));
-                    OnPropertyChanged(nameof(TailMediaItem));
-                    OnPropertyChanged(nameof(TailSmartCollection));
-                }
-            }
-        }
-        
-        public MediaCollectionViewModel TailCollection { get; set; }
-        public MultiCollectionViewModel TailMultiCollection { get; set; }
-        public SmartCollectionViewModel TailSmartCollection { get; set; }
-        public NamedMediaItemViewModel TailMediaItem { get; set; }
-
         public string CustomTitle { get; set; }
 
         public GuideMode GuideMode { get; set; }

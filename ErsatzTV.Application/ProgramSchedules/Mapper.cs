@@ -41,23 +41,6 @@ namespace ErsatzTV.Application.ProgramSchedules
                         duration.PlaybackOrder,
                         duration.PlayoutDuration,
                         duration.TailMode,
-                        duration.TailCollectionType,
-                        duration.TailCollection != null
-                            ? MediaCollections.Mapper.ProjectToViewModel(duration.TailCollection)
-                            : null,
-                        duration.TailMultiCollection != null
-                            ? MediaCollections.Mapper.ProjectToViewModel(duration.TailMultiCollection)
-                            : null,
-                        duration.TailSmartCollection != null
-                            ? MediaCollections.Mapper.ProjectToViewModel(duration.TailSmartCollection)
-                            : null,
-                        duration.TailMediaItem switch
-                        {
-                            Show show => MediaItems.Mapper.ProjectToViewModel(show),
-                            Season season => MediaItems.Mapper.ProjectToViewModel(season),
-                            Artist artist => MediaItems.Mapper.ProjectToViewModel(artist),
-                            _ => null
-                        },
                         duration.CustomTitle,
                         duration.GuideMode,
                         duration.PreRollFiller != null

@@ -21,11 +21,6 @@ namespace ErsatzTV.Application.ProgramSchedules
             PlaybackOrder playbackOrder,
             TimeSpan playoutDuration,
             TailMode tailMode,
-            ProgramScheduleItemCollectionType tailCollectionType,
-            MediaCollectionViewModel tailCollection,
-            MultiCollectionViewModel tailMultiCollection,
-            SmartCollectionViewModel tailSmartCollection,
-            NamedMediaItemViewModel tailMediaItem,
             string customTitle,
             GuideMode guideMode,
             FillerPresetViewModel preRollFiller,
@@ -54,21 +49,9 @@ namespace ErsatzTV.Application.ProgramSchedules
         {
             PlayoutDuration = playoutDuration;
             TailMode = tailMode;
-            TailCollectionType = tailCollectionType;
-            TailCollection = tailCollection;
-            TailMultiCollection = tailMultiCollection;
-            TailSmartCollection = tailSmartCollection;
-            TailMediaItem = tailMediaItem;
         }
 
         public TimeSpan PlayoutDuration { get; }
         public TailMode TailMode { get; }
-        public ProgramScheduleItemCollectionType TailCollectionType { get; }
-
-        public MediaCollectionViewModel TailCollection { get; }
-        public MultiCollectionViewModel TailMultiCollection { get; }
-        public SmartCollectionViewModel TailSmartCollection { get; }
-        public NamedMediaItemViewModel TailMediaItem { get; }
-
     }
 }
