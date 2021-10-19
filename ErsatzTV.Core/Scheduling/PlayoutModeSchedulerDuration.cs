@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -23,6 +24,7 @@ namespace ErsatzTV.Core.Scheduling
             PlayoutBuilderState nextState = playoutBuilderState;
 
             var willFinishInTime = true;
+            Option<DateTimeOffset> durationUntil = None;
 
             IMediaCollectionEnumerator contentEnumerator =
                 collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
@@ -40,6 +42,8 @@ namespace ErsatzTV.Core.Scheduling
                     {
                         DurationFinish = itemStartTime + scheduleItem.PlayoutDuration
                     };
+
+                    durationUntil = nextState.DurationFinish;
                 }
 
                 MediaVersion version = mediaItem switch
@@ -97,7 +101,6 @@ namespace ErsatzTV.Core.Scheduling
                 }
                 else
                 {
-                    logger.LogDebug("Done with duration");
                     nextState = nextState with
                     {
                         DurationFinish = None,
@@ -112,10 +115,57 @@ namespace ErsatzTV.Core.Scheduling
                 nextState = nextState with
                 {
                     DurationFinish = None,
-                    // ScheduleItemIndex = nextState.ScheduleItemIndex + 1
+                    ScheduleItemIndex = nextState.ScheduleItemIndex + 1
                 };
             }
 
+            foreach (DateTimeOffset nextItemStart in durationUntil)
+            {
+                switch (scheduleItem.TailMode)
+                {
+                    case TailMode.Filler:
+                        Tuple<PlayoutBuilderState, List<PlayoutItem>> withTail = AddTailFiller(
+                            nextState,
+                            collectionEnumerators,
+                            scheduleItem,
+                            playoutItems,
+                            nextItemStart,
+                            logger);
+                        if (scheduleItem.FallbackFiller != null)
+                        {
+                            return AddFallbackFiller(
+                                withTail.Item1,
+                                collectionEnumerators,
+                                scheduleItem,
+                                withTail.Item2,
+                                nextItemStart,
+                                logger);
+                        }
+                        else
+                        {
+                            PlayoutBuilderState finalState = withTail.Item1 with { CurrentTime = nextItemStart };
+                            return Tuple(finalState, withTail.Item2);
+                        }
+                    case TailMode.Offline:
+                        if (scheduleItem.FallbackFiller != null)
+                        {
+                            return AddFallbackFiller(
+                                nextState,
+                                collectionEnumerators,
+                                scheduleItem,
+                                playoutItems,
+                                nextItemStart,
+                                logger);
+                        }
+                        else
+                        {
+                            nextState = nextState with { CurrentTime = nextItemStart };
+                        }
+
+                        break;
+                }
+            }
+            
             return Tuple(nextState, playoutItems);
         }
     }

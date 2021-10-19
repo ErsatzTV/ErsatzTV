@@ -531,6 +531,11 @@ namespace ErsatzTV.Core.Scheduling
                 result.Add(CollectionKey.ForFillerPreset(item.PostRollFiller));
             }
 
+            if (item.TailFiller != null)
+            {
+                result.Add(CollectionKey.ForFillerPreset(item.TailFiller));
+            }
+
             if (item.FallbackFiller != null)
             {
                 result.Add(CollectionKey.ForFillerPreset(item.FallbackFiller));

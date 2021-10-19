@@ -55,6 +55,16 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                         return BaseError.New("[PlayoutDuration] is required for playout mode 'duration'");
                     }
 
+                    if (item.TailMode == TailMode.Filler && item.TailFillerId == null)
+                    {
+                        return BaseError.New("Tail Filler is required with tail mode Filler");
+                    }
+
+                    if (item.TailFillerId != null && item.TailMode != TailMode.Filler)
+                    {
+                        return BaseError.New("Tail Filler will not be used unless tail mode is set to Filler");
+                    }
+
                     break;
                 default:
                     return BaseError.New("[PlayoutMode] is invalid");
