@@ -68,7 +68,7 @@ namespace ErsatzTV.Core.Emby
 
                     if (log)
                     {
-                        _logger.LogDebug(
+                        _logger.LogInformation(
                             "Replacing emby path {EmbyPath} with {LocalPath} resulting in {FinalPath}",
                             replacement.EmbyPath,
                             replacement.LocalPath,
