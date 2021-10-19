@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix generated streams with mpeg2video
+- Fix deleting movies that have been removed from Jellyfin and Emby
 
 ### Changed
 - Change some debug log messages to info so they show by default again
