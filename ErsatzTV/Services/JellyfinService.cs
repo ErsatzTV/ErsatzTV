@@ -87,21 +87,21 @@ namespace ErsatzTV.Services
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            // Either<BaseError, List<JellyfinMediaSource>> result = await mediator.Send(request, cancellationToken);
-            // result.Match(
-            //     sources =>
-            //     {
-            //         if (sources.Any())
-            //         {
-            //             _logger.LogInformation("Successfully synchronized jellyfin media sources");
-            //         }
-            //     },
-            //     error =>
-            //     {
-            //         _logger.LogWarning(
-            //             "Unable to synchronize jellyfin media sources: {Error}",
-            //             error.Value);
-            //     });
+            Either<BaseError, List<JellyfinMediaSource>> result = await mediator.Send(request, cancellationToken);
+            result.Match(
+                sources =>
+                {
+                    if (sources.Any())
+                    {
+                        _logger.LogInformation("Successfully synchronized jellyfin media sources");
+                    }
+                },
+                error =>
+                {
+                    _logger.LogWarning(
+                        "Unable to synchronize jellyfin media sources: {Error}",
+                        error.Value);
+                });
         }
 
         private async Task SynchronizeLibraries(
