@@ -565,12 +565,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { LibraryId = library.Id, ShowIds = showIds }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
-                @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinShow js ON js.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                WHERE lp.LibraryId = @LibraryId AND js.ItemId IN @ShowIds)",
-                new { LibraryId = library.Id, ShowIds = showIds });
+                "DELETE FROM MediaItem WHERE Id IN @Ids",
+                new { Ids = ids });
 
             return ids;
         }
@@ -594,12 +590,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { LibraryId = library.Id, EpisodeIds = episodeIds }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
-                @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN JellyfinEpisode je ON je.Id = m.Id
-                INNER JOIN LibraryPath LP on m.LibraryPathId = LP.Id
-                WHERE LP.LibraryId = @LibraryId AND je.ItemId IN @EpisodeIds)",
-                new { LibraryId = library.Id, EpisodeIds = episodeIds });
+                "DELETE FROM MediaItem WHERE Id IN @Ids",
+                new { Ids = ids });
 
             return ids;
         }

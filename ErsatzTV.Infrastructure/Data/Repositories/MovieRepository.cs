@@ -10,6 +10,7 @@ using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
@@ -237,12 +238,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { LibraryId = library.Id, Keys = movieKeys }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
-                @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                WHERE lp.LibraryId = @LibraryId AND pm.Key not in @Keys)",
-                new { LibraryId = library.Id, Keys = movieKeys });
+                "DELETE FROM MediaItem WHERE Id IN @Ids",
+                new { Ids = ids });
 
             return ids;
         }
@@ -273,7 +270,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { LibraryId = library.Id, ItemIds = movieIds }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
-                "DELETE FROM JellyfinMovie WHERE Id IN @Ids",
+                "DELETE FROM MediaItem WHERE Id IN @Ids",
                 new { Ids = ids });
 
             return ids;
@@ -529,7 +526,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { LibraryId = library.Id, ItemIds = movieIds }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
-                "DELETE FROM EmbyMovie WHERE Id IN @Ids",
+                "DELETE FROM MediaItem WHERE Id IN @Ids",
                 new { Ids = ids });
 
             return ids;
