@@ -375,7 +375,8 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 "-c:v", playbackSettings.VideoCodec,
                 "-flags", "cgop",
-                "-sc_threshold", "0" // disable scene change detection
+                // disable scene change detection except with mpeg2video
+                "-sc_threshold", playbackSettings.VideoCodec == "mpeg2video" ? "1000000000" : "0"
             };
 
             if (!string.IsNullOrWhiteSpace(_outputPixelFormat))
