@@ -85,7 +85,7 @@ namespace ErsatzTV.Core.Scheduling
                         Start = nextState.CurrentTime.UtcDateTime,
                         Finish = nextState.CurrentTime.UtcDateTime + version.Duration,
                         IsFiller = true,
-                        CustomGroup = scheduleItem is ProgramScheduleItemDuration
+                        CustomGroup = true
                     };
 
                     newItems.Add(playoutItem);
@@ -126,7 +126,7 @@ namespace ErsatzTV.Core.Scheduling
                         Start = nextState.CurrentTime.UtcDateTime,
                         Finish = nextItemStart.UtcDateTime,
                         IsFiller = true,
-                        CustomGroup = scheduleItem is ProgramScheduleItemDuration
+                        CustomGroup = true
                     };
 
                     newItems.Add(playoutItem);

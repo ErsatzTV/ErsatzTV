@@ -72,13 +72,13 @@ namespace ErsatzTV.Core.Scheduling
 
                 if (willFinishInTime)
                 {
-                    // logger.LogDebug(
-                    //     "Scheduling media item: {ScheduleItemNumber} / {CollectionType} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
-                    //     scheduleItem.Index,
-                    //     scheduleItem.CollectionType,
-                    //     mediaItem.Id,
-                    //     PlayoutBuilder.DisplayTitle(mediaItem),
-                    //     itemStartTime);
+                    logger.LogDebug(
+                        "Scheduling media item: {ScheduleItemNumber} / {CollectionType} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
+                        scheduleItem.Index,
+                        scheduleItem.CollectionType,
+                        mediaItem.Id,
+                        PlayoutBuilder.DisplayTitle(mediaItem),
+                        itemStartTime);
 
                     playoutItems.Add(playoutItem);
 
@@ -102,6 +102,35 @@ namespace ErsatzTV.Core.Scheduling
                 InFlood = nextState.CurrentTime >= hardStop,
                 CustomGroup = false
             };
+            
+            ProgramScheduleItem peekItem =
+                _sortedScheduleItems[nextState.ScheduleItemIndex % _sortedScheduleItems.Count];
+            DateTimeOffset peekItemStart =
+                peekItem.StartType == StartType.Fixed
+                    ? GetStartTimeAfter(nextState, peekItem)
+                    : DateTimeOffset.MaxValue;
+
+            if (scheduleItem.TailFiller != null)
+            {
+                (nextState, playoutItems) = AddTailFiller(
+                    nextState,
+                    collectionEnumerators,
+                    scheduleItem,
+                    playoutItems,
+                    peekItemStart,
+                    logger);
+            }
+
+            if (scheduleItem.FallbackFiller != null)
+            {
+                (nextState, playoutItems) = AddFallbackFiller(
+                    nextState,
+                    collectionEnumerators,
+                    scheduleItem,
+                    playoutItems,
+                    peekItemStart,
+                    logger);
+            }
 
             return Tuple(nextState, playoutItems);
         }
