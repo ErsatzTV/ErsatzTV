@@ -143,5 +143,19 @@ namespace ErsatzTV.Core.Scheduling
 
             return Tuple(nextState, newItems);
         }
+
+        protected TimeSpan DurationForMediaItem(MediaItem mediaItem)
+        {
+            MediaVersion version = mediaItem switch
+            {
+                Movie m => m.MediaVersions.Head(),
+                Episode e => e.MediaVersions.Head(),
+                MusicVideo mv => mv.MediaVersions.Head(),
+                OtherVideo mv => mv.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
+            };
+
+            return version.Duration;
+        }
     }
 }

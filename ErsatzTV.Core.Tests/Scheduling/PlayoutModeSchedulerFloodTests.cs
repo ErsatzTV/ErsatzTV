@@ -82,6 +82,107 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutItems[2].IsFiller.Should().BeFalse();
             playoutItems[2].IsFallback.Should().BeFalse();
         }
+        
+        [Test]
+        public void Should_Fill_Exactly_To_Next_Schedule_Item_With_Post_Roll_Multiple_One()
+        {
+            Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(55));
+            Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(5));
+
+            var scheduleItem = new ProgramScheduleItemFlood
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                PostRollFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.PostRoll,
+                    FillerMode = FillerMode.Multiple,
+                    Count = 1,
+                    Collection = collectionTwo,
+                    CollectionId = collectionTwo.Id
+                },
+                TailFiller = null,
+                FallbackFiller = null
+            };
+
+            var enumerator1 = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            var enumerator2 = new ChronologicalMediaCollectionEnumerator(
+                collectionTwo.MediaItems,
+                new CollectionEnumeratorState());
+
+            var sortedScheduleItems = new List<ProgramScheduleItem>
+            {
+                scheduleItem,
+                NextScheduleItem
+            };
+
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+                StartState,
+                CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.PostRollFiller, enumerator2),
+                scheduleItem,
+                NextScheduleItem,
+                HardStop,
+                new Mock<ILogger>().Object);
+
+            playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
+            playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+            playoutBuilderState.CustomGroup.Should().BeFalse();
+            playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+            playoutBuilderState.InFlood.Should().BeFalse();
+            playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+            playoutBuilderState.InDurationFiller.Should().BeFalse();
+            playoutBuilderState.ScheduleItemIndex.Should().Be(1);
+
+            enumerator1.State.Index.Should().Be(1);
+            enumerator2.State.Index.Should().Be(1);
+
+            playoutItems.Count.Should().Be(6);
+
+            playoutItems[0].MediaItemId.Should().Be(1);
+            playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
+            playoutItems[0].CustomGroup.Should().BeTrue();
+            playoutItems[0].IsFiller.Should().BeFalse();
+            playoutItems[0].IsFallback.Should().BeFalse();
+
+            playoutItems[1].MediaItemId.Should().Be(3);
+            playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.AddMinutes(55));
+            playoutItems[1].CustomGroup.Should().BeTrue();
+            playoutItems[1].IsFiller.Should().BeTrue();
+            playoutItems[1].IsFallback.Should().BeFalse();
+
+            playoutItems[2].MediaItemId.Should().Be(2);
+            playoutItems[2].StartOffset.Should().Be(StartState.CurrentTime.AddHours(1));
+            playoutItems[2].CustomGroup.Should().BeTrue();
+            playoutItems[2].IsFiller.Should().BeFalse();
+            playoutItems[2].IsFallback.Should().BeFalse();
+
+            playoutItems[3].MediaItemId.Should().Be(4);
+            playoutItems[3].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(1, 55, 0)));
+            playoutItems[3].CustomGroup.Should().BeTrue();
+            playoutItems[3].IsFiller.Should().BeTrue();
+            playoutItems[3].IsFallback.Should().BeFalse();
+
+            playoutItems[4].MediaItemId.Should().Be(1);
+            playoutItems[4].StartOffset.Should().Be(StartState.CurrentTime.AddHours(2));
+            playoutItems[4].CustomGroup.Should().BeTrue();
+            playoutItems[4].IsFiller.Should().BeFalse();
+            playoutItems[4].IsFallback.Should().BeFalse();
+
+            playoutItems[5].MediaItemId.Should().Be(3);
+            playoutItems[5].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
+            playoutItems[5].CustomGroup.Should().BeTrue();
+            playoutItems[5].IsFiller.Should().BeTrue();
+            playoutItems[5].IsFallback.Should().BeFalse();
+        }
 
         [Test]
         public void Should_Have_Gap_With_No_Tail_No_Fallback()

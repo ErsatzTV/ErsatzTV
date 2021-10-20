@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
+using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -32,27 +33,28 @@ namespace ErsatzTV.Core.Scheduling
 
             IMediaCollectionEnumerator contentEnumerator =
                 collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
+
+            Option<IMediaCollectionEnumerator> maybePostRollEnumerator =
+                Optional(scheduleItem.PostRollFiller)
+                    .Map(fp => collectionEnumerators[CollectionKey.ForFillerPreset(fp)]);
+            
             while (contentEnumerator.Current.IsSome && nextState.CurrentTime < hardStop && willFinishInTime)
             {
                 MediaItem mediaItem = contentEnumerator.Current.ValueUnsafe();
+                Option<MediaItem> maybePostRollItem = maybePostRollEnumerator
+                    .Map(e => e.Current)
+                    .MapT(identity)
+                    .Flatten();
 
                 // find when we should start this item, based on the current time
                 DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
-
-                MediaVersion version = mediaItem switch
-                {
-                    Movie m => m.MediaVersions.Head(),
-                    Episode e => e.MediaVersions.Head(),
-                    MusicVideo mv => mv.MediaVersions.Head(),
-                    OtherVideo mv => mv.MediaVersions.Head(),
-                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-                };
+                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
                 
                 var playoutItem = new PlayoutItem
                 {
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
-                    Finish = itemStartTime.UtcDateTime + version.Duration,
+                    Finish = itemStartTime.UtcDateTime + itemDuration,
                     CustomGroup = true,
                     IsFiller = scheduleItem.GuideMode == GuideMode.Filler
                 };
@@ -63,12 +65,16 @@ namespace ErsatzTV.Core.Scheduling
                     peekScheduleItem.StartType == StartType.Fixed
                         ? GetStartTimeAfter(nextState, peekScheduleItem)
                         : DateTimeOffset.MaxValue;
+
+                TimeSpan postRollDuration = maybePostRollItem.Match(DurationForMediaItem, () => TimeSpan.Zero);
+
+                DateTimeOffset itemEndTime = itemStartTime + itemDuration + postRollDuration;
                 
                 // if the current time is before the next schedule item, but the current finish
                 // is after, we need to move on to the next schedule item
                 // eventually, spots probably have to fit in this gap
                 willFinishInTime = itemStartTime > peekScheduleItemStart ||
-                                   itemStartTime + version.Duration <= peekScheduleItemStart;
+                                   itemEndTime <= peekScheduleItemStart;
 
                 if (willFinishInTime)
                 {
@@ -82,9 +88,28 @@ namespace ErsatzTV.Core.Scheduling
 
                     playoutItems.Add(playoutItem);
 
+                    foreach (MediaItem postRollItem in maybePostRollItem)
+                    {
+                        var postRollPlayoutItem = new PlayoutItem
+                        {
+                            MediaItemId = postRollItem.Id,
+                            Start = playoutItem.Finish,
+                            Finish = playoutItem.Finish + postRollDuration,
+                            CustomGroup = true,
+                            IsFiller = true
+                        };
+
+                        playoutItems.Add(postRollPlayoutItem);
+
+                        foreach (IMediaCollectionEnumerator enumerator in maybePostRollEnumerator)
+                        {
+                            enumerator.MoveNext();
+                        }
+                    }
+
                     nextState = nextState with
                     {
-                        CurrentTime = itemStartTime + version.Duration,
+                        CurrentTime = itemEndTime,
                         InFlood = true
                     };
 
