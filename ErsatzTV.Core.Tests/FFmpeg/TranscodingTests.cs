@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
@@ -190,7 +191,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 VaapiDriver.Default,
                 "/dev/dri/renderD128",
                 false,
-                false);
+                FillerKind.None);
 
             process.StartInfo.RedirectStandardError = true;
 

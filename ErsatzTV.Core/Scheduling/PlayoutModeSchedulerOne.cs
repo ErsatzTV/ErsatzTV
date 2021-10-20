@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -41,7 +42,9 @@ namespace ErsatzTV.Core.Scheduling
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + version.Duration,
                     CustomGroup = false,
-                    IsFiller = scheduleItem.GuideMode == GuideMode.Filler
+                    FillerKind = scheduleItem.GuideMode == GuideMode.Filler
+                        ? FillerKind.Tail
+                        : FillerKind.None
                 };
                 
                 // only play one item from collection, so always advance to the next item

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
@@ -70,7 +71,7 @@ namespace ErsatzTV.Core.Iptv
             foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(kvp => kvp.Key.Number))
             {
                 var i = 0;
-                while (i < sorted.Count && sorted[i].IsFiller)
+                while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None)
                 {
                     i++;
                 }
@@ -82,7 +83,7 @@ namespace ErsatzTV.Core.Iptv
 
                     int finishIndex = i;
                     while (finishIndex + 1 < sorted.Count && (hasCustomTitle && sorted[finishIndex + 1].CustomGroup ||
-                                                              sorted[finishIndex + 1].IsFiller))
+                                                              sorted[finishIndex + 1].FillerKind != FillerKind.None))
                     {
                         finishIndex++;
                     }

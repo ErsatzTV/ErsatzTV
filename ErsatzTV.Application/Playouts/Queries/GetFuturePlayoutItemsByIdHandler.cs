@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
 using LanguageExt;
 using MediatR;
@@ -28,7 +29,7 @@ namespace ErsatzTV.Application.Playouts.Queries
             DateTime now = DateTimeOffset.Now.UtcDateTime;
 
             int totalCount = await dbContext.PlayoutItems
-                .CountAsync(i => i.Finish >= now && i.PlayoutId == request.PlayoutId && (request.ShowFiller || i.IsFiller == false), cancellationToken);
+                .CountAsync(i => i.Finish >= now && i.PlayoutId == request.PlayoutId && (request.ShowFiller || i.FillerKind == FillerKind.None), cancellationToken);
             
             List<PlayoutItemViewModel> page = await dbContext.PlayoutItems
                 .Include(i => i.MediaItem)
@@ -58,7 +59,7 @@ namespace ErsatzTV.Application.Playouts.Queries
                 .ThenInclude(mi => (mi as OtherVideo).MediaVersions)
                 .Filter(i => i.PlayoutId == request.PlayoutId)
                 .Filter(i => i.Finish >= now)
-                .Filter(i => request.ShowFiller || i.IsFiller == false)
+                .Filter(i => request.ShowFiller || i.FillerKind == FillerKind.None)
                 .OrderBy(i => i.Start)
                 .Skip(request.PageNum * request.PageSize)
                 .Take(request.PageSize)

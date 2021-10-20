@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using LanguageExt;
@@ -43,7 +44,7 @@ namespace ErsatzTV.Core.FFmpeg
             VaapiDriver vaapiDriver,
             string vaapiDevice,
             bool hlsRealtime,
-            bool isFallback)
+            FillerKind fillerKind)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
@@ -72,7 +73,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
-                .WithInfiniteLoop(isFallback)
+                .WithInfiniteLoop(fillerKind == FillerKind.Fallback)
                 .WithInputCodec(path, playbackSettings.VideoDecoder, videoStream.Codec, videoStream.PixelFormat)
                 .WithWatermark(maybeWatermark, maybeWatermarkPath, channel.FFmpegProfile.Resolution, isAnimated)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)

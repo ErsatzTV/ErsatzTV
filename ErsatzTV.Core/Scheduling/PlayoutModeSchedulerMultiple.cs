@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
@@ -66,7 +67,9 @@ namespace ErsatzTV.Core.Scheduling
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + version.Duration,
                     CustomGroup = true,
-                    IsFiller = scheduleItem.GuideMode == GuideMode.Filler
+                    FillerKind = scheduleItem.GuideMode == GuideMode.Filler
+                        ? FillerKind.Tail
+                        : FillerKind.None
                 };
 
                 playoutItems.Add(playoutItem);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain
 {
@@ -14,8 +15,7 @@ namespace ErsatzTV.Core.Domain
         public DateTime? GuideFinish { get; set; }
         public string CustomTitle { get; set; }
         public bool CustomGroup { get; set; }
-        public bool IsFiller { get; set; }
-        public bool IsFallback { get; set; }
+        public FillerKind FillerKind { get; set; }
         public int PlayoutId { get; set; }
         public Playout Playout { get; set; }
 
@@ -24,5 +24,7 @@ namespace ErsatzTV.Core.Domain
         public DateTimeOffset? GuideFinishOffset => GuideFinish.HasValue
             ? new DateTimeOffset(GuideFinish.Value, TimeSpan.Zero).ToLocalTime()
             : null;
+        
+        // TODO: custom group => int for easy grouping, track on anchor?
     }
 }

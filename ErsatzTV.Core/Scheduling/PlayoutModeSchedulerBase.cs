@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
@@ -84,7 +85,7 @@ namespace ErsatzTV.Core.Scheduling
                         MediaItemId = mediaItem.Id,
                         Start = nextState.CurrentTime.UtcDateTime,
                         Finish = nextState.CurrentTime.UtcDateTime + version.Duration,
-                        IsFiller = true,
+                        FillerKind = FillerKind.Tail,
                         CustomGroup = true
                     };
 
@@ -125,9 +126,8 @@ namespace ErsatzTV.Core.Scheduling
                         MediaItemId = mediaItem.Id,
                         Start = nextState.CurrentTime.UtcDateTime,
                         Finish = nextItemStart.UtcDateTime,
-                        IsFiller = true,
                         CustomGroup = true,
-                        IsFallback = true
+                        FillerKind = FillerKind.Fallback
                     };
 
                     newItems.Add(playoutItem);
