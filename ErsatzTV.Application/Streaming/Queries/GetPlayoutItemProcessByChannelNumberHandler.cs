@@ -114,11 +114,13 @@ namespace ErsatzTV.Application.Streaming.Queries
                         version,
                         playoutItemWithPath.Path,
                         playoutItemWithPath.PlayoutItem.StartOffset,
+                        playoutItemWithPath.PlayoutItem.FinishOffset,
                         request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
                         maybeGlobalWatermark,
                         channel.FFmpegProfile.VaapiDriver,
                         channel.FFmpegProfile.VaapiDevice,
-                        request.HlsRealtime);
+                        request.HlsRealtime,
+                        playoutItemWithPath.PlayoutItem.IsFallback);
 
                     var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
 

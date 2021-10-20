@@ -15,6 +15,7 @@ namespace ErsatzTV.Core.Domain
         public string CustomTitle { get; set; }
         public bool CustomGroup { get; set; }
         public bool IsFiller { get; set; }
+        public bool IsFallback { get; set; }
         public int PlayoutId { get; set; }
         public Playout Playout { get; set; }
 

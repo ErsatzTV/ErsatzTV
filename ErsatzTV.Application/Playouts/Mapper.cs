@@ -10,7 +10,7 @@ namespace ErsatzTV.Application.Playouts
             new(
                 GetDisplayTitle(playoutItem.MediaItem),
                 playoutItem.StartOffset,
-                GetDisplayDuration(playoutItem.MediaItem));
+                GetDisplayDuration(playoutItem.FinishOffset - playoutItem.StartOffset));
 
         private static string GetDisplayTitle(MediaItem mediaItem)
         {
@@ -45,20 +45,9 @@ namespace ErsatzTV.Application.Playouts
             }
         }
 
-        private static string GetDisplayDuration(MediaItem mediaItem)
-        {
-            MediaVersion version = mediaItem switch
-            {
-                Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head(),
-                MusicVideo mv => mv.MediaVersions.Head(),
-                OtherVideo ov => ov.MediaVersions.Head(),
-                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-            };
-
-            return string.Format(
-                version.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
-                version.Duration);
-        }
+        private static string GetDisplayDuration(TimeSpan duration) =>
+            string.Format(
+                duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
+                duration);
     }
 }

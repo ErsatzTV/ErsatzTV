@@ -141,10 +141,14 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithInfiniteLoop()
+        public FFmpegProcessBuilder WithInfiniteLoop(bool loop = true)
         {
-            _arguments.Add("-stream_loop");
-            _arguments.Add("-1");
+            if (loop)
+            {
+                _arguments.Add("-stream_loop");
+                _arguments.Add("-1");
+            }
+
             return this;
         }
 

@@ -37,11 +37,13 @@ namespace ErsatzTV.Core.FFmpeg
             MediaVersion version,
             string path,
             DateTimeOffset start,
+            DateTimeOffset finish,
             DateTimeOffset now,
             Option<ChannelWatermark> globalWatermark,
             VaapiDriver vaapiDriver,
             string vaapiDevice,
-            bool hlsRealtime)
+            bool hlsRealtime,
+            bool isFallback)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
@@ -70,6 +72,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
+                .WithInfiniteLoop(isFallback)
                 .WithInputCodec(path, playbackSettings.VideoDecoder, videoStream.Codec, videoStream.PixelFormat)
                 .WithWatermark(maybeWatermark, maybeWatermarkPath, channel.FFmpegProfile.Resolution, isAnimated)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
@@ -114,7 +117,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             builder = builder.WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel, maybeAudioStream)
-                .WithDuration(start + version.Duration - now);
+                .WithDuration(finish - now);
 
             switch (channel.StreamingMode)
             {

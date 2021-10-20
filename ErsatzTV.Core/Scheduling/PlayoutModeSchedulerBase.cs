@@ -126,7 +126,8 @@ namespace ErsatzTV.Core.Scheduling
                         Start = nextState.CurrentTime.UtcDateTime,
                         Finish = nextItemStart.UtcDateTime,
                         IsFiller = true,
-                        CustomGroup = true
+                        CustomGroup = true,
+                        IsFallback = true
                     };
 
                     newItems.Add(playoutItem);
