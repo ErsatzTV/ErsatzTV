@@ -58,9 +58,35 @@ namespace ErsatzTV.Core.Scheduling
 
                 contentEnumerator.MoveNext();
 
-                return Tuple(nextState, new List<PlayoutItem> { playoutItem });
-            }
+                List<PlayoutItem> playoutItems = new List<PlayoutItem> { playoutItem };
 
+                DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
+
+                if (scheduleItem.TailFiller != null)
+                {
+                    (nextState, playoutItems) = AddTailFiller(
+                        nextState,
+                        collectionEnumerators,
+                        scheduleItem,
+                        playoutItems,
+                        nextItemStart,
+                        logger);
+                }
+
+                if (scheduleItem.FallbackFiller != null)
+                {
+                    (nextState, playoutItems) = AddFallbackFiller(
+                        nextState,
+                        collectionEnumerators,
+                        scheduleItem,
+                        playoutItems,
+                        nextItemStart,
+                        logger);
+                }
+
+                return Tuple(nextState, playoutItems);
+            }
+            
             return Tuple(playoutBuilderState, new List<PlayoutItem>());
         }
     }

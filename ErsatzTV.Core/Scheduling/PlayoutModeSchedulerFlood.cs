@@ -105,10 +105,7 @@ namespace ErsatzTV.Core.Scheduling
             
             ProgramScheduleItem peekItem =
                 _sortedScheduleItems[nextState.ScheduleItemIndex % _sortedScheduleItems.Count];
-            DateTimeOffset peekItemStart =
-                peekItem.StartType == StartType.Fixed
-                    ? GetStartTimeAfter(nextState, peekItem)
-                    : DateTimeOffset.MaxValue;
+            DateTimeOffset peekItemStart = GetStartTimeAfter(nextState, peekItem);
 
             if (scheduleItem.TailFiller != null)
             {
