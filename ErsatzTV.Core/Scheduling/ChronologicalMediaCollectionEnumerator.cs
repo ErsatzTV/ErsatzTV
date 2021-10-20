@@ -36,5 +36,14 @@ namespace ErsatzTV.Core.Scheduling
         public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
 
         public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
+
+        public IMediaCollectionEnumerator Clone() =>
+            new ChronologicalMediaCollectionEnumerator(
+                _sortedMediaItems,
+                new CollectionEnumeratorState
+                {
+                    Index = State.Index,
+                    Seed = State.Seed
+                });
     }
 }

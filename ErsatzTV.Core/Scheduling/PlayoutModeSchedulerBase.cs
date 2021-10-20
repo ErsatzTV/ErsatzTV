@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using LanguageExt;
 
 namespace ErsatzTV.Core.Scheduling
 {
@@ -148,7 +150,7 @@ namespace ErsatzTV.Core.Scheduling
             return Tuple(nextState, newItems);
         }
 
-        protected TimeSpan DurationForMediaItem(MediaItem mediaItem)
+        protected static TimeSpan DurationForMediaItem(MediaItem mediaItem)
         {
             MediaVersion version = mediaItem switch
             {
@@ -173,5 +175,74 @@ namespace ErsatzTV.Core.Scheduling
                 mediaItem.Id,
                 PlayoutBuilder.DisplayTitle(mediaItem),
                 startTime);
+
+        internal static DateTimeOffset CalculateEndTimeWithFiller(
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
+            ProgramScheduleItem scheduleItem,
+            DateTimeOffset itemStartTime,
+            TimeSpan itemDuration)
+        {
+            var allFiller = Optional(scheduleItem.PreRollFiller)
+                .Append(Optional(scheduleItem.MidRollFiller))
+                .Append(Optional(scheduleItem.PostRollFiller))
+                .ToList();
+
+            if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
+            {
+                // multiple pad-to-nearest-minute values are invalid; use no filler
+                return itemStartTime + itemDuration;
+            }
+
+            TimeSpan totalDuration = itemDuration;
+            foreach (FillerPreset filler in allFiller)
+            {
+                switch (filler.FillerMode)
+                {
+                    case FillerMode.Duration when filler.Duration.HasValue:
+                        totalDuration += filler.Duration.Value;
+                        break;
+                    case FillerMode.Multiple when filler.Count.HasValue:
+                        IMediaCollectionEnumerator enumerator =
+                            enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        for (int i = 0; i < filler.Count.Value; i++)
+                        {
+                            foreach (MediaItem mediaItem in enumerator.Current)
+                            {
+                                totalDuration += DurationForMediaItem(mediaItem);
+                                enumerator.MoveNext();
+                            }
+                        }
+
+                        break;
+                }
+            }
+
+            foreach (FillerPreset padFiller in Optional(allFiller.FirstOrDefault(f => f.PadToNearestMinute.HasValue)))
+            {
+                int currentMinute = (itemStartTime + totalDuration).Minute;
+                // ReSharper disable once PossibleInvalidOperationException
+                int targetMinute = (currentMinute + padFiller.PadToNearestMinute.Value - 1) /
+                    padFiller.PadToNearestMinute.Value * padFiller.PadToNearestMinute.Value;
+                
+                DateTimeOffset targetTime = itemStartTime + totalDuration - TimeSpan.FromMinutes(currentMinute) +
+                                            TimeSpan.FromMinutes(targetMinute);
+                
+                return new DateTimeOffset(
+                    targetTime.Year,
+                    targetTime.Month,
+                    targetTime.Day,
+                    targetTime.Hour,
+                    targetTime.Minute,
+                    0,
+                    targetTime.Offset);
+            }
+
+            return itemStartTime + totalDuration;
+        }
+
+        protected List<PlayoutItem> AddFiller(PlayoutItem playoutItem)
+        {
+            return new List<PlayoutItem> { playoutItem };
+        }
     }
 }

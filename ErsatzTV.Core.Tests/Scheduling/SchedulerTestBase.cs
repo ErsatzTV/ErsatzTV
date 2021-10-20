@@ -58,7 +58,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
         protected static Collection TwoItemCollection(int id1, int id2, TimeSpan duration) => new()
         {
             Id = id1,
-            Name = $"Duration Items {id1}",
+            Name = $"Collection of Items {id1}",
             MediaItems = new List<MediaItem>
             {
                 TestMovie(id1, duration, new DateTime(2020, 1, 1)),

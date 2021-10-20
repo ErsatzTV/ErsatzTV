@@ -64,6 +64,15 @@ namespace ErsatzTV.Core.Scheduling
             State.Index %= _shuffled.Count;
         }
 
+        public IMediaCollectionEnumerator Clone() =>
+            new ShuffledMediaCollectionEnumerator(
+                _mediaItems.ToList(),
+                new CollectionEnumeratorState
+                {
+                    Index = State.Index,
+                    Seed = State.Seed
+                });
+
         private IList<MediaItem> Shuffle(IEnumerable<GroupedMediaItem> list, Random random)
         {
             GroupedMediaItem[] copy = list.ToArray();

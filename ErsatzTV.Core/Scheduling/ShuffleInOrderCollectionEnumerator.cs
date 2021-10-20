@@ -63,7 +63,16 @@ namespace ErsatzTV.Core.Scheduling
 
             State.Index %= _shuffled.Count;
         }
-        
+
+        public IMediaCollectionEnumerator Clone() =>
+            new ShuffleInOrderCollectionEnumerator(
+                _collections,
+                new CollectionEnumeratorState
+                {
+                    Index = State.Index,
+                    Seed = State.Seed
+                });
+
         private IList<MediaItem> Shuffle(IList<CollectionWithItems> collections, Random random)
         {
             // based on https://keyj.emphy.de/balanced-shuffle/

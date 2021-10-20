@@ -37,5 +37,14 @@ namespace ErsatzTV.Core.Scheduling
             _index = _random.Next() % _mediaItems.Count;
             State.Index++;
         }
+
+        public IMediaCollectionEnumerator Clone() =>
+            new RandomizedMediaCollectionEnumerator(
+                _mediaItems,
+                new CollectionEnumeratorState
+                {
+                    Index = State.Index,
+                    Seed = State.Seed
+                });
     }
 }

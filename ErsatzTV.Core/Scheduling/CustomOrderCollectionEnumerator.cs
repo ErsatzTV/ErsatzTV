@@ -9,13 +9,16 @@ namespace ErsatzTV.Core.Scheduling
 {
     public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
     {
+        private readonly Collection _collection;
         private readonly IList<MediaItem> _sortedMediaItems;
 
         public CustomOrderCollectionEnumerator(
             Collection collection,
-            List<MediaItem> mediaItems,
+            IList<MediaItem> mediaItems,
             CollectionEnumeratorState state)
         {
+            _collection = collection;
+
             // TODO: this will break if we allow shows and seasons
             _sortedMediaItems = collection.CollectionItems
                 .OrderBy(ci => ci.CustomIndex)
@@ -34,5 +37,15 @@ namespace ErsatzTV.Core.Scheduling
         public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
 
         public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
+
+        public IMediaCollectionEnumerator Clone() =>
+            new CustomOrderCollectionEnumerator(
+                _collection,
+                _sortedMediaItems,
+                new CollectionEnumeratorState
+                {
+                    Index = State.Index,
+                    Seed = State.Seed
+                });
     }
 }
