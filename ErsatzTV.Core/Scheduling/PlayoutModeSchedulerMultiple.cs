@@ -93,6 +93,30 @@ namespace ErsatzTV.Core.Scheduling
                     CustomGroup = false
                 };
             }
+            
+            DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
+
+            if (scheduleItem.TailFiller != null)
+            {
+                (nextState, playoutItems) = AddTailFiller(
+                    nextState,
+                    collectionEnumerators,
+                    scheduleItem,
+                    playoutItems,
+                    nextItemStart,
+                    logger);
+            }
+
+            if (scheduleItem.FallbackFiller != null)
+            {
+                (nextState, playoutItems) = AddFallbackFiller(
+                    nextState,
+                    collectionEnumerators,
+                    scheduleItem,
+                    playoutItems,
+                    nextItemStart,
+                    logger);
+            }
 
             return Tuple(nextState, playoutItems);
         }
