@@ -11,6 +11,13 @@ namespace ErsatzTV.Core.Scheduling
 {
     public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> where T : ProgramScheduleItem
     {
+        protected readonly ILogger _logger;
+
+        protected PlayoutModeSchedulerBase(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         public static DateTimeOffset GetStartTimeAfter(
             PlayoutBuilderState state,
             ProgramScheduleItem scheduleItem)
@@ -38,16 +45,14 @@ namespace ErsatzTV.Core.Scheduling
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             T scheduleItem,
             ProgramScheduleItem nextScheduleItem,
-            DateTimeOffset hardStop,
-            ILogger logger);
+            DateTimeOffset hardStop);
 
         protected Tuple<PlayoutBuilderState, List<PlayoutItem>> AddTailFiller(
             PlayoutBuilderState playoutBuilderState,
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             ProgramScheduleItem scheduleItem,
             List<PlayoutItem> playoutItems,
-            DateTimeOffset nextItemStart,
-            ILogger logger)
+            DateTimeOffset nextItemStart)
         {
             var newItems = new List<PlayoutItem>(playoutItems);
             PlayoutBuilderState nextState = playoutBuilderState;
@@ -72,7 +77,7 @@ namespace ErsatzTV.Core.Scheduling
 
                     if (nextState.CurrentTime + version.Duration > nextItemStart)
                     {
-                        logger.LogDebug(
+                        _logger.LogDebug(
                             "Filler with duration {Duration} will go past next item start {NextItemStart}",
                             version.Duration,
                             nextItemStart);
@@ -108,8 +113,7 @@ namespace ErsatzTV.Core.Scheduling
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             ProgramScheduleItem scheduleItem,
             List<PlayoutItem> playoutItems,
-            DateTimeOffset nextItemStart,
-            ILogger logger)
+            DateTimeOffset nextItemStart)
         {
             var newItems = new List<PlayoutItem>(playoutItems);
             PlayoutBuilderState nextState = playoutBuilderState;
@@ -157,5 +161,17 @@ namespace ErsatzTV.Core.Scheduling
 
             return version.Duration;
         }
+
+        protected void LogScheduledItem(
+            ProgramScheduleItem scheduleItem,
+            MediaItem mediaItem,
+            DateTimeOffset startTime) =>
+            _logger.LogDebug(
+                "Scheduling media item: {ScheduleItemNumber} / {CollectionType} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
+                scheduleItem.Index,
+                scheduleItem.CollectionType,
+                mediaItem.Id,
+                PlayoutBuilder.DisplayTitle(mediaItem),
+                startTime);
     }
 }

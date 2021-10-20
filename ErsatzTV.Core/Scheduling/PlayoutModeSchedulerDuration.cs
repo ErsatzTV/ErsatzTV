@@ -12,13 +12,16 @@ namespace ErsatzTV.Core.Scheduling
 {
     public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramScheduleItemDuration>
     {
+        public PlayoutModeSchedulerDuration(ILogger logger) : base(logger)
+        {
+        }
+
         public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
             PlayoutBuilderState playoutBuilderState,
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             ProgramScheduleItemDuration scheduleItem,
             ProgramScheduleItem nextScheduleItem,
-            DateTimeOffset hardStop,
-            ILogger logger)
+            DateTimeOffset hardStop)
         {
             var playoutItems = new List<PlayoutItem>();
 
@@ -58,7 +61,7 @@ namespace ErsatzTV.Core.Scheduling
 
                 if (version.Duration > scheduleItem.PlayoutDuration)
                 {
-                    logger.LogWarning(
+                    _logger.LogWarning(
                         "Skipping playout item {Title} with duration {Duration} that is longer than schedule item duration {PlayoutDuration}",
                         PlayoutBuilder.DisplayTitle(mediaItem),
                         version.Duration,
@@ -85,14 +88,7 @@ namespace ErsatzTV.Core.Scheduling
 
                 if (willFinishInTime)
                 {
-                    logger.LogDebug(
-                        "Scheduling media item: {ScheduleItemNumber} / {CollectionType} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
-                        scheduleItem.Index,
-                        scheduleItem.CollectionType,
-                        mediaItem.Id,
-                        PlayoutBuilder.DisplayTitle(mediaItem),
-                        itemStartTime);
-
+                    LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
                     playoutItems.Add(playoutItem);
 
                     nextState = nextState with
@@ -132,8 +128,7 @@ namespace ErsatzTV.Core.Scheduling
                             collectionEnumerators,
                             scheduleItem,
                             playoutItems,
-                            nextItemStart,
-                            logger);
+                            nextItemStart);
                         if (scheduleItem.FallbackFiller != null)
                         {
                             return AddFallbackFiller(
@@ -141,8 +136,7 @@ namespace ErsatzTV.Core.Scheduling
                                 collectionEnumerators,
                                 scheduleItem,
                                 withTail.Item2,
-                                nextItemStart,
-                                logger);
+                                nextItemStart);
                         }
                         else
                         {
@@ -157,8 +151,7 @@ namespace ErsatzTV.Core.Scheduling
                                 collectionEnumerators,
                                 scheduleItem,
                                 playoutItems,
-                                nextItemStart,
-                                logger);
+                                nextItemStart);
                         }
                         else
                         {

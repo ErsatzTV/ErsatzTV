@@ -135,10 +135,10 @@ namespace ErsatzTV.Core.Scheduling
                 Optional(startAnchor.MultipleRemaining).IsSome || startAnchor.DurationFinishOffset.IsSome,
                 currentTime);
 
-            var schedulerOne = new PlayoutModeSchedulerOne();
-            var schedulerMultiple = new PlayoutModeSchedulerMultiple(collectionMediaItems);
-            var schedulerDuration = new PlayoutModeSchedulerDuration();
-            var schedulerFlood = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var schedulerOne = new PlayoutModeSchedulerOne(_logger);
+            var schedulerMultiple = new PlayoutModeSchedulerMultiple(collectionMediaItems, _logger);
+            var schedulerDuration = new PlayoutModeSchedulerDuration(_logger);
+            var schedulerFlood = new PlayoutModeSchedulerFlood(sortedScheduleItems, _logger);
 
             // loop until we're done filling the desired amount of time
             while (playoutBuilderState.CurrentTime < playoutFinish)
@@ -157,29 +157,25 @@ namespace ErsatzTV.Core.Scheduling
                         collectionEnumerators,
                         multiple,
                         nextScheduleItem,
-                        playoutFinish,
-                        _logger),
+                        playoutFinish),
                     ProgramScheduleItemDuration duration => schedulerDuration.Schedule(
                         playoutBuilderState,
                         collectionEnumerators,
                         duration,
                         nextScheduleItem,
-                        playoutFinish,
-                        _logger),
+                        playoutFinish),
                     ProgramScheduleItemFlood flood => schedulerFlood.Schedule(
                         playoutBuilderState,
                         collectionEnumerators,
                         flood,
                         nextScheduleItem,
-                        playoutFinish,
-                        _logger),
+                        playoutFinish),
                     ProgramScheduleItemOne one => schedulerOne.Schedule(
                         playoutBuilderState,
                         collectionEnumerators,
                         one,
                         nextScheduleItem,
-                        playoutFinish,
-                        _logger),
+                        playoutFinish),
                     _ => throw new ArgumentOutOfRangeException(nameof(scheduleItem))
                 };
 

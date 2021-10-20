@@ -14,7 +14,8 @@ namespace ErsatzTV.Core.Scheduling
     {
         private readonly List<ProgramScheduleItem> _sortedScheduleItems;
 
-        public PlayoutModeSchedulerFlood(List<ProgramScheduleItem> sortedScheduleItems)
+        public PlayoutModeSchedulerFlood(List<ProgramScheduleItem> sortedScheduleItems, ILogger logger)
+            : base(logger)
         {
             _sortedScheduleItems = sortedScheduleItems;
         }
@@ -24,8 +25,7 @@ namespace ErsatzTV.Core.Scheduling
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             ProgramScheduleItemFlood scheduleItem,
             ProgramScheduleItem nextScheduleItem,
-            DateTimeOffset hardStop,
-            ILogger logger)
+            DateTimeOffset hardStop)
         {
             var playoutItems = new List<PlayoutItem>();
 
@@ -81,14 +81,7 @@ namespace ErsatzTV.Core.Scheduling
 
                 if (willFinishInTime)
                 {
-                    logger.LogDebug(
-                        "Scheduling media item: {ScheduleItemNumber} / {CollectionType} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
-                        scheduleItem.Index,
-                        scheduleItem.CollectionType,
-                        mediaItem.Id,
-                        PlayoutBuilder.DisplayTitle(mediaItem),
-                        itemStartTime);
-
+                    LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
                     playoutItems.Add(playoutItem);
 
                     foreach (MediaItem postRollItem in maybePostRollItem)
@@ -120,7 +113,7 @@ namespace ErsatzTV.Core.Scheduling
                 }
             }
 
-            logger.LogDebug(
+            _logger.LogDebug(
                 "Advancing to next schedule item after playout mode {PlayoutMode}",
                 "Flood");
 
@@ -142,8 +135,7 @@ namespace ErsatzTV.Core.Scheduling
                     collectionEnumerators,
                     scheduleItem,
                     playoutItems,
-                    peekItemStart,
-                    logger);
+                    peekItemStart);
             }
 
             if (scheduleItem.FallbackFiller != null)
@@ -153,8 +145,7 @@ namespace ErsatzTV.Core.Scheduling
                     collectionEnumerators,
                     scheduleItem,
                     playoutItems,
-                    peekItemStart,
-                    logger);
+                    peekItemStart);
             }
 
             return Tuple(nextState, playoutItems);

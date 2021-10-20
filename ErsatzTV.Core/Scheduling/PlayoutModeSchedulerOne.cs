@@ -10,13 +10,16 @@ namespace ErsatzTV.Core.Scheduling
 {
     public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleItemOne>
     {
+        public PlayoutModeSchedulerOne(ILogger logger) : base(logger)
+        {
+        }
+
         public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
             PlayoutBuilderState playoutBuilderState,
             Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
             ProgramScheduleItemOne scheduleItem,
             ProgramScheduleItem nextScheduleItem,
-            DateTimeOffset hardStop,
-            ILogger logger)
+            DateTimeOffset hardStop)
         {
             IMediaCollectionEnumerator contentEnumerator =
                 collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
@@ -48,7 +51,7 @@ namespace ErsatzTV.Core.Scheduling
                 };
                 
                 // only play one item from collection, so always advance to the next item
-                logger.LogDebug(
+                _logger.LogDebug(
                     "Advancing to next schedule item after playout mode {PlayoutMode}",
                     "One");
 
@@ -61,6 +64,7 @@ namespace ErsatzTV.Core.Scheduling
 
                 contentEnumerator.MoveNext();
 
+                LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
                 List<PlayoutItem> playoutItems = new List<PlayoutItem> { playoutItem };
 
                 DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
@@ -72,8 +76,7 @@ namespace ErsatzTV.Core.Scheduling
                         collectionEnumerators,
                         scheduleItem,
                         playoutItems,
-                        nextItemStart,
-                        logger);
+                        nextItemStart);
                 }
 
                 if (scheduleItem.FallbackFiller != null)
@@ -83,8 +86,7 @@ namespace ErsatzTV.Core.Scheduling
                         collectionEnumerators,
                         scheduleItem,
                         playoutItems,
-                        nextItemStart,
-                        logger);
+                        nextItemStart);
                 }
 
                 return Tuple(nextState, playoutItems);

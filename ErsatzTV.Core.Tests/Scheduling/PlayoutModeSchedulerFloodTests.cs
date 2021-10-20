@@ -41,14 +41,13 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NextScheduleItem
             };
 
-            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
             (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                 StartState,
                 CollectionEnumerators(scheduleItem, enumerator),
                 scheduleItem,
                 NextScheduleItem,
-                HardStop,
-                new Mock<ILogger>().Object);
+                HardStop);
 
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -120,14 +119,13 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NextScheduleItem
             };
 
-            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
             (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                 StartState,
                 CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.PostRollFiller, enumerator2),
                 scheduleItem,
                 NextScheduleItem,
-                HardStop,
-                new Mock<ILogger>().Object);
+                HardStop);
 
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -202,14 +200,13 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NextScheduleItem
             };
 
-            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
             (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                 StartState,
                 CollectionEnumerators(scheduleItem, enumerator),
                 scheduleItem,
                 NextScheduleItem,
-                HardStop,
-                new Mock<ILogger>().Object);
+                HardStop);
 
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -278,14 +275,13 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NextScheduleItem
             };
 
-            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
             (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                 StartState,
                 CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
                 scheduleItem,
                 NextScheduleItem,
-                HardStop,
-                new Mock<ILogger>().Object);
+                HardStop);
 
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -370,14 +366,13 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NextScheduleItem
             };
 
-            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
             (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                 StartState,
                 CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.FallbackFiller, enumerator2),
                 scheduleItem,
                 NextScheduleItem,
-                HardStop,
-                new Mock<ILogger>().Object);
+                HardStop);
 
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -452,14 +447,13 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NextScheduleItem
             };
 
-            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
             (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                 StartState,
                 CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2),
                 scheduleItem,
                 NextScheduleItem,
-                HardStop,
-                new Mock<ILogger>().Object);
+                HardStop);
 
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -554,7 +548,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NextScheduleItem
             };
 
-            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
             (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                 StartState,
                 CollectionEnumerators(
@@ -566,8 +560,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     enumerator3),
                 scheduleItem,
                 NextScheduleItem,
-                HardStop,
-                new Mock<ILogger>().Object);
+                HardStop);
 
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
@@ -668,7 +661,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 NextScheduleItem
             };
 
-            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems);
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
             (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
                 StartState,
                 CollectionEnumerators(
@@ -680,8 +673,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     enumerator3),
                 scheduleItem,
                 NextScheduleItem,
-                HardStop,
-                new Mock<ILogger>().Object);
+                HardStop);
 
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
