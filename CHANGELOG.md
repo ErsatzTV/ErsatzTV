@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Store chapter details with media statistics; this is needed to support mid-roll filler
     - This requires re-ingesting statistics for all media items the first time this version is launched
 - Add switch to show/hide filler in playout detail table
+- Add `minutes` field to search index
+  - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
 
 ### Changed
 - Remove tail collection options from `Duration` playout mode

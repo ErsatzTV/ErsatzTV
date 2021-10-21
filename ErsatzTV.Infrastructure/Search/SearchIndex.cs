@@ -53,6 +53,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string WriterField = "writer";
         private const string TraktListField = "trakt_list";
         private const string AlbumField = "album";
+        private const string MinutesField = "minutes";
 
         public const string MovieType = "movie";
         public const string ShowType = "show";
@@ -76,7 +77,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 17;
+        public int Version => 18;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -301,6 +302,11 @@ namespace ErsatzTV.Infrastructure.Search
                     };
 
                     await AddLanguages(searchRepository, doc, movie.MediaVersions);
+                    
+                    foreach (MediaVersion version in movie.MediaVersions.HeadOrNone())
+                    {
+                        doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    }
 
                     if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
                     {
@@ -574,7 +580,7 @@ namespace ErsatzTV.Infrastructure.Search
 
                     List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
                     await AddLanguages(searchRepository, doc, languages);
-
+                    
                     foreach (Genre genre in metadata.Genres)
                     {
                         doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
@@ -622,6 +628,11 @@ namespace ErsatzTV.Infrastructure.Search
                     };
 
                     await AddLanguages(searchRepository, doc, musicVideo.MediaVersions);
+                    
+                    foreach (MediaVersion version in musicVideo.MediaVersions.HeadOrNone())
+                    {
+                        doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    }
 
                     if (metadata.ReleaseDate.HasValue)
                     {
@@ -684,17 +695,24 @@ namespace ErsatzTV.Infrastructure.Search
                         continue;
                     }
 
-                    var doc = new Document();
-                    doc.Add(new StringField(IdField, episode.Id.ToString(), Field.Store.YES));
-                    doc.Add(new StringField(TypeField, EpisodeType, Field.Store.YES));
-                    doc.Add(new TextField(TitleField, metadata.Title, Field.Store.NO));
-                    doc.Add(new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO));
-                    doc.Add(new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO));
-                    doc.Add(new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO));
-                    doc.Add(new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO));
-                    doc.Add(new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES));
+                    var doc = new Document
+                    {
+                        new StringField(IdField, episode.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, EpisodeType, Field.Store.YES),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                        new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    };
 
                     await AddLanguages(searchRepository, doc, episode.MediaVersions);
+                    
+                    foreach (MediaVersion version in episode.MediaVersions.HeadOrNone())
+                    {
+                        doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    }
 
                     if (metadata.ReleaseDate.HasValue)
                     {
@@ -773,10 +791,15 @@ namespace ErsatzTV.Infrastructure.Search
                         new TextField(LibraryNameField, otherVideo.LibraryPath.Library.Name, Field.Store.NO),
                         new StringField(LibraryIdField, otherVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     };
 
                     await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
+                    
+                    foreach (MediaVersion version in otherVideo.MediaVersions.HeadOrNone())
+                    {
+                        doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    }
 
                     foreach (Tag tag in metadata.Tags)
                     {
