@@ -212,20 +212,21 @@ namespace ErsatzTV.Core.Scheduling
                 switch (filler.FillerKind, filler.FillerMode)
                 {
                     case (FillerKind.MidRoll, FillerMode.Duration) when filler.Duration.HasValue:
-                        IMediaCollectionEnumerator mrde = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        IMediaCollectionEnumerator mrde = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        var mrdePeekOffset = 0;
                         for (var i = 0; i < chapters.Count - 1; i++)
                         {
                             TimeSpan midRollDuration = filler.Duration.Value;
-                            while (mrde.Current.IsSome)
+                            while (mrde.Peek(mrdePeekOffset))
                             {
-                                foreach (MediaItem mediaItem in mrde.Current)
+                                foreach (MediaItem mediaItem in mrde.Peek(mrdePeekOffset))
                                 {
                                     TimeSpan currentDuration = DurationForMediaItem(mediaItem);
                                     midRollDuration -= currentDuration;
                                     if (midRollDuration >= TimeSpan.Zero)
                                     {
                                         totalDuration += currentDuration;
-                                        mrde.MoveNext();
+                                        mrdePeekOffset++;
                                     }
                                 }
 
@@ -238,33 +239,35 @@ namespace ErsatzTV.Core.Scheduling
 
                         break;
                     case (FillerKind.MidRoll, FillerMode.Count) when filler.Count.HasValue:
-                        IMediaCollectionEnumerator mrce = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        IMediaCollectionEnumerator mrce = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        var mrcePeekOffset = 0;
                         for (var i = 0; i < chapters.Count - 1; i++)
                         {
                             for (var j = 0; j < filler.Count.Value; j++)
                             {
-                                foreach (MediaItem mediaItem in mrce.Current)
+                                foreach (MediaItem mediaItem in mrce.Peek(mrcePeekOffset))
                                 {
                                     totalDuration += DurationForMediaItem(mediaItem);
-                                    mrce.MoveNext();
+                                    mrcePeekOffset++;
                                 }
                             }
                         }
 
                         break;
                     case (_, FillerMode.Duration) when filler.Duration.HasValue:
-                        IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        var peekOffset1 = 0;
                         TimeSpan duration = filler.Duration.Value;
-                        while (e1.Current.IsSome)
+                        while (e1.Peek(peekOffset1).IsSome)
                         {
-                            foreach (MediaItem mediaItem in e1.Current)
+                            foreach (MediaItem mediaItem in e1.Peek(peekOffset1))
                             {
                                 TimeSpan currentDuration = DurationForMediaItem(mediaItem);
                                 duration -= currentDuration;
                                 if (duration >= TimeSpan.Zero)
                                 {
                                     totalDuration += currentDuration;
-                                    e1.MoveNext();
+                                    peekOffset1++;
                                 }
                             }
 
@@ -273,15 +276,17 @@ namespace ErsatzTV.Core.Scheduling
                                 break;
                             }
                         }
+
                         break;
                     case (_, FillerMode.Count) when filler.Count.HasValue:
-                        IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        var peekOffset2 = 0;
                         for (var i = 0; i < filler.Count.Value; i++)
                         {
-                            foreach (MediaItem mediaItem in e2.Current)
+                            foreach (MediaItem mediaItem in e2.Peek(peekOffset2))
                             {
                                 totalDuration += DurationForMediaItem(mediaItem);
-                                e2.MoveNext();
+                                peekOffset2++;
                             }
                         }
 

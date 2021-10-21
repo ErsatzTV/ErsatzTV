@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt;
@@ -64,14 +65,7 @@ namespace ErsatzTV.Core.Scheduling
             State.Index %= _shuffled.Count;
         }
 
-        public IMediaCollectionEnumerator Clone() =>
-            new ShuffleInOrderCollectionEnumerator(
-                _collections,
-                new CollectionEnumeratorState
-                {
-                    Index = State.Index,
-                    Seed = State.Seed
-                });
+        public Option<MediaItem> Peek(int offset) => throw new NotSupportedException();
 
         private IList<MediaItem> Shuffle(IList<CollectionWithItems> collections, Random random)
         {

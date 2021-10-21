@@ -1,5 +1,4 @@
-﻿using System;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using LanguageExt;
 
 namespace ErsatzTV.Core.Interfaces.Scheduling
@@ -9,7 +8,6 @@ namespace ErsatzTV.Core.Interfaces.Scheduling
         CollectionEnumeratorState State { get; }
         Option<MediaItem> Current { get; }
         void MoveNext();
-        IMediaCollectionEnumerator Clone();
-        // TODO: TimeSpan PeekDuration(int offset);
+        Option<MediaItem> Peek(int offset);
     }
 }

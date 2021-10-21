@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -37,13 +38,7 @@ namespace ErsatzTV.Core.Scheduling
 
         public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
 
-        public IMediaCollectionEnumerator Clone() =>
-            new ChronologicalMediaCollectionEnumerator(
-                _sortedMediaItems,
-                new CollectionEnumeratorState
-                {
-                    Index = State.Index,
-                    Seed = State.Seed
-                });
+        public Option<MediaItem> Peek(int offset) =>
+            throw new NotSupportedException();
     }
 }

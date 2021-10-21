@@ -38,13 +38,7 @@ namespace ErsatzTV.Core.Scheduling
             State.Index++;
         }
 
-        public IMediaCollectionEnumerator Clone() =>
-            new RandomizedMediaCollectionEnumerator(
-                _mediaItems,
-                new CollectionEnumeratorState
-                {
-                    Index = State.Index,
-                    Seed = State.Seed
-                });
+        public Option<MediaItem> Peek(int offset) =>
+            throw new NotSupportedException();
     }
 }
