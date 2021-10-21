@@ -200,19 +200,34 @@ namespace ErsatzTV.Core.Scheduling
                 switch (filler.FillerMode)
                 {
                     case FillerMode.Duration when filler.Duration.HasValue:
-                        // TODO: should we make this more accurate by getting the exact
-                        // duration of the filler that will fit in filler.Duration?
-                        totalDuration += filler.Duration.Value;
+                        IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        TimeSpan duration = filler.Duration.Value;
+                        while (e1.Current.IsSome)
+                        {
+                            foreach (MediaItem mediaItem in e1.Current)
+                            {
+                                TimeSpan currentDuration = DurationForMediaItem(mediaItem);
+                                duration -= currentDuration;
+                                if (duration >= TimeSpan.Zero)
+                                {
+                                    totalDuration += currentDuration;
+                                }
+                            }
+
+                            if (duration < TimeSpan.Zero)
+                            {
+                                break;
+                            }
+                        }
                         break;
                     case FillerMode.Count when filler.Count.HasValue:
-                        IMediaCollectionEnumerator enumerator =
-                            enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
                         for (var i = 0; i < filler.Count.Value; i++)
                         {
-                            foreach (MediaItem mediaItem in enumerator.Current)
+                            foreach (MediaItem mediaItem in e2.Current)
                             {
                                 totalDuration += DurationForMediaItem(mediaItem);
-                                enumerator.MoveNext();
+                                e2.MoveNext();
                             }
                         }
 
