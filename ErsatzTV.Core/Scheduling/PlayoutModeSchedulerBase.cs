@@ -424,7 +424,9 @@ namespace ErsatzTV.Core.Scheduling
             foreach (FillerPreset padFiller in Optional(allFiller.FirstOrDefault(f => f.PadToNearestMinute.HasValue)))
             {
                 var totalDuration =
-                    TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
+                    TimeSpan.FromMilliseconds(
+                        result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds) +
+                        chapters.Sum(c => (c.EndTime - c.StartTime).TotalMilliseconds));
                 
                 int currentMinute = (playoutItem.StartOffset + totalDuration).Minute;
                 // ReSharper disable once PossibleInvalidOperationException
@@ -480,21 +482,57 @@ namespace ErsatzTV.Core.Scheduling
 
                         break;
                     case FillerKind.MidRoll:
-                        // IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        // for (var i = 0; i < chapters.Count; i++)
-                        // {
-                        //     result.Add(playoutItem.ForChapter(chapters[i]));
-                        //     if (i < chapters.Count - 1)
-                        //     {
-                        //         result.AddRange(
-                        //             AddDurationFiller(
-                        //                 playoutBuilderState,
-                        //                 e1,
-                        //                 filler.Duration.Value,
-                        //                 FillerKind.MidRoll));
-                        //     }
-                        // }
+                        IMediaCollectionEnumerator mid1 = enumerators[CollectionKey.ForFillerPreset(padFiller)];
+                        var fillerQueue = new Queue<PlayoutItem>(
+                            AddDurationFiller(
+                                playoutBuilderState,
+                                mid1,
+                                remainingToFill,
+                                FillerKind.MidRoll));
+                        TimeSpan average = chapters.Count == 0
+                            ? remainingToFill
+                            : remainingToFill / (chapters.Count - 1);
+                        TimeSpan filled = TimeSpan.Zero;
+                        for (var i = 0; i < chapters.Count; i++)
+                        {
+                            result.Add(playoutItem.ForChapter(chapters[i]));
+                            if (i < chapters.Count - 1)
+                            {
+                                TimeSpan current = TimeSpan.Zero;
+                                while (current < average && filled < remainingToFill)
+                                {
+                                    if (fillerQueue.TryDequeue(out PlayoutItem fillerItem))
+                                    {
+                                        result.Add(fillerItem);
+                                        current += fillerItem.Finish - fillerItem.Start;
+                                        filled += fillerItem.Finish - fillerItem.Start;
+                                    }
+                                    else
+                                    {
+                                        TimeSpan leftInThisBreak = average - current;
+                                        TimeSpan leftOverall = remainingToFill - filled;
 
+                                        TimeSpan maxThisBreak = leftOverall < leftInThisBreak
+                                            ? leftOverall
+                                            : leftInThisBreak;
+
+                                        Option<PlayoutItem> maybeFallback = FallbackFillerForPad(
+                                            playoutBuilderState,
+                                            enumerators,
+                                            scheduleItem,
+                                            i < chapters.Count - 1 ? maxThisBreak : leftOverall);
+
+                                        foreach (PlayoutItem fallback in maybeFallback)
+                                        {
+                                            current += fallback.Finish - fallback.Start;
+                                            filled += fallback.Finish - fallback.Start;
+                                            result.Add(fallback);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
                         break;
                     case FillerKind.PostRoll:
                         IMediaCollectionEnumerator post1 = enumerators[CollectionKey.ForFillerPreset(padFiller)];
