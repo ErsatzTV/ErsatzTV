@@ -337,8 +337,9 @@ namespace ErsatzTV.Core.Scheduling
                 // TODO: log error?
                 return new List<PlayoutItem> { playoutItem };
             }
-            
-            foreach (FillerPreset filler in allFiller.Filter(f => f.FillerKind == FillerKind.PreRoll))
+
+            foreach (FillerPreset filler in allFiller.Filter(
+                f => f.FillerKind == FillerKind.PreRoll && f.FillerMode != FillerMode.Pad))
             {
                 switch (filler.FillerMode)
                 {
@@ -354,14 +355,15 @@ namespace ErsatzTV.Core.Scheduling
                         break;
                 }
             }
-            
+
             if (allFiller.All(f => f.FillerKind != FillerKind.MidRoll) || !chapters.Any())
             {
                 result.Add(playoutItem);
             }
             else
             {
-                foreach (FillerPreset filler in allFiller.Filter(f => f.FillerKind == FillerKind.MidRoll))
+                foreach (FillerPreset filler in allFiller.Filter(
+                    f => f.FillerKind == FillerKind.MidRoll && f.FillerMode != FillerMode.Pad))
                 {
                     switch (filler.FillerMode)
                     {
@@ -400,7 +402,8 @@ namespace ErsatzTV.Core.Scheduling
                 }
             }
 
-            foreach (FillerPreset filler in allFiller.Filter(f => f.FillerKind == FillerKind.PostRoll))
+            foreach (FillerPreset filler in allFiller.Filter(
+                f => f.FillerKind == FillerKind.PostRoll && f.FillerMode != FillerMode.Pad))
             {
                 switch (filler.FillerMode)
                 {
@@ -417,6 +420,107 @@ namespace ErsatzTV.Core.Scheduling
                 }
             }
             
+            // after all non-padded filler has been added, figure out padding
+            foreach (FillerPreset padFiller in Optional(allFiller.FirstOrDefault(f => f.PadToNearestMinute.HasValue)))
+            {
+                var totalDuration =
+                    TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
+                
+                int currentMinute = (playoutItem.StartOffset + totalDuration).Minute;
+                // ReSharper disable once PossibleInvalidOperationException
+                int targetMinute = (currentMinute + padFiller.PadToNearestMinute.Value - 1) /
+                    padFiller.PadToNearestMinute.Value * padFiller.PadToNearestMinute.Value;
+
+                DateTimeOffset almostTargetTime = playoutItem.StartOffset + totalDuration -
+                                            TimeSpan.FromMinutes(currentMinute) +
+                                            TimeSpan.FromMinutes(targetMinute);
+
+                
+                var targetTime = new DateTimeOffset(
+                    almostTargetTime.Year,
+                    almostTargetTime.Month,
+                    almostTargetTime.Day,
+                    almostTargetTime.Hour,
+                    almostTargetTime.Minute,
+                    0,
+                    almostTargetTime.Offset);
+
+                TimeSpan remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
+
+                // _logger.LogInformation(
+                //     "Total duration {TotalDuration}; need to fill {TimeSpan} to pad properly to {TargetTime}",
+                //     totalDuration,
+                //     remainingToFill,
+                //     targetTime);
+
+                switch (padFiller.FillerKind)
+                {
+                    case FillerKind.PreRoll:
+                        IMediaCollectionEnumerator pre1 = enumerators[CollectionKey.ForFillerPreset(padFiller)];
+                        result.InsertRange(
+                            0,
+                            AddDurationFiller(
+                                playoutBuilderState,
+                                pre1,
+                                remainingToFill,
+                                FillerKind.PreRoll));
+                        totalDuration =
+                            TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
+                        remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
+                        if (remainingToFill > TimeSpan.Zero)
+                        {
+                            result.InsertRange(
+                                0,
+                                FallbackFillerForPad(
+                                    playoutBuilderState,
+                                    enumerators,
+                                    scheduleItem,
+                                    remainingToFill));
+                        }
+
+                        break;
+                    case FillerKind.MidRoll:
+                        // IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        // for (var i = 0; i < chapters.Count; i++)
+                        // {
+                        //     result.Add(playoutItem.ForChapter(chapters[i]));
+                        //     if (i < chapters.Count - 1)
+                        //     {
+                        //         result.AddRange(
+                        //             AddDurationFiller(
+                        //                 playoutBuilderState,
+                        //                 e1,
+                        //                 filler.Duration.Value,
+                        //                 FillerKind.MidRoll));
+                        //     }
+                        // }
+
+                        break;
+                    case FillerKind.PostRoll:
+                        IMediaCollectionEnumerator post1 = enumerators[CollectionKey.ForFillerPreset(padFiller)];
+                        result.AddRange(
+                            AddDurationFiller(
+                                playoutBuilderState,
+                                post1,
+                                remainingToFill,
+                                FillerKind.PostRoll));
+                        totalDuration =
+                            TimeSpan.FromMilliseconds(result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds));
+                        remainingToFill = targetTime - totalDuration - playoutItem.StartOffset;
+                        if (remainingToFill > TimeSpan.Zero)
+                        {
+                            result.AddRange(
+                                FallbackFillerForPad(
+                                    playoutBuilderState,
+                                    enumerators,
+                                    scheduleItem,
+                                    remainingToFill));
+                        }
+
+                        break;
+                }
+            }
+
             // fix times on each playout item
             DateTimeOffset currentTime = playoutItem.StartOffset;
             for (var i = 0; i < result.Count; i++)
@@ -448,8 +552,8 @@ namespace ErsatzTV.Core.Scheduling
                     var playoutItem = new PlayoutItem
                     {
                         MediaItemId = mediaItem.Id,
-                        Start = SystemTime.MinValueUtc,
-                        Finish = SystemTime.MinValueUtc + itemDuration,
+                        Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+                        Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + itemDuration,
                         InPoint = TimeSpan.Zero,
                         OutPoint = itemDuration,
                         GuideGroup = playoutBuilderState.NextGuideGroup,
@@ -486,8 +590,8 @@ namespace ErsatzTV.Core.Scheduling
                         var playoutItem = new PlayoutItem
                         {
                             MediaItemId = mediaItem.Id,
-                            Start = SystemTime.MinValueUtc,
-                            Finish = SystemTime.MinValueUtc + itemDuration,
+                            Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+                            Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + itemDuration,
                             InPoint = TimeSpan.Zero,
                             OutPoint = itemDuration,
                             GuideGroup = playoutBuilderState.NextGuideGroup,
@@ -506,6 +610,39 @@ namespace ErsatzTV.Core.Scheduling
             }
 
             return result;
+        }
+
+        private Option<PlayoutItem> FallbackFillerForPad(
+            PlayoutBuilderState playoutBuilderState,
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
+            ProgramScheduleItem scheduleItem,
+            TimeSpan duration)
+        {
+            if (scheduleItem.FallbackFiller != null)
+            {
+                IMediaCollectionEnumerator enumerator =
+                    enumerators[CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller)];
+
+                foreach (MediaItem mediaItem in enumerator.Current)
+                {
+                    var result = new PlayoutItem
+                    {
+                        MediaItemId = mediaItem.Id,
+                        Start = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc),
+                        Finish = new DateTime(2020, 2, 1, 0, 0, 0, DateTimeKind.Utc) + duration,
+                        InPoint = TimeSpan.Zero,
+                        OutPoint = TimeSpan.Zero,
+                        GuideGroup = playoutBuilderState.NextGuideGroup,
+                        FillerKind = FillerKind.Fallback
+                    };
+
+                    enumerator.MoveNext();
+
+                    return result;
+                }
+            }
+
+            return None;
         }
     }
 }
