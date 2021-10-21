@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.ProgramSchedules.Commands
 {
@@ -19,6 +23,33 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 .Include(ps => ps.Playouts)
                 .SelectOneAsync(ps => ps.Id, ps => ps.Id == programScheduleId)
                 .Map(o => o.ToValidation<BaseError>("[ProgramScheduleId] does not exist."));
+
+        protected static async Task<Either<BaseError, ProgramSchedule>> FillerConfigurationMustBeValid(
+            TvContext dbContext,
+            IProgramScheduleItemRequest item,
+            ProgramSchedule programSchedule)
+        {
+            var allFillerIds = Optional(item.PreRollFillerId)
+                .Append(Optional(item.MidRollFillerId))
+                .Append(Optional(item.PostRollFillerId))
+                .ToList();
+
+            List<FillerPreset> allFiller = await dbContext.FillerPresets
+                .Filter(fp => allFillerIds.Contains(fp.Id))
+                .ToListAsync();
+            
+            if (allFiller.Count(f => f.PadToNearestMinute.HasValue) > 1)
+            {
+                return BaseError.New("Schedule may only contain one filler preset that is configured to pad");
+            }
+
+            if (allFiller.Any(fp => fp.PadToNearestMinute.HasValue) && !item.FallbackFillerId.HasValue)
+            {
+                return BaseError.New("Fallback filler is required when padding");
+            }
+
+            return programSchedule;
+        }
 
         protected static Validation<BaseError, ProgramSchedule> PlayoutModeMustBeValid(
             IProgramScheduleItemRequest item,

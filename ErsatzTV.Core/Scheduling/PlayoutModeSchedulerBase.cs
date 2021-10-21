@@ -199,7 +199,8 @@ namespace ErsatzTV.Core.Scheduling
                 .Append(Optional(scheduleItem.PostRollFiller))
                 .ToList();
 
-            if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
+            if (allFiller.Count(f => f.PadToNearestMinute.HasValue) > 1)
+            // if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
             {
                 // multiple pad-to-nearest-minute values are invalid; use no filler
                 // TODO: log error?
@@ -331,7 +332,8 @@ namespace ErsatzTV.Core.Scheduling
                 .Append(Optional(scheduleItem.PostRollFiller))
                 .ToList();
 
-            if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
+            if (allFiller.Count(f => f.PadToNearestMinute.HasValue) > 1)
+            // if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
             {
                 // multiple pad-to-nearest-minute values are invalid; use no filler
                 // TODO: log error?
