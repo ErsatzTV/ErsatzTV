@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix generated streams with mpeg2video
 - Fix incorrect row count in playout detail table
+- Fix deleting movies that have been removed from Jellyfin and Emby
 
 ### Added
 - Add new filler system
@@ -22,6 +23,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
 
 ### Changed
+- Change some debug log messages to info so they show by default again
 - Remove tail collection options from `Duration` playout mode
 - Show localized start time in schedule items tables
 

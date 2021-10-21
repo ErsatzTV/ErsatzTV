@@ -538,13 +538,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { SeasonKey = seasonKey, Keys = episodeKeys }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
-                @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN Episode e ON m.Id = e.Id
-                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
-                INNER JOIN PlexSeason P on P.Id = e.SeasonId
-                WHERE P.Key = @SeasonKey AND pe.Key not in @Keys)",
-                new { SeasonKey = seasonKey, Keys = episodeKeys });
+                "DELETE FROM MediaItem WHERE Id IN @Ids",
+                new { Ids = ids });
 
             return ids;
         }
@@ -685,12 +680,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 new { LibraryId = library.Id, Keys = showKeys }).Map(result => result.ToList());
 
             await _dbConnection.ExecuteAsync(
-                @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                WHERE lp.LibraryId = @LibraryId AND ps.Key not in @Keys)",
-                new { LibraryId = library.Id, Keys = showKeys });
+                "DELETE FROM MediaItem WHERE Id IN @Ids",
+                new { Ids = ids });
 
             return ids;
         }

@@ -69,7 +69,7 @@ namespace ErsatzTV.Core.Jellyfin
 
                     if (log)
                     {
-                        _logger.LogDebug(
+                        _logger.LogInformation(
                             "Replacing jellyfin path {JellyfinPath} with {LocalPath} resulting in {FinalPath}",
                             replacement.JellyfinPath,
                             replacement.LocalPath,
