@@ -39,6 +39,6 @@ namespace ErsatzTV.Core.Scheduling
         public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
 
         public Option<MediaItem> Peek(int offset) =>
-            throw new NotSupportedException();
+            _sortedMediaItems.Any() ? _sortedMediaItems[(State.Index + offset) % _sortedMediaItems.Count] : None;
     }
 }
