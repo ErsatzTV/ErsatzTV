@@ -132,7 +132,7 @@ namespace ErsatzTV.Core.Scheduling
                 startAnchor.DurationFinishOffset,
                 startAnchor.InFlood,
                 startAnchor.InDurationFiller,
-                Optional(startAnchor.MultipleRemaining).IsSome || startAnchor.DurationFinishOffset.IsSome,
+                startAnchor.NextGuideGroup,
                 currentTime);
 
             var schedulerOne = new PlayoutModeSchedulerOne(_logger);
@@ -222,7 +222,8 @@ namespace ErsatzTV.Core.Scheduling
                     ? playoutBuilderState.DurationFinish.ValueUnsafe().UtcDateTime
                     : null,
                 InFlood = playoutBuilderState.InFlood,
-                InDurationFiller = playoutBuilderState.InDurationFiller
+                InDurationFiller = playoutBuilderState.InDurationFiller,
+                NextGuideGroup = playoutBuilderState.NextGuideGroup
             };
 
             return playout;

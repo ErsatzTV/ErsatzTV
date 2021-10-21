@@ -69,11 +69,13 @@ namespace ErsatzTV.Core.Scheduling
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + itemDuration,
-                    CustomGroup = true,
+                    GuideGroup = nextState.NextGuideGroup,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
                         : FillerKind.None
                 };
+
+                durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime); 
                 
                 DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
                 DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
@@ -86,7 +88,7 @@ namespace ErsatzTV.Core.Scheduling
                 if (willFinishInTime)
                 {
                     // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
-                    playoutItems.AddRange(AddFiller(collectionEnumerators, scheduleItem, playoutItem));
+                    playoutItems.AddRange(AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem));
 
                     nextState = nextState with
                     {
@@ -129,44 +131,45 @@ namespace ErsatzTV.Core.Scheduling
                 switch (scheduleItem.TailMode)
                 {
                     case TailMode.Filler:
-                        Tuple<PlayoutBuilderState, List<PlayoutItem>> withTail = AddTailFiller(
-                            nextState,
-                            collectionEnumerators,
-                            scheduleItem,
-                            playoutItems,
-                            nextItemStart);
-                        if (scheduleItem.FallbackFiller != null)
+                        if (scheduleItem.TailFiller != null)
                         {
-                            return AddFallbackFiller(
-                                withTail.Item1,
-                                collectionEnumerators,
-                                scheduleItem,
-                                withTail.Item2,
-                                nextItemStart);
-                        }
-                        else
-                        {
-                            PlayoutBuilderState finalState = withTail.Item1 with { CurrentTime = nextItemStart };
-                            return Tuple(finalState, withTail.Item2);
-                        }
-                    case TailMode.Offline:
-                        if (scheduleItem.FallbackFiller != null)
-                        {
-                            return AddFallbackFiller(
+                            (nextState, playoutItems) = AddTailFiller(
                                 nextState,
                                 collectionEnumerators,
                                 scheduleItem,
                                 playoutItems,
                                 nextItemStart);
                         }
-                        else
+
+                        if (scheduleItem.FallbackFiller != null)
                         {
-                            nextState = nextState with { CurrentTime = nextItemStart };
+                            (nextState, playoutItems) = AddFallbackFiller(
+                                nextState,
+                                collectionEnumerators,
+                                scheduleItem,
+                                playoutItems,
+                                nextItemStart);
                         }
 
+                        nextState = nextState with { CurrentTime = nextItemStart };
+                        break;
+                    case TailMode.Offline:
+                        if (scheduleItem.FallbackFiller != null)
+                        {
+                            (nextState, playoutItems) = AddFallbackFiller(
+                                nextState,
+                                collectionEnumerators,
+                                scheduleItem,
+                                playoutItems,
+                                nextItemStart);
+                        }
+
+                        nextState = nextState with { CurrentTime = nextItemStart };
                         break;
                 }
             }
+
+            nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
             
             return Tuple(nextState, playoutItems);
         }

@@ -71,7 +71,7 @@ namespace ErsatzTV.Core.Iptv
             foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(kvp => kvp.Key.Number))
             {
                 var i = 0;
-                while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None)
+                while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None && sorted[i].FillerKind != FillerKind.PreRoll)
                 {
                     i++;
                 }
@@ -79,23 +79,28 @@ namespace ErsatzTV.Core.Iptv
                 while (i < sorted.Count)
                 {
                     PlayoutItem startItem = sorted[i];
+                    int j = i;
+                    while (j + 1 < sorted.Count && sorted[j].FillerKind != FillerKind.None)
+                    {
+                        j++;
+                    }
+                    PlayoutItem displayItem = sorted[j];
                     bool hasCustomTitle = !string.IsNullOrWhiteSpace(startItem.CustomTitle);
 
                     int finishIndex = i;
-                    while (finishIndex + 1 < sorted.Count && (hasCustomTitle && sorted[finishIndex + 1].CustomGroup ||
-                                                              sorted[finishIndex + 1].FillerKind != FillerKind.None))
+                    while (finishIndex + 1 < sorted.Count && sorted[finishIndex + 1].GuideGroup == startItem.GuideGroup)
                     {
                         finishIndex++;
                     }
 
                     int customShowId = -1;
-                    if (sorted[i].MediaItem is Episode ep)
+                    if (displayItem.MediaItem is Episode ep)
                     {
                         customShowId = ep.Season.ShowId;
                     }
 
                     bool isSameCustomShow = hasCustomTitle;
-                    for (int x = i; x <= finishIndex; x++)
+                    for (int x = j; x <= finishIndex; x++)
                     {
                         isSameCustomShow = isSameCustomShow && sorted[x].MediaItem is Episode e &&
                                            customShowId == e.Season.ShowId;
@@ -105,14 +110,14 @@ namespace ErsatzTV.Core.Iptv
                     i = finishIndex;
 
                     string start = startItem.StartOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
-                    string stop = startItem.GuideFinishOffset.HasValue
-                        ? startItem.GuideFinishOffset.Value.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty)
+                    string stop = displayItem.GuideFinishOffset.HasValue
+                        ? displayItem.GuideFinishOffset.Value.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty)
                         : finishItem.FinishOffset.ToString("yyyyMMddHHmmss zzz").Replace(":", string.Empty);
 
-                    string title = GetTitle(startItem);
-                    string subtitle = GetSubtitle(startItem);
-                    string description = GetDescription(startItem);
-                    Option<ContentRating> contentRating = GetContentRating(startItem);
+                    string title = GetTitle(displayItem);
+                    string subtitle = GetSubtitle(displayItem);
+                    string description = GetDescription(displayItem);
+                    Option<ContentRating> contentRating = GetContentRating(displayItem);
 
                     xml.WriteStartElement("programme");
                     xml.WriteAttributeString("start", start);
@@ -143,7 +148,7 @@ namespace ErsatzTV.Core.Iptv
                         }
                     }
 
-                    if (!hasCustomTitle && startItem.MediaItem is Movie movie)
+                    if (!hasCustomTitle && displayItem.MediaItem is Movie movie)
                     {
                         foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
                         {
@@ -176,7 +181,7 @@ namespace ErsatzTV.Core.Iptv
                         }
                     }
 
-                    if (!hasCustomTitle && startItem.MediaItem is MusicVideo musicVideo)
+                    if (!hasCustomTitle && displayItem.MediaItem is MusicVideo musicVideo)
                     {
                         foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
                         {
@@ -209,7 +214,7 @@ namespace ErsatzTV.Core.Iptv
                         }
                     }
 
-                    if (startItem.MediaItem is Episode episode && (!hasCustomTitle || isSameCustomShow))
+                    if (displayItem.MediaItem is Episode episode && (!hasCustomTitle || isSameCustomShow))
                     {
                         Option<ShowMetadata> maybeMetadata =
                             Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten();

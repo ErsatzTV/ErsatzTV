@@ -9,6 +9,9 @@ namespace ErsatzTV.Core.Scheduling
         Option<DateTimeOffset> DurationFinish,
         bool InFlood,
         bool InDurationFiller,
-        bool CustomGroup,
-        DateTimeOffset CurrentTime);
+        int NextGuideGroup,
+        DateTimeOffset CurrentTime)
+    {
+        public int IncrementGuideGroup => (NextGuideGroup + 1) % 10000;
+    }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
-using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -48,7 +47,7 @@ namespace ErsatzTV.Core.Scheduling
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + itemDuration,
-                    CustomGroup = true,
+                    GuideGroup = nextState.NextGuideGroup,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
                         : FillerKind.None
@@ -74,7 +73,7 @@ namespace ErsatzTV.Core.Scheduling
 
                 if (willFinishInTime)
                 {
-                    playoutItems.AddRange(AddFiller(collectionEnumerators, scheduleItem, playoutItem));
+                    playoutItems.AddRange(AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem));
                     // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
                     nextState = nextState with
@@ -94,8 +93,7 @@ namespace ErsatzTV.Core.Scheduling
             nextState = nextState with
             {
                 ScheduleItemIndex = nextState.ScheduleItemIndex + 1,
-                InFlood = nextState.CurrentTime >= hardStop,
-                CustomGroup = false
+                InFlood = nextState.CurrentTime >= hardStop
             };
             
             ProgramScheduleItem peekItem =
@@ -121,6 +119,8 @@ namespace ErsatzTV.Core.Scheduling
                     playoutItems,
                     peekItemStart);
             }
+
+            nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
 
             return Tuple(nextState, playoutItems);
         }

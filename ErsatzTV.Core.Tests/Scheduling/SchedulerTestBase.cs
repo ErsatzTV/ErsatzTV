@@ -16,7 +16,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Prelude.None,
             false,
             false,
-            false,
+            1,
             new DateTimeOffset(2020, 10, 18, 0, 0, 0, TimeSpan.FromHours(-5)));
 
         protected virtual ProgramScheduleItem NextScheduleItem => new ProgramScheduleItemOne

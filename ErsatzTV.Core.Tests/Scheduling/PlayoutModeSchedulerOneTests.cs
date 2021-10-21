@@ -46,7 +46,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(1));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
 
-            playoutBuilderState.CustomGroup.Should().BeFalse();
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
             playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
             playoutBuilderState.InFlood.Should().BeFalse();
             playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
@@ -59,7 +59,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             playoutItems[0].MediaItemId.Should().Be(1);
             playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
-            playoutItems[0].CustomGroup.Should().BeFalse();
+            playoutItems[0].GuideGroup.Should().Be(1);
             playoutItems[0].FillerKind.Should().Be(FillerKind.None);
         }
 
@@ -105,7 +105,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
 
-            playoutBuilderState.CustomGroup.Should().BeFalse();
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
             playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
             playoutBuilderState.InFlood.Should().BeFalse();
             playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
@@ -119,22 +119,22 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             playoutItems[0].MediaItemId.Should().Be(1);
             playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
-            playoutItems[0].CustomGroup.Should().BeFalse();
+            playoutItems[0].GuideGroup.Should().Be(1);
             playoutItems[0].FillerKind.Should().Be(FillerKind.None);
 
             playoutItems[1].MediaItemId.Should().Be(3);
             playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
-            playoutItems[1].CustomGroup.Should().BeTrue();
+            playoutItems[1].GuideGroup.Should().Be(1);
             playoutItems[1].FillerKind.Should().Be(FillerKind.Tail);
 
             playoutItems[2].MediaItemId.Should().Be(4);
             playoutItems[2].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
-            playoutItems[2].CustomGroup.Should().BeTrue();
+            playoutItems[2].GuideGroup.Should().Be(1);
             playoutItems[2].FillerKind.Should().Be(FillerKind.Tail);
         
             playoutItems[3].MediaItemId.Should().Be(3);
             playoutItems[3].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
-            playoutItems[3].CustomGroup.Should().BeTrue();
+            playoutItems[3].GuideGroup.Should().Be(1);
             playoutItems[3].FillerKind.Should().Be(FillerKind.Tail);
         }
 
@@ -180,7 +180,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
 
-            playoutBuilderState.CustomGroup.Should().BeFalse();
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
             playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
             playoutBuilderState.InFlood.Should().BeFalse();
             playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
@@ -194,12 +194,12 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             playoutItems[0].MediaItemId.Should().Be(1);
             playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
-            playoutItems[0].CustomGroup.Should().BeFalse();
+            playoutItems[0].GuideGroup.Should().Be(1);
             playoutItems[0].FillerKind.Should().Be(FillerKind.None);
 
             playoutItems[1].MediaItemId.Should().Be(3);
             playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.AddHours(1));
-            playoutItems[1].CustomGroup.Should().BeTrue();
+            playoutItems[1].GuideGroup.Should().Be(1);
             playoutItems[1].FillerKind.Should().Be(FillerKind.Fallback);
         }
         
@@ -245,7 +245,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
 
-            playoutBuilderState.CustomGroup.Should().BeFalse();
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
             playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
             playoutBuilderState.InFlood.Should().BeFalse();
             playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
@@ -259,22 +259,22 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             playoutItems[0].MediaItemId.Should().Be(1);
             playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
-            playoutItems[0].CustomGroup.Should().BeFalse();
+            playoutItems[0].GuideGroup.Should().Be(1);
             playoutItems[0].FillerKind.Should().Be(FillerKind.None);
 
             playoutItems[1].MediaItemId.Should().Be(3);
             playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
-            playoutItems[1].CustomGroup.Should().BeTrue();
+            playoutItems[1].GuideGroup.Should().Be(1);
             playoutItems[1].FillerKind.Should().Be(FillerKind.Tail);
 
             playoutItems[2].MediaItemId.Should().Be(4);
             playoutItems[2].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 49, 0)));
-            playoutItems[2].CustomGroup.Should().BeTrue();
+            playoutItems[2].GuideGroup.Should().Be(1);
             playoutItems[2].FillerKind.Should().Be(FillerKind.Tail);
         
             playoutItems[3].MediaItemId.Should().Be(3);
             playoutItems[3].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 53, 0)));
-            playoutItems[3].CustomGroup.Should().BeTrue();
+            playoutItems[3].GuideGroup.Should().Be(1);
             playoutItems[3].FillerKind.Should().Be(FillerKind.Tail);
         }
 
@@ -336,7 +336,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
 
-            playoutBuilderState.CustomGroup.Should().BeFalse();
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
             playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
             playoutBuilderState.InFlood.Should().BeFalse();
             playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
@@ -351,27 +351,27 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             playoutItems[0].MediaItemId.Should().Be(1);
             playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
-            playoutItems[0].CustomGroup.Should().BeFalse();
+            playoutItems[0].GuideGroup.Should().Be(1);
             playoutItems[0].FillerKind.Should().Be(FillerKind.None);
 
             playoutItems[1].MediaItemId.Should().Be(3);
             playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
-            playoutItems[1].CustomGroup.Should().BeTrue();
+            playoutItems[1].GuideGroup.Should().Be(1);
             playoutItems[1].FillerKind.Should().Be(FillerKind.Tail);
 
             playoutItems[2].MediaItemId.Should().Be(4);
             playoutItems[2].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 49, 0)));
-            playoutItems[2].CustomGroup.Should().BeTrue();
+            playoutItems[2].GuideGroup.Should().Be(1);
             playoutItems[2].FillerKind.Should().Be(FillerKind.Tail);
         
             playoutItems[3].MediaItemId.Should().Be(3);
             playoutItems[3].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 53, 0)));
-            playoutItems[3].CustomGroup.Should().BeTrue();
+            playoutItems[3].GuideGroup.Should().Be(1);
             playoutItems[3].FillerKind.Should().Be(FillerKind.Tail);
 
             playoutItems[4].MediaItemId.Should().Be(5);
             playoutItems[4].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 57, 0)));
-            playoutItems[4].CustomGroup.Should().BeTrue();
+            playoutItems[4].GuideGroup.Should().Be(1);
             playoutItems[4].FillerKind.Should().Be(FillerKind.Fallback);
         }
 
@@ -433,7 +433,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
             playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
 
-            playoutBuilderState.CustomGroup.Should().BeFalse();
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
             playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
             playoutBuilderState.InFlood.Should().BeFalse();
             playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
@@ -448,7 +448,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
             playoutItems[0].MediaItemId.Should().Be(1);
             playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
-            playoutItems[0].CustomGroup.Should().BeFalse();
+            playoutItems[0].GuideGroup.Should().Be(1);
             playoutItems[0].FillerKind.Should().Be(FillerKind.None);
         }
 

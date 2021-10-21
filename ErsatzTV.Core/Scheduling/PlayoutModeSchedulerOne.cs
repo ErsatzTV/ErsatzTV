@@ -37,7 +37,7 @@ namespace ErsatzTV.Core.Scheduling
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + itemDuration,
-                    CustomGroup = false,
+                    GuideGroup = playoutBuilderState.NextGuideGroup,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
                         : FillerKind.None
@@ -49,7 +49,11 @@ namespace ErsatzTV.Core.Scheduling
                     itemStartTime,
                     itemDuration);
 
-                List<PlayoutItem> playoutItems = AddFiller(collectionEnumerators, scheduleItem, playoutItem);
+                List<PlayoutItem> playoutItems = AddFiller(
+                    playoutBuilderState,
+                    collectionEnumerators,
+                    scheduleItem,
+                    playoutItem);
 
                 // only play one item from collection, so always advance to the next item
                 // _logger.LogDebug(
@@ -59,8 +63,7 @@ namespace ErsatzTV.Core.Scheduling
                 PlayoutBuilderState nextState = playoutBuilderState with
                 {
                     CurrentTime = itemEndTimeWithFiller,
-                    ScheduleItemIndex = playoutBuilderState.ScheduleItemIndex + 1,
-                    CustomGroup = false
+                    ScheduleItemIndex = playoutBuilderState.ScheduleItemIndex + 1
                 };
 
                 contentEnumerator.MoveNext();
@@ -88,6 +91,8 @@ namespace ErsatzTV.Core.Scheduling
                         playoutItems,
                         nextItemStart);
                 }
+
+                nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
 
                 return Tuple(nextState, playoutItems);
             }

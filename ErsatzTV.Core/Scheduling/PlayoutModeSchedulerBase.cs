@@ -93,7 +93,7 @@ namespace ErsatzTV.Core.Scheduling
                         Start = nextState.CurrentTime.UtcDateTime,
                         Finish = nextState.CurrentTime.UtcDateTime + version.Duration,
                         FillerKind = FillerKind.Tail,
-                        CustomGroup = true
+                        GuideGroup = nextState.NextGuideGroup
                     };
 
                     newItems.Add(playoutItem);
@@ -132,7 +132,7 @@ namespace ErsatzTV.Core.Scheduling
                         MediaItemId = mediaItem.Id,
                         Start = nextState.CurrentTime.UtcDateTime,
                         Finish = nextItemStart.UtcDateTime,
-                        CustomGroup = true,
+                        GuideGroup = nextState.NextGuideGroup,
                         FillerKind = FillerKind.Fallback
                     };
 
@@ -259,6 +259,7 @@ namespace ErsatzTV.Core.Scheduling
         }
 
         protected List<PlayoutItem> AddFiller(
+            PlayoutBuilderState playoutBuilderState,
             Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
             ProgramScheduleItem scheduleItem,
             PlayoutItem playoutItem)
@@ -283,11 +284,13 @@ namespace ErsatzTV.Core.Scheduling
                 {
                     case FillerMode.Duration when filler.Duration.HasValue:
                         IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        result.AddRange(AddDurationFiller(e1, filler.Duration.Value, FillerKind.PreRoll));
+                        result.AddRange(
+                            AddDurationFiller(playoutBuilderState, e1, filler.Duration.Value, FillerKind.PreRoll));
                         break;
                     case FillerMode.Count when filler.Count.HasValue:
                         IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        result.AddRange(AddMultipleFiller(e2, filler.Count.Value, FillerKind.PreRoll));
+                        result.AddRange(
+                            AddMultipleFiller(playoutBuilderState, e2, filler.Count.Value, FillerKind.PreRoll));
                         break;
                 }
             }
@@ -303,11 +306,13 @@ namespace ErsatzTV.Core.Scheduling
                 {
                     case FillerMode.Duration when filler.Duration.HasValue:
                         IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        result.AddRange(AddDurationFiller(e1, filler.Duration.Value, FillerKind.PostRoll));
+                        result.AddRange(
+                            AddDurationFiller(playoutBuilderState, e1, filler.Duration.Value, FillerKind.PostRoll));
                         break;
                     case FillerMode.Count when filler.Count.HasValue:
                         IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        result.AddRange(AddMultipleFiller(e2, filler.Count.Value, FillerKind.PostRoll));
+                        result.AddRange(
+                            AddMultipleFiller(playoutBuilderState, e2, filler.Count.Value, FillerKind.PostRoll));
                         break;
                 }
             }
@@ -327,6 +332,7 @@ namespace ErsatzTV.Core.Scheduling
         }
 
         private static List<PlayoutItem> AddMultipleFiller(
+            PlayoutBuilderState playoutBuilderState,
             IMediaCollectionEnumerator enumerator,
             int count,
             FillerKind fillerKind)
@@ -344,7 +350,7 @@ namespace ErsatzTV.Core.Scheduling
                         MediaItemId = mediaItem.Id,
                         Start = SystemTime.MinValueUtc,
                         Finish = SystemTime.MinValueUtc + itemDuration,
-                        CustomGroup = true,
+                        GuideGroup = playoutBuilderState.NextGuideGroup,
                         FillerKind = fillerKind
                     };
 
@@ -357,6 +363,7 @@ namespace ErsatzTV.Core.Scheduling
         }
 
         private static List<PlayoutItem> AddDurationFiller(
+            PlayoutBuilderState playoutBuilderState,
             IMediaCollectionEnumerator enumerator,
             TimeSpan duration,
             FillerKind fillerKind)
@@ -379,7 +386,7 @@ namespace ErsatzTV.Core.Scheduling
                             MediaItemId = mediaItem.Id,
                             Start = SystemTime.MinValueUtc,
                             Finish = SystemTime.MinValueUtc + itemDuration,
-                            CustomGroup = true,
+                            GuideGroup = playoutBuilderState.NextGuideGroup,
                             FillerKind = fillerKind
                         };
 
