@@ -51,6 +51,7 @@ namespace ErsatzTV.Core.Scheduling
                 }
 
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
 
                 if (itemDuration > scheduleItem.PlayoutDuration)
                 {
@@ -69,12 +70,14 @@ namespace ErsatzTV.Core.Scheduling
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + itemDuration,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = itemDuration,
                     GuideGroup = nextState.NextGuideGroup,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
                         : FillerKind.None
                 };
-
+                
                 durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime); 
                 
                 DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
@@ -82,13 +85,15 @@ namespace ErsatzTV.Core.Scheduling
                     collectionEnumerators,
                     scheduleItem,
                     itemStartTime,
-                    itemDuration);
+                    itemDuration,
+                    itemChapters);
                 willFinishInTime = itemStartTime > durationFinish ||
                                    itemEndTimeWithFiller <= durationFinish;
                 if (willFinishInTime)
                 {
                     // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
-                    playoutItems.AddRange(AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem));
+                    playoutItems.AddRange(
+                        AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
 
                     nextState = nextState with
                     {

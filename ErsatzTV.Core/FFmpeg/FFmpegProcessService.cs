@@ -44,7 +44,9 @@ namespace ErsatzTV.Core.FFmpeg
             VaapiDriver vaapiDriver,
             string vaapiDevice,
             bool hlsRealtime,
-            FillerKind fillerKind)
+            FillerKind fillerKind,
+            TimeSpan inPoint,
+            TimeSpan outPoint)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
@@ -56,7 +58,9 @@ namespace ErsatzTV.Core.FFmpeg
                 videoStream,
                 maybeAudioStream,
                 start,
-                now);
+                now,
+                inPoint,
+                outPoint);
 
             (Option<ChannelWatermark> maybeWatermark, Option<string> maybeWatermarkPath) =
                 GetWatermarkOptions(channel, globalWatermark);

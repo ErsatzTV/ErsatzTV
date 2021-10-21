@@ -120,7 +120,9 @@ namespace ErsatzTV.Application.Streaming.Queries
                         channel.FFmpegProfile.VaapiDriver,
                         channel.FFmpegProfile.VaapiDevice,
                         request.HlsRealtime,
-                        playoutItemWithPath.PlayoutItem.FillerKind);
+                        playoutItemWithPath.PlayoutItem.FillerKind,
+                        playoutItemWithPath.PlayoutItem.InPoint,
+                        playoutItemWithPath.PlayoutItem.OutPoint);
 
                     var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
 

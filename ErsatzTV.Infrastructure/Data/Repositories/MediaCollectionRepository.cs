@@ -362,6 +362,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             dbContext.Movies
                 .Include(m => m.MovieMetadata)
                 .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Filter(m => movieIds.Contains(m.Id))
                 .ToListAsync();
 
@@ -385,6 +386,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(a => a.ArtistMetadata)
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Filter(m => musicVideoIds.Contains(m.Id))
                 .ToListAsync();
         
@@ -416,6 +418,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(a => a.ArtistMetadata)
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Filter(m => musicVideoIds.Contains(m.Id))
                 .ToListAsync();
         
@@ -434,6 +437,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             dbContext.OtherVideos
                 .Include(m => m.OtherVideoMetadata)
                 .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Filter(m => otherVideoIds.Contains(m.Id))
                 .ToListAsync();
 
@@ -454,6 +458,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Include(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
@@ -488,6 +493,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Include(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
@@ -520,6 +526,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             dbContext.Episodes
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Include(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)

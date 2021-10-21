@@ -42,7 +42,7 @@ namespace ErsatzTV.Controllers
                             {
                                 Process process = processModel.Process;
 
-                                _logger.LogDebug(
+                                _logger.LogInformation(
                                     "ffmpeg arguments {FFmpegArguments}",
                                     string.Join(" ", process.StartInfo.ArgumentList));
                                 process.Start();

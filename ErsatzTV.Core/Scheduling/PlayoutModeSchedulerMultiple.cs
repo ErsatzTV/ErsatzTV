@@ -53,12 +53,15 @@ namespace ErsatzTV.Core.Scheduling
                 DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
 
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
 
                 var playoutItem = new PlayoutItem
                 {
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + itemDuration,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = itemDuration,
                     GuideGroup = nextState.NextGuideGroup,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
@@ -70,9 +73,11 @@ namespace ErsatzTV.Core.Scheduling
                     collectionEnumerators,
                     scheduleItem,
                     itemStartTime,
-                    itemDuration);
+                    itemDuration,
+                    itemChapters);
 
-                playoutItems.AddRange(AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem));
+                playoutItems.AddRange(
+                    AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
                 
                 nextState = nextState with
                 {

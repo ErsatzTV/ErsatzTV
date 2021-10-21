@@ -51,7 +51,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                         PreRollFiller = fillerPreset
                     },
                     new DateTimeOffset(2020, 2, 1, 12, 0, 0, TimeSpan.FromHours(-5)),
-                    new TimeSpan(0, 12, 30));
+                    new TimeSpan(0, 12, 30),
+                    new List<MediaChapter>());
 
             result.Should().Be(new DateTimeOffset(2020, 2, 1, 18, 12, 30, TimeSpan.FromHours(-5)));
             enumerator.State.Index.Should().Be(0);
@@ -74,7 +75,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                         }
                     },
                     new DateTimeOffset(2020, 2, 1, 12, 0, 0, TimeSpan.FromHours(-5)),
-                    new TimeSpan(0, 12, 30));
+                    new TimeSpan(0, 12, 30),
+                    new List<MediaChapter>());
 
             result.Should().Be(new DateTimeOffset(2020, 2, 1, 12, 15, 0, TimeSpan.FromHours(-5)));
         }
@@ -95,7 +97,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                         }
                     },
                     new DateTimeOffset(2020, 2, 1, 12, 16, 0, TimeSpan.FromHours(-5)),
-                    new TimeSpan(0, 12, 30));
+                    new TimeSpan(0, 12, 30),
+                    new List<MediaChapter>());
 
             result.Should().Be(new DateTimeOffset(2020, 2, 1, 12, 30, 0, TimeSpan.FromHours(-5)));
         }
@@ -116,7 +119,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                         }
                     },
                     new DateTimeOffset(2020, 2, 1, 12, 30, 0, TimeSpan.FromHours(-5)),
-                    new TimeSpan(0, 12, 30));
+                    new TimeSpan(0, 12, 30),
+                    new List<MediaChapter>());
 
             result.Should().Be(new DateTimeOffset(2020, 2, 1, 12, 45, 0, TimeSpan.FromHours(-5)));
         }
@@ -137,7 +141,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                         }
                     },
                     new DateTimeOffset(2020, 2, 1, 12, 46, 0, TimeSpan.FromHours(-5)),
-                    new TimeSpan(0, 12, 30));
+                    new TimeSpan(0, 12, 30),
+                    new List<MediaChapter>());
 
             result.Should().Be(new DateTimeOffset(2020, 2, 1, 13, 0, 0, TimeSpan.FromHours(-5)));
         }
@@ -158,7 +163,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                         }
                     },
                     new DateTimeOffset(2020, 2, 1, 12, 0, 0, TimeSpan.FromHours(-5)),
-                    new TimeSpan(0, 12, 30));
+                    new TimeSpan(0, 12, 30),
+                    new List<MediaChapter>());
 
             result.Should().Be(new DateTimeOffset(2020, 2, 1, 12, 30, 0, TimeSpan.FromHours(-5)));
         }
@@ -179,7 +185,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                         }
                     },
                     new DateTimeOffset(2020, 2, 1, 12, 20, 0, TimeSpan.FromHours(-5)),
-                    new TimeSpan(0, 12, 30));
+                    new TimeSpan(0, 12, 30),
+                    new List<MediaChapter>());
 
             result.Should().Be(new DateTimeOffset(2020, 2, 1, 13, 0, 0, TimeSpan.FromHours(-5)));
         }

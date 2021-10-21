@@ -68,20 +68,13 @@ namespace ErsatzTV.Core.Scheduling
                 {
                     MediaItem mediaItem = enumerator.Current.ValueUnsafe();
 
-                    MediaVersion version = mediaItem switch
-                    {
-                        Movie m => m.MediaVersions.Head(),
-                        Episode e => e.MediaVersions.Head(),
-                        MusicVideo mv => mv.MediaVersions.Head(),
-                        OtherVideo mv => mv.MediaVersions.Head(),
-                        _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-                    };
+                    TimeSpan itemDuration = DurationForMediaItem(mediaItem);
 
-                    if (nextState.CurrentTime + version.Duration > nextItemStart)
+                    if (nextState.CurrentTime + itemDuration > nextItemStart)
                     {
                         _logger.LogDebug(
                             "Filler with duration {Duration} will go past next item start {NextItemStart}",
-                            version.Duration,
+                            itemDuration,
                             nextItemStart);
 
                         break;
@@ -91,7 +84,9 @@ namespace ErsatzTV.Core.Scheduling
                     {
                         MediaItemId = mediaItem.Id,
                         Start = nextState.CurrentTime.UtcDateTime,
-                        Finish = nextState.CurrentTime.UtcDateTime + version.Duration,
+                        Finish = nextState.CurrentTime.UtcDateTime + itemDuration,
+                        InPoint = TimeSpan.Zero,
+                        OutPoint = itemDuration,
                         FillerKind = FillerKind.Tail,
                         GuideGroup = nextState.NextGuideGroup
                     };
@@ -100,7 +95,7 @@ namespace ErsatzTV.Core.Scheduling
 
                     nextState = nextState with
                     {
-                        CurrentTime = nextState.CurrentTime + version.Duration
+                        CurrentTime = nextState.CurrentTime + itemDuration
                     };
 
                     enumerator.MoveNext();
@@ -132,6 +127,8 @@ namespace ErsatzTV.Core.Scheduling
                         MediaItemId = mediaItem.Id,
                         Start = nextState.CurrentTime.UtcDateTime,
                         Finish = nextItemStart.UtcDateTime,
+                        InPoint = TimeSpan.Zero,
+                        OutPoint = TimeSpan.Zero,
                         GuideGroup = nextState.NextGuideGroup,
                         FillerKind = FillerKind.Fallback
                     };
@@ -164,6 +161,20 @@ namespace ErsatzTV.Core.Scheduling
             return version.Duration;
         }
 
+        protected static List<MediaChapter> ChaptersForMediaItem(MediaItem mediaItem)
+        {
+            MediaVersion version = mediaItem switch
+            {
+                Movie m => m.MediaVersions.Head(),
+                Episode e => e.MediaVersions.Head(),
+                MusicVideo mv => mv.MediaVersions.Head(),
+                OtherVideo mv => mv.MediaVersions.Head(),
+                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
+            };
+
+            return version.Chapters;
+        }
+
         protected void LogScheduledItem(
             ProgramScheduleItem scheduleItem,
             MediaItem mediaItem,
@@ -180,7 +191,8 @@ namespace ErsatzTV.Core.Scheduling
             Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
             ProgramScheduleItem scheduleItem,
             DateTimeOffset itemStartTime,
-            TimeSpan itemDuration)
+            TimeSpan itemDuration,
+            List<MediaChapter> chapters)
         {
             var allFiller = Optional(scheduleItem.PreRollFiller)
                 .Append(Optional(scheduleItem.MidRollFiller))
@@ -197,9 +209,50 @@ namespace ErsatzTV.Core.Scheduling
             TimeSpan totalDuration = itemDuration;
             foreach (FillerPreset filler in allFiller)
             {
-                switch (filler.FillerMode)
+                switch (filler.FillerKind, filler.FillerMode)
                 {
-                    case FillerMode.Duration when filler.Duration.HasValue:
+                    case (FillerKind.MidRoll, FillerMode.Duration) when filler.Duration.HasValue:
+                        IMediaCollectionEnumerator mrde = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        for (var i = 0; i < chapters.Count - 1; i++)
+                        {
+                            TimeSpan midRollDuration = filler.Duration.Value;
+                            while (mrde.Current.IsSome)
+                            {
+                                foreach (MediaItem mediaItem in mrde.Current)
+                                {
+                                    TimeSpan currentDuration = DurationForMediaItem(mediaItem);
+                                    midRollDuration -= currentDuration;
+                                    if (midRollDuration >= TimeSpan.Zero)
+                                    {
+                                        totalDuration += currentDuration;
+                                        mrde.MoveNext();
+                                    }
+                                }
+
+                                if (midRollDuration < TimeSpan.Zero)
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        break;
+                    case (FillerKind.MidRoll, FillerMode.Count) when filler.Count.HasValue:
+                        IMediaCollectionEnumerator mrce = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
+                        for (var i = 0; i < chapters.Count - 1; i++)
+                        {
+                            for (var j = 0; j < filler.Count.Value; j++)
+                            {
+                                foreach (MediaItem mediaItem in mrce.Current)
+                                {
+                                    totalDuration += DurationForMediaItem(mediaItem);
+                                    mrce.MoveNext();
+                                }
+                            }
+                        }
+
+                        break;
+                    case (_, FillerMode.Duration) when filler.Duration.HasValue:
                         IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
                         TimeSpan duration = filler.Duration.Value;
                         while (e1.Current.IsSome)
@@ -211,6 +264,7 @@ namespace ErsatzTV.Core.Scheduling
                                 if (duration >= TimeSpan.Zero)
                                 {
                                     totalDuration += currentDuration;
+                                    e1.MoveNext();
                                 }
                             }
 
@@ -220,7 +274,7 @@ namespace ErsatzTV.Core.Scheduling
                             }
                         }
                         break;
-                    case FillerMode.Count when filler.Count.HasValue:
+                    case (_, FillerMode.Count) when filler.Count.HasValue:
                         IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
                         for (var i = 0; i < filler.Count.Value; i++)
                         {
@@ -262,7 +316,8 @@ namespace ErsatzTV.Core.Scheduling
             PlayoutBuilderState playoutBuilderState,
             Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
             ProgramScheduleItem scheduleItem,
-            PlayoutItem playoutItem)
+            PlayoutItem playoutItem,
+            List<MediaChapter> chapters)
         {
             var result = new List<PlayoutItem>();
             
@@ -290,16 +345,56 @@ namespace ErsatzTV.Core.Scheduling
                     case FillerMode.Count when filler.Count.HasValue:
                         IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
                         result.AddRange(
-                            AddMultipleFiller(playoutBuilderState, e2, filler.Count.Value, FillerKind.PreRoll));
+                            AddCountFiller(playoutBuilderState, e2, filler.Count.Value, FillerKind.PreRoll));
                         break;
                 }
             }
             
-            if (allFiller.All(f => f.FillerKind != FillerKind.MidRoll))
+            if (allFiller.All(f => f.FillerKind != FillerKind.MidRoll) || !chapters.Any())
             {
                 result.Add(playoutItem);
             }
-            
+            else
+            {
+                foreach (FillerPreset filler in allFiller.Filter(f => f.FillerKind == FillerKind.MidRoll))
+                {
+                    switch (filler.FillerMode)
+                    {
+                        case FillerMode.Duration when filler.Duration.HasValue:
+                            IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                            for (var i = 0; i < chapters.Count; i++)
+                            {
+                                result.Add(playoutItem.ForChapter(chapters[i]));
+                                if (i < chapters.Count - 1)
+                                {
+                                    result.AddRange(
+                                        AddDurationFiller(
+                                            playoutBuilderState,
+                                            e1,
+                                            filler.Duration.Value,
+                                            FillerKind.MidRoll));
+                                }
+                            }
+
+                            break;
+                        case FillerMode.Count when filler.Count.HasValue:
+                            IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                            for (var i = 0; i < chapters.Count - 1; i++)
+                            {
+                                result.Add(playoutItem.ForChapter(chapters[i]));
+                                result.AddRange(
+                                    AddCountFiller(
+                                        playoutBuilderState,
+                                        e2,
+                                        filler.Count.Value,
+                                        FillerKind.MidRoll));
+                            }
+
+                            break;
+                    }
+                }
+            }
+
             foreach (FillerPreset filler in allFiller.Filter(f => f.FillerKind == FillerKind.PostRoll))
             {
                 switch (filler.FillerMode)
@@ -312,7 +407,7 @@ namespace ErsatzTV.Core.Scheduling
                     case FillerMode.Count when filler.Count.HasValue:
                         IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
                         result.AddRange(
-                            AddMultipleFiller(playoutBuilderState, e2, filler.Count.Value, FillerKind.PostRoll));
+                            AddCountFiller(playoutBuilderState, e2, filler.Count.Value, FillerKind.PostRoll));
                         break;
                 }
             }
@@ -331,7 +426,7 @@ namespace ErsatzTV.Core.Scheduling
             return result;
         }
 
-        private static List<PlayoutItem> AddMultipleFiller(
+        private static List<PlayoutItem> AddCountFiller(
             PlayoutBuilderState playoutBuilderState,
             IMediaCollectionEnumerator enumerator,
             int count,
@@ -350,6 +445,8 @@ namespace ErsatzTV.Core.Scheduling
                         MediaItemId = mediaItem.Id,
                         Start = SystemTime.MinValueUtc,
                         Finish = SystemTime.MinValueUtc + itemDuration,
+                        InPoint = TimeSpan.Zero,
+                        OutPoint = itemDuration,
                         GuideGroup = playoutBuilderState.NextGuideGroup,
                         FillerKind = fillerKind
                     };
@@ -386,6 +483,8 @@ namespace ErsatzTV.Core.Scheduling
                             MediaItemId = mediaItem.Id,
                             Start = SystemTime.MinValueUtc,
                             Finish = SystemTime.MinValueUtc + itemDuration,
+                            InPoint = TimeSpan.Zero,
+                            OutPoint = itemDuration,
                             GuideGroup = playoutBuilderState.NextGuideGroup,
                             FillerKind = fillerKind
                         };

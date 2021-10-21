@@ -31,12 +31,15 @@ namespace ErsatzTV.Core.Scheduling
                     scheduleItem);
 
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
-                
+                List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
+
                 var playoutItem = new PlayoutItem
                 {
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + itemDuration,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = itemDuration,
                     GuideGroup = playoutBuilderState.NextGuideGroup,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
@@ -47,13 +50,15 @@ namespace ErsatzTV.Core.Scheduling
                     collectionEnumerators,
                     scheduleItem,
                     itemStartTime,
-                    itemDuration);
+                    itemDuration,
+                    itemChapters);
 
                 List<PlayoutItem> playoutItems = AddFiller(
                     playoutBuilderState,
                     collectionEnumerators,
                     scheduleItem,
-                    playoutItem);
+                    playoutItem,
+                    itemChapters);
 
                 // only play one item from collection, so always advance to the next item
                 // _logger.LogDebug(

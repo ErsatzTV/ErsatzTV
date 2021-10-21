@@ -18,13 +18,32 @@ namespace ErsatzTV.Core.Domain
         public FillerKind FillerKind { get; set; }
         public int PlayoutId { get; set; }
         public Playout Playout { get; set; }
+        public TimeSpan InPoint { get; set; }
+        public TimeSpan OutPoint { get; set; }
+        public string ChapterTitle { get; set; }
 
         public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
         public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();
         public DateTimeOffset? GuideFinishOffset => GuideFinish.HasValue
             ? new DateTimeOffset(GuideFinish.Value, TimeSpan.Zero).ToLocalTime()
             : null;
-        
-        // TODO: custom group => int for easy grouping, track on anchor?
+
+        public PlayoutItem ForChapter(MediaChapter chapter) =>
+            new()
+            {
+                MediaItemId = MediaItemId,
+                MediaItem = MediaItem,
+                Start = Start,
+                Finish = Start + chapter.EndTime - chapter.StartTime,
+                GuideFinish = GuideFinish,
+                CustomTitle = CustomTitle,
+                GuideGroup = GuideGroup,
+                FillerKind = FillerKind,
+                PlayoutId = PlayoutId,
+                Playout = Playout,
+                InPoint = chapter.StartTime,
+                OutPoint = chapter.EndTime,
+                ChapterTitle = chapter.Title
+            };
     }
 }

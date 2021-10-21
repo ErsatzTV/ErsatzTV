@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -41,12 +42,15 @@ namespace ErsatzTV.Core.Scheduling
                 // find when we should start this item, based on the current time
                 DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
                 TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
                 
                 var playoutItem = new PlayoutItem
                 {
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
                     Finish = itemStartTime.UtcDateTime + itemDuration,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = itemDuration,
                     GuideGroup = nextState.NextGuideGroup,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
@@ -64,7 +68,8 @@ namespace ErsatzTV.Core.Scheduling
                     collectionEnumerators,
                     scheduleItem,
                     itemStartTime,
-                    itemDuration);
+                    itemDuration,
+                    itemChapters);
                 
                 // if the current time is before the next schedule item, but the current finish
                 // is after, we need to move on to the next schedule item
@@ -73,27 +78,41 @@ namespace ErsatzTV.Core.Scheduling
 
                 if (willFinishInTime)
                 {
-                    playoutItems.AddRange(AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem));
+                    playoutItems.AddRange(
+                        AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
                     // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+
+                    DateTimeOffset actualEndTime = playoutItems.Max(p => p.FinishOffset);
+                    if (Math.Abs((itemEndTimeWithFiller - actualEndTime).TotalSeconds) > 1)
+                    {
+                        _logger.LogWarning(
+                            "Filler prediction failure: predicted {PredictedDuration} doesn't match actual {ActualDuration}",
+                            itemEndTimeWithFiller,
+                            actualEndTime);
+
+                        // _logger.LogWarning("Playout items: {@PlayoutItems}", playoutItems);
+                    }
 
                     nextState = nextState with
                     {
                         CurrentTime = itemEndTimeWithFiller,
-                        InFlood = true
+                        InFlood = true,
+                        NextGuideGroup = nextState.IncrementGuideGroup
                     };
 
                     contentEnumerator.MoveNext();
                 }
             }
 
-            _logger.LogDebug(
-                "Advancing to next schedule item after playout mode {PlayoutMode}",
-                "Flood");
+            // _logger.LogDebug(
+            //     "Advancing to next schedule item after playout mode {PlayoutMode}",
+            //     "Flood");
 
             nextState = nextState with
             {
                 ScheduleItemIndex = nextState.ScheduleItemIndex + 1,
-                InFlood = nextState.CurrentTime >= hardStop
+                InFlood = nextState.CurrentTime >= hardStop,
+                NextGuideGroup = nextState.DecrementGuideGroup
             };
             
             ProgramScheduleItem peekItem =

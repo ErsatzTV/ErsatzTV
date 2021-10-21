@@ -282,6 +282,15 @@ namespace ErsatzTV.Core.Metadata
                             }
                         }
 
+                        if (version.Chapters.Any())
+                        {
+                            MediaChapter last = version.Chapters.Last();
+                            if (last.EndTime != version.Duration)
+                            {
+                                last.EndTime = version.Duration;
+                            }
+                        }
+
                         return version;
                     },
                     _ => new MediaVersion

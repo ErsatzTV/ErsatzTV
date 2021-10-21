@@ -191,7 +191,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 VaapiDriver.Default,
                 "/dev/dri/renderD128",
                 false,
-                FillerKind.None);
+                FillerKind.None,
+                TimeSpan.Zero,
+                TimeSpan.FromSeconds(5));
 
             process.StartInfo.RedirectStandardError = true;
 

@@ -154,6 +154,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .AsNoTracking()
                 .Include(mv => mv.MusicVideoMetadata)
                 .Include(mv => mv.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
                 .Include(mv => mv.Artist)
                 .ThenInclude(a => a.ArtistMetadata)
                 .Filter(mv => mv.ArtistId == artistId)

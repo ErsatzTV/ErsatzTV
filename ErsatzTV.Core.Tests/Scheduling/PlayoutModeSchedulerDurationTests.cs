@@ -267,7 +267,6 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutItems[3].GuideGroup.Should().Be(1);
             playoutItems[3].FillerKind.Should().Be(FillerKind.Fallback);
         }
-        // TODO: should not have gap tail mode offline with fallback
 
         [Test]
         public void Should_Not_Have_Gap_Duration_Tail_Mode_Filler_Exact_Duration()
