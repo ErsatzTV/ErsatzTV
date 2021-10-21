@@ -4,7 +4,7 @@
     {
         None = 0,
         Duration = 1,
-        Multiple = 2,
+        Count = 2,
         Pad = 3
     }
 }

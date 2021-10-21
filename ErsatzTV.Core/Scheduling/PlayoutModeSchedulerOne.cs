@@ -30,42 +30,42 @@ namespace ErsatzTV.Core.Scheduling
                     playoutBuilderState,
                     scheduleItem);
 
-                MediaVersion version = mediaItem switch
-                {
-                    Movie m => m.MediaVersions.Head(),
-                    Episode e => e.MediaVersions.Head(),
-                    MusicVideo mv => mv.MediaVersions.Head(),
-                    OtherVideo mv => mv.MediaVersions.Head(),
-                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-                };
+                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
                 
                 var playoutItem = new PlayoutItem
                 {
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
-                    Finish = itemStartTime.UtcDateTime + version.Duration,
+                    Finish = itemStartTime.UtcDateTime + itemDuration,
                     CustomGroup = false,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
                         : FillerKind.None
                 };
-                
+
+                DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
+                    collectionEnumerators,
+                    scheduleItem,
+                    itemStartTime,
+                    itemDuration);
+
+                List<PlayoutItem> playoutItems = AddFiller(collectionEnumerators, scheduleItem, playoutItem);
+
                 // only play one item from collection, so always advance to the next item
-                _logger.LogDebug(
-                    "Advancing to next schedule item after playout mode {PlayoutMode}",
-                    "One");
+                // _logger.LogDebug(
+                //     "Advancing to next schedule item after playout mode {PlayoutMode}",
+                //     "One");
 
                 PlayoutBuilderState nextState = playoutBuilderState with
                 {
-                    CurrentTime = itemStartTime + version.Duration,
+                    CurrentTime = itemEndTimeWithFiller,
                     ScheduleItemIndex = playoutBuilderState.ScheduleItemIndex + 1,
                     CustomGroup = false
                 };
 
                 contentEnumerator.MoveNext();
 
-                LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
-                List<PlayoutItem> playoutItems = new List<PlayoutItem> { playoutItem };
+                // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
                 DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
 

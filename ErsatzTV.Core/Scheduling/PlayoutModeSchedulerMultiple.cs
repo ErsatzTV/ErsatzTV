@@ -52,32 +52,31 @@ namespace ErsatzTV.Core.Scheduling
                 // find when we should start this item, based on the current time
                 DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
 
-                MediaVersion version = mediaItem switch
-                {
-                    Movie m => m.MediaVersions.Head(),
-                    Episode e => e.MediaVersions.Head(),
-                    MusicVideo mv => mv.MediaVersions.Head(),
-                    OtherVideo mv => mv.MediaVersions.Head(),
-                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-                };
+                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
 
                 var playoutItem = new PlayoutItem
                 {
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
-                    Finish = itemStartTime.UtcDateTime + version.Duration,
+                    Finish = itemStartTime.UtcDateTime + itemDuration,
                     CustomGroup = true,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
                         : FillerKind.None
                 };
 
-                LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
-                playoutItems.Add(playoutItem);
+                // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+                DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
+                    collectionEnumerators,
+                    scheduleItem,
+                    itemStartTime,
+                    itemDuration);
+
+                playoutItems.AddRange(AddFiller(collectionEnumerators, scheduleItem, playoutItem));
                 
                 nextState = nextState with
                 {
-                    CurrentTime = itemStartTime + version.Duration,
+                    CurrentTime = itemEndTimeWithFiller,
                     MultipleRemaining = nextState.MultipleRemaining.Map(i => i - 1)
                 };
 
@@ -86,9 +85,9 @@ namespace ErsatzTV.Core.Scheduling
 
             if (nextState.MultipleRemaining.IfNone(-1) == 0)
             {
-                _logger.LogDebug(
-                    "Advancing to next schedule item after playout mode {PlayoutMode}",
-                    "Multiple");
+                // _logger.LogDebug(
+                //     "Advancing to next schedule item after playout mode {PlayoutMode}",
+                //     "Multiple");
 
                 nextState = nextState with
                 {

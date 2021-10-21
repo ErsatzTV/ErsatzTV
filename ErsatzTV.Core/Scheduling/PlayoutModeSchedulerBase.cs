@@ -190,6 +190,7 @@ namespace ErsatzTV.Core.Scheduling
             if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
             {
                 // multiple pad-to-nearest-minute values are invalid; use no filler
+                // TODO: log error?
                 return itemStartTime + itemDuration;
             }
 
@@ -199,12 +200,14 @@ namespace ErsatzTV.Core.Scheduling
                 switch (filler.FillerMode)
                 {
                     case FillerMode.Duration when filler.Duration.HasValue:
+                        // TODO: should we make this more accurate by getting the exact
+                        // duration of the filler that will fit in filler.Duration?
                         totalDuration += filler.Duration.Value;
                         break;
-                    case FillerMode.Multiple when filler.Count.HasValue:
+                    case FillerMode.Count when filler.Count.HasValue:
                         IMediaCollectionEnumerator enumerator =
                             enumerators[CollectionKey.ForFillerPreset(filler)].Clone();
-                        for (int i = 0; i < filler.Count.Value; i++)
+                        for (var i = 0; i < filler.Count.Value; i++)
                         {
                             foreach (MediaItem mediaItem in enumerator.Current)
                             {
@@ -240,9 +243,143 @@ namespace ErsatzTV.Core.Scheduling
             return itemStartTime + totalDuration;
         }
 
-        protected List<PlayoutItem> AddFiller(PlayoutItem playoutItem)
+        protected List<PlayoutItem> AddFiller(
+            Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
+            ProgramScheduleItem scheduleItem,
+            PlayoutItem playoutItem)
         {
-            return new List<PlayoutItem> { playoutItem };
+            var result = new List<PlayoutItem>();
+            
+            var allFiller = Optional(scheduleItem.PreRollFiller)
+                .Append(Optional(scheduleItem.MidRollFiller))
+                .Append(Optional(scheduleItem.PostRollFiller))
+                .ToList();
+
+            if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
+            {
+                // multiple pad-to-nearest-minute values are invalid; use no filler
+                // TODO: log error?
+                return new List<PlayoutItem> { playoutItem };
+            }
+            
+            foreach (FillerPreset filler in allFiller.Filter(f => f.FillerKind == FillerKind.PreRoll))
+            {
+                switch (filler.FillerMode)
+                {
+                    case FillerMode.Duration when filler.Duration.HasValue:
+                        IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        result.AddRange(AddDurationFiller(e1, filler.Duration.Value, FillerKind.PreRoll));
+                        break;
+                    case FillerMode.Count when filler.Count.HasValue:
+                        IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        result.AddRange(AddMultipleFiller(e2, filler.Count.Value, FillerKind.PreRoll));
+                        break;
+                }
+            }
+            
+            if (allFiller.All(f => f.FillerKind != FillerKind.MidRoll))
+            {
+                result.Add(playoutItem);
+            }
+            
+            foreach (FillerPreset filler in allFiller.Filter(f => f.FillerKind == FillerKind.PostRoll))
+            {
+                switch (filler.FillerMode)
+                {
+                    case FillerMode.Duration when filler.Duration.HasValue:
+                        IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        result.AddRange(AddDurationFiller(e1, filler.Duration.Value, FillerKind.PostRoll));
+                        break;
+                    case FillerMode.Count when filler.Count.HasValue:
+                        IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
+                        result.AddRange(AddMultipleFiller(e2, filler.Count.Value, FillerKind.PostRoll));
+                        break;
+                }
+            }
+            
+            // fix times on each playout item
+            DateTimeOffset currentTime = playoutItem.StartOffset;
+            for (var i = 0; i < result.Count; i++)
+            {
+                PlayoutItem item = result[i];
+                TimeSpan duration = item.Finish - item.Start;
+                item.Start = currentTime.UtcDateTime;
+                item.Finish = (currentTime + duration).UtcDateTime;
+                currentTime = item.FinishOffset;
+            }
+
+            return result;
+        }
+
+        private static List<PlayoutItem> AddMultipleFiller(
+            IMediaCollectionEnumerator enumerator,
+            int count,
+            FillerKind fillerKind)
+        {
+            var result = new List<PlayoutItem>();
+
+            for (var i = 0; i < count; i++)
+            {
+                foreach (MediaItem mediaItem in enumerator.Current)
+                {
+                    TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+
+                    var playoutItem = new PlayoutItem
+                    {
+                        MediaItemId = mediaItem.Id,
+                        Start = SystemTime.MinValueUtc,
+                        Finish = SystemTime.MinValueUtc + itemDuration,
+                        CustomGroup = true,
+                        FillerKind = fillerKind
+                    };
+
+                    result.Add(playoutItem);
+                    enumerator.MoveNext();
+                }
+            }
+
+            return result;
+        }
+
+        private static List<PlayoutItem> AddDurationFiller(
+            IMediaCollectionEnumerator enumerator,
+            TimeSpan duration,
+            FillerKind fillerKind)
+        {
+            var result = new List<PlayoutItem>();
+            
+            while (enumerator.Current.IsSome)
+            {
+                foreach (MediaItem mediaItem in enumerator.Current)
+                {
+                    // TODO: retry up to x times when item doesn't fit?
+                    
+                    TimeSpan itemDuration = DurationForMediaItem(mediaItem);
+                    duration -= itemDuration;
+
+                    if (duration >= TimeSpan.Zero)
+                    {
+                        var playoutItem = new PlayoutItem
+                        {
+                            MediaItemId = mediaItem.Id,
+                            Start = SystemTime.MinValueUtc,
+                            Finish = SystemTime.MinValueUtc + itemDuration,
+                            CustomGroup = true,
+                            FillerKind = fillerKind
+                        };
+
+                        result.Add(playoutItem);
+                        enumerator.MoveNext();
+                    }
+                }
+
+                if (duration < TimeSpan.Zero)
+                {
+                    break;
+                }
+            }
+
+            return result;
         }
     }
 }

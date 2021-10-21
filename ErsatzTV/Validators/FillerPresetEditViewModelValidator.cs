@@ -16,7 +16,7 @@ namespace ErsatzTV.Validators
                 fp => fp.FillerKind != FillerKind.Fallback && fp.FillerKind != FillerKind.Tail,
                 () => RuleFor(fp => fp.FillerMode).NotEqual(FillerMode.None));
             When(
-                fp => fp.FillerMode == FillerMode.Multiple,
+                fp => fp.FillerMode == FillerMode.Count,
                 () => RuleFor(fp => fp.Count).NotNull().GreaterThanOrEqualTo(0));
             When(
                 fp => fp.FillerMode == FillerMode.Duration,

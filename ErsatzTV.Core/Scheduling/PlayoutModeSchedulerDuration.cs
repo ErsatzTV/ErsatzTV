@@ -50,21 +50,14 @@ namespace ErsatzTV.Core.Scheduling
                     durationUntil = nextState.DurationFinish;
                 }
 
-                MediaVersion version = mediaItem switch
-                {
-                    Movie m => m.MediaVersions.Head(),
-                    Episode e => e.MediaVersions.Head(),
-                    MusicVideo mv => mv.MediaVersions.Head(),
-                    OtherVideo mv => mv.MediaVersions.Head(),
-                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-                };
+                TimeSpan itemDuration = DurationForMediaItem(mediaItem);
 
-                if (version.Duration > scheduleItem.PlayoutDuration)
+                if (itemDuration > scheduleItem.PlayoutDuration)
                 {
                     _logger.LogWarning(
                         "Skipping playout item {Title} with duration {Duration} that is longer than schedule item duration {PlayoutDuration}",
                         PlayoutBuilder.DisplayTitle(mediaItem),
-                        version.Duration,
+                        itemDuration,
                         scheduleItem.PlayoutDuration);
 
                     contentEnumerator.MoveNext();
@@ -75,7 +68,7 @@ namespace ErsatzTV.Core.Scheduling
                 {
                     MediaItemId = mediaItem.Id,
                     Start = itemStartTime.UtcDateTime,
-                    Finish = itemStartTime.UtcDateTime + version.Duration,
+                    Finish = itemStartTime.UtcDateTime + itemDuration,
                     CustomGroup = true,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
@@ -83,23 +76,36 @@ namespace ErsatzTV.Core.Scheduling
                 };
                 
                 DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
+                DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
+                    collectionEnumerators,
+                    scheduleItem,
+                    itemStartTime,
+                    itemDuration);
                 willFinishInTime = itemStartTime > durationFinish ||
-                                   itemStartTime + version.Duration <= durationFinish;
-
+                                   itemEndTimeWithFiller <= durationFinish;
                 if (willFinishInTime)
                 {
-                    LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
-                    playoutItems.Add(playoutItem);
+                    // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+                    playoutItems.AddRange(AddFiller(collectionEnumerators, scheduleItem, playoutItem));
 
                     nextState = nextState with
                     {
-                        CurrentTime = itemStartTime + version.Duration
+                        CurrentTime = itemEndTimeWithFiller
                     };
 
                     contentEnumerator.MoveNext();
                 }
                 else
                 {
+                    TimeSpan durationBlock = itemEndTimeWithFiller - itemStartTime;
+                    if (itemEndTimeWithFiller - itemStartTime > scheduleItem.PlayoutDuration)
+                    {
+                        _logger.LogWarning(
+                            "Unable to schedule duration block of {DurationBlock} which is longer than the configured playout duration {PlayoutDuration}",
+                            durationBlock,
+                            scheduleItem.PlayoutDuration);
+                    }
+
                     nextState = nextState with
                     {
                         DurationFinish = None,

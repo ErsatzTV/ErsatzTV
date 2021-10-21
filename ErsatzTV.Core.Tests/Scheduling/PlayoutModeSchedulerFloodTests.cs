@@ -96,7 +96,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 PostRollFiller = new FillerPreset
                 {
                     FillerKind = FillerKind.PostRoll,
-                    FillerMode = FillerMode.Multiple,
+                    FillerMode = FillerMode.Count,
                     Count = 1,
                     Collection = collectionTwo,
                     CollectionId = collectionTwo.Id

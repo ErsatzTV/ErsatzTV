@@ -30,7 +30,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             var fillerPreset = new FillerPreset
             {
                 FillerKind = FillerKind.MidRoll,
-                FillerMode = FillerMode.Multiple,
+                FillerMode = FillerMode.Count,
                 Count = 3,
                 Collection = collection,
                 CollectionId = collection.Id

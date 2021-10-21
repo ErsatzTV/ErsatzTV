@@ -74,7 +74,7 @@ namespace ErsatzTV.Core.Scheduling
 
                 if (willFinishInTime)
                 {
-                    playoutItems.AddRange(AddFiller(playoutItem));
+                    playoutItems.AddRange(AddFiller(collectionEnumerators, scheduleItem, playoutItem));
                     // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
                     nextState = nextState with

@@ -23,7 +23,7 @@
             <MudCard>
                 <MudCardContent>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                    <MudSelect Class="mt-3" Label="Filler Kind" @bind-Value="_model.FillerKind" For="@(() => _model.FillerKind)">
+                    <MudSelect Class="mt-3" Label="Filler Kind" @bind-Value="_model.FillerKind" For="@(() => _model.FillerKind)" Disabled="@IsEdit">
                         <MudSelectItem Value="@(FillerKind.PreRoll)">Pre-Roll</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.MidRoll)">Mid-Roll</MudSelectItem>
                         <MudSelectItem Value="@(FillerKind.PostRoll)">Post-Roll</MudSelectItem>
@@ -33,11 +33,11 @@
                     <MudSelect Class="mt-3" Label="Filler Mode" @bind-Value="_model.FillerMode" For="@(() => _model.FillerMode)"
                                Disabled="@(_model.FillerKind is FillerKind.Fallback or FillerKind.Tail)">
                         <MudSelectItem Value="@(FillerMode.Duration)">Duration</MudSelectItem>
-                        <MudSelectItem Value="@(FillerMode.Multiple)">Multiple</MudSelectItem>
+                        <MudSelectItem Value="@(FillerMode.Count)">Count</MudSelectItem>
                         <MudSelectItem Value="@(FillerMode.Pad)">Pad</MudSelectItem>
                     </MudSelect>
                     <MudTimePicker Class="mt-3" Label="Filler Duration" @bind-Time="@_model.Duration" For="@(() => _model.Duration)" Disabled="@(_model.FillerMode != FillerMode.Duration)"/>
-                    <MudTextField Class="mt-3" Label="Filler Count" @bind-Value="@_model.Count" For="@(() => _model.Count)" Disabled="@(_model.FillerMode != FillerMode.Multiple)"/>
+                    <MudTextField Class="mt-3" Label="Filler Count" @bind-Value="@_model.Count" For="@(() => _model.Count)" Disabled="@(_model.FillerMode != FillerMode.Count)"/>
                     <MudSelect Class="mt-3" Label="Filler Collection Type" @bind-Value="_model.CollectionType" For="@(() => _model.CollectionType)">
                         @foreach (ProgramScheduleItemCollectionType collectionType in Enum.GetValues<ProgramScheduleItemCollectionType>())
                         {

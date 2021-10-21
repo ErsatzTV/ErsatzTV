@@ -48,7 +48,7 @@ namespace ErsatzTV.ViewModels
 
         public int? Count
         {
-            get => FillerMode == FillerMode.Multiple ? _count : null;
+            get => FillerMode == FillerMode.Count ? _count : null;
             set => _count = value;
         }
 
@@ -65,7 +65,7 @@ namespace ErsatzTV.ViewModels
                 Name,
                 FillerKind,
                 FillerMode,
-                Duration,
+                Duration.Map(FixDuration),
                 Count,
                 PadToNearestMinute,
                 CollectionType,
@@ -79,7 +79,7 @@ namespace ErsatzTV.ViewModels
                 Name,
                 FillerKind,
                 FillerMode,
-                Duration,
+                Duration.Map(FixDuration),
                 Count,
                 PadToNearestMinute,
                 CollectionType,
@@ -87,5 +87,8 @@ namespace ErsatzTV.ViewModels
                 MediaItem?.MediaItemId,
                 MultiCollection?.Id,
                 SmartCollection?.Id);
+        
+        private static TimeSpan FixDuration(TimeSpan duration) =>
+            duration > TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
     }
 }
