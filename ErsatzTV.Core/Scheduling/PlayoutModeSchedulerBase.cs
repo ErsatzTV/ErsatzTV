@@ -34,7 +34,19 @@ namespace ErsatzTV.Core.Scheduling
             if (scheduleItem.StartType == StartType.Fixed && !isIncomplete)
             {
                 TimeSpan itemStartTime = scheduleItem.StartTime.GetValueOrDefault();
-                DateTimeOffset result = startTime.Date + itemStartTime;
+                DateTime date = startTime.Date;
+                DateTimeOffset result = new DateTimeOffset(
+                        date.Year,
+                        date.Month,
+                        date.Day,
+                        0,
+                        0,
+                        0,
+                        TimeZoneInfo.Local.GetUtcOffset(
+                            new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Local)))
+                    .Add(itemStartTime);
+                
+                // DateTimeOffset result = startTime.Date + itemStartTime;
                 // need to wrap to the next day if appropriate
                 startTime = startTime.TimeOfDay > itemStartTime ? result.AddDays(1) : result;
             }
