@@ -1,4 +1,5 @@
 ﻿using System;
+using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
@@ -18,7 +19,12 @@ namespace ErsatzTV.Application.ProgramSchedules
         NamedMediaItemViewModel MediaItem,
         PlaybackOrder PlaybackOrder,
         string CustomTitle,
-        GuideMode GuideMode)
+        GuideMode GuideMode,
+        FillerPresetViewModel PreRollFiller,
+        FillerPresetViewModel MidRollFiller,
+        FillerPresetViewModel PostRollFiller,
+        FillerPresetViewModel TailFiller,
+        FillerPresetViewModel FallbackFiller)
     {
         public string Name => CollectionType switch
         {

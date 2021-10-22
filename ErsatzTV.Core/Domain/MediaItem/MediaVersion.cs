@@ -10,6 +10,7 @@ namespace ErsatzTV.Core.Domain
         public string Name { get; set; }
         public List<MediaFile> MediaFiles { get; set; }
         public List<MediaStream> Streams { get; set; }
+        public List<MediaChapter> Chapters { get; set; }
         public TimeSpan Duration { get; set; }
         public string SampleAspectRatio { get; set; }
         public string DisplayAspectRatio { get; set; }

@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.ProgramSchedules.Commands
 {
@@ -19,6 +23,33 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 .Include(ps => ps.Playouts)
                 .SelectOneAsync(ps => ps.Id, ps => ps.Id == programScheduleId)
                 .Map(o => o.ToValidation<BaseError>("[ProgramScheduleId] does not exist."));
+
+        protected static async Task<Either<BaseError, ProgramSchedule>> FillerConfigurationMustBeValid(
+            TvContext dbContext,
+            IProgramScheduleItemRequest item,
+            ProgramSchedule programSchedule)
+        {
+            var allFillerIds = Optional(item.PreRollFillerId)
+                .Append(Optional(item.MidRollFillerId))
+                .Append(Optional(item.PostRollFillerId))
+                .ToList();
+
+            List<FillerPreset> allFiller = await dbContext.FillerPresets
+                .Filter(fp => allFillerIds.Contains(fp.Id))
+                .ToListAsync();
+            
+            if (allFiller.Count(f => f.PadToNearestMinute.HasValue) > 1)
+            {
+                return BaseError.New("Schedule may only contain one filler preset that is configured to pad");
+            }
+
+            if (allFiller.Any(fp => fp.PadToNearestMinute.HasValue) && !item.FallbackFillerId.HasValue)
+            {
+                return BaseError.New("Fallback filler is required when padding");
+            }
+
+            return programSchedule;
+        }
 
         protected static Validation<BaseError, ProgramSchedule> PlayoutModeMustBeValid(
             IProgramScheduleItemRequest item,
@@ -53,6 +84,16 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     if (item.PlayoutDuration is null)
                     {
                         return BaseError.New("[PlayoutDuration] is required for playout mode 'duration'");
+                    }
+
+                    if (item.TailMode == TailMode.Filler && item.TailFillerId == null)
+                    {
+                        return BaseError.New("Tail Filler is required with tail mode Filler");
+                    }
+
+                    if (item.TailFillerId != null && item.TailMode != TailMode.Filler)
+                    {
+                        return BaseError.New("Tail Filler will not be used unless tail mode is set to Filler");
                     }
 
                     break;
@@ -136,7 +177,12 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     CustomTitle = item.CustomTitle,
-                    GuideMode = item.GuideMode
+                    GuideMode = item.GuideMode,
+                    PreRollFillerId = item.PreRollFillerId,
+                    MidRollFillerId = item.MidRollFillerId,
+                    PostRollFillerId = item.PostRollFillerId,
+                    TailFillerId = item.TailFillerId,
+                    FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.One => new ProgramScheduleItemOne
                 {
@@ -150,7 +196,12 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     MediaItemId = item.MediaItemId,
                     PlaybackOrder = item.PlaybackOrder,
                     CustomTitle = item.CustomTitle,
-                    GuideMode = item.GuideMode
+                    GuideMode = item.GuideMode,
+                    PreRollFillerId = item.PreRollFillerId,
+                    MidRollFillerId = item.MidRollFillerId,
+                    PostRollFillerId = item.PostRollFillerId,
+                    TailFillerId = item.TailFillerId,
+                    FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.Multiple => new ProgramScheduleItemMultiple
                 {
@@ -165,7 +216,12 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     PlaybackOrder = item.PlaybackOrder,
                     Count = item.MultipleCount.GetValueOrDefault(),
                     CustomTitle = item.CustomTitle,
-                    GuideMode = item.GuideMode
+                    GuideMode = item.GuideMode,
+                    PreRollFillerId = item.PreRollFillerId,
+                    MidRollFillerId = item.MidRollFillerId,
+                    PostRollFillerId = item.PostRollFillerId,
+                    TailFillerId = item.TailFillerId,
+                    FallbackFillerId = item.FallbackFillerId
                 },
                 PlayoutMode.Duration => new ProgramScheduleItemDuration
                 {
@@ -180,13 +236,13 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     PlaybackOrder = item.PlaybackOrder,
                     PlayoutDuration = FixDuration(item.PlayoutDuration.GetValueOrDefault()),
                     TailMode = item.TailMode,
-                    TailCollectionType = item.TailCollectionType,
-                    TailCollectionId = item.TailCollectionId,
-                    TailMultiCollectionId = item.TailMultiCollectionId,
-                    TailSmartCollectionId = item.TailSmartCollectionId,
-                    TailMediaItemId = item.TailMediaItemId,
                     CustomTitle = item.CustomTitle,
-                    GuideMode = item.GuideMode
+                    GuideMode = item.GuideMode,
+                    PreRollFillerId = item.PreRollFillerId,
+                    MidRollFillerId = item.MidRollFillerId,
+                    PostRollFillerId = item.PostRollFillerId,
+                    TailFillerId = item.TailFillerId,
+                    FallbackFillerId = item.FallbackFillerId
                 },
                 _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
             };

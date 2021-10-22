@@ -20,11 +20,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? MultipleCount,
         TimeSpan? PlayoutDuration,
         TailMode TailMode,
-        ProgramScheduleItemCollectionType TailCollectionType,
-        int? TailCollectionId,
-        int? TailMultiCollectionId,
-        int? TailSmartCollectionId,
-        int? TailMediaItemId,
         string CustomTitle,
-        GuideMode GuideMode) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
+        GuideMode GuideMode,
+        int? PreRollFillerId,
+        int? MidRollFillerId,
+        int? PostRollFillerId,
+        int? TailFillerId,
+        int? FallbackFillerId) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
 }

@@ -26,7 +26,8 @@ namespace ErsatzTV.Core.Tests.Metadata
 
             var input = new LocalStatisticsProvider.FFprobe(
                 new LocalStatisticsProvider.FFprobeFormat("123.45"),
-                new List<LocalStatisticsProvider.FFprobeStream>());
+                new List<LocalStatisticsProvider.FFprobeStream>(),
+                new List<LocalStatisticsProvider.FFprobeChapter>());
 
             MediaVersion result = provider.ProjectToMediaVersion("test", input);
 

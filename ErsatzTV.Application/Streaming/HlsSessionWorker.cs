@@ -161,7 +161,7 @@ namespace ErsatzTV.Application.Streaming
 
                     Process process = processModel.Process;
 
-                    _logger.LogDebug(
+                    _logger.LogInformation(
                         "ffmpeg hls arguments {FFmpegArguments}",
                         string.Join(" ", process.StartInfo.ArgumentList));
 

@@ -8,13 +8,13 @@ namespace ErsatzTV.Application.Playouts
     {
         internal static PlayoutItemViewModel ProjectToViewModel(PlayoutItem playoutItem) =>
             new(
-                GetDisplayTitle(playoutItem.MediaItem),
+                GetDisplayTitle(playoutItem),
                 playoutItem.StartOffset,
-                GetDisplayDuration(playoutItem.MediaItem));
+                GetDisplayDuration(playoutItem.FinishOffset - playoutItem.StartOffset));
 
-        private static string GetDisplayTitle(MediaItem mediaItem)
+        private static string GetDisplayTitle(PlayoutItem playoutItem)
         {
-            switch (mediaItem)
+            switch (playoutItem.MediaItem)
             {
                 case Episode e:
                     string showTitle = e.Season.Show.ShowMetadata.HeadOrNone()
@@ -28,6 +28,11 @@ namespace ErsatzTV.Application.Playouts
 
                     var numbersString = $"e{string.Join('e', episodeNumbers.Map(n => $"{n:00}"))}";
                     var titlesString = $"{string.Join('/', episodeTitles)}";
+                    if (!string.IsNullOrWhiteSpace(playoutItem.ChapterTitle))
+                    {
+                        titlesString += $" ({playoutItem.ChapterTitle})";
+                    }
+
                     return $"{showTitle}s{e.Season.SeasonNumber:00}{numbersString} - {titlesString}";
                 case Movie m:
                     return m.MovieMetadata.HeadOrNone().Map(mm => mm.Title).IfNone("[unknown movie]");
@@ -36,29 +41,21 @@ namespace ErsatzTV.Application.Playouts
                         .Map(am => $"{am.Title} - ").IfNone(string.Empty);
                     return mv.MusicVideoMetadata.HeadOrNone()
                         .Map(mvm => $"{artistName}{mvm.Title}")
+                        .Map(s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle) ? s : $"{s} ({playoutItem.ChapterTitle})")
                         .IfNone("[unknown music video]");
                 case OtherVideo ov:
-                    return ov.OtherVideoMetadata.HeadOrNone().Map(ovm => ovm.Title ?? string.Empty)
+                    return ov.OtherVideoMetadata.HeadOrNone()
+                        .Map(ovm => ovm.Title ?? string.Empty)
+                        .Map(s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle) ? s : $"{s} ({playoutItem.ChapterTitle})")
                         .IfNone("[unknown video]");
                 default:
                     return string.Empty;
             }
         }
 
-        private static string GetDisplayDuration(MediaItem mediaItem)
-        {
-            MediaVersion version = mediaItem switch
-            {
-                Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head(),
-                MusicVideo mv => mv.MediaVersions.Head(),
-                OtherVideo ov => ov.MediaVersions.Head(),
-                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-            };
-
-            return string.Format(
-                version.Duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
-                version.Duration);
-        }
+        private static string GetDisplayDuration(TimeSpan duration) =>
+            string.Format(
+                duration.TotalHours >= 1 ? @"{0:h\:mm\:ss}" : @"{0:mm\:ss}",
+                duration);
     }
 }

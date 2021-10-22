@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using ErsatzTV.Annotations;
+using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;
@@ -14,7 +15,6 @@ namespace ErsatzTV.ViewModels
         private int? _multipleCount;
         private TimeSpan? _playoutDuration;
         private TimeSpan? _startTime;
-        private ProgramScheduleItemCollectionType _tailCollectionType;
 
         public int Id { get; set; }
         public int Index { get; set; }
@@ -59,6 +59,11 @@ namespace ErsatzTV.ViewModels
         public MultiCollectionViewModel MultiCollection { get; set; }
         public SmartCollectionViewModel SmartCollection { get; set; }
         public NamedMediaItemViewModel MediaItem { get; set; }
+        public FillerPresetViewModel PreRollFiller { get; set; }
+        public FillerPresetViewModel MidRollFiller { get; set; }
+        public FillerPresetViewModel PostRollFiller { get; set; }
+        public FillerPresetViewModel TailFiller { get; set; }
+        public FillerPresetViewModel FallbackFiller { get; set; }
 
         public string CollectionName => CollectionType switch
         {
@@ -87,33 +92,6 @@ namespace ErsatzTV.ViewModels
 
         public TailMode TailMode { get; set; }
         
-        public ProgramScheduleItemCollectionType TailCollectionType
-        {
-            get => _tailCollectionType;
-            set
-            {
-                if (_tailCollectionType != value)
-                {
-                    _tailCollectionType = value;
-
-                    TailCollection = null;
-                    TailMultiCollection = null;
-                    TailMediaItem = null;
-                    TailSmartCollection = null;
-
-                    OnPropertyChanged(nameof(TailCollection));
-                    OnPropertyChanged(nameof(TailMultiCollection));
-                    OnPropertyChanged(nameof(TailMediaItem));
-                    OnPropertyChanged(nameof(TailSmartCollection));
-                }
-            }
-        }
-        
-        public MediaCollectionViewModel TailCollection { get; set; }
-        public MultiCollectionViewModel TailMultiCollection { get; set; }
-        public SmartCollectionViewModel TailSmartCollection { get; set; }
-        public NamedMediaItemViewModel TailMediaItem { get; set; }
-
         public string CustomTitle { get; set; }
 
         public GuideMode GuideMode { get; set; }

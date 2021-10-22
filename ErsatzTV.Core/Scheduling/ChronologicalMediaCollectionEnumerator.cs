@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -36,5 +37,8 @@ namespace ErsatzTV.Core.Scheduling
         public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
 
         public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
+
+        public Option<MediaItem> Peek(int offset) =>
+            _sortedMediaItems.Any() ? _sortedMediaItems[(State.Index + offset) % _sortedMediaItems.Count] : None;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain
 {
@@ -13,15 +14,36 @@ namespace ErsatzTV.Core.Domain
         public DateTime Finish { get; set; }
         public DateTime? GuideFinish { get; set; }
         public string CustomTitle { get; set; }
-        public bool CustomGroup { get; set; }
-        public bool IsFiller { get; set; }
+        public int GuideGroup { get; set; }
+        public FillerKind FillerKind { get; set; }
         public int PlayoutId { get; set; }
         public Playout Playout { get; set; }
+        public TimeSpan InPoint { get; set; }
+        public TimeSpan OutPoint { get; set; }
+        public string ChapterTitle { get; set; }
 
         public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
         public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();
         public DateTimeOffset? GuideFinishOffset => GuideFinish.HasValue
             ? new DateTimeOffset(GuideFinish.Value, TimeSpan.Zero).ToLocalTime()
             : null;
+
+        public PlayoutItem ForChapter(MediaChapter chapter) =>
+            new()
+            {
+                MediaItemId = MediaItemId,
+                MediaItem = MediaItem,
+                Start = Start,
+                Finish = Start + chapter.EndTime - chapter.StartTime,
+                GuideFinish = GuideFinish,
+                CustomTitle = CustomTitle,
+                GuideGroup = GuideGroup,
+                FillerKind = FillerKind,
+                PlayoutId = PlayoutId,
+                Playout = Playout,
+                InPoint = chapter.StartTime,
+                OutPoint = chapter.EndTime,
+                ChapterTitle = chapter.Title
+            };
     }
 }

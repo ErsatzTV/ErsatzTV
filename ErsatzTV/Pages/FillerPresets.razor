@@ -1,0 +1,103 @@
+﻿@page "/media/filler/presets"
+@using ErsatzTV.Application.Filler
+@using ErsatzTV.Application.Configuration.Queries
+@using ErsatzTV.Application.Configuration.Commands
+@using ErsatzTV.Application.Filler.Commands
+@using ErsatzTV.Application.Filler.Queries
+@using ErsatzTV.Core.Domain.Filler
+@inject IDialogService _dialog
+@inject IMediator _mediator
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pt-8">
+    <div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Link="/media/filler/presets/add">
+            Add Filler Preset
+        </MudButton>
+    </div>
+    <MudTable Class="mt-4"
+              Hover="true"
+              @bind-RowsPerPage="@_fillerPresetsRowsPerPage"
+              ServerData="@(new Func<TableState, Task<TableData<FillerPresetViewModel>>>(ServerReloadFillerPresets))"
+              Dense="true"
+              @ref="_fillerPresetsTable">
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Filler Presets</MudText>
+        </ToolBarContent>
+        <ColGroup>
+            <col/>
+            <col/>
+            <col style="width: 120px;"/>
+        </ColGroup>
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Filler Kind</MudTh>
+            <MudTh/>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Filler Kind">
+                @(
+                    context.FillerKind switch {
+                        FillerKind.PreRoll => "Pre-Roll",
+                        FillerKind.MidRoll => "Mid-Roll",
+                        FillerKind.PostRoll => "Post-Roll",
+                        FillerKind.Fallback => "Fallback",
+                        FillerKind.Tail => "Tail",
+                        _ => "None"
+                    }
+                )
+            </MudTd>
+            <MudTd>
+                <div style="align-items: center; display: flex;">
+                    <MudTooltip Text="Edit Filler Preset">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Link="@($"/media/filler/presets/{context.Id}/edit")">
+                        </MudIconButton>
+                    </MudTooltip>
+                    <MudTooltip Text="Delete Filler Preset">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       OnClick="@(_ => DeleteFillerPreset(context))">
+                        </MudIconButton>
+                    </MudTooltip>
+                </div>
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager/>
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private MudTable<FillerPresetViewModel> _fillerPresetsTable;
+
+    private int _fillerPresetsRowsPerPage;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        _fillerPresetsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize))
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+    }
+    
+    private async Task DeleteFillerPreset(FillerPresetViewModel fillerPreset)
+    {
+        var parameters = new DialogParameters { { "EntityType", "filler preset" }, { "EntityName", fillerPreset.Name } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        
+        IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Filler Preset", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await _mediator.Send(new DeleteFillerPreset(fillerPreset.Id));
+            await _fillerPresetsTable.ReloadServerData();
+        }
+    }
+
+    private async Task<TableData<FillerPresetViewModel>> ServerReloadFillerPresets(TableState state)
+    {
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()));
+
+        PagedFillerPresetsViewModel data = await _mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize));
+        return new TableData<FillerPresetViewModel> { TotalItems = data.TotalCount, Items = data.Page };
+    }
+}

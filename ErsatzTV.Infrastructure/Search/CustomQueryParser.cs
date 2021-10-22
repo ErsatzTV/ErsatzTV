@@ -1,6 +1,7 @@
 ﻿using System;
 using ErsatzTV.Core;
 using Lucene.Net.Analysis;
+using Lucene.Net.Index;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
@@ -28,6 +29,13 @@ namespace ErsatzTV.Infrastructure.Search
                 var todayString = DateTime.Today.ToString("*MMdd");
                 return base.GetWildcardQuery("release_date", todayString);
             }
+            
+            if (field == "minutes" && int.TryParse(queryText, out int val))
+            {
+                var bytesRef = new BytesRef();
+                NumericUtils.Int32ToPrefixCoded(val, 0, bytesRef);
+                return NewTermQuery(new Term("minutes", bytesRef));
+            }
 
             return base.GetFieldQuery(field, queryText, quoted);
         }
@@ -50,6 +58,16 @@ namespace ErsatzTV.Infrastructure.Search
             }
 
             return base.GetFieldQuery(field, queryText, slop);
+        }
+        
+        protected override Query GetRangeQuery(string field, string part1, string part2, bool startInclusive, bool endInclusive)
+        {
+            if (field == "minutes" && int.TryParse(part1, out int min) && int.TryParse(part2, out int max))
+            {
+                return NumericRangeQuery.NewInt32Range(field, 1, min, max, startInclusive, endInclusive);
+            }
+
+            return base.GetRangeQuery(field, part1, part2, startInclusive, endInclusive);
         }
         
         internal static bool ParseStart(string text, out DateTime start)

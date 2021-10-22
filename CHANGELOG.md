@@ -6,10 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix generated streams with mpeg2video
+- Fix incorrect row count in playout detail table
 - Fix deleting movies that have been removed from Jellyfin and Emby
+
+### Added
+- Add new filler system
+    - `Pre-Roll Filler` plays before each media item
+    - `Mid-Roll Filler` plays between media item chapters
+    - `Post-Roll Filler` plays after each media item
+    - `Tail Filler` plays after all media items, until the next media item
+    - `Fallback Filler` loops instead of default offline image to fill any remaining gaps
+- Store chapter details with media statistics; this is needed to support mid-roll filler
+    - This requires re-ingesting statistics for all media items the first time this version is launched
+- Add switch to show/hide filler in playout detail table
+- Add `minutes` field to search index
+  - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
 
 ### Changed
 - Change some debug log messages to info so they show by default again
+- Remove tail collection options from `Duration` playout mode
+- Show localized start time in schedule items tables
 
 ## [0.1.5-alpha] - 2021-10-18
 ### Fixed
@@ -18,13 +34,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix updating Jellyfin and Emby artwork
 - Fix Plex, Jellyfin, Emby worker crash attempting to sync library that no longer exists
 - Fix bug with `Duration` mode scheduling when media items are too long to fit in the requested duration
-- Fix bug with `Duration` mode scheduling with `Filler` tail mode where other duration items in the schedule would be skipped
 
 ### Added
 - Include music video thumbnails in channel guide (xmltv)
 
 ### Changed
 - Automatically find working Plex address on startup
+- Automatically select schedule item in schedules that contain only one item
 - Change default log level from `Debug` to `Information`
   - The `Debug` log level can be enabled in the `appsettings.json` file for non-docker installs
   - The `Debug` log level can be enabled by setting the environment variable `Serilog:MinimumLevel=Debug` for docker installs

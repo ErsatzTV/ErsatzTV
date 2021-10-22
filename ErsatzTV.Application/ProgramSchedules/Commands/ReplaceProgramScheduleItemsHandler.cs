@@ -63,7 +63,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             ProgramScheduleMustExist(dbContext, request.ProgramScheduleId)
                 .BindT(programSchedule => PlayoutModesMustBeValid(request, programSchedule))
                 .BindT(programSchedule => CollectionTypesMustBeValid(request, programSchedule))
-                .BindT(programSchedule => PlaybackOrdersMustBeValid(request, programSchedule));
+                .BindT(programSchedule => PlaybackOrdersMustBeValid(request, programSchedule))
+                .BindT(programSchedule => FillerConfigurationsMustBeValid(dbContext, request, programSchedule));
 
         private static Validation<BaseError, ProgramSchedule> PlayoutModesMustBeValid(
             ReplaceProgramScheduleItems request,
@@ -76,6 +77,26 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             ProgramSchedule programSchedule) =>
             request.Items.Map(item => CollectionTypeMustBeValid(item, programSchedule)).Sequence()
                 .Map(_ => programSchedule);
+
+        private static async Task<Validation<BaseError, ProgramSchedule>> FillerConfigurationsMustBeValid(
+            TvContext dbContext,
+            ReplaceProgramScheduleItems request,
+            ProgramSchedule programSchedule)
+        {
+            foreach (ReplaceProgramScheduleItem item in request.Items)
+            {
+                Either<BaseError, ProgramSchedule> result = await FillerConfigurationMustBeValid(
+                    dbContext,
+                    item,
+                    programSchedule);
+                if (result.IsLeft)
+                {
+                    return result.ToValidation();
+                }
+            }
+
+            return programSchedule;
+        }
 
         private static Validation<BaseError, ProgramSchedule> PlaybackOrdersMustBeValid(
             ReplaceProgramScheduleItems request,

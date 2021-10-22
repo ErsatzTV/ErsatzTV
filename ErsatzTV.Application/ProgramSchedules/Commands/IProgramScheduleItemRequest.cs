@@ -16,12 +16,12 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int? MultipleCount { get; }
         TimeSpan? PlayoutDuration { get; }
         TailMode TailMode { get; }
-        ProgramScheduleItemCollectionType TailCollectionType { get; }
-        int? TailCollectionId { get; }
-        int? TailMultiCollectionId { get; }
-        int? TailSmartCollectionId { get; }
-        int? TailMediaItemId { get; }
         string CustomTitle { get; }
         GuideMode GuideMode { get; }
+        int? PreRollFillerId { get; }
+        int? MidRollFillerId { get; }
+        int? PostRollFillerId { get; }
+        int? TailFillerId { get; }
+        int? FallbackFillerId { get; }
     }
 }

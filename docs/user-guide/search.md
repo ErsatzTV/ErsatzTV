@@ -24,6 +24,7 @@ The following fields are available for searching movies:
 - `content_rating`: The movie content rating (case-sensitive) 
 - `language`: The movie audio stream language
 - `release_date`: The movie release date (YYYYMMDD)
+- `minutes`: the rounded-up whole number duration of the movie in minutes
 - `type`: Always `movie`
 
 ### Shows
@@ -53,6 +54,7 @@ The following fields are available for searching episodes:
 - `library_name`: The name of the library that contains the episode
 - `language`: The episode audio stream language
 - `release_date`: The episode release date (YYYYMMDD)
+- `minutes`: the rounded-up whole number duration of the episode in minutes
 - `type`: Always `episode`
 
 ### Artists
@@ -76,6 +78,7 @@ The following fields are available for searching music videos:
 - `library_name`: The name of the library that contains the music video
 - `language`: The music video audio stream language
 - `release_date`: The music video release date (YYYYMMDD)
+- `minutes`: the rounded-up whole number duration of the music video in minutes
 - `type`: Always `music_video`
 
 ### Other Videos
@@ -84,6 +87,7 @@ The following fields are available for searching other videos:
 
 - `title`: The filename of the video (without extension)
 - `tag`: All of the video's parent folders
+- `minutes`: the rounded-up whole number duration of the video in minutes
 - `type`: Always `other_video`
 
 ## Special Search Fields
