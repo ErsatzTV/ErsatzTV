@@ -44,18 +44,18 @@ namespace ErsatzTV.Application.Search.Commands
                 await _configElementRepository.GetValue<int>(ConfigElementKey.SearchIndexVersion) <
                 _searchIndex.Version)
             {
-                _logger.LogDebug("Migrating search index to version {Version}", _searchIndex.Version);
+                _logger.LogInformation("Migrating search index to version {Version}", _searchIndex.Version);
 
                 List<int> itemIds = await _searchRepository.GetItemIdsToIndex();
                 await _searchIndex.Rebuild(_searchRepository, itemIds);
 
                 await _configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, _searchIndex.Version);
 
-                _logger.LogDebug("Done migrating search index");
+                _logger.LogInformation("Done migrating search index");
             }
             else
             {
-                _logger.LogDebug("Search index is already version {Version}", _searchIndex.Version);
+                _logger.LogInformation("Search index is already version {Version}", _searchIndex.Version);
             }
 
             return Unit.Default;
