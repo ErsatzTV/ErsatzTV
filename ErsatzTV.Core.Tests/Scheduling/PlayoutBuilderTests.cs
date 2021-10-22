@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Tests.Fakes;
@@ -1164,7 +1165,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     TestMovie(1, TimeSpan.FromMinutes(55), new DateTime(2020, 1, 1))
                 }
             };
-
+            
             var collectionTwo = new Collection
             {
                 Id = 2,
@@ -1174,7 +1175,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     TestMovie(2, TimeSpan.FromMinutes(55), new DateTime(2020, 1, 1))
                 }
             };
-
+            
             var collectionThree = new Collection
             {
                 Id = 3,
@@ -1184,13 +1185,13 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     TestMovie(3, TimeSpan.FromMinutes(5), new DateTime(2020, 1, 1))
                 }
             };
-
+            
             var fakeRepository = new FakeMediaCollectionRepository(
                 Map(
                     (collectionOne.Id, collectionOne.MediaItems.ToList()),
                     (collectionTwo.Id, collectionTwo.MediaItems.ToList()),
                     (collectionThree.Id, collectionThree.MediaItems.ToList())));
-
+            
             var items = new List<ProgramScheduleItem>
             {
                 new ProgramScheduleItemDuration
@@ -1203,9 +1204,12 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     PlayoutDuration = TimeSpan.FromHours(3),
                     PlaybackOrder = PlaybackOrder.Chronological,
                     TailMode = TailMode.Filler,
-                    TailCollectionType = ProgramScheduleItemCollectionType.Collection,
-                    TailCollection = collectionThree,
-                    TailCollectionId = collectionThree.Id
+                    TailFiller = new FillerPreset
+                    {
+                        FillerKind = FillerKind.Tail,
+                        Collection = collectionThree,
+                        CollectionId = collectionThree.Id
+                    }
                 },
                 new ProgramScheduleItemDuration
                 {
@@ -1217,12 +1221,15 @@ namespace ErsatzTV.Core.Tests.Scheduling
                     PlayoutDuration = TimeSpan.FromHours(3),
                     PlaybackOrder = PlaybackOrder.Chronological,
                     TailMode = TailMode.Filler,
-                    TailCollectionType = ProgramScheduleItemCollectionType.Collection,
-                    TailCollection = collectionThree,
-                    TailCollectionId = collectionThree.Id
+                    TailFiller = new FillerPreset
+                    {
+                        FillerKind = FillerKind.Tail,
+                        Collection = collectionThree,
+                        CollectionId = collectionThree.Id
+                    }
                 }
             };
-
+            
             var playout = new Playout
             {
                 ProgramSchedule = new ProgramSchedule
@@ -1231,7 +1238,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 },
                 Channel = new Channel(Guid.Empty) { Id = 1, Name = "Test Channel" },
             };
-
+            
             var configRepo = new Mock<IConfigElementRepository>();
             var televisionRepo = new FakeTelevisionRepository();
             var artistRepo = new Mock<IArtistRepository>();
@@ -1241,42 +1248,42 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 televisionRepo,
                 artistRepo.Object,
                 _logger);
-
+            
             DateTimeOffset start = HoursAfterMidnight(0);
             DateTimeOffset finish = start + TimeSpan.FromHours(6);
-
+            
             Playout result = await builder.BuildPlayoutItems(playout, start, finish);
-
+            
             result.Items.Count.Should().Be(12);
-
+            
             result.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromMinutes(0));
             result.Items[0].MediaItemId.Should().Be(1);
             result.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromMinutes(55));
             result.Items[1].MediaItemId.Should().Be(1);
             result.Items[2].StartOffset.TimeOfDay.Should().Be(new TimeSpan(1, 50, 0));
             result.Items[2].MediaItemId.Should().Be(1);
-
+            
             result.Items[3].StartOffset.TimeOfDay.Should().Be(new TimeSpan(2, 45, 0));
             result.Items[3].MediaItemId.Should().Be(3);
             result.Items[4].StartOffset.TimeOfDay.Should().Be(new TimeSpan(2, 50, 0));
             result.Items[4].MediaItemId.Should().Be(3);
             result.Items[5].StartOffset.TimeOfDay.Should().Be(new TimeSpan(2, 55, 0));
             result.Items[5].MediaItemId.Should().Be(3);
-
+            
             result.Items[6].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(3));
             result.Items[6].MediaItemId.Should().Be(2);
             result.Items[7].StartOffset.TimeOfDay.Should().Be(new TimeSpan(3, 55, 0));
             result.Items[7].MediaItemId.Should().Be(2);
             result.Items[8].StartOffset.TimeOfDay.Should().Be(new TimeSpan(4, 50, 0));
             result.Items[8].MediaItemId.Should().Be(2);
-
+            
             result.Items[9].StartOffset.TimeOfDay.Should().Be(new TimeSpan(5, 45, 0));
             result.Items[9].MediaItemId.Should().Be(3);
             result.Items[10].StartOffset.TimeOfDay.Should().Be(new TimeSpan(5, 50, 0));
             result.Items[10].MediaItemId.Should().Be(3);
             result.Items[11].StartOffset.TimeOfDay.Should().Be(new TimeSpan(5, 55, 0));
             result.Items[11].MediaItemId.Should().Be(3);
-
+            
             result.Anchor.NextScheduleItem.Should().Be(items[0]);
             result.Anchor.DurationFinish.Should().BeNull();
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain
 {
@@ -22,5 +23,15 @@ namespace ErsatzTV.Core.Domain
         public int? SmartCollectionId { get; set; }
         public SmartCollection SmartCollection { get; set; }
         public PlaybackOrder PlaybackOrder { get; set; }
+        public int? PreRollFillerId { get; set; }
+        public FillerPreset PreRollFiller { get; set; }
+        public int? MidRollFillerId { get; set; }
+        public FillerPreset MidRollFiller { get; set; }
+        public int? PostRollFillerId { get; set; }
+        public FillerPreset PostRollFiller { get; set; }
+        public int? TailFillerId { get; set; }
+        public FillerPreset TailFiller { get; set; }
+        public int? FallbackFillerId { get; set; }
+        public FillerPreset FallbackFiller { get; set; }
     }
 }

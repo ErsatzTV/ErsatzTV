@@ -30,10 +30,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
                 .Include(i => i.MultiCollection)
                 .Include(i => i.SmartCollection)
                 .Include(i => i.MediaItem)
-                .Include(i => (i as ProgramScheduleItemDuration).TailCollection)
-                .Include(i => (i as ProgramScheduleItemDuration).TailMultiCollection)
-                .Include(i => (i as ProgramScheduleItemDuration).TailSmartCollection)
-                .Include(i => (i as ProgramScheduleItemDuration).TailMediaItem)
                 .ThenInclude(i => (i as Movie).MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
                 .Include(i => i.MediaItem)
@@ -49,6 +45,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
                 .Include(i => i.MediaItem)
                 .ThenInclude(i => (i as Artist).ArtistMetadata)
                 .ThenInclude(am => am.Artwork)
+                .Include(i => i.PreRollFiller)
+                .Include(i => i.MidRollFiller)
+                .Include(i => i.PostRollFiller)
+                .Include(i => i.TailFiller)
+                .Include(i => i.FallbackFiller)
                 .ToListAsync(cancellationToken)
                 .Map(programScheduleItems => programScheduleItems.Map(ProjectToViewModel).ToList());
         }

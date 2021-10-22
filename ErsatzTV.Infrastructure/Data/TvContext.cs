@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -72,6 +73,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<Resolution> Resolutions { get; set; }
         public DbSet<LanguageCode> LanguageCodes { get; set; }
         public DbSet<TraktList> TraktLists { get; set; }
+        public DbSet<FillerPreset> FillerPresets { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
             optionsBuilder.UseLoggerFactory(_loggerFactory);

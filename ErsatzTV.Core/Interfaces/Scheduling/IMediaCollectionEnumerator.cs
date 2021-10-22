@@ -8,5 +8,6 @@ namespace ErsatzTV.Core.Interfaces.Scheduling
         CollectionEnumeratorState State { get; }
         Option<MediaItem> Current { get; }
         void MoveNext();
+        Option<MediaItem> Peek(int offset);
     }
 }

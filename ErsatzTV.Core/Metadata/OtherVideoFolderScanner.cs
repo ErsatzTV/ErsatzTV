@@ -119,8 +119,6 @@ namespace ErsatzTV.Core.Metadata
 
                 foreach (string file in allFiles.OrderBy(identity))
                 {
-                    _logger.LogDebug("Other video found at {File}", file);
-
                     Either<BaseError, MediaItemScanResult<OtherVideo>> maybeVideo = await _otherVideoRepository
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffprobePath))

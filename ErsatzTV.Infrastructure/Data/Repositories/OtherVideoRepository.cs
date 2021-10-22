@@ -78,8 +78,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             foreach (int otherVideoId in ids)
             {
-                OtherVideo othervide = await dbContext.OtherVideos.FindAsync(otherVideoId);
-                dbContext.OtherVideos.Remove(othervide);
+                OtherVideo otherVideo = await dbContext.OtherVideos.FindAsync(otherVideoId);
+                dbContext.OtherVideos.Remove(otherVideo);
             }
 
             await dbContext.SaveChangesAsync();

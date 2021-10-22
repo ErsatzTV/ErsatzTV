@@ -51,19 +51,190 @@ namespace ErsatzTV.Core.Scheduling
             DateTimeOffset playoutFinish,
             bool rebuild = false)
         {
-            var collectionKeys = playout.ProgramSchedule.Items
-                .SelectMany(CollectionKeysForItem)
-                .Distinct()
-                .ToList();
-
-            if (!collectionKeys.Any())
+            Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(playout);
+            if (!collectionMediaItems.Any())
             {
                 _logger.LogWarning(
                     "Playout {Playout} schedule {Schedule} has no items",
                     playout.Channel.Name,
                     playout.ProgramSchedule.Name);
+
                 return playout;
             }
+
+            _logger.LogDebug(
+                "{Action} playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
+                rebuild ? "Rebuilding" : "Building",
+                playout.Id,
+                playout.Channel.Number,
+                playout.Channel.Name);
+
+            Option<CollectionKey> maybeEmptyCollection = await CheckForEmptyCollections(collectionMediaItems);
+            foreach (CollectionKey emptyCollection in maybeEmptyCollection)
+            {
+                _logger.LogError(
+                    "Unable to rebuild playout; collection {@CollectionKey} has no valid items!",
+                    emptyCollection);
+
+                return playout;
+            }
+
+            playout.Items ??= new List<PlayoutItem>();
+            playout.ProgramScheduleAnchors ??= new List<PlayoutProgramScheduleAnchor>();
+
+            if (rebuild)
+            {
+                playout.Items.Clear();
+                playout.Anchor = null;
+                playout.ProgramScheduleAnchors.Clear();
+            }
+
+            var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
+            var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
+            foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
+            {
+                // use configured playback order for primary collection, shuffle for filler
+                Option<ProgramScheduleItem> maybeScheduleItem = sortedScheduleItems
+                    .FirstOrDefault(item => CollectionKey.ForScheduleItem(item) == collectionKey);
+                PlaybackOrder playbackOrder = maybeScheduleItem
+                    .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
+                IMediaCollectionEnumerator enumerator =
+                    await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems, playbackOrder);
+                collectionEnumerators.Add(collectionKey, enumerator);
+            }
+
+            // find start anchor
+            PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, sortedScheduleItems);
+
+            // start at the previously-decided time
+            DateTimeOffset currentTime = startAnchor.NextStartOffset.ToLocalTime();
+            _logger.LogDebug(
+                "Starting playout {PlayoutId} for channel {ChannelNumber} - {ChannelName} at {StartTime}",
+                playout.Id,
+                playout.Channel.Number,
+                playout.Channel.Name,
+                currentTime);
+            
+            // removing any items scheduled past the start anchor
+            // this could happen if the app was closed after scheduling items
+            // but before saving the anchor
+            int removed = playout.Items.RemoveAll(pi => pi.StartOffset >= currentTime);
+            if (removed > 0)
+            {
+                _logger.LogWarning("Removed {Count} schedule items beyond current start anchor", removed);
+            }
+
+            // start with the previously-decided schedule item
+            // start with the previous multiple/duration states
+            var playoutBuilderState = new PlayoutBuilderState(
+                sortedScheduleItems.IndexOf(startAnchor.NextScheduleItem),
+                Optional(startAnchor.MultipleRemaining),
+                startAnchor.DurationFinishOffset,
+                startAnchor.InFlood,
+                startAnchor.InDurationFiller,
+                startAnchor.NextGuideGroup,
+                currentTime);
+
+            var schedulerOne = new PlayoutModeSchedulerOne(_logger);
+            var schedulerMultiple = new PlayoutModeSchedulerMultiple(collectionMediaItems, _logger);
+            var schedulerDuration = new PlayoutModeSchedulerDuration(_logger);
+            var schedulerFlood = new PlayoutModeSchedulerFlood(sortedScheduleItems, _logger);
+
+            // loop until we're done filling the desired amount of time
+            while (playoutBuilderState.CurrentTime < playoutFinish)
+            {
+                // get the schedule item out of the sorted list
+                ProgramScheduleItem scheduleItem =
+                    sortedScheduleItems[playoutBuilderState.ScheduleItemIndex % sortedScheduleItems.Count];
+
+                ProgramScheduleItem nextScheduleItem =
+                    sortedScheduleItems[(playoutBuilderState.ScheduleItemIndex + 1) % sortedScheduleItems.Count];
+
+                Tuple<PlayoutBuilderState, List<PlayoutItem>> result = scheduleItem switch
+                {
+                    ProgramScheduleItemMultiple multiple => schedulerMultiple.Schedule(
+                        playoutBuilderState,
+                        collectionEnumerators,
+                        multiple,
+                        nextScheduleItem,
+                        playoutFinish),
+                    ProgramScheduleItemDuration duration => schedulerDuration.Schedule(
+                        playoutBuilderState,
+                        collectionEnumerators,
+                        duration,
+                        nextScheduleItem,
+                        playoutFinish),
+                    ProgramScheduleItemFlood flood => schedulerFlood.Schedule(
+                        playoutBuilderState,
+                        collectionEnumerators,
+                        flood,
+                        nextScheduleItem,
+                        playoutFinish),
+                    ProgramScheduleItemOne one => schedulerOne.Schedule(
+                        playoutBuilderState,
+                        collectionEnumerators,
+                        one,
+                        nextScheduleItem,
+                        playoutFinish),
+                    _ => throw new ArgumentOutOfRangeException(nameof(scheduleItem))
+                };
+
+                (PlayoutBuilderState nextState, List<PlayoutItem> playoutItems) = result;
+
+                foreach (PlayoutItem playoutItem in playoutItems)
+                {
+                    playout.Items.Add(playoutItem);
+                }
+
+                playoutBuilderState = nextState;
+            }
+
+            // once more to get playout anchor
+            ProgramScheduleItem anchorScheduleItem =
+                sortedScheduleItems[playoutBuilderState.ScheduleItemIndex % sortedScheduleItems.Count];
+
+            // build program schedule anchors
+            playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
+
+            // remove any items outside the desired range
+            playout.Items.RemoveAll(
+                old => old.FinishOffset < playoutStart.AddHours(-4) || old.StartOffset > playoutFinish);
+
+            if (playout.Items.Any())
+            {
+                DateTimeOffset maxStartTime = playout.Items.Max(i => i.FinishOffset);
+                if (maxStartTime < playoutBuilderState.CurrentTime)
+                {
+                    playoutBuilderState = playoutBuilderState with { CurrentTime = maxStartTime };
+                }
+            }
+
+            playout.Anchor = new PlayoutAnchor
+            {
+                NextScheduleItem = anchorScheduleItem,
+                NextScheduleItemId = anchorScheduleItem.Id,
+                NextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(playoutBuilderState, anchorScheduleItem)
+                    .UtcDateTime,
+                MultipleRemaining = playoutBuilderState.MultipleRemaining.IsSome
+                    ? playoutBuilderState.MultipleRemaining.ValueUnsafe()
+                    : null,
+                DurationFinish = playoutBuilderState.DurationFinish.IsSome
+                    ? playoutBuilderState.DurationFinish.ValueUnsafe().UtcDateTime
+                    : null,
+                InFlood = playoutBuilderState.InFlood,
+                InDurationFiller = playoutBuilderState.InDurationFiller,
+                NextGuideGroup = playoutBuilderState.NextGuideGroup
+            };
+
+            return playout;
+        }
+
+        private async Task<Map<CollectionKey, List<MediaItem>>> GetCollectionMediaItems(Playout playout)
+        {
+            var collectionKeys = playout.ProgramSchedule.Items
+                .SelectMany(CollectionKeysForItem)
+                .Distinct()
+                .ToList();
 
             IEnumerable<Tuple<CollectionKey, List<MediaItem>>> tuples = await collectionKeys.Map(
                 async collectionKey =>
@@ -101,15 +272,12 @@ namespace ErsatzTV.Core.Scheduling
                     }
                 }).Sequence();
 
-            var collectionMediaItems = Map.createRange(tuples);
+            return Map.createRange(tuples);
+        }
 
-            _logger.LogDebug(
-                "{Action} playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
-                rebuild ? "Rebuilding" : "Building",
-                playout.Id,
-                playout.Channel.Number,
-                playout.Channel.Name);
-
+        private async Task<Option<CollectionKey>> CheckForEmptyCollections(
+            Map<CollectionKey, List<MediaItem>> collectionMediaItems)
+        {
             foreach ((CollectionKey _, List<MediaItem> items) in collectionMediaItems)
             {
                 var zeroItems = new List<MediaItem>();
@@ -143,415 +311,9 @@ namespace ErsatzTV.Core.Scheduling
                 items.RemoveAll(i => zeroItems.Contains(i));
             }
 
-            // this guard needs to be below the place where we modify the collections (by removing zero-duration items)
-            Option<CollectionKey> emptyCollection =
-                collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
-            if (emptyCollection.IsSome)
-            {
-                _logger.LogError(
-                    "Unable to rebuild playout; collection {@CollectionKey} has no valid items!",
-                    emptyCollection.ValueUnsafe());
-
-                return playout;
-            }
-
-            // leaving this guard in for a while to ensure the zero item removal is working properly
-            Option<CollectionKey> zeroDurationCollection = collectionMediaItems.Find(
-                c => c.Value.Any(
-                    mi => mi switch
-                    {
-                        Movie m => m.MediaVersions.HeadOrNone().Map(mv => mv.Duration)
-                            .IfNone(TimeSpan.Zero) == TimeSpan.Zero,
-                        Episode e => e.MediaVersions.HeadOrNone().Map(mv => mv.Duration)
-                            .IfNone(TimeSpan.Zero) == TimeSpan.Zero,
-                        MusicVideo mv => mv.MediaVersions.HeadOrNone().Map(v => v.Duration)
-                            .IfNone(TimeSpan.Zero) == TimeSpan.Zero,
-                        OtherVideo ov => ov.MediaVersions.HeadOrNone().Map(v => v.Duration)
-                            .IfNone(TimeSpan.Zero) == TimeSpan.Zero,
-                        _ => true
-                    })).Map(c => c.Key);
-            if (zeroDurationCollection.IsSome)
-            {
-                _logger.LogError(
-                    "BUG: Unable to rebuild playout; collection {@CollectionKey} contains items with zero duration!",
-                    zeroDurationCollection.ValueUnsafe());
-
-                return playout;
-            }
-
-            playout.Items ??= new List<PlayoutItem>();
-            playout.ProgramScheduleAnchors ??= new List<PlayoutProgramScheduleAnchor>();
-
-            if (rebuild)
-            {
-                playout.Items.Clear();
-                playout.Anchor = null;
-                playout.ProgramScheduleAnchors.Clear();
-            }
-
-            var sortedScheduleItems =
-                playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
-            var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
-            foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
-            {
-                // use configured playback order for primary collection, shuffle for filler
-                Option<ProgramScheduleItem> maybeScheduleItem = sortedScheduleItems
-                    .FirstOrDefault(item => CollectionKeyForItem(item) == collectionKey);
-                PlaybackOrder playbackOrder = maybeScheduleItem
-                    .Match(item => item.PlaybackOrder, () => PlaybackOrder.Shuffle);
-                IMediaCollectionEnumerator enumerator =
-                    await GetMediaCollectionEnumerator(playout, collectionKey, mediaItems, playbackOrder);
-                collectionEnumerators.Add(collectionKey, enumerator);
-            }
-
-            // find start anchor
-            PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, sortedScheduleItems);
-
-            // start at the previously-decided time
-            DateTimeOffset currentTime = startAnchor.NextStartOffset.ToLocalTime();
-            _logger.LogDebug(
-                "Starting playout {PlayoutId} for channel {ChannelNumber} - {ChannelName} at {StartTime}",
-                playout.Id,
-                playout.Channel.Number,
-                playout.Channel.Name,
-                currentTime);
-            
-            // removing any items scheduled past the start anchor
-            // this could happen if the app was closed after scheduling items
-            // but before saving the anchor
-            int removed = playout.Items.RemoveAll(pi => pi.StartOffset >= currentTime);
-            if (removed > 0)
-            {
-                _logger.LogWarning("Removed {Count} schedule items beyond current start anchor", removed);
-            }
-
-            // start with the previously-decided schedule item
-            int index = sortedScheduleItems.IndexOf(startAnchor.NextScheduleItem);
-
-            // start with the previous multiple/duration states
-            Option<int> multipleRemaining = Optional(startAnchor.MultipleRemaining);
-            Option<DateTimeOffset> durationFinish = startAnchor.DurationFinishOffset;
-            bool inFlood = startAnchor.InFlood;
-            bool inDurationFiller = startAnchor.InDurationFiller;
-
-            bool customGroup = multipleRemaining.IsSome || durationFinish.IsSome;
-
-            // loop until we're done filling the desired amount of time
-            while (currentTime < playoutFinish)
-            {
-                // get the schedule item out of the sorted list
-                ProgramScheduleItem scheduleItem = sortedScheduleItems[index % sortedScheduleItems.Count];
-
-                // find when we should start this item, based on the current time
-                DateTimeOffset itemStartTime = GetStartTimeAfter(
-                    scheduleItem,
-                    currentTime,
-                    multipleRemaining.IsSome,
-                    durationFinish.IsSome,
-                    inFlood,
-                    inDurationFiller);
-                
-                Option<CollectionKey> maybeTailCollectionKey = Option<CollectionKey>.None;
-                if (inDurationFiller && scheduleItem is ProgramScheduleItemDuration
-                {
-                    TailMode: TailMode.Filler
-                })
-                {
-                    maybeTailCollectionKey = TailCollectionKeyForItem(scheduleItem);
-                }
-
-                IMediaCollectionEnumerator enumerator = collectionEnumerators[CollectionKeyForItem(scheduleItem)];
-                foreach (CollectionKey tailCollectionKey in maybeTailCollectionKey)
-                {
-                    enumerator = collectionEnumerators[tailCollectionKey];
-                }
-
-                await enumerator.Current.IfSomeAsync(
-                    mediaItem =>
-                    {
-                        _logger.LogDebug(
-                            "Scheduling media item: {ScheduleItemNumber} / {CollectionType} / {MediaItemId} - {MediaItemTitle} / {StartTime}",
-                            scheduleItem.Index,
-                            inDurationFiller
-                                ? (scheduleItem as ProgramScheduleItemDuration)?.TailCollectionType
-                                : scheduleItem.CollectionType,
-                            mediaItem.Id,
-                            DisplayTitle(mediaItem),
-                            itemStartTime);
-
-                        MediaVersion version = mediaItem switch
-                        {
-                            Movie m => m.MediaVersions.Head(),
-                            Episode e => e.MediaVersions.Head(),
-                            MusicVideo mv => mv.MediaVersions.Head(),
-                            OtherVideo mv => mv.MediaVersions.Head(),
-                            _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-                        };
-
-                        var playoutItem = new PlayoutItem
-                        {
-                            MediaItemId = mediaItem.Id,
-                            Start = itemStartTime.UtcDateTime,
-                            Finish = itemStartTime.UtcDateTime + version.Duration,
-                            CustomGroup = customGroup,
-                            IsFiller = inDurationFiller || scheduleItem.GuideMode == GuideMode.Filler
-                        };
-
-                        if (!string.IsNullOrWhiteSpace(scheduleItem.CustomTitle))
-                        {
-                            playoutItem.CustomTitle = scheduleItem.CustomTitle;
-                        }
-
-                        enumerator.MoveNext();
-                        
-                        if (scheduleItem is ProgramScheduleItemDuration d &&
-                            version.Duration > d.PlayoutDuration)
-                        {
-                            _logger.LogWarning(
-                                "Skipping playout item {Title} with duration {Duration} that is longer than schedule item duration {PlayoutDuration}",
-                                DisplayTitle(mediaItem),
-                                version.Duration,
-                                d.PlayoutDuration);
-                            return;
-                        }
-
-                        currentTime = itemStartTime + version.Duration;
-                        playout.Items.Add(playoutItem);
-
-                        switch (scheduleItem)
-                        {
-                            case ProgramScheduleItemOne:
-                                // only play one item from collection, so always advance to the next item
-                                _logger.LogDebug(
-                                    "Advancing to next schedule item after playout mode {PlayoutMode}",
-                                    "One");
-                                index++;
-                                customGroup = false;
-                                break;
-                            case ProgramScheduleItemMultiple multiple:
-                                if (multipleRemaining.IsNone)
-                                {
-                                    if (multiple.Count == 0)
-                                    {
-                                        multipleRemaining = collectionMediaItems[CollectionKeyForItem(scheduleItem)]
-                                            .Count;
-                                    }
-                                    else
-                                    {
-                                        multipleRemaining = multiple.Count;
-                                    }
-
-                                    customGroup = true;
-                                }
-
-                                multipleRemaining = multipleRemaining.Map(i => i - 1);
-                                if (multipleRemaining.IfNone(-1) == 0)
-                                {
-                                    _logger.LogDebug(
-                                        "Advancing to next schedule item after playout mode {PlayoutMode}",
-                                        "Multiple");
-                                    index++;
-                                    multipleRemaining = None;
-                                    customGroup = false;
-                                }
-
-                                break;
-                            case ProgramScheduleItemFlood:
-                                enumerator.Current.Do(
-                                    peekMediaItem =>
-                                    {
-                                        customGroup = true;
-
-                                        MediaVersion peekVersion = peekMediaItem switch
-                                        {
-                                            Movie m => m.MediaVersions.Head(),
-                                            Episode e => e.MediaVersions.Head(),
-                                            MusicVideo mv => mv.MediaVersions.Head(),
-                                            OtherVideo ov => ov.MediaVersions.Head(),
-                                            _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
-                                        };
-
-                                        ProgramScheduleItem peekScheduleItem =
-                                            sortedScheduleItems[(index + 1) % sortedScheduleItems.Count];
-                                        DateTimeOffset peekScheduleItemStart =
-                                            peekScheduleItem.StartType == StartType.Fixed
-                                                ? GetStartTimeAfter(peekScheduleItem, currentTime)
-                                                : DateTimeOffset.MaxValue;
-
-                                        // if the current time is before the next schedule item, but the current finish
-                                        // is after, we need to move on to the next schedule item
-                                        // eventually, spots probably have to fit in this gap
-                                        bool willNotFinishInTime = currentTime <= peekScheduleItemStart &&
-                                                                   currentTime + peekVersion.Duration >
-                                                                   peekScheduleItemStart;
-                                        if (willNotFinishInTime)
-                                        {
-                                            _logger.LogDebug(
-                                                "Advancing to next schedule item after playout mode {PlayoutMode}",
-                                                "Flood");
-                                            index++;
-                                            customGroup = false;
-                                            inFlood = false;
-                                        }
-                                        else
-                                        {
-                                            inFlood = true;
-                                        }
-                                    });
-                                break;
-                            case ProgramScheduleItemDuration duration:
-                                enumerator.Current.Do(
-                                    peekMediaItem =>
-                                    {
-                                        MediaVersion peekVersion = peekMediaItem switch
-                                        {
-                                            Movie m => m.MediaVersions.Head(),
-                                            Episode e => e.MediaVersions.Head(),
-                                            MusicVideo mv => mv.MediaVersions.Head(),
-                                            OtherVideo ov => ov.MediaVersions.Head(),
-                                            _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
-                                        };
-
-                                        // remember when we need to finish this duration item
-                                        if (durationFinish.IsNone)
-                                        {
-                                            durationFinish = itemStartTime + duration.PlayoutDuration;
-                                            customGroup = true;
-                                        }
-
-                                        bool willNotFinishInTime =
-                                            currentTime <= durationFinish.IfNone(SystemTime.MinValueUtc) &&
-                                            currentTime + peekVersion.Duration >
-                                            durationFinish.IfNone(SystemTime.MinValueUtc);
-                                        if (willNotFinishInTime)
-                                        {
-                                            _logger.LogDebug(
-                                                "Advancing to next schedule item after playout mode {PlayoutMode}",
-                                                "Duration");
-                                            index++;
-
-                                            if (duration.TailMode == TailMode.Offline)
-                                            {
-                                                durationFinish.Do(f => currentTime = f);
-                                            }
-
-                                            if (duration.TailMode != TailMode.Filler || inDurationFiller)
-                                            {
-                                                if (duration.TailMode != TailMode.None)
-                                                {
-                                                    durationFinish.Do(f => currentTime = f);
-                                                }
-
-                                                durationFinish = None;
-                                                inDurationFiller = false;
-                                                customGroup = false;
-                                            }
-                                            else if (duration.TailMode == TailMode.Filler &&
-                                                     WillFinishFillerInTime(
-                                                         scheduleItem,
-                                                         currentTime,
-                                                         durationFinish,
-                                                         collectionEnumerators))
-                                            {
-                                                // if we're starting filler, we don't actually need to move
-                                                // to the next schedule item yet
-                                                index--;
-
-                                                inDurationFiller = true;
-                                                durationFinish.Do(
-                                                    f => playoutItem.GuideFinish = f.UtcDateTime);
-                                            }
-                                        }
-                                    }
-                                );
-                                break;
-                        }
-                    });
-            }
-
-            // once more to get playout anchor
-            ProgramScheduleItem nextScheduleItem = sortedScheduleItems[index % sortedScheduleItems.Count];
-
-            // build program schedule anchors
-            playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
-
-            // remove any items outside the desired range
-            playout.Items.RemoveAll(
-                old => old.FinishOffset < playoutStart.AddHours(-4) || old.StartOffset > playoutFinish);
-
-            DateTimeOffset minCurrentTime = currentTime;
-            if (playout.Items.Any())
-            {
-                DateTimeOffset maxStartTime = playout.Items.Max(i => i.FinishOffset);
-                if (maxStartTime < currentTime)
-                {
-                    minCurrentTime = maxStartTime;
-                }
-            }
-            
-            playout.Anchor = new PlayoutAnchor
-            {
-                NextScheduleItem = nextScheduleItem,
-                NextScheduleItemId = nextScheduleItem.Id,
-                NextStart = GetStartTimeAfter(nextScheduleItem, minCurrentTime).UtcDateTime,
-                MultipleRemaining = multipleRemaining.IsSome ? multipleRemaining.ValueUnsafe() : null,
-                DurationFinish = durationFinish.IsSome ? durationFinish.ValueUnsafe().UtcDateTime : null,
-                InFlood = inFlood,
-                InDurationFiller = inDurationFiller
-            };
-
-            return playout;
+            return collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
         }
-
-        private static bool WillFinishFillerInTime(
-            ProgramScheduleItem scheduleItem,
-            DateTimeOffset currentTime,
-            Option<DateTimeOffset> durationFinish,
-            Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators)
-        {
-            Option<CollectionKey> maybeTailCollectionKey = Option<CollectionKey>.None;
-            if (scheduleItem is ProgramScheduleItemDuration
-            {
-                TailMode: TailMode.Filler
-            })
-            {
-                maybeTailCollectionKey = TailCollectionKeyForItem(scheduleItem);
-            }
-
-            foreach (CollectionKey collectionKey in maybeTailCollectionKey)
-            {
-                IMediaCollectionEnumerator enumerator = collectionEnumerators[collectionKey];
-                Option<int> firstId = enumerator.Current.Map(i => i.Id);
-                while (true)
-                {
-                    foreach (MediaItem peekMediaItem in enumerator.Current)
-                    {
-                        MediaVersion peekVersion = peekMediaItem switch
-                        {
-                            Movie m => m.MediaVersions.Head(),
-                            Episode e => e.MediaVersions.Head(),
-                            MusicVideo mv => mv.MediaVersions.Head(),
-                            OtherVideo ov => ov.MediaVersions.Head(),
-                            _ => throw new ArgumentOutOfRangeException(nameof(peekMediaItem))
-                        };
-
-                        if (currentTime + peekVersion.Duration <= durationFinish.IfNone(SystemTime.MinValueUtc))
-                        {
-                            return true;
-                        }
-                    }
-
-                    enumerator.MoveNext();
-                    if (enumerator.Current.Map(i => i.Id) == firstId)
-                    {
-                        return false;
-                    }
-                }
-            }
-
-            return false;
-        }
-
+        
         private static PlayoutAnchor FindStartAnchor(
             Playout playout,
             DateTimeOffset start,
@@ -580,35 +342,6 @@ namespace ErsatzTV.Core.Scheduling
                             };
                     }
                 });
-
-        private static DateTimeOffset GetStartTimeAfter(
-            ProgramScheduleItem item,
-            DateTimeOffset start,
-            bool inMultiple = false,
-            bool inDuration = false,
-            bool inFlood = false,
-            bool inDurationFiller = false)
-        {
-            switch (item.StartType)
-            {
-                case StartType.Fixed:
-                    if (item is ProgramScheduleItemMultiple && inMultiple ||
-                        item is ProgramScheduleItemDuration && inDuration ||
-                        item is ProgramScheduleItemFlood && inFlood ||
-                        item is ProgramScheduleItemDuration && inDurationFiller)
-                    {
-                        return start;
-                    }
-
-                    TimeSpan startTime = item.StartTime.GetValueOrDefault();
-                    DateTimeOffset result = start.Date + startTime;
-                    // need to wrap to the next day if appropriate
-                    return start.TimeOfDay > startTime ? result.AddDays(1) : result;
-                case StartType.Dynamic:
-                default:
-                    return start;
-            }
-        }
 
         private static List<PlayoutProgramScheduleAnchor> BuildProgramScheduleAnchors(
             Playout playout,
@@ -746,7 +479,7 @@ namespace ErsatzTV.Core.Scheduling
             return result;
         }
 
-        private static string DisplayTitle(MediaItem mediaItem)
+        internal static string DisplayTitle(MediaItem mediaItem)
         {
             switch (mediaItem)
             {
@@ -775,97 +508,37 @@ namespace ErsatzTV.Core.Scheduling
 
         private static List<CollectionKey> CollectionKeysForItem(ProgramScheduleItem item)
         {
-            var result = new List<CollectionKey> { CollectionKeyForItem(item) };
-            result.AddRange(TailCollectionKeyForItem(item));
-            return result;
-        }
-
-        private static CollectionKey CollectionKeyForItem(ProgramScheduleItem item) =>
-            item.CollectionType switch
+            var result = new List<CollectionKey>
             {
-                ProgramScheduleItemCollectionType.Collection => new CollectionKey
-                {
-                    CollectionType = item.CollectionType,
-                    CollectionId = item.CollectionId
-                },
-                ProgramScheduleItemCollectionType.TelevisionShow => new CollectionKey
-                {
-                    CollectionType = item.CollectionType,
-                    MediaItemId = item.MediaItemId
-                },
-                ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
-                {
-                    CollectionType = item.CollectionType,
-                    MediaItemId = item.MediaItemId
-                },
-                ProgramScheduleItemCollectionType.Artist => new CollectionKey
-                {
-                    CollectionType = item.CollectionType,
-                    MediaItemId = item.MediaItemId
-                },
-                ProgramScheduleItemCollectionType.MultiCollection => new CollectionKey
-                {
-                    CollectionType = item.CollectionType,
-                    MultiCollectionId = item.MultiCollectionId
-                },
-                ProgramScheduleItemCollectionType.SmartCollection => new CollectionKey
-                {
-                    CollectionType = item.CollectionType,
-                    SmartCollectionId = item.SmartCollectionId
-                },
-                _ => throw new ArgumentOutOfRangeException(nameof(item))
+                CollectionKey.ForScheduleItem(item)
             };
 
-        private static Option<CollectionKey> TailCollectionKeyForItem(ProgramScheduleItem item)
-        {
-            if (item is ProgramScheduleItemDuration { TailMode: TailMode.Filler } duration)
+            if (item.PreRollFiller != null)
             {
-                return duration.TailCollectionType switch
-                {
-                    ProgramScheduleItemCollectionType.Collection => new CollectionKey
-                    {
-                        CollectionType = duration.TailCollectionType,
-                        CollectionId = duration.TailCollectionId
-                    },
-                    ProgramScheduleItemCollectionType.TelevisionShow => new CollectionKey
-                    {
-                        CollectionType = duration.TailCollectionType,
-                        MediaItemId = duration.TailMediaItemId
-                    },
-                    ProgramScheduleItemCollectionType.TelevisionSeason => new CollectionKey
-                    {
-                        CollectionType = duration.TailCollectionType,
-                        MediaItemId = duration.TailMediaItemId
-                    },
-                    ProgramScheduleItemCollectionType.Artist => new CollectionKey
-                    {
-                        CollectionType = duration.TailCollectionType,
-                        MediaItemId = duration.TailMediaItemId
-                    },
-                    ProgramScheduleItemCollectionType.MultiCollection => new CollectionKey
-                    {
-                        CollectionType = duration.TailCollectionType,
-                        MultiCollectionId = duration.TailMultiCollectionId
-                    },
-                    ProgramScheduleItemCollectionType.SmartCollection => new CollectionKey
-                    {
-                        CollectionType = duration.TailCollectionType,
-                        SmartCollectionId = duration.TailSmartCollectionId
-                    },
-                    _ => throw new ArgumentOutOfRangeException(nameof(item))
-                };
+                result.Add(CollectionKey.ForFillerPreset(item.PreRollFiller));
             }
 
-            return None;
-        }
+            if (item.MidRollFiller != null)
+            {
+                result.Add(CollectionKey.ForFillerPreset(item.MidRollFiller));
+            }
 
-        private class CollectionKey : Record<CollectionKey>
-        {
-            public ProgramScheduleItemCollectionType CollectionType { get; set; }
-            public int? CollectionId { get; set; }
-            public int? MultiCollectionId { get; set; }
-            public int? SmartCollectionId { get; set; }
-            public int? MediaItemId { get; set; }
+            if (item.PostRollFiller != null)
+            {
+                result.Add(CollectionKey.ForFillerPreset(item.PostRollFiller));
+            }
+
+            if (item.TailFiller != null)
+            {
+                result.Add(CollectionKey.ForFillerPreset(item.TailFiller));
+            }
+
+            if (item.FallbackFiller != null)
+            {
+                result.Add(CollectionKey.ForFillerPreset(item.FallbackFiller));
+            }
+
+            return result;
         }
     }
 }

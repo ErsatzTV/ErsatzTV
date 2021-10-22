@@ -29,7 +29,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ThreadCount.Should().Be(7);
             }
@@ -46,7 +48,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ThreadCount.Should().Be(7);
             }
@@ -63,7 +67,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 string[] expected = { "+genpts", "+discardcorrupt", "+igndts" };
                 actual.FormatFlags.Count.Should().Be(expected.Length);
@@ -82,7 +88,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 string[] expected = { "+genpts", "+discardcorrupt", "+igndts" };
                 actual.FormatFlags.Count.Should().Be(expected.Length);
@@ -101,7 +109,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.RealtimeOutput.Should().BeTrue();
             }
@@ -118,7 +128,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.RealtimeOutput.Should().BeTrue();
             }
@@ -137,7 +149,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     now,
-                    now.AddMinutes(5));
+                    now.AddMinutes(5),
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.StreamSeek.IsSome.Should().BeTrue();
                 actual.StreamSeek.IfNone(TimeSpan.Zero).Should().Be(TimeSpan.FromMinutes(5));
@@ -157,7 +171,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     now,
-                    now.AddMinutes(5));
+                    now.AddMinutes(5),
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.StreamSeek.IsSome.Should().BeTrue();
                 actual.StreamSeek.IfNone(TimeSpan.Zero).Should().Be(TimeSpan.FromMinutes(5));
@@ -175,7 +191,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
             }
@@ -199,7 +217,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
             }
@@ -223,7 +243,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
             }
@@ -247,7 +269,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -273,7 +297,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeTrue();
@@ -298,7 +324,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 IDisplaySize scaledSize = actual.ScaledSize.IfNone(new MediaVersion { Width = 0, Height = 0 });
                 scaledSize.Width.Should().Be(1280);
@@ -326,7 +354,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -352,7 +382,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -379,7 +411,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeTrue();
@@ -409,7 +443,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream { Codec = "mpeg2video" },
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -439,7 +475,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream { Codec = "mpeg2video" },
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -468,7 +506,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream { Codec = "libx264" },
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -498,7 +538,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream { Codec = "mpeg2video" },
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -530,7 +572,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream { Codec = "mpeg2video" },
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -560,7 +604,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeTrue();
@@ -589,7 +635,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream { Codec = "mpeg2video" },
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -617,7 +665,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeTrue();
@@ -647,7 +697,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream { Codec = "mpeg2video" },
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.ScaledSize.IsNone.Should().BeTrue();
                 actual.PadToDesiredResolution.Should().BeFalse();
@@ -673,7 +725,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "aac" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioCodec.Should().Be("aac");
             }
@@ -696,7 +750,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioCodec.Should().Be("copy");
             }
@@ -720,7 +776,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioCodec.Should().Be("aac");
             }
@@ -744,7 +802,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioCodec.Should().Be("copy");
             }
@@ -769,7 +829,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioBitrate.IfNone(0).Should().Be(2424);
             }
@@ -794,7 +856,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioBufferSize.IfNone(0).Should().Be(2424);
             }
@@ -819,7 +883,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioChannels.IfNone(0).Should().Be(6);
             }
@@ -844,7 +910,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioSampleRate.IfNone(0).Should().Be(48);
             }
@@ -868,7 +936,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioChannels.IfNone(0).Should().Be(6);
             }
@@ -892,7 +962,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.AudioSampleRate.IfNone(0).Should().Be(48);
             }
@@ -908,7 +980,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     AudioCodec = "ac3"
                 };
 
-                var version = new MediaVersion { Duration = TimeSpan.FromMinutes(2) };
+                var version = new MediaVersion { Duration = TimeSpan.FromMinutes(5) }; // not pulled from here
 
                 FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                     StreamingMode.TransportStream,
@@ -917,7 +989,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.FromMinutes(2));
 
                 actual.AudioDuration.IfNone(TimeSpan.MinValue).Should().Be(TimeSpan.FromMinutes(2));
             }
@@ -941,7 +1015,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.NormalizeLoudness.Should().BeTrue();
             }
@@ -965,7 +1041,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream { Codec = "ac3" },
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.NormalizeLoudness.Should().BeFalse();
             }
@@ -991,7 +1069,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     new MediaStream(),
                     new MediaStream(),
                     DateTimeOffset.Now,
-                    DateTimeOffset.Now);
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
 
                 actual.HardwareAcceleration.Should().Be(HardwareAccelerationKind.Qsv);
             }

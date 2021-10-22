@@ -110,6 +110,7 @@ namespace ErsatzTV.Core.Metadata
             startInfo.ArgumentList.Add("json");
             startInfo.ArgumentList.Add("-show_format");
             startInfo.ArgumentList.Add("-show_streams");
+            startInfo.ArgumentList.Add("-show_chapters");
             startInfo.ArgumentList.Add("-i");
             startInfo.ArgumentList.Add(filePath);
 
@@ -138,9 +139,18 @@ namespace ErsatzTV.Core.Metadata
                     json =>
                     {
                         var version = new MediaVersion
-                            { Name = "Main", DateAdded = DateTime.UtcNow, Streams = new List<MediaStream>() };
+                        {
+                            Name = "Main",
+                            DateAdded = DateTime.UtcNow,
+                            Streams = new List<MediaStream>(),
+                            Chapters = new List<MediaChapter>()
+                        };
 
-                        if (double.TryParse(json.format.duration, NumberStyles.Number, CultureInfo.InvariantCulture, out double duration))
+                        if (double.TryParse(
+                            json.format.duration,
+                            NumberStyles.Number,
+                            CultureInfo.InvariantCulture,
+                            out double duration))
                         {
                             var seconds = TimeSpan.FromSeconds(duration);
                             version.Duration = seconds;
@@ -240,10 +250,56 @@ namespace ErsatzTV.Core.Metadata
                             version.Streams.Add(stream);
                         }
 
+                        foreach (FFprobeChapter probedChapter in json.chapters)
+                        {
+                            if (double.TryParse(
+                                    probedChapter.start_time,
+                                    NumberStyles.Number,
+                                    CultureInfo.InvariantCulture,
+                                    out double startTime)
+                                && double.TryParse(
+                                    probedChapter.end_time,
+                                    NumberStyles.Number,
+                                    CultureInfo.InvariantCulture,
+                                    out double endTime))
+                            {
+                                var chapter = new MediaChapter
+                                {
+                                    MediaVersionId = version.Id,
+                                    ChapterId = probedChapter.id,
+                                    StartTime = TimeSpan.FromSeconds(startTime),
+                                    EndTime = TimeSpan.FromSeconds(endTime),
+                                    Title = probedChapter?.tags?.title
+                                };
+
+                                version.Chapters.Add(chapter);
+                            }
+                            else
+                            {
+                                _logger.LogWarning(
+                                    "Media item at {Path} has a missing or invalid chapter start/end time",
+                                    path);
+                            }
+                        }
+
+                        if (version.Chapters.Any())
+                        {
+                            MediaChapter last = version.Chapters.Last();
+                            if (last.EndTime != version.Duration)
+                            {
+                                last.EndTime = version.Duration;
+                            }
+                        }
+
                         return version;
                     },
                     _ => new MediaVersion
-                        { Name = "Main", DateAdded = DateTime.UtcNow, Streams = new List<MediaStream>() });
+                    {
+                        Name = "Main",
+                        DateAdded = DateTime.UtcNow,
+                        Streams = new List<MediaStream>(),
+                        Chapters = new List<MediaChapter>()
+                    });
 
         private VideoScanKind ScanKindFromFieldOrder(string fieldOrder) =>
             fieldOrder?.ToLowerInvariant() switch
@@ -254,13 +310,13 @@ namespace ErsatzTV.Core.Metadata
             };
 
         // ReSharper disable InconsistentNaming
-        public record FFprobe(FFprobeFormat format, List<FFprobeStream> streams);
+        public record FFprobe(FFprobeFormat format, List<FFprobeStream> streams, List<FFprobeChapter> chapters);
 
         public record FFprobeFormat(string duration);
 
         public record FFprobeDisposition(int @default, int forced);
 
-        public record FFProbeTags(string language, string title);
+        public record FFprobeTags(string language, string title);
 
         public record FFprobeStream(
             int index,
@@ -277,7 +333,13 @@ namespace ErsatzTV.Core.Metadata
             string r_frame_rate,
             string bits_per_raw_sample,
             FFprobeDisposition disposition,
-            FFProbeTags tags);
+            FFprobeTags tags);
+
+        public record FFprobeChapter(
+            long id,
+            string start_time,
+            string end_time,
+            FFprobeTags tags);
         // ReSharper restore InconsistentNaming
     }
 }

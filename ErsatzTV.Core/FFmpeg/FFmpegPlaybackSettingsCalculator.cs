@@ -49,7 +49,9 @@ namespace ErsatzTV.Core.FFmpeg
             MediaStream videoStream,
             Option<MediaStream> audioStream,
             DateTimeOffset start,
-            DateTimeOffset now)
+            DateTimeOffset now,
+            TimeSpan inPoint,
+            TimeSpan outPoint)
         {
             var result = new FFmpegPlaybackSettings
             {
@@ -57,9 +59,9 @@ namespace ErsatzTV.Core.FFmpeg
                 FormatFlags = CommonFormatFlags
             };
 
-            if (now != start)
+            if (now != start || inPoint != TimeSpan.Zero)
             {
-                result.StreamSeek = now - start;
+                result.StreamSeek = now - start + inPoint;
             }
 
             switch (streamingMode)
@@ -140,7 +142,7 @@ namespace ErsatzTV.Core.FFmpeg
                             });
 
                         result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
-                        result.AudioDuration = version.Duration;
+                        result.AudioDuration = outPoint - inPoint;
                         result.NormalizeLoudness = ffmpegProfile.NormalizeLoudness;
                     }
                     else

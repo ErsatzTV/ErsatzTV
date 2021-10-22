@@ -37,5 +37,8 @@ namespace ErsatzTV.Core.Scheduling
             _index = _random.Next() % _mediaItems.Count;
             State.Index++;
         }
+
+        public Option<MediaItem> Peek(int offset) =>
+            throw new NotSupportedException();
     }
 }
