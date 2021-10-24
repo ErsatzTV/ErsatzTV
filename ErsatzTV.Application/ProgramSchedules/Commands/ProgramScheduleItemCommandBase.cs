@@ -169,7 +169,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
-                    StartTime = FixDuration(item.StartTime.GetValueOrDefault()),
+                    StartTime = FixStartTime(item.StartTime),
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
@@ -188,7 +188,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
-                    StartTime = FixDuration(item.StartTime.GetValueOrDefault()),
+                    StartTime = FixStartTime(item.StartTime),
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
@@ -207,7 +207,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
-                    StartTime = FixDuration(item.StartTime.GetValueOrDefault()),
+                    StartTime = FixStartTime(item.StartTime),
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
@@ -227,7 +227,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
-                    StartTime = FixDuration(item.StartTime.GetValueOrDefault()),
+                    StartTime = FixStartTime(item.StartTime),
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
@@ -249,5 +249,10 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
 
         private static TimeSpan FixDuration(TimeSpan duration) =>
             duration >= TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
+
+        private static TimeSpan? FixStartTime(TimeSpan? startTime) =>
+            startTime.HasValue && startTime.Value >= TimeSpan.FromDays(1)
+                ? startTime.Value.Subtract(TimeSpan.FromDays(1))
+                : startTime;
     }
 }
