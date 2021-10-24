@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix saving dynamic start time on schedule items
 
 ## [0.2.0-alpha] - 2021-10-23
 ### Fixed
