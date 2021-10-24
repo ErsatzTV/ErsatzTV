@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix generated streams with mpeg2video
 - Fix incorrect row count in playout detail table
 - Fix deleting movies that have been removed from Jellyfin and Emby
+- Fix bug that caused large unscheduled gaps in playouts
+  - This was caused by schedule items with a fixed start of midnight
 
 ### Added
 - Add new filler system
