@@ -18,11 +18,7 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - [Jellyfin](https://jellyfin.org/) media and metadata
 - [Emby](https://emby.media/) media and metadata
 - Music video libraries
-
-## Planned Features
-
-- Run as a Windows service
-- Spots to fill unscheduled gaps
+- Pre-roll, mid-roll, post-roll filler options
 
 ## License
 
