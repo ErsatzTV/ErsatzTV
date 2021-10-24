@@ -95,7 +95,7 @@ namespace ErsatzTV.Services
                     {
                         _logger.LogInformation("Successfully synchronized plex media sources");
                     }
-            
+
                     return sources;
                 },
                 error =>
