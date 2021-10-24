@@ -44,25 +44,39 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 { CollectionKey.ForFillerPreset(fillerPreset2), enumerator3 }
             };
 
-        private static Movie TestMovie(int id, TimeSpan duration, DateTime aired) =>
-            new()
+        private static Movie TestMovie(int id, TimeSpan duration, DateTime aired, int chapterCount = 0)
+        {
+            var result = new Movie()
             {
                 Id = id,
                 MovieMetadata = new List<MovieMetadata> { new() { ReleaseDate = aired } },
                 MediaVersions = new List<MediaVersion>
                 {
-                    new() { Duration = duration }
+                    new() { Duration = duration, Chapters = new List<MediaChapter>() }
                 }
             };
 
-        protected static Collection TwoItemCollection(int id1, int id2, TimeSpan duration) => new()
+            for (var i = 0; i < chapterCount; i++)
+            {
+                result.MediaVersions.Head().Chapters.Add(
+                    new MediaChapter
+                    {
+                        StartTime = TimeSpan.FromMilliseconds(i * duration.TotalMilliseconds / chapterCount),
+                        EndTime = TimeSpan.FromMilliseconds(i + 1 * duration.TotalMilliseconds / chapterCount)
+                    });
+            }
+
+            return result;
+        }
+
+        protected static Collection TwoItemCollection(int id1, int id2, TimeSpan duration, int chapterCount = 0) => new()
         {
             Id = id1,
             Name = $"Collection of Items {id1}",
             MediaItems = new List<MediaItem>
             {
-                TestMovie(id1, duration, new DateTime(2020, 1, 1)),
-                TestMovie(id2, duration, new DateTime(2020, 1, 2))
+                TestMovie(id1, duration, new DateTime(2020, 1, 1), chapterCount),
+                TestMovie(id2, duration, new DateTime(2020, 1, 2), chapterCount)
             }
         };
 

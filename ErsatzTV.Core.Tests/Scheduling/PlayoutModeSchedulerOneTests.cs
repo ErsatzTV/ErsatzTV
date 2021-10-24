@@ -452,6 +452,181 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutItems[0].FillerKind.Should().Be(FillerKind.None);
         }
 
+        [Test]
+        public void Should_Have_No_Gap_With_Exact_Post_Roll_Pad()
+        {
+            Collection collectionOne = TwoItemCollection(1, 2, new TimeSpan(2, 45, 0));
+            Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(5));
+            Collection collectionThree = TwoItemCollection(5, 6, TimeSpan.FromMinutes(1));
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                PostRollFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.PostRoll,
+                    FillerMode = FillerMode.Pad,
+                    PadToNearestMinute = 30,
+                    Collection = collectionTwo,
+                    CollectionId = collectionTwo.Id
+                },
+                FallbackFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.Fallback,
+                    Collection = collectionThree,
+                    CollectionId = collectionThree.Id
+                }
+            };
+
+            var enumerator1 = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            var enumerator2 = new ChronologicalMediaCollectionEnumerator(
+                collectionTwo.MediaItems,
+                new CollectionEnumeratorState());
+
+            var enumerator3 = new ChronologicalMediaCollectionEnumerator(
+                collectionThree.MediaItems,
+                new CollectionEnumeratorState());
+
+            var scheduler = new PlayoutModeSchedulerOne(new Mock<ILogger>().Object);
+            (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+                StartState,
+                CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.PostRollFiller, enumerator2, scheduleItem.FallbackFiller, enumerator3),
+                scheduleItem,
+                NextScheduleItem,
+                HardStop);
+
+            playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
+            playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
+            playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+            playoutBuilderState.InFlood.Should().BeFalse();
+            playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+            playoutBuilderState.InDurationFiller.Should().BeFalse();
+            playoutBuilderState.ScheduleItemIndex.Should().Be(1);
+
+            enumerator1.State.Index.Should().Be(1);
+            enumerator2.State.Index.Should().Be(1);
+
+            playoutItems.Count.Should().Be(4);
+
+            playoutItems[0].MediaItemId.Should().Be(1);
+            playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
+            playoutItems[0].GuideGroup.Should().Be(1);
+            playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+
+            playoutItems[1].MediaItemId.Should().Be(3);
+            playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
+            playoutItems[1].GuideGroup.Should().Be(1);
+            playoutItems[1].FillerKind.Should().Be(FillerKind.PostRoll);
+
+            playoutItems[2].MediaItemId.Should().Be(4);
+            playoutItems[2].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
+            playoutItems[2].GuideGroup.Should().Be(1);
+            playoutItems[2].FillerKind.Should().Be(FillerKind.PostRoll);
+        
+            playoutItems[3].MediaItemId.Should().Be(3);
+            playoutItems[3].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
+            playoutItems[3].GuideGroup.Should().Be(1);
+            playoutItems[3].FillerKind.Should().Be(FillerKind.PostRoll);
+        }
+
+        [Test]
+        public void Should_Have_No_Gap_With_Exact_Post_Roll_Pad_With_Chapters()
+        {
+            Collection collectionOne = TwoItemCollection(1, 2, new TimeSpan(2, 45, 0), 2);
+            Collection collectionTwo = TwoItemCollection(3, 4, TimeSpan.FromMinutes(5));
+            Collection collectionThree = TwoItemCollection(5, 6, TimeSpan.FromMinutes(1));
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                PostRollFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.PostRoll,
+                    FillerMode = FillerMode.Pad,
+                    PadToNearestMinute = 30,
+                    Collection = collectionTwo,
+                    CollectionId = collectionTwo.Id
+                },
+                FallbackFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.Fallback,
+                    Collection = collectionThree,
+                    CollectionId = collectionThree.Id
+                }
+            };
+
+            var enumerator1 = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            var enumerator2 = new ChronologicalMediaCollectionEnumerator(
+                collectionTwo.MediaItems,
+                new CollectionEnumeratorState());
+
+            var enumerator3 = new ChronologicalMediaCollectionEnumerator(
+                collectionThree.MediaItems,
+                new CollectionEnumeratorState());
+
+            var scheduler = new PlayoutModeSchedulerOne(new Mock<ILogger>().Object);
+            (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+                StartState,
+                CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.PostRollFiller, enumerator2, scheduleItem.FallbackFiller, enumerator3),
+                scheduleItem,
+                NextScheduleItem,
+                HardStop);
+
+            playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
+            playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
+            playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+            playoutBuilderState.InFlood.Should().BeFalse();
+            playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+            playoutBuilderState.InDurationFiller.Should().BeFalse();
+            playoutBuilderState.ScheduleItemIndex.Should().Be(1);
+
+            enumerator1.State.Index.Should().Be(1);
+            enumerator2.State.Index.Should().Be(1);
+            enumerator3.State.Index.Should().Be(0);
+
+            playoutItems.Count.Should().Be(4);
+
+            playoutItems[0].MediaItemId.Should().Be(1);
+            playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
+            playoutItems[0].GuideGroup.Should().Be(1);
+            playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+
+            playoutItems[1].MediaItemId.Should().Be(3);
+            playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
+            playoutItems[1].GuideGroup.Should().Be(1);
+            playoutItems[1].FillerKind.Should().Be(FillerKind.PostRoll);
+
+            playoutItems[2].MediaItemId.Should().Be(4);
+            playoutItems[2].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 50, 0)));
+            playoutItems[2].GuideGroup.Should().Be(1);
+            playoutItems[2].FillerKind.Should().Be(FillerKind.PostRoll);
+        
+            playoutItems[3].MediaItemId.Should().Be(3);
+            playoutItems[3].StartOffset.Should().Be(StartState.CurrentTime.Add(new TimeSpan(2, 55, 0)));
+            playoutItems[3].GuideGroup.Should().Be(1);
+            playoutItems[3].FillerKind.Should().Be(FillerKind.PostRoll);
+        }
+
         protected override ProgramScheduleItem NextScheduleItem => new ProgramScheduleItemOne
         {
             StartTime = TimeSpan.FromHours(3)

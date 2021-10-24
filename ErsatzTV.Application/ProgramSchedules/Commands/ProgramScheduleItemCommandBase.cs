@@ -169,7 +169,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
-                    StartTime = item.StartTime,
+                    StartTime = FixDuration(item.StartTime.GetValueOrDefault()),
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
@@ -188,7 +188,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
-                    StartTime = item.StartTime,
+                    StartTime = FixDuration(item.StartTime.GetValueOrDefault()),
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
@@ -207,7 +207,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
-                    StartTime = item.StartTime,
+                    StartTime = FixDuration(item.StartTime.GetValueOrDefault()),
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
@@ -227,7 +227,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 {
                     ProgramScheduleId = programSchedule.Id,
                     Index = index,
-                    StartTime = item.StartTime,
+                    StartTime = FixDuration(item.StartTime.GetValueOrDefault()),
                     CollectionType = item.CollectionType,
                     CollectionId = item.CollectionId,
                     MultiCollectionId = item.MultiCollectionId,
@@ -248,6 +248,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             };
 
         private static TimeSpan FixDuration(TimeSpan duration) =>
-            duration > TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
+            duration >= TimeSpan.FromDays(1) ? duration.Subtract(TimeSpan.FromDays(1)) : duration;
     }
 }

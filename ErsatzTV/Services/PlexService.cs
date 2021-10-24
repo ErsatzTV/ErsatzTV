@@ -87,24 +87,25 @@ namespace ErsatzTV.Services
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            Either<BaseError, List<PlexMediaSource>> result = await mediator.Send(request, cancellationToken);
-            return result.Match(
-                sources =>
-                {
-                    if (sources.Any())
-                    {
-                        _logger.LogInformation("Successfully synchronized plex media sources");
-                    }
-
-                    return sources;
-                },
-                error =>
-                {
-                    _logger.LogWarning(
-                        "Unable to synchronize plex media sources: {Error}",
-                        error.Value);
-                    return new List<PlexMediaSource>();
-                });
+            // Either<BaseError, List<PlexMediaSource>> result = await mediator.Send(request, cancellationToken);
+            // return result.Match(
+            //     sources =>
+            //     {
+            //         if (sources.Any())
+            //         {
+            //             _logger.LogInformation("Successfully synchronized plex media sources");
+            //         }
+            //
+            //         return sources;
+            //     },
+            //     error =>
+            //     {
+            //         _logger.LogWarning(
+            //             "Unable to synchronize plex media sources: {Error}",
+            //             error.Value);
+            //         return new List<PlexMediaSource>();
+            //     });
+            return new List<PlexMediaSource>();
         }
 
         private async Task CompletePinFlow(
