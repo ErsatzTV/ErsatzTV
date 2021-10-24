@@ -352,6 +352,12 @@ namespace ErsatzTV.Core.Scheduling
                 return new List<PlayoutItem> { playoutItem };
             }
 
+            List<MediaChapter> effectiveChapters = chapters;
+            if (allFiller.All(fp => fp.FillerKind != FillerKind.MidRoll))
+            {
+                effectiveChapters = new List<MediaChapter>();
+            }
+
             foreach (FillerPreset filler in allFiller.Filter(
                 f => f.FillerKind == FillerKind.PreRoll && f.FillerMode != FillerMode.Pad))
             {
@@ -370,7 +376,7 @@ namespace ErsatzTV.Core.Scheduling
                 }
             }
 
-            if (allFiller.All(f => f.FillerKind != FillerKind.MidRoll) || !chapters.Any())
+            if (!effectiveChapters.Any())
             {
                 result.Add(playoutItem);
             }
@@ -383,10 +389,10 @@ namespace ErsatzTV.Core.Scheduling
                     {
                         case FillerMode.Duration when filler.Duration.HasValue:
                             IMediaCollectionEnumerator e1 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                            for (var i = 0; i < chapters.Count; i++)
+                            for (var i = 0; i < effectiveChapters.Count; i++)
                             {
-                                result.Add(playoutItem.ForChapter(chapters[i]));
-                                if (i < chapters.Count - 1)
+                                result.Add(playoutItem.ForChapter(effectiveChapters[i]));
+                                if (i < effectiveChapters.Count - 1)
                                 {
                                     result.AddRange(
                                         AddDurationFiller(
@@ -400,9 +406,9 @@ namespace ErsatzTV.Core.Scheduling
                             break;
                         case FillerMode.Count when filler.Count.HasValue:
                             IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                            for (var i = 0; i < chapters.Count - 1; i++)
+                            for (var i = 0; i < effectiveChapters.Count - 1; i++)
                             {
-                                result.Add(playoutItem.ForChapter(chapters[i]));
+                                result.Add(playoutItem.ForChapter(effectiveChapters[i]));
                                 result.AddRange(
                                     AddCountFiller(
                                         playoutBuilderState,
@@ -440,7 +446,7 @@ namespace ErsatzTV.Core.Scheduling
                 var totalDuration =
                     TimeSpan.FromMilliseconds(
                         result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds) +
-                        chapters.Sum(c => (c.EndTime - c.StartTime).TotalMilliseconds));
+                        effectiveChapters.Sum(c => (c.EndTime - c.StartTime).TotalMilliseconds));
                 
                 int currentMinute = (playoutItem.StartOffset + totalDuration).Minute;
                 // ReSharper disable once PossibleInvalidOperationException
@@ -503,14 +509,14 @@ namespace ErsatzTV.Core.Scheduling
                                 mid1,
                                 remainingToFill,
                                 FillerKind.MidRoll));
-                        TimeSpan average = chapters.Count == 0
+                        TimeSpan average = effectiveChapters.Count == 0
                             ? remainingToFill
-                            : remainingToFill / (chapters.Count - 1);
+                            : remainingToFill / (effectiveChapters.Count - 1);
                         TimeSpan filled = TimeSpan.Zero;
                         for (var i = 0; i < chapters.Count; i++)
                         {
-                            result.Add(playoutItem.ForChapter(chapters[i]));
-                            if (i < chapters.Count - 1)
+                            result.Add(playoutItem.ForChapter(effectiveChapters[i]));
+                            if (i < effectiveChapters.Count - 1)
                             {
                                 TimeSpan current = TimeSpan.Zero;
                                 while (current < average && filled < remainingToFill)
@@ -534,7 +540,7 @@ namespace ErsatzTV.Core.Scheduling
                                             playoutBuilderState,
                                             enumerators,
                                             scheduleItem,
-                                            i < chapters.Count - 1 ? maxThisBreak : leftOverall);
+                                            i < effectiveChapters.Count - 1 ? maxThisBreak : leftOverall);
 
                                         foreach (PlayoutItem fallback in maybeFallback)
                                         {
