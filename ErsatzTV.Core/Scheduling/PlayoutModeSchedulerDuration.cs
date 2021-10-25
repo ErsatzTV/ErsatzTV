@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
@@ -97,7 +98,8 @@ namespace ErsatzTV.Core.Scheduling
 
                     nextState = nextState with
                     {
-                        CurrentTime = itemEndTimeWithFiller
+                        CurrentTime = itemEndTimeWithFiller,
+                        NextGuideGroup = nextState.IncrementGuideGroup
                     };
 
                     contentEnumerator.MoveNext();
@@ -130,6 +132,8 @@ namespace ErsatzTV.Core.Scheduling
                     ScheduleItemIndex = nextState.ScheduleItemIndex + 1
                 };
             }
+
+            nextState = nextState with { NextGuideGroup = nextState.DecrementGuideGroup };
 
             foreach (DateTimeOffset nextItemStart in durationUntil)
             {
@@ -172,6 +176,14 @@ namespace ErsatzTV.Core.Scheduling
                         nextState = nextState with { CurrentTime = nextItemStart };
                         break;
                 }
+            }
+
+            // clear guide finish on all but the last item
+            var all = playoutItems.Filter(pi => pi.FillerKind == FillerKind.None).ToList();
+            PlayoutItem last = all.OrderBy(pi => pi.FinishOffset).LastOrDefault();
+            foreach (PlayoutItem item in all.Filter(pi => pi != last))
+            {
+                item.GuideFinish = null;
             }
 
             nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
