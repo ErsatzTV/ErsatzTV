@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.2.1-alpha] - 2021-10-24
 ### Fixed
 - Fix saving dynamic start time on schedule items
 
@@ -758,7 +760,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.0-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.1-alpha...HEAD
+[0.2.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.0-alpha...v0.2.1-alpha
 [0.2.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.5-alpha...v0.2.0-alpha
 [0.1.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.4-alpha...v0.1.5-alpha
 [0.1.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.1.3-alpha...v0.1.4-alpha
