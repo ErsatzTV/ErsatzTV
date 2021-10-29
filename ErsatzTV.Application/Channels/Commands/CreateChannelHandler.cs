@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
@@ -42,9 +43,10 @@ namespace ErsatzTV.Application.Channels.Commands
             (ValidateName(request), await ValidateNumber(dbContext, request),
                 await FFmpegProfileMustExist(dbContext, request),
                 ValidatePreferredLanguage(request),
-                await WatermarkMustExist(dbContext, request))
+                await WatermarkMustExist(dbContext, request),
+                await FillerPresetMustExist(dbContext, request))
             .Apply(
-                (name, number, ffmpegProfileId, preferredLanguageCode, watermarkId) =>
+                (name, number, ffmpegProfileId, preferredLanguageCode, watermarkId, fillerPresetId) =>
                 {
                     var artwork = new List<Artwork>();
                     if (!string.IsNullOrWhiteSpace(request.Logo))
@@ -72,6 +74,11 @@ namespace ErsatzTV.Application.Channels.Commands
                     foreach (int id in watermarkId)
                     {
                         channel.WatermarkId = id;
+                    }
+
+                    foreach (int id in fillerPresetId)
+                    {
+                        channel.FallbackFillerId = id;
                     }
 
                     return channel;
@@ -130,6 +137,26 @@ namespace ErsatzTV.Application.Channels.Commands
                 .Filter(c => c > 0)
                 .MapT(_ => Optional(createChannel.WatermarkId))
                 .Map(o => o.ToValidation<BaseError>($"Watermark {createChannel.WatermarkId} does not exist."));
+        }
+
+        private static async Task<Validation<BaseError, Option<int>>> FillerPresetMustExist(
+            TvContext dbContext,
+            CreateChannel createChannel)
+        {
+            if (createChannel.FallbackFillerId is null)
+            {
+                return Option<int>.None;
+            }
+
+            return await dbContext.FillerPresets
+                .Filter(fp => fp.FillerKind == FillerKind.Fallback)
+                .CountAsync(w => w.Id == createChannel.FallbackFillerId)
+                .Map(Optional)
+                .Filter(c => c > 0)
+                .MapT(_ => Optional(createChannel.FallbackFillerId))
+                .Map(
+                    o => o.ToValidation<BaseError>(
+                        $"Fallback filler {createChannel.FallbackFillerId} does not exist."));
         }
     }
 }

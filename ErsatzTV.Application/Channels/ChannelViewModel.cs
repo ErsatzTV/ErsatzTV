@@ -10,5 +10,6 @@ namespace ErsatzTV.Application.Channels
         string Logo,
         string PreferredLanguageCode,
         StreamingMode StreamingMode,
-        int? WatermarkId);
+        int? WatermarkId,
+        int? FallbackFillerId);
 }

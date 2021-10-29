@@ -28,6 +28,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
             Option<int> watermark =
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId);
+            Option<int> fallbackFiller =
+                await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalFallbackFillerId);
             Option<int> hlsSegmenterIdleTimeout =
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout);
             Option<int> workAheadSegmenterLimit =
@@ -47,6 +49,11 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
             foreach (int watermarkId in watermark)
             {
                 result.GlobalWatermarkId = watermarkId;
+            }
+
+            foreach (int fallbackFillerId in fallbackFiller)
+            {
+                result.GlobalFallbackFillerId = fallbackFillerId;
             }
 
             return result;

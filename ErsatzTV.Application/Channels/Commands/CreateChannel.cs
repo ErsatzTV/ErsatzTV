@@ -13,5 +13,6 @@ namespace ErsatzTV.Application.Channels.Commands
         string Logo,
         string PreferredLanguageCode,
         StreamingMode StreamingMode,
-        int? WatermarkId) : IRequest<Either<BaseError, CreateChannelResult>>;
+        int? WatermarkId,
+        int? FallbackFillerId) : IRequest<Either<BaseError, CreateChannelResult>>;
 }

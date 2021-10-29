@@ -64,6 +64,77 @@ namespace ErsatzTV.Core.Tests.Scheduling
         }
 
         [Test]
+        public void Should_Have_Gap_With_Empty_Tail_Empty_Fallback()
+        {
+            Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromHours(1));
+            var collectionTwo = new Collection { Id = 2, Name = "Collection 2", MediaItems = new List<MediaItem>() };
+            var collectionThree = new Collection { Id = 3, Name = "Collection 3", MediaItems = new List<MediaItem>() };
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                TailFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.Tail,
+                    CollectionId = collectionTwo.Id,
+                    Collection = collectionTwo
+                },
+                FallbackFiller = new FillerPreset
+                {
+                    FillerKind = FillerKind.Fallback,
+                    CollectionId = collectionThree.Id,
+                    Collection = collectionThree
+                }
+            };
+
+            var enumerator1 = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            var enumerator2 = new ChronologicalMediaCollectionEnumerator(
+                collectionTwo.MediaItems,
+                new CollectionEnumeratorState());
+
+            var enumerator3 = new ChronologicalMediaCollectionEnumerator(
+                collectionThree.MediaItems,
+                new CollectionEnumeratorState());
+            
+            var scheduler = new PlayoutModeSchedulerOne(new Mock<ILogger>().Object);
+            (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+                StartState,
+                CollectionEnumerators(scheduleItem, enumerator1, scheduleItem.TailFiller, enumerator2, scheduleItem.FallbackFiller, enumerator3),
+                scheduleItem,
+                NextScheduleItem,
+                HardStop);
+
+            playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(1));
+            playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
+            playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+            playoutBuilderState.InFlood.Should().BeFalse();
+            playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+            playoutBuilderState.InDurationFiller.Should().BeFalse();
+            playoutBuilderState.ScheduleItemIndex.Should().Be(1);
+
+            enumerator1.State.Index.Should().Be(1);
+            enumerator2.State.Index.Should().Be(0);
+            enumerator3.State.Index.Should().Be(0);
+
+            playoutItems.Count.Should().Be(1);
+
+            playoutItems[0].MediaItemId.Should().Be(1);
+            playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
+            playoutItems[0].GuideGroup.Should().Be(1);
+            playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+        }
+
+        [Test]
         public void Should_Not_Have_Gap_With_Exact_Tail()
         {
             Collection collectionOne = TwoItemCollection(1, 2, new TimeSpan(2, 45, 0));
