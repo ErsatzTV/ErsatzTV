@@ -1,17 +1,21 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
+using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
@@ -24,6 +28,9 @@ namespace ErsatzTV.Application.Streaming.Queries
         FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
     {
         private readonly IEmbyPathReplacementService _embyPathReplacementService;
+        private readonly IMediaCollectionRepository _mediaCollectionRepository;
+        private readonly ITelevisionRepository _televisionRepository;
+        private readonly IArtistRepository _artistRepository;
         private readonly FFmpegProcessService _ffmpegProcessService;
         private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
         private readonly ILocalFileSystem _localFileSystem;
@@ -37,6 +44,9 @@ namespace ErsatzTV.Application.Streaming.Queries
             IPlexPathReplacementService plexPathReplacementService,
             IJellyfinPathReplacementService jellyfinPathReplacementService,
             IEmbyPathReplacementService embyPathReplacementService,
+            IMediaCollectionRepository mediaCollectionRepository,
+            ITelevisionRepository televisionRepository,
+            IArtistRepository artistRepository,
             IRuntimeInfo runtimeInfo)
             : base(dbContextFactory)
         {
@@ -45,6 +55,9 @@ namespace ErsatzTV.Application.Streaming.Queries
             _plexPathReplacementService = plexPathReplacementService;
             _jellyfinPathReplacementService = jellyfinPathReplacementService;
             _embyPathReplacementService = embyPathReplacementService;
+            _mediaCollectionRepository = mediaCollectionRepository;
+            _televisionRepository = televisionRepository;
+            _artistRepository = artistRepository;
             _runtimeInfo = runtimeInfo;
         }
 
@@ -84,6 +97,11 @@ namespace ErsatzTV.Application.Streaming.Queries
                 .ForChannelAndTime(channel.Id, now)
                 .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
                 .BindT(ValidatePlayoutItemPath);
+
+            if (maybePlayoutItem.LeftAsEnumerable().Any(e => e is UnableToLocatePlayoutItem))
+            {
+                maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, now);
+            }
 
             return await maybePlayoutItem.Match(
                 async playoutItemWithPath =>
@@ -158,8 +176,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                                     maybeDuration,
                                     "Channel is Offline",
                                     request.HlsRealtime);
-
-
+                                
                                 return new PlayoutItemProcessModel(errorProcess, finish);
                             }
                             else
@@ -209,6 +226,95 @@ namespace ErsatzTV.Application.Streaming.Queries
                             }
                     }
                 });
+        }
+
+        private async Task<Either<BaseError, PlayoutItemWithPath>> CheckForFallbackFiller(
+            TvContext dbContext,
+            Channel channel,
+            DateTimeOffset now)
+        {
+            // check for channel fallback
+            Option<FillerPreset> maybeFallback = await dbContext.FillerPresets
+                .SelectOneAsync(w => w.Id, w => w.Id == channel.FallbackFillerId);
+
+            // then check for global fallback
+            if (maybeFallback.IsNone)
+            {
+                maybeFallback = await dbContext.ConfigElements
+                    .GetValue<int>(ConfigElementKey.FFmpegGlobalFallbackFillerId)
+                    .BindT(fillerId => dbContext.FillerPresets.SelectOneAsync(w => w.Id, w => w.Id == fillerId));
+            }
+
+            foreach (FillerPreset fallbackPreset in maybeFallback)
+            {
+                // turn this into a playout item
+
+                var collectionKey = CollectionKey.ForFillerPreset(fallbackPreset);
+                List<MediaItem> items = await MediaItemsForCollection.Collect(
+                    _mediaCollectionRepository,
+                    _televisionRepository,
+                    _artistRepository,
+                    collectionKey);
+
+                // TODO: shuffle? does it really matter since we loop anyway
+                MediaItem item = items[new Random().Next(items.Count)];
+                
+                Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
+                    .Filter(transcode => transcode)
+                    .Match(
+                        _ => dbContext.PlayoutItems
+                            .Filter(pi => pi.Playout.ChannelId == channel.Id)
+                            .Filter(pi => pi.Start > now.UtcDateTime)
+                            .OrderBy(pi => pi.Start)
+                            .FirstOrDefaultAsync()
+                            .Map(Optional)
+                            .MapT(pi => pi.StartOffset - now),
+                        () => Option<TimeSpan>.None.AsTask());
+
+                MediaVersion version = item switch
+                {
+                    Movie m => m.MediaVersions.Head(),
+                    Episode e => e.MediaVersions.Head(),
+                    MusicVideo mv => mv.MediaVersions.Head(),
+                    OtherVideo ov => ov.MediaVersions.Head(),
+                    _ => throw new ArgumentOutOfRangeException(nameof(item))
+                };
+
+                version.MediaFiles = await dbContext.MediaFiles
+                    .AsNoTracking()
+                    .Filter(mf => mf.MediaVersionId == version.Id)
+                    .ToListAsync();
+
+                version.Streams = await dbContext.MediaStreams
+                    .AsNoTracking()
+                    .Filter(ms => ms.MediaVersionId == version.Id)
+                    .ToListAsync();
+
+                DateTimeOffset finish = maybeDuration.Match(
+                    // next playout item exists
+                    // loop until it starts
+                    now.Add,
+                    // no next playout item exists
+                    // loop for 5 minutes if less than 30s, otherwise play full item
+                    () => version.Duration < TimeSpan.FromSeconds(30)
+                        ? now.AddMinutes(5)
+                        : now.Add(version.Duration));
+
+                var playoutItem = new PlayoutItem
+                {
+                    MediaItem = item,
+                    MediaItemId = item.Id,
+                    Start = now.UtcDateTime,
+                    Finish = finish.UtcDateTime,
+                    FillerKind = FillerKind.Fallback,
+                    InPoint = TimeSpan.Zero,
+                    OutPoint = version.Duration
+                };
+                
+                return await ValidatePlayoutItemPath(playoutItem);
+            }
+
+            return new UnableToLocatePlayoutItem();
         }
 
         private async Task<Either<BaseError, PlayoutItemWithPath>> ValidatePlayoutItemPath(PlayoutItem playoutItem)

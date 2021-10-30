@@ -67,6 +67,7 @@ namespace ErsatzTV.Application.Channels.Commands
             
             c.StreamingMode = update.StreamingMode;
             c.WatermarkId = update.WatermarkId;
+            c.FallbackFillerId = update.FallbackFillerId;
             await dbContext.SaveChangesAsync();
             return ProjectToViewModel(c);
         }

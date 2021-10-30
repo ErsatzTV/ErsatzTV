@@ -8,8 +8,11 @@
 @using System.Globalization
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Channels.Queries
+@using ErsatzTV.Application.Filler
+@using ErsatzTV.Application.Filler.Queries
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Application.Watermarks.Queries
+@using ErsatzTV.Core.Domain.Filler
 @inject NavigationManager _navigationManager
 @inject ILogger<ChannelEditor> _logger
 @inject ISnackbar _snackbar
@@ -41,7 +44,11 @@
                             <MudSelectItem Value="@profile.Id">@profile.Name</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSelect Class="mt-3" Label="Preferred Language" @bind-Value="_model.PreferredLanguageCode" For="@(() => _model.PreferredLanguageCode)">
+                    <MudSelect Class="mt-3"
+                               Label="Preferred Language"
+                               @bind-Value="_model.PreferredLanguageCode"
+                               For="@(() => _model.PreferredLanguageCode)"
+                               Clearable="true">
                         <MudSelectItem Value="@((string) null)">(none)</MudSelectItem>
                         @foreach (CultureInfo culture in _availableCultures)
                         {
@@ -67,11 +74,23 @@
                         </MudItem>
                     </MudGrid>
                     <MudSelect Class="mt-3" Label="Watermark" @bind-Value="_model.WatermarkId" For="@(() => _model.WatermarkId)"
-                               Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)">
+                               Disabled="@(_model.StreamingMode == StreamingMode.HttpLiveStreamingDirect)"
+                               Clearable="true">
                         <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
                         @foreach (WatermarkViewModel watermark in _watermarks)
                         {
                             <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="mt-3"
+                               Label="Fallback Filler"
+                               @bind-Value="_model.FallbackFillerId"
+                               For="@(() => _model.FallbackFillerId)"
+                               Clearable="true">
+                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
+                        {
+                            <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
                         }
                     </MudSelect>
                 </MudCardContent>
@@ -97,12 +116,14 @@
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
     private List<CultureInfo> _availableCultures;
     private List<WatermarkViewModel> _watermarks;
+    private List<FillerPresetViewModel> _fillerPresets;
 
     protected override async Task OnParametersSetAsync()
     {
         await LoadFFmpegProfiles();
         _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
         await LoadWatermarks();
+        await LoadFillerPresets();
 
         if (Id.HasValue)
         {
@@ -118,6 +139,7 @@
                     _model.StreamingMode = channelViewModel.StreamingMode;
                     _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
                     _model.WatermarkId = channelViewModel.WatermarkId;
+                    _model.FallbackFillerId = channelViewModel.FallbackFillerId;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }
@@ -149,6 +171,10 @@
 
     private async Task LoadWatermarks() =>
         _watermarks = await _mediator.Send(new GetAllWatermarks());
+
+    private async Task LoadFillerPresets() =>
+        _fillerPresets = await _mediator.Send(new GetAllFillerPresets())
+            .Map(list => list.Filter(vm => vm.FillerKind == FillerKind.Fallback).ToList());
 
     private async Task HandleSubmitAsync()
     {

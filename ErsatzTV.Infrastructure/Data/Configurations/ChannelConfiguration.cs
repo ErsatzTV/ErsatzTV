@@ -21,6 +21,18 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
             builder.HasMany(c => c.Artwork)
                 .WithOne()
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(i => i.Watermark)
+                .WithMany()
+                .HasForeignKey(i => i.WatermarkId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            builder.HasOne(i => i.FallbackFiller)
+                .WithMany()
+                .HasForeignKey(i => i.FallbackFillerId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain
 {
@@ -16,6 +17,8 @@ namespace ErsatzTV.Core.Domain
         public FFmpegProfile FFmpegProfile { get; set; }
         public int? WatermarkId { get; set; }
         public ChannelWatermark Watermark { get; set; }
+        public int? FallbackFillerId { get; set; }
+        public FillerPreset FallbackFiller { get; set; }
         public StreamingMode StreamingMode { get; set; }
         public List<Playout> Playouts { get; set; }
         public List<Artwork> Artwork { get; set; }

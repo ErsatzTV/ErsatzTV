@@ -13,6 +13,7 @@ namespace ErsatzTV.ViewModels
         public string Logo { get; set; }
         public StreamingMode StreamingMode { get; set; }
         public int? WatermarkId { get; set; }
+        public int? FallbackFillerId { get; set; }
 
         public UpdateChannel ToUpdate() =>
             new(
@@ -23,7 +24,8 @@ namespace ErsatzTV.ViewModels
                 Logo,
                 PreferredLanguageCode,
                 StreamingMode,
-                WatermarkId);
+                WatermarkId,
+                FallbackFillerId);
 
         public CreateChannel ToCreate() =>
             new(
@@ -33,6 +35,7 @@ namespace ErsatzTV.ViewModels
                 Logo,
                 PreferredLanguageCode,
                 StreamingMode,
-                WatermarkId);
+                WatermarkId,
+                FallbackFillerId);
     }
 }

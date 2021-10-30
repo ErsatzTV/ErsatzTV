@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
-- Fix EPG entries for Duration schedule items that play multiple items 
+### Fixed
+- Fix EPG entries for Duration schedule items that play multiple items
+
+### Added
+- Add fallback filler settings to Channel and global FFmpeg Settings
+  - When streaming is attempted during an unscheduled gap, the resulting video will be determined using the following priority:
+    - Channel fallback filler
+    - Global fallback filler
+    - Generated `Channel Is Offline` error message video
 
 ## [0.2.1-alpha] - 2021-10-24
 ### Fixed

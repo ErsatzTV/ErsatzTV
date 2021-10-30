@@ -9,8 +9,11 @@
 @using ErsatzTV.Application.Configuration.Queries
 @using Unit = LanguageExt.Unit
 @using ErsatzTV.Application.Configuration.Commands
+@using ErsatzTV.Application.Filler
+@using ErsatzTV.Application.Filler.Queries
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Application.Watermarks.Queries
+@using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Core.FFmpeg
 @using Microsoft.AspNetCore.Components
 @inject IMediator _mediator
@@ -51,11 +54,26 @@
                                    Color="Color.Primary"
                                    @bind-Checked="@_ffmpegSettings.SaveReports"/>
                     </MudElement>
-                    <MudSelect Class="mt-3" Label="Global Watermark" @bind-Value="_ffmpegSettings.GlobalWatermarkId" For="@(() => _ffmpegSettings.GlobalWatermarkId)">
+                    <MudSelect Class="mt-3"
+                               Label="Global Watermark"
+                               @bind-Value="_ffmpegSettings.GlobalWatermarkId"
+                               For="@(() => _ffmpegSettings.GlobalWatermarkId)"
+                               Clearable="true">
                         <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
                         @foreach (WatermarkViewModel watermark in _watermarks)
                         {
                             <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="mt-3"
+                               Label="Global Fallback Filler"
+                               @bind-Value="_ffmpegSettings.GlobalFallbackFillerId"
+                               For="@(() => _ffmpegSettings.GlobalFallbackFillerId)"
+                               Clearable="true">
+                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
+                        {
+                            <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
                         }
                     </MudSelect>
                     <MudElement HtmlTag="div" Class="mt-3">
@@ -153,6 +171,7 @@
     private FFmpegSettingsViewModel _ffmpegSettings;
     private List<CultureInfo> _availableCultures;
     private List<WatermarkViewModel> _watermarks;
+    private List<FillerPresetViewModel> _fillerPresets;
     private int _tunerCount;
     private int _libraryRefreshInterval;
     private int _playoutDaysToBuild;
@@ -165,6 +184,8 @@
         _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
         _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
         _watermarks = await _mediator.Send(new GetAllWatermarks());
+        _fillerPresets = await _mediator.Send(new GetAllFillerPresets())
+            .Map(list => list.Filter(fp => fp.FillerKind == FillerKind.Fallback).ToList());
         _tunerCount = await _mediator.Send(new GetHDHRTunerCount());
         _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
         _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval());

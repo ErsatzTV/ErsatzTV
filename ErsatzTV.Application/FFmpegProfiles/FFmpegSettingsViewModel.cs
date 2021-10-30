@@ -8,6 +8,7 @@
         public string PreferredLanguageCode { get; set; }
         public bool SaveReports { get; set; }
         public int? GlobalWatermarkId { get; set; }
+        public int? GlobalFallbackFillerId { get; set; }
         public int HlsSegmenterIdleTimeout { get; set; }
         public int WorkAheadSegmenterLimit { get; set; }
     }

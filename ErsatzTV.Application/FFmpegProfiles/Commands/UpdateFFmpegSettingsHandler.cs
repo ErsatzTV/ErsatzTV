@@ -115,6 +115,17 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalWatermarkId);
             }
 
+            if (request.Settings.GlobalFallbackFillerId is not null)
+            {
+                await _configElementRepository.Upsert(
+                    ConfigElementKey.FFmpegGlobalFallbackFillerId,
+                    request.Settings.GlobalFallbackFillerId.Value);
+            }
+            else
+            {
+                await _configElementRepository.Delete(ConfigElementKey.FFmpegGlobalFallbackFillerId);
+            }
+
             await _configElementRepository.Upsert(
                 ConfigElementKey.FFmpegSegmenterTimeout,
                 request.Settings.HlsSegmenterIdleTimeout);
