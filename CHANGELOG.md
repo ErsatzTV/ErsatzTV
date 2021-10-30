@@ -13,7 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - When streaming is attempted during an unscheduled gap, the resulting video will be determined using the following priority:
     - Channel fallback filler
     - Global fallback filler
-    - Generated `Channel Is Offline` error message video
+    - Generated `Channel Is Offline` error message video 
+
+### Changed
+- Allow per-episode folders for local show libraries
+  - e.g. `Show Name\Season #\Episode #\Show Name - s#e#.mkv`
 
 ## [0.2.1-alpha] - 2021-10-24
 ### Fixed

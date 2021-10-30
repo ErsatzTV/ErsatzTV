@@ -159,7 +159,7 @@ namespace ErsatzTV.Core.Metadata
             foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showFolder).Filter(ShouldIncludeFolder)
                 .OrderBy(identity))
             {
-                string etag = FolderEtag.Calculate(seasonFolder, _localFileSystem);
+                string etag = FolderEtag.CalculateWithSubfolders(seasonFolder, _localFileSystem);
                 Option<LibraryFolder> knownFolder = libraryPath.LibraryFolders
                     .Filter(f => f.Path == seasonFolder)
                     .HeadOrNone();
@@ -208,10 +208,16 @@ namespace ErsatzTV.Core.Metadata
             Season season,
             string seasonPath)
         {
-            foreach (string file in _localFileSystem.ListFiles(seasonPath)
+            var allSeasonFiles = _localFileSystem.ListSubdirectories(seasonPath)
+                .Map(_localFileSystem.ListFiles)
+                .Flatten()
+                .Append(_localFileSystem.ListFiles(seasonPath))
                 .Filter(f => VideoFileExtensions.Contains(Path.GetExtension(f)))
                 .Filter(f => !Path.GetFileName(f).StartsWith("._"))
-                .OrderBy(identity))
+                .OrderBy(identity)
+                .ToList();
+
+            foreach (string file in allSeasonFiles)
             {
                 // TODO: figure out how to rebuild playlists
                 Either<BaseError, Episode> maybeEpisode = await _televisionRepository
