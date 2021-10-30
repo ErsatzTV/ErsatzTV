@@ -43,7 +43,7 @@ namespace ErsatzTV.Core.Metadata
                 sb.Append(localFileSystem.GetLastWriteTime(file).Ticks);
             }
 
-            foreach (string subfolder in localFileSystem.ListSubdirectories(folder))
+            foreach (string subfolder in localFileSystem.ListSubdirectories(folder).OrderBy(identity))
             {
                 sb.Append(subfolder);
                 sb.Append(Calculate(subfolder, localFileSystem));
