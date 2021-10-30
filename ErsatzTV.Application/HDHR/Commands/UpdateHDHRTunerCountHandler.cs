@@ -24,7 +24,7 @@ namespace ErsatzTV.Application.HDHR.Commands
 
         private static Task<Validation<BaseError, Unit>> Validate(UpdateHDHRTunerCount request) =>
             Optional(request.TunerCount)
-                .Filter(tc => tc > 0)
+                .Where(tc => tc > 0)
                 .Map(_ => Unit.Default)
                 .ToValidation<BaseError>("Tuner count must be greater than zero")
                 .AsTask();

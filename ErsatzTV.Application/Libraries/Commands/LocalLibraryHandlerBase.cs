@@ -33,7 +33,7 @@ namespace ErsatzTV.Application.Libraries.Commands
                 .Map(list => list.SelectMany(ll => ll.Paths).Map(lp => lp.Path).ToList());
 
             return Optional(localLibrary.Paths.Count(folder => allPaths.Any(f => AreSubPaths(f, folder.Path))))
-                .Filter(length => length == 0)
+                .Where(length => length == 0)
                 .Map(_ => localLibrary)
                 .ToValidation<BaseError>("Path must not belong to another library path");
         }

@@ -65,7 +65,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                 .CountAsync(ps => ps.Name == createProgramSchedule.Name);
 
             var result2 = Optional(duplicateNameCount)
-                .Filter(count => count == 0)
+                .Where(count => count == 0)
                 .ToValidation<BaseError>("Schedule name must be unique");
 
             return (result1, result2).Apply((_, _) => createProgramSchedule.Name);

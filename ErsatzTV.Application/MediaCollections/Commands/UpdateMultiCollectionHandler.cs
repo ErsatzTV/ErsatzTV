@@ -156,7 +156,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 .Bind(_ => updateMultiCollection.NotLongerThan(50)(c => c.Name));
 
             var result2 = Optional(updateMultiCollection.Name)
-                .Filter(name => !allNames.Contains(name))
+                .Where(name => !allNames.Contains(name))
                 .ToValidation<BaseError>("MultiCollection name must be unique");
 
             return (result1, result2).Apply((_, _) => updateMultiCollection.Name);

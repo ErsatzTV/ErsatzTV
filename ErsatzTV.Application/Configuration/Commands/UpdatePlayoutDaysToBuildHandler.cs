@@ -58,7 +58,7 @@ namespace ErsatzTV.Application.Configuration.Commands
 
         private static Task<Validation<BaseError, Unit>> Validate(UpdatePlayoutDaysToBuild request) =>
             Optional(request.DaysToBuild)
-                .Filter(days => days > 0)
+                .Where(days => days > 0)
                 .Map(_ => Unit.Default)
                 .ToValidation<BaseError>("Days to build must be greater than zero")
                 .AsTask();

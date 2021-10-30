@@ -69,7 +69,7 @@ namespace ErsatzTV.Application.Jellyfin.Commands
         {
             JellyfinSecrets secrets = await _jellyfinSecretStore.ReadSecrets();
             return Optional(secrets.Address == connectionParameters.ActiveConnection.Address)
-                .Filter(match => match)
+                .Where(match => match)
                 .Map(_ => connectionParameters with { ApiKey = secrets.ApiKey })
                 .ToValidation<BaseError>("Jellyfin media source requires an api key");
         }
