@@ -237,40 +237,13 @@ namespace ErsatzTV.Core.Scheduling
                 .ToList();
 
             IEnumerable<Tuple<CollectionKey, List<MediaItem>>> tuples = await collectionKeys.Map(
-                async collectionKey =>
-                {
-                    switch (collectionKey.CollectionType)
-                    {
-                        case ProgramScheduleItemCollectionType.Collection:
-                            List<MediaItem> collectionItems =
-                                await _mediaCollectionRepository.GetItems(collectionKey.CollectionId ?? 0);
-                            return Tuple(collectionKey, collectionItems);
-                        case ProgramScheduleItemCollectionType.TelevisionShow:
-                            List<Episode> showItems =
-                                await _televisionRepository.GetShowItems(collectionKey.MediaItemId ?? 0);
-                            return Tuple(collectionKey, showItems.Cast<MediaItem>().ToList());
-                        case ProgramScheduleItemCollectionType.TelevisionSeason:
-                            List<Episode> seasonItems =
-                                await _televisionRepository.GetSeasonItems(collectionKey.MediaItemId ?? 0);
-                            return Tuple(collectionKey, seasonItems.Cast<MediaItem>().ToList());
-                        case ProgramScheduleItemCollectionType.Artist:
-                            List<MusicVideo> artistItems =
-                                await _artistRepository.GetArtistItems(collectionKey.MediaItemId ?? 0);
-                            return Tuple(collectionKey, artistItems.Cast<MediaItem>().ToList());
-                        case ProgramScheduleItemCollectionType.MultiCollection:
-                            List<MediaItem> multiCollectionItems =
-                                await _mediaCollectionRepository.GetMultiCollectionItems(
-                                    collectionKey.MultiCollectionId ?? 0);
-                            return Tuple(collectionKey, multiCollectionItems);
-                        case ProgramScheduleItemCollectionType.SmartCollection:
-                            List<MediaItem> smartCollectionItems =
-                                await _mediaCollectionRepository.GetSmartCollectionItems(
-                                    collectionKey.SmartCollectionId ?? 0);
-                            return Tuple(collectionKey, smartCollectionItems);
-                        default:
-                            return Tuple(collectionKey, new List<MediaItem>());
-                    }
-                }).Sequence();
+                async collectionKey => Tuple(
+                    collectionKey,
+                    await MediaItemsForCollection.Collect(
+                        _mediaCollectionRepository,
+                        _televisionRepository,
+                        _artistRepository,
+                        collectionKey))).Sequence();
 
             return Map.createRange(tuples);
         }
