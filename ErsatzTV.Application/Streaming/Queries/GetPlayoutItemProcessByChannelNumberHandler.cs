@@ -152,7 +152,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         $"offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'";
 
                     Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
-                        .Filter(transcode => transcode)
+                        .Where(transcode => transcode)
                         .Match(
                             _ => dbContext.PlayoutItems
                                 .Filter(pi => pi.Playout.ChannelId == channel.Id)
@@ -260,7 +260,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                 MediaItem item = items[new Random().Next(items.Count)];
                 
                 Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
-                    .Filter(transcode => transcode)
+                    .Where(transcode => transcode)
                     .Match(
                         _ => dbContext.PlayoutItems
                             .Filter(pi => pi.Playout.ChannelId == channel.Id)

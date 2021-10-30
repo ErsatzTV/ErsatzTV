@@ -46,7 +46,7 @@ namespace ErsatzTV.Application.Libraries.Commands
                 .Map(list => list.Map(c => c.Path).ToList());
 
             return Optional(request.Path)
-                .Filter(folder => allPaths.ForAll(f => !AreSubPaths(f, folder)))
+                .Where(folder => allPaths.ForAll(f => !AreSubPaths(f, folder)))
                 .ToValidation<BaseError>("Path must not belong to another library path");
         }
 

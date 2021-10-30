@@ -243,7 +243,7 @@ namespace ErsatzTV.Core.Scheduling
                         _mediaCollectionRepository,
                         _televisionRepository,
                         _artistRepository,
-                        collectionKey))).Sequence();
+                        collectionKey))).SequenceParallel();
 
             return Map.createRange(tuples);
         }

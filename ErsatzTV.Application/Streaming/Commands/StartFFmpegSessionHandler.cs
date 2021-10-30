@@ -83,7 +83,7 @@ namespace ErsatzTV.Application.Streaming.Commands
         private Task<Validation<BaseError, Unit>> SessionMustBeInactive(StartFFmpegSession request)
         {
             var result = Optional(_ffmpegSegmenterService.SessionWorkers.TryAdd(request.ChannelNumber, null))
-                .Filter(success => success)
+                .Where(success => success)
                 .Map(_ => Unit.Default)
                 .ToValidation<BaseError>(new ChannelSessionAlreadyActive());
 

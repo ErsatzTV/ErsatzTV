@@ -61,7 +61,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 .Bind(_ => createSmartCollection.NotLongerThan(50)(c => c.Name));
 
             var result2 = Optional(createSmartCollection.Name)
-                .Filter(name => !allNames.Contains(name))
+                .Where(name => !allNames.Contains(name))
                 .ToValidation<BaseError>("SmartCollection name must be unique");
 
             return (result1, result2).Apply((_, _) => createSmartCollection.Name);

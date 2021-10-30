@@ -25,7 +25,7 @@ namespace ErsatzTV.Application.Configuration.Commands
 
         private static Task<Validation<BaseError, Unit>> Validate(UpdateLibraryRefreshInterval request) =>
             Optional(request.LibraryRefreshInterval)
-                .Filter(lri => lri > 0)
+                .Where(lri => lri > 0)
                 .Map(_ => Unit.Default)
                 .ToValidation<BaseError>("Tuner count must be greater than zero")
                 .AsTask();
