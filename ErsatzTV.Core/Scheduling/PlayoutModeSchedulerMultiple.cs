@@ -82,7 +82,8 @@ namespace ErsatzTV.Core.Scheduling
                 nextState = nextState with
                 {
                     CurrentTime = itemEndTimeWithFiller,
-                    MultipleRemaining = nextState.MultipleRemaining.Map(i => i - 1)
+                    MultipleRemaining = nextState.MultipleRemaining.Map(i => i - 1),
+                    NextGuideGroup = nextState.IncrementGuideGroup
                 };
 
                 contentEnumerator.MoveNext();
@@ -97,7 +98,8 @@ namespace ErsatzTV.Core.Scheduling
                 nextState = nextState with
                 {
                     ScheduleItemIndex = nextState.ScheduleItemIndex + 1,
-                    MultipleRemaining = None
+                    MultipleRemaining = None,
+                    NextGuideGroup = nextState.DecrementGuideGroup
                 };
             }
             

@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix EPG entries for Duration schedule items that play multiple items
+- Fix EPG entries for Multiple schedule items that play more than one item
 
 ### Added
 - Add fallback filler settings to Channel and global FFmpeg Settings
