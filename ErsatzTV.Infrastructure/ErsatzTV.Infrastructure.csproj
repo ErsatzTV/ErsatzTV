@@ -9,9 +9,9 @@
 
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.0.90" />
-      <PackageReference Include="Lucene.Net" Version="4.8.0-beta00014" />
-      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00014" />
-      <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00014" />
+      <PackageReference Include="Lucene.Net" Version="4.8.0-beta00015" />
+      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00015" />
+      <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00015" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.11" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.11">
         <PrivateAssets>all</PrivateAssets>
@@ -22,8 +22,8 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Refit" Version="6.0.94" />
-      <PackageReference Include="Refit.Newtonsoft.Json" Version="6.0.94" />
+      <PackageReference Include="Refit" Version="6.1.15" />
+      <PackageReference Include="Refit.Newtonsoft.Json" Version="6.1.15" />
       <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     </ItemGroup>
 

@@ -67,7 +67,7 @@ namespace ErsatzTV.Application.Emby.Commands
         {
             EmbySecrets secrets = await _embySecretStore.ReadSecrets();
             return Optional(secrets.Address == connectionParameters.ActiveConnection.Address)
-                .Filter(match => match)
+                .Where(match => match)
                 .Map(_ => connectionParameters with { ApiKey = secrets.ApiKey })
                 .ToValidation<BaseError>("Emby media source requires an api key");
         }
