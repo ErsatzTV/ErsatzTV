@@ -34,6 +34,7 @@ The `Shows` library requires show and season subfolders. The following is a (non
 
 - `Show (1999)\Season 01\Show - S01E01.mp4`
 - `Show\Season 1\Show - s1e1.mp4`
+- `Show\Season 1\Episode 1\Show - s1e1.mp4`
 
 ### Show NFO Metadata
 
