@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using ErsatzTV.Core.Domain;
@@ -111,7 +112,11 @@ namespace ErsatzTV.Core.FFmpeg
             }
 
             _audioDuration.IfSome(
-                audioDuration => audioFilterQueue.Add($"apad=whole_dur={audioDuration.TotalMilliseconds}ms"));
+                audioDuration =>
+                {
+                    var durationString = audioDuration.TotalMilliseconds.ToString(NumberFormatInfo.InvariantInfo);
+                    audioFilterQueue.Add($"apad=whole_dur={durationString}ms");
+                });
 
             bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None && !isHardwareDecode &&
                                        (_deinterlace || _scaleToSize.IsSome);
