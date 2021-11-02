@@ -27,7 +27,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             [Test]
             public void Should_Return_Audio_Filter_With_AudioDuration()
             {
-                var duration = TimeSpan.FromMinutes(54);
+                var duration = TimeSpan.FromMilliseconds(1000.1);
                 FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
                     .WithAlignedAudio(duration);
 
@@ -37,7 +37,28 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 result.IfSome(
                     filter =>
                     {
-                        filter.ComplexFilter.Should().Be($"[0:1]apad=whole_dur={duration.TotalMilliseconds}ms[a]");
+                        filter.ComplexFilter.Should().Be("[0:1]apad=whole_dur=1000.1ms[a]");
+                        filter.AudioLabel.Should().Be("[a]");
+                        filter.VideoLabel.Should().Be("0:0");
+                    });
+            }
+            
+            [Test]
+            // this needs to be a culture where '.' is a group separator
+            [SetCulture("it-IT")] 
+            public void Should_Return_Audio_Filter_With_AudioDuration_Decimal()
+            {
+                var duration = TimeSpan.FromMilliseconds(1000.1);
+                FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
+                    .WithAlignedAudio(duration);
+
+                Option<FFmpegComplexFilter> result = builder.Build(0, 1);
+
+                result.IsSome.Should().BeTrue();
+                result.IfSome(
+                    filter =>
+                    {
+                        filter.ComplexFilter.Should().Be("[0:1]apad=whole_dur=1000.1ms[a]");
                         filter.AudioLabel.Should().Be("[a]");
                         filter.VideoLabel.Should().Be("0:0");
                     });
