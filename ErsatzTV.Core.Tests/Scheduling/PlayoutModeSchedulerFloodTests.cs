@@ -79,6 +79,75 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         }
         
+                [Test]
+        public void Should_Fill_Exactly_To_Next_Schedule_Item_Flood()
+        {
+            Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromHours(1));
+
+            var scheduleItem = new ProgramScheduleItemFlood
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                TailFiller = null,
+                FallbackFiller = null
+            };
+
+            var enumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+
+            var sortedScheduleItems = new List<ProgramScheduleItem>
+            {
+                scheduleItem,
+                // this caused trouble with the peek logic and the IsFlood flag
+                new ProgramScheduleItemFlood
+                {
+                    StartTime = TimeSpan.FromHours(3),
+                }
+            };
+
+            var scheduler = new PlayoutModeSchedulerFlood(sortedScheduleItems, new Mock<ILogger>().Object);
+            (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+                StartState,
+                CollectionEnumerators(scheduleItem, enumerator),
+                scheduleItem,
+                NextScheduleItem,
+                HardStop);
+
+            playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
+            playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+            playoutBuilderState.NextGuideGroup.Should().Be(4);
+            playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+            playoutBuilderState.InFlood.Should().BeFalse();
+            playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+            playoutBuilderState.InDurationFiller.Should().BeFalse();
+            playoutBuilderState.ScheduleItemIndex.Should().Be(1);
+
+            enumerator.State.Index.Should().Be(1);
+
+            playoutItems.Count.Should().Be(3);
+
+            playoutItems[0].MediaItemId.Should().Be(1);
+            playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
+            playoutItems[0].GuideGroup.Should().Be(1);
+            playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+
+            playoutItems[1].MediaItemId.Should().Be(2);
+            playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.AddHours(1));
+            playoutItems[1].GuideGroup.Should().Be(2);
+            playoutItems[1].FillerKind.Should().Be(FillerKind.None);
+
+            playoutItems[2].MediaItemId.Should().Be(1);
+            playoutItems[2].StartOffset.Should().Be(StartState.CurrentTime.AddHours(2));
+            playoutItems[2].GuideGroup.Should().Be(3);
+            playoutItems[2].FillerKind.Should().Be(FillerKind.None);
+        }
+        
         [Test]
         public void Should_Fill_Exactly_To_Next_Schedule_Item_With_Post_Roll_Multiple_One()
         {
@@ -709,7 +778,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
         protected override ProgramScheduleItem NextScheduleItem => new ProgramScheduleItemOne
         {
-            StartTime = TimeSpan.FromHours(3)
+            StartTime = TimeSpan.FromHours(3),
         };
     }
 }
