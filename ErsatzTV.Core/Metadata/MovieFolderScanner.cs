@@ -69,7 +69,9 @@ namespace ErsatzTV.Core.Metadata
             var foldersCompleted = 0;
 
             var folderQueue = new Queue<string>();
-            foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path).OrderBy(identity))
+            foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
+                .Filter(ShouldIncludeFolder)
+                .OrderBy(identity))
             {
                 folderQueue.Enqueue(folder);
             }
@@ -95,7 +97,9 @@ namespace ErsatzTV.Core.Metadata
 
                 if (allFiles.Count == 0)
                 {
-                    foreach (string subdirectory in _localFileSystem.ListSubdirectories(movieFolder).OrderBy(identity))
+                    foreach (string subdirectory in _localFileSystem.ListSubdirectories(movieFolder)
+                        .Filter(ShouldIncludeFolder)
+                        .OrderBy(identity))
                     {
                         folderQueue.Enqueue(subdirectory);
                     }

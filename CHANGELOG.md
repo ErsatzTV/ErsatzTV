@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where flood playout mode would only schedule one item
   - This would happen if the flood was followed by another flood with a fixed start time
 
+### Added
+- Support empty `.etvignore` file to instruct local movie scanner to ignore the containing folder
+
 ## [0.2.2-alpha] - 2021-10-30
 ### Fixed
 - Fix EPG entries for Duration schedule items that play multiple items
