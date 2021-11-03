@@ -35,6 +35,9 @@ namespace ErsatzTV.Core.Scheduling
             IMediaCollectionEnumerator contentEnumerator =
                 collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
 
+            ProgramScheduleItem peekScheduleItem =
+                _sortedScheduleItems[(nextState.ScheduleItemIndex + 1) % _sortedScheduleItems.Count];
+
             while (contentEnumerator.Current.IsSome && nextState.CurrentTime < hardStop && willFinishInTime)
             {
                 MediaItem mediaItem = contentEnumerator.Current.ValueUnsafe();
@@ -57,11 +60,9 @@ namespace ErsatzTV.Core.Scheduling
                         : FillerKind.None
                 };
                 
-                ProgramScheduleItem peekScheduleItem =
-                    _sortedScheduleItems[(nextState.ScheduleItemIndex + 1) % _sortedScheduleItems.Count];
                 DateTimeOffset peekScheduleItemStart =
                     peekScheduleItem.StartType == StartType.Fixed
-                        ? GetStartTimeAfter(nextState, peekScheduleItem)
+                        ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem)
                         : DateTimeOffset.MaxValue;
 
                 DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
