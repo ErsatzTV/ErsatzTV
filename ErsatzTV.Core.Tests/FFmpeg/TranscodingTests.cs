@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -237,7 +238,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 return string.Empty;
             }
 
-            using var sha = new System.Security.Cryptography.SHA256Managed();
+            using var sha = SHA256.Create();
             byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
             byte[] hash = sha.ComputeHash(textData);
             return BitConverter.ToString(hash).Replace("-", string.Empty);

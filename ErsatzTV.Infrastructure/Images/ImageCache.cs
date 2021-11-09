@@ -18,12 +18,12 @@ namespace ErsatzTV.Infrastructure.Images
 {
     public class ImageCache : IImageCache
     {
-        private static readonly SHA1CryptoServiceProvider Crypto;
+        private static readonly SHA1 Crypto;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<ImageCache> _logger;
         private readonly IMemoryCache _memoryCache;
 
-        static ImageCache() => Crypto = new SHA1CryptoServiceProvider();
+        static ImageCache() => Crypto = SHA1.Create();
 
         public ImageCache(ILocalFileSystem localFileSystem, IMemoryCache memoryCache, ILogger<ImageCache> logger)
         {
