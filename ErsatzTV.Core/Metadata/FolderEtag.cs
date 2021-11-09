@@ -9,7 +9,7 @@ namespace ErsatzTV.Core.Metadata
 {
     public static class FolderEtag
     {
-        private static readonly MD5CryptoServiceProvider Crypto = new();
+        private static readonly MD5 Crypto = MD5.Create();
 
         public static string Calculate(string folder, ILocalFileSystem localFileSystem)
         {
