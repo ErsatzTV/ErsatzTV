@@ -15,7 +15,8 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .HasForeignKey(pi => pi.PlayoutId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.OwnsOne(c => c.Anchor);
+            builder.OwnsOne(p => p.Anchor);
+            builder.Navigation(p => p.Anchor).IsRequired();
 
             builder.HasMany(p => p.ProgramScheduleAnchors)
                 .WithOne(a => a.Playout)
