@@ -163,7 +163,7 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Qsv => $"scale_qsv=w={size.Width}:h={size.Height}",
                         HardwareAccelerationKind.Nvenc when _pixelFormat is "yuv420p10le" =>
                             $"hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Nvenc => $"scale_npp={size.Width}:{size.Height}",
+                        HardwareAccelerationKind.Nvenc => $"scale_cuda={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
