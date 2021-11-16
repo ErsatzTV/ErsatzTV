@@ -342,6 +342,8 @@ namespace ErsatzTV.Core.Iptv
                     .IfNone("[unknown show]"),
                 MusicVideo mv => mv.Artist.ArtistMetadata.HeadOrNone().Map(am => am.Title ?? string.Empty)
                     .IfNone("[unknown artist]"),
+                OtherVideo ov => ov.OtherVideoMetadata.HeadOrNone().Map(vm => vm.Title ?? string.Empty)
+                    .IfNone("[unknown video]"),
                 _ => "[unknown]"
             };
         }

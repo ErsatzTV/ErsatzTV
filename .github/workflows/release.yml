@@ -18,8 +18,11 @@ jobs:
             kind: windows
             target: win-x64
           - os: macos-latest
-            kind: maxOS
+            kind: macOS
             target: osx-x64
+          - os: macos-latest
+            kind: macOS
+            target: osx-arm64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Get the sources
