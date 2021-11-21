@@ -89,6 +89,12 @@ namespace ErsatzTV.Core.Scheduling
                 playout.ProgramScheduleAnchors.Clear();
             }
 
+            // this works around weird EF behavior
+            if (playout.Anchor?.NextStart.Year < 2021)
+            {
+                playout.Anchor = null;
+            }
+
             var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
             var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
             foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
