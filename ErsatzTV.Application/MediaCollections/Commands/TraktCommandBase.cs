@@ -208,6 +208,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             var guids = item.Guids.Map(g => g.Guid).ToList();
             
             Option<int> maybeMovieByGuid = await dbContext.MovieMetadata
+                .AsNoTracking()
                 .Filter(mm => mm.Guids.Any(g => guids.Contains(g.Guid)))
                 .FirstOrDefaultAsync()
                 .Map(Optional)
@@ -220,6 +221,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             }
 
             Option<int> maybeMovieByTitleYear = await dbContext.MovieMetadata
+                .AsNoTracking()
                 .Filter(mm => mm.Title == item.Title && mm.Year == item.Year)
                 .FirstOrDefaultAsync()
                 .Map(Optional)
@@ -241,6 +243,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             var guids = item.Guids.Map(g => g.Guid).ToList();
 
             Option<int> maybeShowByGuid = await dbContext.ShowMetadata
+                .AsNoTracking()
                 .Filter(sm => sm.Guids.Any(g => guids.Contains(g.Guid)))
                 .FirstOrDefaultAsync()
                 .Map(Optional)
@@ -253,6 +256,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             }
 
             Option<int> maybeShowByTitleYear = await dbContext.ShowMetadata
+                .AsNoTracking()
                 .Filter(sm => sm.Title == item.Title && sm.Year == item.Year)
                 .FirstOrDefaultAsync()
                 .Map(Optional)
@@ -274,6 +278,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             var guids = item.Guids.Map(g => g.Guid).ToList();
 
             Option<int> maybeSeasonByGuid = await dbContext.SeasonMetadata
+                .AsNoTracking()
                 .Filter(sm => sm.Guids.Any(g => guids.Contains(g.Guid)))
                 .FirstOrDefaultAsync()
                 .Map(Optional)
@@ -286,6 +291,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             }
 
             Option<int> maybeSeasonByTitleYear = await dbContext.SeasonMetadata
+                .AsNoTracking()
                 .Filter(sm => sm.Season.Show.ShowMetadata.Any(s => s.Title == item.Title && s.Year == item.Year))
                 .Filter(sm => sm.Season.SeasonNumber == item.Season)
                 .FirstOrDefaultAsync()
@@ -308,6 +314,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             var guids = item.Guids.Map(g => g.Guid).ToList();
 
             Option<int> maybeEpisodeByGuid = await dbContext.EpisodeMetadata
+                .AsNoTracking()
                 .Filter(em => em.Guids.Any(g => guids.Contains(g.Guid)))
                 .FirstOrDefaultAsync()
                 .Map(Optional)
@@ -320,6 +327,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
             }
 
             Option<int> maybeEpisodeByTitleYear = await dbContext.EpisodeMetadata
+                .AsNoTracking()
                 .Filter(sm => sm.Episode.Season.Show.ShowMetadata.Any(s => s.Title == item.Title && s.Year == item.Year))
                 .Filter(em => em.Episode.Season.SeasonNumber == item.Season)
                 .Filter(sm => sm.Episode.EpisodeMetadata.Any(e => e.EpisodeNumber == item.Episode))

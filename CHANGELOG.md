@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Include other video title in channel guide (xmltv)
 - Fix bug introduced with 0.2.4-alpha that caused some playouts to build from year 0
+- Use less memory matching Trakt list items
 
 ### Added
 - Build osx-arm64 packages on release
