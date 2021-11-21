@@ -39,7 +39,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
         {
             try
             {
-                await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+                await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
                 Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
                 return await validation.Match(
