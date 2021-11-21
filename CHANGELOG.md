@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Build osx-arm64 packages on release
 
+### Changed
+- No longer warn about local Plex guids; they aren't used for Trakt matching and can be ignored
+
 ## [0.2.4-alpha] - 2021-11-13
 ### Changed
 - Upgrade to dotnet 6
