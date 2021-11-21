@@ -845,7 +845,14 @@ namespace ErsatzTV.Infrastructure.Plex
                 return $"tmdb://{strip2}";
             }
 
-            _logger.LogWarning("Unsupported guid format from Plex; ignoring: {Guid}", guid);
+            if (guid.StartsWith("local://"))
+            {
+                _logger.LogDebug("Ignoring local Plex guid: {Guid}", guid);
+            }
+            else
+            {
+                _logger.LogWarning("Unsupported guid format from Plex; ignoring: {Guid}", guid);
+            }
 
             return None;
         }
