@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Properly fix database incompatibility introduced with v0.2.4-alpha and partially fixed with v0.2.5-alpha
+  - The proper fix requires rebuilding all playouts, which will happen on startup after upgrading
 
 ## [0.2.5-alpha] - 2021-11-21
 ### Fixed

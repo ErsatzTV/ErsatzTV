@@ -10,8 +10,7 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
         {
             builder.ToTable("PlayoutProgramScheduleAnchor");
 
-            builder.OwnsOne(a => a.EnumeratorState);
-            builder.Navigation(a => a.EnumeratorState).IsRequired();
+            builder.OwnsOne(a => a.EnumeratorState).ToTable("CollectionEnumeratorState");
 
             builder.HasOne(i => i.Collection)
                 .WithMany()
