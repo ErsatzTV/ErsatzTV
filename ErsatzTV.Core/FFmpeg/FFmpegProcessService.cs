@@ -87,7 +87,7 @@ namespace ErsatzTV.Core.FFmpeg
                     videoStream.PixelFormat)
                 .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
-                .WithAlignedAudio(playbackSettings.AudioDuration)
+                .WithAlignedAudio(videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None)
                 .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);
 
             playbackSettings.ScaledSize.Match(
