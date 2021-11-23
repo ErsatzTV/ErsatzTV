@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly fix database incompatibility introduced with v0.2.4-alpha and partially fixed with v0.2.5-alpha
   - The proper fix requires rebuilding all playouts, which will happen on startup after upgrading
 
+### Added
+- Add *experimental* `Songs` local libraries
+    - Like `Other Videos`, `Songs` require no metadata or particular folder layout, and will have tags added for each containing folder
+    - For Example, a song at `rock/band/1990 - Album/01 whatever.flac` will have the tags `rock`, `band` and `1990 - Album`, and the title `01 whatever`
+    - Channels that play songs *require* fallback filler to provide looping video to pair with the songs
+
 ## [0.2.5-alpha] - 2021-11-21
 ### Fixed
 - Include other video title in channel guide (xmltv)
