@@ -42,6 +42,7 @@ namespace ErsatzTV.Core.FFmpeg
         private string _vaapiDevice;
         private HardwareAccelerationKind _hwAccel;
         private string _outputPixelFormat;
+        private bool _noAutoScale;
 
         public FFmpegProcessBuilder(string ffmpegPath, bool saveReports, ILogger logger)
         {
@@ -147,6 +148,11 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 _arguments.Add("-stream_loop");
                 _arguments.Add("-1");
+                
+                if (_hwAccel is HardwareAccelerationKind.Qsv or HardwareAccelerationKind.Vaapi)
+                {
+                    _noAutoScale = true;
+                }
             }
 
             return this;
@@ -460,6 +466,12 @@ namespace ErsatzTV.Core.FFmpeg
                 });
 
             _arguments.AddRange(arguments);
+
+            if (_noAutoScale)
+            {
+                _arguments.Add("-noautoscale");
+            }
+
             return this;
         }
 
