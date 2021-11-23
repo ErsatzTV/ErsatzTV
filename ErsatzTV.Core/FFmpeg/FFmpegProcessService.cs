@@ -78,9 +78,9 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
-                .WithInfiniteLoop(fillerKind == FillerKind.Fallback)
                 .WithInputCodec(
                     playbackSettings.StreamSeek,
+                    fillerKind == FillerKind.Fallback,
                     videoPath,
                     audioPath,
                     playbackSettings.VideoDecoder,

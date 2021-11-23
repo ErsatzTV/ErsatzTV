@@ -215,6 +215,7 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithInputCodec(
             Option<TimeSpan> maybeStart,
+            bool loop,
             string videoPath,
             string audioPath,
             string decoder,
@@ -224,6 +225,11 @@ namespace ErsatzTV.Core.FFmpeg
             if (audioPath == videoPath)
             {
                 WithSeek(maybeStart);
+                WithInfiniteLoop(loop);
+            }
+            else
+            {
+                WithInfiniteLoop();
             }
 
             if (!string.IsNullOrWhiteSpace(decoder))
