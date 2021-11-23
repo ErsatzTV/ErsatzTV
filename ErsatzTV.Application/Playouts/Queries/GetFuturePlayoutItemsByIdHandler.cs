@@ -24,7 +24,7 @@ namespace ErsatzTV.Application.Playouts.Queries
             GetFuturePlayoutItemsById request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             DateTime now = DateTimeOffset.Now.UtcDateTime;
 
@@ -57,6 +57,10 @@ namespace ErsatzTV.Application.Playouts.Queries
                 .ThenInclude(mi => (mi as OtherVideo).OtherVideoMetadata)
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as OtherVideo).MediaVersions)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Song).SongMetadata)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Song).MediaVersions)
                 .Filter(i => i.PlayoutId == request.PlayoutId)
                 .Filter(i => i.Finish >= now)
                 .Filter(i => request.ShowFiller || i.FillerKind == FillerKind.None)

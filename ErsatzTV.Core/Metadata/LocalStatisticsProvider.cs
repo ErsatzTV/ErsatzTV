@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -34,15 +35,7 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                string filePath = mediaItem switch
-                {
-                    Movie m => m.MediaVersions.Head().MediaFiles.Head().Path,
-                    Episode e => e.MediaVersions.Head().MediaFiles.Head().Path,
-                    MusicVideo mv => mv.MediaVersions.Head().MediaFiles.Head().Path,
-                    OtherVideo ov => ov.MediaVersions.Head().MediaFiles.Head().Path,
-                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-                };
-
+                string filePath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
                 return await RefreshStatistics(ffprobePath, mediaItem, filePath);
             }
             catch (Exception ex)
@@ -78,14 +71,7 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task<bool> ApplyVersionUpdate(MediaItem mediaItem, MediaVersion version, string filePath)
         {
-            MediaVersion mediaItemVersion = mediaItem switch
-            {
-                Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head(),
-                MusicVideo mv => mv.MediaVersions.Head(),
-                OtherVideo ov => ov.MediaVersions.Head(),
-                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-            };
+            MediaVersion mediaItemVersion = mediaItem.GetHeadVersion();
 
             bool durationChange = mediaItemVersion.Duration != version.Duration;
 
@@ -221,6 +207,7 @@ namespace ErsatzTV.Core.Metadata
                             {
                                 stream.Default = videoStream.disposition.@default == 1;
                                 stream.Forced = videoStream.disposition.forced == 1;
+                                stream.AttachedPic = videoStream.disposition.attached_pic == 1;
                             }
 
                             version.Streams.Add(stream);
@@ -314,7 +301,7 @@ namespace ErsatzTV.Core.Metadata
 
         public record FFprobeFormat(string duration);
 
-        public record FFprobeDisposition(int @default, int forced);
+        public record FFprobeDisposition(int @default, int forced, int attached_pic);
 
         public record FFprobeTags(string language, string title);
 

@@ -57,6 +57,7 @@ namespace ErsatzTV.Application.MediaCollections.Commands
                 .Append(request.ArtistIds)
                 .Append(request.MusicVideoIds)
                 .Append(request.OtherVideoIds)
+                .Append(request.SongIds)
                 .ToList();
 
             var toAddIds = allItems.Where(item => collection.MediaItems.All(mi => mi.Id != item)).ToList();

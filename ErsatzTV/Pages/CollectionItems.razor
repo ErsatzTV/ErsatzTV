@@ -63,6 +63,11 @@
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#other_videos")">@_data.OtherVideoCards.Count Other Videos</MudLink>
             }
+
+            @if (_data.SongCards.Any())
+            {
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")">@_data.SongCards.Count Songs</MudLink>
+            }
             @if (SupportsCustomOrdering())
             {
                 <div style="margin-left: auto">
@@ -248,6 +253,30 @@
             }
         </MudContainer>
     }
+
+    @if (_data.SongCards.Any())
+        {
+            <MudText GutterBottom="true"
+                     Typo="Typo.h4"
+                     Style="scroll-margin-top: 160px"
+                     UserAttributes="@(new Dictionary<string, object> { { "id", "songs" } })">
+                Songs
+            </MudText>
+    
+            <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+                @foreach (SongCardViewModel card in _data.SongCards.OrderBy(e => e.SortTitle))
+                {
+                    <MediaCard Data="@card"
+                               Link=""
+                               ArtworkKind="ArtworkKind.Thumbnail"
+                               DeleteClicked="@RemoveSongFromCollection"
+                               SelectColor="@Color.Error"
+                               SelectClicked="@(e => SelectClicked(card, e))"
+                               IsSelected="@IsSelected(card)"
+                               IsSelectMode="@IsSelectMode()"/>
+                }
+            </MudContainer>
+        }
 </MudContainer>
 
 @code {
@@ -307,6 +336,7 @@
                 .Append(_data.ArtistCards.OrderBy(a => a.SortTitle))
                 .Append(_data.MusicVideoCards.OrderBy(mv => mv.SortTitle))
                 .Append(_data.OtherVideoCards.OrderBy(ov => ov.SortTitle))
+                .Append(_data.SongCards.OrderBy(s => s.SortTitle))
                 .ToList();
         }
 
@@ -401,6 +431,19 @@
             };
 
             await RemoveItemsWithConfirmation("other video", $"{otherVideo.Title}", request);
+        }
+    }
+
+    private async Task RemoveSongFromCollection(MediaCardViewModel vm)
+    {
+        if (vm is SongCardViewModel song)
+        {
+            var request = new RemoveItemsFromCollection(Id)
+            {
+                MediaItemIds = new List<int> { song.SongId }
+            };
+
+            await RemoveItemsWithConfirmation("song", $"{song.Title}", request);
         }
     }
 

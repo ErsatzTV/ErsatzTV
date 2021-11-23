@@ -68,6 +68,11 @@
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#other_videos")" Style="margin-bottom: auto; margin-top: auto">@_otherVideos.Count Other Videos</MudLink>
             }
+
+            if (_songs?.Count > 0)
+            {
+                <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")" Style="margin-bottom: auto; margin-top: auto">@_songs.Count Songs</MudLink>
+            }
             <div style="margin-left: auto">
                 <MudTooltip Text="Add All To Collection">
                     <MudButton Variant="Variant.Filled"
@@ -282,6 +287,34 @@
             }
         </MudContainer>
     }
+    
+    @if (_songs?.Count > 0)
+        {
+            <div class="mb-4" style="align-items: baseline; display: flex; flex-direction: row;">
+                <MudText Typo="Typo.h4"
+                         Style="scroll-margin-top: 160px"
+                         UserAttributes="@(new Dictionary<string, object> { { "id", "songs" } })">
+                    Songs
+                </MudText>
+                @if (_songs.Count > 50)
+                {
+                    <MudLink Href="@GetSongsLink()" Class="ml-4">See All >></MudLink>
+                }
+            </div>
+    
+            <MudContainer MaxWidth="MaxWidth.False" Class="media-card-grid">
+                @foreach (SongCardViewModel card in _songs.Cards.OrderBy(s => s.SortTitle))
+                {
+                    <MediaCard Data="@card"
+                               Link=""
+                               ArtworkKind="ArtworkKind.Thumbnail"
+                               AddToCollectionClicked="@AddToCollection"
+                               SelectClicked="@(e => SelectClicked(card, e))"
+                               IsSelected="@IsSelected(card)"
+                               IsSelectMode="@IsSelectMode()"/>
+                }
+            </MudContainer>
+        }
 </MudContainer>
 
 @code {
@@ -292,6 +325,7 @@
     private TelevisionEpisodeCardResultsViewModel _episodes;
     private MusicVideoCardResultsViewModel _musicVideos;
     private OtherVideoCardResultsViewModel _otherVideos;
+    private SongCardResultsViewModel _songs;
     private ArtistCardResultsViewModel _artists;
 
     protected override async Task OnInitializedAsync()
@@ -305,6 +339,7 @@
             _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50));
             _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50));
             _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50));
+            _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50));
             _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50));
         }
     }
@@ -320,6 +355,7 @@
                 .Append(_artists.Cards.OrderBy(a => a.SortTitle))
                 .Append(_musicVideos.Cards.OrderBy(mv => mv.SortTitle))
                 .Append(_otherVideos.Cards.OrderBy(ov => ov.SortTitle))
+                .Append(_songs.Cards.OrderBy(ov => ov.SortTitle))
                 .ToList();
         }
 
@@ -532,6 +568,17 @@
         return uri;
     }
 
+    private string GetSongsLink()
+    {
+        var uri = "/media/music/songs/page/1";
+        if (!string.IsNullOrWhiteSpace(_query))
+        {
+            (string key, string value) = _query.EncodeQuery();
+            uri = $"{uri}?{key}={value}";
+        }
+        return uri;
+    }
+
     private async Task AddAllToCollection(MouseEventArgs _)
     {
         SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query));
@@ -543,6 +590,7 @@
             results.ArtistIds,
             results.MusicVideoIds,
             results.OtherVideoIds,
+            results.SongIds,
             "search results");
     }
 

@@ -31,6 +31,7 @@ namespace ErsatzTV.Core.Metadata
         private readonly IMovieRepository _movieRepository;
         private readonly IMusicVideoRepository _musicVideoRepository;
         private readonly IOtherVideoRepository _otherVideoRepository;
+        private readonly ISongRepository _songRepository;
         private readonly ITelevisionRepository _televisionRepository;
 
         public LocalMetadataProvider(
@@ -40,6 +41,7 @@ namespace ErsatzTV.Core.Metadata
             IArtistRepository artistRepository,
             IMusicVideoRepository musicVideoRepository,
             IOtherVideoRepository otherVideoRepository,
+            ISongRepository songRepository,
             IFallbackMetadataProvider fallbackMetadataProvider,
             ILocalFileSystem localFileSystem,
             IEpisodeNfoReader episodeNfoReader,
@@ -51,6 +53,7 @@ namespace ErsatzTV.Core.Metadata
             _artistRepository = artistRepository;
             _musicVideoRepository = musicVideoRepository;
             _otherVideoRepository = otherVideoRepository;
+            _songRepository = songRepository;
             _fallbackMetadataProvider = fallbackMetadataProvider;
             _localFileSystem = localFileSystem;
             _episodeNfoReader = episodeNfoReader;
@@ -143,6 +146,11 @@ namespace ErsatzTV.Core.Metadata
             _fallbackMetadataProvider.GetFallbackMetadata(otherVideo).Match(
                 metadata => ApplyMetadataUpdate(otherVideo, metadata),
                 () => Task.FromResult(false));
+
+        public Task<bool> RefreshFallbackMetadata(Song song) =>
+        _fallbackMetadataProvider.GetFallbackMetadata(song).Match(
+            metadata => ApplyMetadataUpdate(song, metadata),
+        () => Task.FromResult(false));
 
         public Task<bool> RefreshFallbackMetadata(MusicVideo musicVideo) =>
             _fallbackMetadataProvider.GetFallbackMetadata(musicVideo).Match(
@@ -658,6 +666,45 @@ namespace ErsatzTV.Core.Metadata
                         : metadata.SortTitle;
                     metadata.OtherVideoId = otherVideo.Id;
                     otherVideo.OtherVideoMetadata = new List<OtherVideoMetadata> { metadata };
+
+                    return await _metadataRepository.Add(metadata);
+                });
+        
+        private Task<bool> ApplyMetadataUpdate(Song song, SongMetadata metadata) =>
+            Optional(song.SongMetadata).Flatten().HeadOrNone().Match(
+                async existing =>
+                {
+                    existing.Title = metadata.Title;
+
+                    if (existing.DateAdded == SystemTime.MinValueUtc)
+                    {
+                        existing.DateAdded = metadata.DateAdded;
+                    }
+
+                    existing.DateUpdated = metadata.DateUpdated;
+                    existing.MetadataKind = metadata.MetadataKind;
+                    existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
+                    existing.OriginalTitle = metadata.OriginalTitle;
+
+                    bool updated = await UpdateMetadataCollections(
+                        existing,
+                        metadata,
+                        (_, _) => Task.FromResult(false),
+                        _songRepository.AddTag,
+                        (_, _) => Task.FromResult(false),
+                        (_, _) => Task.FromResult(false));
+
+                    return await _metadataRepository.Update(existing) || updated;
+                },
+                async () =>
+                {
+                    metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                        : metadata.SortTitle;
+                    metadata.SongId = song.Id;
+                    song.SongMetadata = new List<SongMetadata> { metadata };
 
                     return await _metadataRepository.Add(metadata);
                 });
