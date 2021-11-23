@@ -6,7 +6,7 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
 {
     public interface IFFmpegStreamSelector
     {
-        Task<Option<MediaStream>> SelectVideoStream(Channel channel, MediaVersion version);
+        Task<MediaStream> SelectVideoStream(Channel channel, MediaVersion version);
         Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version);
     }
 }

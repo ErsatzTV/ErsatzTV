@@ -93,12 +93,12 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public Option<FFmpegComplexFilter> Build(int videoStreamIndex, Option<int> audioStreamIndex)
+        public Option<FFmpegComplexFilter> Build(int videoInput, int videoStreamIndex, int audioInput, Option<int> audioStreamIndex)
         {
             var complexFilter = new StringBuilder();
 
-            var videoLabel = $"0:{videoStreamIndex}";
-            string audioLabel = audioStreamIndex.Match(index => $"0:{index}", () => "0:a");
+            var videoLabel = $"{videoInput}:{videoStreamIndex}";
+            string audioLabel = audioStreamIndex.Match(index => $"{audioInput}:{index}", () => "0:a");
 
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
             bool isHardwareDecode = acceleration switch
@@ -314,7 +314,7 @@ namespace ErsatzTV.Core.FFmpeg
                         complexFilter.Append("[vt];");
                     }
 
-                    var watermarkLabel = "[1:v]";
+                    var watermarkLabel = $"[{audioInput+1}:v]";
                     if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
                     {
                         complexFilter.Append($"{watermarkLabel}{watermarkPreprocess}[wmp];");

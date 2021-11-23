@@ -115,6 +115,33 @@ namespace ErsatzTV.Application.Streaming.Queries
                 {
                     MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
 
+                    string videoPath = playoutItemWithPath.Path;
+                    MediaVersion videoVersion = version;
+
+                    string audioPath = playoutItemWithPath.Path;
+                    MediaVersion audioVersion = version;
+                    
+                    if (playoutItemWithPath.PlayoutItem.MediaItem is Song)
+                    {
+                        // find filler to loop as video for song
+
+                        Either<BaseError, PlayoutItemWithPath> fallbackFiller =
+                            await CheckForFallbackFiller(dbContext, channel, now);
+
+                        // fail if we can't find filler
+                        if (fallbackFiller.IsLeft)
+                        {
+                            return Left<BaseError, PlayoutItemProcessModel>(
+                                BaseError.New("Unable to locate fallback filler for song"));
+                        }
+
+                        foreach (PlayoutItemWithPath filler in fallbackFiller.RightToSeq())
+                        {
+                            videoPath = filler.Path;
+                            videoVersion = filler.PlayoutItem.MediaItem.GetHeadVersion();
+                        }
+                    }
+
                     bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await dbContext.ConfigElements
                         .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                         .Map(result => result.IfNone(false));
@@ -129,8 +156,10 @@ namespace ErsatzTV.Application.Streaming.Queries
                         ffmpegPath,
                         saveReports,
                         channel,
-                        version,
-                        playoutItemWithPath.Path,
+                        videoVersion,
+                        audioVersion,
+                        videoPath,
+                        audioPath,
                         playoutItemWithPath.PlayoutItem.StartOffset,
                         playoutItemWithPath.PlayoutItem.FinishOffset,
                         request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,

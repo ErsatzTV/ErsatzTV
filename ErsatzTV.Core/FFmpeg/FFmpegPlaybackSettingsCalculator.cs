@@ -45,7 +45,7 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegPlaybackSettings CalculateSettings(
             StreamingMode streamingMode,
             FFmpegProfile ffmpegProfile,
-            MediaVersion version,
+            MediaVersion videoVersion,
             Option<MediaStream> videoStream,
             Option<MediaStream> audioStream,
             DateTimeOffset start,
@@ -76,10 +76,10 @@ namespace ErsatzTV.Core.FFmpeg
                 case StreamingMode.TransportStream:
                     result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
 
-                    if (NeedToScale(ffmpegProfile, version))
+                    if (NeedToScale(ffmpegProfile, videoVersion))
                     {
-                        IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, version);
-                        if (!scaledSize.IsSameSizeAs(version))
+                        IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, videoVersion);
+                        if (!scaledSize.IsSameSizeAs(videoVersion))
                         {
                             int fixedHeight = scaledSize.Height + scaledSize.Height % 2;
                             int fixedWidth = scaledSize.Width + scaledSize.Width % 2;
@@ -87,7 +87,7 @@ namespace ErsatzTV.Core.FFmpeg
                         }
                     }
 
-                    IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(version);
+                    IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(videoVersion);
                     if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
                     {
                         result.PadToDesiredResolution = true;
@@ -98,7 +98,7 @@ namespace ErsatzTV.Core.FFmpeg
                         result.VideoTrackTimeScale = 90000;
                     }
 
-                    foreach (MediaStream stream in videoStream)
+                    foreach (MediaStream stream in videoStream.Where(s => s.AttachedPic == false))
                     {
                         if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
                             NeedToNormalizeVideoCodec(ffmpegProfile, stream))
@@ -154,7 +154,7 @@ namespace ErsatzTV.Core.FFmpeg
                         result.AudioCodec = "copy";
                     }
 
-                    if (version.VideoScanKind == VideoScanKind.Interlaced)
+                    if (videoVersion.VideoScanKind == VideoScanKind.Interlaced)
                     {
                         result.Deinterlace = true;
                     }
