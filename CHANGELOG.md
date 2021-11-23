@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Properly fix database incompatibility introduced with v0.2.4-alpha and partially fixed with v0.2.5-alpha
   - The proper fix requires rebuilding all playouts, which will happen on startup after upgrading
+- Fix local library locking/progress display when adding paths
 
 ### Added
 - Add *experimental* `Songs` local libraries
