@@ -76,7 +76,8 @@ namespace ErsatzTV.Core.Scheduling
                     GuideGroup = nextState.NextGuideGroup,
                     FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                         ? FillerKind.Tail
-                        : FillerKind.None
+                        : FillerKind.None,
+                    CustomTitle = scheduleItem.CustomTitle
                 };
                 
                 durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime); 
@@ -99,7 +100,11 @@ namespace ErsatzTV.Core.Scheduling
                     nextState = nextState with
                     {
                         CurrentTime = itemEndTimeWithFiller,
-                        NextGuideGroup = nextState.IncrementGuideGroup
+
+                        // only bump guide group if we don't have a custom title
+                        NextGuideGroup = string.IsNullOrWhiteSpace(scheduleItem.CustomTitle)
+                            ? nextState.IncrementGuideGroup
+                            : nextState.NextGuideGroup
                     };
 
                     contentEnumerator.MoveNext();
@@ -133,7 +138,10 @@ namespace ErsatzTV.Core.Scheduling
                 };
             }
 
-            nextState = nextState with { NextGuideGroup = nextState.DecrementGuideGroup };
+            if (playoutItems.Select(pi => pi.GuideGroup).Distinct().Count() != 1)
+            {
+                nextState = nextState with { NextGuideGroup = nextState.DecrementGuideGroup };
+            }
 
             foreach (DateTimeOffset nextItemStart in durationUntil)
             {
