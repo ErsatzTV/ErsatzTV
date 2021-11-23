@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -37,7 +36,7 @@ namespace ErsatzTV.Application.Libraries.Commands
             CreateLocalLibrary request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, LocalLibrary> validation = await Validate(dbContext, request);
             return await validation.Apply(localLibrary => PersistLocalLibrary(dbContext, localLibrary));
         }
