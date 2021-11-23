@@ -43,7 +43,7 @@ namespace ErsatzTV.Application.Libraries.Commands
             UpdateLocalLibrary request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
             return await validation.Apply(parameters => UpdateLocalLibrary(dbContext, parameters));
         }
@@ -53,7 +53,6 @@ namespace ErsatzTV.Application.Libraries.Commands
             (LocalLibrary existing, LocalLibrary incoming) = parameters;
             existing.Name = incoming.Name;
             
-            // toAdd
             var toAdd = incoming.Paths
                 .Filter(p => existing.Paths.All(ep => NormalizePath(ep.Path) != NormalizePath(p.Path)))
                 .ToList();
@@ -77,7 +76,7 @@ namespace ErsatzTV.Application.Libraries.Commands
                 _searchIndex.Commit();
             }
 
-            if (toAdd.Count > 0 || toRemove.Count > 0 && _entityLocker.LockLibrary(existing.Id))
+            if ((toAdd.Count > 0 || toRemove.Count > 0) && _entityLocker.LockLibrary(existing.Id))
             {
                 await _workerChannel.WriteAsync(new ForceScanLocalLibrary(existing.Id));
             }
