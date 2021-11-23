@@ -29,7 +29,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Option<MediaItem>> GetItemToIndex(int id)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.MediaItems
                 .AsNoTracking()
                 .Include(mi => mi.LibraryPath)
@@ -101,6 +101,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Tags)
                 .Include(mi => (mi as OtherVideo).MediaVersions)
                 .ThenInclude(mm => mm.Streams)
+                .Include(mi => (mi as Song).SongMetadata)
+                .ThenInclude(mm => mm.Tags)
+                .Include(mi => (mi as Song).MediaVersions)
+                .ThenInclude(mm => mm.Streams)
                 .Include(mi => mi.TraktListItems)
                 .ThenInclude(tli => tli.TraktList)
                 .OrderBy(mi => mi.Id)
@@ -139,7 +143,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         
         public async Task<List<string>> GetAllLanguageCodes(List<string> mediaCodes)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCodes);
         }
     }

@@ -5,6 +5,7 @@
         Movies = 1,
         Shows = 2,
         MusicVideos = 3,
-        OtherVideos = 4
+        OtherVideos = 4,
+        Songs = 5
     }
 }

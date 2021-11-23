@@ -17,6 +17,7 @@ namespace ErsatzTV.Core.Interfaces.Metadata
         Task<bool> RefreshFallbackMetadata(Artist artist, string artistFolder);
         Task<bool> RefreshFallbackMetadata(MusicVideo musicVideo);
         Task<bool> RefreshFallbackMetadata(OtherVideo otherVideo);
+        Task<bool> RefreshFallbackMetadata(Song song);
         Task<bool> RefreshFallbackMetadata(Show televisionShow, string showFolder);
     }
 }

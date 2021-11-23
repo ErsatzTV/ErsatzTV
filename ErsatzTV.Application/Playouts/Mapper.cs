@@ -48,6 +48,11 @@ namespace ErsatzTV.Application.Playouts
                         .Map(ovm => ovm.Title ?? string.Empty)
                         .Map(s => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle) ? s : $"{s} ({playoutItem.ChapterTitle})")
                         .IfNone("[unknown video]");
+                case Song s:
+                    return s.SongMetadata.HeadOrNone()
+                        .Map(sm => sm.Title ?? string.Empty)
+                        .Map(t => string.IsNullOrWhiteSpace(playoutItem.ChapterTitle) ? t : $"{s} ({playoutItem.ChapterTitle})")
+                        .IfNone("[unknown song]");
                 default:
                     return string.Empty;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -35,8 +36,10 @@ namespace ErsatzTV.Core.FFmpeg
             string ffmpegPath,
             bool saveReports,
             Channel channel,
-            MediaVersion version,
-            string path,
+            MediaVersion videoVersion,
+            MediaVersion audioVersion,
+            string videoPath,
+            string audioPath,
             DateTimeOffset start,
             DateTimeOffset finish,
             DateTimeOffset now,
@@ -48,13 +51,13 @@ namespace ErsatzTV.Core.FFmpeg
             TimeSpan inPoint,
             TimeSpan outPoint)
         {
-            MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
-            Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
+            MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
+            Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
 
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
                 channel.StreamingMode,
                 channel.FFmpegProfile,
-                version,
+                videoVersion,
                 videoStream,
                 maybeAudioStream,
                 start,
@@ -62,24 +65,28 @@ namespace ErsatzTV.Core.FFmpeg
                 inPoint,
                 outPoint);
 
-            (Option<ChannelWatermark> maybeWatermark, Option<string> maybeWatermarkPath) =
-                GetWatermarkOptions(channel, globalWatermark);
-
-            bool isAnimated = await maybeWatermarkPath.Match(
-                p => _imageCache.IsAnimated(p),
-                () => Task.FromResult(false));
+            List<WatermarkOptions> watermarkOptions =
+                await GetAllWatermarkOptions(channel, globalWatermark, videoStream);
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
                 .WithVaapiDriver(vaapiDriver, vaapiDevice)
-                .WithHardwareAcceleration(playbackSettings.HardwareAcceleration, videoStream.PixelFormat, playbackSettings.VideoCodec)
+                .WithHardwareAcceleration(
+                    playbackSettings.HardwareAcceleration,
+                    videoStream.PixelFormat,
+                    playbackSettings.VideoCodec)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
-                .WithSeek(playbackSettings.StreamSeek)
-                .WithInfiniteLoop(fillerKind == FillerKind.Fallback)
-                .WithInputCodec(path, playbackSettings.VideoDecoder, videoStream.Codec, videoStream.PixelFormat)
-                .WithWatermark(maybeWatermark, maybeWatermarkPath, channel.FFmpegProfile.Resolution, isAnimated)
+                .WithInputCodec(
+                    playbackSettings.StreamSeek,
+                    fillerKind == FillerKind.Fallback,
+                    videoPath,
+                    audioPath,
+                    playbackSettings.VideoDecoder,
+                    videoStream.Codec,
+                    videoStream.PixelFormat)
+                .WithWatermarks(watermarkOptions, channel.FFmpegProfile.Resolution)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(playbackSettings.AudioDuration)
                 .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);
@@ -96,7 +103,12 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     builder = builder
-                        .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
+                        .WithFilterComplex(
+                            videoStream,
+                            maybeAudioStream,
+                            videoPath,
+                            audioPath,
+                            channel.FFmpegProfile.VideoCodec);
                 },
                 () =>
                 {
@@ -105,18 +117,33 @@ namespace ErsatzTV.Core.FFmpeg
                         builder = builder
                             .WithDeinterlace(playbackSettings.Deinterlace)
                             .WithBlackBars(channel.FFmpegProfile.Resolution)
-                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
+                            .WithFilterComplex(
+                                videoStream,
+                                maybeAudioStream,
+                                videoPath,
+                                audioPath,
+                                channel.FFmpegProfile.VideoCodec);
                     }
                     else if (playbackSettings.Deinterlace)
                     {
                         builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
                             .WithAlignedAudio(playbackSettings.AudioDuration)
-                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
+                            .WithFilterComplex(
+                                videoStream,
+                                maybeAudioStream,
+                                videoPath,
+                                audioPath,
+                                channel.FFmpegProfile.VideoCodec);
                     }
                     else
                     {
                         builder = builder
-                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
+                            .WithFilterComplex(
+                                videoStream,
+                                maybeAudioStream,
+                                videoPath,
+                                audioPath,
+                                channel.FFmpegProfile.VideoCodec);
                     }
                 });
 
@@ -128,7 +155,7 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
-                    return builder.WithHls(channel.Number, version)
+                    return builder.WithHls(channel.Number, videoVersion)
                         .WithRealtimeOutput(hlsRealtime)
                         .Build();
                 default:
@@ -199,7 +226,35 @@ namespace ErsatzTV.Core.FFmpeg
         private bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
             displaySize.Width != target.Width || displaySize.Height != target.Height;
 
-        private WatermarkOptions GetWatermarkOptions(Channel channel, Option<ChannelWatermark> globalWatermark)
+        private async Task<List<WatermarkOptions>> GetAllWatermarkOptions(
+            Channel channel,
+            Option<ChannelWatermark> globalWatermark,
+            Option<MediaStream> maybeVideoStream)
+        {
+            var result = new List<WatermarkOptions>();
+            foreach (WatermarkOptions options in Optional(await GetWatermarkOptions(channel, globalWatermark)))
+            {
+                result.Add(options);
+            }
+
+            foreach (MediaStream videoStream in maybeVideoStream.Where(s => s.AttachedPic))
+            {
+                // TODO: use attached pic as watermark
+
+                // var options = new WatermarkOptions(
+                //     new ChannelWatermark
+                //     {
+                //     },
+                //     None,
+                //     false);
+                //
+                // result.Add(options);
+            }
+
+            return result;
+        }
+
+        private async Task<WatermarkOptions> GetWatermarkOptions(Channel channel, Option<ChannelWatermark> globalWatermark)
         {
             if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && channel.FFmpegProfile.Transcode &&
                 channel.FFmpegProfile.NormalizeVideo)
@@ -214,13 +269,18 @@ namespace ErsatzTV.Core.FFmpeg
                                 channel.Watermark.Image,
                                 ArtworkKind.Watermark,
                                 Option<int>.None);
-                            return new WatermarkOptions(channel.Watermark, customPath);
+                            return new WatermarkOptions(channel.Watermark, customPath, await _imageCache.IsAnimated(customPath));
                         case ChannelWatermarkImageSource.ChannelLogo:
                             Option<string> maybeChannelPath = channel.Artwork
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                                 .HeadOrNone()
                                 .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
-                            return new WatermarkOptions(channel.Watermark, maybeChannelPath);
+                            return new WatermarkOptions(
+                                channel.Watermark,
+                                maybeChannelPath,
+                                await maybeChannelPath.Match(
+                                    p => _imageCache.IsAnimated(p),
+                                    () => Task.FromResult(false)));
                         default:
                             throw new NotSupportedException("Unsupported watermark image source");
                     }
@@ -236,22 +296,25 @@ namespace ErsatzTV.Core.FFmpeg
                                 watermark.Image,
                                 ArtworkKind.Watermark,
                                 Option<int>.None);
-                            return new WatermarkOptions(watermark, customPath);
+                            return new WatermarkOptions(watermark, customPath, await _imageCache.IsAnimated(customPath));
                         case ChannelWatermarkImageSource.ChannelLogo:
                             Option<string> maybeChannelPath = channel.Artwork
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
                                 .HeadOrNone()
                                 .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
-                            return new WatermarkOptions(watermark, maybeChannelPath);
+                            return new WatermarkOptions(
+                                watermark,
+                                maybeChannelPath,
+                                await maybeChannelPath.Match(
+                                    p => _imageCache.IsAnimated(p),
+                                    () => Task.FromResult(false)));
                         default:
                             throw new NotSupportedException("Unsupported watermark image source");
                     }
                 }
             }
 
-            return new WatermarkOptions(None, None);
+            return new WatermarkOptions(None, None, false);
         }
-
-        private record WatermarkOptions(Option<ChannelWatermark> Watermark, Option<string> ImagePath);
     }
 }

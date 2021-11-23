@@ -34,7 +34,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Option<Collection>> GetCollectionWithCollectionItemsUntracked(int id)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.Collections
                 .Include(c => c.CollectionItems)
                 .OrderBy(c => c.Id)
@@ -44,7 +44,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<MediaItem>> GetItems(int collectionId)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
             var result = new List<MediaItem>();
 
@@ -55,13 +55,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             result.AddRange(await GetArtistItems(dbContext, collectionId));
             result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
             result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
+            result.AddRange(await GetSongItems(dbContext, collectionId));
 
             return result.Distinct().ToList();
         }
 
         public async Task<List<MediaItem>> GetMultiCollectionItems(int id)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
             var result = new List<MediaItem>();
 
@@ -81,6 +82,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     result.AddRange(await GetArtistItems(dbContext, collectionId));
                     result.AddRange(await GetMusicVideoItems(dbContext, collectionId));
                     result.AddRange(await GetOtherVideoItems(dbContext, collectionId));
+                    result.AddRange(await GetSongItems(dbContext, collectionId));
                 }
 
                 foreach (int smartCollectionId in multiCollection.SmartCollections.Map(c => c.Id))
@@ -94,7 +96,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<MediaItem>> GetSmartCollectionItems(int id)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
             var result = new List<MediaItem>();
 
@@ -145,6 +147,12 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     .Map(i => i.Id)
                     .ToList();
                 result.AddRange(await GetOtherVideoItems(dbContext, otherVideoIds));
+
+                var songIds = searchResults.Items
+                    .Filter(i => i.Type == SearchIndex.SongType)
+                    .Map(i => i.Id)
+                    .ToList();
+                result.AddRange(await GetSongItems(dbContext, songIds));
             }
 
             return result;
@@ -152,7 +160,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<CollectionWithItems>> GetMultiCollectionCollections(int id)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
             var result = new List<CollectionWithItems>();
 
@@ -439,6 +447,25 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
                 .Filter(m => otherVideoIds.Contains(m.Id))
+                .ToListAsync();
+
+        private async Task<List<Song>> GetSongItems(TvContext dbContext, int collectionId)
+        {
+            IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+                @"SELECT s.Id FROM CollectionItem ci
+            INNER JOIN Song s ON s.Id = ci.MediaItemId
+            WHERE ci.CollectionId = @CollectionId",
+                new { CollectionId = collectionId });
+
+            return await GetSongItems(dbContext, ids);
+        }
+
+        private static Task<List<Song>> GetSongItems(TvContext dbContext, IEnumerable<int> songIds) =>
+            dbContext.Songs
+                .Include(m => m.SongMetadata)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.Chapters)
+                .Filter(m => songIds.Contains(m.Id))
                 .ToListAsync();
 
         private async Task<List<Episode>> GetShowItems(TvContext dbContext, int collectionId)

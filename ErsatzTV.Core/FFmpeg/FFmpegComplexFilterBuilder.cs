@@ -60,15 +60,23 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegComplexFilterBuilder WithInputCodec(string codec)
+        public FFmpegComplexFilterBuilder WithInputCodec(Option<string> maybeCodec)
         {
-            _inputCodec = codec;
+            foreach (string codec in maybeCodec)
+            {
+                _inputCodec = codec;
+            }
+
             return this;
         }
 
-        public FFmpegComplexFilterBuilder WithInputPixelFormat(string pixelFormat)
+        public FFmpegComplexFilterBuilder WithInputPixelFormat(Option<string> maybePixelFormat)
         {
-            _pixelFormat = pixelFormat;
+            foreach (string pixelFormat in maybePixelFormat)
+            {
+                _pixelFormat = pixelFormat;
+            }
+
             return this;
         }
 
@@ -85,12 +93,12 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public Option<FFmpegComplexFilter> Build(int videoStreamIndex, Option<int> audioStreamIndex)
+        public Option<FFmpegComplexFilter> Build(int videoInput, int videoStreamIndex, int audioInput, Option<int> audioStreamIndex)
         {
             var complexFilter = new StringBuilder();
 
-            var videoLabel = $"0:{videoStreamIndex}";
-            string audioLabel = audioStreamIndex.Match(index => $"0:{index}", () => "0:a");
+            var videoLabel = $"{videoInput}:{videoStreamIndex}";
+            string audioLabel = audioStreamIndex.Match(index => $"{audioInput}:{index}", () => "0:a");
 
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
             bool isHardwareDecode = acceleration switch
@@ -306,7 +314,7 @@ namespace ErsatzTV.Core.FFmpeg
                         complexFilter.Append("[vt];");
                     }
 
-                    var watermarkLabel = "[1:v]";
+                    var watermarkLabel = $"[{audioInput+1}:v]";
                     if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
                     {
                         complexFilter.Append($"{watermarkLabel}{watermarkPreprocess}[wmp];");

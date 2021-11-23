@@ -71,7 +71,7 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel, string pixelFormat, string encoder)
+        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel, Option<string> pixelFormat, string encoder)
         {
             _hwAccel = hwAccel;
 
@@ -84,7 +84,7 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("qsv=qsv:MFX_IMPL_hw_any");
                     break;
                 case HardwareAccelerationKind.Nvenc:
-                    string outputFormat = (encoder, pixelFormat) switch
+                    string outputFormat = (encoder, pixelFormat.IfNone("")) switch
                     {
                         ("hevc_nvenc", "yuv420p10le") => "p010le",
                         ("h264_nvenc", "yuv420p10le") => "p010le",
@@ -187,31 +187,51 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithWatermark(
-            Option<ChannelWatermark> watermark,
-            Option<string> maybePath,
-            IDisplaySize resolution,
-            bool isAnimated)
+        public FFmpegProcessBuilder WithWatermarks(
+            List<WatermarkOptions> watermarkOptions,
+            IDisplaySize resolution)
         {
-            foreach (string path in maybePath)
+            foreach (WatermarkOptions options in watermarkOptions)
             {
-                if (isAnimated)
+                foreach (string path in options.ImagePath)
                 {
-                    _arguments.Add("-ignore_loop");
-                    _arguments.Add("0");
+                    if (options.IsAnimated)
+                    {
+                        _arguments.Add("-ignore_loop");
+                        _arguments.Add("0");
+                    }
+
+                    _arguments.Add("-i");
+                    _arguments.Add(path);
+
+                    _complexFilterBuilder = _complexFilterBuilder.WithWatermark(options.Watermark, resolution);
                 }
-
-                _arguments.Add("-i");
-                _arguments.Add(path);
-
-                _complexFilterBuilder = _complexFilterBuilder.WithWatermark(watermark, resolution);
+                
+                // TODO: when image path is null?
             }
-
+            
             return this;
         }
 
-        public FFmpegProcessBuilder WithInputCodec(string input, string decoder, string codec, string pixelFormat)
+        public FFmpegProcessBuilder WithInputCodec(
+            Option<TimeSpan> maybeStart,
+            bool loop,
+            string videoPath,
+            string audioPath,
+            string decoder,
+            Option<string> codec,
+            Option<string> pixelFormat)
         {
+            if (audioPath == videoPath)
+            {
+                WithSeek(maybeStart);
+                WithInfiniteLoop(loop);
+            }
+            else
+            {
+                WithInfiniteLoop();
+            }
+
             if (!string.IsNullOrWhiteSpace(decoder))
             {
                 _arguments.Add("-c:v");
@@ -223,7 +243,16 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithInputPixelFormat(pixelFormat);
 
             _arguments.Add("-i");
-            _arguments.Add($"{input}");
+            _arguments.Add(videoPath);
+
+            if (audioPath != videoPath)
+            {
+                WithSeek(maybeStart);
+
+                _arguments.Add("-i");
+                _arguments.Add(audioPath);
+            }
+
             return this;
         }
 
@@ -477,6 +506,8 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegProcessBuilder WithFilterComplex(
             MediaStream videoStream,
             Option<MediaStream> maybeAudioStream,
+            string videoPath,
+            string audioPath,
             string videoCodec)
         {
             _complexFilterBuilder = _complexFilterBuilder.WithVideoEncoder(videoCodec);
@@ -484,10 +515,22 @@ namespace ErsatzTV.Core.FFmpeg
             int videoStreamIndex = videoStream.Index;
             Option<int> maybeIndex = maybeAudioStream.Map(ms => ms.Index);
 
-            var videoLabel = $"0:{videoStreamIndex}";
-            var audioLabel = $"0:{maybeIndex.Match(i => i.ToString(), () => "a")}";
+            var videoIndex = 0;
+            var audioIndex = 0;
+            if (audioPath != videoPath)
+            {
+                audioIndex = 1;
+            }
 
-            Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(videoStreamIndex, maybeIndex);
+            var videoLabel = $"{videoIndex}:{videoStreamIndex}";
+            var audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
+
+            Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(
+                videoIndex,
+                videoStreamIndex,
+                audioIndex,
+                maybeIndex);
+
             maybeFilter.IfSome(
                 filter =>
                 {

@@ -184,6 +184,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     StreamingMode = StreamingMode.TransportStream
                 },
                 v,
+                v,
+                file,
                 file,
                 now,
                 now + TimeSpan.FromSeconds(5),

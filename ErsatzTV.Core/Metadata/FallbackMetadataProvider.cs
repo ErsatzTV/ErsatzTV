@@ -104,6 +104,19 @@ namespace ErsatzTV.Core.Metadata
             return GetOtherVideoMetadata(path, metadata);
         }
 
+        public Option<SongMetadata> GetFallbackMetadata(Song song)
+        {
+            string path = song.MediaVersions.Head().MediaFiles.Head().Path;
+            string fileName = Path.GetFileNameWithoutExtension(path);
+            var metadata = new SongMetadata
+            {
+                MetadataKind = MetadataKind.Fallback,
+                Title = fileName ?? path,
+                Song = song
+            };
+
+            return GetSongMetadata(path, metadata);        }
+
         public string GetSortTitle(string title)
         {
             if (string.IsNullOrWhiteSpace(title))
@@ -241,6 +254,43 @@ namespace ErsatzTV.Core.Metadata
                 }
 
                 string libraryPath = metadata.OtherVideo.LibraryPath.Path;
+                string parent = Optional(Directory.GetParent(libraryPath)).Match(
+                    di => di.FullName,
+                    () => libraryPath);
+                
+                string diff = Path.GetRelativePath(parent, folder);
+                
+                var tags = diff.Split(Path.DirectorySeparatorChar)
+                    .Map(t => new Tag { Name = t })
+                    .ToList();
+                
+                metadata.Artwork = new List<Artwork>();
+                metadata.Actors = new List<Actor>();
+                metadata.Genres = new List<Genre>();
+                metadata.Tags = tags;
+                metadata.Studios = new List<Studio>();
+                metadata.DateUpdated = DateTime.UtcNow;
+                metadata.OriginalTitle = Path.GetRelativePath(libraryPath, path);
+
+                return metadata;
+            }
+            catch (Exception)
+            {
+                return None;
+            }
+        }
+        
+        private Option<SongMetadata> GetSongMetadata(string path, SongMetadata metadata)
+        {
+            try
+            {
+                string folder = Path.GetDirectoryName(path);
+                if (folder == null)
+                {
+                    return None;
+                }
+
+                string libraryPath = metadata.Song.LibraryPath.Path;
                 string parent = Optional(Directory.GetParent(libraryPath)).Match(
                     di => di.FullName,
                     () => libraryPath);

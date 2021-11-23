@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
@@ -161,29 +162,13 @@ namespace ErsatzTV.Core.Scheduling
 
         protected static TimeSpan DurationForMediaItem(MediaItem mediaItem)
         {
-            MediaVersion version = mediaItem switch
-            {
-                Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head(),
-                MusicVideo mv => mv.MediaVersions.Head(),
-                OtherVideo mv => mv.MediaVersions.Head(),
-                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-            };
-
+            MediaVersion version = mediaItem.GetHeadVersion();
             return version.Duration;
         }
 
         protected static List<MediaChapter> ChaptersForMediaItem(MediaItem mediaItem)
         {
-            MediaVersion version = mediaItem switch
-            {
-                Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head(),
-                MusicVideo mv => mv.MediaVersions.Head(),
-                OtherVideo mv => mv.MediaVersions.Head(),
-                _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-            };
-
+            MediaVersion version = mediaItem.GetHeadVersion();
             return version.Chapters;
         }
 

@@ -12,6 +12,7 @@ namespace ErsatzTV.Core.Interfaces.Metadata
         MovieMetadata GetFallbackMetadata(Movie movie);
         Option<MusicVideoMetadata> GetFallbackMetadata(MusicVideo musicVideo);
         Option<OtherVideoMetadata> GetFallbackMetadata(OtherVideo otherVideo);
+        Option<SongMetadata> GetFallbackMetadata(Song song);
         string GetSortTitle(string title);
     }
 }
