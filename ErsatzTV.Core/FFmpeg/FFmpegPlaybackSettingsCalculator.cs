@@ -46,7 +46,7 @@ namespace ErsatzTV.Core.FFmpeg
             StreamingMode streamingMode,
             FFmpegProfile ffmpegProfile,
             MediaVersion version,
-            MediaStream videoStream,
+            Option<MediaStream> videoStream,
             Option<MediaStream> audioStream,
             DateTimeOffset start,
             DateTimeOffset now,
@@ -98,32 +98,36 @@ namespace ErsatzTV.Core.FFmpeg
                         result.VideoTrackTimeScale = 90000;
                     }
 
-                    if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
-                        NeedToNormalizeVideoCodec(ffmpegProfile, videoStream))
+                    foreach (MediaStream stream in videoStream)
                     {
-                        result.VideoCodec = ffmpegProfile.VideoCodec;
-                        result.VideoBitrate = ffmpegProfile.VideoBitrate;
-                        result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
+                        if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
+                            NeedToNormalizeVideoCodec(ffmpegProfile, stream))
+                        {
+                            result.VideoCodec = ffmpegProfile.VideoCodec;
+                            result.VideoBitrate = ffmpegProfile.VideoBitrate;
+                            result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
 
-                        result.VideoDecoder =
-                            (result.HardwareAcceleration, videoStream.Codec, videoStream.PixelFormat) switch
-                            {
-                                (HardwareAccelerationKind.Nvenc, "h264", "yuv420p10le" or "yuv444p" or "yuv444p10le") =>
-                                    "h264",
-                                (HardwareAccelerationKind.Nvenc, "hevc", "yuv444p" or "yuv444p10le") => "hevc",
-                                (HardwareAccelerationKind.Nvenc, "h264", _) => "h264_cuvid",
-                                (HardwareAccelerationKind.Nvenc, "hevc", _) => "hevc_cuvid",
-                                (HardwareAccelerationKind.Nvenc, "mpeg2video", _) => "mpeg2_cuvid",
-                                (HardwareAccelerationKind.Nvenc, "mpeg4", _) => "mpeg4_cuvid",
-                                (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
-                                (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
-                                (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
-                                _ => null
-                            };
-                    }
-                    else
-                    {
-                        result.VideoCodec = "copy";
+                            result.VideoDecoder =
+                                (result.HardwareAcceleration, stream.Codec, stream.PixelFormat) switch
+                                {
+                                    (HardwareAccelerationKind.Nvenc, "h264", "yuv420p10le" or "yuv444p" or "yuv444p10le"
+                                        ) =>
+                                        "h264",
+                                    (HardwareAccelerationKind.Nvenc, "hevc", "yuv444p" or "yuv444p10le") => "hevc",
+                                    (HardwareAccelerationKind.Nvenc, "h264", _) => "h264_cuvid",
+                                    (HardwareAccelerationKind.Nvenc, "hevc", _) => "hevc_cuvid",
+                                    (HardwareAccelerationKind.Nvenc, "mpeg2video", _) => "mpeg2_cuvid",
+                                    (HardwareAccelerationKind.Nvenc, "mpeg4", _) => "mpeg4_cuvid",
+                                    (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
+                                    (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
+                                    (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
+                                    _ => null
+                                };
+                        }
+                        else
+                        {
+                            result.VideoCodec = "copy";
+                        }
                     }
 
                     if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeAudio)

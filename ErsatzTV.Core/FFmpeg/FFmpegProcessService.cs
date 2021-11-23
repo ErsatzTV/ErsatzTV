@@ -48,14 +48,14 @@ namespace ErsatzTV.Core.FFmpeg
             TimeSpan inPoint,
             TimeSpan outPoint)
         {
-            MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
+            Option<MediaStream> maybeVideoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, version);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, version);
 
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
                 channel.StreamingMode,
                 channel.FFmpegProfile,
                 version,
-                videoStream,
+                maybeVideoStream,
                 maybeAudioStream,
                 start,
                 now,
@@ -72,13 +72,13 @@ namespace ErsatzTV.Core.FFmpeg
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
                 .WithVaapiDriver(vaapiDriver, vaapiDevice)
-                .WithHardwareAcceleration(playbackSettings.HardwareAcceleration, videoStream.PixelFormat, playbackSettings.VideoCodec)
+                .WithHardwareAcceleration(playbackSettings.HardwareAcceleration, maybeVideoStream.Map(s => s.PixelFormat), playbackSettings.VideoCodec)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
                 .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                 .WithSeek(playbackSettings.StreamSeek)
                 .WithInfiniteLoop(fillerKind == FillerKind.Fallback)
-                .WithInputCodec(path, playbackSettings.VideoDecoder, videoStream.Codec, videoStream.PixelFormat)
+                .WithInputCodec(path, playbackSettings.VideoDecoder, maybeVideoStream.Map(s => s.Codec), maybeVideoStream.Map(s => s.PixelFormat))
                 .WithWatermark(maybeWatermark, maybeWatermarkPath, channel.FFmpegProfile.Resolution, isAnimated)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(playbackSettings.AudioDuration)
@@ -96,7 +96,7 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     builder = builder
-                        .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
+                        .WithFilterComplex(maybeVideoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
                 },
                 () =>
                 {
@@ -105,18 +105,18 @@ namespace ErsatzTV.Core.FFmpeg
                         builder = builder
                             .WithDeinterlace(playbackSettings.Deinterlace)
                             .WithBlackBars(channel.FFmpegProfile.Resolution)
-                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
+                            .WithFilterComplex(maybeVideoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
                     }
                     else if (playbackSettings.Deinterlace)
                     {
                         builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
                             .WithAlignedAudio(playbackSettings.AudioDuration)
-                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
+                            .WithFilterComplex(maybeVideoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
                     }
                     else
                     {
                         builder = builder
-                            .WithFilterComplex(videoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
+                            .WithFilterComplex(maybeVideoStream, maybeAudioStream, channel.FFmpegProfile.VideoCodec);
                     }
                 });
 

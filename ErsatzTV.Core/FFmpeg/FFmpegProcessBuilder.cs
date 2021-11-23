@@ -71,7 +71,7 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel, string pixelFormat, string encoder)
+        public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel, Option<string> pixelFormat, string encoder)
         {
             _hwAccel = hwAccel;
 
@@ -84,7 +84,7 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("qsv=qsv:MFX_IMPL_hw_any");
                     break;
                 case HardwareAccelerationKind.Nvenc:
-                    string outputFormat = (encoder, pixelFormat) switch
+                    string outputFormat = (encoder, pixelFormat.IfNone("")) switch
                     {
                         ("hevc_nvenc", "yuv420p10le") => "p010le",
                         ("h264_nvenc", "yuv420p10le") => "p010le",
@@ -210,7 +210,7 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithInputCodec(string input, string decoder, string codec, string pixelFormat)
+        public FFmpegProcessBuilder WithInputCodec(string input, string decoder, Option<string> codec, Option<string> pixelFormat)
         {
             if (!string.IsNullOrWhiteSpace(decoder))
             {
@@ -475,13 +475,14 @@ namespace ErsatzTV.Core.FFmpeg
         }
 
         public FFmpegProcessBuilder WithFilterComplex(
-            MediaStream videoStream,
+            Option<MediaStream> maybeVideoStream,
             Option<MediaStream> maybeAudioStream,
             string videoCodec)
         {
             _complexFilterBuilder = _complexFilterBuilder.WithVideoEncoder(videoCodec);
 
-            int videoStreamIndex = videoStream.Index;
+            // TODO: we should always have a video stream here
+            int videoStreamIndex = maybeVideoStream.Map(s => s.Index).IfNone(0);
             Option<int> maybeIndex = maybeAudioStream.Map(ms => ms.Index);
 
             var videoLabel = $"0:{videoStreamIndex}";

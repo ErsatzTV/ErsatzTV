@@ -60,15 +60,23 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegComplexFilterBuilder WithInputCodec(string codec)
+        public FFmpegComplexFilterBuilder WithInputCodec(Option<string> maybeCodec)
         {
-            _inputCodec = codec;
+            foreach (string codec in maybeCodec)
+            {
+                _inputCodec = codec;
+            }
+
             return this;
         }
 
-        public FFmpegComplexFilterBuilder WithInputPixelFormat(string pixelFormat)
+        public FFmpegComplexFilterBuilder WithInputPixelFormat(Option<string> maybePixelFormat)
         {
-            _pixelFormat = pixelFormat;
+            foreach (string pixelFormat in maybePixelFormat)
+            {
+                _pixelFormat = pixelFormat;
+            }
+
             return this;
         }
 

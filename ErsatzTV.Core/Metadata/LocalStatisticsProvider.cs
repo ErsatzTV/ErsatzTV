@@ -207,6 +207,7 @@ namespace ErsatzTV.Core.Metadata
                             {
                                 stream.Default = videoStream.disposition.@default == 1;
                                 stream.Forced = videoStream.disposition.forced == 1;
+                                stream.AttachedPic = videoStream.disposition.attached_pic == 1;
                             }
 
                             version.Streams.Add(stream);
@@ -300,7 +301,7 @@ namespace ErsatzTV.Core.Metadata
 
         public record FFprobeFormat(string duration);
 
-        public record FFprobeDisposition(int @default, int forced);
+        public record FFprobeDisposition(int @default, int forced, int attached_pic);
 
         public record FFprobeTags(string language, string title);
 

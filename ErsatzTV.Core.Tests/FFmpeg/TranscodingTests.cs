@@ -246,8 +246,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
         private class FakeStreamSelector : IFFmpegStreamSelector
         {
-            public Task<MediaStream> SelectVideoStream(Channel channel, MediaVersion version) =>
-                version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video).AsTask();
+            public Task<Option<MediaStream>> SelectVideoStream(Channel channel, MediaVersion version) =>
+                Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video)).AsTask();
 
             public Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version) =>
                 Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();

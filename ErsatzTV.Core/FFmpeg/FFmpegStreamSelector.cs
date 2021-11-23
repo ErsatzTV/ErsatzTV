@@ -27,8 +27,11 @@ namespace ErsatzTV.Core.FFmpeg
             _configElementRepository = configElementRepository;
         }
 
-        public Task<MediaStream> SelectVideoStream(Channel channel, MediaVersion version) =>
-            version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video).AsTask();
+        public Task<Option<MediaStream>> SelectVideoStream(Channel channel, MediaVersion version) =>
+            version.Streams
+                .OrderBy(s => s.AttachedPic == false)
+                .Find(s => s.MediaStreamKind == MediaStreamKind.Video)
+                .AsTask();
 
         public async Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version)
         {
