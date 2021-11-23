@@ -77,6 +77,72 @@ namespace ErsatzTV.Core.Tests.Scheduling
         }
         
         [Test]
+        public void Should_Fill_Exact_Duration_CustomTitle()
+        {
+            Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromHours(1));
+
+            var scheduleItem = new ProgramScheduleItemDuration
+            {
+                Id = 1,
+                Index = 1,
+                Collection = collectionOne,
+                CollectionId = collectionOne.Id,
+                StartTime = null,
+                PlayoutDuration = TimeSpan.FromHours(3),
+                TailMode = TailMode.None,
+                PlaybackOrder = PlaybackOrder.Chronological,
+                CustomTitle = "Custom Title"
+            };
+
+            var enumerator = new ChronologicalMediaCollectionEnumerator(
+                collectionOne.MediaItems,
+                new CollectionEnumeratorState());
+            
+            var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
+            (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
+                StartState,
+                CollectionEnumerators(scheduleItem, enumerator),
+                scheduleItem,
+                NextScheduleItem,
+                HardStop);
+
+            playoutBuilderState.CurrentTime.Should().Be(StartState.CurrentTime.AddHours(3));
+            playoutItems.Last().FinishOffset.Should().Be(playoutBuilderState.CurrentTime);
+
+            playoutBuilderState.NextGuideGroup.Should().Be(2);
+            playoutBuilderState.DurationFinish.IsNone.Should().BeTrue();
+            playoutBuilderState.InFlood.Should().BeFalse();
+            playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
+            playoutBuilderState.InDurationFiller.Should().BeFalse();
+            playoutBuilderState.ScheduleItemIndex.Should().Be(1);
+
+            enumerator.State.Index.Should().Be(1);
+
+            playoutItems.Count.Should().Be(3);
+
+            playoutItems[0].MediaItemId.Should().Be(1);
+            playoutItems[0].StartOffset.Should().Be(StartState.CurrentTime);
+            playoutItems[0].GuideGroup.Should().Be(1);
+            playoutItems[0].FillerKind.Should().Be(FillerKind.None);
+            playoutItems[0].GuideFinish.HasValue.Should().BeFalse();
+            playoutItems[0].CustomTitle.Should().Be("Custom Title");
+
+            playoutItems[1].MediaItemId.Should().Be(2);
+            playoutItems[1].StartOffset.Should().Be(StartState.CurrentTime.AddHours(1));
+            playoutItems[1].GuideGroup.Should().Be(1);
+            playoutItems[1].FillerKind.Should().Be(FillerKind.None);
+            playoutItems[1].GuideFinish.HasValue.Should().BeFalse();
+            playoutItems[1].CustomTitle.Should().Be("Custom Title");
+
+            playoutItems[2].MediaItemId.Should().Be(1);
+            playoutItems[2].StartOffset.Should().Be(StartState.CurrentTime.AddHours(2));
+            playoutItems[2].GuideGroup.Should().Be(1);
+            playoutItems[2].FillerKind.Should().Be(FillerKind.None);
+            playoutItems[2].GuideFinish.HasValue.Should().BeTrue();
+            playoutItems[2].CustomTitle.Should().Be("Custom Title");
+        }
+        
+        [Test]
         public void Should_Not_Have_Gap_Duration_Tail_Mode_None()
         {
             Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromMinutes(55));
