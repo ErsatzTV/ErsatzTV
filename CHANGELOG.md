@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - For Example, a song at `rock/band/1990 - Album/01 whatever.flac` will have the tags `rock`, `band` and `1990 - Album`, and the title `01 whatever`
     - Channels that play songs *require* fallback filler to provide looping video to pair with the songs
 - Add `Covert Art` watermark source to support displaying embedded cover art from songs
+- Add support for `.webm` video files
 
 ## [0.2.5-alpha] - 2021-11-21
 ### Fixed
