@@ -62,6 +62,7 @@ namespace ErsatzTV.Infrastructure.Search
         public const string MusicVideoType = "music_video";
         public const string EpisodeType = "episode";
         public const string OtherVideoType = "other_video";
+        public const string SongType = "song";
         private readonly List<CultureInfo> _cultureInfos;
 
         private readonly ILogger<SearchIndex> _logger;
@@ -125,6 +126,9 @@ namespace ErsatzTV.Infrastructure.Search
                         break;
                     case OtherVideo otherVideo:
                         await UpdateOtherVideo(searchRepository, otherVideo);
+                        break;
+                    case Song song:
+                        await UpdateSong(searchRepository, song);
                         break;
                 }
             }
@@ -225,6 +229,9 @@ namespace ErsatzTV.Infrastructure.Search
                             break;
                         case OtherVideo otherVideo:
                             await UpdateOtherVideo(searchRepository, otherVideo);
+                            break;
+                        case Song song:
+                            await UpdateSong(searchRepository, song);
                             break;
                     }
                 }
@@ -812,6 +819,49 @@ namespace ErsatzTV.Infrastructure.Search
                 {
                     metadata.OtherVideo = null;
                     _logger.LogWarning(ex, "Error indexing other video with metadata {@Metadata}", metadata);
+                }
+            }
+        }
+        
+        private async Task UpdateSong(ISearchRepository searchRepository, Song song)
+        {
+            Option<SongMetadata> maybeMetadata = song.SongMetadata.HeadOrNone();
+            if (maybeMetadata.IsSome)
+            {
+                SongMetadata metadata = maybeMetadata.ValueUnsafe();
+
+                try
+                {
+                    var doc = new Document
+                    {
+                        new StringField(IdField, song.Id.ToString(), Field.Store.YES),
+                        new StringField(TypeField, SongType, Field.Store.YES),
+                        new TextField(TitleField, metadata.Title, Field.Store.NO),
+                        new StringField(SortTitleField, metadata.SortTitle.ToLowerInvariant(), Field.Store.NO),
+                        new TextField(LibraryNameField, song.LibraryPath.Library.Name, Field.Store.NO),
+                        new StringField(LibraryIdField, song.LibraryPath.Library.Id.ToString(), Field.Store.NO),
+                        new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                    };
+
+                    await AddLanguages(searchRepository, doc, song.MediaVersions);
+                    
+                    foreach (MediaVersion version in song.MediaVersions.HeadOrNone())
+                    {
+                        doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    }
+
+                    foreach (Tag tag in metadata.Tags)
+                    {
+                        doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                    }
+
+                    _writer.UpdateDocument(new Term(IdField, song.Id.ToString()), doc);
+                }
+                catch (Exception ex)
+                {
+                    metadata.Song = null;
+                    _logger.LogWarning(ex, "Error indexing song with metadata {@Metadata}", metadata);
                 }
             }
         }

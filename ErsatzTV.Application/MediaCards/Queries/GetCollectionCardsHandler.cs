@@ -30,7 +30,7 @@ namespace ErsatzTV.Application.MediaCards.Queries
             GetCollectionCards request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
                 .Map(list => list.HeadOrNone());
@@ -82,6 +82,9 @@ namespace ErsatzTV.Application.MediaCards.Queries
                 .ThenInclude(s => s.SeasonMetadata)
                 .Include(c => c.MediaItems)
                 .ThenInclude(i => (i as OtherVideo).OtherVideoMetadata)
+                .ThenInclude(ovm => ovm.Artwork)
+                .Include(c => c.MediaItems)
+                .ThenInclude(i => (i as Song).SongMetadata)
                 .ThenInclude(ovm => ovm.Artwork)
                 .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
                 .Map(c => c.ToEither(BaseError.New("Unable to load collection")))

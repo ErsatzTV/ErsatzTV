@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -18,6 +19,11 @@ namespace ErsatzTV.Core.Metadata
         {
             ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
             ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts"
+        };
+
+        public static readonly List<string> AudioFileExtensions = new()
+        {
+            ".aac", ".alac", ".flac", ".mp3", ".m4a", ".wav", ".wma"
         };
 
         public static readonly List<string> ImageFileExtensions = new()
@@ -68,14 +74,7 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                MediaVersion version = mediaItem.Item switch
-                {
-                    Movie m => m.MediaVersions.Head(),
-                    Episode e => e.MediaVersions.Head(),
-                    MusicVideo mv => mv.MediaVersions.Head(),
-                    OtherVideo ov => ov.MediaVersions.Head(),
-                    _ => throw new ArgumentOutOfRangeException(nameof(mediaItem))
-                };
+                MediaVersion version = mediaItem.Item.GetHeadVersion();
 
                 string path = version.MediaFiles.Head().Path;
 

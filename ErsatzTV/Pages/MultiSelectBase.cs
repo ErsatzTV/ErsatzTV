@@ -99,7 +99,8 @@ namespace ErsatzTV.Pages
             _selectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId).ToList(),
             _selectedItems.OfType<ArtistCardViewModel>().Map(a => a.ArtistId).ToList(),
             _selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList(),
-            _selectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList());
+            _selectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
+            _selectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList());
 
         protected async Task AddItemsToCollection(
             List<int> movieIds,
@@ -109,10 +110,11 @@ namespace ErsatzTV.Pages
             List<int> artistIds,
             List<int> musicVideoIds,
             List<int> otherVideoIds,
+            List<int> songIds,
             string entityName = "selected items")
         {
             int count = movieIds.Count + showIds.Count + seasonIds.Count + episodeIds.Count + artistIds.Count +
-                        musicVideoIds.Count + otherVideoIds.Count;
+                        musicVideoIds.Count + otherVideoIds.Count + songIds.Count;
 
             var parameters = new DialogParameters
                 { { "EntityType", count.ToString() }, { "EntityName", entityName } };
@@ -130,7 +132,8 @@ namespace ErsatzTV.Pages
                     episodeIds,
                     artistIds,
                     musicVideoIds,
-                    otherVideoIds);
+                    otherVideoIds,
+                    songIds);
 
                 Either<BaseError, Unit> addResult = await Mediator.Send(request);
                 addResult.Match(

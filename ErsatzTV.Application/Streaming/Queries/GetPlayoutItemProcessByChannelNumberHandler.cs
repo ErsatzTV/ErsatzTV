@@ -8,6 +8,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Jellyfin;
@@ -94,6 +95,12 @@ namespace ErsatzTV.Application.Streaming.Queries
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as OtherVideo).MediaVersions)
                 .ThenInclude(ov => ov.Streams)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Song).MediaVersions)
+                .ThenInclude(ov => ov.MediaFiles)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Song).MediaVersions)
+                .ThenInclude(ov => ov.Streams)
                 .ForChannelAndTime(channel.Id, now)
                 .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
                 .BindT(ValidatePlayoutItemPath);
@@ -106,14 +113,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             return await maybePlayoutItem.Match(
                 async playoutItemWithPath =>
                 {
-                    MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem switch
-                    {
-                        Movie m => m.MediaVersions.Head(),
-                        Episode e => e.MediaVersions.Head(),
-                        MusicVideo mv => mv.MediaVersions.Head(),
-                        OtherVideo ov => ov.MediaVersions.Head(),
-                        _ => throw new ArgumentOutOfRangeException(nameof(playoutItemWithPath))
-                    };
+                    MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
 
                     bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await dbContext.ConfigElements
                         .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
@@ -271,14 +271,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                             .MapT(pi => pi.StartOffset - now),
                         () => Option<TimeSpan>.None.AsTask());
 
-                MediaVersion version = item switch
-                {
-                    Movie m => m.MediaVersions.Head(),
-                    Episode e => e.MediaVersions.Head(),
-                    MusicVideo mv => mv.MediaVersions.Head(),
-                    OtherVideo ov => ov.MediaVersions.Head(),
-                    _ => throw new ArgumentOutOfRangeException(nameof(item))
-                };
+                MediaVersion version = item.GetHeadVersion();
 
                 version.MediaFiles = await dbContext.MediaFiles
                     .AsNoTracking()
@@ -331,14 +324,7 @@ namespace ErsatzTV.Application.Streaming.Queries
 
         private async Task<string> GetPlayoutItemPath(PlayoutItem playoutItem)
         {
-            MediaVersion version = playoutItem.MediaItem switch
-            {
-                Movie m => m.MediaVersions.Head(),
-                Episode e => e.MediaVersions.Head(),
-                MusicVideo mv => mv.MediaVersions.Head(),
-                OtherVideo ov => ov.MediaVersions.Head(),
-                _ => throw new ArgumentOutOfRangeException(nameof(playoutItem))
-            };
+            MediaVersion version = playoutItem.MediaItem.GetHeadVersion();
 
             MediaFile file = version.MediaFiles.Head();
             string path = file.Path;

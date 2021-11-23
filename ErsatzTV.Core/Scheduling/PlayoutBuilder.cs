@@ -267,6 +267,8 @@ namespace ErsatzTV.Core.Scheduling
                             .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
                         OtherVideo ov => await ov.MediaVersions.Map(v => v.Duration).HeadOrNone()
                             .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
+                        Song s => await s.MediaVersions.Map(v => v.Duration).HeadOrNone()
+                            .IfNoneAsync(TimeSpan.Zero) == TimeSpan.Zero,
                         _ => true
                     };
 
@@ -436,7 +438,7 @@ namespace ErsatzTV.Core.Scheduling
 
         private async Task<List<CollectionWithItems>> GetCollectionItemsForShuffleInOrder(CollectionKey collectionKey)
         {
-            var result = new List<CollectionWithItems>();
+            List<CollectionWithItems> result;
 
             if (collectionKey.MultiCollectionId != null)
             {
@@ -475,6 +477,10 @@ namespace ErsatzTV.Core.Scheduling
                     return ov.OtherVideoMetadata.HeadOrNone().Match(
                         ovm => ovm.Title ?? string.Empty,
                         () => "[unknown video]");
+                case Song s:
+                    return s.SongMetadata.HeadOrNone().Match(
+                        sm => sm.Title ?? string.Empty,
+                        () => "[unknown song]");
                 default:
                     return string.Empty;
             }
