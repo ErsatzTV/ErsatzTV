@@ -187,8 +187,8 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithWatermarks(
-            List<WatermarkOptions> watermarkOptions,
+        public FFmpegProcessBuilder WithWatermark(
+            Option<WatermarkOptions> watermarkOptions,
             IDisplaySize resolution)
         {
             foreach (WatermarkOptions options in watermarkOptions)
@@ -204,10 +204,11 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("-i");
                     _arguments.Add(path);
 
-                    _complexFilterBuilder = _complexFilterBuilder.WithWatermark(options.Watermark, resolution);
+                    _complexFilterBuilder = _complexFilterBuilder.WithWatermark(
+                        options.Watermark,
+                        resolution,
+                        options.ImageStreamIndex);
                 }
-                
-                // TODO: when image path is null?
             }
             
             return this;

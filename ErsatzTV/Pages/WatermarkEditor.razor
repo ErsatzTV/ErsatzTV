@@ -31,11 +31,12 @@
                                Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
                         <MudSelectItem Value="@(ChannelWatermarkImageSource.Custom)">Custom</MudSelectItem>
                         <MudSelectItem Value="@(ChannelWatermarkImageSource.ChannelLogo)">Channel Logo</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelWatermarkImageSource.CoverArt)">Cover Art</MudSelectItem>
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
                             <InputFile id="watermarkFileInput" OnChange="UploadWatermark" style="display: none;"/>
-                            @if (!string.IsNullOrWhiteSpace(_model.Image) && _model.ImageSource != ChannelWatermarkImageSource.ChannelLogo)
+                            @if (!string.IsNullOrWhiteSpace(_model.Image) && _model.ImageSource == ChannelWatermarkImageSource.Custom)
                             {
                                 <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image}")" Style="max-height: 50px"/>
                             }
@@ -46,7 +47,7 @@
                                        Variant="Variant.Filled"
                                        Color="Color.Primary"
                                        StartIcon="@Icons.Material.Filled.CloudUpload"
-                                       Disabled="@(_model.ImageSource == ChannelWatermarkImageSource.ChannelLogo)"
+                                       Disabled="@(_model.ImageSource != ChannelWatermarkImageSource.Custom)"
                                        for="watermarkFileInput">
                                 Upload Image
                             </MudButton>

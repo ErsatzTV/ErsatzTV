@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -65,8 +64,8 @@ namespace ErsatzTV.Core.FFmpeg
                 inPoint,
                 outPoint);
 
-            List<WatermarkOptions> watermarkOptions =
-                await GetAllWatermarkOptions(channel, globalWatermark, videoStream);
+            Option<WatermarkOptions> watermarkOptions =
+                await GetWatermarkOptions(channel, globalWatermark, audioVersion);
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
@@ -86,7 +85,7 @@ namespace ErsatzTV.Core.FFmpeg
                     playbackSettings.VideoDecoder,
                     videoStream.Codec,
                     videoStream.PixelFormat)
-                .WithWatermarks(watermarkOptions, channel.FFmpegProfile.Resolution)
+                .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(playbackSettings.AudioDuration)
                 .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);
@@ -226,35 +225,10 @@ namespace ErsatzTV.Core.FFmpeg
         private bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
             displaySize.Width != target.Width || displaySize.Height != target.Height;
 
-        private async Task<List<WatermarkOptions>> GetAllWatermarkOptions(
+        private async Task<WatermarkOptions> GetWatermarkOptions(
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
-            Option<MediaStream> maybeVideoStream)
-        {
-            var result = new List<WatermarkOptions>();
-            foreach (WatermarkOptions options in Optional(await GetWatermarkOptions(channel, globalWatermark)))
-            {
-                result.Add(options);
-            }
-
-            foreach (MediaStream videoStream in maybeVideoStream.Where(s => s.AttachedPic))
-            {
-                // TODO: use attached pic as watermark
-
-                // var options = new WatermarkOptions(
-                //     new ChannelWatermark
-                //     {
-                //     },
-                //     None,
-                //     false);
-                //
-                // result.Add(options);
-            }
-
-            return result;
-        }
-
-        private async Task<WatermarkOptions> GetWatermarkOptions(Channel channel, Option<ChannelWatermark> globalWatermark)
+            MediaVersion audioVersion)
         {
             if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && channel.FFmpegProfile.Transcode &&
                 channel.FFmpegProfile.NormalizeVideo)
@@ -269,7 +243,11 @@ namespace ErsatzTV.Core.FFmpeg
                                 channel.Watermark.Image,
                                 ArtworkKind.Watermark,
                                 Option<int>.None);
-                            return new WatermarkOptions(channel.Watermark, customPath, await _imageCache.IsAnimated(customPath));
+                            return new WatermarkOptions(
+                                channel.Watermark,
+                                customPath,
+                                None,
+                                await _imageCache.IsAnimated(customPath));
                         case ChannelWatermarkImageSource.ChannelLogo:
                             Option<string> maybeChannelPath = channel.Artwork
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
@@ -278,9 +256,26 @@ namespace ErsatzTV.Core.FFmpeg
                             return new WatermarkOptions(
                                 channel.Watermark,
                                 maybeChannelPath,
+                                None,
                                 await maybeChannelPath.Match(
                                     p => _imageCache.IsAnimated(p),
                                     () => Task.FromResult(false)));
+                        case ChannelWatermarkImageSource.CoverArt:
+                            Option<MediaStream> maybeAttachedPicStream =
+                                Optional(audioVersion.Streams.Find(s => s.AttachedPic));
+
+                            // only return a watermark if there is an attachment
+                            // to allow falling back on a global watermark
+                            foreach (MediaStream attachedPicStream in maybeAttachedPicStream)
+                            {
+                                return new WatermarkOptions(
+                                    channel.Watermark,
+                                    audioVersion.MediaFiles.Head().Path,
+                                    attachedPicStream.Index,
+                                    false);
+                            }
+
+                            break;
                         default:
                             throw new NotSupportedException("Unsupported watermark image source");
                     }
@@ -296,7 +291,11 @@ namespace ErsatzTV.Core.FFmpeg
                                 watermark.Image,
                                 ArtworkKind.Watermark,
                                 Option<int>.None);
-                            return new WatermarkOptions(watermark, customPath, await _imageCache.IsAnimated(customPath));
+                            return new WatermarkOptions(
+                                watermark,
+                                customPath,
+                                None,
+                                await _imageCache.IsAnimated(customPath));
                         case ChannelWatermarkImageSource.ChannelLogo:
                             Option<string> maybeChannelPath = channel.Artwork
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
@@ -305,16 +304,32 @@ namespace ErsatzTV.Core.FFmpeg
                             return new WatermarkOptions(
                                 watermark,
                                 maybeChannelPath,
+                                None,
                                 await maybeChannelPath.Match(
                                     p => _imageCache.IsAnimated(p),
                                     () => Task.FromResult(false)));
+                        case ChannelWatermarkImageSource.CoverArt:
+                            Option<MediaStream> maybeAttachedPicStream =
+                                Optional(audioVersion.Streams.Find(s => s.AttachedPic));
+                            
+                            // only return a watermark if there is an attachment
+                            foreach (MediaStream attachedPicStream in maybeAttachedPicStream)
+                            {
+                                return new WatermarkOptions(
+                                    channel.Watermark,
+                                    audioVersion.MediaFiles.Head().Path,
+                                    attachedPicStream.Index,
+                                    false);
+                            }
+
+                            break;
                         default:
                             throw new NotSupportedException("Unsupported watermark image source");
                     }
                 }
             }
 
-            return new WatermarkOptions(None, None, false);
+            return new WatermarkOptions(None, None, None, false);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace ErsatzTV.Core.Metadata
         public static readonly List<string> VideoFileExtensions = new()
         {
             ".mpg", ".mp2", ".mpeg", ".mpe", ".mpv", ".ogg", ".mp4",
-            ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts"
+            ".m4p", ".m4v", ".avi", ".wmv", ".mov", ".mkv", ".ts", ".webm"
         };
 
         public static readonly List<string> AudioFileExtensions = new()

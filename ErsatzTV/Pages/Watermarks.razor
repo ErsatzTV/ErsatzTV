@@ -38,6 +38,10 @@
                 {
                     <MudText>[channel logo]</MudText>
                 }
+                else if (context.ImageSource == ChannelWatermarkImageSource.CoverArt)
+                {
+                    <MudText>[cover art]</MudText>
+                }
             </MudTd>
             <MudTd DataLabel="Mode">
                 @context.Mode
