@@ -274,7 +274,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                                 HorizontalMarginPercent = 7,
                                 VerticalMarginPercent = 5
                             }),
-                        new Resolution { Width = 1920, Height = 1080 })
+                        new Resolution { Width = 1920, Height = 1080 },
+                        None)
                     .WithDeinterlace(deinterlace)
                     .WithAlignedAudio(alignAudio ? Some(TimeSpan.FromMinutes(55)) : None);
 

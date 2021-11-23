@@ -21,6 +21,7 @@ namespace ErsatzTV.Core.FFmpeg
         private IDisplaySize _resolution;
         private Option<IDisplaySize> _scaleToSize = None;
         private Option<ChannelWatermark> _watermark;
+        private Option<int> _watermarkIndex;
         private string _pixelFormat;
         private string _videoEncoder;
 
@@ -80,10 +81,14 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegComplexFilterBuilder WithWatermark(Option<ChannelWatermark> watermark, IDisplaySize resolution)
+        public FFmpegComplexFilterBuilder WithWatermark(
+            Option<ChannelWatermark> watermark,
+            IDisplaySize resolution,
+            Option<int> watermarkIndex)
         {
             _watermark = watermark;
             _resolution = resolution;
+            _watermarkIndex = watermarkIndex;
             return this;
         }
 
@@ -315,6 +320,11 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     var watermarkLabel = $"[{audioInput+1}:v]";
+                    foreach (int index in _watermarkIndex)
+                    {
+                        watermarkLabel = $"[{audioInput+1}:{index}]";
+                    }
+
                     if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
                     {
                         complexFilter.Append($"{watermarkLabel}{watermarkPreprocess}[wmp];");

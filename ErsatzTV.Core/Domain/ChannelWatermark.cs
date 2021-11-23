@@ -45,6 +45,7 @@
     public enum ChannelWatermarkImageSource
     {
         Custom = 0,
-        ChannelLogo = 1
+        ChannelLogo = 1,
+        CoverArt = 2
     }
 }

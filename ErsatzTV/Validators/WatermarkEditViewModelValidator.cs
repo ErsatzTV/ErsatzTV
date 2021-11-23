@@ -9,10 +9,11 @@ namespace ErsatzTV.Validators
         public WatermarkEditViewModelValidator()
         {
             RuleFor(x => x.Name).NotEmpty();
-            
+
             RuleFor(x => x.Image)
                 .NotEmpty()
-                .WithMessage("Watermark image is required!");
+                .WithMessage("Watermark image is required!")
+                .When(vm => vm.ImageSource == ChannelWatermarkImageSource.Custom);
             
             RuleFor(x => x.Width)
                 .GreaterThan(0)
