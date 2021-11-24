@@ -260,22 +260,22 @@ namespace ErsatzTV.Core.FFmpeg
                                 await maybeChannelPath.Match(
                                     p => _imageCache.IsAnimated(p),
                                     () => Task.FromResult(false)));
-                        case ChannelWatermarkImageSource.CoverArt:
-                            Option<MediaStream> maybeAttachedPicStream =
-                                Optional(audioVersion.Streams.Find(s => s.AttachedPic));
-
-                            // only return a watermark if there is an attachment
-                            // to allow falling back on a global watermark
-                            foreach (MediaStream attachedPicStream in maybeAttachedPicStream)
-                            {
-                                return new WatermarkOptions(
-                                    channel.Watermark,
-                                    audioVersion.MediaFiles.Head().Path,
-                                    attachedPicStream.Index,
-                                    false);
-                            }
-
-                            break;
+                        // case ChannelWatermarkImageSource.CoverArt:
+                        //     Option<MediaStream> maybeAttachedPicStream =
+                        //         Optional(audioVersion.Streams.Find(s => s.AttachedPic));
+                        //
+                        //     // only return a watermark if there is an attachment
+                        //     // to allow falling back on a global watermark
+                        //     foreach (MediaStream attachedPicStream in maybeAttachedPicStream)
+                        //     {
+                        //         return new WatermarkOptions(
+                        //             channel.Watermark,
+                        //             audioVersion.MediaFiles.Head().Path,
+                        //             attachedPicStream.Index,
+                        //             false);
+                        //     }
+                        //
+                        //     break;
                         default:
                             throw new NotSupportedException("Unsupported watermark image source");
                     }
@@ -308,21 +308,21 @@ namespace ErsatzTV.Core.FFmpeg
                                 await maybeChannelPath.Match(
                                     p => _imageCache.IsAnimated(p),
                                     () => Task.FromResult(false)));
-                        case ChannelWatermarkImageSource.CoverArt:
-                            Option<MediaStream> maybeAttachedPicStream =
-                                Optional(audioVersion.Streams.Find(s => s.AttachedPic));
-                            
-                            // only return a watermark if there is an attachment
-                            foreach (MediaStream attachedPicStream in maybeAttachedPicStream)
-                            {
-                                return new WatermarkOptions(
-                                    channel.Watermark,
-                                    audioVersion.MediaFiles.Head().Path,
-                                    attachedPicStream.Index,
-                                    false);
-                            }
-
-                            break;
+                        // case ChannelWatermarkImageSource.CoverArt:
+                        //     Option<MediaStream> maybeAttachedPicStream =
+                        //         Optional(audioVersion.Streams.Find(s => s.AttachedPic));
+                        //     
+                        //     // only return a watermark if there is an attachment
+                        //     foreach (MediaStream attachedPicStream in maybeAttachedPicStream)
+                        //     {
+                        //         return new WatermarkOptions(
+                        //             channel.Watermark,
+                        //             audioVersion.MediaFiles.Head().Path,
+                        //             attachedPicStream.Index,
+                        //             false);
+                        //     }
+                        //
+                        //     break;
                         default:
                             throw new NotSupportedException("Unsupported watermark image source");
                     }

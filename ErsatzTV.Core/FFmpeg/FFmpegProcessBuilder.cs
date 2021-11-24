@@ -236,7 +236,10 @@ namespace ErsatzTV.Core.FFmpeg
             }
             else
             {
-                WithInfiniteLoop();
+                _noAutoScale = true;
+                
+                _arguments.Add("-loop");
+                _arguments.Add("1");
             }
 
             if (!string.IsNullOrWhiteSpace(decoder))
@@ -542,7 +545,8 @@ namespace ErsatzTV.Core.FFmpeg
                 videoIndex,
                 videoStreamIndex,
                 audioIndex,
-                maybeIndex);
+                maybeIndex,
+                videoPath != audioPath);
 
             maybeFilter.IfSome(
                 filter =>

@@ -248,6 +248,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
                         parameters)
                     .ToUnit(),
+                SongMetadata => _dbConnection.ExecuteAsync(
+                        @"INSERT INTO Artwork (ArtworkKind, SongMetadataId, DateAdded, DateUpdated, Path)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        parameters)
+                    .ToUnit(),
                 _ => Task.FromResult(Unit.Default)
             };
         }
