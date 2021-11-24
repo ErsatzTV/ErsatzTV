@@ -19,7 +19,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 var builder = new FFmpegComplexFilterBuilder();
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsNone.Should().BeTrue();
             }
@@ -31,7 +31,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
                     .WithAlignedAudio(duration);
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsSome.Should().BeTrue();
                 result.IfSome(
@@ -52,7 +52,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
                     .WithAlignedAudio(duration);
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsSome.Should().BeTrue();
                 result.IfSome(
@@ -72,7 +72,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     .WithAlignedAudio(duration)
                     .WithDeinterlace(true);
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsSome.Should().BeTrue();
                 result.IfSome(
@@ -123,7 +123,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     builder = builder.WithBlackBars(new Resolution { Width = 1920, Height = 1080 });
                 }
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsSome.Should().BeTrue();
                 result.IfSome(
@@ -279,7 +279,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     .WithDeinterlace(deinterlace)
                     .WithAlignedAudio(alignAudio ? Some(TimeSpan.FromMinutes(55)) : None);
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsSome.Should().BeTrue();
                 result.IfSome(
@@ -350,7 +350,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     builder = builder.WithBlackBars(new Resolution { Width = 1920, Height = 1080 });
                 }
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsSome.Should().BeTrue();
                 result.IfSome(
@@ -421,7 +421,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     builder = builder.WithBlackBars(new Resolution { Width = 1920, Height = 1080 });
                 }
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsSome.Should().BeTrue();
                 result.IfSome(
@@ -543,7 +543,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     builder = builder.WithBlackBars(new Resolution { Width = 1920, Height = 1080 });
                 }
 
-                Option<FFmpegComplexFilter> result = builder.Build(0, 0, 0, 1, false);
+                Option<FFmpegComplexFilter> result = builder.Build("", 0, 0, 0, 1, false);
 
                 result.IsSome.Should().BeTrue();
                 result.IfSome(
