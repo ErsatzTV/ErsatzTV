@@ -542,6 +542,7 @@ namespace ErsatzTV.Core.FFmpeg
             var audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
 
             Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(
+                videoPath,
                 videoIndex,
                 videoStreamIndex,
                 audioIndex,

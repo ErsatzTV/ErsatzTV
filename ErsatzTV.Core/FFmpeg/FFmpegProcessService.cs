@@ -65,7 +65,7 @@ namespace ErsatzTV.Core.FFmpeg
                 outPoint);
 
             Option<WatermarkOptions> watermarkOptions =
-                await GetWatermarkOptions(channel, globalWatermark, audioVersion);
+                await GetWatermarkOptions(channel, globalWatermark, videoVersion);
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
@@ -228,11 +228,33 @@ namespace ErsatzTV.Core.FFmpeg
         private async Task<WatermarkOptions> GetWatermarkOptions(
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
-            MediaVersion audioVersion)
+            MediaVersion videoVersion)
         {
+            Option<ChannelWatermark> watermarkOverride = videoVersion is FallbackMediaVersion or CoverArtMediaVersion
+                ? new ChannelWatermark
+                {
+                    Mode = ChannelWatermarkMode.Permanent,
+                    HorizontalMarginPercent = 3,
+                    VerticalMarginPercent = 5,
+                    Location = ChannelWatermarkLocation.BottomRight,
+                    Size = ChannelWatermarkSize.Scaled,
+                    WidthPercent = 25,
+                    Opacity = 100
+                }
+                : None;
+            
             if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && channel.FFmpegProfile.Transcode &&
                 channel.FFmpegProfile.NormalizeVideo)
             {
+                if (videoVersion is CoverArtMediaVersion)
+                {
+                    return new WatermarkOptions(
+                        watermarkOverride,
+                        videoVersion.MediaFiles.Head().Path,
+                        0,
+                        false);
+                }
+
                 // check for channel watermark
                 if (channel.Watermark != null)
                 {
@@ -244,7 +266,7 @@ namespace ErsatzTV.Core.FFmpeg
                                 ArtworkKind.Watermark,
                                 Option<int>.None);
                             return new WatermarkOptions(
-                                channel.Watermark,
+                                await watermarkOverride.IfNoneAsync(channel.Watermark),
                                 customPath,
                                 None,
                                 await _imageCache.IsAnimated(customPath));
@@ -254,7 +276,7 @@ namespace ErsatzTV.Core.FFmpeg
                                 .HeadOrNone()
                                 .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
                             return new WatermarkOptions(
-                                channel.Watermark,
+                                await watermarkOverride.IfNoneAsync(channel.Watermark),
                                 maybeChannelPath,
                                 None,
                                 await maybeChannelPath.Match(
@@ -292,7 +314,7 @@ namespace ErsatzTV.Core.FFmpeg
                                 ArtworkKind.Watermark,
                                 Option<int>.None);
                             return new WatermarkOptions(
-                                watermark,
+                                await watermarkOverride.IfNoneAsync(watermark),
                                 customPath,
                                 None,
                                 await _imageCache.IsAnimated(customPath));
@@ -302,7 +324,7 @@ namespace ErsatzTV.Core.FFmpeg
                                 .HeadOrNone()
                                 .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
                             return new WatermarkOptions(
-                                watermark,
+                                await watermarkOverride.IfNoneAsync(watermark),
                                 maybeChannelPath,
                                 None,
                                 await maybeChannelPath.Match(

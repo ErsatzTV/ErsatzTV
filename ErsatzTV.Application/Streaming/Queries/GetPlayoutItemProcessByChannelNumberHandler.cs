@@ -131,8 +131,9 @@ namespace ErsatzTV.Application.Streaming.Queries
                     
                     if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
                     {
-                        videoVersion = new MediaVersion
+                        videoVersion = new FallbackMediaVersion
                         {
+                            Id = -1,
                             Chapters = new List<MediaChapter>(),
                             Width = 301,
                             Height = 162,
@@ -159,9 +160,19 @@ namespace ErsatzTV.Application.Streaming.Queries
 
                                 artworkPath = customPath;
 
-                                // always stretch cover art
-                                videoVersion.Height = 108;
-                                videoVersion.Width = 192;
+                                // signal that we want to use cover art as watermark
+                                videoVersion = new CoverArtMediaVersion
+                                {
+                                    Chapters = new List<MediaChapter>(),
+                                    // always stretch cover art
+                                    Width = 192,
+                                    Height = 108,
+                                    SampleAspectRatio = "1:1",
+                                    Streams = new List<MediaStream>
+                                    {
+                                        new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
+                                    }
+                                };
                             }
                         }
 
