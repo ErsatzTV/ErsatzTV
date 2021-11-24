@@ -209,8 +209,8 @@ namespace ErsatzTV.Core.Metadata
                 Either<BaseError, Dictionary<string, string>> maybeTags =
                     await _localStatisticsProvider.GetFormatTags(ffprobePath, song);
 
-                return await maybeTags.Match(
-                    async tags =>
+                return maybeTags.Match(
+                    tags =>
                     {
                         Option<SongMetadata> maybeFallbackMetadata =
                             _fallbackMetadataProvider.GetFallbackMetadata(song);
@@ -278,9 +278,9 @@ namespace ErsatzTV.Core.Metadata
                             }
                         }
 
-                        return Some(result);
+                        return result;
                     },
-                    _ => Task.FromResult(Option<SongMetadata>.None));
+                    _ => Option<SongMetadata>.None);
             }
             catch (Exception ex)
             {
@@ -774,6 +774,10 @@ namespace ErsatzTV.Core.Metadata
                 async existing =>
                 {
                     existing.Title = metadata.Title;
+                    existing.Artist = metadata.Artist;
+                    existing.Album = metadata.Album;
+                    existing.Date = metadata.Date;
+                    existing.Track = metadata.Track;
 
                     if (existing.DateAdded == SystemTime.MinValueUtc)
                     {
@@ -1077,7 +1081,7 @@ namespace ErsatzTV.Core.Metadata
                 }
             }
 
-            if (existing is not MusicVideoMetadata)
+            if (existing is not MusicVideoMetadata and not SongMetadata)
             {
                 foreach (Actor actor in existing.Actors
                     .Filter(a => incoming.Actors.All(a2 => a2.Name != a.Name))
