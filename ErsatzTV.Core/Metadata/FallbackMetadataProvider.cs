@@ -115,7 +115,8 @@ namespace ErsatzTV.Core.Metadata
                 Song = song
             };
 
-            return GetSongMetadata(path, metadata);        }
+            return GetSongMetadata(path, metadata);
+        }
 
         public string GetSortTitle(string title)
         {

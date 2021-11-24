@@ -54,6 +54,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string TraktListField = "trakt_list";
         private const string AlbumField = "album";
         private const string MinutesField = "minutes";
+        private const string ArtistField = "artist";
 
         public const string MovieType = "movie";
         public const string ShowType = "show";
@@ -849,6 +850,16 @@ namespace ErsatzTV.Infrastructure.Search
                     foreach (MediaVersion version in song.MediaVersions.HeadOrNone())
                     {
                         doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(metadata.Album))
+                    {
+                        doc.Add(new TextField(AlbumField, metadata.Album, Field.Store.NO));
+                    }
+                    
+                    if (!string.IsNullOrWhiteSpace(metadata.Artist))
+                    {
+                        doc.Add(new TextField(ArtistField, metadata.Artist, Field.Store.NO));
                     }
 
                     foreach (Tag tag in metadata.Tags)

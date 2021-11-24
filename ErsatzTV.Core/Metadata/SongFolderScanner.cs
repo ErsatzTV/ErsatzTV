@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -59,6 +60,7 @@ namespace ErsatzTV.Core.Metadata
         public async Task<Either<BaseError, Unit>> ScanFolder(
             LibraryPath libraryPath,
             string ffprobePath,
+            string ffmpegPath,
             decimal progressMin,
             decimal progressMax)
         {
@@ -122,7 +124,8 @@ namespace ErsatzTV.Core.Metadata
                     Either<BaseError, MediaItemScanResult<Song>> maybeSong = await _songRepository
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffprobePath))
-                        .BindT(UpdateMetadata);
+                        .BindT(video => UpdateMetadata(video, ffprobePath));
+                        // .BindT(video => UpdateThumbnail(video, ffprobePath, ffmpegPath));
 
                     await maybeSong.Match(
                         async result =>
@@ -167,18 +170,24 @@ namespace ErsatzTV.Core.Metadata
         }
 
         private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateMetadata(
-            MediaItemScanResult<Song> result)
+            MediaItemScanResult<Song> result, string ffprobePath)
         {
             try
             {
                 Song song = result.Item;
-                if (!Optional(song.SongMetadata).Flatten().Any())
+                string path = song.GetHeadVersion().MediaFiles.Head().Path;
+                
+                bool shouldUpdate = Optional(song.SongMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(path),
+                    true);
+
+                if (shouldUpdate)
                 {
                     song.SongMetadata ??= new List<SongMetadata>();
 
-                    string path = song.MediaVersions.Head().MediaFiles.Head().Path;
-                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
-                    if (await _localMetadataProvider.RefreshFallbackMetadata(song))
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Metadata", path);
+                    if (await _localMetadataProvider.RefreshTagMetadata(song, ffprobePath))
                     {
                         result.IsUpdated = true;
                     }
@@ -191,5 +200,28 @@ namespace ErsatzTV.Core.Metadata
                 return BaseError.New(ex.ToString());
             }
         }
+
+        // private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateThumbnail(
+        //     MediaItemScanResult<Song> result,
+        //     string ffprobePath,
+        //     string ffmpegPath)
+        // {
+        //     try
+        //     {
+        //         Song song = result.Item;
+        //         await LocateThumbnail(song).IfSomeAsync(
+        //             async thumbnailFile =>
+        //             {
+        //                 SongMetadata metadata = song.SongMetadata.Head();
+        //                 await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail);
+        //             });
+        //
+        //         return result;
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return BaseError.New(ex.ToString());
+        //     }
+        // }
     }
 }

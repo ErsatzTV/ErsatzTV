@@ -110,12 +110,15 @@ namespace ErsatzTV.Application.MediaCards
                 otherVideoMetadata.OriginalTitle,
                 otherVideoMetadata.SortTitle);
 
-        internal static SongCardViewModel ProjectToViewModel(SongMetadata songMetadata) =>
-            new(
+        internal static SongCardViewModel ProjectToViewModel(SongMetadata songMetadata)
+        {
+            string album = string.IsNullOrWhiteSpace(songMetadata.Album) ? "" : $" - {songMetadata.Album}";
+            return new SongCardViewModel(
                 songMetadata.SongId,
                 songMetadata.Title,
-                songMetadata.OriginalTitle,
+                songMetadata.Artist + album,
                 songMetadata.SortTitle);
+        }
 
         internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>
             new(

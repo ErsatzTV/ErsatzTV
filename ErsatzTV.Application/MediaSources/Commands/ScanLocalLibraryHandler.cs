@@ -70,7 +70,8 @@ namespace ErsatzTV.Application.MediaSources.Commands
 
         private async Task<Unit> PerformScan(RequestParameters parameters)
         {
-            (LocalLibrary localLibrary, string ffprobePath, bool forceScan, int libraryRefreshInterval) = parameters;
+            (LocalLibrary localLibrary, string ffprobePath, string ffmpegPath, bool forceScan,
+                int libraryRefreshInterval) = parameters;
 
             var sw = new Stopwatch();
             sw.Start();
@@ -124,6 +125,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
                             await _songFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffprobePath,
+                                ffmpegPath,
                                 progressMin,
                                 progressMax);
                             break;
@@ -159,11 +161,12 @@ namespace ErsatzTV.Application.MediaSources.Commands
         }
 
         private async Task<Validation<BaseError, RequestParameters>> Validate(IScanLocalLibrary request) =>
-            (await LocalLibraryMustExist(request), await ValidateFFprobePath(), await ValidateLibraryRefreshInterval())
+            (await LocalLibraryMustExist(request), await ValidateFFprobePath(), await ValidateFFmpegPath(), await ValidateLibraryRefreshInterval())
             .Apply(
-                (library, ffprobePath, libraryRefreshInterval) => new RequestParameters(
+                (library, ffprobePath, ffmpegPath, libraryRefreshInterval) => new RequestParameters(
                     library,
                     ffprobePath,
+                    ffmpegPath,
                     request.ForceScan,
                     libraryRefreshInterval));
 
@@ -180,6 +183,13 @@ namespace ErsatzTV.Application.MediaSources.Commands
                     ffprobePath =>
                         ffprobePath.ToValidation<BaseError>("FFprobe path does not exist on the file system"));
 
+        private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
+            _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
+                .FilterT(File.Exists)
+                .Map(
+                    ffmpegPath =>
+                        ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
+
         private Task<Validation<BaseError, int>> ValidateLibraryRefreshInterval() =>
             _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
                 .FilterT(lri => lri > 0)
@@ -188,6 +198,7 @@ namespace ErsatzTV.Application.MediaSources.Commands
         private record RequestParameters(
             LocalLibrary LocalLibrary,
             string FFprobePath,
+            string FFmpegPath,
             bool ForceScan,
             int LibraryRefreshInterval);
     }
