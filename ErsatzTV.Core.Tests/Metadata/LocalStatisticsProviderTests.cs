@@ -25,7 +25,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                 new Mock<ILogger<LocalStatisticsProvider>>().Object);
 
             var input = new LocalStatisticsProvider.FFprobe(
-                new LocalStatisticsProvider.FFprobeFormat("123.45"),
+                new LocalStatisticsProvider.FFprobeFormat("123.45", null),
                 new List<LocalStatisticsProvider.FFprobeStream>(),
                 new List<LocalStatisticsProvider.FFprobeChapter>());
 

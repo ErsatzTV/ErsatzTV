@@ -90,6 +90,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return ids;
         }
 
+        public Task<bool> AddGenre(SongMetadata metadata, Genre genre) =>
+            _dbConnection.ExecuteAsync(
+                "INSERT INTO Genre (Name, SongMetadataId) VALUES (@Name, @MetadataId)",
+                new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
         public Task<bool> AddTag(SongMetadata metadata, Tag tag) =>
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Tag (Name, SongMetadataId) VALUES (@Name, @MetadataId)",

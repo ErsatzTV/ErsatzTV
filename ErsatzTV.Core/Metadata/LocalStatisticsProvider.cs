@@ -69,6 +69,60 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
+        public async Task<Either<BaseError, Dictionary<string, string>>> GetFormatTags(
+            string ffprobePath,
+            MediaItem mediaItem)
+        {
+            try
+            {
+                string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
+                Either<BaseError, FFprobe> maybeProbe = await GetProbeOutput(ffprobePath, mediaItemPath);
+                return maybeProbe.Match(
+                    ffprobe =>
+                    {
+                        var result = new Dictionary<string, string>();
+                        
+                        if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.album))
+                        {
+                            result.Add(MetadataFormatTag.Album, ffprobe.format.tags.album);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.artist))
+                        {
+                            result.Add(MetadataFormatTag.Artist, ffprobe.format.tags.artist);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.date))
+                        {
+                            result.Add(MetadataFormatTag.Date, ffprobe.format.tags.date);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.genre))
+                        {
+                            result.Add(MetadataFormatTag.Genre, ffprobe.format.tags.genre);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.title))
+                        {
+                            result.Add(MetadataFormatTag.Title, ffprobe.format.tags.title);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.track))
+                        {
+                            result.Add(MetadataFormatTag.Track, ffprobe.format.tags.track);
+                        }
+
+                        return Right<BaseError, Dictionary<string, string>>(result);
+                    },
+                    Left<BaseError, Dictionary<string, string>>);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to get format tags for media item {Id}", mediaItem.Id);
+                return BaseError.New(ex.Message);
+            }
+        }
+
         private async Task<bool> ApplyVersionUpdate(MediaItem mediaItem, MediaVersion version, string filePath)
         {
             MediaVersion mediaItemVersion = mediaItem.GetHeadVersion();
@@ -277,7 +331,7 @@ namespace ErsatzTV.Core.Metadata
                                 last.EndTime = version.Duration;
                             }
                         }
-
+                        
                         return version;
                     },
                     _ => new MediaVersion
@@ -299,11 +353,19 @@ namespace ErsatzTV.Core.Metadata
         // ReSharper disable InconsistentNaming
         public record FFprobe(FFprobeFormat format, List<FFprobeStream> streams, List<FFprobeChapter> chapters);
 
-        public record FFprobeFormat(string duration);
+        public record FFprobeFormat(string duration, FFprobeFormatTags tags);
 
         public record FFprobeDisposition(int @default, int forced, int attached_pic);
 
         public record FFprobeTags(string language, string title);
+
+        public record FFprobeFormatTags(
+            string title,
+            string artist,
+            string album,
+            string track,
+            string genre,
+            string date);
 
         public record FFprobeStream(
             int index,

@@ -9,6 +9,7 @@ namespace ErsatzTV.Core.Interfaces.Metadata
         Task<Either<BaseError, Unit>> ScanFolder(
             LibraryPath libraryPath,
             string ffprobePath,
+            string ffmpegPath,
             decimal progressMin,
             decimal progressMax);
     }

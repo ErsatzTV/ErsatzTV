@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Metadata.Nfo;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -23,6 +24,7 @@ namespace ErsatzTV.Core.Metadata
         private static readonly XmlSerializer MusicVideoSerializer = new(typeof(MusicVideoNfo));
         private readonly IArtistRepository _artistRepository;
         private readonly IEpisodeNfoReader _episodeNfoReader;
+        private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<LocalMetadataProvider> _logger;
@@ -45,6 +47,7 @@ namespace ErsatzTV.Core.Metadata
             IFallbackMetadataProvider fallbackMetadataProvider,
             ILocalFileSystem localFileSystem,
             IEpisodeNfoReader episodeNfoReader,
+            ILocalStatisticsProvider localStatisticsProvider,
             ILogger<LocalMetadataProvider> logger)
         {
             _metadataRepository = metadataRepository;
@@ -57,6 +60,7 @@ namespace ErsatzTV.Core.Metadata
             _fallbackMetadataProvider = fallbackMetadataProvider;
             _localFileSystem = localFileSystem;
             _episodeNfoReader = episodeNfoReader;
+            _localStatisticsProvider = localStatisticsProvider;
             _logger = logger;
         }
 
@@ -133,6 +137,12 @@ namespace ErsatzTV.Core.Metadata
                     metadata => ApplyMetadataUpdate(musicVideo, metadata),
                     () => RefreshFallbackMetadata(musicVideo)));
 
+        public Task<bool> RefreshTagMetadata(Song song, string ffprobePath) =>
+            LoadSongMetadata(song, ffprobePath).Bind(
+                maybeMetadata => maybeMetadata.Match(
+                    metadata => ApplyMetadataUpdate(song, metadata),
+                    () => RefreshFallbackMetadata(song)));
+
         public Task<bool> RefreshFallbackMetadata(Movie movie) =>
             ApplyMetadataUpdate(movie, _fallbackMetadataProvider.GetFallbackMetadata(movie));
 
@@ -148,9 +158,9 @@ namespace ErsatzTV.Core.Metadata
                 () => Task.FromResult(false));
 
         public Task<bool> RefreshFallbackMetadata(Song song) =>
-        _fallbackMetadataProvider.GetFallbackMetadata(song).Match(
-            metadata => ApplyMetadataUpdate(song, metadata),
-        () => Task.FromResult(false));
+            _fallbackMetadataProvider.GetFallbackMetadata(song).Match(
+                metadata => ApplyMetadataUpdate(song, metadata),
+                () => Task.FromResult(false));
 
         public Task<bool> RefreshFallbackMetadata(MusicVideo musicVideo) =>
             _fallbackMetadataProvider.GetFallbackMetadata(musicVideo).Match(
@@ -186,6 +196,95 @@ namespace ErsatzTV.Core.Metadata
             catch (Exception ex)
             {
                 _logger.LogInformation(ex, "Failed to read music video nfo metadata from {Path}", nfoFileName);
+                return None;
+            }
+        }
+
+        private async Task<Option<SongMetadata>> LoadSongMetadata(Song song, string ffprobePath)
+        {
+            string path = song.GetHeadVersion().MediaFiles.Head().Path;
+
+            try
+            {
+                Either<BaseError, Dictionary<string, string>> maybeTags =
+                    await _localStatisticsProvider.GetFormatTags(ffprobePath, song);
+
+                return await maybeTags.Match(
+                    async tags =>
+                    {
+                        Option<SongMetadata> maybeFallbackMetadata =
+                            _fallbackMetadataProvider.GetFallbackMetadata(song);
+                        
+                        var result = new SongMetadata
+                        {
+                            MetadataKind = MetadataKind.Embedded,
+                            DateAdded = DateTime.UtcNow,
+                            DateUpdated = File.GetLastWriteTimeUtc(path),
+                            
+                            Artwork = new List<Artwork>(),
+                            Actors = new List<Actor>(),
+                            Genres = new List<Genre>(),
+                            Studios = new List<Studio>(),
+                            Tags = new List<Tag>()
+                        };
+                        
+                        // TODO: check for cover artwork, and use for watermark if not embedded
+                        // maybe add album as entity rather than string?
+
+                        if (tags.TryGetValue(MetadataFormatTag.Album, out string album))
+                        {
+                            result.Album = album;
+                        }
+
+                        if (tags.TryGetValue(MetadataFormatTag.Artist, out string artist))
+                        {
+                            result.Artist = artist;
+                        }
+
+                        if (tags.TryGetValue(MetadataFormatTag.Date, out string date))
+                        {
+                            result.Date = date;
+                        }
+
+                        if (tags.TryGetValue(MetadataFormatTag.Genre, out string genre))
+                        {
+                            // TODO: split genres? or is this only ever one?
+                            result.Genres.Add(new Genre { Name = genre });
+                        }
+
+                        if (tags.TryGetValue(MetadataFormatTag.Title, out string title))
+                        {
+                            result.Title = title;
+                            result.OriginalTitle = title;
+                        }
+
+                        if (tags.TryGetValue(MetadataFormatTag.Track, out string track))
+                        {
+                            result.Track = track;
+                        }
+
+                        foreach (SongMetadata fallbackMetadata in maybeFallbackMetadata)
+                        {
+                            if (string.IsNullOrWhiteSpace(result.Title))
+                            {
+                                result.Title = fallbackMetadata.Title;
+                                result.OriginalTitle = fallbackMetadata.OriginalTitle;
+                            }
+
+                            // preserve folder tagging - maybe someone uses this
+                            foreach (Tag tag in fallbackMetadata.Tags)
+                            {
+                                result.Tags.Add(tag);
+                            }
+                        }
+
+                        return Some(result);
+                    },
+                    _ => Task.FromResult(Option<SongMetadata>.None));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex, "Failed to read embedded song metadata from {Path}", path);
                 return None;
             }
         }
@@ -691,7 +790,7 @@ namespace ErsatzTV.Core.Metadata
                     bool updated = await UpdateMetadataCollections(
                         existing,
                         metadata,
-                        (_, _) => Task.FromResult(false),
+                        _songRepository.AddGenre,
                         _songRepository.AddTag,
                         (_, _) => Task.FromResult(false),
                         (_, _) => Task.FromResult(false));
