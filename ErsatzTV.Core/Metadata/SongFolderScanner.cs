@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -40,11 +41,13 @@ namespace ErsatzTV.Core.Metadata
             ISearchRepository searchRepository,
             ISongRepository songRepository,
             ILibraryRepository libraryRepository,
+            FFmpegProcessService ffmpegProcessService,
             ILogger<SongFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
             metadataRepository,
             imageCache,
+            ffmpegProcessService,
             logger)
         {
             _localFileSystem = localFileSystem;
@@ -213,7 +216,7 @@ namespace ErsatzTV.Core.Metadata
                     async thumbnailFile =>
                     {
                         SongMetadata metadata = song.SongMetadata.Head();
-                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail);
+                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, ffmpegPath);
                     },
                     () => Task.CompletedTask); // TODO: check for embedded artwork
         

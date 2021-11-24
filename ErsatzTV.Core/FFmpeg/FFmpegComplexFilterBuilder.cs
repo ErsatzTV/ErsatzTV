@@ -129,9 +129,9 @@ namespace ErsatzTV.Core.FFmpeg
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
             bool isHardwareDecode = acceleration switch
             {
-                HardwareAccelerationKind.Vaapi => (!isSong || !videoPath.EndsWith(".png")) && _inputCodec != "mpeg4",
-                HardwareAccelerationKind.Nvenc => !isSong || !videoPath.EndsWith(".png"),
-                HardwareAccelerationKind.Qsv => !isSong || !videoPath.EndsWith(".png"),
+                HardwareAccelerationKind.Vaapi => !isSong && _inputCodec != "mpeg4",
+                HardwareAccelerationKind.Nvenc => !isSong,
+                HardwareAccelerationKind.Qsv => !isSong,
                 _ => false
             };
 
@@ -155,12 +155,12 @@ namespace ErsatzTV.Core.FFmpeg
             bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None && !isHardwareDecode &&
                                        (_deinterlace || _scaleToSize.IsSome);
 
-            if (isSong && !isHardwareDecode)
+            if (isSong)
             {
                 videoFilterQueue.Add("format=yuv420p");
             }
 
-            switch (usesHardwareFilters, isSong && isHardwareDecode,  acceleration)
+            switch (usesHardwareFilters, false,  acceleration)
             {
                 case (true, false, HardwareAccelerationKind.Nvenc):
                     videoFilterQueue.Add("hwupload_cuda");

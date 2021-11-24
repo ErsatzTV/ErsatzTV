@@ -224,6 +224,16 @@ namespace ErsatzTV.Core.FFmpeg
                 .Build();
         }
 
+        public Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile)
+        {
+            return new FFmpegProcessBuilder(ffmpegPath, false, _logger)
+                .WithThreads(1)
+                .WithQuiet()
+                .WithInput(inputFile)
+                .WithOutputFormat("apng", outputFile)
+                .Build();
+        }
+
         private bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
             displaySize.Width != target.Width || displaySize.Height != target.Height;
 

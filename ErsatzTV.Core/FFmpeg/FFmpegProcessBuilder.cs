@@ -377,7 +377,7 @@ namespace ErsatzTV.Core.FFmpeg
             _arguments.Add($"{format}");
             return this;
         }
-
+        
         public FFmpegProcessBuilder WithHls(string channelNumber, Option<MediaVersion> mediaVersion)
         {
             const int SEGMENT_SECONDS = 4;
@@ -527,6 +527,17 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegProcessBuilder WithDeinterlace(bool deinterlace)
         {
             _complexFilterBuilder = _complexFilterBuilder.WithDeinterlace(deinterlace);
+            return this;
+        }
+        
+        public FFmpegProcessBuilder WithOutputFormat(string format, string output)
+        {
+            _arguments.Add("-f");
+            _arguments.Add(format);
+            
+            _arguments.Add("-y");
+            _arguments.Add(output);
+
             return this;
         }
 
