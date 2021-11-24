@@ -48,7 +48,8 @@ namespace ErsatzTV.Core.FFmpeg
             bool hlsRealtime,
             FillerKind fillerKind,
             TimeSpan inPoint,
-            TimeSpan outPoint)
+            TimeSpan outPoint,
+            Option<string> drawtextFile)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
@@ -86,6 +87,7 @@ namespace ErsatzTV.Core.FFmpeg
                     videoStream.Codec,
                     videoStream.PixelFormat)
                 .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
+                .WithDrawtextFile(videoVersion, drawtextFile)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None)
                 .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);

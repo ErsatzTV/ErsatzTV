@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using ErsatzTV.Core.Domain;
@@ -24,6 +25,7 @@ namespace ErsatzTV.Core.FFmpeg
         private Option<int> _watermarkIndex;
         private string _pixelFormat;
         private string _videoEncoder;
+        private Option<string> _drawtext;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -89,6 +91,25 @@ namespace ErsatzTV.Core.FFmpeg
             _watermark = watermark;
             _resolution = resolution;
             _watermarkIndex = watermarkIndex;
+            return this;
+        }
+        
+        public FFmpegComplexFilterBuilder WithDrawtextFile(
+            MediaVersion videoVersion,
+            Option<string> drawtextFile)
+        {
+            foreach (string file in drawtextFile)
+            {
+                if (videoVersion is FallbackMediaVersion or CoverArtMediaVersion)
+                {
+                    string fontPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "OPTIKabel-Heavy.otf");
+
+                    // TODO: calculate by percent
+                    _drawtext =
+                        $"drawtext=fontfile={fontPath}:textfile={file}:x=50:y=H-175:fontsize=36:fontcolor=white";
+                }
+            }
+
             return this;
         }
 
@@ -273,6 +294,11 @@ namespace ErsatzTV.Core.FFmpeg
             }
 
             _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
+            
+            foreach (string drawtext in _drawtext)
+            {
+                videoFilterQueue.Add(drawtext);
+            }
 
             string outputPixelFormat = null;
             
@@ -367,7 +393,7 @@ namespace ErsatzTV.Core.FFmpeg
                         }
                     }
                 }
-
+                
                 videoLabel = "[v]";
                 complexFilter.Append(videoLabel);
             }

@@ -21,6 +21,7 @@ namespace ErsatzTV.Services.RunOnce
             await ExtractResource(assembly, "background.png", cancellationToken);
             await ExtractResource(assembly, "ErsatzTV.png", cancellationToken);
             await ExtractResource(assembly, "Roboto-Regular.ttf", cancellationToken);
+            await ExtractResource(assembly, "OPTIKabel-Heavy.otf", cancellationToken);
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

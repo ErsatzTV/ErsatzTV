@@ -220,6 +220,17 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithDrawtextFile(
+            MediaVersion videoVersion,
+            Option<string> drawtextFile)
+        {
+            _complexFilterBuilder = _complexFilterBuilder.WithDrawtextFile(
+                videoVersion,
+                drawtextFile);
+
+            return this;
+        }
+
         public FFmpegProcessBuilder WithInputCodec(
             Option<TimeSpan> maybeStart,
             bool loop,

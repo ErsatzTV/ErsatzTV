@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -121,6 +122,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             return await maybePlayoutItem.Match(
                 async playoutItemWithPath =>
                 {
+                    Option<string> drawtextFile = None;
+                    
                     MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
 
                     string videoPath = playoutItemWithPath.Path;
@@ -150,6 +153,27 @@ namespace ErsatzTV.Application.Streaming.Queries
                         // use thumbnail (cover art) if present
                         foreach (SongMetadata metadata in song.SongMetadata)
                         {
+                            string fileName = Path.GetTempFileName();
+                            drawtextFile = fileName;
+
+                            var sb = new StringBuilder();
+                            if (!string.IsNullOrWhiteSpace(metadata.Artist))
+                            {
+                                sb.AppendLine(metadata.Artist);
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(metadata.Title))
+                            {
+                                sb.AppendLine($"\"{metadata.Title}\"");
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(metadata.Album))
+                            {
+                                sb.AppendLine(metadata.Album);
+                            }
+
+                            await File.WriteAllTextAsync(fileName, sb.ToString());
+
                             foreach (Artwork artwork in Optional(
                                 metadata.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Thumbnail)))
                             {
@@ -211,7 +235,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                         request.HlsRealtime,
                         playoutItemWithPath.PlayoutItem.FillerKind,
                         playoutItemWithPath.PlayoutItem.InPoint,
-                        playoutItemWithPath.PlayoutItem.OutPoint);
+                        playoutItemWithPath.PlayoutItem.OutPoint,
+                        drawtextFile);
 
                     var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
 
