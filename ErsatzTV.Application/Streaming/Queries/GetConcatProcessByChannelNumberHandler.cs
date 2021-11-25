@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -15,12 +15,12 @@ namespace ErsatzTV.Application.Streaming.Queries
 {
     public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetConcatProcessByChannelNumber>
     {
-        private readonly FFmpegProcessService _ffmpegProcessService;
+        private readonly IFFmpegProcessService _ffmpegProcessService;
         private readonly IRuntimeInfo _runtimeInfo;
 
         public GetConcatProcessByChannelNumberHandler(
             IDbContextFactory<TvContext> dbContextFactory,
-            FFmpegProcessService ffmpegProcessService,
+            IFFmpegProcessService ffmpegProcessService,
             IRuntimeInfo runtimeInfo)
             : base(dbContextFactory)
         {
