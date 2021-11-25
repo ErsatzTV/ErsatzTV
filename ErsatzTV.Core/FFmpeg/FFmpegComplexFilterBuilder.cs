@@ -272,7 +272,7 @@ namespace ErsatzTV.Core.FFmpeg
 
                 if (isSong)
                 {
-                    videoFilterQueue.Add("boxblur=75,fps=24");
+                    videoFilterQueue.Add("boxblur=75");
                 }
 
                 foreach (ChannelWatermark watermark in _watermark)

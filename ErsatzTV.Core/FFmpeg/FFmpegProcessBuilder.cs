@@ -43,6 +43,7 @@ namespace ErsatzTV.Core.FFmpeg
         private HardwareAccelerationKind _hwAccel;
         private string _outputPixelFormat;
         private bool _noAutoScale;
+        private Option<int> _outputFramerate;
 
         public FFmpegProcessBuilder(string ffmpegPath, bool saveReports, ILogger logger)
         {
@@ -248,6 +249,7 @@ namespace ErsatzTV.Core.FFmpeg
             else
             {
                 _noAutoScale = true;
+                _outputFramerate = 30;
                 
                 _arguments.Add("-loop");
                 _arguments.Add("1");
@@ -484,6 +486,12 @@ namespace ErsatzTV.Core.FFmpeg
             if (_noAutoScale)
             {
                 _arguments.Add("-noautoscale");
+            }
+
+            foreach (int framerate in _outputFramerate)
+            {
+                _arguments.Add("-r");
+                _arguments.Add(framerate.ToString());
             }
 
             return this;
