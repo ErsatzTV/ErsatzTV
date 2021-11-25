@@ -64,15 +64,6 @@ namespace ErsatzTV.Core.FFmpeg
                 inPoint,
                 outPoint);
 
-            if (videoVersion is BackgroundImageMediaVersion)
-            {
-                FFmpegPlaybackSettings errorSettings =
-                    _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
-
-                playbackSettings.HardwareAcceleration = errorSettings.HardwareAcceleration;
-                playbackSettings.VideoCodec = errorSettings.VideoCodec;
-            }
-
             Option<WatermarkOptions> watermarkOptions =
                 await GetWatermarkOptions(channel, globalWatermark, videoVersion);
 
