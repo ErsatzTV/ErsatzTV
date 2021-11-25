@@ -133,7 +133,7 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public Option<FFmpegComplexFilter> Build(string videoPath, int videoInput, int videoStreamIndex, int audioInput, Option<int> audioStreamIndex, bool isSong)
+        public Option<FFmpegComplexFilter> Build(bool videoOnly, int videoInput, int videoStreamIndex, int audioInput, Option<int> audioStreamIndex, bool isSong)
         {
             var complexFilter = new StringBuilder();
 
@@ -143,9 +143,9 @@ namespace ErsatzTV.Core.FFmpeg
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
             bool isHardwareDecode = acceleration switch
             {
-                HardwareAccelerationKind.Vaapi => !isSong && _inputCodec != "mpeg4",
-                HardwareAccelerationKind.Nvenc => !isSong,
-                HardwareAccelerationKind.Qsv => !isSong,
+                HardwareAccelerationKind.Vaapi => _inputCodec != "mpeg4",
+                HardwareAccelerationKind.Nvenc => true,
+                HardwareAccelerationKind.Qsv => true,
                 _ => false
             };
 
@@ -168,19 +168,6 @@ namespace ErsatzTV.Core.FFmpeg
 
             bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None && !isHardwareDecode &&
                                        (_deinterlace || _scaleToSize.IsSome);
-
-            if (isSong)
-            {
-                switch (acceleration)
-                {
-                    case HardwareAccelerationKind.Qsv:
-                        videoFilterQueue.Add("format=nv12");
-                        break;
-                    default:
-                        videoFilterQueue.Add("format=yuv420p");
-                        break;
-                }
-            }
 
             switch (usesHardwareFilters, false,  acceleration)
             {
@@ -233,7 +220,6 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Qsv => $"scale_qsv=w={size.Width}:h={size.Height}",
                         HardwareAccelerationKind.Nvenc when _pixelFormat is "yuv420p10le" =>
                             $"hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Nvenc when isSong => $"scale_cuda={size.Width}:{size.Height}:format=yuv420p",
                         HardwareAccelerationKind.Nvenc => $"scale_cuda={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
@@ -258,8 +244,6 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
                         HardwareAccelerationKind.Nvenc when _pixelFormat == "yuv420p10le" =>
                             "format=p010le,format=nv12",
-                        HardwareAccelerationKind.Qsv when isSong => "format=nv12,format=yuv420p",
-                        _ when isSong => "format=yuv420p",
                         _ => "format=nv12"
                     };
                     videoFilterQueue.Add(format);
@@ -270,9 +254,14 @@ namespace ErsatzTV.Core.FFmpeg
                     videoFilterQueue.Add("setsar=1");
                 }
 
+                if (videoOnly)
+                {
+                    videoFilterQueue.Add("boxblur=40");
+                }
+
                 if (isSong)
                 {
-                    videoFilterQueue.Add("boxblur=75");
+                    videoFilterQueue.Add("fps=30");
                 }
 
                 foreach (ChannelWatermark watermark in _watermark)
@@ -408,12 +397,9 @@ namespace ErsatzTV.Core.FFmpeg
 
                     if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None)
                     {
-                        switch (isSong, acceleration)
+                        switch (acceleration)
                         {
-                            case (true, HardwareAccelerationKind.Nvenc):
-                                complexFilter.Append(",hwupload_cuda");
-                                break;
-                            case (_, HardwareAccelerationKind.Qsv):
+                            case HardwareAccelerationKind.Qsv:
                                 complexFilter.Append(",format=yuv420p,hwupload=extra_hw_frames=64");
                                 break;
                             default:

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -49,7 +49,7 @@ namespace ErsatzTV.Core.Metadata
             .ToList();
 
         private readonly IImageCache _imageCache;
-        private readonly FFmpegProcessService _ffmpegProcessService;
+        private readonly IFFmpegProcessService _ffmpegProcessService;
 
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
@@ -61,7 +61,7 @@ namespace ErsatzTV.Core.Metadata
             ILocalStatisticsProvider localStatisticsProvider,
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
-            FFmpegProcessService ffmpegProcessService, 
+            IFFmpegProcessService ffmpegProcessService, 
             ILogger logger)
         {
             _localFileSystem = localFileSystem;
