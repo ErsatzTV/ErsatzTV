@@ -176,21 +176,27 @@ namespace ErsatzTV.Core.FFmpeg
                     case HardwareAccelerationKind.Qsv:
                         videoFilterQueue.Add("format=nv12");
                         break;
+                    case HardwareAccelerationKind.Vaapi:
+                        videoFilterQueue.Add("format=nv12|vaapi");
+                        break;
                     default:
                         videoFilterQueue.Add("format=yuv420p");
                         break;
                 }
             }
 
-            switch (usesHardwareFilters, false,  acceleration)
+            switch (usesHardwareFilters || isSong, acceleration)
             {
-                case (true, false, HardwareAccelerationKind.Nvenc):
+                case (true, HardwareAccelerationKind.Nvenc):
                     videoFilterQueue.Add("hwupload_cuda");
                     break;
-                case (true, false, HardwareAccelerationKind.Qsv):
+                case (true, HardwareAccelerationKind.Qsv):
                     videoFilterQueue.Add("hwupload=extra_hw_frames=64");
                     break;
-                case (true, false, _):
+                case (true, HardwareAccelerationKind.Vaapi):
+                    videoFilterQueue.Add("hwupload");
+                    break;
+                case (true, _) when usesHardwareFilters:
                     videoFilterQueue.Add("hwupload");
                     break;
             }
