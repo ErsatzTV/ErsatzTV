@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
-using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -40,7 +40,7 @@ namespace ErsatzTV.Core.Metadata
             ISearchRepository searchRepository,
             IOtherVideoRepository otherVideoRepository,
             ILibraryRepository libraryRepository,
-            FFmpegProcessService ffmpegProcessService,
+            IFFmpegProcessService ffmpegProcessService,
             ILogger<OtherVideoFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,

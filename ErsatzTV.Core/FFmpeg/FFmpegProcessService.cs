@@ -12,7 +12,7 @@ using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg
 {
-    public class FFmpegProcessService
+    public class FFmpegProcessService : IFFmpegProcessService
     {
         private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
         private readonly IImageCache _imageCache;
@@ -48,8 +48,7 @@ namespace ErsatzTV.Core.FFmpeg
             bool hlsRealtime,
             FillerKind fillerKind,
             TimeSpan inPoint,
-            TimeSpan outPoint,
-            Option<string> drawtextFile)
+            TimeSpan outPoint)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
@@ -64,6 +63,15 @@ namespace ErsatzTV.Core.FFmpeg
                 now,
                 inPoint,
                 outPoint);
+
+            if (videoVersion is BackgroundImageMediaVersion)
+            {
+                FFmpegPlaybackSettings errorSettings =
+                    _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
+
+                playbackSettings.HardwareAcceleration = errorSettings.HardwareAcceleration;
+                playbackSettings.VideoCodec = errorSettings.VideoCodec;
+            }
 
             Option<WatermarkOptions> watermarkOptions =
                 await GetWatermarkOptions(channel, globalWatermark, videoVersion);
@@ -87,7 +95,6 @@ namespace ErsatzTV.Core.FFmpeg
                     videoStream.Codec,
                     videoStream.PixelFormat)
                 .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
-                .WithDrawtextFile(videoVersion, drawtextFile)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None)
                 .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);
@@ -234,6 +241,83 @@ namespace ErsatzTV.Core.FFmpeg
                 .Build();
         }
 
+        public async Task<Either<BaseError, string>> GenerateSongImage(
+            string ffmpegPath,
+            Option<string> drawtextFile,
+            Channel channel,
+            Option<ChannelWatermark> globalWatermark,
+            MediaVersion videoVersion,
+            string videoPath)
+        {
+            try
+            {
+                // todo: generate name by channel? clean up old images?
+                string outputFile = Path.GetTempFileName();
+
+                MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
+
+                Option<WatermarkOptions> watermarkOptions =
+                    await GetWatermarkOptions(channel, globalWatermark, videoVersion);
+
+                FFmpegPlaybackSettings playbackSettings =
+                    _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
+                
+                FFmpegPlaybackSettings scalePlaybackSettings = _playbackSettingsCalculator.CalculateSettings(
+                    StreamingMode.TransportStream,
+                    channel.FFmpegProfile,
+                    videoVersion,
+                    videoStream,
+                    None,
+                    DateTimeOffset.UnixEpoch,
+                    DateTimeOffset.UnixEpoch,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero);
+
+                FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
+                    .WithThreads(1)
+                    .WithQuiet()
+                    .WithFormatFlags(playbackSettings.FormatFlags)
+                    .WithRealtimeOutput(playbackSettings.RealtimeOutput)
+                    .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat)
+                    .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
+                    .WithDrawtextFile(videoVersion, drawtextFile);
+
+                foreach (IDisplaySize scaledSize in scalePlaybackSettings.ScaledSize)
+                {
+                    builder = builder.WithScaling(scaledSize);
+                    
+                    if (NeedToPad(channel.FFmpegProfile.Resolution, scaledSize))
+                    {
+                        builder = builder.WithBlackBars(channel.FFmpegProfile.Resolution);
+                    }
+                }
+
+                using Process process = builder
+                    .WithFilterComplex(
+                        videoStream,
+                        None,
+                        videoPath,
+                        None,
+                        playbackSettings.VideoCodec)
+                    .WithOutputFormat("apng", outputFile)
+                    .Build();
+
+                _logger.LogInformation(
+                    "ffmpeg song arguments {FFmpegArguments}",
+                    string.Join(" ", process.StartInfo.ArgumentList));
+
+                process.Start();
+                await process.WaitForExitAsync();
+
+                return outputFile;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error generating song image");
+                return Left(BaseError.New(ex.Message));
+            }
+        }
+
         private bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
             displaySize.Width != target.Width || displaySize.Height != target.Height;
 
@@ -242,6 +326,11 @@ namespace ErsatzTV.Core.FFmpeg
             Option<ChannelWatermark> globalWatermark,
             MediaVersion videoVersion)
         {
+            if (videoVersion is BackgroundImageMediaVersion)
+            {
+                return new WatermarkOptions(None, None, None, false);
+            }
+
             Option<ChannelWatermark> watermarkOverride = videoVersion is FallbackMediaVersion or CoverArtMediaVersion
                 ? new ChannelWatermark
                 {

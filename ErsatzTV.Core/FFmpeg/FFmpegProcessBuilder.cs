@@ -43,6 +43,7 @@ namespace ErsatzTV.Core.FFmpeg
         private HardwareAccelerationKind _hwAccel;
         private string _outputPixelFormat;
         private bool _noAutoScale;
+        private Option<int> _outputFramerate;
 
         public FFmpegProcessBuilder(string ffmpegPath, bool saveReports, ILogger logger)
         {
@@ -248,6 +249,7 @@ namespace ErsatzTV.Core.FFmpeg
             else
             {
                 _noAutoScale = true;
+                _outputFramerate = 30;
                 
                 _arguments.Add("-loop");
                 _arguments.Add("1");
@@ -273,6 +275,24 @@ namespace ErsatzTV.Core.FFmpeg
                 _arguments.Add("-i");
                 _arguments.Add(audioPath);
             }
+
+            return this;
+        }
+        
+        public FFmpegProcessBuilder WithSongInput(
+            string videoPath,
+            Option<string> codec,
+            Option<string> pixelFormat)
+        {
+            _noAutoScale = true;
+            _outputFramerate = 30;
+            
+            _complexFilterBuilder = _complexFilterBuilder
+                .WithInputCodec(codec)
+                .WithInputPixelFormat(pixelFormat);
+
+            _arguments.Add("-i");
+            _arguments.Add(videoPath);
 
             return this;
         }
@@ -486,6 +506,12 @@ namespace ErsatzTV.Core.FFmpeg
                 _arguments.Add("-noautoscale");
             }
 
+            foreach (int framerate in _outputFramerate)
+            {
+                _arguments.Add("-r");
+                _arguments.Add(framerate.ToString());
+            }
+
             return this;
         }
 
@@ -545,7 +571,7 @@ namespace ErsatzTV.Core.FFmpeg
             MediaStream videoStream,
             Option<MediaStream> maybeAudioStream,
             string videoPath,
-            string audioPath,
+            Option<string> audioPath,
             string videoCodec)
         {
             _complexFilterBuilder = _complexFilterBuilder.WithVideoEncoder(videoCodec);
@@ -555,21 +581,27 @@ namespace ErsatzTV.Core.FFmpeg
 
             var videoIndex = 0;
             var audioIndex = 0;
-            if (audioPath != videoPath)
+            if (audioPath.IsNone)
+            {
+                // no audio index, so use same as video
+                audioIndex = 0;
+            }
+            else if (audioPath.IfNone("NotARealPath") != videoPath)
             {
                 audioIndex = 1;
+                _outputPixelFormat = "yuv420p";
             }
 
             var videoLabel = $"{videoIndex}:{videoStreamIndex}";
             var audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
 
             Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(
-                videoPath,
+                audioPath.IsNone,
                 videoIndex,
                 videoStreamIndex,
                 audioIndex,
                 maybeIndex,
-                videoPath != audioPath);
+                audioPath.IsSome && videoPath != audioPath.IfNone("NotARealPath"));
 
             maybeFilter.IfSome(
                 filter =>
@@ -588,8 +620,11 @@ namespace ErsatzTV.Core.FFmpeg
             _arguments.Add("-map");
             _arguments.Add(videoLabel);
 
-            _arguments.Add("-map");
-            _arguments.Add(audioLabel);
+            foreach (string _ in audioPath)
+            {
+                _arguments.Add("-map");
+                _arguments.Add(audioLabel);
+            }
 
             return this;
         }

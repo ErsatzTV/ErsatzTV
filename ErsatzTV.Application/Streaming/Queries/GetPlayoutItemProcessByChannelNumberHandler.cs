@@ -11,8 +11,8 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -35,7 +35,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
         private readonly IArtistRepository _artistRepository;
-        private readonly FFmpegProcessService _ffmpegProcessService;
+        private readonly IFFmpegProcessService _ffmpegProcessService;
         private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly IPlexPathReplacementService _plexPathReplacementService;
@@ -44,7 +44,7 @@ namespace ErsatzTV.Application.Streaming.Queries
 
         public GetPlayoutItemProcessByChannelNumberHandler(
             IDbContextFactory<TvContext> dbContextFactory,
-            FFmpegProcessService ffmpegProcessService,
+            IFFmpegProcessService ffmpegProcessService,
             ILocalFileSystem localFileSystem,
             IPlexPathReplacementService plexPathReplacementService,
             IJellyfinPathReplacementService jellyfinPathReplacementService,
@@ -122,8 +122,6 @@ namespace ErsatzTV.Application.Streaming.Queries
             return await maybePlayoutItem.Match(
                 async playoutItemWithPath =>
                 {
-                    Option<string> drawtextFile = None;
-                    
                     MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
 
                     string videoPath = playoutItemWithPath.Path;
@@ -131,9 +129,17 @@ namespace ErsatzTV.Application.Streaming.Queries
 
                     string audioPath = playoutItemWithPath.Path;
                     MediaVersion audioVersion = version;
-                    
+
+                    Option<ChannelWatermark> maybeGlobalWatermark = await dbContext.ConfigElements
+                        .GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId)
+                        .BindT(
+                            watermarkId => dbContext.ChannelWatermarks
+                                .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
+
                     if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
                     {
+                        Option<string> drawtextFile = None;
+                        
                         videoVersion = new FallbackMediaVersion
                         {
                             Id = -1,
@@ -206,17 +212,40 @@ namespace ErsatzTV.Application.Streaming.Queries
                         {
                             new() { Path = videoPath }
                         };
+
+                        Either<BaseError, string> maybeSongImage = await _ffmpegProcessService.GenerateSongImage(
+                            ffmpegPath,
+                            drawtextFile,
+                            channel,
+                            maybeGlobalWatermark,
+                            videoVersion,
+                            videoPath);
+
+                        foreach (string si in maybeSongImage.RightToSeq())
+                        {
+                            videoPath = si;
+                            videoVersion = new BackgroundImageMediaVersion
+                            {
+                                Chapters = new List<MediaChapter>(),
+                                // song image has been pre-generated with correct size
+                                Height = channel.FFmpegProfile.Resolution.Height,
+                                Width = channel.FFmpegProfile.Resolution.Width,
+                                SampleAspectRatio = "1:1",
+                                Streams = new List<MediaStream>
+                                {
+                                    new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 },
+                                },
+                                MediaFiles = new List<MediaFile>
+                                {
+                                    new() { Path = si }
+                                }
+                            };
+                        }
                     }
 
                     bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await dbContext.ConfigElements
                         .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                         .Map(result => result.IfNone(false));
-
-                    Option<ChannelWatermark> maybeGlobalWatermark = await dbContext.ConfigElements
-                        .GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId)
-                        .BindT(
-                            watermarkId => dbContext.ChannelWatermarks
-                                .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
 
                     Process process = await _ffmpegProcessService.ForPlayoutItem(
                         ffmpegPath,
@@ -235,8 +264,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         request.HlsRealtime,
                         playoutItemWithPath.PlayoutItem.FillerKind,
                         playoutItemWithPath.PlayoutItem.InPoint,
-                        playoutItemWithPath.PlayoutItem.OutPoint,
-                        drawtextFile);
+                        playoutItemWithPath.PlayoutItem.OutPoint);
 
                     var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
 
