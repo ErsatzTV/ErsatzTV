@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -40,11 +41,13 @@ namespace ErsatzTV.Core.Metadata
             ISearchRepository searchRepository,
             ISongRepository songRepository,
             ILibraryRepository libraryRepository,
+            FFmpegProcessService ffmpegProcessService,
             ILogger<SongFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
             metadataRepository,
             imageCache,
+            ffmpegProcessService,
             logger)
         {
             _localFileSystem = localFileSystem;
@@ -124,8 +127,8 @@ namespace ErsatzTV.Core.Metadata
                     Either<BaseError, MediaItemScanResult<Song>> maybeSong = await _songRepository
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffprobePath))
-                        .BindT(video => UpdateMetadata(video, ffprobePath));
-                        // .BindT(video => UpdateThumbnail(video, ffprobePath, ffmpegPath));
+                        .BindT(video => UpdateMetadata(video, ffprobePath))
+                        .BindT(video => UpdateThumbnail(video, ffprobePath, ffmpegPath));
 
                     await maybeSong.Match(
                         async result =>
@@ -201,27 +204,44 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        // private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateThumbnail(
-        //     MediaItemScanResult<Song> result,
-        //     string ffprobePath,
-        //     string ffmpegPath)
-        // {
-        //     try
-        //     {
-        //         Song song = result.Item;
-        //         await LocateThumbnail(song).IfSomeAsync(
-        //             async thumbnailFile =>
-        //             {
-        //                 SongMetadata metadata = song.SongMetadata.Head();
-        //                 await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail);
-        //             });
-        //
-        //         return result;
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return BaseError.New(ex.ToString());
-        //     }
-        // }
+        private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateThumbnail(
+            MediaItemScanResult<Song> result,
+            string ffprobePath,
+            string ffmpegPath)
+        {
+            try
+            {
+                Song song = result.Item;
+                await LocateThumbnail(song).Match(
+                    async thumbnailFile =>
+                    {
+                        SongMetadata metadata = song.SongMetadata.Head();
+                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, ffmpegPath);
+                    },
+                    () => Task.CompletedTask); // TODO: check for embedded artwork
+        
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
+        }
+        
+        private Option<string> LocateThumbnail(Song song)
+        {
+            string path = song.MediaVersions.Head().MediaFiles.Head().Path;
+            Option<DirectoryInfo> parent = Optional(Directory.GetParent(path));
+
+            return parent.Map(
+                di =>
+                {
+                    string coverPath = Path.Combine(di.FullName, "cover.jpg");
+                    return ImageFileExtensions
+                        .Map(ext => Path.ChangeExtension(coverPath, ext))
+                        .Filter(f => _localFileSystem.FileExists(f))
+                        .HeadOrNone();
+                }).Flatten();
+        }
     }
 }
