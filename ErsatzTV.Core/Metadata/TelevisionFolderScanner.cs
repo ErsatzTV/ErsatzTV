@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -40,11 +41,13 @@ namespace ErsatzTV.Core.Metadata
             ISearchRepository searchRepository,
             ILibraryRepository libraryRepository,
             IMediator mediator,
+            FFmpegProcessService ffmpegProcessService,
             ILogger<TelevisionFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
             metadataRepository,
             imageCache,
+            ffmpegProcessService,
             logger)
         {
             _localFileSystem = localFileSystem;
@@ -362,7 +365,7 @@ namespace ErsatzTV.Core.Metadata
                     async artworkFile =>
                     {
                         ShowMetadata metadata = show.ShowMetadata.Head();
-                        await RefreshArtwork(artworkFile, metadata, artworkKind);
+                        await RefreshArtwork(artworkFile, metadata, artworkKind, None);
                     });
 
                 return result;
@@ -381,7 +384,7 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         SeasonMetadata metadata = season.SeasonMetadata.Head();
-                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster);
+                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None);
                     });
 
                 return season;
@@ -401,7 +404,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
                         {
-                            await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail);
+                            await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail, None);
                         }
                     });
 

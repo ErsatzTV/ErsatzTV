@@ -220,6 +220,17 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithDrawtextFile(
+            MediaVersion videoVersion,
+            Option<string> drawtextFile)
+        {
+            _complexFilterBuilder = _complexFilterBuilder.WithDrawtextFile(
+                videoVersion,
+                drawtextFile);
+
+            return this;
+        }
+
         public FFmpegProcessBuilder WithInputCodec(
             Option<TimeSpan> maybeStart,
             bool loop,
@@ -236,7 +247,10 @@ namespace ErsatzTV.Core.FFmpeg
             }
             else
             {
-                WithInfiniteLoop();
+                _noAutoScale = true;
+                
+                _arguments.Add("-loop");
+                _arguments.Add("1");
             }
 
             if (!string.IsNullOrWhiteSpace(decoder))
@@ -363,7 +377,7 @@ namespace ErsatzTV.Core.FFmpeg
             _arguments.Add($"{format}");
             return this;
         }
-
+        
         public FFmpegProcessBuilder WithHls(string channelNumber, Option<MediaVersion> mediaVersion)
         {
             const int SEGMENT_SECONDS = 4;
@@ -515,6 +529,17 @@ namespace ErsatzTV.Core.FFmpeg
             _complexFilterBuilder = _complexFilterBuilder.WithDeinterlace(deinterlace);
             return this;
         }
+        
+        public FFmpegProcessBuilder WithOutputFormat(string format, string output)
+        {
+            _arguments.Add("-f");
+            _arguments.Add(format);
+            
+            _arguments.Add("-y");
+            _arguments.Add(output);
+
+            return this;
+        }
 
         public FFmpegProcessBuilder WithFilterComplex(
             MediaStream videoStream,
@@ -539,10 +564,12 @@ namespace ErsatzTV.Core.FFmpeg
             var audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
 
             Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(
+                videoPath,
                 videoIndex,
                 videoStreamIndex,
                 audioIndex,
-                maybeIndex);
+                maybeIndex,
+                videoPath != audioPath);
 
             maybeFilter.IfSome(
                 filter =>

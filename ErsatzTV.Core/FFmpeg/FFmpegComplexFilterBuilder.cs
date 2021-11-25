@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -24,6 +26,7 @@ namespace ErsatzTV.Core.FFmpeg
         private Option<int> _watermarkIndex;
         private string _pixelFormat;
         private string _videoEncoder;
+        private Option<string> _drawtext;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -91,6 +94,38 @@ namespace ErsatzTV.Core.FFmpeg
             _watermarkIndex = watermarkIndex;
             return this;
         }
+        
+        public FFmpegComplexFilterBuilder WithDrawtextFile(
+            MediaVersion videoVersion,
+            Option<string> drawtextFile)
+        {
+            foreach (string file in drawtextFile)
+            {
+                string effectiveFile = file;
+                
+                if (videoVersion is FallbackMediaVersion or CoverArtMediaVersion)
+                {
+                    string fontPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "OPTIKabel-Heavy.otf");
+                    
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        fontPath = fontPath
+                            .Replace(@"\", @"/\")
+                            .Replace(@":/", @"\\:/");
+                        
+                        effectiveFile = effectiveFile
+                            .Replace(@"\", @"/\")
+                            .Replace(@":/", @"\\:/");
+                    }
+
+                    // TODO: calculate by percent
+                    _drawtext =
+                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:x=50:y=H-175:fontsize=36:fontcolor=white";
+                }
+            }
+
+            return this;
+        }
 
         public FFmpegComplexFilterBuilder WithVideoEncoder(string videoEncoder)
         {
@@ -98,19 +133,19 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public Option<FFmpegComplexFilter> Build(int videoInput, int videoStreamIndex, int audioInput, Option<int> audioStreamIndex)
+        public Option<FFmpegComplexFilter> Build(string videoPath, int videoInput, int videoStreamIndex, int audioInput, Option<int> audioStreamIndex, bool isSong)
         {
             var complexFilter = new StringBuilder();
 
-            var videoLabel = $"{videoInput}:{videoStreamIndex}";
+            var videoLabel = $"{videoInput}:{(isSong ? "v" : videoStreamIndex.ToString())}";
             string audioLabel = audioStreamIndex.Match(index => $"{audioInput}:{index}", () => "0:a");
 
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
             bool isHardwareDecode = acceleration switch
             {
-                HardwareAccelerationKind.Vaapi => _inputCodec != "mpeg4",
-                HardwareAccelerationKind.Nvenc => true,
-                HardwareAccelerationKind.Qsv => true,
+                HardwareAccelerationKind.Vaapi => !isSong && _inputCodec != "mpeg4",
+                HardwareAccelerationKind.Nvenc => !isSong,
+                HardwareAccelerationKind.Qsv => !isSong,
                 _ => false
             };
 
@@ -118,7 +153,7 @@ namespace ErsatzTV.Core.FFmpeg
             var videoFilterQueue = new List<string>();
             string watermarkPreprocess = string.Empty;
             string watermarkOverlay = string.Empty;
-
+            
             if (_normalizeLoudness)
             {
                 audioFilterQueue.Add("loudnorm=I=-16:TP=-1.5:LRA=11");
@@ -133,9 +168,31 @@ namespace ErsatzTV.Core.FFmpeg
 
             bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None && !isHardwareDecode &&
                                        (_deinterlace || _scaleToSize.IsSome);
-            if (usesHardwareFilters)
+
+            if (isSong)
             {
-                videoFilterQueue.Add("hwupload");
+                switch (acceleration)
+                {
+                    case HardwareAccelerationKind.Qsv:
+                        videoFilterQueue.Add("format=nv12");
+                        break;
+                    default:
+                        videoFilterQueue.Add("format=yuv420p");
+                        break;
+                }
+            }
+
+            switch (usesHardwareFilters, false,  acceleration)
+            {
+                case (true, false, HardwareAccelerationKind.Nvenc):
+                    videoFilterQueue.Add("hwupload_cuda");
+                    break;
+                case (true, false, HardwareAccelerationKind.Qsv):
+                    videoFilterQueue.Add("hwupload=extra_hw_frames=64");
+                    break;
+                case (true, false, _):
+                    videoFilterQueue.Add("hwupload");
+                    break;
             }
 
             if (_deinterlace)
@@ -176,6 +233,7 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Qsv => $"scale_qsv=w={size.Width}:h={size.Height}",
                         HardwareAccelerationKind.Nvenc when _pixelFormat is "yuv420p10le" =>
                             $"hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
+                        HardwareAccelerationKind.Nvenc when isSong => $"scale_cuda={size.Width}:{size.Height}:format=yuv420p",
                         HardwareAccelerationKind.Nvenc => $"scale_cuda={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
@@ -200,6 +258,8 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
                         HardwareAccelerationKind.Nvenc when _pixelFormat == "yuv420p10le" =>
                             "format=p010le,format=nv12",
+                        HardwareAccelerationKind.Qsv when isSong => "format=nv12,format=yuv420p",
+                        _ when isSong => "format=yuv420p",
                         _ => "format=nv12"
                     };
                     videoFilterQueue.Add(format);
@@ -208,6 +268,11 @@ namespace ErsatzTV.Core.FFmpeg
                 if (scaleOrPad)
                 {
                     videoFilterQueue.Add("setsar=1");
+                }
+
+                if (isSong)
+                {
+                    videoFilterQueue.Add("boxblur=75,fps=24");
                 }
 
                 foreach (ChannelWatermark watermark in _watermark)
@@ -255,6 +320,11 @@ namespace ErsatzTV.Core.FFmpeg
             }
 
             _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
+            
+            foreach (string drawtext in _drawtext)
+            {
+                videoFilterQueue.Add(drawtext);
+            }
 
             string outputPixelFormat = null;
             
@@ -338,10 +408,21 @@ namespace ErsatzTV.Core.FFmpeg
 
                     if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None)
                     {
-                        complexFilter.Append(",hwupload");
+                        switch (isSong, acceleration)
+                        {
+                            case (true, HardwareAccelerationKind.Nvenc):
+                                complexFilter.Append(",hwupload_cuda");
+                                break;
+                            case (_, HardwareAccelerationKind.Qsv):
+                                complexFilter.Append(",format=yuv420p,hwupload=extra_hw_frames=64");
+                                break;
+                            default:
+                                complexFilter.Append(",hwupload");
+                                break;
+                        }
                     }
                 }
-
+                
                 videoLabel = "[v]";
                 complexFilter.Append(videoLabel);
             }

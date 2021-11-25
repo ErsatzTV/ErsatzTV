@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -47,6 +49,7 @@ namespace ErsatzTV.Core.Metadata
             .ToList();
 
         private readonly IImageCache _imageCache;
+        private readonly FFmpegProcessService _ffmpegProcessService;
 
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
@@ -58,12 +61,14 @@ namespace ErsatzTV.Core.Metadata
             ILocalStatisticsProvider localStatisticsProvider,
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
+            FFmpegProcessService ffmpegProcessService, 
             ILogger logger)
         {
             _localFileSystem = localFileSystem;
             _localStatisticsProvider = localStatisticsProvider;
             _metadataRepository = metadataRepository;
             _imageCache = imageCache;
+            _ffmpegProcessService = ffmpegProcessService;
             _logger = logger;
         }
 
@@ -107,7 +112,7 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        protected async Task<bool> RefreshArtwork(string artworkFile, Domain.Metadata metadata, ArtworkKind artworkKind)
+        protected async Task<bool> RefreshArtwork(string artworkFile, Domain.Metadata metadata, ArtworkKind artworkKind, Option<string> ffmpegPath)
         {
             DateTime lastWriteTime = _localFileSystem.GetLastWriteTime(artworkFile);
 
@@ -124,6 +129,18 @@ namespace ErsatzTV.Core.Metadata
                 try
                 {
                     _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
+
+                    // if ffmpeg path is passed, we want to convert to png
+                    foreach (string path in ffmpegPath)
+                    {
+                        string tempName = Path.GetTempFileName();
+                        using Process process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
+                        process.Start();
+                        await process.WaitForExitAsync();
+
+                        artworkFile = tempName;
+                    }
+
                     Either<BaseError, string> maybeCacheName =
                         await _imageCache.CopyArtworkToCache(artworkFile, artworkKind);
 

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -41,11 +42,13 @@ namespace ErsatzTV.Core.Metadata
             IMusicVideoRepository musicVideoRepository,
             ILibraryRepository libraryRepository,
             IMediator mediator,
+            FFmpegProcessService ffmpegProcessService,
             ILogger<MusicVideoFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
             metadataRepository,
             imageCache,
+            ffmpegProcessService,
             logger)
         {
             _localFileSystem = localFileSystem;
@@ -217,7 +220,7 @@ namespace ErsatzTV.Core.Metadata
                     async artworkFile =>
                     {
                         ArtistMetadata metadata = artist.ArtistMetadata.Head();
-                        await RefreshArtwork(artworkFile, metadata, artworkKind);
+                        await RefreshArtwork(artworkFile, metadata, artworkKind, None);
                     });
 
                 return result;
@@ -380,7 +383,7 @@ namespace ErsatzTV.Core.Metadata
                     async thumbnailFile =>
                     {
                         MusicVideoMetadata metadata = musicVideo.MusicVideoMetadata.Head();
-                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail);
+                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None);
                     });
 
                 return result;

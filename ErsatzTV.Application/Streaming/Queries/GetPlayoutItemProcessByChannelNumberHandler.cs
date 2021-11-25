@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -11,6 +13,7 @@ using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -37,6 +40,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly ILocalFileSystem _localFileSystem;
         private readonly IPlexPathReplacementService _plexPathReplacementService;
         private readonly IRuntimeInfo _runtimeInfo;
+        private readonly IImageCache _imageCache;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
             IDbContextFactory<TvContext> dbContextFactory,
@@ -48,7 +52,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             IMediaCollectionRepository mediaCollectionRepository,
             ITelevisionRepository televisionRepository,
             IArtistRepository artistRepository,
-            IRuntimeInfo runtimeInfo)
+            IRuntimeInfo runtimeInfo,
+            IImageCache imageCache)
             : base(dbContextFactory)
         {
             _ffmpegProcessService = ffmpegProcessService;
@@ -60,6 +65,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             _televisionRepository = televisionRepository;
             _artistRepository = artistRepository;
             _runtimeInfo = runtimeInfo;
+            _imageCache = imageCache;
         }
 
         protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
@@ -97,10 +103,13 @@ namespace ErsatzTV.Application.Streaming.Queries
                 .ThenInclude(ov => ov.Streams)
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Song).MediaVersions)
-                .ThenInclude(ov => ov.MediaFiles)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Include(i => i.MediaItem)
                 .ThenInclude(mi => (mi as Song).MediaVersions)
-                .ThenInclude(ov => ov.Streams)
+                .ThenInclude(mv => mv.Streams)
+                .Include(i => i.MediaItem)
+                .ThenInclude(mi => (mi as Song).SongMetadata)
+                .ThenInclude(sm => sm.Artwork)
                 .ForChannelAndTime(channel.Id, now)
                 .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
                 .BindT(ValidatePlayoutItemPath);
@@ -113,6 +122,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             return await maybePlayoutItem.Match(
                 async playoutItemWithPath =>
                 {
+                    Option<string> drawtextFile = None;
+                    
                     MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
 
                     string videoPath = playoutItemWithPath.Path;
@@ -121,25 +132,80 @@ namespace ErsatzTV.Application.Streaming.Queries
                     string audioPath = playoutItemWithPath.Path;
                     MediaVersion audioVersion = version;
                     
-                    if (playoutItemWithPath.PlayoutItem.MediaItem is Song)
+                    if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
                     {
-                        // find filler to loop as video for song
-
-                        Either<BaseError, PlayoutItemWithPath> fallbackFiller =
-                            await CheckForFallbackFiller(dbContext, channel, now);
-
-                        // fail if we can't find filler
-                        if (fallbackFiller.IsLeft)
+                        videoVersion = new FallbackMediaVersion
                         {
-                            return Left<BaseError, PlayoutItemProcessModel>(
-                                BaseError.New("Unable to locate fallback filler for song"));
+                            Id = -1,
+                            Chapters = new List<MediaChapter>(),
+                            Width = 301,
+                            Height = 162,
+                            SampleAspectRatio = "1:1",
+                            Streams = new List<MediaStream>
+                            {
+                                new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
+                            }
+                        };
+
+                        // use ETV logo by default
+                        string artworkPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "ErsatzTV.png");
+                        
+                        // use thumbnail (cover art) if present
+                        foreach (SongMetadata metadata in song.SongMetadata)
+                        {
+                            string fileName = Path.GetTempFileName();
+                            drawtextFile = fileName;
+
+                            var sb = new StringBuilder();
+                            if (!string.IsNullOrWhiteSpace(metadata.Artist))
+                            {
+                                sb.AppendLine(metadata.Artist);
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(metadata.Title))
+                            {
+                                sb.AppendLine($"\"{metadata.Title}\"");
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(metadata.Album))
+                            {
+                                sb.AppendLine(metadata.Album);
+                            }
+
+                            await File.WriteAllTextAsync(fileName, sb.ToString());
+
+                            foreach (Artwork artwork in Optional(
+                                metadata.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Thumbnail)))
+                            {
+                                string customPath = _imageCache.GetPathForImage(
+                                    artwork.Path,
+                                    ArtworkKind.Thumbnail,
+                                    Option<int>.None);
+
+                                artworkPath = customPath;
+
+                                // signal that we want to use cover art as watermark
+                                videoVersion = new CoverArtMediaVersion
+                                {
+                                    Chapters = new List<MediaChapter>(),
+                                    // always stretch cover art
+                                    Width = 192,
+                                    Height = 108,
+                                    SampleAspectRatio = "1:1",
+                                    Streams = new List<MediaStream>
+                                    {
+                                        new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
+                                    }
+                                };
+                            }
                         }
 
-                        foreach (PlayoutItemWithPath filler in fallbackFiller.RightToSeq())
+                        videoPath = artworkPath;
+
+                        videoVersion.MediaFiles = new List<MediaFile>
                         {
-                            videoPath = filler.Path;
-                            videoVersion = filler.PlayoutItem.MediaItem.GetHeadVersion();
-                        }
+                            new() { Path = videoPath }
+                        };
                     }
 
                     bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await dbContext.ConfigElements
@@ -169,7 +235,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                         request.HlsRealtime,
                         playoutItemWithPath.PlayoutItem.FillerKind,
                         playoutItemWithPath.PlayoutItem.InPoint,
-                        playoutItemWithPath.PlayoutItem.OutPoint);
+                        playoutItemWithPath.PlayoutItem.OutPoint,
+                        drawtextFile);
 
                     var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
 
