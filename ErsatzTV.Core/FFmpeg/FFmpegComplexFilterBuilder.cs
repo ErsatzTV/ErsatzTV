@@ -278,7 +278,7 @@ namespace ErsatzTV.Core.FFmpeg
 
                 if (videoOnly)
                 {
-                    videoFilterQueue.Add("boxblur=40");
+                    videoFilterQueue.Add("boxblur=40[b];[b]split[b1][b2];[b1]format=rgba,geq=r=0:g=0:b=0:a=120*(Y/H)[fg];[b2][fg]overlay=format=auto");
                 }
 
                 if (isSong)
