@@ -589,7 +589,10 @@ namespace ErsatzTV.Core.FFmpeg
             else if (audioPath.IfNone("NotARealPath") != videoPath)
             {
                 audioIndex = 1;
-                _outputPixelFormat = "yuv420p";
+                if (_hwAccel == HardwareAccelerationKind.None)
+                {
+                    _outputPixelFormat = "yuv420p";
+                }
             }
 
             var videoLabel = $"{videoIndex}:{videoStreamIndex}";
