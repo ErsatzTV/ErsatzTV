@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -100,13 +101,26 @@ namespace ErsatzTV.Core.FFmpeg
         {
             foreach (string file in drawtextFile)
             {
+                string effectiveFile = file;
+                
                 if (videoVersion is FallbackMediaVersion or CoverArtMediaVersion)
                 {
                     string fontPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "OPTIKabel-Heavy.otf");
+                    
+                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    {
+                        fontPath = fontPath
+                            .Replace(@"\", @"/\")
+                            .Replace(@":/", @"\\:/");
+                        
+                        effectiveFile = effectiveFile
+                            .Replace(@"\", @"/\")
+                            .Replace(@":/", @"\\:/");
+                    }
 
                     // TODO: calculate by percent
                     _drawtext =
-                        $"drawtext=fontfile={fontPath}:textfile={file}:x=50:y=H-175:fontsize=36:fontcolor=white";
+                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:x=50:y=H-175:fontsize=36:fontcolor=white";
                 }
             }
 
@@ -157,13 +171,24 @@ namespace ErsatzTV.Core.FFmpeg
 
             if (isSong)
             {
-                videoFilterQueue.Add("format=yuv420p");
+                switch (acceleration)
+                {
+                    case HardwareAccelerationKind.Qsv:
+                        videoFilterQueue.Add("format=nv12");
+                        break;
+                    default:
+                        videoFilterQueue.Add("format=yuv420p");
+                        break;
+                }
             }
 
             switch (usesHardwareFilters, false,  acceleration)
             {
                 case (true, false, HardwareAccelerationKind.Nvenc):
                     videoFilterQueue.Add("hwupload_cuda");
+                    break;
+                case (true, false, HardwareAccelerationKind.Qsv):
+                    videoFilterQueue.Add("hwupload=extra_hw_frames=64");
                     break;
                 case (true, false, _):
                     videoFilterQueue.Add("hwupload");
@@ -233,6 +258,7 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
                         HardwareAccelerationKind.Nvenc when _pixelFormat == "yuv420p10le" =>
                             "format=p010le,format=nv12",
+                        HardwareAccelerationKind.Qsv when isSong => "format=nv12,format=yuv420p",
                         _ when isSong => "format=yuv420p",
                         _ => "format=nv12"
                     };
@@ -386,6 +412,9 @@ namespace ErsatzTV.Core.FFmpeg
                         {
                             case (true, HardwareAccelerationKind.Nvenc):
                                 complexFilter.Append(",hwupload_cuda");
+                                break;
+                            case (_, HardwareAccelerationKind.Qsv):
+                                complexFilter.Append(",format=yuv420p,hwupload=extra_hw_frames=64");
                                 break;
                             default:
                                 complexFilter.Append(",hwupload");
