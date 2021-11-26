@@ -19,6 +19,7 @@ namespace ErsatzTV.Core.FFmpeg
         private readonly ITempFilePool _tempFilePool;
         private readonly ILogger<FFmpegProcessService> _logger;
         private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
+        private readonly Random _random = new();
 
         public FFmpegProcessService(
             FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
@@ -270,7 +271,6 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithThreads(1)
                     .WithQuiet()
                     .WithFormatFlags(playbackSettings.FormatFlags)
-                    .WithRealtimeOutput(playbackSettings.RealtimeOutput)
                     .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat)
                     .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
                     .WithDrawtextFile(videoVersion, drawtextFile);
@@ -330,7 +330,9 @@ namespace ErsatzTV.Core.FFmpeg
                     Mode = ChannelWatermarkMode.Permanent,
                     HorizontalMarginPercent = 3,
                     VerticalMarginPercent = 5,
-                    Location = ChannelWatermarkLocation.BottomRight,
+                    Location = _random.Next() % 2 == 0
+                        ? ChannelWatermarkLocation.BottomRight
+                        : ChannelWatermarkLocation.BottomLeft,
                     Size = ChannelWatermarkSize.Scaled,
                     WidthPercent = 25,
                     Opacity = 100

@@ -118,9 +118,27 @@ namespace ErsatzTV.Core.FFmpeg
                             .Replace(@":/", @"\\:/");
                     }
 
-                    // TODO: calculate by percent
+                    var horizontalMarginPercent = 3;
+                    const int VERTICAL_MARGIN_PERCENT = 14;
+
+                    foreach (ChannelWatermark watermark in _watermark)
+                    {
+                        horizontalMarginPercent = watermark.HorizontalMarginPercent;
+                        switch (watermark.Location)
+                        {
+                            case ChannelWatermarkLocation.BottomLeft:
+                                horizontalMarginPercent += watermark.WidthPercent + watermark.HorizontalMarginPercent;
+                                break;
+                        }
+                    }
+
+                    double horizontalMargin = Math.Round(horizontalMarginPercent / 100.0 * _resolution.Width);
+                    double verticalMargin = Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * _resolution.Height);
+
+                    var location = $"x={horizontalMargin}:y=H-{verticalMargin}";
+
                     _drawtext =
-                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:x=50:y=H-175:fontsize=36:fontcolor=white";
+                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:{location}:fontsize=36:fontcolor=white";
                 }
             }
 

@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Show song artist in playout detail
 - Include song artist and cover art in channel guide (xmltv)
 
+### Changed
+- Randomly place song cover art on left or right side of screen
+
 ## [0.3.0-alpha] - 2021-11-25
 ### Fixed
 - Properly fix database incompatibility introduced with `v0.2.4-alpha` and partially fixed with `v0.2.5-alpha`
