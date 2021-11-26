@@ -4,8 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.3.0-alpha] - 2021-11-25
 ### Fixed
-- Properly fix database incompatibility introduced with v0.2.4-alpha and partially fixed with v0.2.5-alpha
+- Properly fix database incompatibility introduced with `v0.2.4-alpha` and partially fixed with `v0.2.5-alpha`
   - The proper fix requires rebuilding all playouts, which will happen on startup after upgrading
 - Fix local library locking/progress display when adding paths
 - Fix grouping duration items in EPG when custom title is configured
@@ -815,7 +817,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.5-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.0-alpha...HEAD
+[0.3.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.5-alpha...v0.3.0-alpha
 [0.2.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.4-alpha...v0.2.5-alpha
 [0.2.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.3-alpha...v0.2.4-alpha
 [0.2.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.2-alpha...v0.2.3-alpha
