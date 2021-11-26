@@ -239,9 +239,9 @@ namespace ErsatzTV.Core.FFmpeg
                         HardwareAccelerationKind.Qsv => $"scale_qsv=w={size.Width}:h={size.Height}",
                         HardwareAccelerationKind.Nvenc when _pixelFormat is "yuv420p10le" =>
                             $"hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Nvenc when isSong => $"scale_cuda={size.Width}:{size.Height}:format=yuv420p",
                         HardwareAccelerationKind.Nvenc => $"scale_cuda={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
+                        _ when videoOnly => $"scale={size.Width}:{size.Height}::force_original_aspect_ratio=increase,crop={size.Width}:{size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
 
