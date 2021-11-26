@@ -241,7 +241,7 @@ namespace ErsatzTV.Core.FFmpeg
                             $"hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Nvenc => $"scale_cuda={size.Width}:{size.Height}",
                         HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
-                        _ when videoOnly => $"scale={size.Width}:{size.Height}::force_original_aspect_ratio=increase,crop={size.Width}:{size.Height}",
+                        _ when videoOnly => $"scale={size.Width}:{size.Height}:force_original_aspect_ratio=increase,crop={size.Width}:{size.Height}",
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
 
