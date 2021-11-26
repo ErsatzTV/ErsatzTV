@@ -213,6 +213,29 @@ namespace ErsatzTV.Core.Iptv
                             }
                         }
                     }
+                    
+                    if (!hasCustomTitle && displayItem.MediaItem is Song song)
+                    {
+                        xml.WriteStartElement("category");
+                        xml.WriteAttributeString("lang", "en");
+                        xml.WriteString("Music");
+                        xml.WriteEndElement(); // category
+
+                        foreach (SongMetadata metadata in song.SongMetadata.HeadOrNone())
+                        {
+                            string thumbnail = Optional(metadata.Artwork).Flatten()
+                                .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
+                                .HeadOrNone()
+                                .Match(a => GetArtworkUrl(a, ArtworkKind.Thumbnail), () => string.Empty);
+
+                            if (!string.IsNullOrWhiteSpace(thumbnail))
+                            {
+                                xml.WriteStartElement("icon");
+                                xml.WriteAttributeString("src", thumbnail);
+                                xml.WriteEndElement(); // icon
+                            }
+                        }
+                    }
 
                     if (displayItem.MediaItem is Episode episode && (!hasCustomTitle || isSameCustomShow))
                     {
@@ -344,8 +367,8 @@ namespace ErsatzTV.Core.Iptv
                     .IfNone("[unknown artist]"),
                 OtherVideo ov => ov.OtherVideoMetadata.HeadOrNone().Map(vm => vm.Title ?? string.Empty)
                     .IfNone("[unknown video]"),
-                Song s => s.SongMetadata.HeadOrNone().Map(sm => sm.Title ?? string.Empty)
-                    .IfNone("[unknown song]"),
+                Song s => s.SongMetadata.HeadOrNone().Map(sm => sm.Artist ?? string.Empty)
+                    .IfNone("[unknown artist]"),
                 _ => "[unknown]"
             };
         }
@@ -363,6 +386,9 @@ namespace ErsatzTV.Core.Iptv
                     em => em.Title ?? string.Empty,
                     () => string.Empty),
                 MusicVideo mv => mv.MusicVideoMetadata.HeadOrNone().Match(
+                    mvm => mvm.Title ?? string.Empty,
+                    () => string.Empty),
+                Song s => s.SongMetadata.HeadOrNone().Match(
                     mvm => mvm.Title ?? string.Empty,
                     () => string.Empty),
                 _ => string.Empty
