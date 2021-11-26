@@ -14,6 +14,8 @@ namespace ErsatzTV.Core.FFmpeg
 {
     public class FFmpegComplexFilterBuilder
     {
+        private static readonly Random Random = new();
+
         private Option<TimeSpan> _audioDuration = None;
         private bool _deinterlace;
         private Option<HardwareAccelerationKind> _hardwareAccelerationKind = None;
@@ -119,7 +121,7 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     var horizontalMarginPercent = 3;
-                    const int VERTICAL_MARGIN_PERCENT = 14;
+                    const int VERTICAL_MARGIN_PERCENT = 5;
 
                     foreach (ChannelWatermark watermark in _watermark)
                     {
@@ -135,10 +137,10 @@ namespace ErsatzTV.Core.FFmpeg
                     double horizontalMargin = Math.Round(horizontalMarginPercent / 100.0 * _resolution.Width);
                     double verticalMargin = Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * _resolution.Height);
 
-                    var location = $"x={horizontalMargin}:y=H-{verticalMargin}";
+                    var location = $"x={horizontalMargin}:y=H-text_h-{verticalMargin}";
 
                     _drawtext =
-                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:{location}:fontsize=36:fontcolor=white";
+                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:{location}:fontsize=(h/25):fontcolor=white";
                 }
             }
 
@@ -296,7 +298,20 @@ namespace ErsatzTV.Core.FFmpeg
 
                 if (videoOnly)
                 {
-                    videoFilterQueue.Add("boxblur=40[b];[b]split[b1][b2];[b1]format=rgba,geq=r=0:g=0:b=0:a=120*(Y/H)[fg];[b2][fg]overlay=format=auto");
+                    var filter = "boxblur=40";
+
+                    int next = Random.Next() % 16;
+                    if (next < 8)
+                    {
+                        videoFilterQueue.RemoveAll(s => s.Contains("scale="));
+                        filter =
+                            $"palettegen=max_colors=8,crop=1:1:{next}:0,scale={_resolution.Width}:{_resolution.Height},setsar=1:1";
+                    }
+
+                    filter +=
+                        "[b];[b]split[b1][b2];[b1]format=rgba,geq=r=0:g=0:b=0:a=120*(Y/H)[fg];[b2][fg]overlay=format=auto";
+
+                    videoFilterQueue.Add(filter);
                 }
 
                 if (isSong)
