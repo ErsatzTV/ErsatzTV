@@ -51,6 +51,10 @@
 
     <ItemGroup>
       <EmbeddedResource Include="Resources\background.png" />
+      <EmbeddedResource Include="Resources\background_blank.png" />
+      <EmbeddedResource Include="Resources\background_e.png" />
+      <EmbeddedResource Include="Resources\background_t.png" />
+      <EmbeddedResource Include="Resources\background_v.png" />
       <EmbeddedResource Include="Resources\ErsatzTV.png" />
       <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
       <EmbeddedResource Include="Resources\OPTIKabel-Heavy.otf" />
