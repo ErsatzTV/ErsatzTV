@@ -14,6 +14,8 @@ namespace ErsatzTV.Core.FFmpeg
 {
     public class FFmpegComplexFilterBuilder
     {
+        private static readonly Random Random = new();
+
         private Option<TimeSpan> _audioDuration = None;
         private bool _deinterlace;
         private Option<HardwareAccelerationKind> _hardwareAccelerationKind = None;
@@ -296,7 +298,20 @@ namespace ErsatzTV.Core.FFmpeg
 
                 if (videoOnly)
                 {
-                    videoFilterQueue.Add("boxblur=40[b];[b]split[b1][b2];[b1]format=rgba,geq=r=0:g=0:b=0:a=120*(Y/H)[fg];[b2][fg]overlay=format=auto");
+                    var filter = "boxblur=40";
+
+                    int next = Random.Next() % 16;
+                    if (next < 8)
+                    {
+                        videoFilterQueue.RemoveAll(s => s.Contains("scale="));
+                        filter =
+                            $"palettegen=max_colors=8,crop=1:1:{next}:0,scale={_resolution.Width}:{_resolution.Height},setsar=1:1";
+                    }
+
+                    filter +=
+                        "[b];[b]split[b1][b2];[b1]format=rgba,geq=r=0:g=0:b=0:a=120*(Y/H)[fg];[b2][fg]overlay=format=auto";
+
+                    videoFilterQueue.Add(filter);
                 }
 
                 if (isSong)
