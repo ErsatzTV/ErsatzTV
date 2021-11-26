@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -603,6 +604,7 @@ namespace ErsatzTV.Core.Tests.Metadata
                     new Mock<ILibraryRepository>().Object,
                     new Mock<IMediator>().Object,
                     null,
+                    new Mock<ITempFilePool>().Object,
                     new Mock<ILogger<MovieFolderScanner>>().Object
                 );
         }
