@@ -412,11 +412,6 @@ namespace ErsatzTV.Core.FFmpeg
                 videoFilterQueue.Add("scale_vaapi=format=nv12");
             }
 
-            if (videoOnly)
-            {
-                videoFilterQueue.Add("deband");
-            }
-
             if (videoFilterQueue.Any() || !string.IsNullOrWhiteSpace(watermarkOverlay))
             {
                 if (hasAudioFilters)
