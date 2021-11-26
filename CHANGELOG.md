@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Randomly place song cover art on left or right side of screen
+- Use dynamic font size (based on resolution) for song details
 
 ## [0.3.0-alpha] - 2021-11-25
 ### Fixed

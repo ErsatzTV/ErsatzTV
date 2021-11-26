@@ -119,7 +119,7 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     var horizontalMarginPercent = 3;
-                    const int VERTICAL_MARGIN_PERCENT = 14;
+                    const int VERTICAL_MARGIN_PERCENT = 5;
 
                     foreach (ChannelWatermark watermark in _watermark)
                     {
@@ -135,10 +135,10 @@ namespace ErsatzTV.Core.FFmpeg
                     double horizontalMargin = Math.Round(horizontalMarginPercent / 100.0 * _resolution.Width);
                     double verticalMargin = Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * _resolution.Height);
 
-                    var location = $"x={horizontalMargin}:y=H-{verticalMargin}";
+                    var location = $"x={horizontalMargin}:y=H-text_h-{verticalMargin}";
 
                     _drawtext =
-                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:{location}:fontsize=36:fontcolor=white";
+                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:{location}:fontsize=(h/25):fontcolor=white";
                 }
             }
 
