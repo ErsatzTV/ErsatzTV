@@ -17,7 +17,7 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - [Plex](https://www.plex.tv/) media and metadata
 - [Jellyfin](https://jellyfin.org/) media and metadata
 - [Emby](https://emby.media/) media and metadata
-- Music video libraries
+- Song and music video libraries
 - Pre-roll, mid-roll, post-roll filler options
 
 ## License
