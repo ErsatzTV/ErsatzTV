@@ -42,12 +42,14 @@ namespace ErsatzTV.Core.Metadata
             ILibraryRepository libraryRepository,
             IMediator mediator,
             IFFmpegProcessService ffmpegProcessService,
+            ITempFilePool tempFilePool,
             ILogger<TelevisionFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
             metadataRepository,
             imageCache,
             ffmpegProcessService,
+            tempFilePool,
             logger)
         {
             _localFileSystem = localFileSystem;

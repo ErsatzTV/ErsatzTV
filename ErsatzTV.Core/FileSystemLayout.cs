@@ -31,6 +31,7 @@ namespace ErsatzTV.Core
 
         public static readonly string FFmpegReportsFolder = Path.Combine(AppDataFolder, "ffmpeg-reports");
         public static readonly string SearchIndexFolder = Path.Combine(AppDataFolder, "search-index");
+        public static readonly string TempFilePoolFolder = Path.Combine(AppDataFolder, "temp-pool");
 
         public static readonly string ArtworkCacheFolder = Path.Combine(AppDataFolder, "cache", "artwork");
 

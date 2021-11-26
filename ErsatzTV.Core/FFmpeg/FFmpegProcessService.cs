@@ -16,6 +16,7 @@ namespace ErsatzTV.Core.FFmpeg
     {
         private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
         private readonly IImageCache _imageCache;
+        private readonly ITempFilePool _tempFilePool;
         private readonly ILogger<FFmpegProcessService> _logger;
         private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
@@ -23,11 +24,13 @@ namespace ErsatzTV.Core.FFmpeg
             FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
             IFFmpegStreamSelector ffmpegStreamSelector,
             IImageCache imageCache,
+            ITempFilePool tempFilePool,
             ILogger<FFmpegProcessService> logger)
         {
             _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
             _ffmpegStreamSelector = ffmpegStreamSelector;
             _imageCache = imageCache;
+            _tempFilePool = tempFilePool;
             _logger = logger;
         }
 
@@ -242,8 +245,7 @@ namespace ErsatzTV.Core.FFmpeg
         {
             try
             {
-                // todo: generate name by channel? clean up old images?
-                string outputFile = Path.GetTempFileName();
+                string outputFile = _tempFilePool.GetNextTempFile(TempFileCategory.SongBackground);
 
                 MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
 

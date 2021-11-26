@@ -11,6 +11,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
@@ -41,6 +42,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly IPlexPathReplacementService _plexPathReplacementService;
         private readonly IRuntimeInfo _runtimeInfo;
         private readonly IImageCache _imageCache;
+        private readonly ITempFilePool _tempFilePool;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
             IDbContextFactory<TvContext> dbContextFactory,
@@ -53,7 +55,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             ITelevisionRepository televisionRepository,
             IArtistRepository artistRepository,
             IRuntimeInfo runtimeInfo,
-            IImageCache imageCache)
+            IImageCache imageCache,
+            ITempFilePool tempFilePool)
             : base(dbContextFactory)
         {
             _ffmpegProcessService = ffmpegProcessService;
@@ -66,6 +69,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             _artistRepository = artistRepository;
             _runtimeInfo = runtimeInfo;
             _imageCache = imageCache;
+            _tempFilePool = tempFilePool;
         }
 
         protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
@@ -159,7 +163,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         // use thumbnail (cover art) if present
                         foreach (SongMetadata metadata in song.SongMetadata)
                         {
-                            string fileName = Path.GetTempFileName();
+                            string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.DrawText);
                             drawtextFile = fileName;
 
                             var sb = new StringBuilder();

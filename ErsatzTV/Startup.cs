@@ -141,6 +141,11 @@ namespace ErsatzTV
                 Directory.CreateDirectory(FileSystemLayout.TranscodeFolder);
             }
 
+            if (!Directory.Exists(FileSystemLayout.TempFilePoolFolder))
+            {
+                Directory.CreateDirectory(FileSystemLayout.TempFilePoolFolder);
+            }
+
             Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
 
             // until we add a setting for a file-specific scheme://host:port to access
@@ -245,6 +250,7 @@ namespace ErsatzTV
             services.AddSingleton<IEntityLocker, EntityLocker>();
             services.AddSingleton<ISearchIndex, SearchIndex>();
             services.AddSingleton<IFFmpegSegmenterService, FFmpegSegmenterService>();
+            services.AddSingleton<ITempFilePool, TempFilePool>();
             AddChannel<IBackgroundServiceRequest>(services);
             AddChannel<IPlexBackgroundServiceRequest>(services);
             AddChannel<IJellyfinBackgroundServiceRequest>(services);
