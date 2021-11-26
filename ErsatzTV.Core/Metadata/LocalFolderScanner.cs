@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -50,6 +51,7 @@ namespace ErsatzTV.Core.Metadata
 
         private readonly IImageCache _imageCache;
         private readonly IFFmpegProcessService _ffmpegProcessService;
+        private readonly ITempFilePool _tempFilePool;
 
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
@@ -62,6 +64,7 @@ namespace ErsatzTV.Core.Metadata
             IMetadataRepository metadataRepository,
             IImageCache imageCache,
             IFFmpegProcessService ffmpegProcessService, 
+            ITempFilePool tempFilePool,
             ILogger logger)
         {
             _localFileSystem = localFileSystem;
@@ -69,6 +72,7 @@ namespace ErsatzTV.Core.Metadata
             _metadataRepository = metadataRepository;
             _imageCache = imageCache;
             _ffmpegProcessService = ffmpegProcessService;
+            _tempFilePool = tempFilePool;
             _logger = logger;
         }
 
@@ -133,7 +137,7 @@ namespace ErsatzTV.Core.Metadata
                     // if ffmpeg path is passed, we want to convert to png
                     foreach (string path in ffmpegPath)
                     {
-                        string tempName = Path.GetTempFileName();
+                        string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
                         using Process process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
                         process.Start();
                         await process.WaitForExitAsync();
