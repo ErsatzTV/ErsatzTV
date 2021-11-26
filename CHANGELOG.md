@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix song page links in UI
+- Show song artist in playout detail
+- Include song artist and cover art in channel guide (xmltv)
 
 ## [0.3.0-alpha] - 2021-11-25
 ### Fixed
