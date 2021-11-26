@@ -1,5 +1,5 @@
-﻿@page "/music/songs"
-@page "/music/songs/page/{PageNumber:int}"
+﻿@page "/media/music/songs"
+@page "/media/music/songs/page/{PageNumber:int}"
 @using LanguageExt.UnsafeValueAccess
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
@@ -69,7 +69,7 @@
 @if (_data.PageMap.IsSome)
 {
     <LetterBar PageMap="@_data.PageMap.ValueUnsafe()"
-               BaseUri="/music/songs"
+               BaseUri="/media/music/songs"
                Query="@_query"/>
 }
 
@@ -101,7 +101,7 @@
 
     private void PrevPage()
     {
-        var uri = $"/music/songs/page/{PageNumber - 1}";
+        var uri = $"/media/music/songs/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -112,7 +112,7 @@
 
     private void NextPage()
     {
-        var uri = $"/music/songs/page/{PageNumber + 1}";
+        var uri = $"/media/music/songs/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
