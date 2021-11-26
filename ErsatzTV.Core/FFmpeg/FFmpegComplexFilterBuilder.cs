@@ -140,7 +140,7 @@ namespace ErsatzTV.Core.FFmpeg
                     var location = $"x={horizontalMargin}:y=H-text_h-{verticalMargin}";
 
                     _drawtext =
-                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:{location}:fontsize=(h/25):fontcolor=white";
+                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:{location}:fontsize=(h/25):fontcolor=white:line_spacing=7";
                 }
             }
 
@@ -309,7 +309,7 @@ namespace ErsatzTV.Core.FFmpeg
                     }
 
                     filter +=
-                        "[b];[b]split[b1][b2];[b1]format=rgba,geq=r=0:g=0:b=0:a=120*(Y/H)[fg];[b2][fg]overlay=format=auto";
+                        "[b];[b]split[b1][b2];[b1]format=rgba,geq=r=0:g=0:b=0:a=70[fg];[b2][fg]overlay=format=auto";
 
                     videoFilterQueue.Add(filter);
                 }
@@ -410,6 +410,11 @@ namespace ErsatzTV.Core.FFmpeg
                 _pixelFormat == "yuv420p10le" && _videoEncoder.StartsWith("h264"))
             {
                 videoFilterQueue.Add("scale_vaapi=format=nv12");
+            }
+
+            if (videoOnly)
+            {
+                videoFilterQueue.Add("deband");
             }
 
             if (videoFilterQueue.Any() || !string.IsNullOrWhiteSpace(watermarkOverlay))
