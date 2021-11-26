@@ -19,6 +19,10 @@ namespace ErsatzTV.Services.RunOnce
             Assembly assembly = typeof(ResourceExtractorService).GetTypeInfo().Assembly;
 
             await ExtractResource(assembly, "background.png", cancellationToken);
+            await ExtractResource(assembly, "background_blank.png", cancellationToken);
+            await ExtractResource(assembly, "background_e.png", cancellationToken);
+            await ExtractResource(assembly, "background_t.png", cancellationToken);
+            await ExtractResource(assembly, "background_v.png", cancellationToken);
             await ExtractResource(assembly, "ErsatzTV.png", cancellationToken);
             await ExtractResource(assembly, "Roboto-Regular.ttf", cancellationToken);
             await ExtractResource(assembly, "OPTIKabel-Heavy.otf", cancellationToken);

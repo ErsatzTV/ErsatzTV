@@ -148,8 +148,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                         {
                             Id = -1,
                             Chapters = new List<MediaChapter>(),
-                            Width = 301,
-                            Height = 162,
+                            Width = 192,
+                            Height = 108,
                             SampleAspectRatio = "1:1",
                             Streams = new List<MediaStream>
                             {
@@ -157,8 +157,20 @@ namespace ErsatzTV.Application.Streaming.Queries
                             }
                         };
 
-                        // use ETV logo by default
-                        string artworkPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "ErsatzTV.png");
+                        string[] backgrounds =
+                        {
+                            "background_blank.png",
+                            "background_e.png",
+                            "background_t.png",
+                            "background_v.png"
+                        };
+
+                        var random = new Random();
+
+                        // use random ETV color by default
+                        string artworkPath = Path.Combine(
+                            FileSystemLayout.ResourcesCacheFolder,
+                            backgrounds[random.Next() % backgrounds.Length]);
                         
                         // use thumbnail (cover art) if present
                         foreach (SongMetadata metadata in song.SongMetadata)
