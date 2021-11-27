@@ -64,19 +64,12 @@ namespace ErsatzTV.Core.FFmpeg
                 FileSystemLayout.ResourcesCacheFolder,
                 backgrounds[NextRandom(backgrounds.Length)]);
 
-            bool boxBlur = false;
+            var boxBlur = false;
             Option<int> randomColor = None;
 
-            // use thumbnail (cover art) if present
             foreach (SongMetadata metadata in song.SongMetadata)
             {
-                string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
-                subtitleFile = fileName;
-
                 var sb = new StringBuilder();
-                sb.AppendLine("1");
-                sb.AppendLine("00:00:00,000 --> 99:99:99,999");
-
                 if (!string.IsNullOrWhiteSpace(metadata.Artist))
                 {
                     sb.AppendLine(metadata.Artist);
@@ -92,8 +85,11 @@ namespace ErsatzTV.Core.FFmpeg
                     sb.AppendLine(metadata.Album);
                 }
 
-                await File.WriteAllTextAsync(fileName, sb.ToString());
-
+                subtitleFile = await new SubtitleBuilder(_tempFilePool)
+                    .WithContent(sb.ToString())
+                    .BuildFile();
+                
+                // use thumbnail (cover art) if present
                 foreach (Artwork artwork in Optional(
                     metadata.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Thumbnail)))
                 {
