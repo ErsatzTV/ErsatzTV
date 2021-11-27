@@ -28,7 +28,7 @@ namespace ErsatzTV.Core.FFmpeg
         private Option<int> _watermarkIndex;
         private string _pixelFormat;
         private string _videoEncoder;
-        private Option<string> _drawtext;
+        private Option<string> _subtitle;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -97,21 +97,21 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
         
-        public FFmpegComplexFilterBuilder WithDrawtextFile(
+        public FFmpegComplexFilterBuilder WithSubtitleFile(
             MediaVersion videoVersion,
-            Option<string> drawtextFile)
+            Option<string> subtitleFile)
         {
-            foreach (string file in drawtextFile)
+            foreach (string file in subtitleFile)
             {
                 string effectiveFile = file;
                 
                 if (videoVersion is FallbackMediaVersion or CoverArtMediaVersion)
                 {
-                    string fontPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "OPTIKabel-Heavy.otf");
+                    string fontsDir = FileSystemLayout.ResourcesCacheFolder;
                     
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     {
-                        fontPath = fontPath
+                        fontsDir = fontsDir
                             .Replace(@"\", @"/\")
                             .Replace(@":/", @"\\:/");
                         
@@ -120,27 +120,31 @@ namespace ErsatzTV.Core.FFmpeg
                             .Replace(@":/", @"\\:/");
                     }
 
-                    var horizontalMarginPercent = 3;
+                    var leftMarginPercent = 3;
+                    var rightMarginPercent = 3;
                     const int VERTICAL_MARGIN_PERCENT = 5;
 
                     foreach (ChannelWatermark watermark in _watermark)
                     {
-                        horizontalMarginPercent = watermark.HorizontalMarginPercent;
+                        leftMarginPercent = rightMarginPercent = watermark.HorizontalMarginPercent;
                         switch (watermark.Location)
                         {
                             case ChannelWatermarkLocation.BottomLeft:
-                                horizontalMarginPercent += watermark.WidthPercent + watermark.HorizontalMarginPercent;
+                                leftMarginPercent += watermark.WidthPercent + watermark.HorizontalMarginPercent;
+                                break;
+                            case ChannelWatermarkLocation.BottomRight:
+                                rightMarginPercent += watermark.WidthPercent + watermark.HorizontalMarginPercent;
                                 break;
                         }
                     }
 
-                    double horizontalMargin = Math.Round(horizontalMarginPercent / 100.0 * _resolution.Width);
+                    double leftMargin = Math.Round(leftMarginPercent / 100.0 * _resolution.Width);
+                    double rightMargin = Math.Round(rightMarginPercent / 100.0 * _resolution.Width);
                     double verticalMargin = Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * _resolution.Height);
-
-                    var location = $"x={horizontalMargin}:y=H-text_h-{verticalMargin}";
-
-                    _drawtext =
-                        $"drawtext=fontfile={fontPath}:textfile={effectiveFile}:{location}:fontsize=(h/25):fontcolor=white:line_spacing=7";
+                    double fontSize = Math.Round(_resolution.Height / 20.0);
+                    
+                    _subtitle =
+                        $"subtitles={effectiveFile}:fontsdir={fontsDir}:force_style='PlayResX={_resolution.Width},PlayResY={_resolution.Height},Fontname=OPTIKabel-Heavy,Fontsize={fontSize},PrimaryColour=&HFFFFFF,OutlineColour=&H555555,Alignment=0,MarginR={rightMargin},MarginL={leftMargin},MarginV={verticalMargin},Shadow=3'";
                 }
             }
 
@@ -308,9 +312,6 @@ namespace ErsatzTV.Core.FFmpeg
                             $"palettegen=max_colors=8,crop=1:1:{next}:0,scale={_resolution.Width}:{_resolution.Height},setsar=1:1";
                     }
 
-                    filter +=
-                        "[b];[b]split[b1][b2];[b1]format=rgba,geq=r=0:g=0:b=0:a=70[fg];[b2][fg]overlay=format=auto";
-
                     videoFilterQueue.Add(filter);
                 }
 
@@ -365,9 +366,9 @@ namespace ErsatzTV.Core.FFmpeg
 
             _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
             
-            foreach (string drawtext in _drawtext)
+            foreach (string subtitle in _subtitle)
             {
-                videoFilterQueue.Add(drawtext);
+                videoFilterQueue.Add(subtitle);
             }
 
             string outputPixelFormat = null;

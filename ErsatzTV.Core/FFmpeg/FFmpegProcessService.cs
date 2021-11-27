@@ -238,7 +238,7 @@ namespace ErsatzTV.Core.FFmpeg
 
         public async Task<Either<BaseError, string>> GenerateSongImage(
             string ffmpegPath,
-            Option<string> drawtextFile,
+            Option<string> subtitleFile,
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
             MediaVersion videoVersion,
@@ -273,7 +273,7 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithFormatFlags(playbackSettings.FormatFlags)
                     .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat)
                     .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
-                    .WithDrawtextFile(videoVersion, drawtextFile);
+                    .WithSubtitleFile(videoVersion, subtitleFile);
 
                 foreach (IDisplaySize scaledSize in scalePlaybackSettings.ScaledSize)
                 {

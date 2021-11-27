@@ -142,7 +142,7 @@ namespace ErsatzTV.Application.Streaming.Queries
 
                     if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
                     {
-                        Option<string> drawtextFile = None;
+                        Option<string> subtitleFile = None;
                         
                         videoVersion = new FallbackMediaVersion
                         {
@@ -175,10 +175,13 @@ namespace ErsatzTV.Application.Streaming.Queries
                         // use thumbnail (cover art) if present
                         foreach (SongMetadata metadata in song.SongMetadata)
                         {
-                            string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.DrawText);
-                            drawtextFile = fileName;
+                            string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
+                            subtitleFile = fileName;
 
                             var sb = new StringBuilder();
+                            sb.AppendLine("1");
+                            sb.AppendLine("00:00:00,000 --> 99:99:99,999");
+                            
                             if (!string.IsNullOrWhiteSpace(metadata.Artist))
                             {
                                 sb.AppendLine(metadata.Artist);
@@ -231,7 +234,7 @@ namespace ErsatzTV.Application.Streaming.Queries
 
                         Either<BaseError, string> maybeSongImage = await _ffmpegProcessService.GenerateSongImage(
                             ffmpegPath,
-                            drawtextFile,
+                            subtitleFile,
                             channel,
                             maybeGlobalWatermark,
                             videoVersion,
