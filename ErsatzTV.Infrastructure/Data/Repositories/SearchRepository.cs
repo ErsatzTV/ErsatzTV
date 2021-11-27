@@ -103,6 +103,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Streams)
                 .Include(mi => (mi as Song).SongMetadata)
                 .ThenInclude(mm => mm.Tags)
+                .Include(mi => (mi as Song).SongMetadata)
+                .ThenInclude(mm => mm.Genres)
                 .Include(mi => (mi as Song).MediaVersions)
                 .ThenInclude(mm => mm.Streams)
                 .Include(mi => mi.TraktListItems)
