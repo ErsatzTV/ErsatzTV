@@ -242,7 +242,9 @@ namespace ErsatzTV.Core.FFmpeg
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
             MediaVersion videoVersion,
-            string videoPath)
+            string videoPath,
+            bool boxBlur,
+            Option<int> randomColor)
         {
             try
             {
@@ -271,7 +273,7 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithThreads(1)
                     .WithQuiet()
                     .WithFormatFlags(playbackSettings.FormatFlags)
-                    .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat)
+                    .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat, boxBlur, randomColor)
                     .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
                     .WithSubtitleFile(videoVersion, subtitleFile);
 

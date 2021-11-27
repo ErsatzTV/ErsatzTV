@@ -32,6 +32,9 @@ namespace ErsatzTV.Application.Streaming.Queries
     public class GetPlayoutItemProcessByChannelNumberHandler :
         FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
     {
+        private static readonly Random Random = new();
+        private static readonly object RandomLock = new();
+        
         private readonly IEmbyPathReplacementService _embyPathReplacementService;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
@@ -165,12 +168,13 @@ namespace ErsatzTV.Application.Streaming.Queries
                             "background_v.png"
                         };
 
-                        var random = new Random();
-
                         // use random ETV color by default
                         string artworkPath = Path.Combine(
                             FileSystemLayout.ResourcesCacheFolder,
-                            backgrounds[random.Next() % backgrounds.Length]);
+                            backgrounds[NextRandom(backgrounds.Length)]);
+
+                        bool boxBlur = false;
+                        Option<int> randomColor = None;
                         
                         // use thumbnail (cover art) if present
                         foreach (SongMetadata metadata in song.SongMetadata)
@@ -202,6 +206,16 @@ namespace ErsatzTV.Application.Streaming.Queries
                             foreach (Artwork artwork in Optional(
                                 metadata.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Thumbnail)))
                             {
+                                int backgroundRoll = NextRandom(16);
+                                if (backgroundRoll < 8)
+                                {
+                                    randomColor = backgroundRoll;
+                                }
+                                else
+                                {
+                                    boxBlur = true;
+                                }
+
                                 string customPath = _imageCache.GetPathForImage(
                                     artwork.Path,
                                     ArtworkKind.Thumbnail,
@@ -238,7 +252,9 @@ namespace ErsatzTV.Application.Streaming.Queries
                             channel,
                             maybeGlobalWatermark,
                             videoVersion,
-                            videoPath);
+                            videoPath,
+                            boxBlur,
+                            randomColor);
 
                         foreach (string si in maybeSongImage.RightToSeq())
                         {
@@ -493,6 +509,14 @@ namespace ErsatzTV.Application.Streaming.Queries
                     path),
                 _ => path
             };
+        }
+
+        private static int NextRandom(int max)
+        {
+            lock (RandomLock)
+            {
+                return Random.Next() % max;
+            }
         }
 
         private record PlayoutItemWithPath(PlayoutItem PlayoutItem, string Path);

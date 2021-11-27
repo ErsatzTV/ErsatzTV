@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,8 +13,6 @@ namespace ErsatzTV.Core.FFmpeg
 {
     public class FFmpegComplexFilterBuilder
     {
-        private static readonly Random Random = new();
-
         private Option<TimeSpan> _audioDuration = None;
         private bool _deinterlace;
         private Option<HardwareAccelerationKind> _hardwareAccelerationKind = None;
@@ -29,6 +26,8 @@ namespace ErsatzTV.Core.FFmpeg
         private string _pixelFormat;
         private string _videoEncoder;
         private Option<string> _subtitle;
+        private bool _boxBlur;
+        private Option<int> _randomColor;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -96,7 +95,19 @@ namespace ErsatzTV.Core.FFmpeg
             _watermarkIndex = watermarkIndex;
             return this;
         }
-        
+
+        public FFmpegComplexFilterBuilder WithBoxBlur(bool boxBlur)
+        {
+            _boxBlur = boxBlur;
+            return this;
+        }
+
+        public FFmpegComplexFilterBuilder WithRandomColor(Option<int> randomColor)
+        {
+            _randomColor = randomColor;
+            return this;
+        }
+
         public FFmpegComplexFilterBuilder WithSubtitleFile(
             MediaVersion videoVersion,
             Option<string> subtitleFile)
@@ -269,7 +280,7 @@ namespace ErsatzTV.Core.FFmpeg
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
 
-                    if (!string.IsNullOrWhiteSpace(filter))
+                    if (_randomColor.IsNone && !string.IsNullOrWhiteSpace(filter))
                     {
                         videoFilterQueue.Add(filter);
                     }
@@ -295,29 +306,20 @@ namespace ErsatzTV.Core.FFmpeg
                     videoFilterQueue.Add(format);
                 }
 
-                if (scaleOrPad)
+                if (scaleOrPad && _boxBlur == false && _randomColor.IsNone)
                 {
                     videoFilterQueue.Add("setsar=1");
                 }
 
-                if (videoOnly)
+                if (_boxBlur)
                 {
-                    var filter = "boxblur=40";
-
-                    int next = Random.Next() % 16;
-                    if (next < 8)
-                    {
-                        videoFilterQueue.RemoveAll(s => s.Contains("scale="));
-                        filter =
-                            $"palettegen=max_colors=8,crop=1:1:{next}:0,scale={_resolution.Width}:{_resolution.Height},setsar=1:1";
-                    }
-
-                    videoFilterQueue.Add(filter);
+                    videoFilterQueue.Add("boxblur=40");
                 }
 
-                if (isSong)
+                foreach (int color in _randomColor)
                 {
-                    videoFilterQueue.Add("fps=30");
+                    videoFilterQueue.Add(
+                        $"palettegen=max_colors=8,crop=1:1:{color}:0,scale={_resolution.Width}:{_resolution.Height},setsar=1");
                 }
 
                 foreach (ChannelWatermark watermark in _watermark)
