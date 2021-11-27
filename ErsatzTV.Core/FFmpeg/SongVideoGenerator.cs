@@ -66,27 +66,64 @@ namespace ErsatzTV.Core.FFmpeg
 
             var boxBlur = false;
             Option<int> randomColor = None;
-
+            
+            const int HORIZONTAL_MARGIN_PERCENT = 3;
+            const int VERTICAL_MARGIN_PERCENT = 5;
+            const int WATERMARK_WIDTH_PERCENT = 25;
+            ChannelWatermarkLocation watermarkLocation = NextRandom(2) == 0
+                ? ChannelWatermarkLocation.BottomLeft
+                : ChannelWatermarkLocation.BottomRight;
+            
             foreach (SongMetadata metadata in song.SongMetadata)
             {
                 var sb = new StringBuilder();
                 if (!string.IsNullOrWhiteSpace(metadata.Artist))
                 {
-                    sb.AppendLine(metadata.Artist);
+                    sb.Append(metadata.Artist);
                 }
 
                 if (!string.IsNullOrWhiteSpace(metadata.Title))
                 {
-                    sb.AppendLine($"\"{metadata.Title}\"");
+                    sb.Append($"\\N\"{metadata.Title}\"");
                 }
 
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
                 {
-                    sb.AppendLine(metadata.Album);
+                    sb.Append($"\\N{metadata.Album}");
                 }
 
+                int leftMarginPercent = HORIZONTAL_MARGIN_PERCENT;
+                int rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
+
+                switch (watermarkLocation)
+                {
+                    case ChannelWatermarkLocation.BottomLeft:
+                        leftMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
+                        break;
+                    case ChannelWatermarkLocation.BottomRight:
+                        leftMarginPercent = rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
+                        rightMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
+                        break;
+                }
+
+                var leftMargin = (int)Math.Round(leftMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
+                var rightMargin = (int)Math.Round(rightMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
+                var verticalMargin = (int)Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * channel.FFmpegProfile.Resolution.Height);
+                var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
+
                 subtitleFile = await new SubtitleBuilder(_tempFilePool)
-                    .WithContent(sb.ToString())
+                    .WithResolution(channel.FFmpegProfile.Resolution)
+                    .WithFontName("OPTIKabel-Heavy")
+                    .WithFontSize(fontSize)
+                    .WithPrimaryColor("&HFFFFFF")
+                    .WithOutlineColor("&H555555")
+                    .WithAlignment(0)
+                    .WithMarginRight(rightMargin)
+                    .WithMarginLeft(leftMargin)
+                    .WithMarginV(verticalMargin)
+                    .WithBorderStyle(1)
+                    .WithShadow(3)
+                    .WithFormattedContent(sb.ToString())
                     .BuildFile();
                 
                 // use thumbnail (cover art) if present
@@ -141,7 +178,11 @@ namespace ErsatzTV.Core.FFmpeg
                 videoVersion,
                 videoPath,
                 boxBlur,
-                randomColor);
+                randomColor,
+                watermarkLocation,
+                HORIZONTAL_MARGIN_PERCENT,
+                VERTICAL_MARGIN_PERCENT,
+                WATERMARK_WIDTH_PERCENT);
 
             foreach (string si in maybeSongImage.RightToSeq())
             {

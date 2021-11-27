@@ -131,31 +131,7 @@ namespace ErsatzTV.Core.FFmpeg
                             .Replace(@":/", @"\\:/");
                     }
 
-                    var leftMarginPercent = 3;
-                    var rightMarginPercent = 3;
-                    const int VERTICAL_MARGIN_PERCENT = 5;
-
-                    foreach (ChannelWatermark watermark in _watermark)
-                    {
-                        leftMarginPercent = rightMarginPercent = watermark.HorizontalMarginPercent;
-                        switch (watermark.Location)
-                        {
-                            case ChannelWatermarkLocation.BottomLeft:
-                                leftMarginPercent += watermark.WidthPercent + watermark.HorizontalMarginPercent;
-                                break;
-                            case ChannelWatermarkLocation.BottomRight:
-                                rightMarginPercent += watermark.WidthPercent + watermark.HorizontalMarginPercent;
-                                break;
-                        }
-                    }
-
-                    double leftMargin = Math.Round(leftMarginPercent / 100.0 * _resolution.Width);
-                    double rightMargin = Math.Round(rightMarginPercent / 100.0 * _resolution.Width);
-                    double verticalMargin = Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * _resolution.Height);
-                    double fontSize = Math.Round(_resolution.Height / 20.0);
-                    
-                    _subtitle =
-                        $"subtitles={effectiveFile}:fontsdir={fontsDir}:force_style='PlayResX={_resolution.Width},PlayResY={_resolution.Height},Fontname=OPTIKabel-Heavy,Fontsize={fontSize},PrimaryColour=&HFFFFFF,OutlineColour=&H555555,Alignment=0,MarginR={rightMargin},MarginL={leftMargin},MarginV={verticalMargin},Shadow=3'";
+                    _subtitle = $"subtitles={effectiveFile}:fontsdir={fontsDir}";
                 }
             }
 

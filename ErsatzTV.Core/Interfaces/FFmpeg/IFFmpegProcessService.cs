@@ -48,6 +48,10 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
             MediaVersion videoVersion,
             string videoPath,
             bool boxBlur,
-            Option<int> randomColor);
+            Option<int> randomColor,
+            ChannelWatermarkLocation watermarkLocation,
+            int horizontalMarginPercent,
+            int verticalMarginPercent,
+            int watermarkWidthPercent);
     }
 }
