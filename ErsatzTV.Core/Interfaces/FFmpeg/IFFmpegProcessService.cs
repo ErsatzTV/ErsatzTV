@@ -42,7 +42,7 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
 
         Task<Either<BaseError, string>> GenerateSongImage(
             string ffmpegPath,
-            Option<string> drawtextFile,
+            Option<string> subtitleFile,
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
             MediaVersion videoVersion,

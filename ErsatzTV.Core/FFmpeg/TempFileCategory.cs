@@ -2,7 +2,7 @@
 {
     public enum TempFileCategory
     {
-        DrawText = 0,
+        Subtitle = 0,
         SongBackground = 1,
         CoverArt = 2
     }
