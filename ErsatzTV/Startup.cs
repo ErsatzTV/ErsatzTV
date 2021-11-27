@@ -311,6 +311,7 @@ namespace ErsatzTV
             services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
             services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
             services.AddScoped<IFFmpegProcessService, FFmpegProcessService>();
+            services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();
             services.AddScoped<HlsSessionWorker>();
             services.AddScoped<IGitHubApiClient, GitHubApiClient>();
             services.AddScoped<IHtmlSanitizer, HtmlSanitizer>(

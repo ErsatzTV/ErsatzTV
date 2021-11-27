@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
@@ -32,9 +28,6 @@ namespace ErsatzTV.Application.Streaming.Queries
     public class GetPlayoutItemProcessByChannelNumberHandler :
         FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
     {
-        private static readonly Random Random = new();
-        private static readonly object RandomLock = new();
-        
         private readonly IEmbyPathReplacementService _embyPathReplacementService;
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
@@ -44,8 +37,7 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly ILocalFileSystem _localFileSystem;
         private readonly IPlexPathReplacementService _plexPathReplacementService;
         private readonly IRuntimeInfo _runtimeInfo;
-        private readonly IImageCache _imageCache;
-        private readonly ITempFilePool _tempFilePool;
+        private readonly ISongVideoGenerator _songVideoGenerator;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
             IDbContextFactory<TvContext> dbContextFactory,
@@ -58,8 +50,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             ITelevisionRepository televisionRepository,
             IArtistRepository artistRepository,
             IRuntimeInfo runtimeInfo,
-            IImageCache imageCache,
-            ITempFilePool tempFilePool)
+            ISongVideoGenerator songVideoGenerator)
             : base(dbContextFactory)
         {
             _ffmpegProcessService = ffmpegProcessService;
@@ -71,8 +62,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             _televisionRepository = televisionRepository;
             _artistRepository = artistRepository;
             _runtimeInfo = runtimeInfo;
-            _imageCache = imageCache;
-            _tempFilePool = tempFilePool;
+            _songVideoGenerator = songVideoGenerator;
         }
 
         protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
@@ -145,137 +135,11 @@ namespace ErsatzTV.Application.Streaming.Queries
 
                     if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
                     {
-                        Option<string> subtitleFile = None;
-                        
-                        videoVersion = new FallbackMediaVersion
-                        {
-                            Id = -1,
-                            Chapters = new List<MediaChapter>(),
-                            Width = 192,
-                            Height = 108,
-                            SampleAspectRatio = "1:1",
-                            Streams = new List<MediaStream>
-                            {
-                                new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
-                            }
-                        };
-
-                        string[] backgrounds =
-                        {
-                            "background_blank.png",
-                            "background_e.png",
-                            "background_t.png",
-                            "background_v.png"
-                        };
-
-                        // use random ETV color by default
-                        string artworkPath = Path.Combine(
-                            FileSystemLayout.ResourcesCacheFolder,
-                            backgrounds[NextRandom(backgrounds.Length)]);
-
-                        bool boxBlur = false;
-                        Option<int> randomColor = None;
-                        
-                        // use thumbnail (cover art) if present
-                        foreach (SongMetadata metadata in song.SongMetadata)
-                        {
-                            string fileName = _tempFilePool.GetNextTempFile(TempFileCategory.Subtitle);
-                            subtitleFile = fileName;
-
-                            var sb = new StringBuilder();
-                            sb.AppendLine("1");
-                            sb.AppendLine("00:00:00,000 --> 99:99:99,999");
-                            
-                            if (!string.IsNullOrWhiteSpace(metadata.Artist))
-                            {
-                                sb.AppendLine(metadata.Artist);
-                            }
-
-                            if (!string.IsNullOrWhiteSpace(metadata.Title))
-                            {
-                                sb.AppendLine($"\"{metadata.Title}\"");
-                            }
-
-                            if (!string.IsNullOrWhiteSpace(metadata.Album))
-                            {
-                                sb.AppendLine(metadata.Album);
-                            }
-
-                            await File.WriteAllTextAsync(fileName, sb.ToString());
-
-                            foreach (Artwork artwork in Optional(
-                                metadata.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Thumbnail)))
-                            {
-                                int backgroundRoll = NextRandom(16);
-                                if (backgroundRoll < 8)
-                                {
-                                    randomColor = backgroundRoll;
-                                }
-                                else
-                                {
-                                    boxBlur = true;
-                                }
-
-                                string customPath = _imageCache.GetPathForImage(
-                                    artwork.Path,
-                                    ArtworkKind.Thumbnail,
-                                    Option<int>.None);
-
-                                artworkPath = customPath;
-
-                                // signal that we want to use cover art as watermark
-                                videoVersion = new CoverArtMediaVersion
-                                {
-                                    Chapters = new List<MediaChapter>(),
-                                    // always stretch cover art
-                                    Width = 192,
-                                    Height = 108,
-                                    SampleAspectRatio = "1:1",
-                                    Streams = new List<MediaStream>
-                                    {
-                                        new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
-                                    }
-                                };
-                            }
-                        }
-
-                        videoPath = artworkPath;
-
-                        videoVersion.MediaFiles = new List<MediaFile>
-                        {
-                            new() { Path = videoPath }
-                        };
-
-                        Either<BaseError, string> maybeSongImage = await _ffmpegProcessService.GenerateSongImage(
-                            ffmpegPath,
-                            subtitleFile,
+                        (videoPath, videoVersion) = await _songVideoGenerator.GenerateSongVideo(
+                            song,
                             channel,
                             maybeGlobalWatermark,
-                            videoVersion,
-                            videoPath,
-                            boxBlur,
-                            randomColor);
-
-                        foreach (string si in maybeSongImage.RightToSeq())
-                        {
-                            videoPath = si;
-                            videoVersion = new BackgroundImageMediaVersion
-                            {
-                                Chapters = new List<MediaChapter>(),
-                                // song image has been pre-generated with correct size
-                                Height = channel.FFmpegProfile.Resolution.Height,
-                                Width = channel.FFmpegProfile.Resolution.Width,
-                                SampleAspectRatio = "1:1",
-                                Streams = new List<MediaStream>
-                                {
-                                    new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 },
-                                },
-                                MediaFiles = new List<MediaFile>
-                                {
-                                    new() { Path = si }
-                                }
-                            };
-                        }
+                            ffmpegPath);
                     }
 
                     bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await dbContext.ConfigElements
@@ -509,14 +373,6 @@ namespace ErsatzTV.Application.Streaming.Queries
                     path),
                 _ => path
             };
-        }
-
-        private static int NextRandom(int max)
-        {
-            lock (RandomLock)
-            {
-                return Random.Next() % max;
-            }
         }
 
         private record PlayoutItemWithPath(PlayoutItem PlayoutItem, string Path);
