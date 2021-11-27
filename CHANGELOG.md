@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix song page links in UI
 - Show song artist in playout detail
 - Include song artist and cover art in channel guide (xmltv)
+- Use subtitles to display errors, which fixes many edge cases of unescaped characters
 
 ### Changed
 - Randomly place song cover art on left or right side of screen

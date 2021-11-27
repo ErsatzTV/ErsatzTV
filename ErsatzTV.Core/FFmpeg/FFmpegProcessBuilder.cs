@@ -221,14 +221,9 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithSubtitleFile(
-            MediaVersion videoVersion,
-            Option<string> subtitleFile)
+        public FFmpegProcessBuilder WithSubtitleFile(Option<string> subtitleFile)
         {
-            _complexFilterBuilder = _complexFilterBuilder.WithSubtitleFile(
-                videoVersion,
-                subtitleFile);
-
+            _complexFilterBuilder = _complexFilterBuilder.WithSubtitleFile(subtitleFile);
             return this;
         }
 
@@ -301,24 +296,6 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithFiltergraph(string graph)
-        {
-            _arguments.Add("-vf");
-            _arguments.Add($"{graph}");
-            return this;
-        }
-
-        public FFmpegProcessBuilder WithFilterComplex(string filter, string finalVideo, string finalAudio)
-        {
-            _arguments.Add("-filter_complex");
-            _arguments.Add($"{filter}");
-            _arguments.Add("-map");
-            _arguments.Add(finalVideo);
-            _arguments.Add("-map");
-            _arguments.Add(finalAudio);
-            return this;
-        }
-
         public FFmpegProcessBuilder WithConcat(string concatPlaylist)
         {
             _isConcat = true;
@@ -370,22 +347,6 @@ namespace ErsatzTV.Core.FFmpeg
             _arguments.Add("-fflags");
             _arguments.Add(string.Join(string.Empty, formatFlags));
             return this;
-        }
-
-        public FFmpegProcessBuilder WithErrorText(IDisplaySize desiredResolution, string text)
-        {
-            string fontPath = Path.Combine(FileSystemLayout.ResourcesCacheFolder, "Roboto-Regular.ttf");
-            var fontFile = $"fontfile={fontPath}";
-            const string FONT_COLOR = "fontcolor=white";
-            const string X = "x=(w-text_w)/2";
-            const string Y = "y=(h-text_h)/3*2";
-
-            string fontSize = text.Length > 80 ? "fontsize=30" : text.Length > 60 ? "fontsize=40" : "fontsize=60";
-
-            return WithFilterComplex(
-                $"[0:0]scale={desiredResolution.Width}:{desiredResolution.Height},drawtext={fontFile}:{fontSize}:{FONT_COLOR}:{X}:{Y}:text='{text}'[v]",
-                "[v]",
-                "1:a");
         }
 
         public FFmpegProcessBuilder WithDuration(TimeSpan duration)
