@@ -29,7 +29,7 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
             TimeSpan inPoint,
             TimeSpan outPoint);
 
-        Process ForError(
+        Task<Process> ForError(
             string ffmpegPath,
             Channel channel,
             Option<TimeSpan> duration,

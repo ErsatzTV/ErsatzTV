@@ -108,31 +108,25 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegComplexFilterBuilder WithSubtitleFile(
-            MediaVersion videoVersion,
-            Option<string> subtitleFile)
+        public FFmpegComplexFilterBuilder WithSubtitleFile(Option<string> subtitleFile)
         {
             foreach (string file in subtitleFile)
             {
                 string effectiveFile = file;
+                string fontsDir = FileSystemLayout.ResourcesCacheFolder;
                 
-                if (videoVersion is FallbackMediaVersion or CoverArtMediaVersion)
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    string fontsDir = FileSystemLayout.ResourcesCacheFolder;
+                    fontsDir = fontsDir
+                        .Replace(@"\", @"/\")
+                        .Replace(@":/", @"\\:/");
                     
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        fontsDir = fontsDir
-                            .Replace(@"\", @"/\")
-                            .Replace(@":/", @"\\:/");
-                        
-                        effectiveFile = effectiveFile
-                            .Replace(@"\", @"/\")
-                            .Replace(@":/", @"\\:/");
-                    }
-
-                    _subtitle = $"subtitles={effectiveFile}:fontsdir={fontsDir}";
+                    effectiveFile = effectiveFile
+                        .Replace(@"\", @"/\")
+                        .Replace(@":/", @"\\:/");
                 }
+
+                _subtitle = $"subtitles={effectiveFile}:fontsdir={fontsDir}";
             }
 
             return this;

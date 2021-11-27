@@ -167,7 +167,7 @@ namespace ErsatzTV.Core.FFmpeg
             }
         }
 
-        public Process ForError(
+        public async Task<Process> ForError(
             string ffmpegPath,
             Channel channel,
             Option<TimeSpan> duration,
@@ -179,6 +179,22 @@ namespace ErsatzTV.Core.FFmpeg
 
             IDisplaySize desiredResolution = channel.FFmpegProfile.Resolution;
 
+            var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
+            var margin = (int)Math.Round(channel.FFmpegProfile.Resolution.Height * 0.05);
+            
+            string subtitleFile = await new SubtitleBuilder(_tempFilePool)
+                .WithResolution(desiredResolution)
+                .WithFontName("Roboto")
+                .WithFontSize(fontSize)
+                .WithAlignment(2)
+                .WithMarginV(margin)
+                .WithPrimaryColor("&HFFFFFF")
+                .WithFormattedContent(errorMessage.Replace(Environment.NewLine, "\\N"))
+                .BuildFile();
+
+            var videoStream = new MediaStream { Index = 0 };
+            var audioStream = new MediaStream { Index = 0 };
+
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
                 .WithThreads(1)
                 .WithQuiet()
@@ -187,12 +203,18 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithLoopedImage(Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png"))
                 .WithLibavfilter()
                 .WithInput("anullsrc")
-                .WithErrorText(desiredResolution, errorMessage)
+                .WithSubtitleFile(subtitleFile)
+                .WithFilterComplex(
+                    videoStream,
+                    audioStream,
+                    Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png"),
+                    "fake-audio-path",
+                    playbackSettings.VideoCodec)
                 .WithPixfmt("yuv420p")
                 .WithPlaybackArgs(playbackSettings)
                 .WithMetadata(channel, None);
 
-            duration.IfSome(d => builder = builder.WithDuration(d));
+            await duration.IfSomeAsync(d => builder = builder.WithDuration(d));
 
             switch (channel.StreamingMode)
             {
@@ -292,7 +314,7 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithFormatFlags(playbackSettings.FormatFlags)
                     .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat, boxBlur, randomColor)
                     .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
-                    .WithSubtitleFile(videoVersion, subtitleFile);
+                    .WithSubtitleFile(subtitleFile);
 
                 foreach (IDisplaySize scaledSize in scalePlaybackSettings.ScaledSize)
                 {
