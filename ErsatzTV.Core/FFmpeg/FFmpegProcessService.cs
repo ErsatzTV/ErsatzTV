@@ -19,7 +19,6 @@ namespace ErsatzTV.Core.FFmpeg
         private readonly ITempFilePool _tempFilePool;
         private readonly ILogger<FFmpegProcessService> _logger;
         private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
-        private readonly Random _random = new();
 
         public FFmpegProcessService(
             FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
@@ -69,7 +68,7 @@ namespace ErsatzTV.Core.FFmpeg
                 outPoint);
 
             Option<WatermarkOptions> watermarkOptions =
-                await GetWatermarkOptions(channel, globalWatermark, videoVersion);
+                await GetWatermarkOptions(channel, globalWatermark, videoVersion, None);
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
@@ -242,7 +241,13 @@ namespace ErsatzTV.Core.FFmpeg
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
             MediaVersion videoVersion,
-            string videoPath)
+            string videoPath,
+            bool boxBlur,
+            Option<int> randomColor,
+            ChannelWatermarkLocation watermarkLocation,
+            int horizontalMarginPercent,
+            int verticalMarginPercent,
+            int watermarkWidthPercent)
         {
             try
             {
@@ -250,8 +255,22 @@ namespace ErsatzTV.Core.FFmpeg
 
                 MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
 
+                Option<ChannelWatermark> watermarkOverride =
+                    videoVersion is FallbackMediaVersion or CoverArtMediaVersion
+                        ? new ChannelWatermark
+                        {
+                            Mode = ChannelWatermarkMode.Permanent,
+                            HorizontalMarginPercent = horizontalMarginPercent,
+                            VerticalMarginPercent = verticalMarginPercent,
+                            Location = watermarkLocation,
+                            Size = ChannelWatermarkSize.Scaled,
+                            WidthPercent = watermarkWidthPercent,
+                            Opacity = 100
+                        }
+                        : None;
+
                 Option<WatermarkOptions> watermarkOptions =
-                    await GetWatermarkOptions(channel, globalWatermark, videoVersion);
+                    await GetWatermarkOptions(channel, globalWatermark, videoVersion, watermarkOverride);
 
                 FFmpegPlaybackSettings playbackSettings =
                     _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
@@ -271,7 +290,7 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithThreads(1)
                     .WithQuiet()
                     .WithFormatFlags(playbackSettings.FormatFlags)
-                    .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat)
+                    .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat, boxBlur, randomColor)
                     .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
                     .WithSubtitleFile(videoVersion, subtitleFile);
 
@@ -317,28 +336,14 @@ namespace ErsatzTV.Core.FFmpeg
         private async Task<WatermarkOptions> GetWatermarkOptions(
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
-            MediaVersion videoVersion)
+            MediaVersion videoVersion,
+            Option<ChannelWatermark> watermarkOverride)
         {
             if (videoVersion is BackgroundImageMediaVersion)
             {
                 return new WatermarkOptions(None, None, None, false);
             }
 
-            Option<ChannelWatermark> watermarkOverride = videoVersion is FallbackMediaVersion or CoverArtMediaVersion
-                ? new ChannelWatermark
-                {
-                    Mode = ChannelWatermarkMode.Permanent,
-                    HorizontalMarginPercent = 3,
-                    VerticalMarginPercent = 5,
-                    Location = _random.Next() % 2 == 0
-                        ? ChannelWatermarkLocation.BottomRight
-                        : ChannelWatermarkLocation.BottomLeft,
-                    Size = ChannelWatermarkSize.Scaled,
-                    WidthPercent = 25,
-                    Opacity = 100
-                }
-                : None;
-            
             if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && channel.FFmpegProfile.Transcode &&
                 channel.FFmpegProfile.NormalizeVideo)
             {
