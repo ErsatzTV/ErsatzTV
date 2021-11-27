@@ -76,20 +76,40 @@ namespace ErsatzTV.Core.FFmpeg
             
             foreach (SongMetadata metadata in song.SongMetadata)
             {
+                var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
+                var largeFontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 10.0);
+                bool detailsStyle = NextRandom(2) == 0;
+                
                 var sb = new StringBuilder();
-                if (!string.IsNullOrWhiteSpace(metadata.Artist))
-                {
-                    sb.Append(metadata.Artist);
-                }
 
-                if (!string.IsNullOrWhiteSpace(metadata.Title))
+                if (detailsStyle)
                 {
-                    sb.Append($"\\N\"{metadata.Title}\"");
+                    if (!string.IsNullOrWhiteSpace(metadata.Title))
+                    {
+                        sb.Append($"{{\\fs{largeFontSize}}}{metadata.Title}");
+                    }
+                    
+                    if (!string.IsNullOrWhiteSpace(metadata.Artist))
+                    {
+                        sb.Append($"\\N{{\\fs{fontSize}}}{metadata.Artist}");
+                    }
                 }
-
-                if (!string.IsNullOrWhiteSpace(metadata.Album))
+                else
                 {
-                    sb.Append($"\\N{metadata.Album}");
+                    if (!string.IsNullOrWhiteSpace(metadata.Artist))
+                    {
+                        sb.Append(metadata.Artist);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(metadata.Title))
+                    {
+                        sb.Append($"\\N\"{metadata.Title}\"");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(metadata.Album))
+                    {
+                        sb.Append($"\\N{metadata.Album}");
+                    }
                 }
 
                 int leftMarginPercent = HORIZONTAL_MARGIN_PERCENT;
@@ -109,7 +129,6 @@ namespace ErsatzTV.Core.FFmpeg
                 var leftMargin = (int)Math.Round(leftMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
                 var rightMargin = (int)Math.Round(rightMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
                 var verticalMargin = (int)Math.Round(VERTICAL_MARGIN_PERCENT / 100.0 * channel.FFmpegProfile.Resolution.Height);
-                var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
 
                 subtitleFile = await new SubtitleBuilder(_tempFilePool)
                     .WithResolution(channel.FFmpegProfile.Resolution)
