@@ -180,13 +180,14 @@ namespace ErsatzTV.Core.FFmpeg
             IDisplaySize desiredResolution = channel.FFmpegProfile.Resolution;
 
             var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
-
+            var margin = (int)Math.Round(channel.FFmpegProfile.Resolution.Height * 0.05);
+            
             string subtitleFile = await new SubtitleBuilder(_tempFilePool)
                 .WithResolution(desiredResolution)
                 .WithFontName("Roboto")
                 .WithFontSize(fontSize)
                 .WithAlignment(2)
-                .WithMarginV((int)(1080 * 0.05))
+                .WithMarginV(margin)
                 .WithPrimaryColor("&HFFFFFF")
                 .WithFormattedContent(errorMessage.Replace(Environment.NewLine, "\\N"))
                 .BuildFile();
