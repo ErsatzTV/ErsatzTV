@@ -193,7 +193,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         case UnableToLocatePlayoutItem:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                Process errorProcess = _ffmpegProcessService.ForError(
+                                Process errorProcess = await _ffmpegProcessService.ForError(
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
@@ -212,7 +212,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         case PlayoutItemDoesNotExistOnDisk:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                Process errorProcess = _ffmpegProcessService.ForError(
+                                Process errorProcess = await _ffmpegProcessService.ForError(
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
@@ -231,7 +231,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         default:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                Process errorProcess = _ffmpegProcessService.ForError(
+                                Process errorProcess = await _ffmpegProcessService.ForError(
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
