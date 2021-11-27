@@ -282,14 +282,18 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegProcessBuilder WithSongInput(
             string videoPath,
             Option<string> codec,
-            Option<string> pixelFormat)
+            Option<string> pixelFormat,
+            bool boxBlur,
+            Option<int> randomColor)
         {
             _noAutoScale = true;
             _outputFramerate = 30;
-            
+
             _complexFilterBuilder = _complexFilterBuilder
                 .WithInputCodec(codec)
-                .WithInputPixelFormat(pixelFormat);
+                .WithInputPixelFormat(pixelFormat)
+                .WithBoxBlur(boxBlur)
+                .WithRandomColor(randomColor);
 
             _arguments.Add("-i");
             _arguments.Add(videoPath);
