@@ -867,6 +867,11 @@ namespace ErsatzTV.Infrastructure.Search
                         doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
                     }
 
+                    foreach (Genre genre in metadata.Genres)
+                    {
+                        doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
+                    }
+
                     _writer.UpdateDocument(new Term(IdField, song.Id.ToString()), doc);
                 }
                 catch (Exception ex)
