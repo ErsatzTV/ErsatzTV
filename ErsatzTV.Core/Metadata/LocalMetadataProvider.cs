@@ -248,8 +248,7 @@ namespace ErsatzTV.Core.Metadata
 
                         if (tags.TryGetValue(MetadataFormatTag.Genre, out string genre))
                         {
-                            // TODO: split genres? or is this only ever one?
-                            result.Genres.Add(new Genre { Name = genre });
+                            result.Genres.AddRange(SplitGenres(genre).Map(n => new Genre { Name = n }));
                         }
 
                         if (tags.TryGetValue(MetadataFormatTag.Title, out string title))
@@ -1139,6 +1138,18 @@ namespace ErsatzTV.Core.Metadata
             }
 
             return result;
+        }
+        
+        private static IEnumerable<string> SplitGenres(string genre)
+        {
+            char[] delimiters = new[] { '/', '|', ';', '\\' }
+                .Filter(d => genre.IndexOf(d, StringComparison.OrdinalIgnoreCase) != -1)
+                .DefaultIfEmpty(',')
+                .ToArray();
+            
+            return genre.Split(delimiters, StringSplitOptions.RemoveEmptyEntries)
+                .Where(i => !string.IsNullOrWhiteSpace(i))
+                .Select(i => i.Trim());
         }
     }
 }
