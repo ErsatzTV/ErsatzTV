@@ -908,6 +908,7 @@ namespace ErsatzTV.Infrastructure.Search
                     $"{em.Title}_{em.Year}_{em.Episode.Season.SeasonNumber}_{em.EpisodeNumber}"
                         .ToLowerInvariant(),
                 OtherVideoMetadata ovm => $"{ovm.OriginalTitle}".ToLowerInvariant(),
+                SongMetadata sm => $"{sm.OriginalTitle}".ToLowerInvariant(),
                 _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
             };
         
