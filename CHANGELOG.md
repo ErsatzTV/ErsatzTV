@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Add song genres to search index
+- Use embedded song cover art when sidecar cover art is unavailable
 
 ### Changed
 - Randomly place song cover art on left or right side of screen
