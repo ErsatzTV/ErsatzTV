@@ -228,9 +228,6 @@ namespace ErsatzTV.Core.Metadata
                             Tags = new List<Tag>()
                         };
                         
-                        // TODO: check for cover artwork, and use for watermark if not embedded
-                        // maybe add album as entity rather than string?
-
                         if (tags.TryGetValue(MetadataFormatTag.Album, out string album))
                         {
                             result.Album = album;
@@ -254,7 +251,6 @@ namespace ErsatzTV.Core.Metadata
                         if (tags.TryGetValue(MetadataFormatTag.Title, out string title))
                         {
                             result.Title = title;
-                            result.OriginalTitle = title;
                         }
 
                         if (tags.TryGetValue(MetadataFormatTag.Track, out string track))
@@ -267,8 +263,9 @@ namespace ErsatzTV.Core.Metadata
                             if (string.IsNullOrWhiteSpace(result.Title))
                             {
                                 result.Title = fallbackMetadata.Title;
-                                result.OriginalTitle = fallbackMetadata.OriginalTitle;
                             }
+
+                            result.OriginalTitle = fallbackMetadata.OriginalTitle;
 
                             // preserve folder tagging - maybe someone uses this
                             foreach (Tag tag in fallbackMetadata.Tags)
