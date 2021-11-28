@@ -116,7 +116,12 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        protected async Task<bool> RefreshArtwork(string artworkFile, Domain.Metadata metadata, ArtworkKind artworkKind, Option<string> ffmpegPath)
+        protected async Task<bool> RefreshArtwork(
+            string artworkFile,
+            Domain.Metadata metadata,
+            ArtworkKind artworkKind,
+            Option<string> ffmpegPath,
+            Option<int> attachedPicIndex)
         {
             DateTime lastWriteTime = _localFileSystem.GetLastWriteTime(artworkFile);
 
@@ -134,15 +139,34 @@ namespace ErsatzTV.Core.Metadata
                 {
                     _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
 
-                    // if ffmpeg path is passed, we want to convert to png
+                    // if ffmpeg path is passed, we need pre-processing
                     foreach (string path in ffmpegPath)
                     {
-                        string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                        using Process process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
-                        process.Start();
-                        await process.WaitForExitAsync();
+                        artworkFile = await attachedPicIndex.Match(
+                            async picIndex =>
+                            {
+                                // extract attached pic (and convert to png)
+                                string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
+                                using Process process = _ffmpegProcessService.ExtractAttachedPicAsPng(
+                                    path,
+                                    artworkFile,
+                                    picIndex,
+                                    tempName);
+                                process.Start();
+                                await process.WaitForExitAsync();
 
-                        artworkFile = tempName;
+                                return tempName;
+                            },
+                            async () =>
+                            {
+                                // no attached pic index means convert to png
+                                string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
+                                using Process process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
+                                process.Start();
+                                await process.WaitForExitAsync();
+
+                                return tempName;
+                            });
                     }
 
                     Either<BaseError, string> maybeCacheName =

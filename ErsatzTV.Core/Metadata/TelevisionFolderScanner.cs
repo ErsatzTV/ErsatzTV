@@ -367,7 +367,7 @@ namespace ErsatzTV.Core.Metadata
                     async artworkFile =>
                     {
                         ShowMetadata metadata = show.ShowMetadata.Head();
-                        await RefreshArtwork(artworkFile, metadata, artworkKind, None);
+                        await RefreshArtwork(artworkFile, metadata, artworkKind, None, None);
                     });
 
                 return result;
@@ -386,7 +386,7 @@ namespace ErsatzTV.Core.Metadata
                     async posterFile =>
                     {
                         SeasonMetadata metadata = season.SeasonMetadata.Head();
-                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None);
+                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None);
                     });
 
                 return season;
@@ -406,7 +406,7 @@ namespace ErsatzTV.Core.Metadata
                     {
                         foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
                         {
-                            await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail, None);
+                            await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail, None, None);
                         }
                     });
 
