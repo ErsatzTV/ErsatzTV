@@ -257,6 +257,17 @@ namespace ErsatzTV.Core.FFmpeg
                 .Build();
         }
 
+        public Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile)
+        {
+            return new FFmpegProcessBuilder(ffmpegPath, false, _logger)
+                .WithThreads(1)
+                .WithQuiet()
+                .WithInput(inputFile)
+                .WithMap($"0:{streamIndex}")
+                .WithOutputFormat("apng", outputFile)
+                .Build();
+        }
+
         public async Task<Either<BaseError, string>> GenerateSongImage(
             string ffmpegPath,
             Option<string> subtitleFile,

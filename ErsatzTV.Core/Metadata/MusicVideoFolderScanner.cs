@@ -222,7 +222,7 @@ namespace ErsatzTV.Core.Metadata
                     async artworkFile =>
                     {
                         ArtistMetadata metadata = artist.ArtistMetadata.Head();
-                        await RefreshArtwork(artworkFile, metadata, artworkKind, None);
+                        await RefreshArtwork(artworkFile, metadata, artworkKind, None, None);
                     });
 
                 return result;
@@ -385,7 +385,7 @@ namespace ErsatzTV.Core.Metadata
                     async thumbnailFile =>
                     {
                         MusicVideoMetadata metadata = musicVideo.MusicVideoMetadata.Head();
-                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None);
+                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None);
                     });
 
                 return result;

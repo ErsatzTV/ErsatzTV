@@ -40,6 +40,8 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
 
         Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
 
+        Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);
+
         Task<Either<BaseError, string>> GenerateSongImage(
             string ffmpegPath,
             Option<string> subtitleFile,

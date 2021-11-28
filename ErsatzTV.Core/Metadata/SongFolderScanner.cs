@@ -130,7 +130,7 @@ namespace ErsatzTV.Core.Metadata
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffprobePath))
                         .BindT(video => UpdateMetadata(video, ffprobePath))
-                        .BindT(video => UpdateThumbnail(video, ffprobePath, ffmpegPath));
+                        .BindT(video => UpdateThumbnail(video, ffmpegPath));
 
                     await maybeSong.Match(
                         async result =>
@@ -208,19 +208,31 @@ namespace ErsatzTV.Core.Metadata
 
         private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateThumbnail(
             MediaItemScanResult<Song> result,
-            string ffprobePath,
             string ffmpegPath)
         {
             try
             {
+                // reload the song from the database at this point
+                if (result.IsAdded)
+                {
+                    LibraryPath libraryPath = result.Item.LibraryPath;
+                    string path = result.Item.GetHeadVersion().MediaFiles.Head().Path;
+                    foreach (MediaItemScanResult<Song> s in (await _songRepository.GetOrAdd(libraryPath, path))
+                        .RightToSeq())
+                    {
+                        result.Item = s.Item;
+                    }
+                }
+
                 Song song = result.Item;
+
                 await LocateThumbnail(song).Match(
                     async thumbnailFile =>
                     {
                         SongMetadata metadata = song.SongMetadata.Head();
-                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, ffmpegPath);
+                        await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, ffmpegPath, None);
                     },
-                    () => Task.CompletedTask); // TODO: check for embedded artwork
+                    () => ExtractEmbeddedArtwork(song, ffmpegPath));
         
                 return result;
             }
@@ -244,6 +256,20 @@ namespace ErsatzTV.Core.Metadata
                         .Filter(f => _localFileSystem.FileExists(f))
                         .HeadOrNone();
                 }).Flatten();
+        }
+
+        private async Task ExtractEmbeddedArtwork(Song song, string ffmpegPath)
+        {
+            Option<MediaStream> maybeArtworkStream = Optional(song.GetHeadVersion().Streams.Find(ms => ms.AttachedPic));
+            foreach (MediaStream artworkStream in maybeArtworkStream)
+            {
+                await RefreshArtwork(
+                    song.GetHeadVersion().MediaFiles.Head().Path,
+                    song.SongMetadata.Head(),
+                    ArtworkKind.Thumbnail,
+                    ffmpegPath,
+                    artworkStream.Index);
+            }
         }
     }
 }

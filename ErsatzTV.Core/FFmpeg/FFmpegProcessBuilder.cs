@@ -190,7 +190,14 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegProcessBuilder WithInput(string input)
         {
             _arguments.Add("-i");
-            _arguments.Add($"{input}");
+            _arguments.Add(input);
+            return this;
+        }
+
+        public FFmpegProcessBuilder WithMap(string map)
+        {
+            _arguments.Add("-map");
+            _arguments.Add(map);
             return this;
         }
 

@@ -6,7 +6,7 @@ namespace ErsatzTV.Core.Metadata
     {
         public MediaItemScanResult(T item) => Item = item;
 
-        public T Item { get; }
+        public T Item { get; set; }
 
         public bool IsAdded { get; set; }
         public bool IsUpdated { get; set; }

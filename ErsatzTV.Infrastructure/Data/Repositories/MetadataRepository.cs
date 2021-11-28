@@ -114,7 +114,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             MediaVersion incoming,
             bool updateVersion = true)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             Option<MediaVersion> maybeVersion = await dbContext.MediaVersions
                 .Include(v => v.Streams)
                 .Include(v => v.Chapters)
@@ -161,6 +161,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         existingStream.Title = incomingStream.Title;
                         existingStream.Default = incomingStream.Default;
                         existingStream.Forced = incomingStream.Forced;
+                        existingStream.AttachedPic = incomingStream.AttachedPic;
+                        existingStream.PixelFormat = incomingStream.PixelFormat;
+                        existingStream.BitsPerRawSample = incomingStream.BitsPerRawSample;
                     }
                     
                     var chaptersToAdd = incoming.Chapters
