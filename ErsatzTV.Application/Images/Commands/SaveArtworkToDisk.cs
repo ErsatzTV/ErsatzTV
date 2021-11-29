@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.IO;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using LanguageExt;
 using MediatR;
@@ -6,5 +7,5 @@ using MediatR;
 namespace ErsatzTV.Application.Images.Commands
 {
     // ReSharper disable once SuggestBaseTypeForParameter
-    public record SaveArtworkToDisk(byte[] Buffer, ArtworkKind ArtworkKind) : IRequest<Either<BaseError, string>>;
+    public record SaveArtworkToDisk(Stream Stream, ArtworkKind ArtworkKind) : IRequest<Either<BaseError, string>>;
 }
