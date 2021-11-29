@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Use subtitles to display errors, which fixes many edge cases of unescaped characters
 - Properly split song genre tags
 - Properly display all songs that have an identical album and title
+- Fix channel logo and watermark uploads
 
 ### Added
 - Add song genres to search index

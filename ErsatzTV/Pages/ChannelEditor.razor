@@ -199,9 +199,8 @@
     {
         try
         {
-            var buffer = new byte[e.File.Size];
-            await e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
-            Either<BaseError, string> maybeCacheFileName = await _mediator.Send(new SaveArtworkToDisk(buffer, ArtworkKind.Logo));
+            Either<BaseError, string> maybeCacheFileName =
+                await _mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Logo));
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {
@@ -210,12 +209,14 @@
                 },
                 error =>
                 {
+                    Console.WriteLine($"error saving {error}");
                     _snackbar.Add($"Unexpected error saving channel logo: {error.Value}", Severity.Error);
                     _logger.LogError("Unexpected error saving channel logo: {Error}", error.Value);
                 });
         }
-        catch (IOException)
+        catch (IOException ex)
         {
+            Console.WriteLine(ex);
             _snackbar.Add("Channel logo exceeds maximum allowed file size of 10 MB", Severity.Error);
             _logger.LogError("Channel logo exceeds maximum allowed file size of 10 MB");
         }
