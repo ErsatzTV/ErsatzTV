@@ -209,10 +209,8 @@
     {
         try
         {
-            var buffer = new byte[e.File.Size];
-            await e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).ReadAsync(buffer);
             Either<BaseError, string> maybeCacheFileName = await _mediator
-                .Send(new SaveArtworkToDisk(buffer, ArtworkKind.Watermark));
+                .Send(new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Watermark));
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {

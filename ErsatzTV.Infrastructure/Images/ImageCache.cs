@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
 using LanguageExt;
@@ -22,13 +24,19 @@ namespace ErsatzTV.Infrastructure.Images
         private readonly ILocalFileSystem _localFileSystem;
         private readonly ILogger<ImageCache> _logger;
         private readonly IMemoryCache _memoryCache;
+        private readonly ITempFilePool _tempFilePool;
 
         static ImageCache() => Crypto = SHA1.Create();
 
-        public ImageCache(ILocalFileSystem localFileSystem, IMemoryCache memoryCache, ILogger<ImageCache> logger)
+        public ImageCache(
+            ILocalFileSystem localFileSystem,
+            IMemoryCache memoryCache,
+            ITempFilePool tempFilePool,
+            ILogger<ImageCache> logger)
         {
             _localFileSystem = localFileSystem;
             _memoryCache = memoryCache;
+            _tempFilePool = tempFilePool;
             _logger = logger;
         }
 
@@ -53,11 +61,14 @@ namespace ErsatzTV.Infrastructure.Images
             return outStream.ToArray();
         }
 
-        public async Task<Either<BaseError, string>> SaveArtworkToCache(byte[] imageBuffer, ArtworkKind artworkKind)
+        public async Task<Either<BaseError, string>> SaveArtworkToCache(Stream stream, ArtworkKind artworkKind)
         {
             try
             {
-                byte[] hash = Crypto.ComputeHash(imageBuffer);
+                string tempFileName = _tempFilePool.GetNextTempFile(TempFileCategory.CachedArtwork);
+                await using var fs = new FileStream(tempFileName, FileMode.OpenOrCreate);
+                await stream.CopyToAsync(fs);
+                byte[] hash = await ComputeFileHash(tempFileName);
                 string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
                 string subfolder = hex[..2];
                 string baseFolder = artworkKind switch
@@ -76,13 +87,22 @@ namespace ErsatzTV.Infrastructure.Images
                     Directory.CreateDirectory(baseFolder);
                 }
 
-                await File.WriteAllBytesAsync(target, imageBuffer);
+                await _localFileSystem.CopyFile(tempFileName, target);
+
                 return hex;
             }
             catch (Exception ex)
             {
                 return BaseError.New(ex.Message);
             }
+        }
+
+        private static async Task<byte[]> ComputeFileHash(string fileName)
+        {
+            using var md5 = MD5.Create();
+            await using var fs = new FileStream(fileName, FileMode.Open);
+            fs.Position = 0;
+            return await md5.ComputeHashAsync(fs);
         }
 
         public async Task<Either<BaseError, string>> CopyArtworkToCache(string path, ArtworkKind artworkKind)

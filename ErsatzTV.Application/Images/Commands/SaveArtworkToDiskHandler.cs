@@ -14,6 +14,6 @@ namespace ErsatzTV.Application.Images.Commands
         public SaveArtworkToDiskHandler(IImageCache imageCache) => _imageCache = imageCache;
 
         public Task<Either<BaseError, string>> Handle(SaveArtworkToDisk request, CancellationToken cancellationToken) =>
-            _imageCache.SaveArtworkToCache(request.Buffer, request.ArtworkKind);
+            _imageCache.SaveArtworkToCache(request.Stream, request.ArtworkKind);
     }
 }

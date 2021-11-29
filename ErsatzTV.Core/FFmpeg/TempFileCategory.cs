@@ -4,6 +4,7 @@
     {
         Subtitle = 0,
         SongBackground = 1,
-        CoverArt = 2
+        CoverArt = 2,
+        CachedArtwork = 3
     }
 }
