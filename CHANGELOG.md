@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Properly split song genre tags
 - Properly display all songs that have an identical album and title
 - Fix channel logo and watermark uploads
+- Fix regression introduced with `v0.2.4-alpha` that caused some filler edge cases to crash the playout builder
 
 ### Added
 - Add song genres to search index
