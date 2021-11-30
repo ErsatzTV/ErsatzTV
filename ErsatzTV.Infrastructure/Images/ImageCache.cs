@@ -66,8 +66,11 @@ namespace ErsatzTV.Infrastructure.Images
             try
             {
                 string tempFileName = _tempFilePool.GetNextTempFile(TempFileCategory.CachedArtwork);
-                await using var fs = new FileStream(tempFileName, FileMode.OpenOrCreate);
-                await stream.CopyToAsync(fs);
+                // ReSharper disable once UseAwaitUsing
+                using (var fs = new FileStream(tempFileName, FileMode.OpenOrCreate, FileAccess.Write))
+                {
+                    await stream.CopyToAsync(fs);
+                }
                 byte[] hash = await ComputeFileHash(tempFileName);
                 string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
                 string subfolder = hex[..2];
@@ -100,9 +103,13 @@ namespace ErsatzTV.Infrastructure.Images
         private static async Task<byte[]> ComputeFileHash(string fileName)
         {
             using var md5 = MD5.Create();
-            await using var fs = new FileStream(fileName, FileMode.Open);
-            fs.Position = 0;
-            return await md5.ComputeHashAsync(fs);
+            // ReSharper disable once UseAwaitUsing
+            // ReSharper disable once ConvertToUsingDeclaration
+            using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+            {
+                fs.Position = 0;
+                return await md5.ComputeHashAsync(fs);
+            }
         }
 
         public async Task<Either<BaseError, string>> CopyArtworkToCache(string path, ArtworkKind artworkKind)
