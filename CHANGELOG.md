@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Fixed
+- Fix artwork upload on Windows
+
+## [0.3.1-alpha] - 2021-11-30
+### Fixed
 - Fix song page links in UI
 - Show song artist in playout detail
 - Include song artist and cover art in channel guide (xmltv)
@@ -835,7 +839,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.0-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.1-alpha...HEAD
+[0.3.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.0-alpha...v0.3.1-alpha
 [0.3.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.5-alpha...v0.3.0-alpha
 [0.2.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.4-alpha...v0.2.5-alpha
 [0.2.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.2.3-alpha...v0.2.4-alpha
