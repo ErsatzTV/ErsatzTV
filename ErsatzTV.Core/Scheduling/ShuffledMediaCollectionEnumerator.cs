@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt;
@@ -13,7 +12,7 @@ namespace ErsatzTV.Core.Scheduling
     {
         private readonly int _mediaItemCount;
         private readonly IList<GroupedMediaItem> _mediaItems;
-        private Random _random;
+        private CloneableRandom _random;
         private IList<MediaItem> _shuffled;
 
         public ShuffledMediaCollectionEnumerator(
@@ -29,7 +28,7 @@ namespace ErsatzTV.Core.Scheduling
                 state.Seed = new Random(state.Seed).Next();
             }
 
-            _random = new Random(state.Seed);
+            _random = new CloneableRandom(state.Seed);
             _shuffled = Shuffle(_mediaItems, _random);
 
             State = new CollectionEnumeratorState { Seed = state.Seed };
@@ -45,7 +44,7 @@ namespace ErsatzTV.Core.Scheduling
 
         public void MoveNext()
         {
-            if ((State.Index + 1) % _shuffled.Count == 0)
+            if ((State.Index + 1) % _mediaItemCount == 0)
             {
                 Option<MediaItem> tail = Current;
 
@@ -53,7 +52,7 @@ namespace ErsatzTV.Core.Scheduling
                 do
                 {
                     State.Seed = _random.Next();
-                    _random = new Random(State.Seed);
+                    _random = new CloneableRandom(State.Seed);
                     _shuffled = Shuffle(_mediaItems, _random);
                 } while (_mediaItems.Count > 1 && Current == tail);
             }
@@ -62,29 +61,28 @@ namespace ErsatzTV.Core.Scheduling
                 State.Index++;
             }
 
-            State.Index %= _shuffled.Count;
+            State.Index %= _mediaItemCount;
         }
 
         public Option<MediaItem> Peek(int offset)
         {
+            if (offset == 0)
+            {
+                return Current;
+            }
+
             if ((State.Index + offset) % _mediaItemCount == 0)
             {
                 IList<MediaItem> shuffled;
                 Option<MediaItem> tail = Current;
-                
+
                 // clone the random
-                var randomCopy = new Random();
-                FieldInfo seedArrayInfo = typeof(Random).GetField(
-                    "_seedArray",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                var seedArray = seedArrayInfo.GetValue(_random) as int[];
-                int[] seedArrayCopy = seedArray.ToArray();
-                seedArrayInfo.SetValue(randomCopy, seedArrayCopy);
+                CloneableRandom randomCopy = _random.Clone();
                 
                 do
                 {
                     int newSeed = randomCopy.Next();
-                    randomCopy = new Random(newSeed);
+                    randomCopy = new CloneableRandom(newSeed);
                     shuffled = Shuffle(_mediaItems, randomCopy);
                 } while (_mediaItems.Count > 1 && shuffled[0] == tail);
 
@@ -94,7 +92,7 @@ namespace ErsatzTV.Core.Scheduling
             return _shuffled.Any() ? _shuffled[(State.Index + offset) % _mediaItemCount] : None;
         }
 
-        private IList<MediaItem> Shuffle(IEnumerable<GroupedMediaItem> list, Random random)
+        private IList<MediaItem> Shuffle(IEnumerable<GroupedMediaItem> list, CloneableRandom random)
         {
             GroupedMediaItem[] copy = list.ToArray();
 
