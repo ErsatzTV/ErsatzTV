@@ -969,9 +969,9 @@ namespace ErsatzTV.Core.Metadata
             }
         }
 
-        private static int? GetYear(int year, string premiered)
+        private static int? GetYear(int? year, string premiered)
         {
-            if (year > 1000)
+            if (year is > 1000)
             {
                 return year;
             }
@@ -989,9 +989,9 @@ namespace ErsatzTV.Core.Metadata
             return null;
         }
 
-        private static DateTime? GetAired(int year, string aired)
+        private static DateTime? GetAired(int? year, string aired)
         {
-            DateTime? fallback = year > 1000 ? new DateTime(year, 1, 1) : null;
+            DateTime? fallback = year is > 1000 ? new DateTime(year.Value, 1, 1) : null;
 
             if (string.IsNullOrWhiteSpace(aired))
             {

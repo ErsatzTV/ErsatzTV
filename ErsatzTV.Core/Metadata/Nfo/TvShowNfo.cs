@@ -9,8 +9,15 @@ namespace ErsatzTV.Core.Metadata.Nfo
         [XmlElement("title")]
         public string Title { get; set; }
 
+        [XmlIgnore]
+        public int? Year { get; set; }
+
         [XmlElement("year")]
-        public int Year { get; set; }
+        public string YearAsText
+        {
+            get => Year.HasValue ? Year.ToString() : null;
+            set => Year = !string.IsNullOrWhiteSpace(value) ? int.Parse(value) : default(int?);
+        }
 
         [XmlElement("plot")]
         public string Plot { get; set; }
