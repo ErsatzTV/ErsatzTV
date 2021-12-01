@@ -15,7 +15,7 @@
     <ItemGroup>
       <PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
       <PackageReference Include="FluentValidation" Version="10.3.4" />
-      <PackageReference Include="FluentValidation.AspNetCore" Version="10.3.4" />
+      <PackageReference Include="FluentValidation.AspNetCore" Version="10.3.5" />
       <PackageReference Include="HtmlSanitizer" Version="6.0.453" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
       <PackageReference Include="Markdig" Version="0.26.0" />
