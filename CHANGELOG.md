@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix artwork upload on Windows
 
+### Changed
+- Use custom log database backend which should be more portable (i.e. work in osx-arm64)
+
 ## [0.3.1-alpha] - 2021-11-30
 ### Fixed
 - Fix song page links in UI
