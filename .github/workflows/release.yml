@@ -52,9 +52,6 @@ jobs:
           # Pack files
           if [ "${{ matrix.target }}" == "win-x64" ]; then
             7z a -tzip "${release_name}.zip" "./${release_name}/*"
-          elif [ "${{ matrix.target }}" == "linux-arm" ]; then
-            cp lib/linux-arm/* "$release_name/"
-            tar czvf "${release_name}.tar.gz" "$release_name"
           else
             tar czvf "${release_name}.tar.gz" "$release_name"
           fi
