@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix artwork upload on Windows
+- Fix unicode song metadata on Windows
+- Fix unicode console output on Windows
+- Fix TV Show NFO metadata processing when `year` is missing
 
 ### Changed
 - Use custom log database backend which should be more portable (i.e. work in osx-arm64)
