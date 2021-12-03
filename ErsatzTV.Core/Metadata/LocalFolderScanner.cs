@@ -180,6 +180,7 @@ namespace ErsatzTV.Core.Metadata
                                 {
                                     artwork.Path = cacheName;
                                     artwork.DateUpdated = lastWriteTime;
+                                    artwork.BlurHash = await _imageCache.CalculateBlurHash(cacheName, artworkKind);
                                     await _metadataRepository.UpdateArtworkPath(artwork);
                                 },
                                 async () =>
@@ -189,7 +190,8 @@ namespace ErsatzTV.Core.Metadata
                                         Path = cacheName,
                                         DateAdded = DateTime.UtcNow,
                                         DateUpdated = lastWriteTime,
-                                        ArtworkKind = artworkKind
+                                        ArtworkKind = artworkKind,
+                                        BlurHash = await _imageCache.CalculateBlurHash(cacheName, artworkKind)
                                     };
                                     metadata.Artwork.Add(artwork);
                                     await _metadataRepository.AddArtwork(metadata, artwork);

@@ -12,5 +12,6 @@ namespace ErsatzTV.Core.Interfaces.Images
         Task<Either<BaseError, string>> CopyArtworkToCache(string path, ArtworkKind artworkKind);
         string GetPathForImage(string fileName, ArtworkKind artworkKind, Option<int> maybeMaxHeight);
         Task<bool> IsAnimated(string fileName);
+        Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind);
     }
 }

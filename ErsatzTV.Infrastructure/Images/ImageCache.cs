@@ -14,6 +14,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace ErsatzTV.Infrastructure.Images
@@ -180,6 +181,15 @@ namespace ErsatzTV.Infrastructure.Images
                 _logger.LogError(ex, "Unable to check image for animation");
                 return false;
             }
+        }
+
+        public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind)
+        {
+            var encoder = new Blurhash.ImageSharp.Encoder();
+            string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
+            await using var fs = new FileStream(targetFile, FileMode.Open, FileAccess.Read);
+            using var image = await Image.LoadAsync<Rgb24>(fs);
+            return encoder.Encode(image, 4, 3);
         }
     }
 }

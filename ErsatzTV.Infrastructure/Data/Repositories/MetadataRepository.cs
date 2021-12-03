@@ -209,51 +209,51 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<Unit> UpdateArtworkPath(Artwork artwork) =>
             _dbConnection.ExecuteAsync(
-                "UPDATE Artwork SET Path = @Path, DateUpdated = @DateUpdated WHERE Id = @Id",
-                new { artwork.Path, artwork.DateUpdated, artwork.Id }).ToUnit();
+                "UPDATE Artwork SET Path = @Path, DateUpdated = @DateUpdated, BlurHash = @BlurHash WHERE Id = @Id",
+                new { artwork.Path, artwork.DateUpdated, artwork.BlurHash, artwork.Id }).ToUnit();
 
         public Task<Unit> AddArtwork(Metadata metadata, Artwork artwork)
         {
             var parameters = new
             {
-                artwork.ArtworkKind, metadata.Id, artwork.DateAdded, artwork.DateUpdated, artwork.Path
+                artwork.ArtworkKind, metadata.Id, artwork.DateAdded, artwork.DateUpdated, artwork.Path, artwork.BlurHash
             };
 
             return metadata switch
             {
                 MovieMetadata => _dbConnection.ExecuteAsync(
-                        @"INSERT INTO Artwork (ArtworkKind, MovieMetadataId, DateAdded, DateUpdated, Path)
-                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        @"INSERT INTO Artwork (ArtworkKind, MovieMetadataId, DateAdded, DateUpdated, Path, BlurHash)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @BlurHash)",
                         parameters)
                     .ToUnit(),
                 ShowMetadata => _dbConnection.ExecuteAsync(
-                        @"INSERT INTO Artwork (ArtworkKind, ShowMetadataId, DateAdded, DateUpdated, Path)
-                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        @"INSERT INTO Artwork (ArtworkKind, ShowMetadataId, DateAdded, DateUpdated, Path, BlurHash)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @BlurHash)",
                         parameters)
                     .ToUnit(),
                 SeasonMetadata => _dbConnection.ExecuteAsync(
-                        @"INSERT INTO Artwork (ArtworkKind, SeasonMetadataId, DateAdded, DateUpdated, Path)
-                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        @"INSERT INTO Artwork (ArtworkKind, SeasonMetadataId, DateAdded, DateUpdated, Path, BlurHash)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @BlurHash)",
                         parameters)
                     .ToUnit(),
                 EpisodeMetadata => _dbConnection.ExecuteAsync(
-                        @"INSERT INTO Artwork (ArtworkKind, EpisodeMetadataId, DateAdded, DateUpdated, Path)
-                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        @"INSERT INTO Artwork (ArtworkKind, EpisodeMetadataId, DateAdded, DateUpdated, Path, BlurHash)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @BlurHash)",
                         parameters)
                     .ToUnit(),
                 ArtistMetadata => _dbConnection.ExecuteAsync(
-                        @"INSERT INTO Artwork (ArtworkKind, ArtistMetadataId, DateAdded, DateUpdated, Path)
-                            Values (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        @"INSERT INTO Artwork (ArtworkKind, ArtistMetadataId, DateAdded, DateUpdated, Path, BlurHash)
+                            Values (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @BlurHash)",
                         parameters)
                     .ToUnit(),
                 MusicVideoMetadata => _dbConnection.ExecuteAsync(
-                        @"INSERT INTO Artwork (ArtworkKind, MusicVideoMetadataId, DateAdded, DateUpdated, Path)
-                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        @"INSERT INTO Artwork (ArtworkKind, MusicVideoMetadataId, DateAdded, DateUpdated, Path, BlurHash)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @BlurHash)",
                         parameters)
                     .ToUnit(),
                 SongMetadata => _dbConnection.ExecuteAsync(
-                        @"INSERT INTO Artwork (ArtworkKind, SongMetadataId, DateAdded, DateUpdated, Path)
-                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path)",
+                        @"INSERT INTO Artwork (ArtworkKind, SongMetadataId, DateAdded, DateUpdated, Path, BlurHash)
+                            VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @BlurHash)",
                         parameters)
                     .ToUnit(),
                 _ => Task.FromResult(Unit.Default)
