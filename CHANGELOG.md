@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Use custom log database backend which should be more portable (i.e. work in osx-arm64)
+- Use cover art blurhashes for song backgrounds instead of solid colors or box blur
 
 ## [0.3.1-alpha] - 2021-11-30
 ### Fixed
