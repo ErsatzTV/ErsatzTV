@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix unicode console output on Windows
 - Fix TV Show NFO metadata processing when `year` is missing
 - Fix song detail outline to help legibility on white backgrounds
+- Optimize song artwork scanning to prevent re-processing album artwork for each song
 
 ### Changed
 - Use custom log database backend which should be more portable (i.e. work in osx-arm64)

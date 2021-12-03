@@ -37,6 +37,7 @@ namespace ErsatzTV.Infrastructure.Data
         public DbSet<MediaStream> MediaStreams { get; set; }
         public DbSet<Movie> Movies { get; set; }
         public DbSet<MovieMetadata> MovieMetadata { get; set; }
+        public DbSet<Artwork> Artwork { get; set; }
         public DbSet<Artist> Artists { get; set; }
         public DbSet<ArtistMetadata> ArtistMetadata { get; set; }
         public DbSet<MusicVideo> MusicVideos { get; set; }
