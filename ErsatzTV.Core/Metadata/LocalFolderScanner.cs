@@ -139,6 +139,17 @@ namespace ErsatzTV.Core.Metadata
                 {
                     _logger.LogDebug("Refreshing {Attribute} from {Path}", artworkKind, artworkFile);
 
+                    string sourcePath = artworkFile;
+                    if (await _metadataRepository.CloneArtwork(
+                        metadata,
+                        maybeArtwork,
+                        artworkKind,
+                        sourcePath,
+                        lastWriteTime))
+                    {
+                        return true;
+                    }
+
                     // if ffmpeg path is passed, we need pre-processing
                     foreach (string path in ffmpegPath)
                     {
@@ -179,10 +190,28 @@ namespace ErsatzTV.Core.Metadata
                                 async artwork =>
                                 {
                                     artwork.Path = cacheName;
+                                    artwork.SourcePath = sourcePath;
                                     artwork.DateUpdated = lastWriteTime;
-                                    artwork.BlurHash43 = await _imageCache.CalculateBlurHash(cacheName, artworkKind, 4, 3);
-                                    artwork.BlurHash54 = await _imageCache.CalculateBlurHash(cacheName, artworkKind, 5, 4);
-                                    artwork.BlurHash64 = await _imageCache.CalculateBlurHash(cacheName, artworkKind, 6, 4);
+
+                                    if (metadata is SongMetadata)
+                                    {
+                                        artwork.BlurHash43 = await _imageCache.CalculateBlurHash(
+                                            cacheName,
+                                            artworkKind,
+                                            4,
+                                            3);
+                                        artwork.BlurHash54 = await _imageCache.CalculateBlurHash(
+                                            cacheName,
+                                            artworkKind,
+                                            5,
+                                            4);
+                                        artwork.BlurHash64 = await _imageCache.CalculateBlurHash(
+                                            cacheName,
+                                            artworkKind,
+                                            6,
+                                            4);
+                                    }
+
                                     await _metadataRepository.UpdateArtworkPath(artwork);
                                 },
                                 async () =>
@@ -190,13 +219,31 @@ namespace ErsatzTV.Core.Metadata
                                     var artwork = new Artwork
                                     {
                                         Path = cacheName,
+                                        SourcePath = sourcePath,
                                         DateAdded = DateTime.UtcNow,
                                         DateUpdated = lastWriteTime,
-                                        ArtworkKind = artworkKind,
-                                        BlurHash43 = await _imageCache.CalculateBlurHash(cacheName, artworkKind, 4, 3),
-                                        BlurHash54 = await _imageCache.CalculateBlurHash(cacheName, artworkKind, 5, 4),
-                                        BlurHash64 = await _imageCache.CalculateBlurHash(cacheName, artworkKind, 6, 4)
+                                        ArtworkKind = artworkKind
                                     };
+
+                                    if (metadata is SongMetadata)
+                                    {
+                                        artwork.BlurHash43 = await _imageCache.CalculateBlurHash(
+                                            cacheName,
+                                            artworkKind,
+                                            4,
+                                            3);
+                                        artwork.BlurHash54 = await _imageCache.CalculateBlurHash(
+                                            cacheName,
+                                            artworkKind,
+                                            5,
+                                            4);
+                                        artwork.BlurHash64 = await _imageCache.CalculateBlurHash(
+                                            cacheName,
+                                            artworkKind,
+                                            6,
+                                            4);
+                                    }
+
                                     metadata.Artwork.Add(artwork);
                                     await _metadataRepository.AddArtwork(metadata, artwork);
                                 });

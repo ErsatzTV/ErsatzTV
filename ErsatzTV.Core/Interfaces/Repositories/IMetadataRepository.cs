@@ -20,6 +20,12 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<Unit> UpdateArtworkPath(Artwork artwork);
         Task<Unit> AddArtwork(Domain.Metadata metadata, Artwork artwork);
         Task<Unit> RemoveArtwork(Domain.Metadata metadata, ArtworkKind artworkKind);
+        Task<bool> CloneArtwork(
+            Domain.Metadata metadata,
+            Option<Artwork> maybeArtwork,
+            ArtworkKind artworkKind,
+            string sourcePath,
+            DateTime lastWriteTime);
         Task<Unit> MarkAsUpdated(ShowMetadata metadata, DateTime dateUpdated);
         Task<Unit> MarkAsUpdated(SeasonMetadata metadata, DateTime dateUpdated);
         Task<Unit> MarkAsUpdated(MovieMetadata metadata, DateTime dateUpdated);

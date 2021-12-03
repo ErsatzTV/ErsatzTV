@@ -6,6 +6,7 @@ namespace ErsatzTV.Core.Domain
     {
         public int Id { get; set; }
         public string Path { get; set; }
+        public string SourcePath { get; set; }
         public string BlurHash43 { get; set; }
         public string BlurHash54 { get; set; }
         public string BlurHash64 { get; set; }
