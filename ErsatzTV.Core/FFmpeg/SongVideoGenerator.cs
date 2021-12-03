@@ -137,7 +137,7 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithFontName("OPTIKabel-Heavy")
                     .WithFontSize(fontSize)
                     .WithPrimaryColor("&HFFFFFF")
-                    .WithOutlineColor("&H555555")
+                    .WithOutlineColor("&H444444")
                     .WithAlignment(0)
                     .WithMarginRight(rightMargin)
                     .WithMarginLeft(leftMargin)
