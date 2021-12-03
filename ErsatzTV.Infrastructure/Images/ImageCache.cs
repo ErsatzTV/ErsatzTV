@@ -194,12 +194,19 @@ namespace ErsatzTV.Infrastructure.Images
 
         public async Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
         {
-            // TODO: check for existing blur hash on disk using known file name
-            
-            var decoder = new Blurhash.ImageSharp.Decoder();
-            string targetFile = _tempFilePool.GetNextTempFile(TempFileCategory.BlurHash);
-            using Image<Rgb24> image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height);
-            await image.SaveAsPngAsync(targetFile);
+            byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
+            string base64 = Convert.ToBase64String(bytes);
+            string targetFile = GetPathForImage(base64, ArtworkKind.Poster, targetSize.Height);
+            if (!_localFileSystem.FileExists(targetFile))
+            {
+                string folder = Path.GetDirectoryName(targetFile);
+                _localFileSystem.EnsureFolderExists(folder);
+                
+                var decoder = new Blurhash.ImageSharp.Decoder();
+                using Image<Rgb24> image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height);
+                await image.SaveAsPngAsync(targetFile);
+            }
+
             return targetFile;
         }
     }
