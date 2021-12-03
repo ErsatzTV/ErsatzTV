@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -171,10 +172,20 @@ namespace ErsatzTV.Core.FFmpeg
                     
                     watermarkPath = customPath;
 
-                    if (!string.IsNullOrWhiteSpace(artwork.BlurHash))
+                    // randomize selected blur hash
+                    var hashes = new List<string>
                     {
+                        artwork.BlurHash43,
+                        artwork.BlurHash54,
+                        artwork.BlurHash64
+                    }.Filter(s => !string.IsNullOrWhiteSpace(s)).ToList();
+
+                    if (hashes.Any())
+                    {
+                        string hash = hashes[NextRandom(hashes.Count)];
+                        
                         backgroundPath = await _imageCache.WriteBlurHash(
-                            artwork.BlurHash,
+                            hash,
                             channel.FFmpegProfile.Resolution);
 
                         videoVersion.Height = channel.FFmpegProfile.Resolution.Height;

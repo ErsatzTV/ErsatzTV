@@ -183,19 +183,19 @@ namespace ErsatzTV.Infrastructure.Images
             }
         }
 
-        public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind)
+        public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
         {
             var encoder = new Blurhash.ImageSharp.Encoder();
             string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
             await using var fs = new FileStream(targetFile, FileMode.Open, FileAccess.Read);
             using var image = await Image.LoadAsync<Rgb24>(fs);
-            return encoder.Encode(image, 4, 3);
+            return encoder.Encode(image, x, y);
         }
 
         public async Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
-            string base64 = Convert.ToBase64String(bytes);
+            string base64 = Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
             string targetFile = GetPathForImage(base64, ArtworkKind.Poster, targetSize.Height);
             if (!_localFileSystem.FileExists(targetFile))
             {
