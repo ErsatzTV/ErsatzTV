@@ -27,7 +27,6 @@ namespace ErsatzTV.Core.FFmpeg
         private string _videoEncoder;
         private Option<string> _subtitle;
         private bool _boxBlur;
-        private Option<int> _randomColor;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -99,12 +98,6 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegComplexFilterBuilder WithBoxBlur(bool boxBlur)
         {
             _boxBlur = boxBlur;
-            return this;
-        }
-
-        public FFmpegComplexFilterBuilder WithRandomColor(Option<int> randomColor)
-        {
-            _randomColor = randomColor;
             return this;
         }
 
@@ -250,7 +243,7 @@ namespace ErsatzTV.Core.FFmpeg
                         _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                     };
 
-                    if (_randomColor.IsNone && !string.IsNullOrWhiteSpace(filter))
+                    if (!string.IsNullOrWhiteSpace(filter))
                     {
                         videoFilterQueue.Add(filter);
                     }
@@ -276,7 +269,7 @@ namespace ErsatzTV.Core.FFmpeg
                     videoFilterQueue.Add(format);
                 }
 
-                if (scaleOrPad && _boxBlur == false && _randomColor.IsNone)
+                if (scaleOrPad && _boxBlur == false)
                 {
                     videoFilterQueue.Add("setsar=1");
                 }
@@ -286,10 +279,9 @@ namespace ErsatzTV.Core.FFmpeg
                     videoFilterQueue.Add("boxblur=40");
                 }
 
-                foreach (int color in _randomColor)
+                if (videoOnly)
                 {
-                    videoFilterQueue.Add(
-                        $"palettegen=max_colors=8,crop=1:1:{color}:0,scale={_resolution.Width}:{_resolution.Height},setsar=1");
+                    videoFilterQueue.Add("deband");
                 }
 
                 foreach (ChannelWatermark watermark in _watermark)

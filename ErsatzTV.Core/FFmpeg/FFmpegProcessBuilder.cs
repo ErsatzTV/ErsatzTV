@@ -285,8 +285,7 @@ namespace ErsatzTV.Core.FFmpeg
             string videoPath,
             Option<string> codec,
             Option<string> pixelFormat,
-            bool boxBlur,
-            Option<int> randomColor)
+            bool boxBlur)
         {
             _noAutoScale = true;
             _outputFramerate = 30;
@@ -294,8 +293,7 @@ namespace ErsatzTV.Core.FFmpeg
             _complexFilterBuilder = _complexFilterBuilder
                 .WithInputCodec(codec)
                 .WithInputPixelFormat(pixelFormat)
-                .WithBoxBlur(boxBlur)
-                .WithRandomColor(randomColor);
+                .WithBoxBlur(boxBlur);
 
             _arguments.Add("-i");
             _arguments.Add(videoPath);

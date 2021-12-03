@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20211203040447_Add_ArtworkBlurHash")]
+    partial class Add_ArtworkBlurHash
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.0");
@@ -144,13 +146,7 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("ArtworkKind")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("BlurHash43")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BlurHash54")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("BlurHash64")
+                    b.Property<string>("BlurHash")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("ChannelId")

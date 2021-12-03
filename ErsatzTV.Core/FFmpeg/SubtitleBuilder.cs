@@ -118,8 +118,8 @@ namespace ErsatzTV.Core.FFmpeg
             }
 
             sb.AppendLine("[V4+ Styles]");
-            sb.AppendLine("Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BorderStyle, Shadow, Alignment, Encoding");
-            sb.AppendLine($"Style: Default,{await _fontName.IfNoneAsync("")},{await _fontSize.IfNoneAsync(32)},{await _primaryColor.IfNoneAsync("")},{await _outlineColor.IfNoneAsync("")},{await _borderStyle.IfNoneAsync(0)},{await _shadow.IfNoneAsync(0)}, {await _alignment.IfNoneAsync(0)},1");
+            sb.AppendLine("Format: Name, Fontname, Fontsize, PrimaryColour, OutlineColour, BorderStyle, Outline, Shadow, Alignment, Encoding");
+            sb.AppendLine($"Style: Default,{await _fontName.IfNoneAsync("")},{await _fontSize.IfNoneAsync(32)},{await _primaryColor.IfNoneAsync("")},{await _outlineColor.IfNoneAsync("")},{await _borderStyle.IfNoneAsync(0)},1,{await _shadow.IfNoneAsync(0)},{await _alignment.IfNoneAsync(0)},1");
 
             sb.AppendLine("[Events]");
             sb.AppendLine("Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text");

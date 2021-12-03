@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -50,7 +51,7 @@ namespace ErsatzTV.Core.FFmpeg
                     new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
                 }
             };
-
+            
             string[] backgrounds =
             {
                 "background_blank.png",
@@ -60,12 +61,13 @@ namespace ErsatzTV.Core.FFmpeg
             };
 
             // use random ETV color by default
-            string artworkPath = Path.Combine(
+            string backgroundPath = Path.Combine(
                 FileSystemLayout.ResourcesCacheFolder,
                 backgrounds[NextRandom(backgrounds.Length)]);
 
+            Option<string> watermarkPath = None;
+
             var boxBlur = false;
-            Option<int> randomColor = None;
             
             const int HORIZONTAL_MARGIN_PERCENT = 3;
             const int VERTICAL_MARGIN_PERCENT = 5;
@@ -135,7 +137,7 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithFontName("OPTIKabel-Heavy")
                     .WithFontSize(fontSize)
                     .WithPrimaryColor("&HFFFFFF")
-                    .WithOutlineColor("&H555555")
+                    .WithOutlineColor("&H444444")
                     .WithAlignment(0)
                     .WithMarginRight(rightMargin)
                     .WithMarginLeft(leftMargin)
@@ -149,23 +151,6 @@ namespace ErsatzTV.Core.FFmpeg
                 foreach (Artwork artwork in Optional(
                     metadata.Artwork.Find(a => a.ArtworkKind == ArtworkKind.Thumbnail)))
                 {
-                    int backgroundRoll = NextRandom(16);
-                    if (backgroundRoll < 8)
-                    {
-                        randomColor = backgroundRoll;
-                    }
-                    else
-                    {
-                        boxBlur = true;
-                    }
-
-                    string customPath = _imageCache.GetPathForImage(
-                        artwork.Path,
-                        ArtworkKind.Thumbnail,
-                        Option<int>.None);
-
-                    artworkPath = customPath;
-
                     // signal that we want to use cover art as watermark
                     videoVersion = new CoverArtMediaVersion
                     {
@@ -179,10 +164,42 @@ namespace ErsatzTV.Core.FFmpeg
                             new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
                         }
                     };
+
+                    string customPath = _imageCache.GetPathForImage(
+                        artwork.Path,
+                        ArtworkKind.Thumbnail,
+                        Option<int>.None);
+                    
+                    watermarkPath = customPath;
+
+                    // randomize selected blur hash
+                    var hashes = new List<string>
+                    {
+                        artwork.BlurHash43,
+                        artwork.BlurHash54,
+                        artwork.BlurHash64
+                    }.Filter(s => !string.IsNullOrWhiteSpace(s)).ToList();
+
+                    if (hashes.Any())
+                    {
+                        string hash = hashes[NextRandom(hashes.Count)];
+                        
+                        backgroundPath = await _imageCache.WriteBlurHash(
+                            hash,
+                            channel.FFmpegProfile.Resolution);
+
+                        videoVersion.Height = channel.FFmpegProfile.Resolution.Height;
+                        videoVersion.Width = channel.FFmpegProfile.Resolution.Width;
+                    }
+                    else
+                    {
+                        backgroundPath = customPath;
+                        boxBlur = true;
+                    }
                 }
             }
 
-            string videoPath = artworkPath;
+            string videoPath = backgroundPath;
 
             videoVersion.MediaFiles = new List<MediaFile>
             {
@@ -197,7 +214,7 @@ namespace ErsatzTV.Core.FFmpeg
                 videoVersion,
                 videoPath,
                 boxBlur,
-                randomColor,
+                watermarkPath,
                 watermarkLocation,
                 HORIZONTAL_MARGIN_PERCENT,
                 VERTICAL_MARGIN_PERCENT,

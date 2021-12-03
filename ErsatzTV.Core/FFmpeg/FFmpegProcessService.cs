@@ -68,7 +68,7 @@ namespace ErsatzTV.Core.FFmpeg
                 outPoint);
 
             Option<WatermarkOptions> watermarkOptions =
-                await GetWatermarkOptions(channel, globalWatermark, videoVersion, None);
+                await GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
 
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
@@ -276,7 +276,7 @@ namespace ErsatzTV.Core.FFmpeg
             MediaVersion videoVersion,
             string videoPath,
             bool boxBlur,
-            Option<int> randomColor,
+            Option<string> watermarkPath,
             ChannelWatermarkLocation watermarkLocation,
             int horizontalMarginPercent,
             int verticalMarginPercent,
@@ -303,7 +303,7 @@ namespace ErsatzTV.Core.FFmpeg
                         : None;
 
                 Option<WatermarkOptions> watermarkOptions =
-                    await GetWatermarkOptions(channel, globalWatermark, videoVersion, watermarkOverride);
+                    await GetWatermarkOptions(channel, globalWatermark, videoVersion, watermarkOverride, watermarkPath);
 
                 FFmpegPlaybackSettings playbackSettings =
                     _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
@@ -323,7 +323,7 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithThreads(1)
                     .WithQuiet()
                     .WithFormatFlags(playbackSettings.FormatFlags)
-                    .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat, boxBlur, randomColor)
+                    .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat, boxBlur)
                     .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
                     .WithSubtitleFile(subtitleFile);
 
@@ -370,7 +370,8 @@ namespace ErsatzTV.Core.FFmpeg
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
             MediaVersion videoVersion,
-            Option<ChannelWatermark> watermarkOverride)
+            Option<ChannelWatermark> watermarkOverride,
+            Option<string> watermarkPath)
         {
             if (videoVersion is BackgroundImageMediaVersion)
             {
@@ -384,7 +385,7 @@ namespace ErsatzTV.Core.FFmpeg
                 {
                     return new WatermarkOptions(
                         watermarkOverride,
-                        videoVersion.MediaFiles.Head().Path,
+                        await watermarkPath.IfNoneAsync(videoVersion.MediaFiles.Head().Path),
                         0,
                         false);
                 }
