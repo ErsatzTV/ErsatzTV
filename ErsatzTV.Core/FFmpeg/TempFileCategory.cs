@@ -5,6 +5,7 @@
         Subtitle = 0,
         SongBackground = 1,
         CoverArt = 2,
-        CachedArtwork = 3
+        CachedArtwork = 3,
+        BlurHash = 4
     }
 }

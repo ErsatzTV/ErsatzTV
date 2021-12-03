@@ -191,5 +191,16 @@ namespace ErsatzTV.Infrastructure.Images
             using var image = await Image.LoadAsync<Rgb24>(fs);
             return encoder.Encode(image, 4, 3);
         }
+
+        public async Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
+        {
+            // TODO: check for existing blur hash on disk using known file name
+            
+            var decoder = new Blurhash.ImageSharp.Decoder();
+            string targetFile = _tempFilePool.GetNextTempFile(TempFileCategory.BlurHash);
+            using Image<Rgb24> image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height);
+            await image.SaveAsPngAsync(targetFile);
+            return targetFile;
+        }
     }
 }
