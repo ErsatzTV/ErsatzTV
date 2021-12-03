@@ -14,6 +14,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace ErsatzTV.Infrastructure.Images
@@ -180,6 +181,33 @@ namespace ErsatzTV.Infrastructure.Images
                 _logger.LogError(ex, "Unable to check image for animation");
                 return false;
             }
+        }
+
+        public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
+        {
+            var encoder = new Blurhash.ImageSharp.Encoder();
+            string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
+            await using var fs = new FileStream(targetFile, FileMode.Open, FileAccess.Read);
+            using var image = await Image.LoadAsync<Rgb24>(fs);
+            return encoder.Encode(image, x, y);
+        }
+
+        public async Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
+            string base64 = Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
+            string targetFile = GetPathForImage(base64, ArtworkKind.Poster, targetSize.Height);
+            if (!_localFileSystem.FileExists(targetFile))
+            {
+                string folder = Path.GetDirectoryName(targetFile);
+                _localFileSystem.EnsureFolderExists(folder);
+                
+                var decoder = new Blurhash.ImageSharp.Decoder();
+                using Image<Rgb24> image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height);
+                await image.SaveAsPngAsync(targetFile);
+            }
+
+            return targetFile;
         }
     }
 }
