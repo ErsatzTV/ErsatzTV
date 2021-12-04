@@ -54,10 +54,9 @@ namespace ErsatzTV.Core.FFmpeg
             
             string[] backgrounds =
             {
-                "background_blank.png",
-                "background_e.png",
-                "background_t.png",
-                "background_v.png"
+                "song_background_1.png",
+                "song_background_2.png",
+                "song_background_3.png"
             };
 
             // use random ETV color by default
@@ -117,15 +116,18 @@ namespace ErsatzTV.Core.FFmpeg
                 int leftMarginPercent = HORIZONTAL_MARGIN_PERCENT;
                 int rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
 
-                switch (watermarkLocation)
+                if (metadata.Artwork.Any(a => a.ArtworkKind == ArtworkKind.Thumbnail))
                 {
-                    case ChannelWatermarkLocation.BottomLeft:
-                        leftMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
-                        break;
-                    case ChannelWatermarkLocation.BottomRight:
-                        leftMarginPercent = rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
-                        rightMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
-                        break;
+                    switch (watermarkLocation)
+                    {
+                        case ChannelWatermarkLocation.BottomLeft:
+                            leftMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
+                            break;
+                        case ChannelWatermarkLocation.BottomRight:
+                            leftMarginPercent = rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
+                            rightMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
+                            break;
+                    }
                 }
 
                 var leftMargin = (int)Math.Round(leftMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);

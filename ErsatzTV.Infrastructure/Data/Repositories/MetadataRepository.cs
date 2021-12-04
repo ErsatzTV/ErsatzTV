@@ -209,7 +209,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public Task<Unit> UpdateArtworkPath(Artwork artwork) =>
             _dbConnection.ExecuteAsync(
-                "UPDATE Artwork SET Path = @Path, SourcePath = @SourcePath, DateUpdated = @DateUpdated, BlurHash43 = @BlurHash43, BlurHash43 = @BlurHash54, BlurHash43 = @BlurHash64 WHERE Id = @Id",
+                "UPDATE Artwork SET Path = @Path, SourcePath = @SourcePath, DateUpdated = @DateUpdated, BlurHash43 = @BlurHash43, BlurHash54 = @BlurHash54, BlurHash64 = @BlurHash64 WHERE Id = @Id",
                 new { artwork.Path, artwork.SourcePath, artwork.DateUpdated, artwork.BlurHash43, artwork.BlurHash54, artwork.BlurHash64, artwork.Id }).ToUnit();
 
         public Task<Unit> AddArtwork(Metadata metadata, Artwork artwork)
