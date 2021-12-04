@@ -116,7 +116,7 @@ namespace ErsatzTV.Core.FFmpeg
                 int leftMarginPercent = HORIZONTAL_MARGIN_PERCENT;
                 int rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
 
-                if (watermarkPath.IsSome || metadata.Artwork.Any(a => a.ArtworkKind == ArtworkKind.Thumbnail))
+                if (metadata.Artwork.Any(a => a.ArtworkKind == ArtworkKind.Thumbnail))
                 {
                     switch (watermarkLocation)
                     {
