@@ -54,9 +54,9 @@ namespace ErsatzTV.Core.FFmpeg
             
             string[] backgrounds =
             {
-                "background_e.png",
-                "background_t.png",
-                "background_v.png"
+                "song_background_1.png",
+                "song_background_2.png",
+                "song_background_3.png"
             };
 
             // use random ETV color by default
@@ -116,7 +116,7 @@ namespace ErsatzTV.Core.FFmpeg
                 int leftMarginPercent = HORIZONTAL_MARGIN_PERCENT;
                 int rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
 
-                if (watermarkPath.IsSome)
+                if (watermarkPath.IsSome || metadata.Artwork.Any(a => a.ArtworkKind == ArtworkKind.Thumbnail))
                 {
                     switch (watermarkLocation)
                     {
