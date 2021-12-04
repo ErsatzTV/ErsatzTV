@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix bug with saving multiple blurhash versions for cover art; all cover art will be automatically rescanned
+- Fix song detail margin when no cover art exists and no watermark exists
 
 ### Changed
 - Use blurhash of ErsatzTV colors instead of solid colors for default song backgrounds

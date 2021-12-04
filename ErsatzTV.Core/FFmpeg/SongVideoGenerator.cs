@@ -54,7 +54,6 @@ namespace ErsatzTV.Core.FFmpeg
             
             string[] backgrounds =
             {
-                "background_blank.png",
                 "background_e.png",
                 "background_t.png",
                 "background_v.png"
@@ -117,15 +116,18 @@ namespace ErsatzTV.Core.FFmpeg
                 int leftMarginPercent = HORIZONTAL_MARGIN_PERCENT;
                 int rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
 
-                switch (watermarkLocation)
+                if (watermarkPath.IsSome)
                 {
-                    case ChannelWatermarkLocation.BottomLeft:
-                        leftMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
-                        break;
-                    case ChannelWatermarkLocation.BottomRight:
-                        leftMarginPercent = rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
-                        rightMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
-                        break;
+                    switch (watermarkLocation)
+                    {
+                        case ChannelWatermarkLocation.BottomLeft:
+                            leftMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
+                            break;
+                        case ChannelWatermarkLocation.BottomRight:
+                            leftMarginPercent = rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
+                            rightMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
+                            break;
+                    }
                 }
 
                 var leftMargin = (int)Math.Round(leftMarginPercent / 100.0 * channel.FFmpegProfile.Resolution.Width);
