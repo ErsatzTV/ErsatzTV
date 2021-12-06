@@ -7,6 +7,7 @@ using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 
+
 namespace ErsatzTV.Infrastructure.Data.Repositories
 {
     public class ChannelRepository : IChannelRepository
@@ -42,10 +43,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<Channel>> GetAll()
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.Channels
                 .Include(c => c.FFmpegProfile)
                 .Include(c => c.Artwork)
+                .Include(c => c.Playouts)
                 .ToListAsync();
         }
 

@@ -17,23 +17,37 @@
             <MudCard>
                 <MudCardContent>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
-                    <MudAutocomplete @ref="_collectionAutocomplete"
-                                     Class="mt-4"
-                                     T="MediaCollectionViewModel"
-                                     Label="Collection"
-                                     @bind-value="_selectedCollection"
-                                     SearchFunc="@SearchCollections"
-                                     ToStringFunc="@(c => c?.Name)"/>
+                    <MudSelect @ref="_collectionSelect"
+                               Class="mt-4"
+                               T="MediaCollectionViewModel"
+                               Label="Collection"
+                               @bind-value="_selectedCollection"
+                               HelperText="Disabled collections are already present in this multi collection">
+                        @foreach (MediaCollectionViewModel collection in _collections)
+                        {
+                            <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.Id == collection.Id))"
+                                           Value="@collection">
+                                @collection.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
                     <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddCollection())" Class="mt-4 mr-auto">
                         Add Collection
                     </MudButton>
-                    <MudAutocomplete @ref="_smartCollectionAutocomplete"
-                                     Class="mt-4"
-                                     T="SmartCollectionViewModel"
-                                     Label="Smart Collection"
-                                     @bind-value="_selectedSmartCollection"
-                                     SearchFunc="@SearchSmartCollections"
-                                     ToStringFunc="@(c => c?.Name)"/>
+                    <MudSelect @ref="_smartCollectionSelect"
+                               Class="mt-4"
+                               T="SmartCollectionViewModel"
+                               Label="Smart Collection"
+                               @bind-value="_selectedSmartCollection"
+                               HelperText="Disabled collections are already present in this multi collection">
+                        @foreach (SmartCollectionViewModel collection in _smartCollections)
+                        {
+                            <MudSelectItem Disabled="@(_model.Items.Any(i => i.Collection.Id == collection.Id))"
+                                           Value="@collection">
+                                @collection.Name
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
                     <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="@(_ => AddSmartCollection())" Class="mt-4 mr-auto">
                         Add Smart Collection
                     </MudButton>
@@ -100,8 +114,8 @@
     private List<SmartCollectionViewModel> _smartCollections;
     private MediaCollectionViewModel _selectedCollection;
     private SmartCollectionViewModel _selectedSmartCollection;
-    private MudAutocomplete<MediaCollectionViewModel> _collectionAutocomplete;
-    private MudAutocomplete<SmartCollectionViewModel> _smartCollectionAutocomplete;
+    private MudSelect<MediaCollectionViewModel> _collectionSelect;
+    private MudSelect<SmartCollectionViewModel> _smartCollectionSelect;
     
     protected override async Task OnParametersSetAsync()
     {
@@ -211,7 +225,7 @@
             });
 
             _selectedCollection = null;
-            _collectionAutocomplete.Reset();
+            _collectionSelect.Reset();
         }
     }
 
@@ -226,14 +240,7 @@
             });
 
             _selectedSmartCollection = null;
-            _smartCollectionAutocomplete.Reset();
+            _smartCollectionSelect.Reset();
         }
     }
-
-    private Task<IEnumerable<MediaCollectionViewModel>> SearchCollections(string value) =>
-        _collections.Filter(c => _model.Items.All(i => i.Collection != c) && c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
-    private Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value) =>
-        _smartCollections.Filter(c => _model.Items.OfType<MultiCollectionSmartItemEditViewModel>().All(i => i.SmartCollection != c) && c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
 }

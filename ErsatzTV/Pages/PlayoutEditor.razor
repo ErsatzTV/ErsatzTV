@@ -16,8 +16,26 @@
             <FluentValidator/>
             <MudCard>
                 <MudCardContent>
-                    <MudAutocomplete T="ChannelViewModel" Label="Channel" @bind-value="_model.Channel" SearchFunc="@SearchChannels" ToStringFunc="@(c => c is null ? null : $"{c.Number} - {c.Name}")"/>
-                    <MudAutocomplete Class="mt-3" T="ProgramScheduleViewModel" Label="Schedule" @bind-value="_model.ProgramSchedule" SearchFunc="@SearchProgramSchedules" ToStringFunc="@(s => s?.Name)"/>
+                    <MudSelect T="ChannelViewModel"
+                               Label="Channel"
+                               @bind-value="_model.Channel"
+                               HelperText="Disabled channels already have a playout">
+                        @foreach (ChannelViewModel channel in _channels)
+                        {
+                            <MudSelectItem Disabled="@(channel.PlayoutCount > 0)" Value="@channel">
+                                @($"{channel.Number} - {channel.Name}")
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="mt-3"
+                                     T="ProgramScheduleViewModel"
+                                     Label="Schedule"
+                                     @bind-value="_model.ProgramSchedule">
+                         @foreach (ProgramScheduleViewModel schedule in _programSchedules)
+                         {
+                             <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
+                         }
+                    </MudSelect>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -51,13 +69,6 @@
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
     }
-
-    private Task<IEnumerable<ChannelViewModel>> SearchChannels(string value) =>
-        _channels.Filter(c => $"{c.Number} - {c.Name}".Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
-    private Task<IEnumerable<ProgramScheduleViewModel>> SearchProgramSchedules(string value) =>
-        _programSchedules.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
 
     private async Task HandleSubmitAsync()
     {

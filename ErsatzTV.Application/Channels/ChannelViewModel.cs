@@ -11,5 +11,6 @@ namespace ErsatzTV.Application.Channels
         string PreferredLanguageCode,
         StreamingMode StreamingMode,
         int? WatermarkId,
-        int? FallbackFillerId);
+        int? FallbackFillerId,
+        int PlayoutCount);
 }

@@ -17,6 +17,7 @@ namespace ErsatzTV.ViewModels
         private TimeSpan? _duration;
         private FillerMode _fillerMode;
         private int? _count;
+        private ProgramScheduleItemCollectionType _collectionType;
 
         public int Id { get; set; }
         public string Name { get; set; }
@@ -53,7 +54,24 @@ namespace ErsatzTV.ViewModels
         }
 
         public int? PadToNearestMinute { get; set; }
-        public ProgramScheduleItemCollectionType CollectionType { get; set; }
+
+        public ProgramScheduleItemCollectionType CollectionType
+        {
+            get => _collectionType;
+            set
+            {
+                if (_collectionType != value)
+                {
+                    Collection = null;
+                    MediaItem = null;
+                    MultiCollection = null;
+                    SmartCollection = null;
+                }
+
+                _collectionType = value;
+            }
+        }
+
         public MediaCollectionViewModel Collection { get; set; }
         public NamedMediaItemViewModel MediaItem { get; set; }
         public MultiCollectionViewModel MultiCollection { get; set; }

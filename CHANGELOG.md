@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Use blurhash of ErsatzTV colors instead of solid colors for default song backgrounds
+- Use select control instead of autocomplete control in many places
+    - The autocomplete control is not intuitive to use and has focus bugs
 
 ## [0.3.2-alpha] - 2021-12-03
 ### Fixed
