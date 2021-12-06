@@ -105,57 +105,75 @@
                             </MudSelect>
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Collection)
                             {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="MediaCollectionViewModel"
-                                                 Label="Collection"
-                                                 @bind-value="_selectedItem.Collection"
-                                                 SearchFunc="@SearchMediaCollections"
-                                                 ToStringFunc="@(c => c?.Name)"/>
+                                <MudSelect Class="mt-3"
+                                           T="MediaCollectionViewModel"
+                                           Label="Collection"
+                                           @bind-value="_selectedItem.Collection">
+                                    @foreach (MediaCollectionViewModel collection in _mediaCollections)
+                                    {
+                                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
                             }
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.MultiCollection)
                             {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="MultiCollectionViewModel"
-                                                 Label="Multi Collection"
-                                                 @bind-value="_selectedItem.MultiCollection"
-                                                 SearchFunc="@SearchMultiCollections"
-                                                 ToStringFunc="@(c => c?.Name)"/>
+                                <MudSelect Class="mt-3"
+                                           T="MultiCollectionViewModel"
+                                           Label="Multi Collection"
+                                           @bind-value="_selectedItem.MultiCollection">
+                                    @foreach (MultiCollectionViewModel collection in _multiCollections)
+                                    {
+                                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
                             }
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.SmartCollection)
                             {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="SmartCollectionViewModel"
-                                                 Label="Smart Collection"
-                                                 @bind-value="_selectedItem.SmartCollection"
-                                                 SearchFunc="@SearchSmartCollections"
-                                                 ToStringFunc="@(c => c?.Name)"/>
+                                <MudSelect Class="mt-3"
+                                           T="SmartCollectionViewModel"
+                                           Label="Smart Collection"
+                                           @bind-value="_selectedItem.SmartCollection">
+                                    @foreach (SmartCollectionViewModel collection in _smartCollections)
+                                    {
+                                        <MudSelectItem Value="@collection">@collection.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
                             }
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionShow)
                             {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="NamedMediaItemViewModel"
-                                                 Label="Television Show"
-                                                 @bind-value="_selectedItem.MediaItem"
-                                                 SearchFunc="@SearchTelevisionShows"
-                                                 ToStringFunc="@(s => s?.Name)"/>
+                                <MudSelect Class="mt-3"
+                                           T="NamedMediaItemViewModel"
+                                           Label="Television Show"
+                                           @bind-value="_selectedItem.MediaItem">
+                                    @foreach (NamedMediaItemViewModel show in _televisionShows)
+                                    {
+                                        <MudSelectItem Value="@show">@show.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
                             }
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.TelevisionSeason)
                             {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="NamedMediaItemViewModel"
-                                                 Label="Television Season"
-                                                 @bind-value="_selectedItem.MediaItem"
-                                                 SearchFunc="@SearchTelevisionSeasons"
-                                                 ToStringFunc="@(s => s?.Name)"/>
+                                <MudSelect Class="mt-3"
+                                           T="NamedMediaItemViewModel"
+                                           Label="Television Season"
+                                           @bind-value="_selectedItem.MediaItem">
+                                    @foreach (NamedMediaItemViewModel season in _televisionSeasons)
+                                    {
+                                        <MudSelectItem Value="@season">@season.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
                             }
                             @if (_selectedItem.CollectionType == ProgramScheduleItemCollectionType.Artist)
                             {
-                                <MudAutocomplete Class="mt-3"
-                                                 T="NamedMediaItemViewModel"
-                                                 Label="Artist"
-                                                 @bind-value="_selectedItem.MediaItem"
-                                                 SearchFunc="@SearchArtists"
-                                                 ToStringFunc="@(s => s?.Name)"/>
+                                <MudSelect Class="mt-3"
+                                           T="NamedMediaItemViewModel"
+                                           Label="Artist"
+                                           @bind-value="_selectedItem.MediaItem">
+                                    @foreach (NamedMediaItemViewModel artist in _artists)
+                                    {
+                                        <MudSelectItem Value="@artist">@artist.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
                             }
                             <MudSelect Class="mt-3" Label="Playback Order" @bind-Value="@_selectedItem.PlaybackOrder" For="@(() => _selectedItem.PlaybackOrder)">
                                 @switch (_selectedItem.CollectionType)
@@ -378,24 +396,6 @@
         ProgramScheduleItemEditViewModel toSwap = _schedule.Items.OrderBy(x => x.Index).First(x => x.Index > item.Index);
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
-
-    private Task<IEnumerable<MediaCollectionViewModel>> SearchMediaCollections(string value) =>
-        _mediaCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
-    private Task<IEnumerable<MultiCollectionViewModel>> SearchMultiCollections(string value) =>
-        _multiCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
-    private Task<IEnumerable<SmartCollectionViewModel>> SearchSmartCollections(string value) =>
-        _smartCollections.Filter(c => c.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
-    private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionShows(string value) =>
-        _televisionShows.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
-    private Task<IEnumerable<NamedMediaItemViewModel>> SearchTelevisionSeasons(string value) =>
-        _televisionSeasons.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
-    private Task<IEnumerable<NamedMediaItemViewModel>> SearchArtists(string value) =>
-        _artists.Filter(s => s.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
 
     private Task<IEnumerable<FillerPresetViewModel>> SearchFillerPresets(FillerKind fillerKind, string value) =>
         _fillerPresets.Filter(p => p.FillerKind == fillerKind && p.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
