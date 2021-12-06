@@ -16,7 +16,8 @@ namespace ErsatzTV.Application.Channels
                 channel.PreferredLanguageCode,
                 channel.StreamingMode,
                 channel.WatermarkId,
-                channel.FallbackFillerId);
+                channel.FallbackFillerId,
+                channel.Playouts?.Count ?? 0);
 
         private static string GetLogo(Channel channel) =>
             Optional(channel.Artwork.FirstOrDefault(a => a.ArtworkKind == ArtworkKind.Logo))
