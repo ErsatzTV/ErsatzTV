@@ -220,47 +220,57 @@
                 <div style="flex-grow: 1; max-width: 400px;">
                     <MudCard>
                         <MudCardContent>
-                            <MudAutocomplete Class="mt-3"
-                                             T="FillerPresetViewModel"
-                                             Label="Pre-Roll Filler"
-                                             @bind-value="_selectedItem.PreRollFiller"
-                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.PreRoll, arg))"
-                                             ToStringFunc="@(c => c?.Name)"
-                                             ResetValueOnEmptyText="true"
-                                             Clearable="true"/>
-                            <MudAutocomplete Class="mt-3"
-                                             T="FillerPresetViewModel"
-                                             Label="Mid-Roll Filler"
-                                             @bind-value="_selectedItem.MidRollFiller"
-                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.MidRoll, arg))"
-                                             ToStringFunc="@(c => c?.Name)"
-                                             ResetValueOnEmptyText="true"
-                                             Clearable="true"/>
-                            <MudAutocomplete Class="mt-3"
-                                             T="FillerPresetViewModel"
-                                             Label="Post-Roll Filler"
-                                             @bind-value="_selectedItem.PostRollFiller"
-                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.PostRoll, arg))"
-                                             ToStringFunc="@(c => c?.Name)"
-                                             ResetValueOnEmptyText="true"
-                                             Clearable="true"/>
-                            <MudAutocomplete Class="mt-3"
-                                             T="FillerPresetViewModel"
-                                             Label="Tail Filler"
-                                             @bind-value="_selectedItem.TailFiller"
-                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.Tail, arg))"
-                                             ToStringFunc="@(c => c?.Name)"
-                                             ResetValueOnEmptyText="true"
-                                             Clearable="true"/>
-                            <MudAutocomplete Class="mt-3"
-                                             T="FillerPresetViewModel"
-                                             Label="Fallback Filler"
-                                             @bind-value="_selectedItem.FallbackFiller"
-                                             SearchFunc="@(arg => SearchFillerPresets(FillerKind.Fallback, arg))"
-                                             ToStringFunc="@(c => c?.Name)"
-                                             ResetValueOnEmptyText="true"
-                                             Clearable="true"/>
-                            </MudCardContent>
+                            <MudSelect Class="mt-3"
+                                       T="FillerPresetViewModel"
+                                       Label="Pre-Roll Filler"
+                                       @bind-value="_selectedItem.PreRollFiller"
+                                       Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.PreRoll))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                       T="FillerPresetViewModel"
+                                       Label="Mid-Roll Filler"
+                                       @bind-value="_selectedItem.MidRollFiller"
+                                       Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.MidRoll))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                       T="FillerPresetViewModel"
+                                       Label="Post-Roll Filler"
+                                       @bind-value="_selectedItem.PostRollFiller"
+                                       Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.PostRoll))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                       T="FillerPresetViewModel"
+                                       Label="Tail Filler"
+                                       @bind-value="_selectedItem.TailFiller"
+                                       Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.Tail))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                            <MudSelect Class="mt-3"
+                                       T="FillerPresetViewModel"
+                                       Label="Fallback Filler"
+                                       @bind-value="_selectedItem.FallbackFiller"
+                                       Clearable="true">
+                                @foreach (FillerPresetViewModel filler in _fillerPresets.Where(f => f.FillerKind == FillerKind.Fallback))
+                                {
+                                    <MudSelectItem Value="@filler">@filler.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudCardContent>
                     </MudCard>
                 </div>
             </div>
