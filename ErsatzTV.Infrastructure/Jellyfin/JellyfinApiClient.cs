@@ -383,11 +383,6 @@ namespace ErsatzTV.Infrastructure.Jellyfin
         {
             try
             {
-                if (item.LocationType != "FileSystem")
-                {
-                    return None;
-                }
-
                 ShowMetadata metadata = ProjectToShowMetadata(item);
 
                 var show = new JellyfinShow
@@ -481,11 +476,6 @@ namespace ErsatzTV.Infrastructure.Jellyfin
         {
             try
             {
-                if (item.LocationType != "FileSystem")
-                {
-                    return None;
-                }
-
                 DateTime dateAdded = item.DateCreated.UtcDateTime;
                 // DateTime lastWriteTime = DateTimeOffset.FromUnixTimeSeconds(response.UpdatedAt).DateTime;
 
