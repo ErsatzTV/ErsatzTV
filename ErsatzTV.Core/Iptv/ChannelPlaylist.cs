@@ -26,7 +26,7 @@ namespace ErsatzTV.Core.Iptv
 
             var xmltv = $"{_scheme}://{_host}/iptv/xmltv.xml";
             sb.AppendLine($"#EXTM3U url-tvg=\"{xmltv}\" x-tvg-url=\"{xmltv}\"");
-            foreach (Channel channel in _channels.OrderBy(c => c.Number))
+            foreach (Channel channel in _channels.OrderBy(c => decimal.Parse(c.Number)))
             {
                 string logo = Optional(channel.Artwork).Flatten()
                     .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
