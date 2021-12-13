@@ -168,9 +168,9 @@ namespace ErsatzTV.Core.Metadata
             {
                 if (!_localFileSystem.FileExists(path))
                 {
-                    _logger.LogInformation("Removing missing movie at {Path}", path);
-                    List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(ids);
+                    _logger.LogInformation("Flagging missing movie at {Path}", path);
+                    List<int> ids = await _movieRepository.FlagFileNotFound(libraryPath, path);
+                    await _searchIndex.RebuildItems(_searchRepository, ids);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {

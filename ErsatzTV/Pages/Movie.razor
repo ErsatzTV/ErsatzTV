@@ -28,18 +28,28 @@
     <div style="display: flex; flex-direction: row;" class="mb-6">
         @if (!string.IsNullOrWhiteSpace(_movie.Poster))
         {
-            if (_movie.Poster.StartsWith("http://") || _movie.Poster.StartsWith("https://"))
-            {
-                <img class="mud-elevation-2 mr-6"
-                     style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                     src="@_movie.Poster" alt="movie poster"/>
-            }
-            else
-            {
-                <img class="mud-elevation-2 mr-6"
-                     style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
-                     src="@($"/artwork/posters/{_movie.Poster}")" alt="movie poster"/>
-            }
+            <div class="mr-6" style="display: flex; flex-direction: column; max-height: 440px; position: relative">
+                @if (_movie.Poster.StartsWith("http://") || _movie.Poster.StartsWith("https://"))
+                {
+                    <img class="mud-elevation-2"
+                         style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
+                         src="@_movie.Poster" alt="movie poster"/>
+                }
+                else
+                {
+                    <img class="mud-elevation-2"
+                         style="border-radius: 4px; flex-shrink: 0; max-height: 440px;"
+                         src="@($"/artwork/posters/{_movie.Poster}")" alt="movie poster"/>
+                }
+                @if (_movie.MediaItemState == MediaItemState.FileNotFound)
+                {
+                    <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.4);">
+                    </div>
+                    <div style="position: absolute; bottom: 8px; right: 10px; justify-content: right">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                    </div>
+                }
+            </div>
         }
         <div style="display: flex; flex-direction: column; height: 100%">
             <MudText Typo="Typo.h2" Class="media-item-title">@_movie.Title</MudText>
@@ -56,12 +66,25 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@AddToCollection">
+                           OnClick="@AddToCollection"
+                           Disabled="@(_movie.MediaItemState != MediaItemState.Normal)">
                     Add To Collection
                 </MudButton>
             </div>
         </div>
     </div>
+    @if (_movie.MediaItemState == MediaItemState.FileNotFound)
+    {
+        <MudCard Class="mb-6">
+            <MudCardContent>
+                <div style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
+                    <MudText>File Not Found:&nbsp;</MudText>
+                    <MudText>@_movie.Path</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    }
     <MudCard Class="mb-6">
         <MudCardContent>
             @if (_sortedContentRatings.Any())

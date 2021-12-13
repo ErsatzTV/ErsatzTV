@@ -33,7 +33,7 @@ namespace ErsatzTV.Application.Movies.Queries
             GetMovieById request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             
             Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
                 .Map(list => list.HeadOrNone());

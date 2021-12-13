@@ -202,12 +202,18 @@ namespace ErsatzTV.Infrastructure.Search
         {
             _writer.DeleteAll();
 
+            await RebuildItems(searchRepository, itemIds);
+
+            _writer.Commit();
+            return Unit.Default;
+        }
+
+        public async Task<Unit> RebuildItems(ISearchRepository searchRepository, List<int> itemIds)
+        {
             foreach (int id in itemIds)
             {
-                Option<MediaItem> maybeMediaItem = await searchRepository.GetItemToIndex(id);
-                if (maybeMediaItem.IsSome)
+                foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id))
                 {
-                    MediaItem mediaItem = maybeMediaItem.ValueUnsafe();
                     switch (mediaItem)
                     {
                         case Movie movie:
@@ -238,7 +244,6 @@ namespace ErsatzTV.Infrastructure.Search
                 }
             }
 
-            _writer.Commit();
             return Unit.Default;
         }
 

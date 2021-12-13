@@ -56,6 +56,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Writers)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(m => m.Id)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
@@ -63,7 +65,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(LibraryPath libraryPath, string path)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             Option<Movie> maybeExisting = await dbContext.Movies
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
@@ -167,7 +169,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             List<int> ids = await _dbConnection.QueryAsync<int>(
                     @"SELECT M.Id
                 FROM Movie M
@@ -181,11 +183,33 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             foreach (int movieId in ids)
             {
                 Movie movie = await dbContext.Movies.FindAsync(movieId);
-                dbContext.Movies.Remove(movie);
+                if (movie != null)
+                {
+                    dbContext.Movies.Remove(movie);
+                }
             }
 
             bool changed = await dbContext.SaveChangesAsync() > 0;
             return changed ? ids : new List<int>();
+        }
+        
+        public async Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path)
+        {
+            List<int> ids = await _dbConnection.QueryAsync<int>(
+                    @"SELECT M.Id
+                FROM Movie M
+                INNER JOIN MediaItem MI on M.Id = MI.Id
+                INNER JOIN MediaVersion MV on M.Id = MV.MovieId
+                INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
+                WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
+                    new { LibraryPathId = libraryPath.Id, Path = path })
+                .Map(result => result.ToList());
+
+            await _dbConnection.ExecuteScalarAsync(
+                @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
+                new { Ids = ids });
+
+            return ids;
         }
 
         public Task<bool> AddGenre(MovieMetadata metadata, Genre genre) =>
