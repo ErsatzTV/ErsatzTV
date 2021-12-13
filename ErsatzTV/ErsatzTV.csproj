@@ -19,7 +19,7 @@
       <PackageReference Include="HtmlSanitizer" Version="6.0.453" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
       <PackageReference Include="Markdig" Version="0.26.0" />
-      <PackageReference Include="MediatR.Courier.DependencyInjection" Version="3.0.1" />
+      <PackageReference Include="MediatR.Courier.DependencyInjection" Version="4.0.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
       <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.0" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.0">
@@ -31,7 +31,7 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="MudBlazor" Version="6.0.2" />
-      <PackageReference Include="NaturalSort.Extension" Version="3.1.0" />
+      <PackageReference Include="NaturalSort.Extension" Version="3.2.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="5.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.1.15" />
       <PackageReference Include="Serilog" Version="2.10.0" />
