@@ -77,9 +77,15 @@ namespace ErsatzTV.Core.Metadata
             var foldersCompleted = 0;
 
             var folderQueue = new Queue<string>();
+
+            if (ShouldIncludeFolder(libraryPath.Path))
+            {
+                folderQueue.Enqueue(libraryPath.Path);
+            }
+
             foreach (string folder in _localFileSystem.ListSubdirectories(libraryPath.Path)
-                .Filter(ShouldIncludeFolder)
-                .OrderBy(identity))
+                         .Filter(ShouldIncludeFolder)
+                         .OrderBy(identity))
             {
                 folderQueue.Enqueue(folder);
             }
