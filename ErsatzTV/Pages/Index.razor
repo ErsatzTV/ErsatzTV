@@ -49,7 +49,23 @@
                         <div class="ml-2">@context.Title</div>
                     </div>
                 </MudTd>
-                <MudTd DataLabel="Message">@context.Message</MudTd>
+                <MudTd DataLabel="Message">
+                    @if (context.Link.IsSome)
+                    {
+                        foreach (string link in context.Link)
+                        {
+                            <MudLink Href="@link">
+                                @context.Message
+                            </MudLink>
+                        }
+                    }
+                    else
+                    {
+                        <MudText>
+                            @context.Message
+                        </MudText>
+                    }
+                </MudTd>
             </RowTemplate>
         </MudTable>
 </MudContainer>

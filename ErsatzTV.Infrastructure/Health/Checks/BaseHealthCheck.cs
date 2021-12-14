@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Health;
-using LanguageExt;
 using Lucene.Net.Util;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Health.Checks
 {
@@ -12,22 +12,25 @@ namespace ErsatzTV.Infrastructure.Health.Checks
         protected abstract string Title { get; }
 
         protected HealthCheckResult Result(HealthCheckStatus status, string message) =>
-            new(Title, status, message);
+            new(Title, status, message, None);
 
         protected HealthCheckResult NotApplicableResult() =>
-            new(Title, HealthCheckStatus.NotApplicable, string.Empty);
+            new(Title, HealthCheckStatus.NotApplicable, string.Empty, None);
         
         protected HealthCheckResult OkResult() =>
-            new(Title, HealthCheckStatus.Pass, string.Empty);
+            new(Title, HealthCheckStatus.Pass, string.Empty, None);
 
         protected HealthCheckResult FailResult(string message) =>
-            new(Title, HealthCheckStatus.Fail, message);
+            new(Title, HealthCheckStatus.Fail, message, None);
 
         protected HealthCheckResult WarningResult(string message) =>
-            new(Title, HealthCheckStatus.Warning, message);
+            new(Title, HealthCheckStatus.Warning, message, None);
+
+        protected HealthCheckResult WarningResult(string message, string link) =>
+            new(Title, HealthCheckStatus.Warning, message, link);
 
         protected HealthCheckResult InfoResult(string message) =>
-            new(Title, HealthCheckStatus.Info, message);
+            new(Title, HealthCheckStatus.Info, message, None);
         
         protected static async Task<string> GetProcessOutput(string path, IEnumerable<string> arguments)
         {

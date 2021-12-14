@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Core.Health
+﻿using LanguageExt;
+
+namespace ErsatzTV.Core.Health
 {
-    public record HealthCheckResult(string Title, HealthCheckStatus Status, string Message);
+    public record HealthCheckResult(string Title, HealthCheckStatus Status, string Message, Option<string> Link);
 }

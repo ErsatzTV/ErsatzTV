@@ -66,7 +66,9 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
 
                 var files = string.Join(", ", paths);
 
-                return WarningResult($"There are {all.Count} files that do not exist on disk, including the following: {files}");
+                return WarningResult(
+                    $"There are {all.Count} files that do not exist on disk, including the following: {files}",
+                    $"/search?query=state%3AFileNotFound");
             }
 
             return OkResult();
