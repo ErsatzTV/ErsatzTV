@@ -140,7 +140,8 @@ namespace ErsatzTV.Core.Metadata
                         .BindT(movie => UpdateStatistics(movie, ffprobePath))
                         .BindT(UpdateMetadata)
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster))
-                        .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt));
+                        .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt))
+                        .BindT(FlagNormal);
 
                     await maybeMovie.Match(
                         async result =>
@@ -179,6 +180,8 @@ namespace ErsatzTV.Core.Metadata
                     await _searchIndex.RemoveItems(ids);
                 }
             }
+
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             _searchIndex.Commit();
             return Unit.Default;
@@ -241,6 +244,24 @@ namespace ErsatzTV.Core.Metadata
                         MovieMetadata metadata = movie.MovieMetadata.Head();
                         await RefreshArtwork(posterFile, metadata, artworkKind, None, None);
                     });
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
+        }
+
+        private async Task<Either<BaseError, MediaItemScanResult<Movie>>> FlagNormal(MediaItemScanResult<Movie> result)
+        {
+            try
+            {
+                Movie movie = result.Item;
+                if (movie.State != MediaItemState.Normal)
+                {
+                    await _movieRepository.FlagNormal(movie);
+                }
 
                 return result;
             }

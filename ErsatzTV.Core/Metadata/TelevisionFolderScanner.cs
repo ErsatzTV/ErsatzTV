@@ -135,6 +135,8 @@ namespace ErsatzTV.Core.Metadata
                     await _televisionRepository.DeleteByPath(libraryPath, path);
                 }
             }
+            
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             await _televisionRepository.DeleteEmptySeasons(libraryPath);
             List<int> ids = await _televisionRepository.DeleteEmptyShows(libraryPath);

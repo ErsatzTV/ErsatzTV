@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
@@ -14,10 +15,15 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
     public class LibraryRepository : ILibraryRepository
     {
         private readonly IDbConnection _dbConnection;
+        private readonly ILocalFileSystem _localFileSystem;
         private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-        public LibraryRepository(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+        public LibraryRepository(
+            ILocalFileSystem localFileSystem,
+            IDbContextFactory<TvContext> dbContextFactory,
+            IDbConnection dbConnection)
         {
+            _localFileSystem = localFileSystem;
             _dbContextFactory = dbContextFactory;
             _dbConnection = dbConnection;
         }
@@ -120,7 +126,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 },
                 async () =>
                 {
-                    await using TvContext context = _dbContextFactory.CreateDbContext();
+                    await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
                     await context.LibraryFolders.AddAsync(
                         new LibraryFolder
                         {
@@ -130,5 +136,23 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         });
                     await context.SaveChangesAsync();
                 }).ToUnit();
+
+        public async Task<Unit> CleanEtagsForLibraryPath(LibraryPath libraryPath)
+        {
+            IEnumerable<string> folders = await _dbConnection.QueryAsync<string>(
+                @"SELECT LF.Path
+                FROM LibraryFolder LF
+                WHERE LF.LibraryPathId = @LibraryPathId",
+                new { LibraryPathId = libraryPath.Id });
+
+            foreach (string folder in folders.Where(f => !_localFileSystem.FolderExists(f)))
+            {
+                await _dbConnection.ExecuteAsync(
+                    @"DELETE FROM LibraryFolder WHERE LibraryPathId = @LibraryPathId AND Path = @Path",
+                    new { LibraryPathId = libraryPath.Id, Path = folder });
+            }
+
+            return Unit.Default;
+        }
     }
 }

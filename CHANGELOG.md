@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Fixed
+- Fix local folder scanners to properly detect removed/re-added folders with unchanged contents
 - Fix double-click startup on mac
 
 ## [0.3.6-alpha] - 2022-01-10
@@ -53,7 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [0.3.2-alpha] - 2021-12-03
 ### Fixed
 - Fix artwork upload on Windows
-- Fix unicode song metadata on Windows`
+- Fix unicode song metadata on Windows
 - Fix unicode console output on Windows
 - Fix TV Show NFO metadata processing when `year` is missing
 - Fix song detail outline to help legibility on white backgrounds

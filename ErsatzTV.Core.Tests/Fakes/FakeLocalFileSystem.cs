@@ -53,6 +53,7 @@ namespace ErsatzTV.Core.Tests.Fakes
             _files.Map(f => f.Path).Filter(f => Path.GetDirectoryName(f) == folder);
 
         public bool FileExists(string path) => _files.Any(f => f.Path == path);
+        public bool FolderExists(string folder) => false;
 
         public Task<byte[]> ReadAllBytes(string path) => TestBytes.AsTask();
 

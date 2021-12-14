@@ -146,6 +146,8 @@ namespace ErsatzTV.Core.Metadata
                     await _searchIndex.RemoveItems(musicVideoIds);
                 }
             }
+            
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             List<int> artistIds = await _artistRepository.DeleteEmptyArtists(libraryPath);
             await _searchIndex.RemoveItems(artistIds);

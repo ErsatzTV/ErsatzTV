@@ -18,6 +18,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath);
         Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path);
         Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path);
+        Task<Unit> FlagNormal(Movie movie);
         Task<bool> AddGenre(MovieMetadata metadata, Genre genre);
         Task<bool> AddTag(MovieMetadata metadata, Tag tag);
         Task<bool> AddStudio(MovieMetadata metadata, Studio studio);

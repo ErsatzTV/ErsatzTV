@@ -206,12 +206,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                     new { LibraryPathId = libraryPath.Id, Path = path })
                 .Map(result => result.ToList());
 
-            await _dbConnection.ExecuteScalarAsync(
+            await _dbConnection.ExecuteAsync(
                 @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
                 new { Ids = ids });
 
             return ids;
         }
+
+        public Task<Unit> FlagNormal(Movie movie) =>
+            _dbConnection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
+                new { movie.Id }).ToUnit();
 
         public Task<bool> AddGenre(MovieMetadata metadata, Genre genre) =>
             _dbConnection.ExecuteAsync(

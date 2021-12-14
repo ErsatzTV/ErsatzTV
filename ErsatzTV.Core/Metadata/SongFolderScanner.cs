@@ -175,6 +175,8 @@ namespace ErsatzTV.Core.Metadata
                     await _searchIndex.RemoveItems(songIds);
                 }
             }
+            
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             _searchIndex.Commit();
             return Unit.Default;

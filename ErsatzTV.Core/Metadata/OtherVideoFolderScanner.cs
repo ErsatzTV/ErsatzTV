@@ -172,6 +172,8 @@ namespace ErsatzTV.Core.Metadata
                     await _searchIndex.RemoveItems(otherVideoIds);
                 }
             }
+            
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             _searchIndex.Commit();
             return Unit.Default;
