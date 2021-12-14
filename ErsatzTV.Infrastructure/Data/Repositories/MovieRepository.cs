@@ -148,12 +148,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.MovieMetadata
                 .AsNoTracking()
                 .Filter(mm => ids.Contains(mm.MovieId))
                 .Include(mm => mm.Artwork)
                 .OrderBy(mm => mm.SortTitle)
+                .Include(mm => mm.Movie)
                 .ToListAsync();
         }
 

@@ -43,9 +43,7 @@
                 }
                 @if (_movie.MediaItemState == MediaItemState.FileNotFound)
                 {
-                    <div style="position: absolute; bottom: 0; top: 0; left: 0; right: 0; background: rgba(0, 0, 0, 0.4);">
-                    </div>
-                    <div style="position: absolute; bottom: 8px; right: 10px; justify-content: right">
+                    <div style="position: absolute; top: 8px; right: 10px">
                         <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
                     </div>
                 }
@@ -66,8 +64,7 @@
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@AddToCollection"
-                           Disabled="@(_movie.MediaItemState != MediaItemState.Normal)">
+                           OnClick="@AddToCollection">
                     Add To Collection
                 </MudButton>
             </div>

@@ -55,7 +55,7 @@
     [Parameter]
     public string DetailHighlight { get; set; }
 
-    private readonly MediaCollectionViewModel _newCollection = new(-1, "(New Collection)", false);
+    private readonly MediaCollectionViewModel _newCollection = new(-1, "(New Collection)", false, MediaItemState.Normal);
     private string _newCollectionName;
 
     private List<MediaCollectionViewModel> _collections;

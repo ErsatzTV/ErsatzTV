@@ -19,7 +19,8 @@ namespace ErsatzTV.Application.MediaCards
                 showMetadata.Title,
                 showMetadata.Year?.ToString(),
                 showMetadata.SortTitle,
-                GetPoster(showMetadata, maybeJellyfin, maybeEmby));
+                GetPoster(showMetadata, maybeJellyfin, maybeEmby),
+                showMetadata.Show.State);
         
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(
             Season season,
@@ -34,7 +35,8 @@ namespace ErsatzTV.Application.MediaCards
                 GetSeasonName(season.SeasonNumber),
                 season.SeasonMetadata.HeadOrNone().Map(sm => GetPoster(sm, maybeJellyfin, maybeEmby))
                     .IfNone(string.Empty),
-                season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString());
+                season.SeasonNumber == 0 ? "S" : season.SeasonNumber.ToString(),
+                season.State);
 
         internal static TelevisionSeasonCardViewModel ProjectToViewModel(
             SeasonMetadata seasonMetadata,
@@ -53,7 +55,8 @@ namespace ErsatzTV.Application.MediaCards
                 GetSeasonName(seasonMetadata.Season.SeasonNumber),
                 $"{showTitle}_{seasonMetadata.Season.SeasonNumber:0000}",
                 GetPoster(seasonMetadata, maybeJellyfin, maybeEmby),
-                seasonMetadata.Season.SeasonNumber == 0 ? "S" : seasonMetadata.Season.SeasonNumber.ToString());
+                seasonMetadata.Season.SeasonNumber == 0 ? "S" : seasonMetadata.Season.SeasonNumber.ToString(),
+                seasonMetadata.Season.State);
         }
 
         internal static TelevisionEpisodeCardViewModel ProjectToViewModel(
@@ -80,7 +83,8 @@ namespace ErsatzTV.Application.MediaCards
                     ? GetEpisodePoster(episodeMetadata, maybeJellyfin, maybeEmby)
                     : GetThumbnail(episodeMetadata, maybeJellyfin, maybeEmby),
                 episodeMetadata.Directors.Map(d => d.Name).ToList(),
-                episodeMetadata.Writers.Map(w => w.Name).ToList());
+                episodeMetadata.Writers.Map(w => w.Name).ToList(),
+                episodeMetadata.Episode.State);
 
         internal static MovieCardViewModel ProjectToViewModel(
             MovieMetadata movieMetadata,
@@ -91,7 +95,8 @@ namespace ErsatzTV.Application.MediaCards
                 movieMetadata.Title,
                 movieMetadata.Year?.ToString(),
                 movieMetadata.SortTitle,
-                GetPoster(movieMetadata, maybeJellyfin, maybeEmby));
+                GetPoster(movieMetadata, maybeJellyfin, maybeEmby),
+                movieMetadata.Movie.State);
 
         internal static MusicVideoCardViewModel ProjectToViewModel(MusicVideoMetadata musicVideoMetadata) =>
             new(
@@ -101,14 +106,16 @@ namespace ErsatzTV.Application.MediaCards
                 musicVideoMetadata.SortTitle,
                 musicVideoMetadata.Plot,
                 musicVideoMetadata.Album,
-                GetThumbnail(musicVideoMetadata, None, None));
+                GetThumbnail(musicVideoMetadata, None, None),
+                musicVideoMetadata.MusicVideo.State);
 
         internal static OtherVideoCardViewModel ProjectToViewModel(OtherVideoMetadata otherVideoMetadata) =>
             new(
                 otherVideoMetadata.OtherVideoId,
                 otherVideoMetadata.Title,
                 otherVideoMetadata.OriginalTitle,
-                otherVideoMetadata.SortTitle);
+                otherVideoMetadata.SortTitle,
+                otherVideoMetadata.OtherVideo.State);
 
         internal static SongCardViewModel ProjectToViewModel(SongMetadata songMetadata)
         {
@@ -117,7 +124,8 @@ namespace ErsatzTV.Application.MediaCards
                 songMetadata.SongId,
                 songMetadata.Title,
                 songMetadata.Artist + album,
-                songMetadata.SortTitle);
+                songMetadata.SortTitle,
+                songMetadata.Song.State);
         }
 
         internal static ArtistCardViewModel ProjectToViewModel(ArtistMetadata artistMetadata) =>
@@ -126,7 +134,8 @@ namespace ErsatzTV.Application.MediaCards
                 artistMetadata.Title,
                 artistMetadata.Disambiguation,
                 artistMetadata.SortTitle,
-                GetThumbnail(artistMetadata, None, None));
+                GetThumbnail(artistMetadata, None, None),
+                artistMetadata.Artist.State);
 
         internal static CollectionCardResultsViewModel
             ProjectToViewModel(
@@ -174,7 +183,7 @@ namespace ErsatzTV.Application.MediaCards
                     .SetQueryParam("maxHeight", 440);
             }
 
-            return new ActorCardViewModel(actor.Id, actor.Name, actor.Role, artwork);
+            return new ActorCardViewModel(actor.Id, actor.Name, actor.Role, artwork, MediaItemState.Normal);
         }
 
         private static int GetCustomIndex(Collection collection, int mediaItemId) =>
