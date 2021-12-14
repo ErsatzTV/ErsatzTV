@@ -149,12 +149,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<MusicVideo>> GetArtistItems(int artistId)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.MusicVideos
                 .AsNoTracking()
                 .Include(mv => mv.MusicVideoMetadata)
                 .Include(mv => mv.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Include(mv => mv.Artist)
                 .ThenInclude(a => a.ArtistMetadata)
                 .Filter(mv => mv.ArtistId == artistId)
