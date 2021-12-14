@@ -261,6 +261,7 @@ namespace ErsatzTV.Core.Metadata
                 if (movie.State != MediaItemState.Normal)
                 {
                     await _movieRepository.FlagNormal(movie);
+                    result.IsUpdated = true;
                 }
 
                 return result;

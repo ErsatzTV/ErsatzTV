@@ -213,10 +213,14 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return ids;
         }
 
-        public Task<Unit> FlagNormal(Movie movie) =>
-            _dbConnection.ExecuteAsync(
+        public async Task<Unit> FlagNormal(Movie movie)
+        {
+            movie.State = MediaItemState.Normal;
+            
+            return await _dbConnection.ExecuteAsync(
                 @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
                 new { movie.Id }).ToUnit();
+        }
 
         public Task<bool> AddGenre(MovieMetadata metadata, Genre genre) =>
             _dbConnection.ExecuteAsync(
