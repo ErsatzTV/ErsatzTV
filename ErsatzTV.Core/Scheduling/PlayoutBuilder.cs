@@ -255,7 +255,7 @@ namespace ErsatzTV.Core.Scheduling
             foreach ((CollectionKey _, List<MediaItem> items) in collectionMediaItems)
             {
                 var zeroItems = new List<MediaItem>();
-                var missingItems = new List<MediaItem>();
+                // var missingItems = new List<MediaItem>();
 
                 foreach (MediaItem item in items)
                 {
@@ -274,17 +274,18 @@ namespace ErsatzTV.Core.Scheduling
                         _ => true
                     };
 
-                    if (item.State == MediaItemState.FileNotFound)
-                    {
-                        _logger.LogWarning(
-                            "Skipping media item that does not exist on disk  {MediaItem} - {MediaItemTitle} - {Path}",
-                            item.Id,
-                            DisplayTitle(item),
-                            item.GetHeadVersion().MediaFiles.Head().Path);
-
-                        missingItems.Add(item);
-                    }
-                    else if (isZero)
+                    // if (item.State == MediaItemState.FileNotFound)
+                    // {
+                    //     _logger.LogWarning(
+                    //         "Skipping media item that does not exist on disk  {MediaItem} - {MediaItemTitle} - {Path}",
+                    //         item.Id,
+                    //         DisplayTitle(item),
+                    //         item.GetHeadVersion().MediaFiles.Head().Path);
+                    //
+                    //     missingItems.Add(item);
+                    // }
+                    // else
+                    if (isZero)
                     {
                         _logger.LogWarning(
                             "Skipping media item with zero duration {MediaItem} - {MediaItemTitle}",
@@ -295,7 +296,7 @@ namespace ErsatzTV.Core.Scheduling
                     }
                 }
 
-                items.RemoveAll(missingItems.Contains);
+                // items.RemoveAll(missingItems.Contains);
                 items.RemoveAll(zeroItems.Contains);
             }
 
