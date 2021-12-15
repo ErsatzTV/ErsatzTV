@@ -194,34 +194,6 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return changed ? ids : new List<int>();
         }
         
-        public async Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path)
-        {
-            List<int> ids = await _dbConnection.QueryAsync<int>(
-                    @"SELECT M.Id
-                FROM Movie M
-                INNER JOIN MediaItem MI on M.Id = MI.Id
-                INNER JOIN MediaVersion MV on M.Id = MV.MovieId
-                INNER JOIN MediaFile MF on MV.Id = MF.MediaVersionId
-                WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
-                    new { LibraryPathId = libraryPath.Id, Path = path })
-                .Map(result => result.ToList());
-
-            await _dbConnection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
-                new { Ids = ids });
-
-            return ids;
-        }
-
-        public async Task<Unit> FlagNormal(Movie movie)
-        {
-            movie.State = MediaItemState.Normal;
-            
-            return await _dbConnection.ExecuteAsync(
-                @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
-                new { movie.Id }).ToUnit();
-        }
-
         public Task<bool> AddGenre(MovieMetadata metadata, Genre genre) =>
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Genre (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",

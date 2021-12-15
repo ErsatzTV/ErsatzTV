@@ -2,6 +2,7 @@
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
 using static LanguageExt.Prelude;
@@ -107,7 +108,8 @@ namespace ErsatzTV.Application.MediaCards
                 musicVideoMetadata.Plot,
                 musicVideoMetadata.Album,
                 GetThumbnail(musicVideoMetadata, None, None),
-                musicVideoMetadata.MusicVideo.State);
+                musicVideoMetadata.MusicVideo.State,
+                musicVideoMetadata.MusicVideo.GetHeadVersion().MediaFiles.Head().Path);
 
         internal static OtherVideoCardViewModel ProjectToViewModel(OtherVideoMetadata otherVideoMetadata) =>
             new(
@@ -125,6 +127,7 @@ namespace ErsatzTV.Application.MediaCards
                 songMetadata.Title,
                 songMetadata.Artist + album,
                 songMetadata.SortTitle,
+                GetThumbnail(songMetadata, None, None),
                 songMetadata.Song.State);
         }
 

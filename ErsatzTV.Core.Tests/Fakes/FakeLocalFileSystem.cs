@@ -44,7 +44,7 @@ namespace ErsatzTV.Core.Tests.Fakes
                 .IfNone(SystemTime.MinValueUtc);
 
         public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
-            _files.Any(f => f.Path.StartsWith(libraryPath.Path + Path.DirectorySeparatorChar));
+            _folders.Any(f => f.Path == libraryPath.Path);
 
         public IEnumerable<string> ListSubdirectories(string folder) =>
             _folders.Map(f => f.Path).Filter(f => f.StartsWith(folder) && Directory.GetParent(f)?.FullName == folder);

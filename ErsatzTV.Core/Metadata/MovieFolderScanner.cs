@@ -40,6 +40,7 @@ namespace ErsatzTV.Core.Metadata
             ISearchIndex searchIndex,
             ISearchRepository searchRepository,
             ILibraryRepository libraryRepository,
+            IMediaItemRepository mediaItemRepository,
             IMediator mediator,
             IFFmpegProcessService ffmpegProcessService,
             ITempFilePool tempFilePool,
@@ -48,6 +49,7 @@ namespace ErsatzTV.Core.Metadata
                 localFileSystem,
                 localStatisticsProvider,
                 metadataRepository,
+                mediaItemRepository,
                 imageCache,
                 ffmpegProcessService,
                 tempFilePool,
@@ -170,7 +172,7 @@ namespace ErsatzTV.Core.Metadata
                 if (!_localFileSystem.FileExists(path))
                 {
                     _logger.LogInformation("Flagging missing movie at {Path}", path);
-                    List<int> ids = await _movieRepository.FlagFileNotFound(libraryPath, path);
+                    List<int> ids = await FlagFileNotFound(libraryPath, path);
                     await _searchIndex.RebuildItems(_searchRepository, ids);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
@@ -244,25 +246,6 @@ namespace ErsatzTV.Core.Metadata
                         MovieMetadata metadata = movie.MovieMetadata.Head();
                         await RefreshArtwork(posterFile, metadata, artworkKind, None, None);
                     });
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                return BaseError.New(ex.ToString());
-            }
-        }
-
-        private async Task<Either<BaseError, MediaItemScanResult<Movie>>> FlagNormal(MediaItemScanResult<Movie> result)
-        {
-            try
-            {
-                Movie movie = result.Item;
-                if (movie.State != MediaItemState.Normal)
-                {
-                    await _movieRepository.FlagNormal(movie);
-                    result.IsUpdated = true;
-                }
 
                 return result;
             }

@@ -40,12 +40,14 @@ namespace ErsatzTV.Core.Metadata
             ISearchRepository searchRepository,
             IOtherVideoRepository otherVideoRepository,
             ILibraryRepository libraryRepository,
+            IMediaItemRepository mediaItemRepository,
             IFFmpegProcessService ffmpegProcessService,
             ITempFilePool tempFilePool,
             ILogger<OtherVideoFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
             metadataRepository,
+            mediaItemRepository,
             imageCache,
             ffmpegProcessService,
             tempFilePool,
@@ -133,7 +135,8 @@ namespace ErsatzTV.Core.Metadata
                     Either<BaseError, MediaItemScanResult<OtherVideo>> maybeVideo = await _otherVideoRepository
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffprobePath))
-                        .BindT(UpdateMetadata);
+                        .BindT(UpdateMetadata)
+                        .BindT(FlagNormal);
 
                     await maybeVideo.Match(
                         async result =>
@@ -161,9 +164,9 @@ namespace ErsatzTV.Core.Metadata
             {
                 if (!_localFileSystem.FileExists(path))
                 {
-                    _logger.LogInformation("Removing missing other video at {Path}", path);
-                    List<int> otherVideoIds = await _otherVideoRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(otherVideoIds);
+                    _logger.LogInformation("Flagging missing other video at {Path}", path);
+                    List<int> otherVideoIds = await FlagFileNotFound(libraryPath, path);
+                    await _searchIndex.RebuildItems(_searchRepository, otherVideoIds);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {

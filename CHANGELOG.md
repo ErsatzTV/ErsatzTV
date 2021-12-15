@@ -39,6 +39,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix other video and song scanners to include videos contained directly in top-level folders that are added to a library
 - Allow saving ffmpeg troubleshooting reports on Windows
 
+### Changed
+- Show song thumbnail in song list
+
 ## [0.3.3-alpha] - 2021-12-12
 ### Fixed
 - Fix bug with saving multiple blurhash versions for cover art; all cover art will be automatically rescanned

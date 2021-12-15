@@ -818,6 +818,7 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(LibraryIdField, otherVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                        new StringField(StateField, otherVideo.State.ToString(), Field.Store.NO)
                     };
 
                     await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
@@ -861,6 +862,7 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(LibraryIdField, song.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                        new StringField(StateField, song.State.ToString(), Field.Store.NO)
                     };
 
                     await AddLanguages(searchRepository, doc, song.MediaVersions);

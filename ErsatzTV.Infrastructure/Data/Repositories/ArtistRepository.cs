@@ -123,10 +123,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<ArtistMetadata>> GetArtistsForCards(List<int> ids)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.ArtistMetadata
                 .AsNoTracking()
                 .Filter(am => ids.Contains(am.ArtistId))
+                .Include(am => am.Artist)
                 .Include(am => am.Artwork)
                 .OrderBy(am => am.SortTitle)
                 .ToListAsync();

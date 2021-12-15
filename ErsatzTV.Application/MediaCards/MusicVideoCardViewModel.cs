@@ -11,7 +11,8 @@ namespace ErsatzTV.Application.MediaCards
         string Plot,
         string Album,
         string Poster,
-        MediaItemState State) : MediaCardViewModel(
+        MediaItemState State,
+        string Path) : MediaCardViewModel(
         MusicVideoId,
         Title,
         Subtitle,

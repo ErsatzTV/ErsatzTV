@@ -41,6 +41,7 @@ namespace ErsatzTV.Core.Metadata
             IArtistRepository artistRepository,
             IMusicVideoRepository musicVideoRepository,
             ILibraryRepository libraryRepository,
+            IMediaItemRepository mediaItemRepository,
             IMediator mediator,
             IFFmpegProcessService ffmpegProcessService,
             ITempFilePool tempFilePool,
@@ -48,6 +49,7 @@ namespace ErsatzTV.Core.Metadata
             localFileSystem,
             localStatisticsProvider,
             metadataRepository,
+            mediaItemRepository,
             imageCache,
             ffmpegProcessService,
             tempFilePool,
@@ -135,9 +137,9 @@ namespace ErsatzTV.Core.Metadata
             {
                 if (!_localFileSystem.FileExists(path))
                 {
-                    _logger.LogInformation("Removing missing music video at {Path}", path);
-                    List<int> musicVideoIds = await _musicVideoRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(musicVideoIds);
+                    _logger.LogInformation("Flagging missing music video at {Path}", path);
+                    List<int> musicVideoIds = await FlagFileNotFound(libraryPath, path);
+                    await _searchIndex.RebuildItems(_searchRepository, musicVideoIds);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
@@ -278,7 +280,8 @@ namespace ErsatzTV.Core.Metadata
                         .GetOrAdd(artist, libraryPath, file)
                         .BindT(musicVideo => UpdateStatistics(musicVideo, ffprobePath))
                         .BindT(UpdateMetadata)
-                        .BindT(UpdateThumbnail);
+                        .BindT(UpdateThumbnail)
+                        .BindT(FlagNormal);
 
                     await maybeMusicVideo.Match(
                         async result =>
