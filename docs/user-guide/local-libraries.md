@@ -139,12 +139,12 @@ Songs will have basic metadata pulled from embedded tags (artist, album, title).
 
 ### Songs Fallback Metadata
 
-Songs will have a tag added to their metadata for every containing folder, including the top-level folder. As an example, consider adding a commercials folder with the following files:
+Songs will have a tag added to their metadata for every containing folder, including the top-level folder. As an example, consider adding a songs folder with the following files:
 
 - `Rock\Awesome Band\Awesome Album\01 Track 1.flac`
 - `Rock\Awesome Band\Better Album\05 Track 5.flac`
 
-Your other video library will then have two media items with the following metadata:
+Your songs library will then have two media items with the following metadata:
 
 1. title: `01 Track 1`, tags: `Rock`, `Awesome Band`, `Awesome Album`
 2. title: `05 Track 5`, tags: `Rock`, `Awesome Band`, `Better Album`
