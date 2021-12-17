@@ -78,18 +78,22 @@
             <div id="@($"episode-{episode.EpisodeId}")" style="display: flex; flex-direction: row; scroll-margin-top: 85px">
                 @if (!string.IsNullOrWhiteSpace(episode.Poster))
                 {
-                    if (episode.Poster.StartsWith("http://") || episode.Poster.StartsWith("https://"))
-                    {
-                        <MudPaper style="display: flex; flex-direction: column">
+                    <MudPaper style="display: flex; flex-direction: column; position: relative">
+                        @if (episode.Poster.StartsWith("http://") || episode.Poster.StartsWith("https://"))
+                        {
                             <MudCardMedia Image="@episode.Poster" Style="flex-grow: 1; height: 220px; width: 392px;"/>
-                        </MudPaper>
-                    }
-                    else
-                    {
-                        <MudPaper style="display: flex; flex-direction: column">
+                        }
+                        else
+                        {
                             <MudCardMedia Image="@($"/artwork/thumbnails/{episode.Poster}")" Style="flex-grow: 1; height: 220px; width: 392px;"/>
-                        </MudPaper>
-                    }
+                        }
+                        @if (episode.State == MediaItemState.FileNotFound)
+                        {
+                            <div style="position: absolute; top: 8px; right: 10px">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                            </div>
+                        }
+                    </MudPaper>
                 }
                 <MudCardContent Class="ml-3">
                     <div style="display: flex; flex-direction: column; height: 100%">
@@ -107,6 +111,14 @@
                 </MudCardContent>
             </div>
             <div class="pl-3 pt-3">
+                @if (episode.State == MediaItemState.FileNotFound)
+                {
+                    <div class="mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
+                        <MudText>File Not Found:&nbsp;</MudText>
+                        <MudText>@episode.Path</MudText>
+                    </div>
+                }
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">
                     <MudText GutterBottom="true">Released: @episode.Aired.ToShortDateString()</MudText>
                 </div>

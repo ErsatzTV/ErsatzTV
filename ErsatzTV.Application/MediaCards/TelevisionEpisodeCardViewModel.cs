@@ -19,7 +19,8 @@ namespace ErsatzTV.Application.MediaCards
         string Poster,
         List<string> Directors,
         List<string> Writers,
-        MediaItemState State) : MediaCardViewModel(
+        MediaItemState State,
+        string Path) : MediaCardViewModel(
         EpisodeId,
         Title,
         $"Episode {Episode}",
