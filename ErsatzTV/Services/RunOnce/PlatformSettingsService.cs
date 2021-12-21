@@ -2,9 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
-using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.Extensions.Caching.Memory;
@@ -33,13 +31,6 @@ namespace ErsatzTV.Services.RunOnce
             await using TvContext dbContext = scope.ServiceProvider.GetRequiredService<TvContext>();
 
             IRuntimeInfo runtimeInfo = scope.ServiceProvider.GetRequiredService<IRuntimeInfo>();
-            if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-            {
-                _logger.LogInformation("Disabling ffmpeg reports on Windows platform");
-                IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
-                await repo.Upsert(ConfigElementKey.FFmpegSaveReports, false);
-            }
-
             if (runtimeInfo != null && runtimeInfo.IsOSPlatform(OSPlatform.Linux) &&
                 System.IO.Directory.Exists("/dev/dri"))
             {

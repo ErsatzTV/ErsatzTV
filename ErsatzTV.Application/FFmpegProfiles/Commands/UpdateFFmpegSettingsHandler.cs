@@ -1,13 +1,11 @@
 ﻿using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Runtime;
 using LanguageExt;
 
 namespace ErsatzTV.Application.FFmpegProfiles.Commands
@@ -16,16 +14,13 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
     {
         private readonly IConfigElementRepository _configElementRepository;
         private readonly ILocalFileSystem _localFileSystem;
-        private readonly IRuntimeInfo _runtimeInfo;
 
         public UpdateFFmpegSettingsHandler(
             IConfigElementRepository configElementRepository,
-            ILocalFileSystem localFileSystem,
-            IRuntimeInfo runtimeInfo)
+            ILocalFileSystem localFileSystem)
         {
             _configElementRepository = configElementRepository;
             _localFileSystem = localFileSystem;
-            _runtimeInfo = runtimeInfo;
         }
 
         public Task<Either<BaseError, Unit>> Handle(
@@ -36,24 +31,14 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 .Bind(v => v.ToEitherAsync());
 
         private async Task<Validation<BaseError, Unit>> Validate(UpdateFFmpegSettings request) =>
-            (await FFmpegMustExist(request), await FFprobeMustExist(request), ReportsAreNotSupportedOnWindows(request))
-            .Apply((_, _, _) => Unit.Default);
+            (await FFmpegMustExist(request), await FFprobeMustExist(request))
+            .Apply((_, _) => Unit.Default);
 
         private Task<Validation<BaseError, Unit>> FFmpegMustExist(UpdateFFmpegSettings request) =>
             ValidateToolPath(request.Settings.FFmpegPath, "ffmpeg");
 
         private Task<Validation<BaseError, Unit>> FFprobeMustExist(UpdateFFmpegSettings request) =>
             ValidateToolPath(request.Settings.FFprobePath, "ffprobe");
-
-        private Validation<BaseError, Unit> ReportsAreNotSupportedOnWindows(UpdateFFmpegSettings request)
-        {
-            if (request.Settings.SaveReports && _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-            {
-                return BaseError.New("FFmpeg reports are not supported on Windows");
-            }
-
-            return Unit.Default;
-        }
 
         private async Task<Validation<BaseError, Unit>> ValidateToolPath(string path, string name)
         {

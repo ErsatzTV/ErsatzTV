@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -15,7 +14,6 @@ using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
-using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -36,7 +34,6 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly IPlexPathReplacementService _plexPathReplacementService;
-        private readonly IRuntimeInfo _runtimeInfo;
         private readonly ISongVideoGenerator _songVideoGenerator;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
@@ -49,7 +46,6 @@ namespace ErsatzTV.Application.Streaming.Queries
             IMediaCollectionRepository mediaCollectionRepository,
             ITelevisionRepository televisionRepository,
             IArtistRepository artistRepository,
-            IRuntimeInfo runtimeInfo,
             ISongVideoGenerator songVideoGenerator)
             : base(dbContextFactory)
         {
@@ -61,7 +57,6 @@ namespace ErsatzTV.Application.Streaming.Queries
             _mediaCollectionRepository = mediaCollectionRepository;
             _televisionRepository = televisionRepository;
             _artistRepository = artistRepository;
-            _runtimeInfo = runtimeInfo;
             _songVideoGenerator = songVideoGenerator;
         }
 
@@ -142,7 +137,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                             ffmpegPath);
                     }
 
-                    bool saveReports = !_runtimeInfo.IsOSPlatform(OSPlatform.Windows) && await dbContext.ConfigElements
+                    bool saveReports = await dbContext.ConfigElements
                         .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                         .Map(result => result.IfNone(false));
 

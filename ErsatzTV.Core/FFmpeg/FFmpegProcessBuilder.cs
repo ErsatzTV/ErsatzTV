@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -641,6 +642,17 @@ namespace ErsatzTV.Core.FFmpeg
                 string fileName = _isConcat
                     ? Path.Combine(FileSystemLayout.FFmpegReportsFolder, "ffmpeg-%t-concat.log")
                     : Path.Combine(FileSystemLayout.FFmpegReportsFolder, "ffmpeg-%t-transcode.log");
+
+                // rework filename in a format that works on windows
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // \ is escape, so use / for directory separators
+                    fileName = fileName.Replace(@"\", @"/");
+                    
+                    // colon after drive letter needs to be escaped
+                    fileName = fileName.Replace(@":/", @"\:/");
+                }
+                
                 startInfo.EnvironmentVariables.Add("FFREPORT", $"file={fileName}:level=32");
             }
 
