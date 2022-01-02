@@ -121,6 +121,11 @@ namespace ErsatzTV.Core.FFmpeg
                                     (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
                                     (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
                                     (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
+                                    
+                                    // temp disable mpeg4 hardware decoding for all vaapi
+                                    // TODO: check for codec support
+                                    (HardwareAccelerationKind.Vaapi, "mpeg4", _) => "mpeg4",
+                                    
                                     _ => null
                                 };
                         }
