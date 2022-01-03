@@ -250,7 +250,12 @@ namespace ErsatzTV.Core.FFmpeg
                 });
 
             bool scaleOrPad = _scaleToSize.IsSome || _padToSize.IsSome;
-            bool usesSoftwareFilters = scaleOrPad || _watermark.IsSome;
+            bool usesSoftwareFilters = _padToSize.IsSome || _watermark.IsSome;
+
+            if (scaleOrPad && _boxBlur == false)
+            {
+                videoFilterQueue.Add("setsar=1");
+            }
 
             if (usesSoftwareFilters)
             {
@@ -268,12 +273,7 @@ namespace ErsatzTV.Core.FFmpeg
                     };
                     videoFilterQueue.Add(format);
                 }
-
-                if (scaleOrPad && _boxBlur == false)
-                {
-                    videoFilterQueue.Add("setsar=1");
-                }
-
+                
                 if (_boxBlur)
                 {
                     videoFilterQueue.Add("boxblur=40");
