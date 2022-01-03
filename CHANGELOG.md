@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Use software decoding for mpeg4 content when VAAPI acceleration is enabled
 
+### Changed
+- Treat `setsar` as a hardware filter, avoiding unneeded `hwdownload` and `hwupload` steps when padding isn't required
+
 ## [0.3.4-alpha] - 2021-12-21
 ### Fixed
 - Fix other video and song scanners to include videos contained directly in top-level folders that are added to a library
