@@ -113,11 +113,7 @@ namespace ErsatzTV.Infrastructure.Health.Checks
                         result.Add(HardwareAccelerationKind.Nvenc);
                         break;
                     case "qsv":
-                        // qsv is only supported on windows
-                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                        {
-                            result.Add(HardwareAccelerationKind.Qsv);
-                        }
+                        result.Add(HardwareAccelerationKind.Qsv);
                         break;
                 }
             }
