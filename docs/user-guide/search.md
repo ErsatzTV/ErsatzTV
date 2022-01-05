@@ -126,7 +126,7 @@ The following fields are available for searching songs:
 
 `genre:comedy AND (release_date:197* OR release_date:198*)`
 
-### Lush Music
+### Lush Music (Artists)
 
 `mood:lush`
 
