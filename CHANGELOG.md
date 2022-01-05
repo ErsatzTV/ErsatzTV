@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix bundled ffmpeg version in base docker image (NOT nvidia or vaapi) which prevented playback since v0.3.0-alpha
 - Use software decoding for mpeg4 content when VAAPI acceleration is enabled
+- Fix hardware acceleration health check to recognize QSV on non-Windows platforms
 
 ### Changed
 - Treat `setsar` as a hardware filter, avoiding unneeded `hwdownload` and `hwupload` steps when padding isn't required
