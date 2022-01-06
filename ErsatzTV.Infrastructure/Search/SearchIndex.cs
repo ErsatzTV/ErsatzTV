@@ -79,7 +79,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 18;
+        public int Version => 19;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -812,7 +812,6 @@ namespace ErsatzTV.Infrastructure.Search
 
                     await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
                     
-                    // TODO: this may not be set when adding via scan
                     foreach (MediaVersion version in otherVideo.MediaVersions.HeadOrNone())
                     {
                         doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
