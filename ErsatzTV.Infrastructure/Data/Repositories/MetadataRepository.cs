@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
@@ -110,14 +111,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
         }
 
         public async Task<bool> UpdateLocalStatistics(
-            int mediaVersionId,
+            MediaItem mediaItem,
             MediaVersion incoming,
             bool updateVersion = true)
         {
+            int mediaVersionId = mediaItem.GetHeadVersion().Id;
+            
             await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             Option<MediaVersion> maybeVersion = await dbContext.MediaVersions
                 .Include(v => v.Streams)
                 .Include(v => v.Chapters)
+                .Include(v => v.MediaFiles)
                 .OrderBy(v => v.Id)
                 .SingleOrDefaultAsync(v => v.Id == mediaVersionId)
                 .Map(Optional);
@@ -191,7 +195,37 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         existingChapter.Title = incomingChapter.Title;
                     }
 
-                    return await dbContext.SaveChangesAsync() > 0;
+                    if (await dbContext.SaveChangesAsync() <= 0)
+                    {
+                        return false;
+                    }
+
+                    // reload the media versions so we can properly index the duration
+                    switch (mediaItem)
+                    {
+                        case Movie movie:
+                            movie.MediaVersions.Clear();
+                            movie.MediaVersions.Add(existing);
+                            break;
+                        case Episode episode:
+                            episode.MediaVersions.Clear();
+                            episode.MediaVersions.Add(existing);
+                            break;
+                        case MusicVideo musicVideo:
+                            musicVideo.MediaVersions.Clear();
+                            musicVideo.MediaVersions.Add(existing);
+                            break;
+                        case OtherVideo otherVideo:
+                            otherVideo.MediaVersions.Clear();
+                            otherVideo.MediaVersions.Add(existing);
+                            break;
+                        case Song song:
+                            song.MediaVersions.Clear();
+                            song.MediaVersions.Add(existing);
+                            break;
+                    }
+
+                    return true;
                 },
                 () => Task.FromResult(false));
         }

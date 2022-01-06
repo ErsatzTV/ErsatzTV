@@ -132,7 +132,7 @@ namespace ErsatzTV.Core.Metadata
 
             version.DateUpdated = _localFileSystem.GetLastWriteTime(filePath);
 
-            return await _metadataRepository.UpdateLocalStatistics(mediaItemVersion.Id, version) && durationChange;
+            return await _metadataRepository.UpdateLocalStatistics(mediaItem, version) && durationChange;
         }
 
         private Task<Either<BaseError, FFprobe>> GetProbeOutput(string ffprobePath, string filePath)

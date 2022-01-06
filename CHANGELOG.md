@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Properly index `minutes` field when adding new items during scan (vs when rebuilding index)
+
 ### Changed
 - Remove `HLS Hybrid` streaming mode; all channels have been reconfigured to use the superior `HLS Segmenter` streaming mode
 - Update `MPEG-TS` streaming mode to internally use the HLS segmenter
