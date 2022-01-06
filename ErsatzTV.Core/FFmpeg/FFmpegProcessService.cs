@@ -247,6 +247,24 @@ namespace ErsatzTV.Core.FFmpeg
                 .Build();
         }
 
+        public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
+        {
+            FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
+
+            return new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
+                .WithThreads(1)
+                .WithQuiet()
+                .WithFormatFlags(playbackSettings.FormatFlags)
+                .WithRealtimeOutput(playbackSettings.RealtimeOutput)
+                .WithInput($"http://localhost:{Settings.ListenPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter")
+                .WithMap("0")
+                .WithCopyCodec()
+                .WithMetadata(channel, None)
+                .WithFormat("mpegts")
+                .WithPipe()
+                .Build();
+        }
+
         public Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile)
         {
             return new FFmpegProcessBuilder(ffmpegPath, false, _logger)

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Changed
+- Remove `HLS Hybrid` streaming mode; all channels have been reconfigured to use the superior `HLS Segmenter` streaming mode
+- Update `MPEG-TS` streaming mode to internally use the HLS segmenter
+  - This improves compatibility with many clients and also improves performance at program boundaries
+- Renamed existing `MPEG-TS` mode as `MPEG-TS (Legacy)`
+  - This mode will be removed in a future release
 
 ## [0.3.5-alpha] - 2022-01-05
 ### Fixed

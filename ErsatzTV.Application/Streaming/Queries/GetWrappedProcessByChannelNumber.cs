@@ -2,11 +2,11 @@
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
-    public record GetConcatProcessByChannelNumber : FFmpegProcessRequest
+    public record GetWrappedProcessByChannelNumber : FFmpegProcessRequest
     {
-        public GetConcatProcessByChannelNumber(string scheme, string host, string channelNumber) : base(
+        public GetWrappedProcessByChannelNumber(string scheme, string host, string channelNumber) : base(
             channelNumber,
-            "ts-legacy",
+            "ts",
             DateTimeOffset.Now,
             false,
             true)
