@@ -32,9 +32,9 @@
                     <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
                     <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
-                        <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS</MudSelectItem>
+                        <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
+                        <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingDirect)">HLS Direct</MudSelectItem>
-                        <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingHybrid)">HLS Hybrid</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.HttpLiveStreamingSegmenter)">HLS Segmenter</MudSelectItem>
                     </MudSelect>
                     <MudSelect Class="mt-3" Label="FFmpeg Profile" @bind-Value="_model.FFmpegProfileId" For="@(() => _model.FFmpegProfileId)"
@@ -154,7 +154,7 @@
             _model.Number = (maxNumber + 1).ToString();
             _model.Name = "New Channel";
             _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
-            _model.StreamingMode = StreamingMode.TransportStream;
+            _model.StreamingMode = StreamingMode.TransportStreamHybrid;
         }
     }
 

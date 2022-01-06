@@ -23,7 +23,7 @@ namespace ErsatzTV.Application.Streaming.Queries
 
         public async Task<Either<BaseError, PlayoutItemProcessModel>> Handle(T request, CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, Tuple<Channel, string>> validation = await Validate(dbContext, request);
             return await validation.Match(
                 tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2),
@@ -56,7 +56,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                         {
                             "hls-direct" => StreamingMode.HttpLiveStreamingDirect,
                             "segmenter" => StreamingMode.HttpLiveStreamingSegmenter,
-                            "ts" => StreamingMode.TransportStream,
+                            "ts" => StreamingMode.TransportStreamHybrid,
+                            "ts-legacy" => StreamingMode.TransportStream,
                             _ => channel.StreamingMode
                         };
 

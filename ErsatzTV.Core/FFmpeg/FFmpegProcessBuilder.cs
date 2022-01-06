@@ -202,6 +202,13 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithCopyCodec()
+        {
+            _arguments.Add("-c");
+            _arguments.Add("copy");
+            return this;
+        }
+
         public FFmpegProcessBuilder WithWatermark(
             Option<WatermarkOptions> watermarkOptions,
             IDisplaySize resolution)
