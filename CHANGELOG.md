@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Properly index `minutes` field when adding new items during scan (vs when rebuilding index)
 
+### Added
+- Add music video `artist` to search index
+
 ### Changed
 - Remove `HLS Hybrid` streaming mode; all channels have been reconfigured to use the superior `HLS Segmenter` streaming mode
 - Update `MPEG-TS` streaming mode to internally use the HLS segmenter
