@@ -140,9 +140,9 @@
 
     private static string GetStreamingMode(StreamingMode streamingMode) => streamingMode switch {
         StreamingMode.HttpLiveStreamingDirect => "HLS Direct",
-        StreamingMode.HttpLiveStreamingHybrid => "HLS Hybrid",
         StreamingMode.HttpLiveStreamingSegmenter => "HLS Segmenter",
-        _ => "MPEG-TS"
+        StreamingMode.TransportStreamHybrid => "MPEG-TS",
+        _ => "MPEG-TS (Legacy)"
         };
 
 }

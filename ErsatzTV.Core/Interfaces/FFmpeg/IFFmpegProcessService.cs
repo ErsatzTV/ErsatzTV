@@ -38,6 +38,8 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
 
         Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
+        Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
+
         Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
 
         Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);

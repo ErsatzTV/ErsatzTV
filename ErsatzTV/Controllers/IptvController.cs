@@ -52,14 +52,24 @@ namespace ErsatzTV.Controllers
                 .Map<ChannelGuide, IActionResult>(Ok);
 
         [HttpGet("iptv/channel/{channelNumber}.ts")]
-        public Task<IActionResult> GetTransportStreamVideo(string channelNumber) =>
-            _mediator.Send(new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
+        public async Task<IActionResult> GetTransportStreamVideo(
+            string channelNumber,
+            [FromQuery]
+            string mode = null)
+        {
+            FFmpegProcessRequest request = mode switch
+            {
+                "legacy" => new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber),
+                _ => new GetWrappedProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber)
+            };
+
+            return await _mediator.Send(request)
                 .Map(
                     result => result.Match<IActionResult>(
                         processModel =>
                         {
                             Process process = processModel.Process;
-                            
+
                             _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
                             // _logger.LogDebug(
                             //     "ffmpeg concat arguments {FFmpegArguments}",
@@ -68,6 +78,7 @@ namespace ErsatzTV.Controllers
                             return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
                         },
                         error => BadRequest(error.Value)));
+        }
 
         [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
         public async Task<IActionResult> GetLivePlaylist(string channelNumber)
