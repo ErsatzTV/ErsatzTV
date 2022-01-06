@@ -146,8 +146,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             var metadataRepository = new Mock<IMetadataRepository>();
             metadataRepository
-                .Setup(r => r.UpdateLocalStatistics(It.IsAny<int>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
-                .Callback<int, MediaVersion, bool>((_, version, _) => v = version);
+                .Setup(r => r.UpdateLocalStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
+                .Callback<MediaItem, MediaVersion, bool>((_, version, _) => v = version);
 
             var localStatisticsProvider = new LocalStatisticsProvider(
                 metadataRepository.Object,

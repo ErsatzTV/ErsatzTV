@@ -79,7 +79,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 18;
+        public int Version => 19;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -674,6 +674,14 @@ namespace ErsatzTV.Infrastructure.Search
                     foreach (Studio studio in metadata.Studios)
                     {
                         doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
+                    }
+                    
+                    if (musicVideo.Artist != null)
+                    {
+                        foreach (ArtistMetadata artistMetadata in musicVideo.Artist.ArtistMetadata)
+                        {
+                            doc.Add(new TextField(ArtistField, artistMetadata.Title, Field.Store.NO));
+                        }
                     }
 
                     _writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
