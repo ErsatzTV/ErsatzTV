@@ -30,9 +30,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             LibraryPath libraryPath,
             string path)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             Option<MusicVideo> maybeExisting = await dbContext.MusicVideos
                 .AsNoTracking()
+                .Include(mv => mv.Artist)
+                .ThenInclude(a => a.ArtistMetadata)
                 .Include(mv => mv.MusicVideoMetadata)
                 .ThenInclude(mvm => mvm.Artwork)
                 .Include(mv => mv.MusicVideoMetadata)
@@ -196,6 +198,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
                 await dbContext.MusicVideos.AddAsync(musicVideo);
                 await dbContext.SaveChangesAsync();
+                await dbContext.Entry(musicVideo).Reference(m => m.Artist).LoadAsync();
+                await dbContext.Entry(musicVideo.Artist).Collection(a => a.ArtistMetadata).LoadAsync();
                 await dbContext.Entry(musicVideo).Reference(m => m.LibraryPath).LoadAsync();
                 await dbContext.Entry(musicVideo.LibraryPath).Reference(lp => lp.Library).LoadAsync();
                 return new MediaItemScanResult<MusicVideo>(musicVideo) { IsAdded = true };

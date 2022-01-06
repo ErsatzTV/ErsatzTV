@@ -675,6 +675,14 @@ namespace ErsatzTV.Infrastructure.Search
                     {
                         doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                     }
+                    
+                    if (musicVideo.Artist != null)
+                    {
+                        foreach (ArtistMetadata artistMetadata in musicVideo.Artist.ArtistMetadata)
+                        {
+                            doc.Add(new TextField(ArtistField, artistMetadata.Title, Field.Store.NO));
+                        }
+                    }
 
                     _writer.UpdateDocument(new Term(IdField, musicVideo.Id.ToString()), doc);
                 }
@@ -804,6 +812,7 @@ namespace ErsatzTV.Infrastructure.Search
 
                     await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
                     
+                    // TODO: this may not be set when adding via scan
                     foreach (MediaVersion version in otherVideo.MediaVersions.HeadOrNone())
                     {
                         doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
