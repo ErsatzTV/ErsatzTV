@@ -104,6 +104,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             string inputPixelFormat,
             [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
             Resolution profileResolution,
+            [Values(true, false)]
+            bool pad,
             // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
             [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
@@ -112,13 +114,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         {
             string name = GetStringSha256Hash(
-                $"{inputCodec}_{inputPixelFormat}_{profileResolution}_{profileCodec}_{profileAcceleration}");
+                $"{inputCodec}_{inputPixelFormat}_{pad}_{profileResolution}_{profileCodec}_{profileAcceleration}");
 
             string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
             if (!File.Exists(file))
             {
+                string resolution = pad ? "1920x1060" : "1920x1080";
+                
                 var args =
-                    $"-y -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -f lavfi -i testsrc=duration=1:size=1920x1080:rate=30 -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {file}";
+                    $"-y -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {file}";
                 var p1 = new Process
                 {
                     StartInfo = new ProcessStartInfo
@@ -200,6 +204,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 TimeSpan.FromSeconds(5));
 
             process.StartInfo.RedirectStandardError = true;
+            
+            // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
             process.Start().Should().BeTrue();
 
