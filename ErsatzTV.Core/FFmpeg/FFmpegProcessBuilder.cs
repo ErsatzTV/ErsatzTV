@@ -633,13 +633,13 @@ namespace ErsatzTV.Core.FFmpeg
                 switch (_vaapiDriver)
                 {
                     case VaapiDriver.i965:
-                        startInfo.EnvironmentVariables.Add("LIBVA_DRIVER_NAME", "i965");
+                        startInfo.EnvironmentVariables["LIBVA_DRIVER_NAME"] = "i965";
                         break;
                     case VaapiDriver.iHD:
-                        startInfo.EnvironmentVariables.Add("LIBVA_DRIVER_NAME", "iHD");
+                        startInfo.EnvironmentVariables["LIBVA_DRIVER_NAME"] = "iHD";
                         break;
                     case VaapiDriver.RadeonSI:
-                        startInfo.EnvironmentVariables.Add("LIBVA_DRIVER_NAME", "radeonsi");
+                        startInfo.EnvironmentVariables["LIBVA_DRIVER_NAME"] = "radeonsi";
                         break;
                 }
             }
@@ -659,8 +659,8 @@ namespace ErsatzTV.Core.FFmpeg
                     // colon after drive letter needs to be escaped
                     fileName = fileName.Replace(@":/", @"\:/");
                 }
-                
-                startInfo.EnvironmentVariables.Add("FFREPORT", $"file={fileName}:level=32");
+
+                startInfo.EnvironmentVariables["FFREPORT"] = $"file={fileName}:level=32";
             }
 
             startInfo.ArgumentList.Add("-nostdin");
