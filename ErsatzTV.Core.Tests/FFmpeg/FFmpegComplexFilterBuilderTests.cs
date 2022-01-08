@@ -409,7 +409,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
                     .WithHardwareAcceleration(HardwareAccelerationKind.Nvenc)
-                    .WithDeinterlace(deinterlace);
+                    .WithDeinterlace(deinterlace)
+                    .WithInputPixelFormat("h264");
 
                 if (scale)
                 {
