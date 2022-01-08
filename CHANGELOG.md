@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Properly index `minutes` field when adding new items during scan (vs when rebuilding index)
+- Fix some nvenc edge cases where only padding is needed for normalization
 
 ### Added
 - Add music video `artist` to search index

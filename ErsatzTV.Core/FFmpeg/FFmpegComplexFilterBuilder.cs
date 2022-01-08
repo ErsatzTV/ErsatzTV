@@ -142,6 +142,11 @@ namespace ErsatzTV.Core.FFmpeg
             bool isHardwareDecode = acceleration switch
             {
                 HardwareAccelerationKind.Vaapi => !isSong && _inputCodec != "mpeg4",
+                
+                // we need an initial hwupload_cuda when only padding with these pixel formats
+                HardwareAccelerationKind.Nvenc when _scaleToSize.IsNone && _padToSize.IsSome =>
+                    !isSong && !_pixelFormat.Contains("p10le") && !_pixelFormat.Contains("444"),
+
                 HardwareAccelerationKind.Nvenc => !isSong,
                 HardwareAccelerationKind.Qsv => !isSong,
                 _ => false
