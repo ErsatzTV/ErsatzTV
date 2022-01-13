@@ -41,12 +41,14 @@ namespace ErsatzTV.Core.Metadata
             ISearchRepository searchRepository,
             ISongRepository songRepository,
             ILibraryRepository libraryRepository,
+            IMediaItemRepository mediaItemRepository,
             IFFmpegProcessService ffmpegProcessService,
             ITempFilePool tempFilePool,
             ILogger<SongFolderScanner> logger) : base(
             localFileSystem,
             localStatisticsProvider,
             metadataRepository,
+            mediaItemRepository,
             imageCache,
             ffmpegProcessService,
             tempFilePool,
@@ -136,7 +138,8 @@ namespace ErsatzTV.Core.Metadata
                         .GetOrAdd(libraryPath, file)
                         .BindT(video => UpdateStatistics(video, ffprobePath))
                         .BindT(video => UpdateMetadata(video, ffprobePath))
-                        .BindT(video => UpdateThumbnail(video, ffmpegPath));
+                        .BindT(video => UpdateThumbnail(video, ffmpegPath))
+                        .BindT(FlagNormal);
 
                     await maybeSong.Match(
                         async result =>
@@ -164,9 +167,9 @@ namespace ErsatzTV.Core.Metadata
             {
                 if (!_localFileSystem.FileExists(path))
                 {
-                    _logger.LogInformation("Removing missing song at {Path}", path);
-                    List<int> songIds = await _songRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(songIds);
+                    _logger.LogInformation("Flagging missing song at {Path}", path);
+                    List<int> songIds = await FlagFileNotFound(libraryPath, path);
+                    await _searchIndex.RebuildItems(_searchRepository, songIds);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
@@ -175,6 +178,8 @@ namespace ErsatzTV.Core.Metadata
                     await _searchIndex.RemoveItems(songIds);
                 }
             }
+            
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             _searchIndex.Commit();
             return Unit.Default;

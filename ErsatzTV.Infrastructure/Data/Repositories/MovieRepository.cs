@@ -56,6 +56,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .ThenInclude(mm => mm.Writers)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Streams)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(m => m.Id)
                 .SingleOrDefaultAsync(m => m.Id == movieId)
                 .Map(Optional);
@@ -63,7 +65,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<Either<BaseError, MediaItemScanResult<Movie>>> GetOrAdd(LibraryPath libraryPath, string path)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             Option<Movie> maybeExisting = await dbContext.Movies
                 .Include(i => i.MovieMetadata)
                 .ThenInclude(mm => mm.Artwork)
@@ -146,12 +148,13 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.MovieMetadata
                 .AsNoTracking()
                 .Filter(mm => ids.Contains(mm.MovieId))
                 .Include(mm => mm.Artwork)
                 .OrderBy(mm => mm.SortTitle)
+                .Include(mm => mm.Movie)
                 .ToListAsync();
         }
 
@@ -167,7 +170,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             List<int> ids = await _dbConnection.QueryAsync<int>(
                     @"SELECT M.Id
                 FROM Movie M
@@ -181,13 +184,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             foreach (int movieId in ids)
             {
                 Movie movie = await dbContext.Movies.FindAsync(movieId);
-                dbContext.Movies.Remove(movie);
+                if (movie != null)
+                {
+                    dbContext.Movies.Remove(movie);
+                }
             }
 
             bool changed = await dbContext.SaveChangesAsync() > 0;
             return changed ? ids : new List<int>();
         }
-
+        
         public Task<bool> AddGenre(MovieMetadata metadata, Genre genre) =>
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Genre (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",

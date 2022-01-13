@@ -371,6 +371,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MovieMetadata)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Filter(m => movieIds.Contains(m.Id))
                 .ToListAsync();
 
@@ -395,6 +397,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Filter(m => musicVideoIds.Contains(m.Id))
                 .ToListAsync();
         
@@ -427,6 +431,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MusicVideoMetadata)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Filter(m => musicVideoIds.Contains(m.Id))
                 .ToListAsync();
         
@@ -446,6 +452,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.OtherVideoMetadata)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Filter(m => otherVideoIds.Contains(m.Id))
                 .ToListAsync();
 
@@ -465,6 +473,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.SongMetadata)
                 .Include(m => m.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Filter(m => songIds.Contains(m.Id))
                 .ToListAsync();
 
@@ -486,6 +496,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Include(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
@@ -521,6 +533,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Include(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)
@@ -554,6 +568,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(e => e.EpisodeMetadata)
                 .Include(e => e.MediaVersions)
                 .ThenInclude(mv => mv.Chapters)
+                .Include(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Include(e => e.Season)
                 .ThenInclude(s => s.Show)
                 .ThenInclude(s => s.ShowMetadata)

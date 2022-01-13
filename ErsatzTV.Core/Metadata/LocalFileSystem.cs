@@ -50,6 +50,8 @@ namespace ErsatzTV.Core.Metadata
 
         public bool FileExists(string path) => File.Exists(path);
 
+        public bool FolderExists(string folder) => Directory.Exists(folder);
+
         public async Task<Either<BaseError, Unit>> CopyFile(string source, string destination)
         {
             try

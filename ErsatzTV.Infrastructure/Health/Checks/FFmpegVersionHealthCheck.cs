@@ -66,7 +66,7 @@ namespace ErsatzTV.Infrastructure.Health.Checks
                 }
             }
 
-            return new HealthCheckResult("FFmpeg Version", HealthCheckStatus.Pass, string.Empty);
+            return new HealthCheckResult("FFmpeg Version", HealthCheckStatus.Pass, string.Empty, None);
         }
         
         private Option<HealthCheckResult> ValidateVersion(string version, string app)

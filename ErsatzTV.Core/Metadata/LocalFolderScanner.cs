@@ -57,11 +57,13 @@ namespace ErsatzTV.Core.Metadata
         private readonly ILocalStatisticsProvider _localStatisticsProvider;
         private readonly ILogger _logger;
         private readonly IMetadataRepository _metadataRepository;
+        private readonly IMediaItemRepository _mediaItemRepository;
 
         protected LocalFolderScanner(
             ILocalFileSystem localFileSystem,
             ILocalStatisticsProvider localStatisticsProvider,
             IMetadataRepository metadataRepository,
+            IMediaItemRepository mediaItemRepository,
             IImageCache imageCache,
             IFFmpegProcessService ffmpegProcessService, 
             ITempFilePool tempFilePool,
@@ -70,6 +72,7 @@ namespace ErsatzTV.Core.Metadata
             _localFileSystem = localFileSystem;
             _localStatisticsProvider = localStatisticsProvider;
             _metadataRepository = metadataRepository;
+            _mediaItemRepository = mediaItemRepository;
             _imageCache = imageCache;
             _ffmpegProcessService = ffmpegProcessService;
             _tempFilePool = tempFilePool;
@@ -263,6 +266,29 @@ namespace ErsatzTV.Core.Metadata
             }
 
             return false;
+        }
+
+        protected Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path) =>
+            _mediaItemRepository.FlagFileNotFound(libraryPath, path);
+
+        protected async Task<Either<BaseError, MediaItemScanResult<T>>> FlagNormal<T>(MediaItemScanResult<T> result)
+            where T : MediaItem
+        {
+            try
+            {
+                T mediaItem = result.Item;
+                if (mediaItem.State != MediaItemState.Normal)
+                {
+                    await _mediaItemRepository.FlagNormal(mediaItem);
+                    result.IsUpdated = true;
+                }
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return BaseError.New(ex.ToString());
+            }
         }
 
         protected bool ShouldIncludeFolder(string folder) =>

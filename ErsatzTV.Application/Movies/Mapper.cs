@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Jellyfin;
 using Flurl;
 using LanguageExt;
@@ -34,7 +35,9 @@ namespace ErsatzTV.Application.Movies
                     .Map(a => MediaCards.Mapper.ProjectToViewModel(a, maybeJellyfin, maybeEmby))
                     .ToList(),
                 metadata.Directors.Map(d => d.Name).ToList(),
-                metadata.Writers.Map(w => w.Name).ToList())
+                metadata.Writers.Map(w => w.Name).ToList(),
+                movie.GetHeadVersion().MediaFiles.Head().Path,
+                movie.State)
             {
                 Poster = Artwork(metadata, ArtworkKind.Poster, maybeJellyfin, maybeEmby),
                 FanArt = Artwork(metadata, ArtworkKind.FanArt, maybeJellyfin, maybeEmby)

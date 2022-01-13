@@ -94,18 +94,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
                 new { LibraryPathId = libraryPath.Id, Path = path }).Map(result => result.ToList());
 
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             foreach (int musicVideoId in ids)
             {
                 MusicVideo musicVideo = await dbContext.MusicVideos.FindAsync(musicVideoId);
-                dbContext.MusicVideos.Remove(musicVideo);
+                if (musicVideo != null)
+                {
+                    dbContext.MusicVideos.Remove(musicVideo);
+                }
             }
 
             await dbContext.SaveChangesAsync();
 
             return ids;
         }
-
+        
         public Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre) =>
             _dbConnection.ExecuteAsync(
                 "INSERT INTO Genre (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
@@ -123,7 +126,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.MusicVideoMetadata
                 .AsNoTracking()
                 .Filter(mvm => ids.Contains(mvm.MusicVideoId))
@@ -163,6 +166,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(m => m.MusicVideo)
                 .ThenInclude(mv => mv.Artist)
                 .ThenInclude(a => a.ArtistMetadata)
+                .Include(m => m.MusicVideo)
+                .ThenInclude(mv => mv.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Filter(m => m.MusicVideo.ArtistId == artistId)
                 .OrderBy(m => m.SortTitle)
                 .Skip((pageNumber - 1) * pageSize)

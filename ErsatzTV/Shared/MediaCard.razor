@@ -24,6 +24,12 @@
                              Style="margin: auto"/>
                 </div>
             }
+            @if (Data.State == MediaItemState.FileNotFound)
+            {
+                <div style="position: absolute; top: 12px; right: 12px">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error"/>
+                </div>
+            }
             <div class="media-card-overlay" style="">
                 <MudButton Link="@(IsSelectMode ? null : Link)"
                            Style="height: 100%; width: 100%"

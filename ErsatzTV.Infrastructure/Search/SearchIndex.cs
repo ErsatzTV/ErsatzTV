@@ -55,6 +55,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string AlbumField = "album";
         private const string MinutesField = "minutes";
         private const string ArtistField = "artist";
+        private const string StateField = "state";
 
         public const string MovieType = "movie";
         public const string ShowType = "show";
@@ -160,7 +161,8 @@ namespace ErsatzTV.Infrastructure.Search
             using var analyzer = new StandardAnalyzer(AppLuceneVersion);
             var customAnalyzers = new Dictionary<string, Analyzer>
             {
-                { ContentRatingField, new KeywordAnalyzer() }
+                { ContentRatingField, new KeywordAnalyzer() },
+                { StateField, new KeywordAnalyzer() }
             };
             using var analyzerWrapper = new PerFieldAnalyzerWrapper(analyzer, customAnalyzers);
             QueryParser parser = !string.IsNullOrWhiteSpace(searchField)
@@ -202,12 +204,18 @@ namespace ErsatzTV.Infrastructure.Search
         {
             _writer.DeleteAll();
 
+            await RebuildItems(searchRepository, itemIds);
+
+            _writer.Commit();
+            return Unit.Default;
+        }
+
+        public async Task<Unit> RebuildItems(ISearchRepository searchRepository, List<int> itemIds)
+        {
             foreach (int id in itemIds)
             {
-                Option<MediaItem> maybeMediaItem = await searchRepository.GetItemToIndex(id);
-                if (maybeMediaItem.IsSome)
+                foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id))
                 {
-                    MediaItem mediaItem = maybeMediaItem.ValueUnsafe();
                     switch (mediaItem)
                     {
                         case Movie movie:
@@ -238,7 +246,6 @@ namespace ErsatzTV.Infrastructure.Search
                 }
             }
 
-            _writer.Commit();
             return Unit.Default;
         }
 
@@ -306,7 +313,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new TextField(LibraryNameField, movie.LibraryPath.Library.Name, Field.Store.NO),
                         new StringField(LibraryIdField, movie.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                        new StringField(StateField, movie.State.ToString(), Field.Store.NO)
                     };
 
                     await AddLanguages(searchRepository, doc, movie.MediaVersions);
@@ -632,7 +640,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new TextField(LibraryNameField, musicVideo.LibraryPath.Library.Name, Field.Store.NO),
                         new StringField(LibraryIdField, musicVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                        new StringField(StateField, musicVideo.State.ToString(), Field.Store.NO)
                     };
 
                     await AddLanguages(searchRepository, doc, musicVideo.MediaVersions);
@@ -720,7 +729,8 @@ namespace ErsatzTV.Infrastructure.Search
                         new TextField(LibraryNameField, episode.LibraryPath.Library.Name, Field.Store.NO),
                         new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                        new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                        new StringField(StateField, episode.State.ToString(), Field.Store.NO)
                     };
 
                     await AddLanguages(searchRepository, doc, episode.MediaVersions);
@@ -808,6 +818,7 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(LibraryIdField, otherVideo.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                        new StringField(StateField, otherVideo.State.ToString(), Field.Store.NO)
                     };
 
                     await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
@@ -851,6 +862,7 @@ namespace ErsatzTV.Infrastructure.Search
                         new StringField(LibraryIdField, song.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                         new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                         new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                        new StringField(StateField, song.State.ToString(), Field.Store.NO)
                     };
 
                     await AddLanguages(searchRepository, doc, song.MediaVersions);

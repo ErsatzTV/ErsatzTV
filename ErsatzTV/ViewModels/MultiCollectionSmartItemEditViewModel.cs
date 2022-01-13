@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Application.MediaCollections;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels
 {
@@ -16,7 +17,8 @@ namespace ErsatzTV.ViewModels
                 Collection = new MediaCollectionViewModel(
                     _smartCollection.Id,
                     _smartCollection.Name,
-                    false);
+                    false,
+                    MediaItemState.Normal);
             }
         }
 
