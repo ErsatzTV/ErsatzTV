@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Local libraries only: when items are missing from disk, they will be added to the trash and no longer removed from collections, etc.
+- Show song thumbnail in song list
 
 ## [0.3.6-alpha] - 2022-01-10
 ### Fixed
@@ -47,9 +48,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix other video and song scanners to include videos contained directly in top-level folders that are added to a library
 - Allow saving ffmpeg troubleshooting reports on Windows
-
-### Changed
-- Show song thumbnail in song list
 
 ## [0.3.3-alpha] - 2021-12-12
 ### Fixed
