@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.Application.MediaCards
+﻿using ErsatzTV.Core.Domain;
+
+namespace ErsatzTV.Application.MediaCards
 {
     public record TelevisionSeasonCardViewModel
     (
@@ -9,10 +11,12 @@
         string Subtitle,
         string SortTitle,
         string Poster,
-        string Placeholder) : MediaCardViewModel(
+        string Placeholder,
+        MediaItemState State) : MediaCardViewModel(
         TelevisionSeasonId,
         Title,
         Subtitle,
         SortTitle,
-        Poster);
+        Poster,
+        State);
 }

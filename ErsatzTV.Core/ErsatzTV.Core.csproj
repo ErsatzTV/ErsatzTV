@@ -3,7 +3,6 @@
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
         <NoWarn>VSTHRD200</NoWarn>
-        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <ItemGroup>

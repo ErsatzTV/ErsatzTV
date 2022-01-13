@@ -14,6 +14,7 @@ namespace ErsatzTV.Core.Interfaces.Search
         public int Version { get; }
         Task<bool> Initialize(ILocalFileSystem localFileSystem);
         Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds);
+        Task<Unit> RebuildItems(ISearchRepository searchRepository, List<int> itemIds);
         Task<Unit> AddItems(ISearchRepository searchRepository, List<MediaItem> items);
         Task<Unit> UpdateItems(ISearchRepository searchRepository, List<MediaItem> items);
         Task<Unit> RemoveItems(List<int> ids);

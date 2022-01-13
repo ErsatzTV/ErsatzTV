@@ -40,6 +40,7 @@ namespace ErsatzTV.Core.Metadata
             ISearchIndex searchIndex,
             ISearchRepository searchRepository,
             ILibraryRepository libraryRepository,
+            IMediaItemRepository mediaItemRepository,
             IMediator mediator,
             IFFmpegProcessService ffmpegProcessService,
             ITempFilePool tempFilePool,
@@ -48,6 +49,7 @@ namespace ErsatzTV.Core.Metadata
                 localFileSystem,
                 localStatisticsProvider,
                 metadataRepository,
+                mediaItemRepository,
                 imageCache,
                 ffmpegProcessService,
                 tempFilePool,
@@ -140,7 +142,8 @@ namespace ErsatzTV.Core.Metadata
                         .BindT(movie => UpdateStatistics(movie, ffprobePath))
                         .BindT(UpdateMetadata)
                         .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster))
-                        .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt));
+                        .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt))
+                        .BindT(FlagNormal);
 
                     await maybeMovie.Match(
                         async result =>
@@ -168,9 +171,9 @@ namespace ErsatzTV.Core.Metadata
             {
                 if (!_localFileSystem.FileExists(path))
                 {
-                    _logger.LogInformation("Removing missing movie at {Path}", path);
-                    List<int> ids = await _movieRepository.DeleteByPath(libraryPath, path);
-                    await _searchIndex.RemoveItems(ids);
+                    _logger.LogInformation("Flagging missing movie at {Path}", path);
+                    List<int> ids = await FlagFileNotFound(libraryPath, path);
+                    await _searchIndex.RebuildItems(_searchRepository, ids);
                 }
                 else if (Path.GetFileName(path).StartsWith("._"))
                 {
@@ -179,6 +182,8 @@ namespace ErsatzTV.Core.Metadata
                     await _searchIndex.RemoveItems(ids);
                 }
             }
+
+            await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
             _searchIndex.Commit();
             return Unit.Default;

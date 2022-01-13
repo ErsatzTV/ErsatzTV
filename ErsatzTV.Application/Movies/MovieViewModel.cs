@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 using ErsatzTV.Application.MediaCards;
+using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.Movies
 {
@@ -15,7 +16,9 @@ namespace ErsatzTV.Application.Movies
         List<CultureInfo> Languages,
         List<ActorCardViewModel> Actors,
         List<string> Directors,
-        List<string> Writers)
+        List<string> Writers,
+        string Path,
+        MediaItemState MediaItemState)
     {
         public string Poster { get; set; }
         public string FanArt { get; set; }

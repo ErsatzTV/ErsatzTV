@@ -1,0 +1,53 @@
+﻿@inject IMediator _mediator
+
+<div @onkeydown="@OnKeyDown">
+    <MudDialog>
+        <DialogContent>
+            <MudContainer Class="mb-6">
+                <MudHighlighter Class="mud-primary-text"
+                                Style="background-color: transparent; font-weight: bold"
+                                Text="@FormatText()"
+                                HighlightedText="@EntityName"/>
+            </MudContainer>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="Submit">
+                Delete From Database
+            </MudButton>
+        </DialogActions>
+    </MudDialog>
+</div>
+
+@code {
+
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public string EntityType { get; set; }
+
+    [Parameter]
+    public string EntityName { get; set; }
+
+    [Parameter]
+    public string DetailText { get; set; }
+
+    [Parameter]
+    public string DetailHighlight { get; set; }
+
+    private string FormatText() => $"Do you really want to delete the {EntityType} {EntityName} from the database?";
+
+    private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Code is "Enter" or "NumpadEnter")
+        {
+            Submit();
+        }
+    }
+
+}

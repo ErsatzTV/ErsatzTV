@@ -124,17 +124,31 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-8">
     @foreach (MusicVideoCardViewModel musicVideo in _musicVideos.Cards)
     {
-        <MudCard Class="mb-6">
+        <MudCard Class="mb-6" Style="display: flex; flex-direction: column">
             <div id="@($"music-video-{musicVideo.MusicVideoId}")" style="display: flex; flex-direction: row; scroll-margin-top: 85px">
                 @if (!string.IsNullOrWhiteSpace(musicVideo.Poster))
                 {
-                    <MudPaper style="display: flex; flex-direction: column">
+                    <MudPaper style="display: flex; flex-direction: column; position: relative">
                         <MudCardMedia Image="@($"/artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 293px;"/>
+                        @if (musicVideo.State == MediaItemState.FileNotFound)
+                        {
+                            <div style="position: absolute; top: 8px; right: 10px">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                            </div>
+                        }
                     </MudPaper>
                 }
                 else
                 {
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False" Height="220px" Width="293px"/>
+                    <div style="height: 220px; width: 293px; display: flex; position: relative">
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False"/>
+                        @if (musicVideo.State == MediaItemState.FileNotFound)
+                        {
+                            <div style="position: absolute; top: 8px; right: 10px">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
+                            </div>
+                        }
+                    </div>
                 }
                 <MudCardContent Class="ml-3">
                     <div style="display: flex; flex-direction: column; height: 100%">
@@ -158,6 +172,14 @@
                     </div>
                 </MudCardContent>
             </div>
+            @if (musicVideo.State == MediaItemState.FileNotFound)
+            {
+                <div class="ml-3 mt-3 mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
+                    <MudText>File Not Found:&nbsp;</MudText>
+                    <MudText>@musicVideo.Path</MudText>
+                </div>
+            }
         </MudCard>
     }
 </MudContainer>

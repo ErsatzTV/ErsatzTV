@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -54,6 +53,10 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
                     .Returns(new List<string>().AsEnumerable().AsTask());
 
+                _mediaItemRepository = new Mock<IMediaItemRepository>();
+                _mediaItemRepository.Setup(x => x.FlagFileNotFound(It.IsAny<LibraryPath>(), It.IsAny<string>()))
+                    .Returns(new List<int>().AsTask());
+
                 _localStatisticsProvider = new Mock<ILocalStatisticsProvider>();
                 _localMetadataProvider = new Mock<ILocalMetadataProvider>();
 
@@ -73,6 +76,7 @@ namespace ErsatzTV.Core.Tests.Metadata
             }
 
             private Mock<IMovieRepository> _movieRepository;
+            private Mock<IMediaItemRepository> _mediaItemRepository;
             private Mock<ILocalStatisticsProvider> _localStatisticsProvider;
             private Mock<ILocalMetadataProvider> _localMetadataProvider;
             private Mock<IImageCache> _imageCache;
@@ -535,6 +539,9 @@ namespace ErsatzTV.Core.Tests.Metadata
             [Test]
             public async Task RenamedMovie_Should_Delete_Old_Movie()
             {
+                // TODO: handle this case more elegantly
+                // ideally, detect that the movie was renamed and still delete the old one (or update the path?)
+
                 string movieFolder = Path.Combine(FakeRoot, "Movie (2020)");
                 string oldMoviePath = Path.Combine(movieFolder, "Movie (2020).avi");
 
@@ -557,12 +564,14 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.DeleteByPath(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.DeleteByPath(libraryPath, oldMoviePath), Times.Once);
+                _mediaItemRepository.Verify(
+                    x => x.FlagFileNotFound(It.IsAny<LibraryPath>(), It.IsAny<string>()),
+                    Times.Once);
+                _mediaItemRepository.Verify(x => x.FlagFileNotFound(libraryPath, oldMoviePath), Times.Once);
             }
 
             [Test]
-            public async Task DeletedMovieAndFolder_Should_Delete_Old_Movie()
+            public async Task DeletedMovieAndFolder_Should_Flag_File_Not_Found()
             {
                 string movieFolder = Path.Combine(FakeRoot, "Movie (2020)");
                 string oldMoviePath = Path.Combine(movieFolder, "Movie (2020).avi");
@@ -570,10 +579,8 @@ namespace ErsatzTV.Core.Tests.Metadata
                 _movieRepository.Setup(x => x.FindMoviePaths(It.IsAny<LibraryPath>()))
                     .Returns(new List<string> { oldMoviePath }.AsEnumerable().AsTask());
 
-                string moviePath = Path.Combine(movieFolder, "Movie (2020).mkv");
-
                 MovieFolderScanner service = GetService(
-                    new FakeFileEntry(moviePath) { LastWriteTime = DateTime.Now }
+                    new FakeFolderEntry(FakeRoot)
                 );
                 var libraryPath = new LibraryPath
                     { Id = 1, Path = FakeRoot, LibraryFolders = new List<LibraryFolder>() };
@@ -586,10 +593,11 @@ namespace ErsatzTV.Core.Tests.Metadata
 
                 result.IsRight.Should().BeTrue();
 
-                _movieRepository.Verify(x => x.DeleteByPath(It.IsAny<LibraryPath>(), It.IsAny<string>()), Times.Once);
-                _movieRepository.Verify(x => x.DeleteByPath(libraryPath, oldMoviePath), Times.Once);
+                _mediaItemRepository.Verify(
+                    x => x.FlagFileNotFound(It.IsAny<LibraryPath>(), It.IsAny<string>()),
+                    Times.Once);
+                _mediaItemRepository.Verify(x => x.FlagFileNotFound(libraryPath, oldMoviePath), Times.Once);
             }
-
 
             private MovieFolderScanner GetService(params FakeFileEntry[] files) =>
                 new(
@@ -602,6 +610,25 @@ namespace ErsatzTV.Core.Tests.Metadata
                     new Mock<ISearchIndex>().Object,
                     new Mock<ISearchRepository>().Object,
                     new Mock<ILibraryRepository>().Object,
+                    _mediaItemRepository.Object,
+                    new Mock<IMediator>().Object,
+                    null,
+                    new Mock<ITempFilePool>().Object,
+                    new Mock<ILogger<MovieFolderScanner>>().Object
+                );
+            
+            private MovieFolderScanner GetService(params FakeFolderEntry[] folders) =>
+                new(
+                    new FakeLocalFileSystem(new List<FakeFileEntry>(), new List<FakeFolderEntry>(folders)),
+                    _movieRepository.Object,
+                    _localStatisticsProvider.Object,
+                    _localMetadataProvider.Object,
+                    new Mock<IMetadataRepository>().Object,
+                    _imageCache.Object,
+                    new Mock<ISearchIndex>().Object,
+                    new Mock<ISearchRepository>().Object,
+                    new Mock<ILibraryRepository>().Object,
+                    _mediaItemRepository.Object,
                     new Mock<IMediator>().Object,
                     null,
                     new Mock<ITempFilePool>().Object,

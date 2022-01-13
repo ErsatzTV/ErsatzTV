@@ -14,21 +14,23 @@ namespace ErsatzTV.Infrastructure.Health
         // ReSharper disable SuggestBaseTypeForParameterInConstructor
         public HealthCheckService(
             IFFmpegVersionHealthCheck ffmpegVersionHealthCheck,
-            IFFmpegReportsHealthCheck fFmpegReportsHealthCheck,
+            IFFmpegReportsHealthCheck ffmpegReportsHealthCheck,
             IHardwareAccelerationHealthCheck hardwareAccelerationHealthCheck,
             IMovieMetadataHealthCheck movieMetadataHealthCheck,
             IEpisodeMetadataHealthCheck episodeMetadataHealthCheck,
             IZeroDurationHealthCheck zeroDurationHealthCheck,
+            IFileNotFoundHealthCheck fileNotFoundHealthCheck,
             IVaapiDriverHealthCheck vaapiDriverHealthCheck)
         {
             _checks = new List<IHealthCheck>
             {
                 ffmpegVersionHealthCheck,
-                fFmpegReportsHealthCheck,
+                ffmpegReportsHealthCheck,
                 hardwareAccelerationHealthCheck,
                 movieMetadataHealthCheck,
                 episodeMetadataHealthCheck,
                 zeroDurationHealthCheck,
+                fileNotFoundHealthCheck,
                 vaapiDriverHealthCheck
             };
         }

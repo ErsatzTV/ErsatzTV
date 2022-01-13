@@ -1,16 +1,20 @@
-﻿namespace ErsatzTV.Application.MediaCards
+﻿using ErsatzTV.Core.Domain;
+
+namespace ErsatzTV.Application.MediaCards
 {
     public record OtherVideoCardViewModel
     (
         int OtherVideoId,
         string Title,
         string Subtitle,
-        string SortTitle) : MediaCardViewModel(
+        string SortTitle,
+        MediaItemState State) : MediaCardViewModel(
         OtherVideoId,
         Title,
         Subtitle,
         SortTitle,
-        null)
+        null,
+        State)
     {
         public int CustomIndex { get; set; }
     }

@@ -4,7 +4,6 @@
         <TargetFramework>net6.0</TargetFramework>
         <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
         <NoWarn>VSTHRD200</NoWarn>
-        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <ItemGroup>

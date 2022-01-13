@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt;
@@ -254,6 +255,7 @@ namespace ErsatzTV.Core.Scheduling
             foreach ((CollectionKey _, List<MediaItem> items) in collectionMediaItems)
             {
                 var zeroItems = new List<MediaItem>();
+                // var missingItems = new List<MediaItem>();
 
                 foreach (MediaItem item in items)
                 {
@@ -272,6 +274,17 @@ namespace ErsatzTV.Core.Scheduling
                         _ => true
                     };
 
+                    // if (item.State == MediaItemState.FileNotFound)
+                    // {
+                    //     _logger.LogWarning(
+                    //         "Skipping media item that does not exist on disk  {MediaItem} - {MediaItemTitle} - {Path}",
+                    //         item.Id,
+                    //         DisplayTitle(item),
+                    //         item.GetHeadVersion().MediaFiles.Head().Path);
+                    //
+                    //     missingItems.Add(item);
+                    // }
+                    // else
                     if (isZero)
                     {
                         _logger.LogWarning(
@@ -283,7 +296,8 @@ namespace ErsatzTV.Core.Scheduling
                     }
                 }
 
-                items.RemoveAll(i => zeroItems.Contains(i));
+                // items.RemoveAll(missingItems.Contains);
+                items.RemoveAll(zeroItems.Contains);
             }
 
             return collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
