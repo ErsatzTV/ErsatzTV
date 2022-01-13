@@ -3,6 +3,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
@@ -51,6 +52,18 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return await _dbConnection.ExecuteAsync(
                 @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
                 new { mediaItem.Id }).ToUnit();
+        }
+
+        public async Task<Either<BaseError, Unit>> DeleteItems(List<int> mediaItemIds)
+        {
+            foreach (int mediaItemId in mediaItemIds)
+            {
+                await _dbConnection.ExecuteAsync(
+                    "DELETE FROM MediaItem WHERE Id = @Id",
+                    new { Id = mediaItemId });
+            }
+
+            return Unit.Default;
         }
     }
 }

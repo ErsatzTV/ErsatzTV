@@ -42,6 +42,8 @@ namespace ErsatzTV.Pages
         [Inject]
         protected IMediator Mediator { get; set; }
 
+        protected System.Collections.Generic.HashSet<MediaCardViewModel> SelectedItems => _selectedItems;
+
         protected bool IsSelected(MediaCardViewModel card) =>
             _selectedItems.Contains(card);
 

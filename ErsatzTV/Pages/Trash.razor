@@ -1,11 +1,9 @@
 ﻿@page "/media/trash"
 @using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Application.Search
 @using ErsatzTV.Application.Search.Queries
 @using ErsatzTV.Extensions
 @using Unit = LanguageExt.Unit
+@using ErsatzTV.Application.Maintenance.Commands
 @inherits MultiSelectBase<Search>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel
@@ -17,9 +15,9 @@
             <MudText Typo="Typo.h6" Color="Color.Primary">@SelectionLabel()</MudText>
             <div style="margin-left: auto">
                 <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Add"
-                           OnClick="@(_ => AddSelectionToCollection())">
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           OnClick="@(_ => DeleteFromDatabase())">
                     Delete From Database
                 </MudButton>
                 <MudButton Class="ml-3"
@@ -33,7 +31,6 @@
         }
         else
         {
-            <MudText Style="margin-bottom: auto; margin-top: auto">@_query</MudText>
             if (_movies?.Count > 0)
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#movies")" Style="margin-bottom: auto; margin-top: auto">@_movies.Count Movies</MudLink>
@@ -73,24 +70,11 @@
             {
                 <MudLink Class="ml-4" Href="@(_navigationManager.Uri.Split("#").Head() + "#songs")" Style="margin-bottom: auto; margin-top: auto">@_songs.Count Songs</MudLink>
             }
-            <div style="margin-left: auto">
-                <MudTooltip Text="Add All To Collection">
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="@AddAllToCollection">
-                        Add All
-                    </MudButton>
-                </MudTooltip>
-                <MudTooltip Text="Save As Smart Collection">
-                    <MudButton Class="ml-3" Variant="Variant.Filled"
-                               Color="Color.Secondary"
-                               StartIcon="@Icons.Material.Filled.Save"
-                               OnClick="@SaveAsSmartCollection">
-                        Save As
-                    </MudButton>
-                </MudTooltip>
-            </div>
+
+            if (_movies?.Count == 0 && _shows?.Count == 0 && _seasons?.Count == 0 && _episodes?.Count == 0 && _artists?.Count == 0 && _musicVideos?.Count == 0 && _otherVideos?.Count == 0 && _songs?.Count == 0)
+            {
+                <MudText>Nothing to see here...</MudText>
+            }
         }
     </div>
 </MudPaper>
@@ -114,7 +98,8 @@
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/movies/{card.MovieId}")"
-                           AddToCollectionClicked="@AddToCollection"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
                            IsSelectMode="@IsSelectMode()"/>
@@ -141,7 +126,8 @@
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/tv/shows/{card.TelevisionShowId}")"
-                           AddToCollectionClicked="@AddToCollection"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
                            IsSelectMode="@IsSelectMode()"/>
@@ -168,7 +154,8 @@
             {
                 <MediaCard Data="@card"
                            Link="@($"/media/tv/seasons/{card.TelevisionSeasonId}")"
-                           AddToCollectionClicked="@AddToCollection"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
                            IsSelectMode="@IsSelectMode()"/>
@@ -194,7 +181,8 @@
             @foreach (TelevisionEpisodeCardViewModel card in _episodes.Cards.OrderBy(s => s.SortTitle))
             {
                 <MediaCard Data="@card"
-                           AddToCollectionClicked="@AddToCollection"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
                            Link="@($"/media/tv/seasons/{card.SeasonId}#episode-{card.EpisodeId}")"
                            Subtitle="@($"{card.ShowTitle} - S{card.Season} E{card.Episode}")"
                            SelectClicked="@(e => SelectClicked(card, e))"
@@ -224,7 +212,8 @@
                 <MediaCard Data="@card"
                            Link="@($"/media/music/artists/{card.ArtistId}")"
                            ArtworkKind="ArtworkKind.Thumbnail"
-                           AddToCollectionClicked="@AddToCollection"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
                            IsSelectMode="@IsSelectMode()"/>
@@ -252,7 +241,8 @@
                 <MediaCard Data="@card"
                            Link=""
                            ArtworkKind="ArtworkKind.Thumbnail"
-                           AddToCollectionClicked="@AddToCollection"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
                            IsSelectMode="@IsSelectMode()"/>
@@ -280,7 +270,8 @@
                 <MediaCard Data="@card"
                            Link=""
                            ArtworkKind="ArtworkKind.Thumbnail"
-                           AddToCollectionClicked="@AddToCollection"
+                           DeleteClicked="@DeleteItemFromDatabase"
+                           SelectColor="@Color.Error"
                            SelectClicked="@(e => SelectClicked(card, e))"
                            IsSelected="@IsSelected(card)"
                            IsSelectMode="@IsSelectMode()"/>
@@ -308,7 +299,8 @@
                     <MediaCard Data="@card"
                                Link=""
                                ArtworkKind="ArtworkKind.Thumbnail"
-                               AddToCollectionClicked="@AddToCollection"
+                               DeleteClicked="@DeleteItemFromDatabase"
+                               SelectColor="@Color.Error"
                                SelectClicked="@(e => SelectClicked(card, e))"
                                IsSelected="@IsSelected(card)"
                                IsSelectMode="@IsSelectMode()"/>
@@ -328,9 +320,11 @@
     private SongCardResultsViewModel _songs;
     private ArtistCardResultsViewModel _artists;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync() => RefreshData();
+
+    protected override async Task RefreshData()
     {
-        _query = _navigationManager.Uri.GetSearchQuery();
+        _query = "state:FileNotFound";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
@@ -360,135 +354,6 @@
         }
 
         SelectClicked(GetSortedItems, card, e);
-    }
-
-    private async Task AddToCollection(MediaCardViewModel card)
-    {
-        if (card is MovieCardViewModel movie)
-        {
-            var parameters = new DialogParameters { { "EntityType", "movie" }, { "EntityName", movie.Title } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
-            {
-                var request = new AddMovieToCollection(collection.Id, movie.MovieId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                addResult.Match(
-                    Left: error =>
-                    {
-                        Snackbar.Add($"Unexpected error adding movie to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding movie to collection: {Error}", error.Value);
-                    },
-                    Right: _ => Snackbar.Add($"Added {movie.Title} to collection {collection.Name}", Severity.Success));
-            }
-        }
-
-        if (card is TelevisionShowCardViewModel show)
-        {
-            var parameters = new DialogParameters { { "EntityType", "show" }, { "EntityName", show.Title } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
-            {
-                var request = new AddShowToCollection(collection.Id, show.TelevisionShowId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                addResult.Match(
-                    Left: error =>
-                    {
-                        Snackbar.Add($"Unexpected error adding show to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding show to collection: {Error}", error.Value);
-                    },
-                    Right: _ => Snackbar.Add($"Added {show.Title} to collection {collection.Name}", Severity.Success));
-            }
-        }
-
-        if (card is TelevisionEpisodeCardViewModel episode)
-        {
-            var parameters = new DialogParameters { { "EntityType", "episode" }, { "EntityName", episode.Title } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
-            {
-                var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                addResult.Match(
-                    Left: error =>
-                    {
-                        Snackbar.Add($"Unexpected error adding episode to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding episode to collection: {Error}", error.Value);
-                    },
-                    Right: _ => Snackbar.Add($"Added {episode.Title} to collection {collection.Name}", Severity.Success));
-            }
-        }
-
-        if (card is ArtistCardViewModel artist)
-        {
-            var parameters = new DialogParameters { { "EntityType", "artist" }, { "EntityName", artist.Title } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
-            {
-                var request = new AddArtistToCollection(collection.Id, artist.ArtistId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                addResult.Match(
-                    Left: error =>
-                    {
-                        Snackbar.Add($"Unexpected error adding artist to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding artist to collection: {Error}", error.Value);
-                    },
-                    Right: _ => Snackbar.Add($"Added {artist.Title} to collection {collection.Name}", Severity.Success));
-            }
-        }
-
-        if (card is MusicVideoCardViewModel musicVideo)
-        {
-            var parameters = new DialogParameters { { "EntityType", "music video" }, { "EntityName", musicVideo.Title } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
-            {
-                var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                addResult.Match(
-                    Left: error =>
-                    {
-                        Snackbar.Add($"Unexpected error adding music video to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding music video to collection: {Error}", error.Value);
-                    },
-                    Right: _ => Snackbar.Add($"Added {musicVideo.Title} to collection {collection.Name}", Severity.Success));
-            }
-        }
-        
-        if (card is OtherVideoCardViewModel otherVideo)
-        {
-            var parameters = new DialogParameters { { "EntityType", "other video" }, { "EntityName", otherVideo.Title } };
-            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-
-            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
-            DialogResult result = await dialog.Result;
-            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
-            {
-                var request = new AddOtherVideoToCollection(collection.Id, otherVideo.OtherVideoId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
-                addResult.Match(
-                    Left: error =>
-                    {
-                        Snackbar.Add($"Unexpected error adding other video to collection: {error.Value}");
-                        Logger.LogError("Unexpected error adding other video to collection: {Error}", error.Value);
-                    },
-                    Right: _ => Snackbar.Add($"Added {otherVideo.Title} to collection {collection.Name}", Severity.Success));
-            }
-        }
     }
 
     private string GetMoviesLink()
@@ -578,48 +443,121 @@
         }
         return uri;
     }
+    
+    private Task DeleteFromDatabase() => DeleteItemsFromDatabase(
+        SelectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
+        SelectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
+        SelectedItems.OfType<TelevisionSeasonCardViewModel>().Map(s => s.TelevisionSeasonId).ToList(),
+        SelectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId).ToList(),
+        SelectedItems.OfType<ArtistCardViewModel>().Map(a => a.ArtistId).ToList(),
+        SelectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList(),
+        SelectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
+        SelectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList());
 
-    private async Task AddAllToCollection(MouseEventArgs _)
+    private async Task DeleteItemsFromDatabase(
+        List<int> movieIds,
+        List<int> showIds,
+        List<int> seasonIds,
+        List<int> episodeIds,
+        List<int> artistIds,
+        List<int> musicVideoIds,
+        List<int> otherVideoIds,
+        List<int> songIds,
+        string entityName = "selected items")
     {
-        SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query));
-        await AddItemsToCollection(
-            results.MovieIds,
-            results.ShowIds,
-            results.SeasonIds,
-            results.EpisodeIds,
-            results.ArtistIds,
-            results.MusicVideoIds,
-            results.OtherVideoIds,
-            results.SongIds,
-            "search results");
-    }
+        int count = movieIds.Count + showIds.Count + seasonIds.Count + episodeIds.Count + artistIds.Count +
+                    musicVideoIds.Count + otherVideoIds.Count + songIds.Count;
 
-    private async Task SaveAsSmartCollection(MouseEventArgs _)
-    {
+        var parameters = new DialogParameters
+        { { "EntityType", count.ToString() }, { "EntityName", entityName } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = Dialog.Show<SaveAsSmartCollectionDialog>("Save As Smart Collection", options);
+        IDialogReference dialog = Dialog.Show<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
         DialogResult result = await dialog.Result;
-        if (!result.Cancelled && result.Data is SmartCollectionViewModel collection)
+        if (!result.Cancelled)
         {
-            var request = new UpdateSmartCollection(
-                collection.Id,
-                _query);
+            var request = new DeleteItemsFromDatabase(
+                movieIds.Append(showIds)
+                    .Append(seasonIds)
+                    .Append(episodeIds)
+                    .Append(artistIds)
+                    .Append(musicVideoIds)
+                    .Append(otherVideoIds)
+                    .Append(songIds)
+                    .ToList());
 
-            Either<BaseError, Unit> updateResult = await Mediator.Send(request);
-            updateResult.Match(
+            Either<BaseError, Unit> addResult = await Mediator.Send(request);
+            await addResult.Match(
                 Left: error =>
                 {
-                    Snackbar.Add($"Unexpected error saving smart collection: {error.Value}");
-                    Logger.LogError("Unexpected error saving smart collection: {Error}", error.Value);
+                    Snackbar.Add($"Unexpected error deleting items from database: {error.Value}");
+                    Logger.LogError("Unexpected error deleting items from database: {Error}", error.Value);
+                    return Task.CompletedTask;
                 },
-                Right: _ =>
+                Right: async _ =>
                 {
-                    Snackbar.Add(
-                        $"Saved smart collection {collection.Name}",
-                        Severity.Success);
+                    Snackbar.Add($"Deleted {count} items from the database", Severity.Success);
                     ClearSelection();
+                    await RefreshData();
                 });
+        }
+    }
+
+    private async Task DeleteItemFromDatabase(MediaCardViewModel vm)
+    {
+        DeleteItemsFromDatabase request;
+        
+        switch (vm)
+        {
+            case MovieCardViewModel movie:
+                request = new DeleteItemsFromDatabase(new List<int> { movie.MovieId });
+                await DeleteItemsWithConfirmation("movie", $"{movie.Title} ({movie.Subtitle})", request);
+                break;
+            case TelevisionShowCardViewModel show:
+                request = new DeleteItemsFromDatabase(new List<int> { show.TelevisionShowId });
+                await DeleteItemsWithConfirmation("show", $"{show.Title} ({show.Subtitle})", request);
+                break;
+            case TelevisionSeasonCardViewModel season:
+                request = new DeleteItemsFromDatabase(new List<int> { season.TelevisionSeasonId });
+                await DeleteItemsWithConfirmation("season", $"{season.Title} ({season.Subtitle})", request);
+                break;
+            case TelevisionEpisodeCardViewModel episode:
+                request = new DeleteItemsFromDatabase(new List<int> { episode.EpisodeId });
+                await DeleteItemsWithConfirmation("episode", $"{episode.Title} ({episode.Subtitle})", request);
+                break;
+            case ArtistCardViewModel artist:
+                request = new DeleteItemsFromDatabase(new List<int> { artist.ArtistId });
+                await DeleteItemsWithConfirmation("artist", $"{artist.Title} ({artist.Subtitle})", request);
+                break;
+            case MusicVideoCardViewModel musicVideo:
+                request = new DeleteItemsFromDatabase(new List<int> { musicVideo.MusicVideoId });
+                await DeleteItemsWithConfirmation("music video", $"{musicVideo.Title} ({musicVideo.Subtitle})", request);
+                break;
+            case OtherVideoCardViewModel otherVideo:
+                request = new DeleteItemsFromDatabase(new List<int> { otherVideo.OtherVideoId });
+                await DeleteItemsWithConfirmation("other video", $"{otherVideo.Title} ({otherVideo.Subtitle})", request);
+                break;
+            case SongCardViewModel song:
+                request = new DeleteItemsFromDatabase(new List<int> { song.SongId });
+                await DeleteItemsWithConfirmation("song", $"{song.Title} ({song.Subtitle})", request);
+                break;
+        }
+    }
+
+    private async Task DeleteItemsWithConfirmation(
+        string entityType,
+        string entityName,
+        DeleteItemsFromDatabase request)
+    {
+        var parameters = new DialogParameters { { "EntityType", entityType }, { "EntityName", entityName } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(request);
+            await RefreshData();
         }
     }
 
