@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix local folder scanners to properly detect removed/re-added folders with unchanged contents
 - Fix double-click startup on mac
 
+### Added
+- Add trash system for local libraries to maintain collection and schedule integrity through media share outages
+  - When items are missing from disk, they will be flagged and present in the `Media` > `Trash` page
+  - The trash page can be used to permanently remove missing items from the database
+  - When items reappear at the expected location on disk, they will be unflagged and removed from the trash
+
+### Changed
+- Local libraries only: when items are missing from disk, they will be added to the trash and no longer removed from collections, etc.
+
 ## [0.3.6-alpha] - 2022-01-10
 ### Fixed
 - Properly index `minutes` field when adding new items during scan (vs when rebuilding index)
