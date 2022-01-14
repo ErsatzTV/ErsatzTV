@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix local folder scanners to properly detect removed/re-added folders with unchanged contents
 - Fix double-click startup on mac
 - Fix trakt list sync when show does not contain a year
+- Properly unlock libraries when a scan is unable to be performed because ffmpeg or ffprobe have not been found
 
 ### Added
 - Add trash system for local libraries to maintain collection and schedule integrity through media share outages
