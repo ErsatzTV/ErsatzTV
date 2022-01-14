@@ -160,15 +160,36 @@ namespace ErsatzTV.Application.MediaSources.Commands
             return Unit.Default;
         }
 
-        private async Task<Validation<BaseError, RequestParameters>> Validate(IScanLocalLibrary request) =>
-            (await LocalLibraryMustExist(request), await ValidateFFprobePath(), await ValidateFFmpegPath(), await ValidateLibraryRefreshInterval())
-            .Apply(
-                (library, ffprobePath, ffmpegPath, libraryRefreshInterval) => new RequestParameters(
-                    library,
-                    ffprobePath,
-                    ffmpegPath,
-                    request.ForceScan,
-                    libraryRefreshInterval));
+        private async Task<Validation<BaseError, RequestParameters>> Validate(IScanLocalLibrary request)
+        {
+            Validation<BaseError, LocalLibrary> libraryResult = await LocalLibraryMustExist(request);
+            Validation<BaseError, string> ffprobePathResult = await ValidateFFprobePath();
+            Validation<BaseError, string> ffmpegPathResult = await ValidateFFmpegPath();
+            Validation<BaseError, int> refreshIntervalResult = await ValidateLibraryRefreshInterval();
+
+            try
+            {
+                return (libraryResult, ffprobePathResult, ffmpegPathResult, refreshIntervalResult)
+                    .Apply(
+                        (library, ffprobePath, ffmpegPath, libraryRefreshInterval) => new RequestParameters(
+                            library,
+                            ffprobePath,
+                            ffmpegPath,
+                            request.ForceScan,
+                            libraryRefreshInterval));
+            }
+            finally
+            {
+                // ensure we unlock the library if any validation is unsuccessful
+                foreach (LocalLibrary library in libraryResult.SuccessToSeq())
+                {
+                    if (ffprobePathResult.IsFail || ffmpegPathResult.IsFail || refreshIntervalResult.IsFail)
+                    {
+                        _entityLocker.UnlockLibrary(library.Id);
+                    }
+                }
+            }
+        }
 
         private Task<Validation<BaseError, LocalLibrary>> LocalLibraryMustExist(
             IScanLocalLibrary request) =>
