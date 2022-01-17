@@ -94,6 +94,17 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 HardwareAccelerationKind.Vaapi
             };
+
+            public static string[] VideoToolboxCodecs =
+            {
+                "h264_videotoolbox",
+                "hevc_videotoolbox"
+            };
+
+            public static HardwareAccelerationKind[] VideoToolboxAcceleration =
+            {
+                HardwareAccelerationKind.VideoToolbox
+            };
         }
 
         [Test, Combinatorial]
@@ -108,10 +119,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             bool pad,
             // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         {
             string name = GetStringSha256Hash(
                 $"{inputCodec}_{inputPixelFormat}_{pad}_{profileResolution}_{profileCodec}_{profileAcceleration}");
