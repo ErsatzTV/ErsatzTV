@@ -108,6 +108,10 @@ namespace ErsatzTV.Core.FFmpeg
                     _arguments.Add("-hwaccel_output_format");
                     _arguments.Add("vaapi");
                     break;
+                case HardwareAccelerationKind.VideoToolbox:
+                    _arguments.Add("-hwaccel");
+                    _arguments.Add("videotoolbox");
+                    break;
             }
 
             _complexFilterBuilder = _complexFilterBuilder.WithHardwareAcceleration(hwAccel);

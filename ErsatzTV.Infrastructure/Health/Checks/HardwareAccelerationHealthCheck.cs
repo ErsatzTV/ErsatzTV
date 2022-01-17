@@ -115,6 +115,9 @@ namespace ErsatzTV.Infrastructure.Health.Checks
                     case "qsv":
                         result.Add(HardwareAccelerationKind.Qsv);
                         break;
+                    case "videotoolbox":
+                        result.Add(HardwareAccelerationKind.VideoToolbox);
+                        break;
                 }
             }
 

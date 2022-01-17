@@ -10,6 +10,7 @@ namespace ErsatzTV.Validators
         private static readonly List<string> QsvEncoders = new() { "h264_qsv", "hevc_qsv", "mpeg2_qsv" };
         private static readonly List<string> NvencEncoders = new() { "h264_nvenc", "hevc_nvenc" };
         private static readonly List<string> VaapiEncoders = new() { "h264_vaapi", "hevc_vaapi", "mpeg2_vaapi" };
+        private static readonly List<string> VideoToolboxEncoders = new() { "h264_videotoolbox", "hevc_videotoolbox" };
 
         public FFmpegProfileEditViewModelValidator()
         {
@@ -54,10 +55,20 @@ namespace ErsatzTV.Validators
                 });
 
             When(
+                x => x.HardwareAcceleration == HardwareAccelerationKind.VideoToolbox,
+                () =>
+                {
+                    RuleFor(x => x.VideoCodec).Must(c => VideoToolboxEncoders.Contains(c))
+                        .WithMessage("VideoToolbox codec is required (h264_videotoolbox, hevc_videotoolbox)");
+                });
+
+            When(
                 x => x.HardwareAcceleration == HardwareAccelerationKind.None,
                 () =>
                 {
-                    RuleFor(x => x.VideoCodec).Must(c => !QsvEncoders.Contains(c) && !NvencEncoders.Contains(c))
+                    RuleFor(x => x.VideoCodec).Must(
+                            c => !QsvEncoders.Contains(c) && !NvencEncoders.Contains(c) && !VaapiEncoders.Contains(c) &&
+                                 !VideoToolboxEncoders.Contains(c))
                         .WithMessage("Hardware acceleration is required for this codec");
                 });
         }
