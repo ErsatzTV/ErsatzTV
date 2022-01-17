@@ -149,6 +149,7 @@ namespace ErsatzTV.Core.FFmpeg
 
                 HardwareAccelerationKind.Nvenc => !isSong,
                 HardwareAccelerationKind.Qsv => !isSong,
+                HardwareAccelerationKind.VideoToolbox => false,
                 _ => false
             };
 
@@ -169,9 +170,11 @@ namespace ErsatzTV.Core.FFmpeg
                     audioFilterQueue.Add($"apad=whole_dur={durationString}ms");
                 });
 
-            bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None && !isHardwareDecode &&
+            bool usesHardwareFilters = acceleration != HardwareAccelerationKind.None &&
+                                       acceleration != HardwareAccelerationKind.VideoToolbox &&
+                                       !isHardwareDecode &&
                                        (_deinterlace || _scaleToSize.IsSome);
-            
+
             if (isSong)
             {
                 switch (acceleration)

@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - When items are missing from disk, they will be flagged and present in the `Media` > `Trash` page
   - The trash page can be used to permanently remove missing items from the database
   - When items reappear at the expected location on disk, they will be unflagged and removed from the trash
+- Add basic Mac hardware acceleration using VideoToolbox
 
 ### Changed
 - Local libraries only: when items are missing from disk, they will be added to the trash and no longer removed from collections, etc.
