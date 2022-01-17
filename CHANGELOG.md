@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.3.7-alpha] - 2022-01-17
 ### Fixed
 - Fix local folder scanners to properly detect removed/re-added folders with unchanged contents
 - Fix double-click startup on mac
@@ -909,8 +911,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.6-alpha...HEAD
-[0.3.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.5-alpha...v0.3.6-alpha
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.7-alpha...HEAD
+[0.3.7-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.6-alpha...v0.3.7-alpha
+[0.3.6-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.5-alpha...v0.3.6-alpha
 [0.3.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.4-alpha...v0.3.5-alpha
 [0.3.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.3-alpha...v0.3.4-alpha
 [0.3.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.2-alpha...v0.3.3-alpha
