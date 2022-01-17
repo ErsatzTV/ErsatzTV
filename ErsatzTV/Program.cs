@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using Microsoft.AspNetCore.Hosting;
@@ -12,14 +11,32 @@ namespace ErsatzTV
 {
     public class Program
     {
-        private static IConfiguration Configuration { get; } = new ConfigurationBuilder()
-            .SetBasePath(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location))
-            .AddJsonFile("appsettings.json", false, true)
-            .AddJsonFile(
-                $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json",
-                true)
-            .AddEnvironmentVariables()
-            .Build();
+        static Program()
+        {
+            var executablePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+            var executable = Path.GetFileNameWithoutExtension(executablePath);
+
+            IConfigurationBuilder builder = new ConfigurationBuilder();
+
+            if ("dotnet".Equals(executable, StringComparison.InvariantCultureIgnoreCase))
+            {
+                builder = builder.SetBasePath(Path.GetDirectoryName(typeof(Program).Assembly.Location));
+            }
+            else
+            {
+                builder = builder.SetBasePath(Path.GetDirectoryName(executablePath));
+            }
+
+            Configuration = builder
+                .AddJsonFile("appsettings.json", false, true)
+                .AddJsonFile(
+                    $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json",
+                    true)
+                .AddEnvironmentVariables()
+                .Build();
+        }
+
+        private static IConfiguration Configuration { get; }
 
         public static async Task<int> Main(string[] args)
         {
