@@ -29,7 +29,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.0.4" />
+      <PackageReference Include="MudBlazor" Version="6.0.5" />
       <PackageReference Include="NaturalSort.Extension" Version="3.2.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="5.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.1.15" />
