@@ -72,10 +72,10 @@ namespace ErsatzTV.Core.Scheduling
                     itemDuration,
                     itemChapters);
                 
-                // if the current time is before the next schedule item, but the current finish
-                // is after, we need to move on to the next schedule item
-                willFinishInTime = itemStartTime > peekScheduleItemStart ||
-                                   itemEndTimeWithFiller <= peekScheduleItemStart;
+                // if the next schedule item is supposed to start during this item,
+                // don't schedule this item and just move on
+                willFinishInTime = peekScheduleItemStart < itemStartTime ||
+                                   peekScheduleItemStart >= itemEndTimeWithFiller;
 
                 if (willFinishInTime)
                 {

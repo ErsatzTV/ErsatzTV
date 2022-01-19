@@ -79,7 +79,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         }
         
-                [Test]
+        [Test]
         public void Should_Fill_Exactly_To_Next_Schedule_Item_Flood()
         {
             Collection collectionOne = TwoItemCollection(1, 2, TimeSpan.FromHours(1));
