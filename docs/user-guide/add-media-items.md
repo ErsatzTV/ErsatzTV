@@ -1,6 +1,9 @@
 ﻿ErsatzTV needs to know about your media items in order to create channels.
 Four library kinds are currently supported: [Local](#local-libraries), [Plex](#plex-libraries), [Jellyfin](#jellyfin-libraries) and [Emby](#emby-libraries).
 
+ErsatzTV supports a subset of media kinds when synchronizing from media servers, i.e. [Plex](#plex-libraries), [Jellyfin](#jellyfin-libraries) and [Emby](#emby-libraries) only support `Movies` and `Shows`.
+[Local Libraries](#local-libraries) support all media kinds: `Movies`, `Shows`, `Music Videos`, `Other Videos` and `Songs`.
+
 ## Local Libraries
 
 Local libraries provide a way to schedule media directly from folders; no media server is necessary.
