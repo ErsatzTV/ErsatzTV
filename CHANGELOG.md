@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix issue preventing some versions of ffmpeg (usually 4.4.x) from streaming MPEG-TS (Legacy) channels at all
+  - The issue appears to be caused by using a thread count other than `1`
+  - Thread count is now forced to `1` for all streaming modes other than HLS Segmenter
 
 ## [0.3.7-alpha] - 2022-01-17
 ### Fixed

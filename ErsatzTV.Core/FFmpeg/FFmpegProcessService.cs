@@ -65,7 +65,8 @@ namespace ErsatzTV.Core.FFmpeg
                 start,
                 now,
                 inPoint,
-                outPoint);
+                outPoint,
+                hlsRealtime);
 
             Option<WatermarkOptions> watermarkOptions =
                 await GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
@@ -158,10 +159,10 @@ namespace ErsatzTV.Core.FFmpeg
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
                     return builder.WithHls(channel.Number, videoVersion)
-                        .WithRealtimeOutput(hlsRealtime)
                         .Build();
                 default:
                     return builder.WithFormat("mpegts")
+                        .WithInitialDiscontinuity()
                         .WithPipe()
                         .Build();
             }
@@ -221,7 +222,6 @@ namespace ErsatzTV.Core.FFmpeg
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
                     return builder.WithHls(channel.Number, None)
-                        .WithRealtimeOutput(hlsRealtime)
                         .Build();
                 default:
                     return builder.WithFormat("mpegts")
@@ -255,7 +255,7 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithThreads(1)
                 .WithQuiet()
                 .WithFormatFlags(playbackSettings.FormatFlags)
-                .WithRealtimeOutput(playbackSettings.RealtimeOutput)
+                .WithRealtimeOutput(true)
                 .WithInput($"http://localhost:{Settings.ListenPort}/iptv/channel/{channel.Number}.m3u8?mode=segmenter")
                 .WithMap("0")
                 .WithCopyCodec()
@@ -335,7 +335,8 @@ namespace ErsatzTV.Core.FFmpeg
                     DateTimeOffset.UnixEpoch,
                     DateTimeOffset.UnixEpoch,
                     TimeSpan.Zero,
-                    TimeSpan.Zero);
+                    TimeSpan.Zero,
+                    false);
 
                 FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
                     .WithThreads(1)
