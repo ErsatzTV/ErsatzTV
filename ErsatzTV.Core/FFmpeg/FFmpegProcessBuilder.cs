@@ -379,7 +379,14 @@ namespace ErsatzTV.Core.FFmpeg
             _arguments.Add($"{format}");
             return this;
         }
-        
+
+        public FFmpegProcessBuilder WithInitialDiscontinuity()
+        {
+            _arguments.Add("-mpegts_flags");
+            _arguments.Add("+initial_discontinuity");
+            return this;
+        }
+
         public FFmpegProcessBuilder WithHls(string channelNumber, Option<MediaVersion> mediaVersion)
         {
             const int SEGMENT_SECONDS = 4;
