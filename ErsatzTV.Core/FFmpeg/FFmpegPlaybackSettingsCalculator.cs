@@ -51,13 +51,21 @@ namespace ErsatzTV.Core.FFmpeg
             DateTimeOffset start,
             DateTimeOffset now,
             TimeSpan inPoint,
-            TimeSpan outPoint)
+            TimeSpan outPoint,
+            bool hlsRealtime)
         {
             var result = new FFmpegPlaybackSettings
             {
-                ThreadCount = ffmpegProfile.ThreadCount,
-                FormatFlags = CommonFormatFlags
+                FormatFlags = CommonFormatFlags,
+                RealtimeOutput = streamingMode switch
+                {
+                    StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                    _ => true
+                }
             };
+
+            // always use one thread with realtime output
+            result.ThreadCount = result.RealtimeOutput ? 1 : ffmpegProfile.ThreadCount;
 
             if (now != start || inPoint != TimeSpan.Zero)
             {
