@@ -11,7 +11,7 @@ namespace ErsatzTV.Infrastructure.Health.Checks
 {
     public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthCheck
     {
-        private const string BundledVersion = "N-105153-g8abc192236";
+        private const string BundledVersion = "N-105324-g0f5fd44dc9";
         private readonly IConfigElementRepository _configElementRepository;
 
         public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository)
@@ -71,19 +71,15 @@ namespace ErsatzTV.Infrastructure.Health.Checks
         
         private Option<HealthCheckResult> ValidateVersion(string version, string app)
         {
-            if (version.StartsWith("3."))
+            if (version.StartsWith("3.") || version.StartsWith("4."))
             {
-                return FailResult($"{app} version {version} is too old; please install 4.4!");
+                return FailResult($"{app} version {version} is too old; please install 5.0!");
             }
 
-            if (version.StartsWith("4.3"))
+            if (!version.StartsWith("5.0") && version != BundledVersion)
             {
-                return WarningResult($"{app} version 4.4 is now supported, please upgrade from 4.3!");
-            }
-
-            if (!version.StartsWith("4.4") && version != BundledVersion)
-            {
-                return WarningResult($"{app} version {version} is unexpected and may have problems; please install 4.4!");
+                return WarningResult(
+                    $"{app} version {version} is unexpected and may have problems; please install 5.0!");
             }
 
             return None;
