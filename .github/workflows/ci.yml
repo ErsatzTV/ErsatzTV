@@ -32,11 +32,75 @@ jobs:
 
       - name: Test
         run: dotnet test --no-restore --verbosity normal
+  build_test_and_release:
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[no build]')
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            kind: linux
+            target: linux-x64
+          - os: ubuntu-latest
+            kind: linux
+            target: linux-arm
+          - os: windows-latest
+            kind: windows
+            target: win-x64
+          - os: macos-latest
+            kind: macOS
+            target: osx-x64
+          - os: macos-latest
+            kind: macOS
+            target: osx-arm64
+    steps:
+      - name: Get the sources
+        uses: actions/checkout@v2
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Clean
+        run: dotnet clean --configuration Release && dotnet nuget locals all --clear
+
+      - name: Install dependencies
+        run: dotnet restore
+
+      - name: Build
+        shell: bash
+        run: |
+          # Define some variables for things we need
+          tag=$(git describe --tags --abbrev=0)
+          tag2="${tag:1}"
+          short=$(git rev-parse --short HEAD)
+          final="${tag2/alpha/$short}"
+          release_name="ErsatzTV-$final-${{ matrix.target }}"
+          
+          # Build everything
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" /property:InformationalVersion="$final-${{ matrix.target }}" /property:EnableCompressionInSingleFile=true /property:DebugType=Embedded /property:PublishSingleFile=true --self-contained true
+          
+          # Pack files
+          if [ "${{ matrix.target }}" == "win-x64" ]; then
+            7z a -tzip "${release_name}.zip" "./${release_name}/*"
+          else
+            tar czvf "${release_name}.tar.gz" "$release_name"
+          fi
+          
+          # Delete output directory
+          rm -r "$release_name"
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          path: |
+            ErsatzTV*.zip
+            ErsatzTV*.tar.gz
   build_and_push:
     name: Build & Publish to Docker Hub
     needs: build_and_test
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[no docker]')
+    if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[no build]')
     steps:
       - name: Checkout
         uses: actions/checkout@v2
