@@ -32,7 +32,7 @@ jobs:
 
       - name: Test
         run: dotnet test --no-restore --verbosity normal
-  build_test_and_release:
+  build_and_upload:
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' && !contains(github.event.head_commit.message, '[no build]')
     strategy:
