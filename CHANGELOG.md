@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - The issue appears to be caused by using a thread count other than `1`
   - Thread count is now forced to `1` for all streaming modes other than HLS Segmenter
 
+### Changed
+- Upgrade ffmpeg from 4.4 to 5.0 in all docker images
+    - Upgrading from 4.4 to 5.0 is recommended for all installations
+ 
 ## [0.3.7-alpha] - 2022-01-17
 ### Fixed
 - Fix local folder scanners to properly detect removed/re-added folders with unchanged contents
