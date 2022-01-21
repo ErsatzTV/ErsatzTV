@@ -113,6 +113,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(ovm => ids.Contains(ovm.SongId))
                 .Include(ovm => ovm.Song)
                 .Include(ovm => ovm.Artwork)
+                .Include(sm => sm.Song)
+                .ThenInclude(s => s.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(ovm => ovm.SortTitle)
                 .ToListAsync();
         }
