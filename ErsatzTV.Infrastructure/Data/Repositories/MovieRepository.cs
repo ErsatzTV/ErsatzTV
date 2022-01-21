@@ -153,8 +153,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .AsNoTracking()
                 .Filter(mm => ids.Contains(mm.MovieId))
                 .Include(mm => mm.Artwork)
-                .OrderBy(mm => mm.SortTitle)
                 .Include(mm => mm.Movie)
+                .ThenInclude(m => m.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
+                .OrderBy(mm => mm.SortTitle)
                 .ToListAsync();
         }
 

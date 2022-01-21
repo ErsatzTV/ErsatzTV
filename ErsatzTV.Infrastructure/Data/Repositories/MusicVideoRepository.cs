@@ -133,6 +133,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Include(mvm => mvm.MusicVideo)
                 .ThenInclude(mv => mv.Artist)
                 .ThenInclude(a => a.ArtistMetadata)
+                .Include(mvm => mvm.MusicVideo)
+                .ThenInclude(e => e.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .Include(mvm => mvm.Artwork)
                 .OrderBy(mvm => mvm.SortTitle)
                 .ToListAsync();
