@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace ErsatzTV.Core.FFmpeg
@@ -55,7 +56,11 @@ namespace ErsatzTV.Core.FFmpeg
                     continue;
                 }
 
-                var duration = TimeSpan.FromSeconds(double.Parse(lines[i].TrimEnd(',').Split(':')[1]));
+                var duration = TimeSpan.FromSeconds(
+                    double.Parse(
+                        lines[i].TrimEnd(',').Split(':')[1],
+                        NumberStyles.Number,
+                        CultureInfo.InvariantCulture));
                 if (currentTime < filterBefore)
                 {
                     currentTime += duration;
