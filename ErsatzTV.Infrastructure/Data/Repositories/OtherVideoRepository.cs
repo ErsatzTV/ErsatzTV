@@ -100,6 +100,9 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 .Filter(ovm => ids.Contains(ovm.OtherVideoId))
                 .Include(ovm => ovm.OtherVideo)
                 .Include(ovm => ovm.Artwork)
+                .Include(ovm => ovm.OtherVideo)
+                .ThenInclude(ov => ov.MediaVersions)
+                .ThenInclude(mv => mv.MediaFiles)
                 .OrderBy(ovm => ovm.SortTitle)
                 .ToListAsync();
         }
