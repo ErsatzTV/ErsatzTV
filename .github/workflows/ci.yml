@@ -81,7 +81,6 @@ jobs:
           short=$(git rev-parse --short HEAD)
           final="${tag2/alpha/$short}"
           release_name="ErsatzTV-$final-${{ matrix.target }}"
-          echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
           
           # Build everything
           dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" /property:InformationalVersion="$final-${{ matrix.target }}" /property:EnableCompressionInSingleFile=true /property:DebugType=Embedded /property:PublishSingleFile=true --self-contained true
@@ -95,18 +94,15 @@ jobs:
           
           # Delete output directory
           rm -r "$release_name"
-      - name: Upload Windows
-        uses: actions/upload-artifact@v2
-        if: ${{ matrix.target == 'win-x64' }}
+      - name: Publish
+        uses: pyTooling/Actions/releaser@r0
         with:
-          name: ${{ env.RELEASE_NAME }}.zip
-          path: ErsatzTV*.zip
-      - name: Upload Everything Else
-        uses: actions/upload-artifact@v2
-        if: ${{ matrix.target != 'win-x64' }}
-        with:
-          name: ${{ env.RELEASE_NAME }}.tar.gz
-          path: ErsatzTV*.tar.gz
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: develop
+          rm: true
+          files: |
+            ErsatzTV*.zip
+            ErsatzTV*.tar.gz
   build_and_push:
     name: Build & Publish to Docker Hub
     needs: build_and_test
