@@ -94,7 +94,7 @@ jobs:
           if [ "${{ matrix.kind }}" == "macOS" ]; then
             brew tap mitchellh/gon
             brew install mitchellh/gon/gon
-            dotnet msbuild ErsatzTV/ErsatzTV.csproj -t:BundleApp -p:RuntimeIdentifier="${{ matrix.target }}" -p:CFBundleVersion="${{ tag2 }}" -p:Configuration=Release -p:CFBundleShortVersionString="${{ tag2 }}" -p:InformationalVersion="$final-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true -p:PublishDir=$(pwd)/release
+            dotnet msbuild ErsatzTV/ErsatzTV.csproj -t:BundleApp -p:RuntimeIdentifier="${{ matrix.target }}" -p:CFBundleVersion="${tag2}" -p:Configuration=Release -p:CFBundleShortVersionString="${tag2}" -p:InformationalVersion="$final-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true -p:PublishDir=$(pwd)/release
             cp scripts/launcher.sh release/ErsatzTV.app/Contents/MacOS/"
             gon -log-level=debug -log-json ./gon.json
             mv release/ErsatzTV.dmg "${release_name}.dmg"
