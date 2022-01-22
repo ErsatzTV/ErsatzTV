@@ -5,7 +5,8 @@
     "password":  "@env:AC_PASSWORD"
   },
   "sign" :{
-    "application_identity" : "C3BBCFB2D6851FF0DCA6CAC06A3EF1ECE71F9FFF"
+    "application_identity" : "C3BBCFB2D6851FF0DCA6CAC06A3EF1ECE71F9FFF",
+    "entitlements_file": "./scripts/macOS/ErsatzTV.entitlements"
   },
   "dmg" :{
     "output_path":  "./release/ErsatzTV.dmg",
