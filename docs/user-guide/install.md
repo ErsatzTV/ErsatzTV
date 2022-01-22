@@ -82,6 +82,11 @@ docker run -d \
 
 7. Open your browser to `http://[docker-ip]:8409` (First run may take a few minutes to be available.)
 
+## Development Builds
+
+Development builds for all supported architectures can be found on the [develop release](https://github.com/jasongdove/ErsatzTV/releases/tag/develop).
+As with the docker development tags, the development builds are updated with every push to the main branch and have the potential to be less stable than releases.
+
 ## Windows
 
 ### Manual Installation
