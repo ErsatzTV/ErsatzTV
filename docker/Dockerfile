@@ -13,6 +13,7 @@ WORKDIR /source
 COPY *.sln .
 COPY nuget.config .
 COPY lib/nuget/* ./lib/nuget/
+COPY artwork/* ./artwork/
 COPY ErsatzTV/*.csproj ./ErsatzTV/
 COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
