@@ -100,9 +100,10 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: develop
+          fail-if-no-assets: false
           assets: |
-            ${{ env.RELEASE_NAME }}.zip
-            ${{ env.RELEASE_NAME }}.tar.gz
+            *${{ matrix.target }}.zip
+            *${{ matrix.target }}.tar.gz
       - name: Publish
         uses: softprops/action-gh-release@v1
         with:
