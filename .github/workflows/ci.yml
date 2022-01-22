@@ -70,7 +70,7 @@ jobs:
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
       - name: Install dependencies
-        run: dotnet restore
+        run: dotnet restore -r "${{ matrix.target}}"
         
       - name: Import Code-Signing Certificates
         uses: Apple-Actions/import-codesign-certs@v1
@@ -94,7 +94,7 @@ jobs:
           if [ "${{ matrix.kind }}" == "macOS" ]; then
             brew tap mitchellh/gon
             brew install mitchellh/gon/gon
-            dotnet msbuild ErsatzTV/ErsatzTV.csproj -t:BundleApp -p:RuntimeIdentifier="${{ matrix.target }}" -p:CFBundleVersion="${tag2}" -p:Configuration=Release -p:CFBundleShortVersionString="${tag2}" -p:InformationalVersion="$final-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true -p:PublishDir=$(pwd)/release
+            dotnet msbuild ErsatzTV/ErsatzTV.csproj -t:BundleApp -p:RuntimeIdentifier="${{ matrix.target }}" -p:CFBundleVersion="${tag2}" -p:Configuration=Release -p:CFBundleShortVersionString="${tag2}" -p:InformationalVersion="$final-${{ matrix.target }}" -p:PublishDir=$(pwd)/release
             cp scripts/macOS/launcher.sh release/ErsatzTV.app/Contents/MacOS/
             scripts/macOS/sign.sh
             gon -log-level=debug -log-json ./gon.json
