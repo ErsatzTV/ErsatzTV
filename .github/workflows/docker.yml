@@ -1,22 +1,26 @@
 ﻿name: Build & Publish to Docker Hub
 on:
-  workflow_call:
   workflow_dispatch:
+  workflow_call:
     inputs:
       base_version:
         description: 'Base version (latest or develop)'
         required: true
+        type: string
       info_version:
         description: 'Informational version number (e.g. 0.3.7-alpha)'
         required: true
+        type: string
       tag_version:
         description: 'Docker tag version (e.g. v0.3.7)'
         required: true
+        type: string
 
 jobs:
   build_and_push:
     name: Build & Publish to Docker Hub
     runs-on: ubuntu-latest
+    if: !contains(github.event.head_commit.message, '[no build]')
     steps:
       - name: Checkout
         uses: actions/checkout@v2
