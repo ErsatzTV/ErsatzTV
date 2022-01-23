@@ -73,9 +73,6 @@ jobs:
         run: |
           dotnet msbuild ErsatzTV/ErsatzTV.csproj -t:BundleApp -p:RuntimeIdentifier="${{ matrix.target }}" -p:CFBundleVersion="${{ inputs.info_version }}" -p:Configuration=Release -p:CFBundleShortVersionString="${{ inputs.info_version }}" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:PublishDir=$(pwd)/release
           cp scripts/macOS/launcher.sh release/ErsatzTV.app/Contents/MacOS/
-        env:
-          AC_USERNAME: ${{ secrets.ac_username }}
-          AC_PASSWORD: ${{ secrets.ac_password }}
 
       - name: Sign
         shell: bash
@@ -87,6 +84,9 @@ jobs:
           brew tap mitchellh/gon
           brew install mitchellh/gon/gon
           gon -log-level=debug -log-json ./gon.json
+        env:
+          AC_USERNAME: ${{ secrets.ac_username }}
+          AC_PASSWORD: ${{ secrets.ac_password }}
 
       - name: Cleanup
         shell: bash
