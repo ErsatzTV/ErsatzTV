@@ -23,7 +23,7 @@ on:
         required: true
       ac_password:
         required: true
-      github_token:
+      gh_token:
         required: true
 jobs:
   build_and_upload:
@@ -109,7 +109,7 @@ jobs:
       - name: Delete old release assets
         uses: mknejp/delete-release-assets@v1
         with:
-          token: ${{ secrets.github_token }}
+          token: ${{ secrets.gh_token }}
           tag: ${{ inputs.release_tag }}
           fail-if-no-assets: false
           assets: |
@@ -126,4 +126,4 @@ jobs:
             ${{ env.RELEASE_NAME }}.tar.gz
             ${{ env.RELEASE_NAME }}.dmg
         env:
-          GITHUB_TOKEN: ${{ secrets.github_token }}
+          GITHUB_TOKEN: ${{ secrets.gh_token }}

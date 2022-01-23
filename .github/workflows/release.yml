@@ -40,7 +40,7 @@ jobs:
       apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
       ac_username: ${{ secrets.AC_USERNAME }}
       ac_password: ${{ secrets.AC_PASSWORD }}
-      github_token: ${{ secrets.GITHUB_TOKEN }}
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
   build_and_push:
     uses: jasongdove/ersatztv/.github/workflows/docker.yml@main
     needs: calculate_version
