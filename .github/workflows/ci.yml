@@ -30,15 +30,21 @@ jobs:
           final="${tag2/alpha/$short}"
           echo "ARTIFACTS_VERSION=${final}" >> $GITHUB_ENV
           echo "INFO_VERSION=${tag2}" >> $GITHUB_ENV
+    outputs:
+      git_tag: ${{ env.GIT_TAG }}
+      artifacts_version: ${{ env.ARTIFACTS_VERSION }}
+      info_version: ${{ env.INFO_VERSION }}
   build_and_upload:
     uses: jasongdove/ersatztv/.github/workflows/artifacts.yml@main
+    needs: calculate_version
     with:
       release_tag: develop
-      release_version: ${{ env.ARTIFACTS_VERSION }}
-      info_version: ${{ env.INFO_VERSION }}
+      release_version: ${{ needs.calculate_version.outputs.artifacts_version }}
+      info_version: ${{ needs.calculate_version.outputs.info_version }}
   build_and_push:
     uses: jasongdove/ersatztv/.github/workflows/docker.yml@main
+    needs: calculate_version
     with:
       base_version: develop
-      info_version: ${{ env.GIT_TAG }}
+      info_version: ${{ needs.calculate_version.outputs.git_tag }}
       tag_version: ${{ github.sha }}
