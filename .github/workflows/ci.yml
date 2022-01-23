@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
 jobs:
   calculate_version:
     name: Calculate version information

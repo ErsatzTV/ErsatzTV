@@ -1,6 +1,5 @@
 ﻿name: Build Artifacts
 on:
-  workflow_dispatch:
   workflow_call:
     inputs:
       release_tag:
@@ -15,7 +14,6 @@ on:
         description: 'Informational version number (e.g. 0.3.7-alpha)'
         required: true
         type: string
-
 jobs:
   build_and_upload:
     name: Build & Upload Artifacts

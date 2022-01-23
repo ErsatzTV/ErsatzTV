@@ -1,7 +1,6 @@
 ﻿name: Pull Request
 on:
   pull_request:
-
 jobs:
   build_and_test:
     runs-on: ${{ matrix.os }}

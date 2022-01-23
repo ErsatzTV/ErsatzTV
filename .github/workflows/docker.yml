@@ -1,6 +1,5 @@
 ﻿name: Build & Publish to Docker Hub
 on:
-  workflow_dispatch:
   workflow_call:
     inputs:
       base_version:
@@ -15,7 +14,6 @@ on:
         description: 'Docker tag version (e.g. v0.3.7)'
         required: true
         type: string
-
 jobs:
   build_and_push:
     name: Build & Publish
