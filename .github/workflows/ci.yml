@@ -25,11 +25,10 @@ jobs:
         shell: bash
         run: |
           tag=$(git describe --tags --abbrev=0)
-          tag2="${tag:1}"
           short=$(git rev-parse --short HEAD)
-          final="${tag2/alpha/$short}"
+          final="${tag/alpha/$short}"
           echo "ARTIFACTS_VERSION=${final}" >> $GITHUB_ENV
-          echo "INFO_VERSION=${tag2}" >> $GITHUB_ENV
+          echo "INFO_VERSION=${tag:1}" >> $GITHUB_ENV
     outputs:
       git_tag: ${{ env.GIT_TAG }}
       artifacts_version: ${{ env.ARTIFACTS_VERSION }}
