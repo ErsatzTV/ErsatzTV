@@ -14,6 +14,17 @@ on:
         description: 'Informational version number (e.g. 0.3.7-alpha)'
         required: true
         type: string
+    secrets:
+      apple_developer_certificate_p12_base64:
+        required: true
+      apple_developer_certificate_password:
+        required: true
+      ac_username:
+        required: true
+      ac_password:
+        required: true
+      github_token:
+        required: true
 jobs:
   build_and_upload:
     name: Build & Upload Artifacts
@@ -58,8 +69,8 @@ jobs:
         uses: Apple-Actions/import-codesign-certs@v1
         if: matrix.kind == 'macOS'
         with:
-          p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
-          p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+          p12-file-base64: ${{ secrets.apple_developer_certificate_p12_base64 }}
+          p12-password: ${{ secrets.apple_developer_certificate_password }}
 
       - name: Build
         shell: bash
@@ -92,13 +103,13 @@ jobs:
             rm -r "$release_name"
           fi
         env:
-          AC_USERNAME: ${{ secrets.AC_USERNAME }}
-          AC_PASSWORD: ${{ secrets.AC_PASSWORD }}
+          AC_USERNAME: ${{ secrets.ac_username }}
+          AC_PASSWORD: ${{ secrets.ac_password }}
 
       - name: Delete old release assets
         uses: mknejp/delete-release-assets@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.github_token }}
           tag: ${{ inputs.release_tag }}
           fail-if-no-assets: false
           assets: |
@@ -115,4 +126,4 @@ jobs:
             ${{ env.RELEASE_NAME }}.tar.gz
             ${{ env.RELEASE_NAME }}.dmg
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.github_token }}
