@@ -18,7 +18,7 @@ jobs:
   build_and_upload:
     name: Build & Upload Artifacts
     runs-on: ${{ matrix.os }}
-    if: !contains(github.event.head_commit.message, '[no build]')
+    if: contains(github.event.head_commit.message, '[no build]') == false
     strategy:
       matrix:
         include:

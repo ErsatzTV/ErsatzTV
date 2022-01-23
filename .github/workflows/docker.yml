@@ -18,7 +18,7 @@ jobs:
   build_and_push:
     name: Build & Publish
     runs-on: ubuntu-latest
-    if: !contains(github.event.head_commit.message, '[no build]')
+    if: contains(github.event.head_commit.message, '[no build]') == false
     steps:
       - name: Checkout
         uses: actions/checkout@v2
