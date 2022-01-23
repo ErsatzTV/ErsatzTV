@@ -35,6 +35,12 @@ jobs:
       release_tag: ${{ needs.calculate_version.outputs.artifacts_version }}
       release_version: ${{ needs.calculate_version.outputs.artifacts_version }}
       info_version: ${{ needs.calculate_version.outputs.info_version }}
+    secrets:
+      apple_developer_certificate_p12_base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_BASE64 }}
+      apple_developer_certificate_password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_PASSWORD }}
+      ac_username: ${{ secrets.AC_USERNAME }}
+      ac_password: ${{ secrets.AC_PASSWORD }}
+      github_token: ${{ secrets.GITHUB_TOKEN }}
   build_and_push:
     uses: jasongdove/ersatztv/.github/workflows/docker.yml@main
     needs: calculate_version
@@ -42,3 +48,6 @@ jobs:
       base_version: latest
       info_version: ${{ needs.calculate_version.outputs.git_tag }}
       tag_version: ${{ needs.calculate_version.outputs.docker_tag }}
+    secrets:
+      docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+      docker_hub_access_token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}

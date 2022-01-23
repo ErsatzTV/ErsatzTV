@@ -14,6 +14,11 @@ on:
         description: 'Docker tag version (e.g. v0.3.7)'
         required: true
         type: string
+    secrets:
+      docker_hub_username:
+        required: true
+      docker_hub_access_token:
+        required: true
 jobs:
   build_and_push:
     name: Build & Publish
@@ -40,8 +45,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+          username: ${{ secrets.docker_hub_username }}
+          password: ${{ secrets.docker_hub_access_token }}
 
       - name: Build and push base
         uses: docker/build-push-action@v2
