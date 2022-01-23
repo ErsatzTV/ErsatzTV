@@ -1,142 +1,37 @@
-name: Publish
+name: Release
 on:
   release:
     types: [ published ]
 jobs:
-  release:
-    name: Release
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            kind: linux
-            target: linux-x64
-          - os: ubuntu-latest
-            kind: linux
-            target: linux-arm
-          - os: windows-latest
-            kind: windows
-            target: win-x64
-          - os: macos-latest
-            kind: macOS
-            target: osx-x64
-          - os: macos-latest
-            kind: macOS
-            target: osx-arm64
-    runs-on: ${{ matrix.os }}
+  calculate_version:
+    name: Calculate version information
+    runs-on: ubuntu-latest
     steps:
       - name: Get the sources
         uses: actions/checkout@v2
-
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 6.0.x
-
-      - name: Clean
-        run: dotnet clean --configuration Release && dotnet nuget locals all --clear
-
-      - name: Install dependencies
-        run: dotnet restore
-
-      - name: Build
-        shell: bash
-        run: |
-          # Define some variables for things we need
-          tag=$(git describe --tags --abbrev=0)
-          release_name="ErsatzTV-$tag-${{ matrix.target }}"
-
-          # Build everything
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" /property:InformationalVersion="${tag:1}-${{ matrix.target }}" /property:EnableCompressionInSingleFile=true /property:DebugType=Embedded /property:PublishSingleFile=true --self-contained true
-
-          # Pack files
-          if [ "${{ matrix.target }}" == "win-x64" ]; then
-            7z a -tzip "${release_name}.zip" "./${release_name}/*"
-          else
-            tar czvf "${release_name}.tar.gz" "$release_name"
-          fi
-
-          # Delete output directory
-          rm -r "$release_name"
-
-      - name: Publish
-        uses: softprops/action-gh-release@v1
-        with:
-          prerelease: true
-          files: |
-            ErsatzTV*.zip
-            ErsatzTV*.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  build_and_push:
-    name: Build & Publish to Docker Hub
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      - name: Extract Git Tag
+      - name: Extract Docker Tag
         shell: bash
         run: |
           tag=$(git describe --tags --abbrev=0)
           echo "GIT_TAG=${tag:1}" >> $GITHUB_ENV
           echo "DOCKER_TAG=${tag/-alpha/}" >> $GITHUB_ENV
-
-      - name: Set up Docker Buildx Base
-        uses: docker/setup-buildx-action@v1
-        id: builder-base
-
-      - name: Set up Docker Buildx NVIDIA
-        uses: docker/setup-buildx-action@v1
-        id: builder-nvidia
-
-      - name: Set up Docker Buildx VAAPI
-        uses: docker/setup-buildx-action@v1
-        id: builder-vaapi
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Build and push base
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.builder-base.outputs.name }}
-          context: .
-          file: ./docker/Dockerfile
-          push: true
-          build-args: |
-            INFO_VERSION=${{ env.GIT_TAG }}-docker
-          tags: |
-            jasongdove/ersatztv:latest
-            jasongdove/ersatztv:${{ env.DOCKER_TAG }}
-
-      - name: Build and push nvidia
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.builder-nvidia.outputs.name }}
-          context: .
-          file: ./docker/nvidia/Dockerfile
-          push: true
-          build-args: |
-            INFO_VERSION=${{ env.GIT_TAG }}-docker-nvidia
-          tags: |
-            jasongdove/ersatztv:latest-nvidia
-            jasongdove/ersatztv:${{ env.DOCKER_TAG }}-nvidia
-
-      - name: Build and push vaapi
-        uses: docker/build-push-action@v2
-        with:
-          builder: ${{ steps.builder-vaapi.outputs.name }}
-          context: .
-          file: ./docker/vaapi/Dockerfile
-          push: true
-          build-args: |
-            INFO_VERSION=${{ env.GIT_TAG }}-docker-vaapi
-          tags: |
-            jasongdove/ersatztv:latest-vaapi
-            jasongdove/ersatztv:${{ env.DOCKER_TAG }}-vaapi
+      - name: Extract Artifacts Version
+        shell: bash
+        run: |
+          tag=$(git describe --tags --abbrev=0)
+          echo "ARTIFACTS_VERSION=${tag}" >> $GITHUB_ENV
+          echo "INFO_VERSION=${tag:1}" >> $GITHUB_ENV
+  build_and_upload:
+    uses: jasongdove/ersatztv/.github/workflows/artifacts.yml@main
+    with:
+      release_tag: ${{ env.ARTIFACTS_VERSION }}
+      release_version: ${{ env.ARTIFACTS_VERSION }}
+      info_version: ${{ env.INFO_VERSION }}
+  build_and_push:
+    uses: jasongdove/ersatztv/.github/workflows/docker.yml@main
+    with:
+      base_version: latest
+      info_version: ${{ env.GIT_TAG }}
+      tag_version: ${{ env.DOCKER_TAG }}
