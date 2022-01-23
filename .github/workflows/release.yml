@@ -23,15 +23,22 @@ jobs:
           tag=$(git describe --tags --abbrev=0)
           echo "ARTIFACTS_VERSION=${tag}" >> $GITHUB_ENV
           echo "INFO_VERSION=${tag:1}" >> $GITHUB_ENV
+    outputs:
+      git_tag: ${{ env.GIT_TAG }}
+      docker_tag: ${{ env.DOCKER_TAG }}
+      artifacts_version: ${{ env.ARTIFACTS_VERSION }}
+      info_version: ${{ env.INFO_VERSION }}
   build_and_upload:
     uses: jasongdove/ersatztv/.github/workflows/artifacts.yml@main
+    needs: calculate_version
     with:
-      release_tag: ${{ env.ARTIFACTS_VERSION }}
-      release_version: ${{ env.ARTIFACTS_VERSION }}
-      info_version: ${{ env.INFO_VERSION }}
+      release_tag: ${{ needs.calculate_version.outputs.artifacts_version }}
+      release_version: ${{ needs.calculate_version.outputs.artifacts_version }}
+      info_version: ${{ needs.calculate_version.outputs.info_version }}
   build_and_push:
     uses: jasongdove/ersatztv/.github/workflows/docker.yml@main
+    needs: calculate_version
     with:
       base_version: latest
-      info_version: ${{ env.GIT_TAG }}
-      tag_version: ${{ env.DOCKER_TAG }}
+      info_version: ${{ needs.calculate_version.outputs.git_tag }}
+      tag_version: ${{ needs.calculate_version.outputs.docker_tag }}
