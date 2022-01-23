@@ -26,7 +26,7 @@ jobs:
   build_and_upload:
     uses: jasongdove/ersatztv/.github/workflows/artifacts.yml@main
     with:
-      release_tag: develop
+      release_tag: ${{ env.ARTIFACTS_VERSION }}
       release_version: ${{ env.ARTIFACTS_VERSION }}
       info_version: ${{ env.INFO_VERSION }}
   build_and_push:
