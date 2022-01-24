@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+## [0.3.8-alpha] - 2022-01-23
 ### Fixed
 - Fix issue preventing some versions of ffmpeg (usually 4.4.x) from streaming MPEG-TS (Legacy) channels at all
   - The issue appears to be caused by using a thread count other than `1`
@@ -16,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Upgrade ffmpeg from 4.4 to 5.0 in all docker images
     - Upgrading from 4.4 to 5.0 is recommended for all installations
- 
+
 ## [0.3.7-alpha] - 2022-01-17
 ### Fixed
 - Fix local folder scanners to properly detect removed/re-added folders with unchanged contents
@@ -923,7 +924,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.7-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.8-alpha...HEAD
+[0.3.8-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.7-alpha...v0.3.8-alpha
 [0.3.7-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.6-alpha...v0.3.7-alpha
 [0.3.6-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.5-alpha...v0.3.6-alpha
 [0.3.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.4-alpha...v0.3.5-alpha
