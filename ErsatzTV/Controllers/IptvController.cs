@@ -59,7 +59,7 @@ namespace ErsatzTV.Controllers
         {
             FFmpegProcessRequest request = mode switch
             {
-                "legacy" => new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber),
+                "ts-legacy" => new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber),
                 _ => new GetWrappedProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber)
             };
 
