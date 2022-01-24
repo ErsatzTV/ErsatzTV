@@ -5,8 +5,8 @@
 	<key>CFBundleDisplayName</key>
 	<string>ErsatzTV</string>
 	<key>CFBundleExecutable</key>
-	<string>ErsatzTV</string>
-	<key>CFBundleIconFile</key>
+    <string>launcher.sh</string>
+    <key>CFBundleIconFile</key>
 	<string>ErsatzTV.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.jasongdove.ersatztv</string>
