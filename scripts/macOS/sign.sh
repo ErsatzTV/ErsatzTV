@@ -1,6 +1,10 @@
-﻿#! /bin/bash
-APP_NAME="release/ErsatzTV.app"
-ENTITLEMENTS="scripts/macOS/ErsatzTV.entitlements"
+#! /bin/bash
+
+SCRIPT_FOLDER=$(dirname ${BASH_SOURCE[0]})
+REPO_ROOT="$SCRIPT_FOLDER/../.."
+
+APP_NAME="$REPO_ROOT/ErsatzTV.app"
+ENTITLEMENTS="$SCRIPT_FOLDER/ErsatzTV.entitlements"
 SIGNING_IDENTITY="C3BBCFB2D6851FF0DCA6CAC06A3EF1ECE71F9FFF"
 
 find "$APP_NAME/Contents/MacOS/"|while read fname; do

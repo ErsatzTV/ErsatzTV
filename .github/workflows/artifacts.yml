@@ -27,7 +27,7 @@ on:
         required: true
 jobs:
   build_and_upload_mac:
-    name: Build & Upload Mac Artifacts
+    name: Mac Build & Upload
     runs-on: ${{ matrix.os }}
     if: contains(github.event.head_commit.message, '[no build]') == false
     strategy:
@@ -70,13 +70,34 @@ jobs:
 
       - name: Build
         shell: bash
+        run: dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o publish -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+
+      - name: Bundle
+        shell: bash
         run: |
-          dotnet msbuild ErsatzTV/ErsatzTV.csproj -t:BundleApp -p:RuntimeIdentifier="${{ matrix.target }}" -p:CFBundleVersion="${{ inputs.info_version }}" -p:Configuration=Release -p:CFBundleShortVersionString="${{ inputs.info_version }}" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:PublishDir=$(pwd)/release
-          cp scripts/macOS/launcher.sh release/ErsatzTV.app/Contents/MacOS/
+          plutil -replace CFBundleShortVersionString -string "${{ inputs.info_version }}" scripts/macOS/Info.plist
+          plutil -replace CFBundleVersion -string "${{ inputs.info_version }}" scripts/macOS/Info.plist
+          scripts/macOS/bundle.sh
 
       - name: Sign
         shell: bash
         run: scripts/macOS/sign.sh
+      
+      - name: Create DMG
+        shell: bash
+        run: |
+          brew install create-dmg
+          create-dmg \
+            --volname "ErsatzTV" \
+            --volicon "artwork/ErsatzTV.icns" \
+            --window-pos 200 120 \
+            --window-size 800 400 \
+            --icon-size 100 \
+            --icon "ErsatzTV.app" 200 190 \
+            --hide-extension "ErsatzTV.app" \
+            --app-drop-link 600 185 \
+            "ErsatzTV.dmg" \
+            "ErsatzTV.app/"
 
       - name: Notarize
         shell: bash
@@ -91,8 +112,9 @@ jobs:
       - name: Cleanup
         shell: bash
         run: |
-          mv release/ErsatzTV.dmg "${{ env.RELEASE_NAME }}.dmg"
-          rm -r release
+          mv ErsatzTV.dmg "${{ env.RELEASE_NAME }}.dmg"
+          rm -r publish
+          rm -r ErsatzTV.app
 
       - name: Delete old release assets
         uses: mknejp/delete-release-assets@v1
@@ -113,7 +135,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.gh_token }}
   build_and_upload:
-    name: Build & Upload Artifacts
+    name: Build & Upload
     runs-on: ${{ matrix.os }}
     if: contains(github.event.head_commit.message, '[no build]') == false
     strategy:
@@ -153,7 +175,7 @@ jobs:
           echo "RELEASE_NAME=${release_name}" >> $GITHUB_ENV
           
           # Build everything
-          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" /property:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" /property:EnableCompressionInSingleFile=true /property:DebugType=Embedded /property:PublishSingleFile=true --self-contained true
+          dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
         
           # Pack files
           if [ "${{ matrix.kind }}" == "windows" ]; then
