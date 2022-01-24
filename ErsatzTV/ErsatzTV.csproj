@@ -4,18 +4,6 @@
         <TargetFramework>net6.0</TargetFramework>
         <NoWarn>VSTHRD200</NoWarn>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
-	<RuntimeIdentifiers>osx-x64;osx-arm64</RuntimeIdentifiers>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <CFBundleName>ErsatzTV</CFBundleName>
-        <CFBundleDisplayName>ErsatzTV</CFBundleDisplayName>
-        <CFBundleIdentifier>com.jasongdove.ersatztv</CFBundleIdentifier>
-        <CFBundlePackageType>APPL</CFBundlePackageType>
-        <CFBundleExecutable>launcher.sh</CFBundleExecutable>
-        <CFBundleIconFile>ErsatzTV.icns</CFBundleIconFile> 
-        <NSPrincipalClass>NSApplication</NSPrincipalClass>
-        <NSHighResolutionCapable>true</NSHighResolutionCapable>
     </PropertyGroup>
 
     <ItemGroup>
@@ -25,7 +13,6 @@
 
     <ItemGroup>
       <PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
-      <PackageReference Include="DotNet.Bundle" Version="0.9.13" />
       <PackageReference Include="FluentValidation" Version="10.3.6" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="10.3.6" />
       <PackageReference Include="HtmlSanitizer" Version="6.0.453" />
