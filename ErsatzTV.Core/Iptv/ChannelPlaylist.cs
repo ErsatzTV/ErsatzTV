@@ -45,7 +45,7 @@ namespace ErsatzTV.Core.Iptv
                     StreamingMode.HttpLiveStreamingDirect => "m3u8?mode=hls-direct",
                     StreamingMode.HttpLiveStreamingSegmenter => "m3u8?mode=segmenter",
                     StreamingMode.TransportStreamHybrid => "ts",
-                    _ => "ts?mode=legacy"
+                    _ => "ts?mode=ts-legacy"
                 };
 
                 string vcodec = channel.FFmpegProfile.VideoCodec.Split("_").Head();
