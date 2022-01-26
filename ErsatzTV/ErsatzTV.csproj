@@ -15,11 +15,11 @@
       <PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
       <PackageReference Include="FluentValidation" Version="10.3.6" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="10.3.6" />
-      <PackageReference Include="HtmlSanitizer" Version="6.0.453" />
+      <PackageReference Include="HtmlSanitizer" Version="7.1.475" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
-      <PackageReference Include="Markdig" Version="0.26.0" />
-      <PackageReference Include="MediatR.Courier.DependencyInjection" Version="4.0.0" />
-      <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
+      <PackageReference Include="Markdig" Version="0.27.0" />
+      <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
+      <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
       <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.1" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.1">
         <PrivateAssets>all</PrivateAssets>
@@ -29,7 +29,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="MudBlazor" Version="6.0.4" />
+      <PackageReference Include="MudBlazor" Version="6.0.5" />
       <PackageReference Include="NaturalSort.Extension" Version="3.2.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="5.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.1.15" />
