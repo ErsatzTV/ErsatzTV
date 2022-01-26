@@ -36,8 +36,12 @@ namespace ErsatzTV.Application.Channels.Queries
                         channel.StreamingMode = StreamingMode.HttpLiveStreamingDirect;
                         result.Add(channel);
                         break;
-                    case "ts":
+                    case "ts-legacy":
                         channel.StreamingMode = StreamingMode.TransportStream;
+                        result.Add(channel);
+                        break;
+                    case "ts":
+                        channel.StreamingMode = StreamingMode.TransportStreamHybrid;
                         result.Add(channel);
                         break;
                     default:
