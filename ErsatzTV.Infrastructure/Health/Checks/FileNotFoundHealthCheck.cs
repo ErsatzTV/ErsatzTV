@@ -68,7 +68,7 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
 
                 return WarningResult(
                     $"There are {all.Count} files that do not exist on disk, including the following: {files}",
-                    $"/search?query=state%3AFileNotFound");
+                    "/media/trash");
             }
 
             return OkResult();

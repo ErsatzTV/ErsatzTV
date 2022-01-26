@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `ts` for `MPEG-TS`
   - `ts-legacy` for `MPEG-TS (Legacy)`
   - omitting the `mode` parameter returns each channel as configured
+- Link `File Not Found` health check to `Trash` page to allow deletion
 
 ## [0.3.8-alpha] - 2022-01-23
 ### Fixed
