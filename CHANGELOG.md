@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix m3u `mode` query param to properly override streaming mode for all channels
+  - `segmenter` for `HLS Segmenter`
+  - `hls-direct` for `HLS Direct`
+  - `ts` for `MPEG-TS`
+  - `ts-legacy` for `MPEG-TS (Legacy)`
+  - omitting the `mode` parameter returns each channel as configured
+
 ## [0.3.8-alpha] - 2022-01-23
 ### Fixed
 - Fix issue preventing some versions of ffmpeg (usually 4.4.x) from streaming MPEG-TS (Legacy) channels at all
