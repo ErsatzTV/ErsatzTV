@@ -425,7 +425,9 @@ namespace ErsatzTV.Core.FFmpeg
                     "-segment_list_flags", "+live",
                     "-hls_segment_filename",
                     Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live%06d.ts"),
-                    "-hls_flags", "program_date_time+append_list+omit_endlist+independent_segments",
+                    "-hls_flags", "program_date_time+append_list+discont_start+omit_endlist+independent_segments",
+                    "-mpegts_flags", "+initial_discontinuity",
+                    "-mpegts_copyts", "1",
                     Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8")
                 });
 
