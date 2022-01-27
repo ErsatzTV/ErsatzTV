@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - omitting the `mode` parameter returns each channel as configured
 - Link `File Not Found` health check to `Trash` page to allow deletion
 
+### Changed
+- Minor HLS Segmenter improvements
+
 ## [0.3.8-alpha] - 2022-01-23
 ### Fixed
 - Fix issue preventing some versions of ffmpeg (usually 4.4.x) from streaming MPEG-TS (Legacy) channels at all
