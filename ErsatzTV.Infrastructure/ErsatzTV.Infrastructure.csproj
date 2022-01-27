@@ -22,7 +22,7 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Refit" Version="6.1.15" />
+      <PackageReference Include="Refit" Version="6.2.16" />
       <PackageReference Include="Refit.Newtonsoft.Json" Version="6.1.15" />
       <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     </ItemGroup>
