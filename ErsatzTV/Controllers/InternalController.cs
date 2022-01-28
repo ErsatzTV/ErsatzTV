@@ -27,14 +27,14 @@ namespace ErsatzTV.Controllers
         public Task<IActionResult> GetConcatPlaylist(string channelNumber) =>
             _mediator.Send(new GetConcatPlaylistByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber))
                 .ToActionResult();
-        
+
         [HttpGet("ffmpeg/stream/{channelNumber}")]
         public Task<IActionResult> GetStream(
             string channelNumber,
             [FromQuery]
             string mode = "mixed") =>
             _mediator.Send(
-                    new GetPlayoutItemProcessByChannelNumber(channelNumber, mode, DateTimeOffset.Now, false, true))
+                    new GetPlayoutItemProcessByChannelNumber(channelNumber, mode, DateTimeOffset.Now, false, true, 0))
                 .Map(
                     result =>
                         result.Match<IActionResult>(

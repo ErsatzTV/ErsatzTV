@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -387,7 +388,7 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHls(string channelNumber, Option<MediaVersion> mediaVersion)
+        public FFmpegProcessBuilder WithHls(string channelNumber, Option<MediaVersion> mediaVersion, long ptsOffset, Option<int> maybeTimeScale)
         {
             const int SEGMENT_SECONDS = 4;
 
@@ -412,10 +413,15 @@ namespace ErsatzTV.Core.FFmpeg
                 frameRate = fr;
             }
 
+            foreach (int timescale in maybeTimeScale)
+            {
+                _arguments.Add("-output_ts_offset");
+                _arguments.Add($"{(ptsOffset / (double)timescale).ToString(NumberFormatInfo.InvariantInfo)}");
+            }
+
             _arguments.AddRange(
                 new[]
                 {
-                    "-use_wallclock_as_timestamps", "1",
                     "-g", $"{frameRate * SEGMENT_SECONDS}",
                     "-keyint_min", $"{frameRate * SEGMENT_SECONDS}",
                     "-force_key_frames", $"expr:gte(t,n_forced*{SEGMENT_SECONDS})",
@@ -427,7 +433,6 @@ namespace ErsatzTV.Core.FFmpeg
                     Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live%06d.ts"),
                     "-hls_flags", "program_date_time+append_list+discont_start+omit_endlist+independent_segments",
                     "-mpegts_flags", "+initial_discontinuity",
-                    "-mpegts_copyts", "1",
                     Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8")
                 });
 

@@ -158,7 +158,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                         request.HlsRealtime,
                         playoutItemWithPath.PlayoutItem.FillerKind,
                         playoutItemWithPath.PlayoutItem.InPoint,
-                        playoutItemWithPath.PlayoutItem.OutPoint);
+                        playoutItemWithPath.PlayoutItem.OutPoint,
+                        request.PtsOffset);
 
                     var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
 
@@ -193,7 +194,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                                     channel,
                                     maybeDuration,
                                     "Channel is Offline",
-                                    request.HlsRealtime);
+                                    request.HlsRealtime,
+                                    request.PtsOffset);
                                 
                                 return new PlayoutItemProcessModel(errorProcess, finish);
                             }
@@ -212,7 +214,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                                     channel,
                                     maybeDuration,
                                     error.Value,
-                                    request.HlsRealtime);
+                                    request.HlsRealtime,
+                                    request.PtsOffset);
 
                                 return new PlayoutItemProcessModel(errorProcess, finish);
                             }
@@ -231,7 +234,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                                     channel,
                                     maybeDuration,
                                     "Channel is Offline",
-                                    request.HlsRealtime);
+                                    request.HlsRealtime,
+                                    request.PtsOffset);
 
                                 return new PlayoutItemProcessModel(errorProcess, finish);
                             }

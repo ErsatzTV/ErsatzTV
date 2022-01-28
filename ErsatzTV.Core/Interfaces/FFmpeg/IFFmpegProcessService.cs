@@ -27,14 +27,16 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
             bool hlsRealtime,
             FillerKind fillerKind,
             TimeSpan inPoint,
-            TimeSpan outPoint);
+            TimeSpan outPoint,
+            long ptsOffset);
 
         Task<Process> ForError(
             string ffmpegPath,
             Channel channel,
             Option<TimeSpan> duration,
             string errorMessage,
-            bool hlsRealtime);
+            bool hlsRealtime,
+            long ptsOffset);
 
         Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 

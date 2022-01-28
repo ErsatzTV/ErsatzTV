@@ -9,7 +9,8 @@ namespace ErsatzTV.Application.Streaming.Queries
             "ts-legacy",
             DateTimeOffset.Now,
             false,
-            true)
+            true,
+            0)
         {
             Scheme = scheme;
             Host = host;

@@ -2,20 +2,15 @@
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
-    public record GetPlayoutItemProcessByChannelNumber : FFmpegProcessRequest
-    {
-        public GetPlayoutItemProcessByChannelNumber(
-            string channelNumber,
-            string mode,
-            DateTimeOffset now,
-            bool startAtZero,
-            bool hlsRealtime) : base(
-            channelNumber,
-            mode,
-            now,
-            startAtZero,
-            hlsRealtime)
-        {
-        }
-    }
+    public record GetPlayoutItemProcessByChannelNumber(string ChannelNumber,
+        string Mode,
+        DateTimeOffset Now,
+        bool StartAtZero,
+        bool HlsRealtime,
+        long PtsOffset) : FFmpegProcessRequest(ChannelNumber,
+        Mode,
+        Now,
+        StartAtZero,
+        HlsRealtime,
+        PtsOffset);
 }
