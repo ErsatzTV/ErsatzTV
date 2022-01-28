@@ -16,6 +16,26 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             private readonly FFmpegPlaybackSettingsCalculator _calculator;
 
             public CalculateSettings() => _calculator = new FFmpegPlaybackSettingsCalculator();
+            
+            [Test]
+            public void Should_Not_GenPts_ForHlsSegmenter()
+            {
+                FFmpegProfile ffmpegProfile = TestProfile();
+
+                FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
+                    StreamingMode.HttpLiveStreamingSegmenter,
+                    ffmpegProfile,
+                    new MediaVersion(),
+                    new MediaStream(),
+                    new MediaStream(),
+                    DateTimeOffset.Now,
+                    DateTimeOffset.Now,
+                    TimeSpan.Zero,
+                    TimeSpan.Zero,
+                    false);
+
+                actual.FormatFlags.Should().NotContain("+genpts");
+            }
 
             [Test]
             public void Should_Not_UseSpecifiedThreadCount_ForTransportStream()

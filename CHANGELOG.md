@@ -12,9 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `ts-legacy` for `MPEG-TS (Legacy)`
   - omitting the `mode` parameter returns each channel as configured
 - Link `File Not Found` health check to `Trash` page to allow deletion
-
-### Changed
-- Minor HLS Segmenter improvements
+- Fix `HLS Segmenter` streaming mode with multiple ffmpeg-based clients
+  - Jellyfin (web) and TiviMate (Android) were specifically tested
 
 ## [0.3.8-alpha] - 2022-01-23
 ### Fixed

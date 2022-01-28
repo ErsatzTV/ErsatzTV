@@ -36,6 +36,12 @@ namespace ErsatzTV.Core.FFmpeg
             "+igndts"
         };
 
+        private static readonly List<string> SegmenterFormatFlags = new()
+        {
+            "+discardcorrupt",
+            "+igndts"
+        };
+
         public FFmpegPlaybackSettings ConcatSettings => new()
         {
             ThreadCount = 1,
@@ -56,7 +62,11 @@ namespace ErsatzTV.Core.FFmpeg
         {
             var result = new FFmpegPlaybackSettings
             {
-                FormatFlags = CommonFormatFlags,
+                FormatFlags = streamingMode switch
+                {
+                    StreamingMode.HttpLiveStreamingSegmenter => SegmenterFormatFlags,
+                    _ => CommonFormatFlags,
+                },
                 RealtimeOutput = streamingMode switch
                 {
                     StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,

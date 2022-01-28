@@ -11,5 +11,6 @@ namespace ErsatzTV.Application.Streaming.Queries
         string Mode,
         DateTimeOffset Now,
         bool StartAtZero,
-        bool HlsRealtime) : IRequest<Either<BaseError, PlayoutItemProcessModel>>;
+        bool HlsRealtime,
+        long PtsOffset) : IRequest<Either<BaseError, PlayoutItemProcessModel>>;
 }

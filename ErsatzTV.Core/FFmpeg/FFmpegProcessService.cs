@@ -51,7 +51,8 @@ namespace ErsatzTV.Core.FFmpeg
             bool hlsRealtime,
             FillerKind fillerKind,
             TimeSpan inPoint,
-            TimeSpan outPoint)
+            TimeSpan outPoint,
+            long ptsOffset)
         {
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
@@ -158,7 +159,7 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
-                    return builder.WithHls(channel.Number, videoVersion)
+                    return builder.WithHls(channel.Number, videoVersion, ptsOffset, playbackSettings.VideoTrackTimeScale)
                         .Build();
                 default:
                     return builder.WithFormat("mpegts")
@@ -173,7 +174,8 @@ namespace ErsatzTV.Core.FFmpeg
             Channel channel,
             Option<TimeSpan> duration,
             string errorMessage,
-            bool hlsRealtime)
+            bool hlsRealtime,
+            long ptsOffset)
         {
             FFmpegPlaybackSettings playbackSettings =
                 _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
@@ -221,7 +223,7 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
-                    return builder.WithHls(channel.Number, None)
+                    return builder.WithHls(channel.Number, None, ptsOffset, playbackSettings.VideoTrackTimeScale)
                         .Build();
                 default:
                     return builder.WithFormat("mpegts")
