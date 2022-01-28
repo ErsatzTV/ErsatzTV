@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -132,12 +133,16 @@ namespace ErsatzTV.Application.Streaming
                 using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
+                long ptsOffset = await GetPtsOffset(mediator, channelNumber, cancellationToken);
+                // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
+
                 var request = new GetPlayoutItemProcessByChannelNumber(
                     channelNumber,
                     "segmenter",
                     firstProcess ? DateTimeOffset.Now : _transcodedUntil.AddSeconds(1),
                     !firstProcess,
-                    realtime);
+                    realtime,
+                    ptsOffset);
 
                 // _logger.LogInformation("Request {@Request}", request);
 
@@ -230,6 +235,28 @@ namespace ErsatzTV.Application.Streaming
 
                 _playlistStart = trimResult.PlaylistStart;
             }
+        }
+        
+        private async Task<long> GetPtsOffset(IMediator mediator, string channelNumber, CancellationToken cancellationToken)
+        {
+            var directory = new DirectoryInfo(Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber));
+            Option<FileInfo> lastSegment =
+                Optional(directory.GetFiles("*.ts").OrderByDescending(f => f.Name).FirstOrDefault());
+
+            long result = 0;
+            foreach (FileInfo segment in lastSegment)
+            {
+                Either<BaseError, PtsAndDuration> queryResult = await mediator.Send(
+                    new GetLastPtsDuration(segment.FullName),
+                    cancellationToken);
+
+                foreach (PtsAndDuration ptsAndDuration in queryResult.RightToSeq())
+                {
+                    result = ptsAndDuration.Pts + ptsAndDuration.Duration;
+                }
+            }
+
+            return result;
         }
 
         private async Task<int> GetWorkAheadLimit()
