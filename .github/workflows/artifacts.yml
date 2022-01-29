@@ -179,6 +179,11 @@ jobs:
           # Build everything
           dotnet publish ErsatzTV/ErsatzTV.csproj --framework net6.0 --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
 
+          # Build Windows launcher
+          if [ "${{ matrix.kind }}" == "windows" ]; then
+            dotnet publish ErsatzTV-Windows/ErsatzTV-Windows.csproj --framework net6.0-windows --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
+          fi
+
           # Pack files
           if [ "${{ matrix.kind }}" == "windows" ]; then
             7z a -tzip "${release_name}.zip" "./${release_name}/*"

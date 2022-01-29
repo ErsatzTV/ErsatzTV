@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Application", "Ers
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV.Core.Tests", "ErsatzTV.Core.Tests\ErsatzTV.Core.Tests.csproj", "{CE7F1ACD-F286-4761-A7BC-A541A1E25C86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ErsatzTV-Windows", "ErsatzTV-Windows\ErsatzTV-Windows.csproj", "{805DB439-1CC1-44E1-A39F-F472635CF94E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,6 +38,10 @@ Global
 		{CE7F1ACD-F286-4761-A7BC-A541A1E25C86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE7F1ACD-F286-4761-A7BC-A541A1E25C86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE7F1ACD-F286-4761-A7BC-A541A1E25C86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{805DB439-1CC1-44E1-A39F-F472635CF94E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{805DB439-1CC1-44E1-A39F-F472635CF94E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{805DB439-1CC1-44E1-A39F-F472635CF94E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{805DB439-1CC1-44E1-A39F-F472635CF94E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
