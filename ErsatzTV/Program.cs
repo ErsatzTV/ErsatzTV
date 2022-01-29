@@ -11,23 +11,22 @@ namespace ErsatzTV
 {
     public class Program
     {
+        private static readonly string BasePath;
+
         static Program()
         {
-            var executablePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
-            var executable = Path.GetFileNameWithoutExtension(executablePath);
+            string executablePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+            string executable = Path.GetFileNameWithoutExtension(executablePath);
 
             IConfigurationBuilder builder = new ConfigurationBuilder();
 
-            if ("dotnet".Equals(executable, StringComparison.InvariantCultureIgnoreCase))
-            {
-                builder = builder.SetBasePath(Path.GetDirectoryName(typeof(Program).Assembly.Location));
-            }
-            else
-            {
-                builder = builder.SetBasePath(Path.GetDirectoryName(executablePath));
-            }
+            BasePath = Path.GetDirectoryName(
+                "dotnet".Equals(executable, StringComparison.InvariantCultureIgnoreCase)
+                    ? typeof(Program).Assembly.Location
+                    : executablePath);
 
             Configuration = builder
+                .SetBasePath(BasePath)
                 .AddJsonFile("appsettings.json", false, true)
                 .AddJsonFile(
                     $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}.json",
@@ -67,7 +66,8 @@ namespace ErsatzTV
                 .ConfigureWebHostDefaults(
                     webBuilder => webBuilder.UseStartup<Startup>()
                         .UseConfiguration(Configuration)
-                        .UseKestrel(options => options.AddServerHeader = false))
+                        .UseKestrel(options => options.AddServerHeader = false)
+                        .UseContentRoot(BasePath))
                 .UseSerilog();
     }
 }
