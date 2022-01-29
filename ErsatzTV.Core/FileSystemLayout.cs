@@ -21,6 +21,7 @@ namespace ErsatzTV.Core
         public static readonly string DatabasePath = Path.Combine(AppDataFolder, "ersatztv.sqlite3");
 
         public static readonly string LogDatabasePath = Path.Combine(AppDataFolder, "logs.sqlite3");
+        public static readonly string LogFilePath = Path.Combine(AppDataFolder, "logs", "ersatztv.log");
 
         public static readonly string LegacyImageCacheFolder = Path.Combine(AppDataFolder, "cache", "images");
         public static readonly string ResourcesCacheFolder = Path.Combine(AppDataFolder, "cache", "resources");

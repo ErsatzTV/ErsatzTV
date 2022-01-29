@@ -43,6 +43,7 @@ namespace ErsatzTV
                 .ReadFrom.Configuration(Configuration)
                 .Enrich.FromLogContext()
                 .WriteTo.SQLite(FileSystemLayout.LogDatabasePath, retentionPeriod: TimeSpan.FromDays(1))
+                .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day)
                 .CreateLogger();
 
             try
