@@ -76,6 +76,7 @@ jobs:
       - name: Bundle
         shell: bash
         run: |
+          brew install coreutils
           plutil -replace CFBundleShortVersionString -string "${{ inputs.info_version }}" ErsatzTV-macOS/ErsatzTV-macOS/Info.plist
           plutil -replace CFBundleVersion -string "${{ inputs.info_version }}" ErsatzTV-macOS/ErsatzTV-macOS/Info.plist
           scripts/macOS/bundle.sh

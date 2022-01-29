@@ -1,7 +1,7 @@
 #! /bin/bash
 
 SCRIPT_FOLDER=$(dirname ${BASH_SOURCE[0]})
-REPO_ROOT="$SCRIPT_FOLDER/../.."
+REPO_ROOT=$(realpath "$SCRIPT_FOLDER/../..")
 
 APP_NAME="$REPO_ROOT/ErsatzTV.app"
 PUBLISH_OUTPUT_DIRECTORY="$REPO_ROOT/publish/."
