@@ -18,10 +18,12 @@ namespace ErsatzTV.Core
                 Environment.SpecialFolderOption.Create),
             "etv-transcode");
 
+        public static readonly string LogsFolder = Path.Combine(AppDataFolder, "logs");
+
         public static readonly string DatabasePath = Path.Combine(AppDataFolder, "ersatztv.sqlite3");
 
         public static readonly string LogDatabasePath = Path.Combine(AppDataFolder, "logs.sqlite3");
-        public static readonly string LogFilePath = Path.Combine(AppDataFolder, "logs", "ersatztv.log");
+        public static readonly string LogFilePath = Path.Combine(LogsFolder, "ersatztv.log");
 
         public static readonly string LegacyImageCacheFolder = Path.Combine(AppDataFolder, "cache", "images");
         public static readonly string ResourcesCacheFolder = Path.Combine(AppDataFolder, "cache", "resources");
