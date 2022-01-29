@@ -60,6 +60,21 @@ namespace ErsatzTV.Infrastructure.Search
                 return base.GetRangeQuery("release_date", "00000000", dateString, false, false);
             }
             
+            if (field == "added_inthelast" && CustomQueryParser.ParseStart(queryText, out DateTime addedStart))
+            {
+                var todayString = DateTime.Today.ToString("yyyyMMdd");
+                var dateString = addedStart.ToString("yyyyMMdd");
+
+                return base.GetRangeQuery("added_date", dateString, todayString, true, true);
+            }
+            
+            if (field == "added_notinthelast" && CustomQueryParser.ParseStart(queryText, out DateTime addedFinish))
+            {
+                var dateString = addedFinish.ToString("yyyyMMdd");
+
+                return base.GetRangeQuery("added_date", "00000000", dateString, false, false);
+            }
+            
             return base.GetFieldQuery(field, queryText, slop);
         }
         
