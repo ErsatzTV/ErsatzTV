@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Jellyfin (web) and TiviMate (Android) were specifically tested
 
 ### Added
+- Hide console window on macOS; tray menu can be used to access UI, logs and to stop the app
 - Also write logs to text files in the `logs` config subfolder
 
 ## [0.3.8-alpha] - 2022-01-23
