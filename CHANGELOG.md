@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix `HLS Segmenter` streaming mode with multiple ffmpeg-based clients
   - Jellyfin (web) and TiviMate (Android) were specifically tested
 
+### Added
+- Also write logs to text files in the `logs` config subfolder
+
 ## [0.3.8-alpha] - 2022-01-23
 ### Fixed
 - Fix issue preventing some versions of ffmpeg (usually 4.4.x) from streaming MPEG-TS (Legacy) channels at all
