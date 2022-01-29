@@ -43,6 +43,7 @@ namespace ErsatzTV.Infrastructure.Search
         private const string TitleAndYearField = "title_and_year";
         private const string JumpLetterField = "jump_letter";
         private const string ReleaseDateField = "release_date";
+        private const string AddedDateField = "added_date";
         private const string StudioField = "studio";
         private const string LanguageField = "language";
         private const string StyleField = "style";
@@ -80,7 +81,7 @@ namespace ErsatzTV.Infrastructure.Search
             _initialized = false;
         }
 
-        public int Version => 19;
+        public int Version => 20;
 
         public Task<bool> Initialize(ILocalFileSystem localFileSystem)
         {
@@ -342,6 +343,8 @@ namespace ErsatzTV.Infrastructure.Search
                                 Field.Store.NO));
                     }
 
+                    doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
                     {
                         doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
@@ -468,6 +471,8 @@ namespace ErsatzTV.Infrastructure.Search
                                 Field.Store.NO));
                     }
 
+                    doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
                     {
                         doc.Add(new TextField(PlotField, metadata.Plot ?? string.Empty, Field.Store.NO));
@@ -558,6 +563,8 @@ namespace ErsatzTV.Infrastructure.Search
                                 Field.Store.NO));
                     }
                     
+                    doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+
                     foreach (TraktListItem item in season.TraktListItems)
                     {
                         doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
@@ -597,6 +604,8 @@ namespace ErsatzTV.Infrastructure.Search
                     List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
                     await AddLanguages(searchRepository, doc, languages);
                     
+                    doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
+
                     foreach (Genre genre in metadata.Genres)
                     {
                         doc.Add(new TextField(GenreField, genre.Name, Field.Store.NO));
@@ -659,6 +668,8 @@ namespace ErsatzTV.Infrastructure.Search
                                 metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                                 Field.Store.NO));
                     }
+                    
+                    doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                     if (!string.IsNullOrWhiteSpace(metadata.Album))
                     {
@@ -748,6 +759,8 @@ namespace ErsatzTV.Infrastructure.Search
                                 metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                                 Field.Store.NO));
                     }
+                    
+                    doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                     if (!string.IsNullOrWhiteSpace(metadata.Plot))
                     {
@@ -827,6 +840,8 @@ namespace ErsatzTV.Infrastructure.Search
                     {
                         doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
                     }
+                    
+                    doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                     foreach (Tag tag in metadata.Tags)
                     {
@@ -871,6 +886,8 @@ namespace ErsatzTV.Infrastructure.Search
                     {
                         doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
                     }
+                    
+                    doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                     if (!string.IsNullOrWhiteSpace(metadata.Album))
                     {

@@ -18,6 +18,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Hide console window on macOS; tray menu can be used to access UI, logs and to stop the app
 - Also write logs to text files in the `logs` config subfolder
+- Add `added_date` to search index
+    - This requires rebuilding the search index and search results may be empty or incomplete until the rebuild is complete
+- Add `added_inthelast`, `added_notinthelast` search field for relative added date queries
+    - Syntax is a number and a unit (days, weeks, months, years) like `1 week` or `2 years`
 
 ## [0.3.8-alpha] - 2022-01-23
 ### Fixed
