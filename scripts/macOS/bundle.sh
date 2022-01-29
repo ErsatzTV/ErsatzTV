@@ -13,6 +13,7 @@ fi
 
 cd "$REPO_ROOT/ErsatzTV-macOS" || exit
 xcodebuild build
+cd "$REPO_ROOT" || exit
 cp -R "$REPO_ROOT/ErsatzTV-macOS/build/Release/ErsatzTV-macOS.app" "$APP_NAME"
 
 cp -a "$PUBLISH_OUTPUT_DIRECTORY" "$APP_NAME/Contents/MacOS"
