@@ -8,7 +8,12 @@
 
     <ItemGroup>
       <Folder Include="Resources" />
-      <Folder Include="wwwroot\css\bootstrap" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <Content Update="wwwroot\**" ExcludeFromSingleFile="false">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
