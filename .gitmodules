@@ -1,0 +1,3 @@
+[submodule "ErsatzTV-macOS"]
+	path = ErsatzTV-macOS
+	url = git@github.com:jasongdove/ErsatzTV-macOS.git
