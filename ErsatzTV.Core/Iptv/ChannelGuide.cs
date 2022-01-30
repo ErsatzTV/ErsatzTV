@@ -9,7 +9,6 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
 using LanguageExt;
-using LanguageExt.UnsafeValueAccess;
 using Serilog;
 using static LanguageExt.Prelude;
 
@@ -158,15 +157,20 @@ namespace ErsatzTV.Core.Iptv
                                 xml.WriteString(metadata.Year.Value.ToString());
                                 xml.WriteEndElement(); // date
                             }
-                        }
 
-                        xml.WriteStartElement("category");
-                        xml.WriteAttributeString("lang", "en");
-                        xml.WriteString("Movie");
-                        xml.WriteEndElement(); // category
+                            xml.WriteStartElement("category");
+                            xml.WriteAttributeString("lang", "en");
+                            xml.WriteString("Movie");
+                            xml.WriteEndElement(); // category
 
-                        foreach (MovieMetadata metadata in movie.MovieMetadata.HeadOrNone())
-                        {
+                            foreach (Genre genre in Optional(metadata.Genres).Flatten())
+                            {
+                                xml.WriteStartElement("category");
+                                xml.WriteAttributeString("lang", "en");
+                                xml.WriteString(genre.Name);
+                                xml.WriteEndElement(); // category
+                            }
+
                             string poster = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Poster)
                                 .HeadOrNone()
@@ -241,9 +245,21 @@ namespace ErsatzTV.Core.Iptv
                     {
                         Option<ShowMetadata> maybeMetadata =
                             Optional(episode.Season?.Show?.ShowMetadata.HeadOrNone()).Flatten();
-                        if (maybeMetadata.IsSome)
+                        foreach (ShowMetadata metadata in maybeMetadata)
                         {
-                            ShowMetadata metadata = maybeMetadata.ValueUnsafe();
+                            xml.WriteStartElement("category");
+                            xml.WriteAttributeString("lang", "en");
+                            xml.WriteString("Series");
+                            xml.WriteEndElement(); // category
+                            
+                            foreach (Genre genre in Optional(metadata.Genres).Flatten())
+                            {
+                                xml.WriteStartElement("category");
+                                xml.WriteAttributeString("lang", "en");
+                                xml.WriteString(genre.Name);
+                                xml.WriteEndElement(); // category
+                            }
+
                             string artwork = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
                                 .HeadOrNone()
