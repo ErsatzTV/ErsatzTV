@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Normalize smart quotes in search queries as they are unsupported by the search library
+
 ### Added
 - Include `Series` category tag for all episodes in XMLTV
 - Include movie, episode (show) genres as `category` tags in XMLTV
