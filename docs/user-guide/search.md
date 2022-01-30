@@ -24,6 +24,7 @@ The following fields are available for searching movies:
 - `content_rating`: The movie content rating (case-sensitive) 
 - `language`: The movie audio stream language
 - `release_date`: The movie release date (YYYYMMDD)
+- `added_date`: The date the movie was added to ErsatzTV (YYYYMMDD)
 - `minutes`: the rounded-up whole number duration of the movie in minutes
 - `type`: Always `movie`
 
@@ -41,6 +42,7 @@ The following fields are available for searching shows:
 - `content_rating`: The show content rating (case-sensitive)
 - `language`: The show audio stream language
 - `release_date`: The show release date (YYYYMMDD)
+- `added_date`: The date the show was added to ErsatzTV (YYYYMMDD)
 - `type`: Always `show`
 
 ### Episodes
@@ -54,6 +56,7 @@ The following fields are available for searching episodes:
 - `library_name`: The name of the library that contains the episode
 - `language`: The episode audio stream language
 - `release_date`: The episode release date (YYYYMMDD)
+- `added_date`: The date the episode was added to ErsatzTV (YYYYMMDD)
 - `minutes`: the rounded-up whole number duration of the episode in minutes
 - `type`: Always `episode`
 
@@ -65,6 +68,7 @@ The following fields are available for searching artists:
 - `genre`: The artist genre
 - `style`: The artist style
 - `mood`: The artist mood
+- `added_date`: The date the artist was added to ErsatzTV (YYYYMMDD)
 - `library_name`: The name of the library that contains the artist
 - `type`: Always `artist`
 
@@ -79,6 +83,7 @@ The following fields are available for searching music videos:
 - `library_name`: The name of the library that contains the music video
 - `language`: The music video audio stream language
 - `release_date`: The music video release date (YYYYMMDD)
+- `added_date`: The date the music video was added to ErsatzTV (YYYYMMDD)
 - `minutes`: the rounded-up whole number duration of the music video in minutes
 - `type`: Always `music_video`
 
@@ -89,6 +94,7 @@ The following fields are available for searching other videos:
 - `title`: The filename of the video (without extension)
 - `tag`: All of the video's parent folders
 - `minutes`: the rounded-up whole number duration of the video in minutes
+- `added_date`: The date the other video was added to ErsatzTV (YYYYMMDD)
 - `type`: Always `other_video`
 
 ### Songs
@@ -101,6 +107,7 @@ The following fields are available for searching songs:
 - `genre`: The song genre
 - `tag`: All of the song's parent folders
 - `minutes`: the rounded-up whole number duration of the song in minutes
+- `added_date`: The date the song was added to ErsatzTV (YYYYMMDD)
 - `type`: Always `song`
 
 ## Special Search Fields
@@ -108,6 +115,8 @@ The following fields are available for searching songs:
 - `released_inthelast`: For any media type that supports `release_date`, `released_inthelast` takes a number and a unit (days, weeks, months, years) and returns items released between the specified time ago and now
 - `released_notinthelast`: For any media type that supports `release_date`, `released_notinthelast` takes a number and a unit (days, weeks, months, years) and returns items released before the specified time ago
 - `released_onthisday`: For any media type that supports `release_date`, `released_onthisday` takes any value (ignored) and will return items released on this month number and day number in previous years
+- `added_inthelast`: For any media type that supports `added_date`, `added_inthelast` takes a number and a unit (days, weeks, months, years) and returns items added to ErsatzTV between the specified time ago and now
+- `added_notinthelast`: For any media type that supports `added_date`, `added_notinthelast` takes a number and a unit (days, weeks, months, years) and returns items added to ErsatzTV before the specified time ago
 
 ## Sample Searches
 

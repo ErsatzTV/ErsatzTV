@@ -31,7 +31,7 @@
       <PackageReference Include="MudBlazor" Version="6.0.5" />
       <PackageReference Include="NaturalSort.Extension" Version="3.2.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="5.0.0" />
-      <PackageReference Include="Refit.HttpClientFactory" Version="6.1.15" />
+      <PackageReference Include="Refit.HttpClientFactory" Version="6.2.16" />
       <PackageReference Include="Serilog" Version="2.10.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="4.1.0" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
