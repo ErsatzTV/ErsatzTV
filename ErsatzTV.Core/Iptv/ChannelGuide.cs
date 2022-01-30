@@ -195,15 +195,35 @@ namespace ErsatzTV.Core.Iptv
                                 xml.WriteString(metadata.Year.Value.ToString());
                                 xml.WriteEndElement(); // date
                             }
-                        }
 
-                        xml.WriteStartElement("category");
-                        xml.WriteAttributeString("lang", "en");
-                        xml.WriteString("Music");
-                        xml.WriteEndElement(); // category
+                            xml.WriteStartElement("category");
+                            xml.WriteAttributeString("lang", "en");
+                            xml.WriteString("Music");
+                            xml.WriteEndElement(); // category
 
-                        foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata.HeadOrNone())
-                        {
+                            // music video genres
+                            foreach (Genre genre in Optional(metadata.Genres).Flatten())
+                            {
+                                xml.WriteStartElement("category");
+                                xml.WriteAttributeString("lang", "en");
+                                xml.WriteString(genre.Name);
+                                xml.WriteEndElement(); // category
+                            }
+
+                            // artist genres
+                            Option<ArtistMetadata> maybeMetadata =
+                                Optional(musicVideo.Artist?.ArtistMetadata.HeadOrNone()).Flatten();
+                            foreach (ArtistMetadata artistMetadata in maybeMetadata)
+                            {
+                                foreach (Genre genre in Optional(artistMetadata.Genres).Flatten())
+                                {
+                                    xml.WriteStartElement("category");
+                                    xml.WriteAttributeString("lang", "en");
+                                    xml.WriteString(genre.Name);
+                                    xml.WriteEndElement(); // category
+                                }
+                            }
+
                             string thumbnail = Optional(metadata.Artwork).Flatten()
                                 .Filter(a => a.ArtworkKind == ArtworkKind.Thumbnail)
                                 .HeadOrNone()
@@ -217,7 +237,7 @@ namespace ErsatzTV.Core.Iptv
                             }
                         }
                     }
-                    
+
                     if (!hasCustomTitle && displayItem.MediaItem is Song song)
                     {
                         xml.WriteStartElement("category");
