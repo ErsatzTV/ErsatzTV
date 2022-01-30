@@ -6,3 +6,21 @@ updates:
       interval: daily
     assignees:
       - jasongdove
+  - package-ecosystem: docker
+    directory: "/docker"
+    schedule:
+      interval: daily
+    assignees:
+      - jasongdove
+  - package-ecosystem: docker
+    directory: "/docker/nvidia"
+    schedule:
+      interval: daily
+    assignees:
+      - jasongdove
+  - package-ecosystem: docker
+    directory: "/docker/vaapi"
+    schedule:
+      interval: daily
+    assignees:
+      - jasongdove
