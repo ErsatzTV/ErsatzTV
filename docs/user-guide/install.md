@@ -93,17 +93,17 @@ As with the docker development tags, the development builds are updated with eve
 
 1. Create a folder `ersatztv` at your preferred install location.
 2. Download and extract the [latest release from GitHub](https://github.com/jasongdove/ErsatzTV/releases) to the `ersatztv` folder.
-3. Run `ErsatzTV.exe`
-4. Open your browser to `http://[server-ip]:8409`
+3. Run `ErsatzTV-Windows.exe`
+4. Use the tray menu to open the UI, view logs or exit
 
 ## MacOS
 
 ### Manual Installation
 
-1. Create a folder `ersatztv` at your preferred install location.
-2. Download and extract the [latest release from GitHub](https://github.com/jasongdove/ErsatzTV/releases) to the `ersatztv` folder.
-3. Run `ErsatzTV`
-4. Open your browser to `http://[server-ip]:8409`
+1. Download the .dmg from the [latest release from GitHub](https://github.com/jasongdove/ErsatzTV/releases)
+2. Open the .dmg and drag `ErsatzTV` to the `Applications` folder
+3. Double-click the `ErsatzTV` application
+4. Use the tray menu to open the UI, view logs or exit
 
 ## Linux
 
