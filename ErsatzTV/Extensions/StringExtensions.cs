@@ -43,7 +43,9 @@ namespace ErsatzTV.Extensions
 
         public static EncodedQueryResult EncodeQuery(this string query)
         {
-            string encoded = Uri.EscapeDataString(query);
+            string normalizedQuery = Normalize(query);
+            
+            string encoded = Uri.EscapeDataString(normalizedQuery);
 
             // TODO: remove this on dotnet 6
             // see https://github.com/dotnet/aspnetcore/pull/26769
@@ -54,5 +56,13 @@ namespace ErsatzTV.Extensions
         }
 
         public record EncodedQueryResult(string Key, string Value);
+
+        private static string Normalize(string s)
+        {
+            // normalize single and double quotes
+            return !string.IsNullOrEmpty(s)
+                ? s.Replace('\u2018', '\'').Replace('\u2019', '\'').Replace('\u201c', '\"').Replace('\u201d', '\"')
+                : s;
+        }
     }
 }
