@@ -219,34 +219,43 @@ namespace ErsatzTV.Core.FFmpeg
             Option<List<FadePoint>> maybeFadePoints,
             IDisplaySize resolution)
         {
-            foreach (WatermarkOptions options in watermarkOptions)
+            ChannelWatermarkMode maybeWatermarkMode = watermarkOptions.Map(wmo => wmo.Watermark.Map(wm => wm.Mode)).Flatten()
+                .IfNone(ChannelWatermarkMode.None);
+
+            // skip watermark if intermittent and no fade points
+            if (maybeWatermarkMode != ChannelWatermarkMode.None &&
+                (maybeWatermarkMode != ChannelWatermarkMode.Intermittent ||
+                 maybeFadePoints.Map(fp => fp.Count > 0).IfNone(false)))
             {
-                foreach (string path in options.ImagePath)
+                foreach (WatermarkOptions options in watermarkOptions)
                 {
-                    if (options.IsAnimated)
+                    foreach (string path in options.ImagePath)
                     {
-                        _arguments.Add("-ignore_loop");
-                        _arguments.Add("0");
+                        if (options.IsAnimated)
+                        {
+                            _arguments.Add("-ignore_loop");
+                            _arguments.Add("0");
+                        }
+
+                        // when we have fade points, we need to loop the static watermark image
+                        else if (maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
+                        {
+                            _arguments.Add("-stream_loop");
+                            _arguments.Add("-1");
+                        }
+
+                        _arguments.Add("-i");
+                        _arguments.Add(path);
+
+                        _complexFilterBuilder = _complexFilterBuilder.WithWatermark(
+                            options.Watermark,
+                            maybeFadePoints,
+                            resolution,
+                            options.ImageStreamIndex);
                     }
-
-                    // when we have fade points, we need to loop the static watermark image
-                    else if (maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
-                    {
-                        _arguments.Add("-stream_loop");
-                        _arguments.Add("-1");
-                    }
-
-                    _arguments.Add("-i");
-                    _arguments.Add(path);
-
-                    _complexFilterBuilder = _complexFilterBuilder.WithWatermark(
-                        options.Watermark,
-                        maybeFadePoints,
-                        resolution,
-                        options.ImageStreamIndex);
                 }
             }
-            
+
             return this;
         }
 
@@ -400,27 +409,7 @@ namespace ErsatzTV.Core.FFmpeg
         public FFmpegProcessBuilder WithHls(string channelNumber, Option<MediaVersion> mediaVersion, long ptsOffset, Option<int> maybeTimeScale)
         {
             const int SEGMENT_SECONDS = 4;
-
-            var frameRate = 24;
-
-            foreach (MediaVersion version in mediaVersion)
-            {
-                if (!int.TryParse(version.RFrameRate, out int fr))
-                {
-                    string[] split = (version.RFrameRate ?? string.Empty).Split("/");
-                    if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
-                    {
-                        fr = (int)Math.Round(left / (double)right);
-                    }
-                    else
-                    {
-                        _logger.LogInformation("Unable to detect framerate, using {FrameRate}", 24);
-                        fr = 24;
-                    }
-                }
-
-                frameRate = fr;
-            }
+            int frameRate = GetFrameRateFromMediaVersion(mediaVersion);
 
             foreach (int timescale in maybeTimeScale)
             {
@@ -700,6 +689,32 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 StartInfo = startInfo
             };
+        }
+
+        private int GetFrameRateFromMediaVersion(Option<MediaVersion> mediaVersion)
+        {
+            var frameRate = 24;
+
+            foreach (MediaVersion version in mediaVersion)
+            {
+                if (!int.TryParse(version.RFrameRate, out int fr))
+                {
+                    string[] split = (version.RFrameRate ?? string.Empty).Split("/");
+                    if (int.TryParse(split[0], out int left) && int.TryParse(split[1], out int right))
+                    {
+                        fr = (int)Math.Round(left / (double)right);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Unable to detect framerate, using {FrameRate}", 24);
+                        fr = 24;
+                    }
+                }
+
+                frameRate = fr;
+            }
+
+            return frameRate;
         }
     }
 }
