@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -72,6 +73,28 @@ namespace ErsatzTV.Core.FFmpeg
             Option<WatermarkOptions> watermarkOptions =
                 await GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
 
+            Option<List<FadePoint>> maybeFadePoints = watermarkOptions
+                .Map(o => o.Watermark)
+                .Flatten()
+                .Where(wm => wm.Mode == ChannelWatermarkMode.Intermittent)
+                .Map(
+                    wm =>
+                        WatermarkCalculator.CalculateFadePoints(
+                            start,
+                            inPoint,
+                            outPoint,
+                            playbackSettings.StreamSeek,
+                            wm.FrequencyMinutes,
+                            wm.DurationSeconds));
+
+            // foreach (List<FadePoint> fadePoints in maybeFadePoints)
+            // {
+            //     foreach (FadePoint fadePoint in fadePoints)
+            //     {
+            //         _logger.LogDebug("Fade point filter: {FadePointFilter}", fadePoint.ToFilter());
+            //     }
+            // }
+
             FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
                 .WithThreads(playbackSettings.ThreadCount)
                 .WithVaapiDriver(vaapiDriver, vaapiDevice)
@@ -90,7 +113,7 @@ namespace ErsatzTV.Core.FFmpeg
                     playbackSettings.VideoDecoder,
                     videoStream.Codec,
                     videoStream.PixelFormat)
-                .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
+                .WithWatermark(watermarkOptions, maybeFadePoints, channel.FFmpegProfile.Resolution)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
                 .WithAlignedAudio(videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None)
                 .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);
@@ -345,7 +368,7 @@ namespace ErsatzTV.Core.FFmpeg
                     .WithQuiet()
                     .WithFormatFlags(playbackSettings.FormatFlags)
                     .WithSongInput(videoPath, videoStream.Codec, videoStream.PixelFormat, boxBlur)
-                    .WithWatermark(watermarkOptions, channel.FFmpegProfile.Resolution)
+                    .WithWatermark(watermarkOptions, None, channel.FFmpegProfile.Resolution)
                     .WithSubtitleFile(subtitleFile);
 
                 foreach (IDisplaySize scaledSize in scalePlaybackSettings.ScaledSize)

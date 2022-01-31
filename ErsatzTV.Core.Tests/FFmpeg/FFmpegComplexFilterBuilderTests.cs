@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using FluentAssertions;
@@ -183,7 +184,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 ChannelWatermarkLocation.TopLeft,
                 false,
                 100,
-                "[0:0][1:v]overlay=x=134:y=54:enable='lt(mod(mod(time(0),60*60),10*60),15)'[v]",
+                "[1:v]format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,fade=in:st=300:d=1:alpha=1:enable='between(t,0,314)',fade=out:st=315:d=1:alpha=1:enable='between(t,301,899)',fade=in:st=900:d=1:alpha=1:enable='between(t,316,914)',fade=out:st=915:d=1:alpha=1:enable='between(t,901,1499)',fade=in:st=1500:d=1:alpha=1:enable='between(t,916,1514)',fade=out:st=1515:d=1:alpha=1:enable='between(t,1501,2099)',fade=in:st=2100:d=1:alpha=1:enable='between(t,1516,2114)',fade=out:st=2115:d=1:alpha=1:enable='between(t,2101,2699)',fade=in:st=2700:d=1:alpha=1:enable='between(t,2116,2714)',fade=out:st=2715:d=1:alpha=1:enable='between(t,2701,3300)'[wmp];[0:0][wmp]overlay=x=134:y=54,format=yuv420p[v]",
                 "0:1",
                 "[v]")]
             [TestCase(
@@ -257,23 +258,36 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 string expectedAudioLabel,
                 string expectedVideoLabel)
             {
+                var watermark = new ChannelWatermark
+                {
+                    Mode = intermittent
+                        ? ChannelWatermarkMode.Intermittent
+                        : ChannelWatermarkMode.Permanent,
+                    DurationSeconds = intermittent ? 15 : 0,
+                    FrequencyMinutes = intermittent ? 10 : 0,
+                    Location = location,
+                    Size = scaled ? ChannelWatermarkSize.Scaled : ChannelWatermarkSize.ActualSize,
+                    WidthPercent = scaled ? 20 : 0,
+                    Opacity = opacity,
+                    HorizontalMarginPercent = 7,
+                    VerticalMarginPercent = 5
+                };
+
+                Option<List<FadePoint>> maybeFadePoints = watermark.Mode == ChannelWatermarkMode.Intermittent
+                    ? Some(
+                        WatermarkCalculator.CalculateFadePoints(
+                            new DateTimeOffset(2022, 01, 31, 12, 25, 0, TimeSpan.FromHours(-5)),
+                            TimeSpan.Zero,
+                            TimeSpan.FromMinutes(55),
+                            TimeSpan.Zero,
+                            watermark.FrequencyMinutes,
+                            watermark.DurationSeconds))
+                    : None;
+                
                 FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
                     .WithWatermark(
-                        Some(
-                            new ChannelWatermark
-                            {
-                                Mode = intermittent
-                                    ? ChannelWatermarkMode.Intermittent
-                                    : ChannelWatermarkMode.Permanent,
-                                DurationSeconds = intermittent ? 15 : 0,
-                                FrequencyMinutes = intermittent ? 10 : 0,
-                                Location = location,
-                                Size = scaled ? ChannelWatermarkSize.Scaled : ChannelWatermarkSize.ActualSize,
-                                WidthPercent = scaled ? 20 : 0,
-                                Opacity = opacity,
-                                HorizontalMarginPercent = 7,
-                                VerticalMarginPercent = 5
-                            }),
+                        Some(watermark),
+                        maybeFadePoints,
                         new Resolution { Width = 1920, Height = 1080 },
                         None)
                     .WithDeinterlace(deinterlace)
