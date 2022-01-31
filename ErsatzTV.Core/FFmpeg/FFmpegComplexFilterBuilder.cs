@@ -22,6 +22,7 @@ namespace ErsatzTV.Core.FFmpeg
         private IDisplaySize _resolution;
         private Option<IDisplaySize> _scaleToSize = None;
         private Option<ChannelWatermark> _watermark;
+        private Option<List<FadePoint>> _maybeFadePoints = None;
         private Option<int> _watermarkIndex;
         private string _pixelFormat;
         private string _videoEncoder;
@@ -86,10 +87,12 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegComplexFilterBuilder WithWatermark(
             Option<ChannelWatermark> watermark,
+            Option<List<FadePoint>> maybeFadePoints,
             IDisplaySize resolution,
             Option<int> watermarkIndex)
         {
             _watermark = watermark;
+            _maybeFadePoints = maybeFadePoints;
             _resolution = resolution;
             _watermarkIndex = watermarkIndex;
             return this;
@@ -155,7 +158,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             var audioFilterQueue = new List<string>();
             var videoFilterQueue = new List<string>();
-            string watermarkPreprocess = string.Empty;
+            var watermarkPreprocess = new List<string>();
             string watermarkOverlay = string.Empty;
             
             if (_normalizeLoudness)
@@ -281,7 +284,7 @@ namespace ErsatzTV.Core.FFmpeg
                     };
                     videoFilterQueue.Add(format);
                 }
-                
+
                 if (_boxBlur)
                 {
                     videoFilterQueue.Add("boxblur=40");
@@ -294,9 +297,11 @@ namespace ErsatzTV.Core.FFmpeg
 
                 foreach (ChannelWatermark watermark in _watermark)
                 {
-                    string enable = watermark.Mode == ChannelWatermarkMode.Intermittent
-                        ? $":enable='lt(mod(mod(time(0),60*60),{watermark.FrequencyMinutes}*60),{watermark.DurationSeconds})'"
-                        : string.Empty;
+                    if (watermark.Opacity != 100 || _maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
+                    {
+                        const string FORMATS = "yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8";
+                        watermarkPreprocess.Add($"format={FORMATS}");
+                    }
 
                     double horizontalMargin = Math.Round(watermark.HorizontalMarginPercent / 100.0 * _resolution.Width);
                     double verticalMargin = Math.Round(watermark.VerticalMarginPercent / 100.0 * _resolution.Height);
@@ -313,26 +318,29 @@ namespace ErsatzTV.Core.FFmpeg
                         _ => $"x=W-w-{horizontalMargin}:y=H-h-{verticalMargin}"
                     };
 
+                    if (watermark.Opacity != 100)
+                    {
+                        double opacity = watermark.Opacity / 100.0;
+                        watermarkPreprocess.Add($"colorchannelmixer=aa={opacity:F2}");
+                    }
+
                     if (watermark.Size == ChannelWatermarkSize.Scaled)
                     {
                         double width = Math.Round(watermark.WidthPercent / 100.0 * _resolution.Width);
-                        watermarkPreprocess = $"scale={width}:-1";
+                        watermarkPreprocess.Add($"scale={width}:-1");
                     }
-                    
-                    if (watermark.Opacity != 100)
+
+                    foreach (List<FadePoint> fadePoints in _maybeFadePoints)
                     {
-                        const string FORMATS = "yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8"; 
-                        string join = string.Empty;
-                        double opacity = watermark.Opacity / 100.0;
-                        if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
-                        {
-                            join = ",";
-                        }
-
-                        watermarkPreprocess = $"format={FORMATS},colorchannelmixer=aa={opacity:F2}{join}{watermarkPreprocess}";
+                        watermarkPreprocess.AddRange(fadePoints.Map(fp => fp.ToFilter()));
                     }
 
-                    watermarkOverlay = $"overlay={position}{enable}";
+                    watermarkOverlay = $"overlay={position}";
+
+                    if (_maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
+                    {
+                        watermarkOverlay += ",format=yuv420p";
+                    }
                 }
             }
 
@@ -412,9 +420,10 @@ namespace ErsatzTV.Core.FFmpeg
                         watermarkLabel = $"[{audioInput+1}:{index}]";
                     }
 
-                    if (!string.IsNullOrWhiteSpace(watermarkPreprocess))
+                    if (watermarkPreprocess.Count > 0)
                     {
-                        complexFilter.Append($"{watermarkLabel}{watermarkPreprocess}[wmp];");
+                        var joined = string.Join(",", watermarkPreprocess);
+                        complexFilter.Append($"{watermarkLabel}{joined}[wmp];");
                         watermarkLabel = "[wmp]";
                     }
 

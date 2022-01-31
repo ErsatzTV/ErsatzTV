@@ -6,10 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Normalize smart quotes in search queries as they are unsupported by the search library
+- Fix incorrect watermark time calculations caused by working ahead in `HLS Segmenter`
 
 ### Added
 - Include `Series` category tag for all episodes in XMLTV
 - Include movie, episode (show), music video (artist) genres as `category` tags in XMLTV
+
+### Changed
+- Intermittent watermarks will now fade in and out
 
 ## [0.4.0-alpha] - 2022-01-29
 ### Fixed
