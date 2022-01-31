@@ -216,6 +216,7 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithWatermark(
             Option<WatermarkOptions> watermarkOptions,
+            Option<List<FadePoint>> maybeFadePoints,
             IDisplaySize resolution)
         {
             foreach (WatermarkOptions options in watermarkOptions)
@@ -228,11 +229,19 @@ namespace ErsatzTV.Core.FFmpeg
                         _arguments.Add("0");
                     }
 
+                    // when we have fade points, we need to loop the static watermark image
+                    else if (maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
+                    {
+                        _arguments.Add("-stream_loop");
+                        _arguments.Add("-1");
+                    }
+
                     _arguments.Add("-i");
                     _arguments.Add(path);
 
                     _complexFilterBuilder = _complexFilterBuilder.WithWatermark(
                         options.Watermark,
+                        maybeFadePoints,
                         resolution,
                         options.ImageStreamIndex);
                 }
