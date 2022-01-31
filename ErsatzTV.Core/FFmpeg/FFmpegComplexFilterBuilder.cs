@@ -284,7 +284,7 @@ namespace ErsatzTV.Core.FFmpeg
                     };
                     videoFilterQueue.Add(format);
                 }
-                
+
                 if (_boxBlur)
                 {
                     videoFilterQueue.Add("boxblur=40");
@@ -297,8 +297,11 @@ namespace ErsatzTV.Core.FFmpeg
 
                 foreach (ChannelWatermark watermark in _watermark)
                 {
-                    const string FORMATS = "yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8";
-                    watermarkPreprocess.Add($"format={FORMATS}");
+                    if (watermark.Opacity != 100 || _maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
+                    {
+                        const string FORMATS = "yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8";
+                        watermarkPreprocess.Add($"format={FORMATS}");
+                    }
 
                     double horizontalMargin = Math.Round(watermark.HorizontalMarginPercent / 100.0 * _resolution.Width);
                     double verticalMargin = Math.Round(watermark.VerticalMarginPercent / 100.0 * _resolution.Height);
@@ -332,7 +335,12 @@ namespace ErsatzTV.Core.FFmpeg
                         watermarkPreprocess.AddRange(fadePoints.Map(fp => fp.ToFilter()));
                     }
 
-                    watermarkOverlay = $"overlay={position},format=yuv420p";
+                    watermarkOverlay = $"overlay={position}";
+
+                    if (_maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
+                    {
+                        watermarkOverlay += ",format=yuv420p";
+                    }
                 }
             }
 
