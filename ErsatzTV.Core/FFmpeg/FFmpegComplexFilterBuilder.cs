@@ -339,7 +339,12 @@ namespace ErsatzTV.Core.FFmpeg
 
                     if (_maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
                     {
-                        watermarkOverlay += ",format=yuv420p";
+                        watermarkOverlay += "," + acceleration switch
+                        {
+                            HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
+                            _ when isSong => "format=yuv420p",
+                            _ => "format=nv12"
+                        };
                     }
                 }
             }
