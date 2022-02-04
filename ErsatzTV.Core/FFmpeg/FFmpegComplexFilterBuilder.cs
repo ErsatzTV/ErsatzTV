@@ -28,7 +28,6 @@ namespace ErsatzTV.Core.FFmpeg
         private string _videoEncoder;
         private Option<string> _subtitle;
         private bool _boxBlur;
-        private Option<int> _frameRate;
 
         public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
         {
@@ -83,12 +82,6 @@ namespace ErsatzTV.Core.FFmpeg
                 _pixelFormat = pixelFormat;
             }
 
-            return this;
-        }
-
-        public FFmpegComplexFilterBuilder WithFrameRate(Option<int> frameRate)
-        {
-            _frameRate = frameRate;
             return this;
         }
 
@@ -246,8 +239,6 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 videoFilterQueue.Add("format=nv12|vaapi,hwupload");
             }
-
-            videoFilterQueue.AddRange(_frameRate.Select(frameRate => $"fps=fps={frameRate}"));
 
             _scaleToSize.IfSome(
                 size =>
