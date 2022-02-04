@@ -81,6 +81,9 @@
                                 <MudElement HtmlTag="div" Class="mt-3">
                                     <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Video" @bind-Checked="@_model.NormalizeVideo" For="@(() => _model.NormalizeVideo)"/>
                                 </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudCheckBox Disabled="@(!_model.Transcode)" Label="Normalize Frame Rate" @bind-Checked="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
+                                </MudElement>
                             </MudItem>
                             <MudItem>
                                 <MudText Typo="Typo.h6">Audio</MudText>

@@ -28,7 +28,8 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
             FillerKind fillerKind,
             TimeSpan inPoint,
             TimeSpan outPoint,
-            long ptsOffset);
+            long ptsOffset,
+            Option<int> targetFramerate);
 
         Task<Process> ForError(
             string ffmpegPath,

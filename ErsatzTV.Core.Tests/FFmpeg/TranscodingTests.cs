@@ -215,7 +215,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 FillerKind.None,
                 TimeSpan.Zero,
                 TimeSpan.FromSeconds(5),
-                0);
+                0,
+                None);
 
             process.StartInfo.RedirectStandardError = true;
             

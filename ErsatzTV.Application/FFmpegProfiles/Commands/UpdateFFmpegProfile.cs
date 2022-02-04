@@ -25,5 +25,6 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
         bool NormalizeLoudness,
         int AudioChannels,
         int AudioSampleRate,
-        bool NormalizeAudio) : IRequest<Either<BaseError, UpdateFFmpegProfileResult>>;
+        bool NormalizeAudio,
+        bool NormalizeFramerate) : IRequest<Either<BaseError, UpdateFFmpegProfileResult>>;
 }

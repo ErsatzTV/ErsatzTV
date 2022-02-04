@@ -24,6 +24,7 @@ namespace ErsatzTV.ViewModels
             Name = viewModel.Name;
             NormalizeAudio = viewModel.NormalizeAudio;
             NormalizeVideo = viewModel.NormalizeVideo;
+            NormalizeFramerate = viewModel.NormalizeFramerate;
             Resolution = viewModel.Resolution;
             ThreadCount = viewModel.ThreadCount;
             Transcode = viewModel.Transcode;
@@ -45,6 +46,7 @@ namespace ErsatzTV.ViewModels
         public string Name { get; set; }
         public bool NormalizeAudio { get; set; }
         public bool NormalizeVideo { get; set; }
+        public bool NormalizeFramerate { get; set; }
         public ResolutionViewModel Resolution { get; set; }
         public int ThreadCount { get; set; }
         public bool Transcode { get; set; }
@@ -74,7 +76,8 @@ namespace ErsatzTV.ViewModels
                 NormalizeLoudness,
                 AudioChannels,
                 AudioSampleRate,
-                NormalizeAudio
+                NormalizeAudio,
+                NormalizeFramerate
             );
 
         public UpdateFFmpegProfile ToUpdate() =>
@@ -97,7 +100,8 @@ namespace ErsatzTV.ViewModels
                 NormalizeLoudness,
                 AudioChannels,
                 AudioSampleRate,
-                NormalizeAudio
+                NormalizeAudio,
+                NormalizeFramerate
             );
     }
 }

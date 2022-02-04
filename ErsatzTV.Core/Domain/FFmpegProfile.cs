@@ -24,6 +24,7 @@ namespace ErsatzTV.Core.Domain
         public int AudioChannels { get; set; }
         public int AudioSampleRate { get; set; }
         public bool NormalizeAudio { get; set; }
+        public bool NormalizeFramerate { get; set; }
 
         public static FFmpegProfile New(string name, Resolution resolution) =>
             new()
