@@ -1,4 +1,5 @@
 ﻿using System;
+using LanguageExt;
 
 namespace ErsatzTV.Application.Streaming.Queries
 {
@@ -7,7 +8,8 @@ namespace ErsatzTV.Application.Streaming.Queries
         DateTimeOffset Now,
         bool StartAtZero,
         bool HlsRealtime,
-        long PtsOffset) : FFmpegProcessRequest(ChannelNumber,
+        long PtsOffset,
+        Option<int> TargetFramerate) : FFmpegProcessRequest(ChannelNumber,
         Mode,
         Now,
         StartAtZero,

@@ -50,6 +50,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             p.AudioChannels = update.AudioChannels;
             p.AudioSampleRate = update.AudioSampleRate;
             p.NormalizeAudio = update.Transcode && update.NormalizeAudio;
+            p.NormalizeFramerate = update.Transcode && update.NormalizeFramerate;
             await dbContext.SaveChangesAsync();
             return new UpdateFFmpegProfileResult(p.Id);
         }

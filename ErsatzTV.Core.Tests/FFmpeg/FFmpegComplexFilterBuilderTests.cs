@@ -184,7 +184,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 ChannelWatermarkLocation.TopLeft,
                 false,
                 100,
-                "[1:v]format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,fade=in:st=300:d=1:alpha=1:enable='between(t,0,314)',fade=out:st=315:d=1:alpha=1:enable='between(t,301,899)',fade=in:st=900:d=1:alpha=1:enable='between(t,316,914)',fade=out:st=915:d=1:alpha=1:enable='between(t,901,1499)',fade=in:st=1500:d=1:alpha=1:enable='between(t,916,1514)',fade=out:st=1515:d=1:alpha=1:enable='between(t,1501,2099)',fade=in:st=2100:d=1:alpha=1:enable='between(t,1516,2114)',fade=out:st=2115:d=1:alpha=1:enable='between(t,2101,2699)',fade=in:st=2700:d=1:alpha=1:enable='between(t,2116,2714)',fade=out:st=2715:d=1:alpha=1:enable='between(t,2701,3300)'[wmp];[0:0][wmp]overlay=x=134:y=54,format=yuv420p[v]",
+                "[1:v]format=yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8,fade=in:st=300:d=1:alpha=1:enable='between(t,0,314)',fade=out:st=315:d=1:alpha=1:enable='between(t,301,899)',fade=in:st=900:d=1:alpha=1:enable='between(t,316,914)',fade=out:st=915:d=1:alpha=1:enable='between(t,901,1499)',fade=in:st=1500:d=1:alpha=1:enable='between(t,916,1514)',fade=out:st=1515:d=1:alpha=1:enable='between(t,1501,2099)',fade=in:st=2100:d=1:alpha=1:enable='between(t,1516,2114)',fade=out:st=2115:d=1:alpha=1:enable='between(t,2101,2699)',fade=in:st=2700:d=1:alpha=1:enable='between(t,2116,2714)',fade=out:st=2715:d=1:alpha=1:enable='between(t,2701,3300)'[wmp];[0:0][wmp]overlay=x=134:y=54,format=nv12[v]",
                 "0:1",
                 "[v]")]
             [TestCase(

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using ErsatzTV.Application.Channels.Queries;
 using ErsatzTV.Application.Streaming.Queries;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -30,6 +31,7 @@ namespace ErsatzTV.Application.Streaming
         private Timer _timer;
         private readonly object _sync = new();
         private DateTimeOffset _playlistStart;
+        private Option<int> _targetFramerate;
 
         public HlsSessionWorker(IServiceScopeFactory serviceScopeFactory, ILogger<HlsSessionWorker> logger)
         {
@@ -66,6 +68,13 @@ namespace ErsatzTV.Application.Streaming
                 CancellationToken cancellationToken = cts.Token;
 
                 _logger.LogInformation("Starting HLS session for channel {Channel}", channelNumber);
+                
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
+                IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                _targetFramerate = await mediator.Send(
+                    new GetChannelFramerate(channelNumber),
+                    cancellationToken);
 
                 Touch();
                 _transcodedUntil = DateTimeOffset.Now;
@@ -142,7 +151,8 @@ namespace ErsatzTV.Application.Streaming
                     firstProcess ? DateTimeOffset.Now : _transcodedUntil.AddSeconds(1),
                     !firstProcess,
                     realtime,
-                    ptsOffset);
+                    ptsOffset,
+                    _targetFramerate);
 
                 // _logger.LogInformation("Request {@Request}", request);
 

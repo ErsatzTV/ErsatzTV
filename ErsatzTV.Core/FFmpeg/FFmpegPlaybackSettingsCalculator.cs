@@ -58,7 +58,8 @@ namespace ErsatzTV.Core.FFmpeg
             DateTimeOffset now,
             TimeSpan inPoint,
             TimeSpan outPoint,
-            bool hlsRealtime)
+            bool hlsRealtime,
+            Option<int> targetFramerate)
         {
             var result = new FFmpegPlaybackSettings
             {
@@ -113,6 +114,11 @@ namespace ErsatzTV.Core.FFmpeg
 
                     if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo)
                     {
+                        if (ffmpegProfile.NormalizeFramerate)
+                        {
+                            result.FrameRate = targetFramerate;
+                        }
+
                         result.VideoTrackTimeScale = 90000;
                     }
 

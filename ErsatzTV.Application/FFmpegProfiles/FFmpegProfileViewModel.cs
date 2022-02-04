@@ -23,5 +23,6 @@ namespace ErsatzTV.Application.FFmpegProfiles
         bool NormalizeLoudness,
         int AudioChannels,
         int AudioSampleRate,
-        bool NormalizeAudio);
+        bool NormalizeAudio,
+        bool NormalizeFramerate);
 }

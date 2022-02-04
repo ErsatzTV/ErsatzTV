@@ -214,6 +214,12 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
+        public FFmpegProcessBuilder WithFrameRate(Option<int> frameRate)
+        {
+            _complexFilterBuilder = _complexFilterBuilder.WithFrameRate(frameRate);
+            return this;
+        }
+
         public FFmpegProcessBuilder WithWatermark(
             Option<WatermarkOptions> watermarkOptions,
             Option<List<FadePoint>> maybeFadePoints,
@@ -406,10 +412,15 @@ namespace ErsatzTV.Core.FFmpeg
             return this;
         }
 
-        public FFmpegProcessBuilder WithHls(string channelNumber, Option<MediaVersion> mediaVersion, long ptsOffset, Option<int> maybeTimeScale)
+        public FFmpegProcessBuilder WithHls(
+            string channelNumber,
+            Option<MediaVersion> mediaVersion,
+            long ptsOffset,
+            Option<int> maybeTimeScale,
+            Option<int> maybeFrameRate)
         {
             const int SEGMENT_SECONDS = 4;
-            int frameRate = GetFrameRateFromMediaVersion(mediaVersion);
+            int frameRate = maybeFrameRate.IfNone(GetFrameRateFromMediaVersion(mediaVersion));
 
             foreach (int timescale in maybeTimeScale)
             {

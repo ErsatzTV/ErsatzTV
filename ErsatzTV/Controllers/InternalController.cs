@@ -34,7 +34,14 @@ namespace ErsatzTV.Controllers
             [FromQuery]
             string mode = "mixed") =>
             _mediator.Send(
-                    new GetPlayoutItemProcessByChannelNumber(channelNumber, mode, DateTimeOffset.Now, false, true, 0))
+                    new GetPlayoutItemProcessByChannelNumber(
+                        channelNumber,
+                        mode,
+                        DateTimeOffset.Now,
+                        false,
+                        true,
+                        0,
+                        Option<int>.None))
                 .Map(
                     result =>
                         result.Match<IActionResult>(
