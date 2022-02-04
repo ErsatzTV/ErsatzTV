@@ -216,7 +216,15 @@ namespace ErsatzTV.Core.FFmpeg
 
         public FFmpegProcessBuilder WithFrameRate(Option<int> frameRate)
         {
-            _complexFilterBuilder = _complexFilterBuilder.WithFrameRate(frameRate);
+            foreach (int fr in frameRate)
+            {
+                _arguments.Add("-r");
+                _arguments.Add($"{fr}");
+            
+                _arguments.Add("-vsync");
+                _arguments.Add("1");
+            }
+
             return this;
         }
 
