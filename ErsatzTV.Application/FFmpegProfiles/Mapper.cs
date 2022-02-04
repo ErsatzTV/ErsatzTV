@@ -25,7 +25,8 @@ namespace ErsatzTV.Application.FFmpegProfiles
                 profile.NormalizeLoudness,
                 profile.AudioChannels,
                 profile.AudioSampleRate,
-                profile.NormalizeAudio);
+                profile.NormalizeAudio,
+                profile.NormalizeVideo && profile.NormalizeFramerate);
 
         private static ResolutionViewModel Project(Resolution resolution) =>
             new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);

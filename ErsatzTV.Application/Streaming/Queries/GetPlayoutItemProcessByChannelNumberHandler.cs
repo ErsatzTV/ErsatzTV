@@ -159,7 +159,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                         playoutItemWithPath.PlayoutItem.FillerKind,
                         playoutItemWithPath.PlayoutItem.InPoint,
                         playoutItemWithPath.PlayoutItem.OutPoint,
-                        request.PtsOffset);
+                        request.PtsOffset,
+                        request.TargetFramerate);
 
                     var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
 
