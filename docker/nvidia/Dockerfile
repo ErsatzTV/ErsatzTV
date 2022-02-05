@@ -23,7 +23,7 @@ COPY ErsatzTV.Core.Tests/. ./ErsatzTV.Core.Tests/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
 WORKDIR /source/ErsatzTV
 ARG INFO_VERSION="unknown"
-RUN dotnet publish -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION} /p:PublishTrimmed=false
+RUN dotnet publish -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
 FROM jasongdove/ffmpeg:5.0-nvidia2004 AS runtime-base
