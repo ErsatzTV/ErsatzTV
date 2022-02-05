@@ -172,6 +172,14 @@ jobs:
       - name: Install dependencies
         run: dotnet restore -r "${{ matrix.target}}"
 
+      - uses: suisei-cn/actions-download-file@v1
+        if: ${{ matrix.kind }} == "windows"
+        id: downloadffmpeg
+        name: Download ffmpeg
+        with:
+          url: "https://github.com/GyanD/codexffmpeg/releases/download/5.0/ffmpeg-5.0-full_build.7z"
+          target: ffmpeg/
+
       - name: Build
         shell: bash
         run: |
@@ -189,8 +197,7 @@ jobs:
 
           # Download ffmpeg
           if [ "${{ matrix.kind }}" == "windows" ]; then
-            wget 'https://github.com/GyanD/codexffmpeg/releases/download/5.0/ffmpeg-5.0-full_build.7z'
-            7z e ffmpeg-5.0-full_build.7z -o"$release_name" '*.exe' -r
+            7z e "${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
             rm -f "$release_name/ffplay.exe"
           fi
 
