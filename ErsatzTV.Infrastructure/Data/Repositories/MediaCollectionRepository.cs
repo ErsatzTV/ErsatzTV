@@ -355,6 +355,37 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                 @"SELECT IFNULL(MIN(UseCustomPlaybackOrder), 0) FROM Collection WHERE Id = @CollectionId",
                 new { CollectionId = collectionId });
 
+        public async Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection)
+        {
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+            return emptyCollection.CollectionType switch
+            {
+                ProgramScheduleItemCollectionType.Artist => await dbContext.Artists.Include(a => a.ArtistMetadata)
+                    .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                    .MapT(a => a.ArtistMetadata.Head().Title),
+                ProgramScheduleItemCollectionType.Collection => await dbContext.Collections
+                    .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.CollectionId.Value)
+                    .MapT(c => c.Name),
+                ProgramScheduleItemCollectionType.MultiCollection => await dbContext.MultiCollections
+                    .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.MultiCollectionId.Value)
+                    .MapT(c => c.Name),
+                ProgramScheduleItemCollectionType.SmartCollection => await dbContext.SmartCollections
+                    .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.SmartCollectionId.Value)
+                    .MapT(c => c.Name),
+                ProgramScheduleItemCollectionType.TelevisionSeason => await dbContext.Seasons
+                    .Include(s => s.SeasonMetadata)
+                    .Include(s => s.Show)
+                    .ThenInclude(s => s.ShowMetadata)
+                    .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                    .MapT(s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}"),
+                ProgramScheduleItemCollectionType.TelevisionShow => await dbContext.Shows.Include(s => s.ShowMetadata)
+                    .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                    .MapT(s => s.ShowMetadata.Head().Title),
+                _ => None
+            };
+        }
+
         private async Task<List<Movie>> GetMovieItems(TvContext dbContext, int collectionId)
         {
             IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
