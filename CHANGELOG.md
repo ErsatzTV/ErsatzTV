@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Intermittent watermarks will now fade in and out
+- Show collection name in some playout build error messages
 
 ## [0.4.0-alpha] - 2022-01-29
 ### Fixed

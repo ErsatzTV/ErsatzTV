@@ -73,9 +73,23 @@ namespace ErsatzTV.Core.Scheduling
             Option<CollectionKey> maybeEmptyCollection = await CheckForEmptyCollections(collectionMediaItems);
             foreach (CollectionKey emptyCollection in maybeEmptyCollection)
             {
-                _logger.LogError(
-                    "Unable to rebuild playout; collection {@CollectionKey} has no valid items!",
-                    emptyCollection);
+                Option<string> maybeName = await _mediaCollectionRepository.GetNameFromKey(emptyCollection);
+                if (maybeName.IsSome)
+                {
+                    foreach (string name in maybeName)
+                    {
+                        _logger.LogError(
+                            "Unable to rebuild playout; {CollectionType} {CollectionName} has no valid items!",
+                            emptyCollection.CollectionType,
+                            name);
+                    }
+                }
+                else
+                {
+                    _logger.LogError(
+                        "Unable to rebuild playout; collection {@CollectionKey} has no valid items!",
+                        emptyCollection);
+                }
 
                 return playout;
             }

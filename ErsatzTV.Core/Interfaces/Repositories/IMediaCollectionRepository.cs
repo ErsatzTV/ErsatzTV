@@ -18,5 +18,6 @@ namespace ErsatzTV.Core.Interfaces.Repositories
         Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId);
         Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId);
         Task<bool> IsCustomPlaybackOrder(int collectionId);
+        Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection);
     }
 }
