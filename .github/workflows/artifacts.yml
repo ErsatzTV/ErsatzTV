@@ -197,7 +197,7 @@ jobs:
 
           # Download ffmpeg
           if [ "${{ matrix.kind }}" == "windows" ]; then
-            7z e "${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
+            7z e "ffmpeg/${{ steps.downloadffmpeg.outputs.filename }}" -o"$release_name" '*.exe' -r
             rm -f "$release_name/ffplay.exe"
           fi
 
