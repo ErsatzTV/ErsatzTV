@@ -187,6 +187,13 @@ jobs:
             dotnet publish ErsatzTV-Windows/ErsatzTV-Windows.csproj --framework net6.0-windows --runtime "${{ matrix.target }}" -c Release -o "$release_name" -p:InformationalVersion="${{ inputs.release_version }}-${{ matrix.target }}" -p:EnableCompressionInSingleFile=true -p:DebugType=Embedded -p:PublishSingleFile=true --self-contained true
           fi
 
+          # Download ffmpeg
+          if [ "${{ matrix.kind }}" == "windows" ]; then
+            wget 'https://github.com/GyanD/codexffmpeg/releases/download/5.0/ffmpeg-5.0-full_build.7z'
+            7z e ffmpeg-5.0-full_build.7z -o"$release_name" '*.exe' -r
+            rm -f "$release_name/ffplay.exe"
+          fi
+
           # Pack files
           if [ "${{ matrix.kind }}" == "windows" ]; then
             7z a -tzip "${release_name}.zip" "./${release_name}/*"
