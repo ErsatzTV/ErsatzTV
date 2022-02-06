@@ -4,7 +4,6 @@
         <TargetFramework>net6.0</TargetFramework>
         <NoWarn>VSTHRD200</NoWarn>
         <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
-        <PublishTrimmed>true</PublishTrimmed>
     </PropertyGroup>
 
     <ItemGroup>
