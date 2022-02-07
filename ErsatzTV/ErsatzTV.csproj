@@ -11,7 +11,7 @@
     </ItemGroup>
     
     <ItemGroup>
-      <PackageReference Include="Blazored.LocalStorage" Version="4.1.5" />
+      <PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
       <PackageReference Include="FluentValidation" Version="10.3.6" />
       <PackageReference Include="FluentValidation.AspNetCore" Version="10.3.6" />
       <PackageReference Include="HtmlSanitizer" Version="7.1.475" />
