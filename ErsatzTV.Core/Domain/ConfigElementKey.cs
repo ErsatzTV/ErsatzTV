@@ -16,6 +16,7 @@
         public static ConfigElementKey FFmpegGlobalFallbackFillerId => new("ffmpeg.global_fallback_filler_id");
         public static ConfigElementKey FFmpegSegmenterTimeout => new("ffmpeg.segmenter.timeout_seconds");
         public static ConfigElementKey FFmpegWorkAheadSegmenters => new("ffmpeg.segmenter.work_ahead_limit");
+        public static ConfigElementKey FFmpegInitialSegmentCount => new("ffmpeg.segmenter.initial_segment_count");
         public static ConfigElementKey SearchIndexVersion => new("search_index.version");
         public static ConfigElementKey HDHRTunerCount => new("hdhr.tuner_count");
         public static ConfigElementKey ChannelsPageSize => new("pages.channels.page_size");

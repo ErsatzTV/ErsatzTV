@@ -11,5 +11,6 @@
         public int? GlobalFallbackFillerId { get; set; }
         public int HlsSegmenterIdleTimeout { get; set; }
         public int WorkAheadSegmenterLimit { get; set; }
+        public int InitialSegmentCount { get; set; }
     }
 }

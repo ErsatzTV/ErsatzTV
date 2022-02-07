@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Errors;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -50,7 +51,7 @@ namespace ErsatzTV.Application.Streaming.Commands
             TimeSpan idleTimeout = await _configElementRepository
                 .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout)
                 .Map(maybeTimeout => maybeTimeout.Match(i => TimeSpan.FromSeconds(i), () => TimeSpan.FromMinutes(1)));
-            
+
             using IServiceScope scope = _serviceScopeFactory.CreateScope();
             HlsSessionWorker worker = scope.ServiceProvider.GetRequiredService<HlsSessionWorker>();
             _ffmpegSegmenterService.SessionWorkers.AddOrUpdate(request.ChannelNumber, _ => worker, (_, _) => worker);
@@ -68,12 +69,32 @@ namespace ErsatzTV.Application.Streaming.Commands
                 request.ChannelNumber,
                 "live.m3u8");
 
+            IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
+            int initialSegmentCount = await repo.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount)
+                .Map(maybeCount => maybeCount.Match(identity, () => 4));
+
+            await WaitForPlaylistSegments(playlistFileName, initialSegmentCount, worker);
+
+            return Unit.Default;
+        }
+
+        private static async Task WaitForPlaylistSegments(string playlistFileName, int initialSegmentCount, IHlsSessionWorker worker)
+        {
             while (!File.Exists(playlistFileName))
             {
                 await Task.Delay(TimeSpan.FromMilliseconds(100));
             }
 
-            return Unit.Default;
+            var segmentCount = 0;
+            while (segmentCount < initialSegmentCount)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(200));
+                
+                DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
+                string[] input = await File.ReadAllLinesAsync(playlistFileName);
+                TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
+                segmentCount = result.SegmentCount;
+            }
         }
 
         private Task<Validation<BaseError, Unit>> Validate(StartFFmpegSession request) =>

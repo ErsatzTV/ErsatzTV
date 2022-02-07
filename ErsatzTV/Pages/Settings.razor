@@ -94,6 +94,14 @@
                                       Required="true"
                                       RequiredError="Work-ahead HLS Segmenter limit is required!"/>
                     </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTextField T="int"
+                                      Label="HLS Segmenter Initial Segment Count"
+                                      @bind-Value="_ffmpegSettings.InitialSegmentCount"
+                                      Validation="@(new Func<int, string>(ValidateInitialSegmentCount))"
+                                      Required="true"
+                                      RequiredError="HLS Segmenter initial segment count is required!"/>
+                    </MudElement>
                 </MudForm>
             </MudCardContent>
             <MudCardActions>
@@ -205,6 +213,8 @@
     private static string ValidateHlsSegmenterIdleTimeout(int idleTimeout) => idleTimeout < 30 ? "HLS Segmenter idle timeout must be greater than or equal to 30" : null;
 
     private static string ValidateWorkAheadSegmenterLimit(int limit) => limit < 0 ? "Work-Ahead HLS Segmenter limit must be greater than or equal to 0" : null;
+
+    private static string ValidateInitialSegmentCount(int count) => count < 1 ? "HLS Segmenter initial segment count must be greater than or equal to 1" : null;
 
     private async Task LoadFFmpegProfilesAsync() =>
         _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());

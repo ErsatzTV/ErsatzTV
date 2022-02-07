@@ -95,12 +95,13 @@ namespace ErsatzTV.Core.FFmpeg
                 i += 3;
             }
 
-            if (endWithDiscontinuity)
+            var playlist = output.ToString();
+            if (endWithDiscontinuity && !playlist.EndsWith($"#EXT-X-DISCONTINUITY{Environment.NewLine}"))
             {
-                output.AppendLine("#EXT-X-DISCONTINUITY");
+                playlist += "#EXT-X-DISCONTINUITY" + Environment.NewLine;
             }
 
-            return new TrimPlaylistResult(nextPlaylistStart, startSequence, output.ToString());
+            return new TrimPlaylistResult(nextPlaylistStart, startSequence, playlist, segments);
         }
 
         public static TrimPlaylistResult TrimPlaylistWithDiscontinuity(
@@ -112,5 +113,5 @@ namespace ErsatzTV.Core.FFmpeg
         }
     }
 
-    public record TrimPlaylistResult(DateTimeOffset PlaylistStart, int Sequence, string Playlist);
+    public record TrimPlaylistResult(DateTimeOffset PlaylistStart, int Sequence, string Playlist, int SegmentCount);
 }
