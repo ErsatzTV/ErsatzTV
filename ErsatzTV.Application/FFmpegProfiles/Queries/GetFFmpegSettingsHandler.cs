@@ -46,7 +46,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 PreferredLanguageCode = await preferredLanguageCode.IfNoneAsync("eng"),
                 HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
                 WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
-                InitialSegmentCount = await initialSegmentCount.IfNoneAsync(4)
+                InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1)
             };
 
             foreach (int watermarkId in watermark)

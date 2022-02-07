@@ -71,7 +71,7 @@ namespace ErsatzTV.Application.Streaming.Commands
 
             IConfigElementRepository repo = scope.ServiceProvider.GetRequiredService<IConfigElementRepository>();
             int initialSegmentCount = await repo.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount)
-                .Map(maybeCount => maybeCount.Match(identity, () => 4));
+                .Map(maybeCount => maybeCount.Match(identity, () => 1));
 
             await WaitForPlaylistSegments(playlistFileName, initialSegmentCount, worker);
 
