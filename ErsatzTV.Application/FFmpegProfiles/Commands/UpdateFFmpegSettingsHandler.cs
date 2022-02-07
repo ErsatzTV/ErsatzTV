@@ -119,6 +119,10 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
                 ConfigElementKey.FFmpegWorkAheadSegmenters,
                 request.Settings.WorkAheadSegmenterLimit);
 
+            await _configElementRepository.Upsert(
+                ConfigElementKey.FFmpegInitialSegmentCount,
+                request.Settings.InitialSegmentCount);
+
             return Unit.Default;
         }
     }

@@ -92,6 +92,11 @@ namespace ErsatzTV.Controllers
                 {
                     string[] input = await System.IO.File.ReadAllLinesAsync(fileName);
 
+                    // _logger.LogInformation(
+                    //     "Trimming playlist: {PlaylistStart} {FilterBefore}",
+                    //     worker.PlaylistStart,
+                    //     now);
+
                     TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
                     return Content(result.Playlist, "application/vnd.apple.mpegurl");
                 }

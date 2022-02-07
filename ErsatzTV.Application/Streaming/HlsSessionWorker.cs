@@ -231,16 +231,31 @@ namespace ErsatzTV.Application.Streaming
                 await File.WriteAllTextAsync(playlistFileName, trimResult.Playlist, cancellationToken);
 
                 // delete old segments
-                foreach (string file in Directory.GetFiles(
-                    Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber),
-                    "*.ts"))
+                var allSegments = Directory.GetFiles(
+                        Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber),
+                        "live*.ts")
+                    .Map(
+                        file =>
+                        {
+                            string fileName = Path.GetFileName(file);
+                            var sequenceNumber = int.Parse(fileName.Replace("live", string.Empty).Split('.')[0]);
+                            return new Segment(file, sequenceNumber);
+                        })
+                    .ToList();
+
+                var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
+                // if (toDelete.Count > 0)
+                // {
+                    // _logger.LogInformation(
+                    //     "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
+                    //     toDelete.Map(s => s.SequenceNumber).Min(),
+                    //     toDelete.Map(s => s.SequenceNumber).Max(),
+                    //     trimResult.Sequence);
+                // }
+                    
+                foreach (Segment segment in toDelete)
                 {
-                    string fileName = Path.GetFileName(file);
-                    if (fileName.StartsWith("live") && int.Parse(fileName.Replace("live", string.Empty).Split('.')[0]) <
-                        trimResult.Sequence)
-                    {
-                        File.Delete(file);
-                    }
+                    File.Delete(segment.File);
                 }
 
                 _playlistStart = trimResult.PlaylistStart;
@@ -276,5 +291,7 @@ namespace ErsatzTV.Application.Streaming
             return await repo.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters)
                 .Map(maybeCount => maybeCount.Match(identity, () => 1));
         }
+
+        private record Segment(string File, int SequenceNumber);
     }
 }

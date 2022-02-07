@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Include `Series` category tag for all episodes in XMLTV
 - Include movie, episode (show), music video (artist) genres as `category` tags in XMLTV
 - Add framerate normalization to `HLS Segmenter` and `MPEG-TS` streaming modes
+- Add `HLS Segmenter Initial Segment Count` setting to allow segmenter to work ahead before allowing client playback
 
 ### Changed
 - Intermittent watermarks will now fade in and out
