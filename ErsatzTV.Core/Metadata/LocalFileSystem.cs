@@ -23,7 +23,7 @@ namespace ErsatzTV.Core.Metadata
         {
             try
             {
-                if (!Directory.Exists(folder))
+                if (folder != null && !Directory.Exists(folder))
                 {
                     Directory.CreateDirectory(folder);
                 }
@@ -42,11 +42,39 @@ namespace ErsatzTV.Core.Metadata
         public bool IsLibraryPathAccessible(LibraryPath libraryPath) =>
             Directory.Exists(libraryPath.Path);
 
-        public IEnumerable<string> ListSubdirectories(string folder) =>
-            Try(Directory.EnumerateDirectories(folder)).IfFail(new List<string>());
+        public IEnumerable<string> ListSubdirectories(string folder)
+        {
+            if (Directory.Exists(folder))
+            {
+                try
+                {
+                    return Directory.EnumerateDirectories(folder);
+                }
+                catch
+                {
+                    // do nothing
+                }
+            }
 
-        public IEnumerable<string> ListFiles(string folder) =>
-            Try(Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly)).IfFail(new List<string>());
+            return new List<string>();
+        }
+
+        public IEnumerable<string> ListFiles(string folder)
+        {
+            if (Directory.Exists(folder))
+            {
+                try
+                {
+                    return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly);
+                }
+                catch
+                {
+                    // do nothing
+                }
+            }
+
+            return new List<string>();
+        }
 
         public bool FileExists(string path) => File.Exists(path);
 

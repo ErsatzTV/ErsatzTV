@@ -188,7 +188,7 @@
 
     private void AddLibraryPath()
     {
-        if (_model.Paths.All(p => NormalizePath(p.Path) != NormalizePath(_newPath.Path)))
+        if (!string.IsNullOrWhiteSpace(_newPath.Path) && _model.Paths.All(p => NormalizePath(p.Path) != NormalizePath(_newPath.Path)))
         {
             _model.HasChanges = true;
             _model.Paths.Add(new LocalLibraryPathEditViewModel

@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -73,11 +72,6 @@ namespace ErsatzTV.Core.Metadata
             decimal progressMax)
         {
             decimal progressSpread = progressMax - progressMin;
-
-            if (!_localFileSystem.IsLibraryPathAccessible(libraryPath))
-            {
-                return new MediaSourceInaccessible();
-            }
 
             var allArtistFolders = _localFileSystem.ListSubdirectories(libraryPath.Path)
                 .Filter(ShouldIncludeFolder)

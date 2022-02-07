@@ -82,24 +82,6 @@ namespace ErsatzTV.Core.Tests.Metadata
             private Mock<IImageCache> _imageCache;
 
             [Test]
-            public async Task Missing_Folder()
-            {
-                MovieFolderScanner service = GetService(
-                    new FakeFileEntry(Path.Combine(FakeRoot, Path.Combine("Movie (2020)", "Movie (2020).mkv")))
-                );
-                var libraryPath = new LibraryPath { Path = BadFakeRoot, LibraryFolders = new List<LibraryFolder>() };
-
-                Either<BaseError, Unit> result = await service.ScanFolder(
-                    libraryPath,
-                    FFprobePath,
-                    0,
-                    1);
-
-                result.IsLeft.Should().BeTrue();
-                result.IfLeft(error => error.Should().BeOfType<MediaSourceInaccessible>());
-            }
-
-            [Test]
             public async Task NewMovie_Statistics_And_FallbackMetadata(
                 [ValueSource(typeof(LocalFolderScanner), nameof(LocalFolderScanner.VideoFileExtensions))]
                 string videoExtension)
