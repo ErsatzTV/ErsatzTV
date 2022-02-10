@@ -304,6 +304,213 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                         filter.VideoLabel.Should().Be(expectedVideoLabel);
                     });
             }
+            
+            [Test]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.BottomLeft,
+                false,
+                100,
+                "[0:0]scale_cuda=format=yuv420p[vt];[1:v]format=yuva420p,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=H-h-54[v]",
+                "0:1",
+                "[v]",
+                false)]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.BottomLeft,
+                false,
+                100,
+                "[0:0]scale_cuda=1920:1080,setsar=1,hwdownload,format=nv12,format=yuv420p,hwupload_cuda[vt];[1:v]format=yuva420p,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=H-h-54,hwupload[v]",
+                "0:1",
+                "[v]",
+                true)]
+            [TestCase(
+                false,
+                false,
+                true,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:0]scale_cuda=format=yuv420p[vt];[1:v]format=yuva420p,fade=in:st=300:d=1:alpha=1:enable='between(t,0,314)',fade=out:st=315:d=1:alpha=1:enable='between(t,301,899)',fade=in:st=900:d=1:alpha=1:enable='between(t,316,914)',fade=out:st=915:d=1:alpha=1:enable='between(t,901,1499)',fade=in:st=1500:d=1:alpha=1:enable='between(t,916,1514)',fade=out:st=1515:d=1:alpha=1:enable='between(t,1501,2099)',fade=in:st=2100:d=1:alpha=1:enable='between(t,1516,2114)',fade=out:st=2115:d=1:alpha=1:enable='between(t,2101,2699)',fade=in:st=2700:d=1:alpha=1:enable='between(t,2116,2714)',fade=out:st=2715:d=1:alpha=1:enable='between(t,2701,3300)',hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54[v]",
+                "0:1",
+                "[v]",
+                false)]
+            [TestCase(
+                false,
+                false,
+                true,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:0]scale_cuda=1920:1080,setsar=1,hwdownload,format=nv12,format=yuv420p,hwupload_cuda[vt];[1:v]format=yuva420p,fade=in:st=300:d=1:alpha=1:enable='between(t,0,314)',fade=out:st=315:d=1:alpha=1:enable='between(t,301,899)',fade=in:st=900:d=1:alpha=1:enable='between(t,316,914)',fade=out:st=915:d=1:alpha=1:enable='between(t,901,1499)',fade=in:st=1500:d=1:alpha=1:enable='between(t,916,1514)',fade=out:st=1515:d=1:alpha=1:enable='between(t,1501,2099)',fade=in:st=2100:d=1:alpha=1:enable='between(t,1516,2114)',fade=out:st=2115:d=1:alpha=1:enable='between(t,2101,2699)',fade=in:st=2700:d=1:alpha=1:enable='between(t,2116,2714)',fade=out:st=2715:d=1:alpha=1:enable='between(t,2701,3300)',hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54,hwupload[v]",
+                "0:1",
+                "[v]",
+                true)]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                true,
+                100,
+                "[0:0]scale_cuda=format=yuv420p[vt];[1:v]format=yuva420p,scale=384:-1,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54[v]",
+                "0:1",
+                "[v]",
+                false)]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                true,
+                100,
+                "[0:0]scale_cuda=1920:1080,setsar=1,hwdownload,format=nv12,format=yuv420p,hwupload_cuda[vt];[1:v]format=yuva420p,scale=384:-1,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54,hwupload[v]",
+                "0:1",
+                "[v]",
+                true)]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                90,
+                "[0:0]scale_cuda=format=yuv420p[vt];[1:v]format=yuva420p,colorchannelmixer=aa=0.90,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54[v]",
+                "0:1",
+                "[v]",
+                false)]
+            [TestCase(
+                false,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                90,
+                "[0:0]scale_cuda=1920:1080,setsar=1,hwdownload,format=nv12,format=yuv420p,hwupload_cuda[vt];[1:v]format=yuva420p,colorchannelmixer=aa=0.90,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54,hwupload[v]",
+                "0:1",
+                "[v]",
+                true)]            
+            // TODO: do we need these anymore? interlaced content that isn't handled by mpeg2_cuvid?
+            // [TestCase(
+            //     false,
+            //     true,
+            //     false,
+            //     ChannelWatermarkLocation.TopLeft,
+            //     false,
+            //     100,
+            //     "[0:0]yadif=1[vt];[vt][1:v]overlay=x=134:y=54[v]",
+            //     "0:1",
+            //     "[v]")]
+            // [TestCase(
+            //     false,
+            //     true,
+            //     false,
+            //     ChannelWatermarkLocation.TopLeft,
+            //     true,
+            //     100,
+            //     "[0:0]yadif=1[vt];[1:v]scale=384:-1[wmp];[vt][wmp]overlay=x=134:y=54[v]",
+            //     "0:1",
+            //     "[v]")]
+            // [TestCase(
+            //     true,
+            //     true,
+            //     false,
+            //     ChannelWatermarkLocation.TopLeft,
+            //     false,
+            //     100,
+            //     "[0:1]apad=whole_dur=3300000ms[a];[0:0]yadif=1[vt];[vt][1:v]overlay=x=134:y=54[v]",
+            //     "[a]",
+            //     "[v]")]
+            [TestCase(
+                true,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:1]apad=whole_dur=3300000ms[a];[0:0]scale_cuda=format=yuv420p[vt];[1:v]format=yuva420p,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54[v]",
+                "[a]",
+                "[v]",
+                false)]
+            [TestCase(
+                true,
+                false,
+                false,
+                ChannelWatermarkLocation.TopLeft,
+                false,
+                100,
+                "[0:1]apad=whole_dur=3300000ms[a];[0:0]scale_cuda=1920:1080,setsar=1,hwdownload,format=nv12,format=yuv420p,hwupload_cuda[vt];[1:v]format=yuva420p,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54,hwupload[v]",
+                "[a]",
+                "[v]",
+                true)]
+            public void Should_Return_NVENC_Watermark(
+                bool alignAudio,
+                bool deinterlace,
+                bool intermittent,
+                ChannelWatermarkLocation location,
+                bool scaled,
+                int opacity,
+                string expectedVideoFilter,
+                string expectedAudioLabel,
+                string expectedVideoLabel,
+                bool scaledSource)
+            {
+                var watermark = new ChannelWatermark
+                {
+                    Mode = intermittent
+                        ? ChannelWatermarkMode.Intermittent
+                        : ChannelWatermarkMode.Permanent,
+                    DurationSeconds = intermittent ? 15 : 0,
+                    FrequencyMinutes = intermittent ? 10 : 0,
+                    Location = location,
+                    Size = scaled ? ChannelWatermarkSize.Scaled : ChannelWatermarkSize.ActualSize,
+                    WidthPercent = scaled ? 20 : 0,
+                    Opacity = opacity,
+                    HorizontalMarginPercent = 7,
+                    VerticalMarginPercent = 5
+                };
+
+                Option<List<FadePoint>> maybeFadePoints = watermark.Mode == ChannelWatermarkMode.Intermittent
+                    ? Some(
+                        WatermarkCalculator.CalculateFadePoints(
+                            new DateTimeOffset(2022, 01, 31, 12, 25, 0, TimeSpan.FromHours(-5)),
+                            TimeSpan.Zero,
+                            TimeSpan.FromMinutes(55),
+                            TimeSpan.Zero,
+                            watermark.FrequencyMinutes,
+                            watermark.DurationSeconds))
+                    : None;
+                
+                FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
+                    .WithHardwareAcceleration(HardwareAccelerationKind.Nvenc)
+                    .WithWatermark(
+                        Some(watermark),
+                        maybeFadePoints,
+                        new Resolution { Width = 1920, Height = 1080 },
+                        None)
+                    .WithDeinterlace(deinterlace)
+                    .WithAlignedAudio(alignAudio ? Some(TimeSpan.FromMinutes(55)) : None);
+
+                if (scaledSource)
+                {
+                    builder = builder.WithScaling(new Resolution { Width = 1920, Height = 1080 });
+                }
+
+                Option<FFmpegComplexFilter> result = builder.Build(false, 0, 0, 0, 1, false);
+
+                result.IsSome.Should().BeTrue();
+                result.IfSome(
+                    filter =>
+                    {
+                        filter.ComplexFilter.Should().Be(expectedVideoFilter);
+                        filter.AudioLabel.Should().Be(expectedAudioLabel);
+                        filter.VideoLabel.Should().Be(expectedVideoLabel);
+                    });
+            }
 
             [Test]
             [TestCase(true, false, false, "[0:0]deinterlace_qsv[v]", "[v]")]
