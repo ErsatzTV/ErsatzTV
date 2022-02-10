@@ -286,7 +286,8 @@ namespace ErsatzTV.Core.FFmpeg
             string audioPath,
             string decoder,
             Option<string> codec,
-            Option<string> pixelFormat)
+            Option<string> pixelFormat,
+            bool deinterlace)
         {
             if (audioPath == videoPath)
             {
@@ -306,6 +307,15 @@ namespace ErsatzTV.Core.FFmpeg
             {
                 _arguments.Add("-c:v");
                 _arguments.Add(decoder);
+
+                if (decoder == "mpeg2_cuvid" && deinterlace)
+                {
+                    _arguments.Add("-deint");
+                    _arguments.Add("2");
+                }
+
+                _complexFilterBuilder = _complexFilterBuilder
+                    .WithDecoder(decoder);
             }
 
             _complexFilterBuilder = _complexFilterBuilder
@@ -633,14 +643,14 @@ namespace ErsatzTV.Core.FFmpeg
                     }
                 });
 
-            _arguments.Add("-map");
-            _arguments.Add(videoLabel);
-
             foreach (string _ in audioPath)
             {
                 _arguments.Add("-map");
                 _arguments.Add(audioLabel);
             }
+            
+            _arguments.Add("-map");
+            _arguments.Add(videoLabel);
 
             return this;
         }

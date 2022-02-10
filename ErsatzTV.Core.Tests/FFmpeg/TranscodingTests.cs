@@ -37,8 +37,26 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             Assert.Pass();
         }
 
+        public enum Padding
+        {
+            NoPadding,
+            WithPadding
+        }
+
         private class TestData
         {
+            public static Padding[] Paddings =
+            {
+                Padding.NoPadding,
+                Padding.WithPadding
+            };
+
+            public static VideoScanKind[] VideoScanKinds =
+            {
+                VideoScanKind.Progressive,
+                VideoScanKind.Interlaced
+            };
+            
             public static string[] InputCodecs =
             {
                 "h264",
@@ -51,9 +69,9 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 "yuv420p",
                 "yuv420p10le",
-                "yuvj420p",
-                "yuv444p",
-                "yuv444p10le"
+                // "yuvj420p",
+                // "yuv444p",
+                // "yuv444p10le"
             };
             
             public static Resolution[] Resolutions =
@@ -115,27 +133,32 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             string inputPixelFormat,
             [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
             Resolution profileResolution,
-            [Values(true, false)]
-            bool pad,
+            [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
+            Padding padding,
+            [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
+            VideoScanKind videoScanKind,
             // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         {
             string name = GetStringSha256Hash(
-                $"{inputCodec}_{inputPixelFormat}_{pad}_{profileResolution}_{profileCodec}_{profileAcceleration}");
+                $"{inputCodec}_{inputPixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileCodec}_{profileAcceleration}");
 
             string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
             if (!File.Exists(file))
             {
-                string resolution = pad ? "1920x1060" : "1920x1080";
+                string resolution = padding == Padding.WithPadding ? "1920x1060" : "1920x1080";
+
+                string videoFilter = videoScanKind == VideoScanKind.Interlaced ? "-vf tinterlace=interleave_top,fieldorder=tff" : string.Empty;
+                string flags = videoScanKind == VideoScanKind.Interlaced ? "-flags +ildct+ilme" : string.Empty;
                 
-                var args =
-                    $"-y -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {file}";
+                string args =
+                    $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {flags} {file}";
                 var p1 = new Process
                 {
                     StartInfo = new ProcessStartInfo

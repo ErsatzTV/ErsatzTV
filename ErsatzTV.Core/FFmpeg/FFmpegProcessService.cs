@@ -114,7 +114,8 @@ namespace ErsatzTV.Core.FFmpeg
                     audioPath,
                     playbackSettings.VideoDecoder,
                     videoStream.Codec,
-                    videoStream.PixelFormat)
+                    videoStream.PixelFormat,
+                    playbackSettings.Deinterlace)
                 .WithWatermark(watermarkOptions, maybeFadePoints, channel.FFmpegProfile.Resolution)
                 .WithFrameRate(playbackSettings.FrameRate)
                 .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)

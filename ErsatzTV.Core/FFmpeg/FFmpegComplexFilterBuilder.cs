@@ -25,6 +25,7 @@ namespace ErsatzTV.Core.FFmpeg
         private Option<List<FadePoint>> _maybeFadePoints = None;
         private Option<int> _watermarkIndex;
         private string _pixelFormat;
+        private string _videoDecoder;
         private string _videoEncoder;
         private Option<string> _subtitle;
         private bool _boxBlur;
@@ -72,6 +73,12 @@ namespace ErsatzTV.Core.FFmpeg
                 _inputCodec = codec;
             }
 
+            return this;
+        }
+
+        public FFmpegComplexFilterBuilder WithDecoder(string decoder)
+        {
+            _videoDecoder = decoder;
             return this;
         }
 
@@ -145,19 +152,31 @@ namespace ErsatzTV.Core.FFmpeg
             string audioLabel = audioStreamIndex.Match(index => $"{audioInput}:{index}", () => "0:a");
 
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
+
             bool isHardwareDecode = acceleration switch
             {
                 HardwareAccelerationKind.Vaapi => !isSong && _inputCodec != "mpeg4",
-                
+
                 // we need an initial hwupload_cuda when only padding with these pixel formats
                 HardwareAccelerationKind.Nvenc when _scaleToSize.IsNone && _padToSize.IsSome =>
                     !isSong && !_pixelFormat.Contains("p10le") && !_pixelFormat.Contains("444"),
 
-                HardwareAccelerationKind.Nvenc => !isSong,
+                HardwareAccelerationKind.Nvenc => !isSong &&
+                                                  (string.IsNullOrWhiteSpace(_videoDecoder) ||
+                                                   _videoDecoder.Contains("cuvid")),
                 HardwareAccelerationKind.Qsv => !isSong,
                 HardwareAccelerationKind.VideoToolbox => false,
                 _ => false
             };
+
+            bool nvencDeinterlace = acceleration == HardwareAccelerationKind.Nvenc && _videoDecoder == "mpeg2_cuvid" &&
+                                    _deinterlace; 
+            // mpeg2_cuvid will handle deinterlace and is "not" a hardware decode
+            if (nvencDeinterlace)
+            {
+                _deinterlace = false;
+                isHardwareDecode = false;
+            }
 
             var audioFilterQueue = new List<string>();
             var videoFilterQueue = new List<string>();
@@ -215,15 +234,17 @@ namespace ErsatzTV.Core.FFmpeg
 
             if (_deinterlace)
             {
-                string filter = acceleration switch
+                Option<string> maybeFilter = acceleration switch
                 {
                     HardwareAccelerationKind.Qsv => "deinterlace_qsv",
+                    HardwareAccelerationKind.Nvenc when !usesHardwareFilters && _pixelFormat.Contains("p10le") =>
+                        "hwupload_cuda,yadif_cuda",
                     HardwareAccelerationKind.Nvenc => "yadif_cuda",
                     HardwareAccelerationKind.Vaapi => "deinterlace_vaapi",
                     _ => "yadif=1"
                 };
 
-                if (!string.IsNullOrWhiteSpace(filter))
+                foreach (string filter in maybeFilter)
                 {
                     videoFilterQueue.Add(filter);
                 }
@@ -243,67 +264,64 @@ namespace ErsatzTV.Core.FFmpeg
                 videoFilterQueue.Add("format=nv12|vaapi,hwupload");
             }
 
-            _scaleToSize.IfSome(
-                size =>
-                {
-                    string filter = acceleration switch
-                    {
-                        HardwareAccelerationKind.Qsv => $"scale_qsv=w={size.Width}:h={size.Height}",
-                        HardwareAccelerationKind.Nvenc when _pixelFormat is "yuv420p10le" =>
-                            $"hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Nvenc => $"scale_cuda={size.Width}:{size.Height}",
-                        HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
-                        _ when videoOnly => $"scale={size.Width}:{size.Height}:force_original_aspect_ratio=increase,crop={size.Width}:{size.Height}",
-                        _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
-                    };
-
-                    if (!string.IsNullOrWhiteSpace(filter))
-                    {
-                        videoFilterQueue.Add(filter);
-                    }
-                });
-
             bool scaleOrPad = _scaleToSize.IsSome || _padToSize.IsSome;
             bool usesSoftwareFilters = _padToSize.IsSome || _watermark.IsSome;
+            bool hasFadePoints = _maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0;
 
-            if (scaleOrPad && _boxBlur == false)
-            {
-                videoFilterQueue.Add("setsar=1");
-            }
-
+            var softwareFilterQueue = new List<string>();
             if (usesSoftwareFilters)
             {
                 if (acceleration != HardwareAccelerationKind.None && (isHardwareDecode || usesHardwareFilters))
                 {
-                    videoFilterQueue.Add("hwdownload");
-                    string format = acceleration switch
+                    Option<string> maybeFormat = acceleration switch
                     {
                         HardwareAccelerationKind.Vaapi => "format=nv12|vaapi",
+                        HardwareAccelerationKind.Nvenc when _padToSize.IsNone || nvencDeinterlace => None,
                         HardwareAccelerationKind.Nvenc when _pixelFormat == "yuv420p10le" =>
                             "format=p010le,format=nv12",
                         HardwareAccelerationKind.Qsv when isSong => "format=nv12,format=yuv420p",
                         _ when isSong => "format=yuv420p",
                         _ => "format=nv12"
                     };
-                    videoFilterQueue.Add(format);
+
+                    foreach (string format in maybeFormat)
+                    {
+                        softwareFilterQueue.Add("hwdownload");
+                        softwareFilterQueue.Add(format);
+                    }
+
+                    if (nvencDeinterlace)
+                    {
+                        softwareFilterQueue.Add("hwdownload");
+                    }
                 }
 
                 if (_boxBlur)
                 {
-                    videoFilterQueue.Add("boxblur=40");
+                    softwareFilterQueue.Add("boxblur=40");
                 }
 
                 if (videoOnly)
                 {
-                    videoFilterQueue.Add("deband");
+                    softwareFilterQueue.Add("deband");
                 }
 
                 foreach (ChannelWatermark watermark in _watermark)
                 {
-                    if (watermark.Opacity != 100 || _maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
+                    Option<string> maybeFormats = acceleration switch
                     {
-                        const string FORMATS = "yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8";
-                        watermarkPreprocess.Add($"format={FORMATS}");
+                        // overlay_cuda only supports alpha with yuva420p 
+                        HardwareAccelerationKind.Nvenc => "yuva420p",
+
+                        _ when watermark.Opacity != 100 || hasFadePoints =>
+                            "yuva420p|yuva444p|yuva422p|rgba|abgr|bgra|gbrap|ya8",
+
+                        _ => None
+                    };
+
+                    foreach (string formats in maybeFormats)
+                    {
+                        watermarkPreprocess.Add($"format={formats}");
                     }
 
                     double horizontalMargin = Math.Round(watermark.HorizontalMarginPercent / 100.0 * _resolution.Width);
@@ -338,9 +356,18 @@ namespace ErsatzTV.Core.FFmpeg
                         watermarkPreprocess.AddRange(fadePoints.Map(fp => fp.ToFilter()));
                     }
 
-                    watermarkOverlay = $"overlay={position}";
+                    if (acceleration == HardwareAccelerationKind.Nvenc)
+                    {
+                        watermarkPreprocess.Add("hwupload_cuda");
+                    }
 
-                    if (_maybeFadePoints.Map(fp => fp.Count).IfNone(0) > 0)
+                    watermarkOverlay = acceleration switch
+                    {
+                        HardwareAccelerationKind.Nvenc => $"overlay_cuda={position}",
+                        _ => $"overlay={position}"
+                    };
+
+                    if (hasFadePoints && acceleration != HardwareAccelerationKind.Nvenc)
                     {
                         watermarkOverlay += "," + acceleration switch
                         {
@@ -351,27 +378,8 @@ namespace ErsatzTV.Core.FFmpeg
                     }
                 }
             }
-
-            _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
             
-            foreach (string subtitle in _subtitle)
-            {
-                videoFilterQueue.Add(subtitle);
-            }
-
             string outputPixelFormat = null;
-            
-            if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None &&
-                string.IsNullOrWhiteSpace(watermarkOverlay))
-            {
-                string upload = acceleration switch
-                {
-                    HardwareAccelerationKind.Qsv => "hwupload=extra_hw_frames=64",
-                    _ => "hwupload"
-                };
-                videoFilterQueue.Add(upload);
-            }
-
             if (!usesSoftwareFilters && string.IsNullOrWhiteSpace(watermarkOverlay))
             {
                 switch (acceleration, _videoEncoder, _pixelFormat)
@@ -383,6 +391,90 @@ namespace ErsatzTV.Core.FFmpeg
                         outputPixelFormat = "yuv444p";
                         break;
                 }
+            }
+
+            string outputFormat = (_videoEncoder, _pixelFormat) switch
+            {
+                ("hevc_nvenc", "yuv420p10le") => "p010le",
+                ("h264_nvenc", "yuv420p10le") => "p010le",
+                _ => null
+            };
+
+            _scaleToSize.IfSome(
+                size =>
+                {
+                    string filter = acceleration switch
+                    {
+                        HardwareAccelerationKind.Qsv => $"scale_qsv=w={size.Width}:h={size.Height}",
+                        HardwareAccelerationKind.Nvenc when _watermark.IsSome && _scaleToSize.IsNone =>
+                            $"format=yuv420p,hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
+                        HardwareAccelerationKind.Nvenc when _watermark.IsSome && _padToSize.IsNone =>
+                            $"scale_cuda={size.Width}:{size.Height}",
+                        HardwareAccelerationKind.Nvenc when _watermark.IsNone && !string.IsNullOrEmpty(outputFormat) =>
+                            $"scale_cuda={size.Width}:{size.Height}:format={outputFormat}",
+                        HardwareAccelerationKind.Nvenc when _pixelFormat is "yuv420p10le" && usesHardwareFilters == false =>
+                            $"hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
+                        HardwareAccelerationKind.Nvenc => $"scale_cuda={size.Width}:{size.Height}",
+                        HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
+                        _ when videoOnly => $"scale={size.Width}:{size.Height}:force_original_aspect_ratio=increase,crop={size.Width}:{size.Height}",
+                        _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
+                    };
+
+                    if (!string.IsNullOrWhiteSpace(filter))
+                    {
+                        videoFilterQueue.Add(filter);
+                    }
+                });
+
+            if (scaleOrPad && _boxBlur == false)
+            {
+                if (acceleration == HardwareAccelerationKind.Nvenc)
+                {
+                    if (!isHardwareDecode && !string.IsNullOrWhiteSpace(outputPixelFormat))
+                    {
+                        videoFilterQueue.Add($"hwdownload,format={outputPixelFormat}");
+                    }
+                }
+
+                videoFilterQueue.Add("setsar=1");
+            }
+
+            videoFilterQueue.AddRange(softwareFilterQueue);
+
+            _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
+            
+            if (acceleration == HardwareAccelerationKind.Nvenc && _watermark.IsSome)
+            {
+                if (_scaleToSize.IsSome)
+                {
+                    videoFilterQueue.Add("hwdownload,format=nv12,format=yuv420p");
+                    videoFilterQueue.Add("hwupload_cuda");
+                }
+                else if (_padToSize.IsNone)
+                {
+                    videoFilterQueue.Add("scale_cuda=format=yuv420p");
+                }
+                else
+                {
+                    videoFilterQueue.Add("format=yuv420p");
+                    videoFilterQueue.Add("hwupload_cuda");
+                }
+            }
+
+            foreach (string subtitle in _subtitle)
+            {
+                videoFilterQueue.Add(subtitle);
+            }
+            
+            if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None &&
+                string.IsNullOrWhiteSpace(watermarkOverlay))
+            {
+                string upload = acceleration switch
+                {
+                    HardwareAccelerationKind.Qsv => "hwupload=extra_hw_frames=64",
+                    _ => "hwupload"
+                };
+                videoFilterQueue.Add(upload);
             }
 
             bool hasAudioFilters = audioFilterQueue.Any();
@@ -446,6 +538,9 @@ namespace ErsatzTV.Core.FFmpeg
                         {
                             case (true, HardwareAccelerationKind.Nvenc):
                                 complexFilter.Append(",hwupload_cuda");
+                                break;
+                            // no need to upload since we're already in the GPU with overlay_cuda
+                            case (_, HardwareAccelerationKind.Nvenc) when scaleOrPad == false && _watermark.IsSome:
                                 break;
                             case (_, HardwareAccelerationKind.Qsv):
                                 complexFilter.Append(",format=yuv420p,hwupload=extra_hw_frames=64");

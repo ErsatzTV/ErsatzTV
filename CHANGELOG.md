@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix ui crash adding empty path to local library
 - Properly flag items as `File Not Found` when local library path (folder) is missing from disk
 - Fix playback bug with unknown pixel format
+- Fix playback of interlaced mpeg2video on NVIDIA
 
 ### Added
 - Include `Series` category tag for all episodes in XMLTV
@@ -20,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Intermittent watermarks will now fade in and out
 - Show collection name in some playout build error messages
+- Use hardware-accelerated filter for watermarks on NVIDIA
+- Use hardware-accelerated deinterlace for some content on NVIDIA
 
 ## [0.4.0-alpha] - 2022-01-29
 ### Fixed
