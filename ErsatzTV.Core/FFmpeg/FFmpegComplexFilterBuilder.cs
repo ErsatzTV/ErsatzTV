@@ -136,9 +136,12 @@ namespace ErsatzTV.Core.FFmpeg
 
         public Option<FFmpegComplexFilter> Build(bool videoOnly, int videoInput, int videoStreamIndex, int audioInput, Option<int> audioStreamIndex, bool isSong)
         {
+            // since .Contains is used on pixel format, we need it to be not null
+            _pixelFormat ??= string.Empty;
+            
             var complexFilter = new StringBuilder();
 
-            var videoLabel = $"{videoInput}:{(isSong ? "v" : videoStreamIndex.ToString())}";
+            string videoLabel = $"{videoInput}:{(isSong ? "v" : videoStreamIndex.ToString())}";
             string audioLabel = audioStreamIndex.Match(index => $"{audioInput}:{index}", () => "0:a");
 
             HardwareAccelerationKind acceleration = _hardwareAccelerationKind.IfNone(HardwareAccelerationKind.None);
