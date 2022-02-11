@@ -159,7 +159,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
 
         public async Task<List<MusicVideoMetadata>> GetPagedMusicVideos(int artistId, int pageNumber, int pageSize)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
             return await dbContext.MusicVideoMetadata
                 .AsNoTracking()
                 .Include(m => m.Artwork)

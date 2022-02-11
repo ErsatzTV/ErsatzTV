@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Normalize smart quotes in search queries as they are unsupported by the search library
 - Fix incorrect watermark time calculations caused by working ahead in `HLS Segmenter`
 - Fix ui crash adding empty path to local library
+- Fix ui crash loading collection editor
 - Properly flag items as `File Not Found` when local library path (folder) is missing from disk
 - Fix playback bug with unknown pixel format
 - Fix playback of interlaced mpeg2video on NVIDIA, VAAPI

@@ -21,7 +21,7 @@ namespace ErsatzTV.Application.MediaCollections.Queries
             GetCollectionById request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             return await dbContext.Collections
                 .SelectOneAsync(c => c.Id, c => c.Id == request.Id)
                 .MapT(ProjectToViewModel);
