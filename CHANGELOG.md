@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix ui crash adding empty path to local library
 - Properly flag items as `File Not Found` when local library path (folder) is missing from disk
 - Fix playback bug with unknown pixel format
-- Fix playback of interlaced mpeg2video on NVIDIA
+- Fix playback of interlaced mpeg2video on NVIDIA, VAAPI
 
 ### Added
 - Include `Series` category tag for all episodes in XMLTV

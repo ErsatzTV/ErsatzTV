@@ -155,7 +155,8 @@ namespace ErsatzTV.Core.FFmpeg
 
             bool isHardwareDecode = acceleration switch
             {
-                HardwareAccelerationKind.Vaapi => !isSong && _inputCodec != "mpeg4",
+                HardwareAccelerationKind.Vaapi => !isSong && _inputCodec != "mpeg4" &&
+                                                  (_deinterlace == false || !_pixelFormat.Contains("p10le")),
 
                 // we need an initial hwupload_cuda when only padding with these pixel formats
                 HardwareAccelerationKind.Nvenc when _scaleToSize.IsNone && _padToSize.IsSome =>
@@ -252,9 +253,9 @@ namespace ErsatzTV.Core.FFmpeg
 
             string[] h264hevc = { "h264", "hevc" };
 
-            if (acceleration == HardwareAccelerationKind.Vaapi && (_pixelFormat ?? string.Empty).EndsWith("p10le") &&
-                h264hevc.Contains(_inputCodec)
-                && (_pixelFormat != "yuv420p10le" || _inputCodec != "hevc"))
+            if (_deinterlace == false && acceleration == HardwareAccelerationKind.Vaapi &&
+                (_pixelFormat ?? string.Empty).EndsWith("p10le") &&
+                h264hevc.Contains(_inputCodec) && (_pixelFormat != "yuv420p10le" || _inputCodec != "hevc"))
             {
                 videoFilterQueue.Add("format=p010le,format=nv12|vaapi,hwupload");
             }
