@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.4.1-alpha] - 2022-02-10
 ### Fixed
 - Normalize smart quotes in search queries as they are unsupported by the search library
 - Fix incorrect watermark time calculations caused by working ahead in `HLS Segmenter`
@@ -965,7 +967,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.0-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.1-alpha...HEAD
+[0.4.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.0-alpha...v0.4.1-alpha
 [0.4.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.8-alpha...v0.4.0-alpha
 [0.3.8-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.7-alpha...v0.3.8-alpha
 [0.3.7-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.6-alpha...v0.3.7-alpha
