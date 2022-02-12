@@ -18,13 +18,13 @@ public class PipelineGeneratorTests
             new List<MediaStream>
             {
                 new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P()),
-                new AudioStream(1, AudioFormat.Aac)
+                new AudioStream(1, AudioFormat.Aac, 2)
             },
             TimeSpan.FromMinutes(2));
 
         var inputFiles = new List<InputFile> { testFile };
 
-        var desiredState = new FrameState(VideoFormat.H264, new PixelFormatYuv420P(), AudioFormat.Aac);
+        var desiredState = new FrameState(VideoFormat.H264, new PixelFormatYuv420P(), AudioFormat.Aac, 2);
 
         var builder = new PipelineBuilder(inputFiles);
         IList<IPipelineStep> result = builder.Build(desiredState);
@@ -43,13 +43,13 @@ public class PipelineGeneratorTests
             new List<MediaStream>
             {
                 new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P()),
-                new AudioStream(1, AudioFormat.Aac)
+                new AudioStream(1, AudioFormat.Aac, 2)
             },
             TimeSpan.FromMinutes(2));
 
         var inputFiles = new List<InputFile> { testFile };
 
-        var desiredState = new FrameState(VideoFormat.Hevc, new PixelFormatYuv420P(), AudioFormat.Aac);
+        var desiredState = new FrameState(VideoFormat.Hevc, new PixelFormatYuv420P(), AudioFormat.Aac, 2);
 
         var builder = new PipelineBuilder(inputFiles);
         IList<IPipelineStep> result = builder.Build(desiredState);

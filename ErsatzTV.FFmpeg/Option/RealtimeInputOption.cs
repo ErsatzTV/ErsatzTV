@@ -9,6 +9,7 @@ public class RealtimeInputOption : IPipelineStep
     public IList<string> GlobalOptions => new List<string> { "-threads", "1" };
     
     public IList<string> InputOptions => new List<string> { "-re" };
+    public IList<string> FilterOptions => Array.Empty<string>();
     public IList<string> OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState;
 }

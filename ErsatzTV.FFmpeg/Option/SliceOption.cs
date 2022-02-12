@@ -15,6 +15,8 @@ public class SliceOption : IPipelineStep
     public IList<string> GlobalOptions => Array.Empty<string>();
     public IList<string> InputOptions =>
         _inPoint.HasValue ? new List<string> { "-ss", $"{_inPoint:c}" } : Array.Empty<string>();
+
+    public IList<string> FilterOptions => Array.Empty<string>();
     public IList<string> OutputOptions => new List<string> { "-t", $"{_duration:c}" };
     public FrameState NextState(FrameState currentState) => currentState;
 }

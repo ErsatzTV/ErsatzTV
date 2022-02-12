@@ -6,4 +6,5 @@ public record FrameState(
     string VideoFormat,
     IPixelFormat PixelFormat,
     string AudioFormat,
+    int AudioChannels,
     FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown);

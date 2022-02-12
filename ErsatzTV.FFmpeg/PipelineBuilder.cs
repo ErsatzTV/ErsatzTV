@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
+using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Option;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Protocol;
@@ -9,9 +10,11 @@ namespace ErsatzTV.FFmpeg;
 public class PipelineBuilder
 {
     private readonly List<IPipelineStep> _pipelineSteps;
-    private readonly IEnumerable<InputFile> _inputFiles;
+    private readonly List<IPipelineFilterStep> _audioFilterSteps;
+    private readonly List<IPipelineFilterStep> _videoFilterSteps;
+    private readonly IList<InputFile> _inputFiles;
 
-    public PipelineBuilder(IEnumerable<InputFile> inputFiles)
+    public PipelineBuilder(IList<InputFile> inputFiles)
     {
         _pipelineSteps = new List<IPipelineStep>
         {
@@ -25,6 +28,9 @@ public class PipelineBuilder
             new FastStartOutputOption(),
             new ClosedGopOutputOption(),
         };
+
+        _audioFilterSteps = new List<IPipelineFilterStep>();
+        _videoFilterSteps = new List<IPipelineFilterStep>();
 
         _inputFiles = inputFiles;
     }
@@ -65,6 +71,12 @@ public class PipelineBuilder
         return this;
     }
 
+    public PipelineBuilder WithAudioDuration(TimeSpan audioDuration)
+    {
+        _audioFilterSteps.Add(new AudioPadFilter(audioDuration));
+        return this;
+    }
+
     public IList<IPipelineStep> Build(FrameState desiredState)
     {
         InputFile head = _inputFiles.First();
@@ -72,7 +84,11 @@ public class PipelineBuilder
         var audioStream = head.Streams.First(s => s.Kind == StreamKind.Audio) as AudioStream;
         if (videoStream != null && audioStream != null)
         {
-            var currentState = new FrameState(videoStream.Codec, videoStream.PixelFormat, audioStream.Codec);
+            var currentState = new FrameState(
+                videoStream.Codec,
+                videoStream.PixelFormat,
+                audioStream.Codec,
+                audioStream.Channels);
 
             if (IsDesiredVideoState(currentState, desiredState))
             {
@@ -110,10 +126,18 @@ public class PipelineBuilder
                     currentState = step.NextState(currentState);
                     _pipelineSteps.Add(step);
                 }
+
+                if (currentState.AudioChannels != desiredState.AudioChannels)
+                {
+                    var step = new AudioChannelsOutputOption(desiredState.AudioChannels);
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
             }
 
             _pipelineSteps.Add(new OutputFormatMpegTs());
             _pipelineSteps.Add(new PipeProtocol());
+            _pipelineSteps.Add(new ComplexFilter(_inputFiles, _audioFilterSteps, _videoFilterSteps));
         }
 
         return _pipelineSteps;

@@ -21,7 +21,10 @@ public static class CommandGenerator
             arguments.AddRange(new[] { "-i", inputFile.Path });
         }
         
-        // TODO: complex filter
+        foreach (IPipelineStep step in pipelineSteps)
+        {
+            arguments.AddRange(step.FilterOptions);
+        }
 
         foreach (IPipelineStep step in pipelineSteps)
         {

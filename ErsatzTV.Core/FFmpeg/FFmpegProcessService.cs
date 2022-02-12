@@ -93,7 +93,8 @@ namespace ErsatzTV.Core.FFmpeg
 
             foreach (MediaStream audioStream in maybeAudioStream)
             {
-                inputFiles.Head().Streams.Add(new AudioStream(audioStream.Index, audioStream.Codec));
+                inputFiles.Head().Streams
+                    .Add(new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels));
             }
             
             // TODO: need formats for these codecs
@@ -107,10 +108,12 @@ namespace ErsatzTV.Core.FFmpeg
             var desiredState = new FrameState(
                 videoFormat,
                 new PixelFormatYuv420P(),
-                channel.FFmpegProfile.AudioCodec);
+                channel.FFmpegProfile.AudioCodec,
+                channel.FFmpegProfile.AudioChannels);
 
             var pipelineBuilder = new PipelineBuilder(inputFiles);
 
+            // TODO: these options should probably be part of the "desired state" so the logic can live in the ffmpeg lib
             if (playbackSettings.RealtimeOutput)
             {
                 pipelineBuilder = pipelineBuilder.WithRealtimeInput();
@@ -140,6 +143,11 @@ namespace ErsatzTV.Core.FFmpeg
             foreach (int audioSampleRate in playbackSettings.AudioSampleRate)
             {
                 pipelineBuilder = pipelineBuilder.WithAudioSampleRate(audioSampleRate);
+            }
+
+            foreach (TimeSpan audioDuration in playbackSettings.AudioDuration)
+            {
+                pipelineBuilder = pipelineBuilder.WithAudioDuration(audioDuration);
             }
 
             pipelineBuilder = pipelineBuilder.WithSlice(
