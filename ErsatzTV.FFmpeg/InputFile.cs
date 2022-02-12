@@ -1,3 +1,3 @@
 ﻿namespace ErsatzTV.FFmpeg;
 
-public record InputFile(string Path, IList<MediaStream> Streams);
+public record InputFile(string Path, IList<MediaStream> Streams, TimeSpan Duration);

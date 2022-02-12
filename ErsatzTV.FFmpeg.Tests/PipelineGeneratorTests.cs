@@ -19,13 +19,18 @@ public class PipelineGeneratorTests
             {
                 new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P()),
                 new AudioStream(1, AudioFormat.Aac)
-            });
+            },
+            TimeSpan.FromMinutes(2));
 
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(VideoFormat.H264, new PixelFormatYuv420P(), AudioFormat.Aac);
 
-        IList<IPipelineStep> result = PipelineGenerator.GeneratePipeline(inputFiles, desiredState);
+        IList<IPipelineStep> result = PipelineBuilder.GeneratePipeline(
+            inputFiles,
+            desiredState,
+            null,
+            testFile.Duration);
 
         result.Should().Contain(p => p is EncoderCopyVideo);
         result.Should().Contain(p => p is EncoderCopyAudio);
@@ -42,13 +47,18 @@ public class PipelineGeneratorTests
             {
                 new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P()),
                 new AudioStream(1, AudioFormat.Aac)
-            });
+            },
+            TimeSpan.FromMinutes(2));
 
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(VideoFormat.Hevc, new PixelFormatYuv420P(), AudioFormat.Aac);
 
-        IList<IPipelineStep> result = PipelineGenerator.GeneratePipeline(inputFiles, desiredState);
+        IList<IPipelineStep> result = PipelineBuilder.GeneratePipeline(
+            inputFiles,
+            desiredState,
+            null,
+            testFile.Duration);
 
         result.Should().Contain(p => p is EncoderLibx265);
         result.Should().Contain(p => p is EncoderCopyAudio);

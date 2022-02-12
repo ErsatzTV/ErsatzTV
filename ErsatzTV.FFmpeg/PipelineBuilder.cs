@@ -6,17 +6,27 @@ using ErsatzTV.FFmpeg.Protocol;
 
 namespace ErsatzTV.FFmpeg;
 
-public static class PipelineGenerator
+public static class PipelineBuilder
 {
-    public static IList<IPipelineStep> GeneratePipeline(IEnumerable<InputFile> inputFiles, FrameState desiredState)
+    public static IList<IPipelineStep> GeneratePipeline(IEnumerable<InputFile> inputFiles, FrameState desiredState, TimeSpan? inPoint, TimeSpan duration)
     {
         var result = new List<IPipelineStep>
         {
             new NoStandardInputOption(),
             new HideBannerOption(),
             new NoStatsOption(),
+            new LoglevelErrorOption(),
+            new StandardFormatFlags(),
             new RealtimeInputOption(), // TODO: this should be configurable
             new VideoTrackTimescaleOutputOption(), // TODO: configurable?
+            new NoSceneDetectOutputOption(),
+            new NoDemuxDecodeDelayOutputOption(),
+            new FastStartOutputOption(),
+            new ClosedGopOutputOption(),
+            new VideoBitrateOutputOption(2000, 2000, 4000), // TODO: configurable
+            new AudioBitrateOutputOption(320, 320, 640), // TODO: configurable
+            new AudioSampleRateOutputOption(48), // TODO: configurable
+            new SliceOption(inPoint, duration),
         };
 
         InputFile head = inputFiles.First();
@@ -52,6 +62,16 @@ public static class PipelineGenerator
             if (IsDesiredAudioState(currentState, desiredState))
             {
                 result.Add(new EncoderCopyAudio());
+            }
+            
+            while (!IsDesiredAudioState(currentState, desiredState))
+            {
+                if (currentState.AudioFormat != desiredState.AudioFormat)
+                {
+                    IEncoder step = AvailableEncoders.ForAudioFormat(desiredState);
+                    currentState = step.NextState(currentState);
+                    result.Add(step);
+                }
             }
 
             result.Add(new OutputFormatMpegTs());

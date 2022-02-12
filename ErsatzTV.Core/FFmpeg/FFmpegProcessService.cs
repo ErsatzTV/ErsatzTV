@@ -11,6 +11,7 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Format;
 using LanguageExt;
+using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
@@ -63,6 +64,19 @@ namespace ErsatzTV.Core.FFmpeg
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
 
+            FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
+                channel.StreamingMode,
+                channel.FFmpegProfile,
+                videoVersion,
+                videoStream,
+                maybeAudioStream,
+                start,
+                now,
+                inPoint,
+                outPoint,
+                hlsRealtime,
+                targetFramerate);
+
             var inputFiles = new List<InputFile>
             {
                 new(
@@ -73,7 +87,8 @@ namespace ErsatzTV.Core.FFmpeg
                             videoStream.Index,
                             videoStream.Codec,
                             AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat))
-                    })
+                    },
+                    videoVersion.Duration)
             };
 
             foreach (MediaStream audioStream in maybeAudioStream)
@@ -94,44 +109,31 @@ namespace ErsatzTV.Core.FFmpeg
                 new PixelFormatYuv420P(),
                 channel.FFmpegProfile.AudioCodec);
 
-            IList<IPipelineStep> pipelineSteps = PipelineGenerator.GeneratePipeline(inputFiles, desiredState);
+            IList<IPipelineStep> pipelineSteps = PipelineBuilder.GeneratePipeline(
+                inputFiles,
+                desiredState,
+                playbackSettings.StreamSeek.IsNone ? null : playbackSettings.StreamSeek.ValueUnsafe(),
+                finish - now);
+
             IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
 
             _logger.LogInformation("Generated command arguments {Command}", arguments);
             
-            // var startInfo = new ProcessStartInfo
-            // {
-            //     FileName = ffmpegPath,
-            //     RedirectStandardOutput = true,
-            //     RedirectStandardError = false,
-            //     UseShellExecute = false,
-            //     CreateNoWindow = true,
-            //     StandardOutputEncoding = Encoding.UTF8
-            // };
-            //
-            // foreach (string argument in arguments)
-            // {
-            //     startInfo.ArgumentList.Add(argument);
-            // }
-            //
-            // return new Process
-            // {
-            //     StartInfo = startInfo
-            // };
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = ffmpegPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = false,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8
+            };
             
-            FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
-                channel.StreamingMode,
-                channel.FFmpegProfile,
-                videoVersion,
-                videoStream,
-                maybeAudioStream,
-                start,
-                now,
-                inPoint,
-                outPoint,
-                hlsRealtime,
-                targetFramerate);
-
+            foreach (string argument in arguments)
+            {
+                startInfo.ArgumentList.Add(argument);
+            }
+            
             Option<WatermarkOptions> watermarkOptions =
                 await GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
 
@@ -242,23 +244,33 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithMetadata(channel, maybeAudioStream)
                 .WithDuration(finish - now);
 
+            Process oldProcess;
             switch (channel.StreamingMode)
             {
                 // HLS needs to segment and generate playlist
                 case StreamingMode.HttpLiveStreamingSegmenter:
-                    return builder.WithHls(
+                     oldProcess = builder.WithHls(
                             channel.Number,
                             videoVersion,
                             ptsOffset,
                             playbackSettings.VideoTrackTimeScale,
                             playbackSettings.FrameRate)
                         .Build();
+                     break;
                 default:
-                    return builder.WithFormat("mpegts")
+                    oldProcess = builder.WithFormat("mpegts")
                         .WithInitialDiscontinuity()
                         .WithPipe()
                         .Build();
+                    break;
             }
+
+            _logger.LogInformation("Old arguments {Arguments}", oldProcess.StartInfo.ArgumentList);
+            
+            return new Process
+            {
+                StartInfo = startInfo
+            };
         }
 
         public async Task<Process> ForError(

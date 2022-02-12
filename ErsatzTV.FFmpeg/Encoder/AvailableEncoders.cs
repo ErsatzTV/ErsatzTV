@@ -14,4 +14,14 @@ public class AvailableEncoders
             _ => throw new ArgumentOutOfRangeException(nameof(desiredState.VideoFormat), desiredState.VideoFormat, null)
         };
     }
+    
+    public static IEncoder ForAudioFormat(FrameState desiredState)
+    {
+        return desiredState.AudioFormat switch
+        {
+            AudioFormat.Aac => new EncoderAac(),
+            AudioFormat.Ac3 => new EncoderAc3(),
+            _ => throw new ArgumentOutOfRangeException(nameof(desiredState.AudioFormat), desiredState.AudioFormat, null)
+        };
+    }
 }
