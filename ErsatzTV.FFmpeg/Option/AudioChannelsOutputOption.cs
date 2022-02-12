@@ -10,4 +10,6 @@ public class AudioChannelsOutputOption : OutputOption
     }
 
     public override IList<string> OutputOptions => new List<string> { "-ac", _channels.ToString() };
+
+    public override FrameState NextState(FrameState currentState) => currentState with { AudioChannels = _channels };
 }

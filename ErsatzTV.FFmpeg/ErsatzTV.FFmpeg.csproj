@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
+    </ItemGroup>
+
 </Project>

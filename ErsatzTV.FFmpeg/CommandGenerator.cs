@@ -2,7 +2,9 @@
 
 public static class CommandGenerator
 {
-    public static IList<string> GenerateArguments(IEnumerable<InputFile> inputFiles, IList<IPipelineStep> pipelineSteps)
+    public static IList<string> GenerateArguments(
+        IEnumerable<InputFile> inputFiles,
+        IList<IPipelineStep> pipelineSteps)
     {
         var arguments = new List<string>();
 
@@ -20,7 +22,7 @@ public static class CommandGenerator
 
             arguments.AddRange(new[] { "-i", inputFile.Path });
         }
-        
+
         foreach (IPipelineStep step in pipelineSteps)
         {
             arguments.AddRange(step.FilterOptions);

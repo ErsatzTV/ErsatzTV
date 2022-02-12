@@ -2,5 +2,12 @@
 
 public class NoSceneDetectOutputOption : OutputOption
 {
-    public override IList<string> OutputOptions => new List<string> { "-sc_threshold", "0" };
+    private readonly int _value;
+
+    public NoSceneDetectOutputOption(int value)
+    {
+        _value = value;
+    }
+
+    public override IList<string> OutputOptions => new List<string> { "-sc_threshold", _value.ToString() };
 }

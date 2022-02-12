@@ -108,8 +108,12 @@ namespace ErsatzTV.Core.FFmpeg
             var desiredState = new FrameState(
                 videoFormat,
                 new PixelFormatYuv420P(),
+                playbackSettings.VideoBitrate,
+                playbackSettings.VideoBufferSize,
                 channel.FFmpegProfile.AudioCodec,
-                channel.FFmpegProfile.AudioChannels);
+                channel.FFmpegProfile.AudioChannels,
+                playbackSettings.AudioBitrate,
+                playbackSettings.AudioBufferSize);
 
             var pipelineBuilder = new PipelineBuilder(inputFiles);
 
@@ -122,22 +126,6 @@ namespace ErsatzTV.Core.FFmpeg
             if (playbackSettings.VideoTrackTimeScale.IsSome)
             {
                 pipelineBuilder = pipelineBuilder.WithVideoTrackTimescale();
-            }
-
-            foreach (int videoBitrate in playbackSettings.VideoBitrate)
-            {
-                pipelineBuilder = pipelineBuilder.WithVideoBitrate(
-                    videoBitrate,
-                    videoBitrate,
-                    await playbackSettings.VideoBufferSize.IfNoneAsync(videoBitrate * 2));
-            }
-
-            foreach (int audioBitrate in playbackSettings.AudioBitrate)
-            {
-                pipelineBuilder = pipelineBuilder.WithAudioBitrate(
-                    audioBitrate,
-                    audioBitrate,
-                    await playbackSettings.AudioBufferSize.IfNoneAsync(audioBitrate * 2));
             }
 
             foreach (int audioSampleRate in playbackSettings.AudioSampleRate)

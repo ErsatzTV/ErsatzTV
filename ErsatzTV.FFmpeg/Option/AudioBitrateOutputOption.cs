@@ -2,24 +2,21 @@
 
 public class AudioBitrateOutputOption : OutputOption
 {
-    private readonly int _averageBitrate;
-    private readonly int _maximumTolerance;
-    private readonly int _decoderBufferSize;
+    private readonly int _bitrate;
 
-    public AudioBitrateOutputOption(
-        int averageBitrate,
-        int maximumTolerance,
-        int decoderBufferSize)
+    public AudioBitrateOutputOption(int bitrate)
     {
-        _averageBitrate = averageBitrate;
-        _maximumTolerance = maximumTolerance;
-        _decoderBufferSize = decoderBufferSize;
+        _bitrate = bitrate;
     }
 
     public override IList<string> OutputOptions => new List<string>
     {
-        "-b:a", $"{_averageBitrate}k",
-        "-maxrate:a", $"{_maximumTolerance}k",
-        "-bufsize:a", $"{_decoderBufferSize}k"
+        "-b:a", $"{_bitrate}k",
+        "-maxrate:a", $"{_bitrate}k",
+    };
+
+    public override FrameState NextState(FrameState currentState) => currentState with
+    {
+        AudioBitrate = _bitrate
     };
 }

@@ -24,7 +24,15 @@ public class PipelineGeneratorTests
 
         var inputFiles = new List<InputFile> { testFile };
 
-        var desiredState = new FrameState(VideoFormat.H264, new PixelFormatYuv420P(), AudioFormat.Aac, 2);
+        var desiredState = new FrameState(
+            VideoFormat.H264,
+            new PixelFormatYuv420P(),
+            2000,
+            4000,
+            AudioFormat.Aac,
+            2,
+            320,
+            640);
 
         var builder = new PipelineBuilder(inputFiles);
         IList<IPipelineStep> result = builder.Build(desiredState);
@@ -49,7 +57,15 @@ public class PipelineGeneratorTests
 
         var inputFiles = new List<InputFile> { testFile };
 
-        var desiredState = new FrameState(VideoFormat.Hevc, new PixelFormatYuv420P(), AudioFormat.Aac, 2);
+        var desiredState = new FrameState(
+            VideoFormat.Hevc,
+            new PixelFormatYuv420P(),
+            2000,
+            4000,
+            AudioFormat.Aac,
+            2,
+            320,
+            640);
 
         var builder = new PipelineBuilder(inputFiles);
         IList<IPipelineStep> result = builder.Build(desiredState);
