@@ -7,9 +7,12 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.FFmpeg;
+using ErsatzTV.FFmpeg.Format;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.FFmpeg
 {
@@ -59,6 +62,42 @@ namespace ErsatzTV.Core.FFmpeg
             MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
             Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
 
+            var inputFiles = new List<InputFile>
+            {
+                new(
+                    videoVersion.MediaFiles.Head().Path,
+                    new List<ErsatzTV.FFmpeg.MediaStream>
+                    {
+                        new VideoStream(
+                            videoStream.Index,
+                            videoStream.Codec,
+                            AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat))
+                    })
+            };
+
+            foreach (MediaStream audioStream in maybeAudioStream)
+            {
+                inputFiles.Head().Streams.Add(new AudioStream(audioStream.Index, audioStream.Codec));
+            }
+            
+            // TODO: need formats for these codecs
+            string videoFormat = channel.FFmpegProfile.VideoCodec switch
+            {
+                "hevc_nvenc" => VideoFormat.Hevc,
+                "h264_nvenc" => VideoFormat.H264,
+                _ => throw new ArgumentOutOfRangeException($"unexpected video codec {channel.FFmpegProfile.VideoCodec}")
+            };
+
+            var desiredState = new FrameState(
+                videoFormat,
+                new PixelFormatYuv420P(),
+                channel.FFmpegProfile.AudioCodec);
+
+            IList<IPipelineStep> pipelineSteps = PipelineGenerator.GeneratePipeline(inputFiles, desiredState);
+            string command = CommandGenerator.GenerateCommand(inputFiles, pipelineSteps);
+
+            _logger.LogInformation("Generated command {Command}", command);
+            
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
                 channel.StreamingMode,
                 channel.FFmpegProfile,

@@ -1,4 +1,4 @@
-﻿namespace ErsatzTV.FFmpeg.PixelFormat;
+﻿namespace ErsatzTV.FFmpeg.Format;
 
 public class PixelFormatYuv420P : IPixelFormat
 {
