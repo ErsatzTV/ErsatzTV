@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix `HLS Segmenter` bug when source video packet contains no duration (`N/A`)
 
 ## [0.4.1-alpha] - 2022-02-10
 ### Fixed
