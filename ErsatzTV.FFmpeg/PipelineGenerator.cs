@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
+using ErsatzTV.FFmpeg.Option;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Protocol;
 
@@ -9,7 +10,14 @@ public static class PipelineGenerator
 {
     public static IList<IPipelineStep> GeneratePipeline(IEnumerable<InputFile> inputFiles, FrameState desiredState)
     {
-        var result = new List<IPipelineStep>();
+        var result = new List<IPipelineStep>
+        {
+            new NoStandardInputOption(),
+            new HideBannerOption(),
+            new NoStatsOption(),
+            new RealtimeInputOption(), // TODO: this should be configurable
+            new VideoTrackTimescaleOutputOption(), // TODO: configurable?
+        };
 
         InputFile head = inputFiles.First();
         var videoStream = head.Streams.First(s => s.Kind == StreamKind.Video) as VideoStream;

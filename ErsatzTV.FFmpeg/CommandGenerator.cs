@@ -2,9 +2,14 @@
 
 public static class CommandGenerator
 {
-    public static string GenerateCommand(IEnumerable<InputFile> inputFiles, IList<IPipelineStep> pipelineSteps)
+    public static IList<string> GenerateArguments(IEnumerable<InputFile> inputFiles, IList<IPipelineStep> pipelineSteps)
     {
         var arguments = new List<string>();
+
+        foreach (IPipelineStep step in pipelineSteps)
+        {
+            arguments.AddRange(step.GlobalOptions);
+        }
 
         foreach (InputFile inputFile in inputFiles)
         {
@@ -23,6 +28,6 @@ public static class CommandGenerator
             arguments.AddRange(step.OutputOptions);
         }
 
-        return string.Join(" ", arguments);
+        return arguments;
     }
 }

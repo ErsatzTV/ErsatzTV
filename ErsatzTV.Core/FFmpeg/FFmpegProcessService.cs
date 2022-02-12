@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -94,9 +95,29 @@ namespace ErsatzTV.Core.FFmpeg
                 channel.FFmpegProfile.AudioCodec);
 
             IList<IPipelineStep> pipelineSteps = PipelineGenerator.GeneratePipeline(inputFiles, desiredState);
-            string command = CommandGenerator.GenerateCommand(inputFiles, pipelineSteps);
+            IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
 
-            _logger.LogInformation("Generated command {Command}", command);
+            _logger.LogInformation("Generated command arguments {Command}", arguments);
+            
+            // var startInfo = new ProcessStartInfo
+            // {
+            //     FileName = ffmpegPath,
+            //     RedirectStandardOutput = true,
+            //     RedirectStandardError = false,
+            //     UseShellExecute = false,
+            //     CreateNoWindow = true,
+            //     StandardOutputEncoding = Encoding.UTF8
+            // };
+            //
+            // foreach (string argument in arguments)
+            // {
+            //     startInfo.ArgumentList.Add(argument);
+            // }
+            //
+            // return new Process
+            // {
+            //     StartInfo = startInfo
+            // };
             
             FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
                 channel.StreamingMode,

@@ -1,12 +1,7 @@
 ﻿namespace ErsatzTV.FFmpeg.Decoder;
 
-public class DecoderH264 : IDecoder
+public class DecoderH264 : DecoderBase
 {
-    public string Name => "h264";
-    public FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
-    public IList<string> InputOptions => new List<string> { "-c:v", Name };
-    public IList<string> OutputOptions => Array.Empty<string>();
-
-    public FrameState NextState(FrameState currentState) =>
-        currentState with { FrameDataLocation = OutputFrameDataLocation };
+    public override string Name => "h264";
+    public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
 }

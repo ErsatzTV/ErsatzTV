@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.PixelFormat;
 using NUnit.Framework;
 using FluentAssertions;
 
@@ -59,7 +58,7 @@ public class PipelineGeneratorTests
 
     private static void PrintCommand(IEnumerable<InputFile> inputFiles, IList<IPipelineStep> pipeline)
     {
-        string command = CommandGenerator.GenerateCommand(inputFiles, pipeline);
-        Console.WriteLine($"Generated command: ffmpeg {command}");
+        IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipeline);
+        Console.WriteLine($"Generated command: ffmpeg {string.Join(" ", arguments)}");
     }
 }
