@@ -6,30 +6,68 @@ using ErsatzTV.FFmpeg.Protocol;
 
 namespace ErsatzTV.FFmpeg;
 
-public static class PipelineBuilder
+public class PipelineBuilder
 {
-    public static IList<IPipelineStep> GeneratePipeline(IEnumerable<InputFile> inputFiles, FrameState desiredState, TimeSpan? inPoint, TimeSpan duration)
+    private readonly List<IPipelineStep> _pipelineSteps;
+    private readonly IEnumerable<InputFile> _inputFiles;
+
+    public PipelineBuilder(IEnumerable<InputFile> inputFiles)
     {
-        var result = new List<IPipelineStep>
+        _pipelineSteps = new List<IPipelineStep>
         {
             new NoStandardInputOption(),
             new HideBannerOption(),
             new NoStatsOption(),
             new LoglevelErrorOption(),
             new StandardFormatFlags(),
-            new RealtimeInputOption(), // TODO: this should be configurable
-            new VideoTrackTimescaleOutputOption(), // TODO: configurable?
             new NoSceneDetectOutputOption(),
             new NoDemuxDecodeDelayOutputOption(),
             new FastStartOutputOption(),
             new ClosedGopOutputOption(),
-            new VideoBitrateOutputOption(2000, 2000, 4000), // TODO: configurable
-            new AudioBitrateOutputOption(320, 320, 640), // TODO: configurable
-            new AudioSampleRateOutputOption(48), // TODO: configurable
-            new SliceOption(inPoint, duration),
         };
 
-        InputFile head = inputFiles.First();
+        _inputFiles = inputFiles;
+    }
+
+    public PipelineBuilder WithRealtimeInput()
+    {
+        _pipelineSteps.Add(new RealtimeInputOption());
+        return this;
+    }
+
+    public PipelineBuilder WithVideoTrackTimescale()
+    {
+        _pipelineSteps.Add(new VideoTrackTimescaleOutputOption());
+        return this;
+    }
+
+    public PipelineBuilder WithVideoBitrate(int averageBitrate, int maximumTolerance, int decoderBufferSize)
+    {
+        _pipelineSteps.Add(new VideoBitrateOutputOption(averageBitrate, maximumTolerance, decoderBufferSize));
+        return this;
+    }
+    
+    public PipelineBuilder WithAudioBitrate(int averageBitrate, int maximumTolerance, int decoderBufferSize)
+    {
+        _pipelineSteps.Add(new AudioBitrateOutputOption(averageBitrate, maximumTolerance, decoderBufferSize));
+        return this;
+    }
+
+    public PipelineBuilder WithAudioSampleRate(int sampleRate)
+    {
+        _pipelineSteps.Add(new AudioSampleRateOutputOption(sampleRate));
+        return this;
+    }
+
+    public PipelineBuilder WithSlice(TimeSpan? start, TimeSpan finish)
+    {
+        _pipelineSteps.Add(new SliceOption(start, finish));
+        return this;
+    }
+
+    public IList<IPipelineStep> Build(FrameState desiredState)
+    {
+        InputFile head = _inputFiles.First();
         var videoStream = head.Streams.First(s => s.Kind == StreamKind.Video) as VideoStream;
         var audioStream = head.Streams.First(s => s.Kind == StreamKind.Audio) as AudioStream;
         if (videoStream != null && audioStream != null)
@@ -38,13 +76,13 @@ public static class PipelineBuilder
 
             if (IsDesiredVideoState(currentState, desiredState))
             {
-                result.Add(new EncoderCopyVideo());
+                _pipelineSteps.Add(new EncoderCopyVideo());
             }
             else
             {
                 IDecoder step = AvailableDecoders.ForVideoFormat(currentState);
                 currentState = step.NextState(currentState);
-                result.Add(step);
+                _pipelineSteps.Add(step);
             }
 
             while (!IsDesiredVideoState(currentState, desiredState))
@@ -54,14 +92,14 @@ public static class PipelineBuilder
                     // TODO: prioritize which codec is used (hw accel)
                     IEncoder step = AvailableEncoders.ForVideoFormat(desiredState);
                     currentState = step.NextState(currentState);
-                    result.Add(step);
+                    _pipelineSteps.Add(step);
                 }
             }
 
             // TODO: loop while not desired state?
             if (IsDesiredAudioState(currentState, desiredState))
             {
-                result.Add(new EncoderCopyAudio());
+                _pipelineSteps.Add(new EncoderCopyAudio());
             }
             
             while (!IsDesiredAudioState(currentState, desiredState))
@@ -70,15 +108,15 @@ public static class PipelineBuilder
                 {
                     IEncoder step = AvailableEncoders.ForAudioFormat(desiredState);
                     currentState = step.NextState(currentState);
-                    result.Add(step);
+                    _pipelineSteps.Add(step);
                 }
             }
 
-            result.Add(new OutputFormatMpegTs());
-            result.Add(new PipeProtocol());
+            _pipelineSteps.Add(new OutputFormatMpegTs());
+            _pipelineSteps.Add(new PipeProtocol());
         }
 
-        return result;
+        return _pipelineSteps;
     }
 
     private static bool IsDesiredVideoState(FrameState currentState, FrameState desiredState)

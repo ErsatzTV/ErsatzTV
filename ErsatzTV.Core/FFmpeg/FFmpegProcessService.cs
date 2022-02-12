@@ -109,30 +109,42 @@ namespace ErsatzTV.Core.FFmpeg
                 new PixelFormatYuv420P(),
                 channel.FFmpegProfile.AudioCodec);
 
-            IList<IPipelineStep> pipelineSteps = PipelineBuilder.GeneratePipeline(
-                inputFiles,
-                desiredState,
+            var pipelineBuilder = new PipelineBuilder(inputFiles);
+
+            if (playbackSettings.RealtimeOutput)
+            {
+                pipelineBuilder = pipelineBuilder.WithRealtimeInput();
+            }
+
+            if (playbackSettings.VideoTrackTimeScale.IsSome)
+            {
+                pipelineBuilder = pipelineBuilder.WithVideoTrackTimescale();
+            }
+
+            foreach (int videoBitrate in playbackSettings.VideoBitrate)
+            {
+                pipelineBuilder = pipelineBuilder.WithVideoBitrate(
+                    videoBitrate,
+                    videoBitrate,
+                    await playbackSettings.VideoBufferSize.IfNoneAsync(videoBitrate * 2));
+            }
+
+            foreach (int audioBitrate in playbackSettings.AudioBitrate)
+            {
+                pipelineBuilder = pipelineBuilder.WithAudioBitrate(
+                    audioBitrate,
+                    audioBitrate,
+                    await playbackSettings.AudioBufferSize.IfNoneAsync(audioBitrate * 2));
+            }
+
+            foreach (int audioSampleRate in playbackSettings.AudioSampleRate)
+            {
+                pipelineBuilder = pipelineBuilder.WithAudioSampleRate(audioSampleRate);
+            }
+
+            pipelineBuilder = pipelineBuilder.WithSlice(
                 playbackSettings.StreamSeek.IsNone ? null : playbackSettings.StreamSeek.ValueUnsafe(),
                 finish - now);
-
-            IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
-
-            _logger.LogInformation("Generated command arguments {Command}", arguments);
-            
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = ffmpegPath,
-                RedirectStandardOutput = true,
-                RedirectStandardError = false,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                StandardOutputEncoding = Encoding.UTF8
-            };
-            
-            foreach (string argument in arguments)
-            {
-                startInfo.ArgumentList.Add(argument);
-            }
             
             Option<WatermarkOptions> watermarkOptions =
                 await GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
@@ -266,7 +278,28 @@ namespace ErsatzTV.Core.FFmpeg
             }
 
             _logger.LogInformation("Old arguments {Arguments}", oldProcess.StartInfo.ArgumentList);
+
+            IList<IPipelineStep> pipelineSteps = pipelineBuilder.Build(desiredState);
+
+            IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
+
+            _logger.LogInformation("Generated command arguments {Command}", arguments);
             
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = ffmpegPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = false,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                StandardOutputEncoding = Encoding.UTF8
+            };
+            
+            foreach (string argument in arguments)
+            {
+                startInfo.ArgumentList.Add(argument);
+            }
+
             return new Process
             {
                 StartInfo = startInfo

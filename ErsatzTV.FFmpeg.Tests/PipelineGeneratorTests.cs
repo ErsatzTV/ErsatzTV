@@ -26,11 +26,8 @@ public class PipelineGeneratorTests
 
         var desiredState = new FrameState(VideoFormat.H264, new PixelFormatYuv420P(), AudioFormat.Aac);
 
-        IList<IPipelineStep> result = PipelineBuilder.GeneratePipeline(
-            inputFiles,
-            desiredState,
-            null,
-            testFile.Duration);
+        var builder = new PipelineBuilder(inputFiles);
+        IList<IPipelineStep> result = builder.Build(desiredState);
 
         result.Should().Contain(p => p is EncoderCopyVideo);
         result.Should().Contain(p => p is EncoderCopyAudio);
@@ -54,11 +51,8 @@ public class PipelineGeneratorTests
 
         var desiredState = new FrameState(VideoFormat.Hevc, new PixelFormatYuv420P(), AudioFormat.Aac);
 
-        IList<IPipelineStep> result = PipelineBuilder.GeneratePipeline(
-            inputFiles,
-            desiredState,
-            null,
-            testFile.Duration);
+        var builder = new PipelineBuilder(inputFiles);
+        IList<IPipelineStep> result = builder.Build(desiredState);
 
         result.Should().Contain(p => p is EncoderLibx265);
         result.Should().Contain(p => p is EncoderCopyAudio);
