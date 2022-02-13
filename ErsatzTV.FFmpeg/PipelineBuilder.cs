@@ -33,16 +33,6 @@ public class PipelineBuilder
             new ClosedGopOutputOption(),
         };
 
-        var allVideoStreams = inputFiles.SelectMany(f => f.Streams)
-            .Filter(s => s.Kind == StreamKind.Video)
-            .ToList();
-
-        // -sc_threshold 0 is unsupported with mpeg2video
-        _pipelineSteps.Add(
-            allVideoStreams.All(s => s.Codec != VideoFormat.Mpeg2Video)
-                ? new NoSceneDetectOutputOption(0)
-                : new NoSceneDetectOutputOption(1_000_000_000));
-
         _audioFilterSteps = new List<IPipelineFilterStep>();
         _videoFilterSteps = new List<IPipelineFilterStep>();
 
@@ -52,6 +42,16 @@ public class PipelineBuilder
 
     public IList<IPipelineStep> Build(FrameState desiredState)
     {
+        var allVideoStreams = _inputFiles.SelectMany(f => f.Streams)
+            .Filter(s => s.Kind == StreamKind.Video)
+            .ToList();
+
+        // -sc_threshold 0 is unsupported with mpeg2video
+        _pipelineSteps.Add(
+            allVideoStreams.All(s => s.Codec != VideoFormat.Mpeg2Video) && desiredState.VideoFormat != VideoFormat.Mpeg2Video
+                ? new NoSceneDetectOutputOption(0)
+                : new NoSceneDetectOutputOption(1_000_000_000));
+
         InputFile head = _inputFiles.First();
         var videoStream = head.Streams.First(s => s.Kind == StreamKind.Video) as VideoStream;
         var audioStream = head.Streams.First(s => s.Kind == StreamKind.Audio) as AudioStream;

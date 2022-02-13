@@ -9,7 +9,7 @@ public static class AvailableDecoders
         // TODO: hw accel?
         return desiredState.VideoFormat switch
         {
-            // VideoFormat.Hevc => new EncoderLibx265(),
+            VideoFormat.Hevc => new DecoderHevc(),
             VideoFormat.H264 => new DecoderH264(),
             VideoFormat.Mpeg2Video => new DecoderMpeg2Video(),
             VideoFormat.Vc1 => new DecoderVc1(),

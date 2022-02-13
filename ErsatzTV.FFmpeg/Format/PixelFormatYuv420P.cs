@@ -2,5 +2,5 @@
 
 public class PixelFormatYuv420P : IPixelFormat
 {
-    public string Name => "yuv420p";
+    public string Name => PixelFormat.YUV420P;
 }

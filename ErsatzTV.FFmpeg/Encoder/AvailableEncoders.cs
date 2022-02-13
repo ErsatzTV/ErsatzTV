@@ -11,6 +11,7 @@ public class AvailableEncoders
         {
             VideoFormat.Hevc => new EncoderLibx265(),
             VideoFormat.H264 => new EncoderLibx264(),
+            VideoFormat.Mpeg2Video => new EncoderMpeg2Video(),
             _ => throw new ArgumentOutOfRangeException(nameof(desiredState.VideoFormat), desiredState.VideoFormat, null)
         };
     }

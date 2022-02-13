@@ -101,8 +101,9 @@ namespace ErsatzTV.Core.FFmpeg
             // TODO: need formats for these codecs
             string videoFormat = channel.FFmpegProfile.VideoCodec switch
             {
-                "hevc_nvenc" => VideoFormat.Hevc,
-                "h264_nvenc" => VideoFormat.H264,
+                "libx265" or "hevc_nvenc" => VideoFormat.Hevc,
+                "libx264" or "h264_nvenc" => VideoFormat.H264,
+                "mpeg2video" => VideoFormat.Mpeg2Video,
                 _ => throw new ArgumentOutOfRangeException($"unexpected video codec {channel.FFmpegProfile.VideoCodec}")
             };
 
@@ -129,7 +130,7 @@ namespace ErsatzTV.Core.FFmpeg
                 playbackSettings.NormalizeLoudness,
                 "ErsatzTV",
                 channel.Name,
-                maybeAudioStream.Map(s => s.Language));
+                maybeAudioStream.Map(s => Optional(s.Language)).Flatten());
 
             var pipelineBuilder = new PipelineBuilder(inputFiles, _logger);
 
