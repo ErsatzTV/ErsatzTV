@@ -13,10 +13,12 @@ public static class AvailableDecoders
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new DecoderH264Cuvid(desiredState),
             (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video) => new DecoderMpeg2Cuvid(desiredState),
             (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1) => new DecoderVc1Cuvid(desiredState),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4) => new DecoderMpeg4Cuvid(desiredState),
             (_, VideoFormat.Hevc) => new DecoderHevc(),
             (_, VideoFormat.H264) => new DecoderH264(),
             (_, VideoFormat.Mpeg2Video) => new DecoderMpeg2Video(),
             (_, VideoFormat.Vc1) => new DecoderVc1(),
+            (_, VideoFormat.Mpeg4) => new DecoderMpeg4(),
             _ => throw new ArgumentOutOfRangeException(nameof(currentState.VideoFormat), currentState.VideoFormat, null)
         };
     }

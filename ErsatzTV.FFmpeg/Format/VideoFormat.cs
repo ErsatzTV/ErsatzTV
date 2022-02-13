@@ -6,4 +6,5 @@ public static class VideoFormat
     public const string H264 = "h264";
     public const string Mpeg2Video = "mpeg2video";
     public const string Vc1 = "vc1";
+    public const string Mpeg4 = "mpeg4";
 }

@@ -18,8 +18,20 @@ public class ScaleCudaFilter : IPipelineFilterStep
     {
         get
         {
-            string scale =
-                $"scale_cuda={_paddedSize.Width}:{_paddedSize.Height}:force_original_aspect_ratio=1:format={_currentState.PixelFormat.Name}";
+            string scale;
+            var format = $"format={_currentState.PixelFormat.FFmpegName}";
+
+            if (_currentState.ScaledSize == _scaledSize)
+            {
+                // don't need scaling, but still need pixel format
+                scale = $"scale_cuda={format}";
+            }
+            else
+            {
+                string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
+                scale = $"scale_cuda={targetSize}:force_original_aspect_ratio=1:{format}";
+            }
+
             return _currentState.FrameDataLocation == FrameDataLocation.Hardware ? scale : $"hwupload_cuda,{scale}";
         }
     }

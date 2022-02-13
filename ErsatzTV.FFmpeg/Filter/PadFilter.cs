@@ -18,7 +18,7 @@ public class PadFilter : IPipelineFilterStep
         {
             string pad = $"pad={_paddedSize.Width}:{_paddedSize.Height}:-1:-1:color=black";
             return _currentState.FrameDataLocation == FrameDataLocation.Hardware
-                ? $"hwdownload,format={_currentState.PixelFormat.Name},{pad}" // TODO: does this apply to other accels?
+                ? $"hwdownload,format={_currentState.PixelFormat.FFmpegName},{pad}" // TODO: does this apply to other accels?
                 : pad;
         }
     }

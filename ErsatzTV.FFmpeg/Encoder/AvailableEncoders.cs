@@ -9,6 +9,7 @@ public static class AvailableEncoders
         (desiredState.HardwareAccelerationMode, desiredState.VideoFormat )switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(),
             (_, VideoFormat.Hevc) => new EncoderLibx265(),
             (_, VideoFormat.H264) => new EncoderLibx264(),
             (_, VideoFormat.Mpeg2Video )=> new EncoderMpeg2Video(),

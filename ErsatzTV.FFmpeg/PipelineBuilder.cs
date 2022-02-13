@@ -217,7 +217,7 @@ public class PipelineBuilder
                         _videoFilterSteps.Add(sarStep);
                     }
                 }
-                else
+                else if (currentState.ScaledSize != desiredState.ScaledSize)
                 {
                     IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
                         currentState.HardwareAccelerationMode,
@@ -239,11 +239,34 @@ public class PipelineBuilder
                     currentState = sarStep.NextState(currentState);
                     _videoFilterSteps.Add(sarStep);
                 }
+                else if (currentState.PaddedSize != desiredState.PaddedSize)
+                {
+                    IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                        currentState.HardwareAccelerationMode,
+                        currentState,
+                        desiredState.ScaledSize,
+                        desiredState.PaddedSize);
+                    currentState = scaleFilter.NextState(currentState);
+                    _videoFilterSteps.Add(scaleFilter);
+
+                    if (currentState.PaddedSize != desiredState.PaddedSize)
+                    {
+                        IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
+                        currentState = padStep.NextState(currentState);
+                        _videoFilterSteps.Add(padStep);
+                    }
+
+                    IPipelineFilterStep sarStep = new SetSarFilter();
+                    currentState = sarStep.NextState(currentState);
+                    _videoFilterSteps.Add(sarStep);
+                }
 
                 // after everything else is done, apply the encoder
                 currentState = encoder.NextState(currentState);
             }
             
+            // TODO: if all video filters are software, use software pixel format for hwaccel output
+            // might be able to skip scale_cuda=format=whatever,hwdownload,format=whatever
 
             if (IsDesiredAudioState(currentState, desiredState))
             {
