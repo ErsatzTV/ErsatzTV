@@ -11,7 +11,6 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Format;
 using LanguageExt;
-using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
@@ -87,7 +86,8 @@ namespace ErsatzTV.Core.FFmpeg
                             videoStream.Index,
                             videoStream.Codec,
                             AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat),
-                            new FrameSize(videoVersion.Width, videoVersion.Height))
+                            new FrameSize(videoVersion.Width, videoVersion.Height),
+                            videoVersion.RFrameRate)
                     },
                     videoVersion.Duration)
             };
@@ -115,15 +115,18 @@ namespace ErsatzTV.Core.FFmpeg
                 await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
                     .IfNoneAsync(new FrameSize(videoVersion.Width, videoVersion.Height)),
                 new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
+                playbackSettings.FrameRate,
                 playbackSettings.VideoBitrate,
                 playbackSettings.VideoBufferSize,
                 playbackSettings.VideoTrackTimeScale,
+                playbackSettings.Deinterlace,
                 channel.FFmpegProfile.AudioCodec,
                 channel.FFmpegProfile.AudioChannels,
                 playbackSettings.AudioBitrate,
                 playbackSettings.AudioBufferSize,
                 playbackSettings.AudioSampleRate,
-                playbackSettings.AudioDuration);
+                playbackSettings.AudioDuration,
+                playbackSettings.NormalizeLoudness);
 
             var pipelineBuilder = new PipelineBuilder(inputFiles, _logger);
 

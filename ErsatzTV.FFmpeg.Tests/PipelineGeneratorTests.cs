@@ -22,7 +22,7 @@ public class PipelineGeneratorTests
             "/tmp/whatever.mkv",
             new List<MediaStream>
             {
-                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080)),
+                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24"),
                 new AudioStream(1, AudioFormat.Aac, 2)
             },
             TimeSpan.FromMinutes(2));
@@ -37,15 +37,18 @@ public class PipelineGeneratorTests
             new PixelFormatYuv420P(),
             new FrameSize(1920, 1080),
             new FrameSize(1920, 1080),
+            Option<int>.None,
             2000,
             4000,
             90_000,
+            false,
             AudioFormat.Aac,
             2,
             320,
             640,
             48,
-            Option<TimeSpan>.None);
+            Option<TimeSpan>.None,
+            false);
 
         var builder = new PipelineBuilder(inputFiles, _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
@@ -63,7 +66,7 @@ public class PipelineGeneratorTests
             "/tmp/whatever.mkv",
             new List<MediaStream>
             {
-                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080)),
+                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24"),
                 new AudioStream(1, AudioFormat.Aac, 2)
             },
             TimeSpan.FromMinutes(2));
@@ -78,15 +81,18 @@ public class PipelineGeneratorTests
             new PixelFormatYuv420P(),
             new FrameSize(1920, 1080),
             new FrameSize(1920, 1080),
+            Option<int>.None,
             2000,
             4000,
             90_000,
+            false,
             AudioFormat.Aac,
             2,
             320,
             640,
             48,
-            Option<TimeSpan>.None);
+            Option<TimeSpan>.None,
+            false);
 
         var builder = new PipelineBuilder(inputFiles, _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
