@@ -285,7 +285,7 @@ namespace ErsatzTV.Core.FFmpeg
                     break;
             }
 
-            _logger.LogInformation("Old arguments {Arguments}", oldProcess.StartInfo.ArgumentList);
+            _logger.LogDebug("Old arguments {Arguments}", oldProcess.StartInfo.ArgumentList);
 
             IList<IPipelineStep> pipelineSteps = pipelineBuilder.Build(desiredState);
 
