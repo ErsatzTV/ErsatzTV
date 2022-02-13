@@ -1,4 +1,4 @@
-﻿namespace ErsatzTV.FFmpeg.Option;
+﻿namespace ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 
 public class CudaHardwareAccelerationOption : GlobalOption
 {

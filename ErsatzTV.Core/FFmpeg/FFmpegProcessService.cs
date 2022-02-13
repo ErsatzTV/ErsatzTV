@@ -102,8 +102,8 @@ namespace ErsatzTV.Core.FFmpeg
             // TODO: need formats for these codecs
             string videoFormat = channel.FFmpegProfile.VideoCodec switch
             {
-                "libx265" or "hevc_nvenc" => VideoFormat.Hevc,
-                "libx264" or "h264_nvenc" => VideoFormat.H264,
+                "libx265" or "hevc_nvenc" or "hevc_qsv" => VideoFormat.Hevc,
+                "libx264" or "h264_nvenc" or "h264_qsv" => VideoFormat.H264,
                 "mpeg2video" => VideoFormat.Mpeg2Video,
                 _ => throw new ArgumentOutOfRangeException($"unexpected video codec {channel.FFmpegProfile.VideoCodec}")
             };

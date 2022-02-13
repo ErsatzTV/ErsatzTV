@@ -3,6 +3,7 @@ using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Option;
+using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 using ErsatzTV.FFmpeg.Option.Metadata;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Protocol;
@@ -207,6 +208,7 @@ public class PipelineBuilder
                         currentState.PaddedSize != desiredState.PaddedSize)
                     {
                         IPipelineFilterStep scaleStep = new ScaleFilter(
+                            currentState,
                             desiredState.ScaledSize,
                             desiredState.PaddedSize);
                         currentState = scaleStep.NextState(currentState);

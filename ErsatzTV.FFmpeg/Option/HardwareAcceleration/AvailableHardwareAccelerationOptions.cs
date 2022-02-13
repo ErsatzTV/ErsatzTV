@@ -1,4 +1,4 @@
-﻿namespace ErsatzTV.FFmpeg.Option;
+﻿namespace ErsatzTV.FFmpeg.Option.HardwareAcceleration;
 
 public static class AvailableHardwareAccelerationOptions
 {
@@ -7,6 +7,7 @@ public static class AvailableHardwareAccelerationOptions
         return mode switch
         {
             HardwareAccelerationMode.Nvenc => new CudaHardwareAccelerationOption(),
+            HardwareAccelerationMode.Qsv => new QsvHardwareAccelerationOption(),
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
         };
     }

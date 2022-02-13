@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Filter.Cuda;
+using ErsatzTV.FFmpeg.Filter.Qsv;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
@@ -12,6 +13,7 @@ public static class AvailableScaleFilters
         accelMode switch
         {
             HardwareAccelerationMode.Nvenc => new ScaleCudaFilter(currentState, scaledSize, paddedSize),
-            _ => new ScaleFilter(scaledSize, paddedSize)
+            HardwareAccelerationMode.Qsv => new ScaleQsvFilter(currentState, scaledSize),
+            _ => new ScaleFilter(currentState, scaledSize, paddedSize)
         };
 }
