@@ -107,7 +107,17 @@ namespace ErsatzTV.Core.FFmpeg
                 _ => throw new ArgumentOutOfRangeException($"unexpected video codec {channel.FFmpegProfile.VideoCodec}")
             };
 
+            HardwareAccelerationMode hwAccel = playbackSettings.HardwareAcceleration switch
+            {
+                HardwareAccelerationKind.Nvenc => HardwareAccelerationMode.Nvenc,
+                HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
+                HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
+                HardwareAccelerationKind.VideoToolbox => HardwareAccelerationMode.VideoToolbox,
+                _ => HardwareAccelerationMode.None
+            };
+
             var desiredState = new FrameState(
+                hwAccel,
                 playbackSettings.RealtimeOutput,
                 playbackSettings.StreamSeek,
                 finish - now,

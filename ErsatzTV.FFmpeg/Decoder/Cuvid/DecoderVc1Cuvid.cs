@@ -1,21 +1,21 @@
 ﻿namespace ErsatzTV.FFmpeg.Decoder.Cuvid;
 
-public class DecoderMpeg2Cuvid : DecoderBase
+public class DecoderVc1Cuvid : DecoderBase
 {
     private readonly FrameState _desiredState;
 
-    public DecoderMpeg2Cuvid(FrameState desiredState)
+    public DecoderVc1Cuvid(FrameState desiredState)
     {
         _desiredState = desiredState;
     }
 
-    public override string Name => "mpeg2_cuvid";
+    public override string Name => "vc1_cuvid";
     public override IList<string> InputOptions
     {
         get
         {
             IList<string> result =  base.InputOptions;
-            
+
             if (_desiredState.Deinterlaced)
             {
                 result.Add("-deint");
@@ -24,12 +24,12 @@ public class DecoderMpeg2Cuvid : DecoderBase
 
             result.Add("-hwaccel_output_format");
             result.Add("cuda");
-            
+
             return result;
         }
     }
     public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
-
+        
     public override FrameState NextState(FrameState currentState)
     {
         FrameState result = base.NextState(currentState);

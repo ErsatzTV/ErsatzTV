@@ -30,6 +30,7 @@ public class PipelineGeneratorTests
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(
+            HardwareAccelerationMode.None,
             true,
             Option<TimeSpan>.None,
             Option<TimeSpan>.None,
@@ -77,6 +78,7 @@ public class PipelineGeneratorTests
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(
+            HardwareAccelerationMode.None,
             true,
             Option<TimeSpan>.None,
             Option<TimeSpan>.None,

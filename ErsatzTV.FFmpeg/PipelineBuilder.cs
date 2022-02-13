@@ -64,6 +64,7 @@ public class PipelineBuilder
             }
 
             var currentState = new FrameState(
+                HardwareAccelerationMode.None,
                 false, // realtime
                 Option<TimeSpan>.None,
                 Option<TimeSpan>.None,
@@ -109,20 +110,29 @@ public class PipelineBuilder
                 }
             }
 
+            IEncoder encoder;
+
             if (IsDesiredVideoState(currentState, desiredState))
             {
-                _pipelineSteps.Add(new EncoderCopyVideo());
+                encoder = new EncoderCopyVideo();
+                _pipelineSteps.Add(encoder);
             }
             else
             {
                 // TODO: prioritize which codecs are used (hw accel)
+                if (currentState.HardwareAccelerationMode != desiredState.HardwareAccelerationMode)
+                {
+                    IPipelineStep accel =
+                        AvailableHardwareAccelerationOptions.ForMode(desiredState.HardwareAccelerationMode);
+                    currentState = accel.NextState(currentState);
+                    _pipelineSteps.Add(accel);
+                }
 
-                IDecoder decoder = AvailableDecoders.ForVideoFormat(currentState);
+                IDecoder decoder = AvailableDecoders.ForVideoFormat(currentState, desiredState);
                 currentState = decoder.NextState(currentState);
                 _pipelineSteps.Add(decoder);
                 
-                IEncoder encoder = AvailableEncoders.ForVideoFormat(desiredState);
-                currentState = encoder.NextState(currentState);
+                encoder = AvailableEncoders.ForVideoFormat(desiredState);
                 _pipelineSteps.Add(encoder);
             }
 
@@ -177,27 +187,63 @@ public class PipelineBuilder
                 
                 if (desiredState.Deinterlaced && !currentState.Deinterlaced)
                 {
-                    IPipelineFilterStep step = new YadifFilter();
+                    IPipelineFilterStep step = AvailableDeinterlaceFilters.ForAcceleration(
+                        currentState.HardwareAccelerationMode,
+                        currentState);
+
                     currentState = step.NextState(currentState);
                     _videoFilterSteps.Add(step);
                 }
 
                 // TODO: this is a software-only flow, will need to be different for hardware accel
-                if (currentState.ScaledSize != desiredState.ScaledSize || currentState.PaddedSize != desiredState.PaddedSize)
+                if (currentState.HardwareAccelerationMode == HardwareAccelerationMode.None)
                 {
-                    IPipelineFilterStep scaleStep = new ScaleFilter(desiredState.ScaledSize, desiredState.PaddedSize);
-                    currentState = scaleStep.NextState(currentState);
-                    _videoFilterSteps.Add(scaleStep);
+                    if (currentState.ScaledSize != desiredState.ScaledSize ||
+                        currentState.PaddedSize != desiredState.PaddedSize)
+                    {
+                        IPipelineFilterStep scaleStep = new ScaleFilter(
+                            desiredState.ScaledSize,
+                            desiredState.PaddedSize);
+                        currentState = scaleStep.NextState(currentState);
+                        _videoFilterSteps.Add(scaleStep);
 
-                    IPipelineFilterStep padStep = new PadFilter(desiredState.PaddedSize);
-                    currentState = padStep.NextState(currentState);
-                    _videoFilterSteps.Add(padStep);
+                        // TODO: padding might not be needed, can we optimize this out?
+                        IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
+                        currentState = padStep.NextState(currentState);
+                        _videoFilterSteps.Add(padStep);
 
+                        IPipelineFilterStep sarStep = new SetSarFilter();
+                        currentState = sarStep.NextState(currentState);
+                        _videoFilterSteps.Add(sarStep);
+                    }
+                }
+                else
+                {
+                    IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                        currentState.HardwareAccelerationMode,
+                        currentState,
+                        desiredState.ScaledSize,
+                        desiredState.PaddedSize);
+                    currentState = scaleFilter.NextState(currentState);
+                    _videoFilterSteps.Add(scaleFilter);
+
+                    // TODO: padding might not be needed, can we optimize this out?
+                    if (currentState.PaddedSize != desiredState.PaddedSize)
+                    {
+                        IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
+                        currentState = padStep.NextState(currentState);
+                        _videoFilterSteps.Add(padStep);
+                    }
+                    
                     IPipelineFilterStep sarStep = new SetSarFilter();
                     currentState = sarStep.NextState(currentState);
                     _videoFilterSteps.Add(sarStep);
                 }
+
+                // after everything else is done, apply the encoder
+                currentState = encoder.NextState(currentState);
             }
+            
 
             if (IsDesiredAudioState(currentState, desiredState))
             {
@@ -308,7 +354,8 @@ public class PipelineBuilder
 
     private static bool IsDesiredVideoState(FrameState currentState, FrameState desiredState)
     {
-        return currentState.VideoFormat == desiredState.VideoFormat &&
+        return currentState.HardwareAccelerationMode == desiredState.HardwareAccelerationMode &&
+               currentState.VideoFormat == desiredState.VideoFormat &&
                currentState.PixelFormat.Name == desiredState.PixelFormat.Name &&
                (desiredState.VideoBitrate.IsNone || currentState.VideoBitrate == desiredState.VideoBitrate) &&
                (desiredState.VideoBufferSize.IsNone || currentState.VideoBufferSize == desiredState.VideoBufferSize) &&

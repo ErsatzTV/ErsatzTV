@@ -1,19 +1,23 @@
-﻿using ErsatzTV.FFmpeg.Format;
+﻿using ErsatzTV.FFmpeg.Decoder.Cuvid;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Decoder;
 
 public static class AvailableDecoders
 {
-    public static IDecoder ForVideoFormat(FrameState desiredState)
+    public static IDecoder ForVideoFormat(FrameState currentState, FrameState desiredState)
     {
-        // TODO: hw accel?
-        return desiredState.VideoFormat switch
+        return (currentState.HardwareAccelerationMode, currentState.VideoFormat) switch
         {
-            VideoFormat.Hevc => new DecoderHevc(),
-            VideoFormat.H264 => new DecoderH264(),
-            VideoFormat.Mpeg2Video => new DecoderMpeg2Video(),
-            VideoFormat.Vc1 => new DecoderVc1(),
-            _ => throw new ArgumentOutOfRangeException(nameof(desiredState.VideoFormat), desiredState.VideoFormat, null)
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new DecoderHevcCuvid(desiredState),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new DecoderH264Cuvid(desiredState),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video) => new DecoderMpeg2Cuvid(desiredState),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1) => new DecoderVc1Cuvid(desiredState),
+            (_, VideoFormat.Hevc) => new DecoderHevc(),
+            (_, VideoFormat.H264) => new DecoderH264(),
+            (_, VideoFormat.Mpeg2Video) => new DecoderMpeg2Video(),
+            (_, VideoFormat.Vc1) => new DecoderVc1(),
+            _ => throw new ArgumentOutOfRangeException(nameof(currentState.VideoFormat), currentState.VideoFormat, null)
         };
     }
 }

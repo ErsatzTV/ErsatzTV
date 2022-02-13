@@ -4,6 +4,7 @@ using LanguageExt;
 namespace ErsatzTV.FFmpeg;
 
 public record FrameState(
+    HardwareAccelerationMode HardwareAccelerationMode,
     bool Realtime,
     Option<TimeSpan> Start,
     Option<TimeSpan> Finish,
