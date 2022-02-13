@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -253,18 +255,11 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 None);
 
             process.StartInfo.RedirectStandardError = true;
+            process.EnableRaisingEvents = true;
             
             // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
             process.Start().Should().BeTrue();
-
-            // TODO: timeout
-            
-            process.BeginOutputReadLine();
-            string error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
-            // ReSharper disable once MethodHasAsyncOverload
-            process.WaitForExit();
 
             string[] unsupportedMessages =
             {
@@ -272,8 +267,39 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 "No usable",
                 "Provided device doesn't support"
             };
+
+            var errorBuffer = new StringBuilder();
             
-            if (profileAcceleration != HardwareAccelerationKind.None && unsupportedMessages.Any(error.Contains))
+            process.ErrorDataReceived += (_, errorLine) =>
+            {
+                string data = errorLine.Data ?? string.Empty;
+                errorBuffer.AppendLine(data);
+            };
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            // string error = await process.StandardError.ReadToEndAsync();
+
+            var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            try
+            {
+                await process.WaitForExitAsync(timeoutSignal.Token);
+                // ReSharper disable once MethodHasAsyncOverload
+                process.WaitForExit();
+            }
+            catch (OperationCanceledException)
+            {
+                process.Kill();
+
+                IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
+                Assert.Fail($"Transcode failure (timeout): ffmpeg {string.Join(" ", quotedArgs)}");
+                return;
+            }
+
+            var error = errorBuffer.ToString();
+            bool isUnsupported = unsupportedMessages.Any(error.Contains); 
+
+            if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
             {
                 var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
                 process.ExitCode.Should().Be(1, $"Error message with successful exit code? {string.Join(" ", quotedArgs)}");
@@ -287,7 +313,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             else
             {
                 IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
-                process.ExitCode.Should().Be(0, error + Environment.NewLine + string.Join(" ", quotedArgs));
+                process.ExitCode.Should().Be(0, errorBuffer + Environment.NewLine + string.Join(" ", quotedArgs));
             }
         }
         
