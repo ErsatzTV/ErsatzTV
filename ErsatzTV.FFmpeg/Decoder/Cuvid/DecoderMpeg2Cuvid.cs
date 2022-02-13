@@ -33,6 +33,9 @@ public class DecoderMpeg2Cuvid : DecoderBase
     public override FrameState NextState(FrameState currentState)
     {
         FrameState result = base.NextState(currentState);
-        return _desiredState.Deinterlaced ? result with { Deinterlaced = true } : result;
+        return _desiredState.Deinterlaced
+            // when -deint is used, a hwupload_cuda is required to use more hw filters
+            ? result with { Deinterlaced = true, FrameDataLocation = FrameDataLocation.Software }
+            : result;
     }
 }

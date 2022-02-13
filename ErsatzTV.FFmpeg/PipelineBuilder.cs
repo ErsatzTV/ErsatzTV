@@ -142,7 +142,8 @@ public class PipelineBuilder
                 _pipelineSteps.Add(encoder);
             }
 
-            while (!IsDesiredVideoState(currentState, desiredState))
+            // TODO: while?
+            if (!IsDesiredVideoState(currentState, desiredState))
             {
                 if (!currentState.Realtime && desiredState.Realtime)
                 {
@@ -292,7 +293,8 @@ public class PipelineBuilder
                 _pipelineSteps.Add(new EncoderCopyAudio());
             }
             
-            while (!IsDesiredAudioState(currentState, desiredState))
+            // TODO: while?
+            if (!IsDesiredAudioState(currentState, desiredState))
             {
                 if (currentState.AudioFormat != desiredState.AudioFormat)
                 {

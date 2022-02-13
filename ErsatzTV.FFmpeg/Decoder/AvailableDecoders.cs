@@ -11,6 +11,10 @@ public static class AvailableDecoders
         return (currentState.HardwareAccelerationMode, currentState.VideoFormat, currentState.PixelFormat.Name) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc, _) => new DecoderHevcCuvid(desiredState),
+
+            // nvenc doesn't support hardware decoding of 10-bit content
+            (HardwareAccelerationMode.Nvenc, VideoFormat.H264, PixelFormat.YUV420P10LE or PixelFormat.YUV444P10LE) => new DecoderH264(),
+            
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264, _) => new DecoderH264Cuvid(desiredState),
             (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Cuvid(desiredState),
             (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1, _) => new DecoderVc1Cuvid(desiredState),

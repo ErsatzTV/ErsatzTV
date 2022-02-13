@@ -8,6 +8,9 @@ public static class AvailablePixelFormats
         {
             PixelFormat.YUV420P => new PixelFormatYuv420P(),
             PixelFormat.YUV420P10LE => new PixelFormatYuv420P10Le(),
+            PixelFormat.YUVJ420P => new PixelFormatYuvJ420P(),
+            PixelFormat.YUV444P => new PixelFormatYuv444P(),
+            PixelFormat.YUV444P10LE => new PixelFormatYuv444P10Le(),
             _ => throw new ArgumentOutOfRangeException(nameof(pixelFormat), pixelFormat, null)
         };
     }

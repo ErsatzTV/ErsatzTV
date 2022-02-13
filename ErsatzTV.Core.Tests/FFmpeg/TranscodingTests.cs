@@ -182,12 +182,22 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 new Mock<ITempFilePool>().Object,
                 new Mock<ILogger<FFmpegProcessService>>().Object);
 
-            MediaVersion v = new MediaVersion();
+            var v = new MediaVersion
+            {
+                MediaFiles = new List<MediaFile>
+                {
+                    new() { Path = file }
+                }
+            };
 
             var metadataRepository = new Mock<IMetadataRepository>();
             metadataRepository
                 .Setup(r => r.UpdateLocalStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
-                .Callback<MediaItem, MediaVersion, bool>((_, version, _) => v = version);
+                .Callback<MediaItem, MediaVersion, bool>((_, version, _) =>
+                {
+                    version.MediaFiles = v.MediaFiles;
+                    v = version;
+                });
 
             var localStatisticsProvider = new LocalStatisticsProvider(
                 metadataRepository.Object,
@@ -217,6 +227,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 false,
                 new Channel(Guid.NewGuid())
                 {
+                    Number = "1",
                     FFmpegProfile = FFmpegProfile.New("test", profileResolution) with
                     {
                         HardwareAcceleration = profileAcceleration,
@@ -247,6 +258,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             process.Start().Should().BeTrue();
 
+            // TODO: timeout
+            
             process.BeginOutputReadLine();
             string error = await process.StandardError.ReadToEndAsync();
             await process.WaitForExitAsync();
