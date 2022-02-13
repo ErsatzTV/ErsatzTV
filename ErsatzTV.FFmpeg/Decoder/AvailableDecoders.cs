@@ -23,11 +23,13 @@ public static class AvailableDecoders
             (HardwareAccelerationMode.Qsv, VideoFormat.H264, _) => new DecoderH264Qsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Qsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.Vc1, _) => new DecoderVc1Qsv(),
+            
             (_, VideoFormat.Hevc, _) => new DecoderHevc(),
             (_, VideoFormat.H264, _) => new DecoderH264(),
             (_, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Video(),
             (_, VideoFormat.Vc1, _) => new DecoderVc1(),
             (_, VideoFormat.Mpeg4, _) => new DecoderMpeg4(),
+            
             _ => throw new ArgumentOutOfRangeException(nameof(currentState.VideoFormat), currentState.VideoFormat, null)
         };
     }
