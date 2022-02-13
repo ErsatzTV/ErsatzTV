@@ -86,7 +86,8 @@ namespace ErsatzTV.Core.FFmpeg
                         new VideoStream(
                             videoStream.Index,
                             videoStream.Codec,
-                            AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat))
+                            AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat),
+                            new FrameSize(videoVersion.Width, videoVersion.Height))
                     },
                     videoVersion.Duration)
             };
@@ -111,6 +112,9 @@ namespace ErsatzTV.Core.FFmpeg
                 finish - now,
                 videoFormat,
                 new PixelFormatYuv420P(),
+                await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
+                    .IfNoneAsync(new FrameSize(videoVersion.Width, videoVersion.Height)),
+                new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
                 playbackSettings.VideoBitrate,
                 playbackSettings.VideoBufferSize,
                 playbackSettings.VideoTrackTimeScale,

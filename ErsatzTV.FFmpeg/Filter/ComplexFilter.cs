@@ -46,8 +46,9 @@ public class ComplexFilter : IPipelineStep
                         if (_videoFilters.Any())
                         {
                             videoFilterComplex += $"[{i}:{stream.Index}]";
+                            videoFilterComplex += string.Join(",", _videoFilters.Select(f => f.Filter));
                             videoLabel = "[v]";
-                            audioFilterComplex += audioLabel;
+                            videoFilterComplex += videoLabel;
                         }
                         break;
                 }

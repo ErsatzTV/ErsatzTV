@@ -9,6 +9,8 @@ public record FrameState(
     Option<TimeSpan> Finish,
     string VideoFormat,
     IPixelFormat PixelFormat,
+    FrameSize ScaledSize,
+    FrameSize PaddedSize,
     Option<int> VideoBitrate,
     Option<int> VideoBufferSize,
     Option<int> VideoTrackTimeScale,

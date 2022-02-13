@@ -62,6 +62,8 @@ public class PipelineBuilder
                 Option<TimeSpan>.None,
                 videoStream.Codec,
                 videoStream.PixelFormat,
+                videoStream.FrameSize,
+                videoStream.FrameSize,
                 Option<int>.None,
                 Option<int>.None,
                 Option<int>.None,
@@ -154,6 +156,20 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
+
+                if (currentState.ScaledSize != desiredState.ScaledSize)
+                {
+                    IPipelineFilterStep step = new ScaleFilter(desiredState.ScaledSize);
+                    currentState = step.NextState(currentState);
+                    _videoFilterSteps.Add(step);
+                }
+
+                if (currentState.PaddedSize != desiredState.PaddedSize)
+                {
+                    IPipelineFilterStep step = new PadFilter(desiredState.PaddedSize);
+                    currentState = step.NextState(currentState);
+                    _videoFilterSteps.Add(step);
+                }
             }
 
             if (IsDesiredAudioState(currentState, desiredState))
@@ -237,7 +253,9 @@ public class PipelineBuilder
                currentState.VideoBitrate == desiredState.VideoBitrate &&
                currentState.VideoBufferSize == desiredState.VideoBufferSize &&
                currentState.Realtime == desiredState.Realtime &&
-               currentState.VideoTrackTimeScale == desiredState.VideoTrackTimeScale;
+               currentState.VideoTrackTimeScale == desiredState.VideoTrackTimeScale &&
+               currentState.ScaledSize == desiredState.ScaledSize &&
+               currentState.PaddedSize == desiredState.PaddedSize;
     }
 
     private static bool IsDesiredAudioState(FrameState currentState, FrameState desiredState)
