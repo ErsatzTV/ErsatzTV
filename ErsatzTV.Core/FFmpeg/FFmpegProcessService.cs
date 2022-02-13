@@ -111,7 +111,7 @@ namespace ErsatzTV.Core.FFmpeg
                 playbackSettings.StreamSeek,
                 finish - now,
                 videoFormat,
-                new PixelFormatYuv420P(),
+                AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat),
                 await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
                     .IfNoneAsync(new FrameSize(videoVersion.Width, videoVersion.Height)),
                 new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
@@ -270,7 +270,7 @@ namespace ErsatzTV.Core.FFmpeg
 
             IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
 
-            _logger.LogInformation("Generated command arguments {Command}", arguments);
+            // _logger.LogInformation("Generated command arguments {Command}", arguments);
             
             var startInfo = new ProcessStartInfo
             {

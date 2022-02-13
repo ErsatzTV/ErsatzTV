@@ -182,16 +182,28 @@ public class PipelineBuilder
                     _videoFilterSteps.Add(step);
                 }
 
+                bool scaleOrPad = false;
                 if (currentState.ScaledSize != desiredState.ScaledSize)
                 {
                     IPipelineFilterStep step = new ScaleFilter(desiredState.ScaledSize);
                     currentState = step.NextState(currentState);
                     _videoFilterSteps.Add(step);
+
+                    scaleOrPad = true;
                 }
 
                 if (currentState.PaddedSize != desiredState.PaddedSize)
                 {
                     IPipelineFilterStep step = new PadFilter(desiredState.PaddedSize);
+                    currentState = step.NextState(currentState);
+                    _videoFilterSteps.Add(step);
+
+                    scaleOrPad = true;
+                }
+
+                if (scaleOrPad)
+                {
+                    IPipelineFilterStep step = new SetSarFilter();
                     currentState = step.NextState(currentState);
                     _videoFilterSteps.Add(step);
                 }
