@@ -3,6 +3,7 @@ using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Option;
+using ErsatzTV.FFmpeg.Option.Metadata;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Protocol;
 using LanguageExt;
@@ -81,12 +82,14 @@ public class PipelineBuilder
                 Option<int>.None,
                 Option<int>.None,
                 Option<TimeSpan>.None,
-                false);
+                false,
+                Option<string>.None,
+                Option<string>.None,
+                Option<string>.None);
 
             foreach (TimeSpan desiredStart in desiredState.Start)
             {
-                TimeSpan currentStart = currentState.Start.IfNone(TimeSpan.Zero);
-                if (currentStart != desiredStart)
+                if (currentState.Start != desiredStart)
                 {
                     // _logger.LogInformation("Setting stream seek: {DesiredStart}", desiredStart);
                     IPipelineStep step = new StreamSeekInputOption(desiredStart);
@@ -97,8 +100,7 @@ public class PipelineBuilder
 
             foreach (TimeSpan desiredFinish in desiredState.Finish)
             {
-                TimeSpan currentFinish = currentState.Finish.IfNone(TimeSpan.Zero);
-                if (currentFinish != desiredFinish)
+                if (currentState.Finish != desiredFinish)
                 {
                     // _logger.LogInformation("Setting time limit: {DesiredFinish}", desiredFinish);
                     IPipelineStep step = new TimeLimitOutputOption(desiredFinish);
@@ -135,8 +137,7 @@ public class PipelineBuilder
 
                 foreach (int desiredFrameRate in desiredState.FrameRate)
                 {
-                    int currentFrameRate = currentState.FrameRate.IfNone(0);
-                    if (currentFrameRate != desiredFrameRate)
+                    if (currentState.FrameRate != desiredFrameRate)
                     {
                         IPipelineStep step = new FrameRateInputOption(desiredFrameRate);
                         currentState = step.NextState(currentState);
@@ -146,8 +147,7 @@ public class PipelineBuilder
 
                 foreach (int desiredTimeScale in desiredState.VideoTrackTimeScale)
                 {
-                    int currentTimeScale = currentState.VideoTrackTimeScale.IfNone(0);
-                    if (currentTimeScale != desiredTimeScale)
+                    if (currentState.VideoTrackTimeScale != desiredTimeScale)
                     {
                         IPipelineStep step = new VideoTrackTimescaleOutputOption(desiredTimeScale);
                         currentState = step.NextState(currentState);
@@ -157,8 +157,7 @@ public class PipelineBuilder
 
                 foreach (int desiredBitrate in desiredState.VideoBitrate)
                 {
-                    int currentBitrate = currentState.VideoBitrate.IfNone(0);
-                    if (currentBitrate != desiredBitrate)
+                    if (currentState.VideoBitrate != desiredBitrate)
                     {
                         IPipelineStep step = new VideoBitrateOutputOption(desiredBitrate);
                         currentState = step.NextState(currentState);
@@ -168,8 +167,7 @@ public class PipelineBuilder
 
                 foreach (int desiredBufferSize in desiredState.VideoBufferSize)
                 {
-                    int currentBufferSize = currentState.VideoBitrate.IfNone(0);
-                    if (currentBufferSize != desiredBufferSize)
+                    if (currentState.VideoBufferSize != desiredBufferSize)
                     {
                         IPipelineStep step = new VideoBufferSizeOutputOption(desiredBufferSize);
                         currentState = step.NextState(currentState);
@@ -222,8 +220,7 @@ public class PipelineBuilder
                 
                 foreach (int desiredBitrate in desiredState.AudioBitrate)
                 {
-                    int currentBitrate = currentState.AudioBitrate.IfNone(0);
-                    if (currentBitrate != desiredBitrate)
+                    if (currentState.AudioBitrate != desiredBitrate)
                     {
                         IPipelineStep step = new AudioBitrateOutputOption(desiredBitrate);
                         currentState = step.NextState(currentState);
@@ -233,8 +230,7 @@ public class PipelineBuilder
 
                 foreach (int desiredBufferSize in desiredState.AudioBufferSize)
                 {
-                    int currentBufferSize = currentState.AudioBufferSize.IfNone(0);
-                    if (currentBufferSize != desiredBufferSize)
+                    if (currentState.AudioBufferSize != desiredBufferSize)
                     {
                         IPipelineStep step = new AudioBufferSizeOutputOption(desiredBufferSize);
                         currentState = step.NextState(currentState);
@@ -244,8 +240,7 @@ public class PipelineBuilder
 
                 foreach (int desiredSampleRate in desiredState.AudioSampleRate)
                 {
-                    int currentSampleRate = currentState.AudioSampleRate.IfNone(0);
-                    if (currentSampleRate != desiredSampleRate)
+                    if (currentState.AudioSampleRate != desiredSampleRate)
                     {
                         IPipelineStep step = new AudioSampleRateOutputOption(desiredSampleRate);
                         currentState = step.NextState(currentState);
@@ -262,13 +257,42 @@ public class PipelineBuilder
 
                 foreach (TimeSpan desiredDuration in desiredState.AudioDuration)
                 {
-                    TimeSpan currentDuration = currentState.AudioDuration.IfNone(TimeSpan.Zero);
-                    if (currentDuration != desiredDuration)
+                    if (currentState.AudioDuration != desiredDuration)
                     {
                         IPipelineFilterStep step = new AudioPadFilter(desiredDuration);
                         currentState = step.NextState(currentState);
                         _audioFilterSteps.Add(step);
                     }
+                }
+            }
+
+            foreach (string desiredServiceProvider in desiredState.MetadataServiceProvider)
+            {
+                if (currentState.MetadataServiceProvider != desiredServiceProvider)
+                {
+                    IPipelineStep step = new MetadataServiceProviderOutputOption(desiredServiceProvider);
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+            }
+
+            foreach (string desiredServiceName in desiredState.MetadataServiceName)
+            {
+                if (currentState.MetadataServiceName != desiredServiceName)
+                {
+                    IPipelineStep step = new MetadataServiceNameOutputOption(desiredServiceName);
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+            }
+
+            foreach (string desiredAudioLanguage in desiredState.MetadataAudioLanguage)
+            {
+                if (currentState.MetadataAudioLanguage != desiredAudioLanguage)
+                {
+                    IPipelineStep step = new MetadataAudioLanguageOutputOption(desiredAudioLanguage);
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
                 }
             }
 

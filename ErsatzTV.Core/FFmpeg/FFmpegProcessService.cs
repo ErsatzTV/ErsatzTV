@@ -125,8 +125,11 @@ namespace ErsatzTV.Core.FFmpeg
                 playbackSettings.AudioBitrate,
                 playbackSettings.AudioBufferSize,
                 playbackSettings.AudioSampleRate,
-                playbackSettings.AudioDuration,
-                playbackSettings.NormalizeLoudness);
+                videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
+                playbackSettings.NormalizeLoudness,
+                "ErsatzTV",
+                channel.Name,
+                maybeAudioStream.Map(s => s.Language));
 
             var pipelineBuilder = new PipelineBuilder(inputFiles, _logger);
 

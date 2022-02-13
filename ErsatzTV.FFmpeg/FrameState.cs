@@ -23,4 +23,7 @@ public record FrameState(
     Option<int> AudioSampleRate,
     Option<TimeSpan> AudioDuration,
     bool NormalizeLoudness,
+    Option<string> MetadataServiceProvider,
+    Option<string> MetadataServiceName,
+    Option<string> MetadataAudioLanguage,
     FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown);

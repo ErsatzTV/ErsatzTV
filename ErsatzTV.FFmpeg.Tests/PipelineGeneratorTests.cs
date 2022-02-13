@@ -48,7 +48,10 @@ public class PipelineGeneratorTests
             640,
             48,
             Option<TimeSpan>.None,
-            false);
+            false,
+            Option<string>.None,
+            Option<string>.None,
+            Option<string>.None);
 
         var builder = new PipelineBuilder(inputFiles, _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
@@ -92,7 +95,10 @@ public class PipelineGeneratorTests
             640,
             48,
             Option<TimeSpan>.None,
-            false);
+            false,
+            Option<string>.None,
+            Option<string>.None,
+            Option<string>.None);
 
         var builder = new PipelineBuilder(inputFiles, _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
