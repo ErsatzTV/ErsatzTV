@@ -182,30 +182,20 @@ public class PipelineBuilder
                     _videoFilterSteps.Add(step);
                 }
 
-                bool scaleOrPad = false;
-                if (currentState.ScaledSize != desiredState.ScaledSize)
+                // TODO: this is a software-only flow, will need to be different for hardware accel
+                if (currentState.ScaledSize != desiredState.ScaledSize || currentState.PaddedSize != desiredState.PaddedSize)
                 {
-                    IPipelineFilterStep step = new ScaleFilter(desiredState.ScaledSize);
-                    currentState = step.NextState(currentState);
-                    _videoFilterSteps.Add(step);
+                    IPipelineFilterStep scaleStep = new ScaleFilter(desiredState.ScaledSize, desiredState.PaddedSize);
+                    currentState = scaleStep.NextState(currentState);
+                    _videoFilterSteps.Add(scaleStep);
 
-                    scaleOrPad = true;
-                }
+                    IPipelineFilterStep padStep = new PadFilter(desiredState.PaddedSize);
+                    currentState = padStep.NextState(currentState);
+                    _videoFilterSteps.Add(padStep);
 
-                if (currentState.PaddedSize != desiredState.PaddedSize)
-                {
-                    IPipelineFilterStep step = new PadFilter(desiredState.PaddedSize);
-                    currentState = step.NextState(currentState);
-                    _videoFilterSteps.Add(step);
-
-                    scaleOrPad = true;
-                }
-
-                if (scaleOrPad)
-                {
-                    IPipelineFilterStep step = new SetSarFilter();
-                    currentState = step.NextState(currentState);
-                    _videoFilterSteps.Add(step);
+                    IPipelineFilterStep sarStep = new SetSarFilter();
+                    currentState = sarStep.NextState(currentState);
+                    _videoFilterSteps.Add(sarStep);
                 }
             }
 

@@ -10,7 +10,7 @@ public class PadFilter : IPipelineFilterStep
     }
 
     public StreamKind StreamKind => StreamKind.Video;
-    public string Filter => $"pad={_paddedSize.Width}:{_paddedSize.Height}:(ow-iw)/2:(oh-ih)/2";
+    public string Filter => $"pad={_paddedSize.Width}:{_paddedSize.Height}:-1:-1:color=black";
     public FrameState NextState(FrameState currentState) => currentState with
     {
         PaddedSize = _paddedSize,
