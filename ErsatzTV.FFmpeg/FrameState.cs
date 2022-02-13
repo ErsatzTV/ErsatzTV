@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.OutputFormat;
 using LanguageExt;
 
 namespace ErsatzTV.FFmpeg;
@@ -24,7 +25,12 @@ public record FrameState(
     Option<int> AudioSampleRate,
     Option<TimeSpan> AudioDuration,
     bool NormalizeLoudness,
+    bool DoNotMapMetadata,
     Option<string> MetadataServiceProvider,
     Option<string> MetadataServiceName,
     Option<string> MetadataAudioLanguage,
+    OutputFormatKind OutputFormat,
+    Option<string> HlsPlaylistPath,
+    Option<string> HlsSegmentTemplate,
+    long PtsOffset,
     FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown);

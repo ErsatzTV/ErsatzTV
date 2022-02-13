@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.OutputFormat;
 using NUnit.Framework;
 using FluentAssertions;
 using LanguageExt;
@@ -50,9 +51,14 @@ public class PipelineGeneratorTests
             48,
             Option<TimeSpan>.None,
             false,
+            false,
             Option<string>.None,
             Option<string>.None,
-            Option<string>.None);
+            Option<string>.None,
+            OutputFormatKind.MpegTs,
+            Option<string>.None,
+            Option<string>.None,
+            0);
 
         var builder = new PipelineBuilder(inputFiles, _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
@@ -98,9 +104,14 @@ public class PipelineGeneratorTests
             48,
             Option<TimeSpan>.None,
             false,
+            false,
             Option<string>.None,
             Option<string>.None,
-            Option<string>.None);
+            Option<string>.None,
+            OutputFormatKind.MpegTs,
+            Option<string>.None,
+            Option<string>.None,
+            0);
 
         var builder = new PipelineBuilder(inputFiles, _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);

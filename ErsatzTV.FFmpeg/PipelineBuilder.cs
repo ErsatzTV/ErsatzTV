@@ -84,9 +84,14 @@ public class PipelineBuilder
                 Option<int>.None,
                 Option<TimeSpan>.None,
                 false,
+                false,
                 Option<string>.None,
                 Option<string>.None,
-                Option<string>.None);
+                Option<string>.None,
+                OutputFormatKind.None,
+                Option<string>.None,
+                Option<string>.None,
+                0);
 
             foreach (TimeSpan desiredStart in desiredState.Start)
             {
@@ -149,7 +154,7 @@ public class PipelineBuilder
                 {
                     if (currentState.FrameRate != desiredFrameRate)
                     {
-                        IPipelineStep step = new FrameRateInputOption(desiredFrameRate);
+                        IPipelineStep step = new FrameRateOutputOption(desiredFrameRate);
                         currentState = step.NextState(currentState);
                         _pipelineSteps.Add(step);
                     }
@@ -261,6 +266,18 @@ public class PipelineBuilder
                     _videoFilterSteps.Add(sarStep);
                 }
 
+                if (currentState.PtsOffset != desiredState.PtsOffset)
+                {
+                    foreach (int videoTrackTimeScale in desiredState.VideoTrackTimeScale)
+                    {
+                        IPipelineStep step = new OutputTsOffsetOption(
+                            desiredState.PtsOffset,
+                            videoTrackTimeScale);
+                        currentState = step.NextState(currentState);
+                        _pipelineSteps.Add(step);
+                    }
+                }
+
                 // after everything else is done, apply the encoder
                 currentState = encoder.NextState(currentState);
             }
@@ -337,6 +354,13 @@ public class PipelineBuilder
                 }
             }
 
+            if (desiredState.DoNotMapMetadata && !currentState.DoNotMapMetadata)
+            {
+                IPipelineStep step = new DoNotMapMetadataOutputOption();
+                currentState = step.NextState(currentState);
+                _pipelineSteps.Add(step);
+            }
+
             foreach (string desiredServiceProvider in desiredState.MetadataServiceProvider)
             {
                 if (currentState.MetadataServiceProvider != desiredServiceProvider)
@@ -367,8 +391,31 @@ public class PipelineBuilder
                 }
             }
 
-            _pipelineSteps.Add(new OutputFormatMpegTs());
-            _pipelineSteps.Add(new PipeProtocol());
+            switch (desiredState.OutputFormat)
+            {
+                case OutputFormatKind.MpegTs:
+                    _pipelineSteps.Add(new OutputFormatMpegTs());
+                    _pipelineSteps.Add(new PipeProtocol());
+                    currentState = currentState with { OutputFormat = OutputFormatKind.MpegTs };
+                    break;
+                case OutputFormatKind.Hls:
+                    foreach (string playlistPath in desiredState.HlsPlaylistPath)
+                    {
+                        foreach (string segmentTemplate in desiredState.HlsSegmentTemplate)
+                        {
+                            var step = new OutputFormatHls(
+                                desiredState,
+                                videoStream.FrameRate,
+                                segmentTemplate,
+                                playlistPath);
+                            currentState = step.NextState(currentState);
+                            _pipelineSteps.Add(step);
+                        }
+                    }
+
+                    break;
+            }
+
             _pipelineSteps.Add(new ComplexFilter(_inputFiles, _audioFilterSteps, _videoFilterSteps));
         }
 

@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.OutputFormat;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -116,6 +117,10 @@ namespace ErsatzTV.Core.FFmpeg
                 _ => HardwareAccelerationMode.None
             };
 
+            OutputFormatKind outputFormat = channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter
+                ? OutputFormatKind.Hls
+                : OutputFormatKind.MpegTs;
+
             var desiredState = new FrameState(
                 hwAccel,
                 playbackSettings.RealtimeOutput,
@@ -138,9 +143,14 @@ namespace ErsatzTV.Core.FFmpeg
                 playbackSettings.AudioSampleRate,
                 videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
                 playbackSettings.NormalizeLoudness,
+                channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
                 "ErsatzTV",
                 channel.Name,
-                maybeAudioStream.Map(s => Optional(s.Language)).Flatten());
+                maybeAudioStream.Map(s => Optional(s.Language)).Flatten(),
+                outputFormat,
+                Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8"),
+                Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
+                ptsOffset);
 
             var pipelineBuilder = new PipelineBuilder(inputFiles, _logger);
 
