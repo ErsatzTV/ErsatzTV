@@ -312,8 +312,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
             else
             {
-                IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
+                var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
                 process.ExitCode.Should().Be(0, errorBuffer + Environment.NewLine + string.Join(" ", quotedArgs));
+                if (process.ExitCode == 0)
+                {
+                    Console.WriteLine(string.Join(" ", quotedArgs));
+                }
             }
         }
         
