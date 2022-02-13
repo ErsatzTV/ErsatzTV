@@ -22,5 +22,5 @@ public class AudioPadFilter : IPipelineFilterStep
         }
     }
 
-    public FrameState NextState(FrameState currentState) => currentState;
+    public FrameState NextState(FrameState currentState) => currentState with { AudioDuration = _wholeDuration };
 }

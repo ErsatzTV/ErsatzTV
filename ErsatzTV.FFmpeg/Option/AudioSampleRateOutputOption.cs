@@ -10,4 +10,7 @@ public class AudioSampleRateOutputOption : OutputOption
     }
 
     public override IList<string> OutputOptions => new List<string> { "-ar", $"{_sampleRate}k" };
+
+    public override FrameState NextState(FrameState currentState) =>
+        currentState with { AudioSampleRate = _sampleRate };
 }

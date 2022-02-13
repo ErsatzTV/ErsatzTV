@@ -106,42 +106,23 @@ namespace ErsatzTV.Core.FFmpeg
             };
 
             var desiredState = new FrameState(
+                playbackSettings.RealtimeOutput,
+                playbackSettings.StreamSeek,
+                finish - now,
                 videoFormat,
                 new PixelFormatYuv420P(),
                 playbackSettings.VideoBitrate,
                 playbackSettings.VideoBufferSize,
+                playbackSettings.VideoTrackTimeScale,
                 channel.FFmpegProfile.AudioCodec,
                 channel.FFmpegProfile.AudioChannels,
                 playbackSettings.AudioBitrate,
-                playbackSettings.AudioBufferSize);
+                playbackSettings.AudioBufferSize,
+                playbackSettings.AudioSampleRate,
+                playbackSettings.AudioDuration);
 
-            var pipelineBuilder = new PipelineBuilder(inputFiles);
+            var pipelineBuilder = new PipelineBuilder(inputFiles, _logger);
 
-            // TODO: these options should probably be part of the "desired state" so the logic can live in the ffmpeg lib
-            if (playbackSettings.RealtimeOutput)
-            {
-                pipelineBuilder = pipelineBuilder.WithRealtimeInput();
-            }
-
-            if (playbackSettings.VideoTrackTimeScale.IsSome)
-            {
-                pipelineBuilder = pipelineBuilder.WithVideoTrackTimescale();
-            }
-
-            foreach (int audioSampleRate in playbackSettings.AudioSampleRate)
-            {
-                pipelineBuilder = pipelineBuilder.WithAudioSampleRate(audioSampleRate);
-            }
-
-            foreach (TimeSpan audioDuration in playbackSettings.AudioDuration)
-            {
-                pipelineBuilder = pipelineBuilder.WithAudioDuration(audioDuration);
-            }
-
-            pipelineBuilder = pipelineBuilder.WithSlice(
-                playbackSettings.StreamSeek.IsNone ? null : playbackSettings.StreamSeek.ValueUnsafe(),
-                finish - now);
-            
             Option<WatermarkOptions> watermarkOptions =
                 await GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
 

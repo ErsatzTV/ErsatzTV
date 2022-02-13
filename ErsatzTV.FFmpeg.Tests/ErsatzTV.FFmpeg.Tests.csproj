@@ -10,6 +10,7 @@
     <ItemGroup>
         <PackageReference Include="FluentAssertions" Version="6.4.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.11.0" />
+        <PackageReference Include="Moq" Version="4.16.1" />
         <PackageReference Include="NUnit" Version="3.13.2" />
         <PackageReference Include="NUnit3TestAdapter" Version="4.0.0" />
         <PackageReference Include="coverlet.collector" Version="3.1.0" />
@@ -17,6 +18,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ErsatzTV.FFmpeg\ErsatzTV.FFmpeg.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+        <HintPath>..\..\..\..\..\..\usr\share\dotnet\shared\Microsoft.AspNetCore.App\6.0.2\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

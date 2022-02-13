@@ -4,12 +4,17 @@ using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
 using NUnit.Framework;
 using FluentAssertions;
+using LanguageExt;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace ErsatzTV.FFmpeg.Tests;
 
 [TestFixture]
 public class PipelineGeneratorTests
 {
+    private readonly ILogger _logger = new Mock<ILogger>().Object; 
+    
     [Test]
     public void Correct_Codecs_And_Pixel_Format_Should_Copy()
     {
@@ -25,16 +30,22 @@ public class PipelineGeneratorTests
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(
+            true,
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
             VideoFormat.H264,
             new PixelFormatYuv420P(),
             2000,
             4000,
+            90_000,
             AudioFormat.Aac,
             2,
             320,
-            640);
+            640,
+            48,
+            Option<TimeSpan>.None);
 
-        var builder = new PipelineBuilder(inputFiles);
+        var builder = new PipelineBuilder(inputFiles, _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
 
         result.Should().Contain(p => p is EncoderCopyVideo);
@@ -58,20 +69,26 @@ public class PipelineGeneratorTests
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(
+            true,
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
             VideoFormat.Hevc,
             new PixelFormatYuv420P(),
             2000,
             4000,
+            90_000,
             AudioFormat.Aac,
             2,
             320,
-            640);
+            640,
+            48,
+            Option<TimeSpan>.None);
 
-        var builder = new PipelineBuilder(inputFiles);
+        var builder = new PipelineBuilder(inputFiles, _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
 
         result.Should().Contain(p => p is EncoderLibx265);
-        result.Should().Contain(p => p is EncoderCopyAudio);
+        result.Should().Contain(p => p is EncoderAac);
 
         PrintCommand(inputFiles, result);
     }

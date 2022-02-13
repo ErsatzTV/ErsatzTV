@@ -10,4 +10,10 @@
       <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Logging.Abstractions, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60">
+        <HintPath>..\..\..\..\..\..\usr\share\dotnet\shared\Microsoft.AspNetCore.App\6.0.2\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

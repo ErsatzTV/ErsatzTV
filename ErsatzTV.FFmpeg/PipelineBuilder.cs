@@ -6,6 +6,7 @@ using ErsatzTV.FFmpeg.Option;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Protocol;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg;
 
@@ -15,8 +16,9 @@ public class PipelineBuilder
     private readonly List<IPipelineFilterStep> _audioFilterSteps;
     private readonly List<IPipelineFilterStep> _videoFilterSteps;
     private readonly IList<InputFile> _inputFiles;
+    private readonly ILogger _logger;
 
-    public PipelineBuilder(IList<InputFile> inputFiles)
+    public PipelineBuilder(IList<InputFile> inputFiles, ILogger logger)
     {
         _pipelineSteps = new List<IPipelineStep>
         {
@@ -38,42 +40,13 @@ public class PipelineBuilder
         _pipelineSteps.Add(
             allVideoStreams.All(s => s.Codec != VideoFormat.Mpeg2Video)
                 ? new NoSceneDetectOutputOption(0)
-                : new NoSceneDetectOutputOption(1000000000));
+                : new NoSceneDetectOutputOption(1_000_000_000));
 
         _audioFilterSteps = new List<IPipelineFilterStep>();
         _videoFilterSteps = new List<IPipelineFilterStep>();
 
         _inputFiles = inputFiles;
-    }
-
-    public PipelineBuilder WithRealtimeInput()
-    {
-        _pipelineSteps.Add(new RealtimeInputOption());
-        return this;
-    }
-
-    public PipelineBuilder WithVideoTrackTimescale()
-    {
-        _pipelineSteps.Add(new VideoTrackTimescaleOutputOption());
-        return this;
-    }
-
-    public PipelineBuilder WithAudioSampleRate(int sampleRate)
-    {
-        _pipelineSteps.Add(new AudioSampleRateOutputOption(sampleRate));
-        return this;
-    }
-
-    public PipelineBuilder WithSlice(TimeSpan? start, TimeSpan finish)
-    {
-        _pipelineSteps.Add(new SliceOption(start, finish));
-        return this;
-    }
-
-    public PipelineBuilder WithAudioDuration(TimeSpan audioDuration)
-    {
-        _audioFilterSteps.Add(new AudioPadFilter(audioDuration));
-        return this;
+        _logger = logger;
     }
 
     public IList<IPipelineStep> Build(FrameState desiredState)
@@ -84,14 +57,44 @@ public class PipelineBuilder
         if (videoStream != null && audioStream != null)
         {
             var currentState = new FrameState(
+                false, // realtime
+                Option<TimeSpan>.None,
+                Option<TimeSpan>.None,
                 videoStream.Codec,
                 videoStream.PixelFormat,
+                Option<int>.None,
                 Option<int>.None,
                 Option<int>.None,
                 audioStream.Codec,
                 audioStream.Channels,
                 Option<int>.None,
-                Option<int>.None);
+                Option<int>.None,
+                Option<int>.None,
+                Option<TimeSpan>.None);
+
+            foreach (TimeSpan desiredStart in desiredState.Start)
+            {
+                TimeSpan currentStart = currentState.Start.IfNone(TimeSpan.Zero);
+                if (currentStart != desiredStart)
+                {
+                    // _logger.LogInformation("Setting stream seek: {DesiredStart}", desiredStart);
+                    IPipelineStep step = new StreamSeekInputOption(desiredStart);
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+            }
+
+            foreach (TimeSpan desiredFinish in desiredState.Finish)
+            {
+                TimeSpan currentFinish = currentState.Finish.IfNone(TimeSpan.Zero);
+                if (currentFinish != desiredFinish)
+                {
+                    // _logger.LogInformation("Setting time limit: {DesiredFinish}", desiredFinish);
+                    IPipelineStep step = new TimeLimitOutputOption(desiredFinish);
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+            }
 
             if (IsDesiredVideoState(currentState, desiredState))
             {
@@ -112,6 +115,24 @@ public class PipelineBuilder
 
             while (!IsDesiredVideoState(currentState, desiredState))
             {
+                if (!currentState.Realtime && desiredState.Realtime)
+                {
+                    IPipelineStep step = new RealtimeInputOption();
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+
+                foreach (int desiredTimeScale in desiredState.VideoTrackTimeScale)
+                {
+                    int currentTimeScale = currentState.VideoTrackTimeScale.IfNone(0);
+                    if (currentTimeScale != desiredTimeScale)
+                    {
+                        IPipelineStep step = new VideoTrackTimescaleOutputOption(desiredTimeScale);
+                        currentState = step.NextState(currentState);
+                        _pipelineSteps.Add(step);
+                    }
+                }
+
                 foreach (int desiredBitrate in desiredState.VideoBitrate)
                 {
                     int currentBitrate = currentState.VideoBitrate.IfNone(0);
@@ -147,7 +168,6 @@ public class PipelineBuilder
                     IEncoder step = AvailableEncoders.ForAudioFormat(desiredState);
                     currentState = step.NextState(currentState);
                     _pipelineSteps.Add(step);
-                    continue;
                 }
 
                 if (currentState.AudioChannels != desiredState.AudioChannels)
@@ -155,7 +175,6 @@ public class PipelineBuilder
                     var step = new AudioChannelsOutputOption(desiredState.AudioChannels);
                     currentState = step.NextState(currentState);
                     _pipelineSteps.Add(step);
-                    continue;
                 }
                 
                 foreach (int desiredBitrate in desiredState.AudioBitrate)
@@ -179,6 +198,28 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
+
+                foreach (int desiredSampleRate in desiredState.AudioSampleRate)
+                {
+                    int currentSampleRate = currentState.AudioSampleRate.IfNone(0);
+                    if (currentSampleRate != desiredSampleRate)
+                    {
+                        IPipelineStep step = new AudioSampleRateOutputOption(desiredSampleRate);
+                        currentState = step.NextState(currentState);
+                        _pipelineSteps.Add(step);
+                    }
+                }
+
+                foreach (TimeSpan desiredDuration in desiredState.AudioDuration)
+                {
+                    TimeSpan currentDuration = currentState.AudioDuration.IfNone(TimeSpan.Zero);
+                    if (currentDuration != desiredDuration)
+                    {
+                        IPipelineFilterStep step = new AudioPadFilter(desiredDuration);
+                        currentState = step.NextState(currentState);
+                        _audioFilterSteps.Add(step);
+                    }
+                }
             }
 
             _pipelineSteps.Add(new OutputFormatMpegTs());
@@ -194,7 +235,9 @@ public class PipelineBuilder
         return currentState.VideoFormat == desiredState.VideoFormat &&
                currentState.PixelFormat.Name == desiredState.PixelFormat.Name &&
                currentState.VideoBitrate == desiredState.VideoBitrate &&
-               currentState.VideoBufferSize == desiredState.VideoBufferSize;
+               currentState.VideoBufferSize == desiredState.VideoBufferSize &&
+               currentState.Realtime == desiredState.Realtime &&
+               currentState.VideoTrackTimeScale == desiredState.VideoTrackTimeScale;
     }
 
     private static bool IsDesiredAudioState(FrameState currentState, FrameState desiredState)
@@ -202,6 +245,8 @@ public class PipelineBuilder
         return currentState.AudioFormat == desiredState.AudioFormat &&
                currentState.AudioChannels == desiredState.AudioChannels &&
                currentState.AudioBitrate == desiredState.AudioBitrate &&
-               currentState.AudioBufferSize == desiredState.AudioBufferSize;
+               currentState.AudioBufferSize == desiredState.AudioBufferSize &&
+               currentState.AudioSampleRate == desiredState.AudioSampleRate &&
+               currentState.AudioDuration == desiredState.AudioDuration;
     }
 }
