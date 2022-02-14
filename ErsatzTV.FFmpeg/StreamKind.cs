@@ -3,5 +3,6 @@
 public enum StreamKind
 {
     Audio,
-    Video
+    Video,
+    All
 }

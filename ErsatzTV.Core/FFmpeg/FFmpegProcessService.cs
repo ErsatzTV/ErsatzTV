@@ -2,15 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
-using ErsatzTV.FFmpeg;
-using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.OutputFormat;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -76,83 +72,6 @@ namespace ErsatzTV.Core.FFmpeg
                 outPoint,
                 hlsRealtime,
                 targetFramerate);
-
-            var inputFiles = new List<InputFile>
-            {
-                new(
-                    videoVersion.MediaFiles.Head().Path,
-                    new List<ErsatzTV.FFmpeg.MediaStream>
-                    {
-                        new VideoStream(
-                            videoStream.Index,
-                            videoStream.Codec,
-                            AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat),
-                            new FrameSize(videoVersion.Width, videoVersion.Height),
-                            videoVersion.RFrameRate)
-                    },
-                    videoVersion.Duration)
-            };
-
-            foreach (MediaStream audioStream in maybeAudioStream)
-            {
-                inputFiles.Head().Streams
-                    .Add(new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels));
-            }
-            
-            // TODO: need formats for these codecs
-            string videoFormat = channel.FFmpegProfile.VideoCodec switch
-            {
-                "libx265" or "hevc_nvenc" or "hevc_qsv" or "hevc_vaapi" => VideoFormat.Hevc,
-                "libx264" or "h264_nvenc" or "h264_qsv" or "h264_vaapi" => VideoFormat.H264,
-                "mpeg2video" => VideoFormat.Mpeg2Video,
-                _ => throw new ArgumentOutOfRangeException($"unexpected video codec {channel.FFmpegProfile.VideoCodec}")
-            };
-
-            HardwareAccelerationMode hwAccel = playbackSettings.HardwareAcceleration switch
-            {
-                HardwareAccelerationKind.Nvenc => HardwareAccelerationMode.Nvenc,
-                HardwareAccelerationKind.Qsv => HardwareAccelerationMode.Qsv,
-                HardwareAccelerationKind.Vaapi => HardwareAccelerationMode.Vaapi,
-                HardwareAccelerationKind.VideoToolbox => HardwareAccelerationMode.VideoToolbox,
-                _ => HardwareAccelerationMode.None
-            };
-
-            OutputFormatKind outputFormat = channel.StreamingMode == StreamingMode.HttpLiveStreamingSegmenter
-                ? OutputFormatKind.Hls
-                : OutputFormatKind.MpegTs;
-
-            var desiredState = new FrameState(
-                hwAccel,
-                playbackSettings.RealtimeOutput,
-                playbackSettings.StreamSeek,
-                finish - now,
-                videoFormat,
-                AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat),
-                await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
-                    .IfNoneAsync(new FrameSize(videoVersion.Width, videoVersion.Height)),
-                new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
-                playbackSettings.FrameRate,
-                playbackSettings.VideoBitrate,
-                playbackSettings.VideoBufferSize,
-                playbackSettings.VideoTrackTimeScale,
-                playbackSettings.Deinterlace,
-                channel.FFmpegProfile.AudioCodec,
-                channel.FFmpegProfile.AudioChannels,
-                playbackSettings.AudioBitrate,
-                playbackSettings.AudioBufferSize,
-                playbackSettings.AudioSampleRate,
-                videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
-                playbackSettings.NormalizeLoudness,
-                channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
-                "ErsatzTV",
-                channel.Name,
-                maybeAudioStream.Map(s => Optional(s.Language)).Flatten(),
-                outputFormat,
-                Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8"),
-                Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
-                ptsOffset);
-
-            var pipelineBuilder = new PipelineBuilder(inputFiles, _logger);
 
             Option<WatermarkOptions> watermarkOptions =
                 await GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
@@ -264,54 +183,17 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithMetadata(channel, maybeAudioStream)
                 .WithDuration(finish - now);
 
-            Process oldProcess;
-            switch (channel.StreamingMode)
+            return channel.StreamingMode switch
             {
                 // HLS needs to segment and generate playlist
-                case StreamingMode.HttpLiveStreamingSegmenter:
-                     oldProcess = builder.WithHls(
-                            channel.Number,
-                            videoVersion,
-                            ptsOffset,
-                            playbackSettings.VideoTrackTimeScale,
-                            playbackSettings.FrameRate)
-                        .Build();
-                     break;
-                default:
-                    oldProcess = builder.WithFormat("mpegts")
-                        .WithInitialDiscontinuity()
-                        .WithPipe()
-                        .Build();
-                    break;
-            }
-
-            _logger.LogDebug("Old arguments {Arguments}", oldProcess.StartInfo.ArgumentList);
-
-            IList<IPipelineStep> pipelineSteps = pipelineBuilder.Build(desiredState);
-
-            IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
-
-            // _logger.LogInformation("Generated command arguments {Command}", arguments);
-            
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = ffmpegPath,
-                RedirectStandardOutput = true,
-                RedirectStandardError = false,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                StandardOutputEncoding = Encoding.UTF8
-            };
-            
-            foreach (string argument in arguments)
-            {
-                startInfo.ArgumentList.Add(argument);
-            }
-
-            // return oldProcess;
-            return new Process
-            {
-                StartInfo = startInfo
+                StreamingMode.HttpLiveStreamingSegmenter => builder.WithHls(
+                        channel.Number,
+                        videoVersion,
+                        ptsOffset,
+                        playbackSettings.VideoTrackTimeScale,
+                        playbackSettings.FrameRate)
+                    .Build(),
+                _ => builder.WithFormat("mpegts").WithInitialDiscontinuity().WithPipe().Build()
             };
         }
 

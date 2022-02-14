@@ -55,18 +55,22 @@ public class PipelineBuilder
 
         InputFile head = _inputFiles.First();
         var videoStream = head.Streams.First(s => s.Kind == StreamKind.Video) as VideoStream;
-        var audioStream = head.Streams.First(s => s.Kind == StreamKind.Audio) as AudioStream;
-        if (videoStream != null && audioStream != null)
+        Option<AudioStream> audioStream = head.Streams.OfType<AudioStream>().Find(s => s.Kind == StreamKind.Audio);
+        if (videoStream != null)
         {
             Option<int> initialFrameRate = Option<int>.None;
-            if (int.TryParse(videoStream.FrameRate, out int parsedFrameRate))
+            foreach (string frameRateString in videoStream.FrameRate)
             {
-                initialFrameRate = parsedFrameRate;
+                if (int.TryParse(frameRateString, out int parsedFrameRate))
+                {
+                    initialFrameRate = parsedFrameRate;
+                }
             }
 
             var currentState = new FrameState(
                 HardwareAccelerationMode.None,
                 false, // realtime
+                false, // infinite loop
                 Option<TimeSpan>.None,
                 Option<TimeSpan>.None,
                 videoStream.Codec,
@@ -78,8 +82,8 @@ public class PipelineBuilder
                 Option<int>.None,
                 Option<int>.None,
                 false, // deinterlace
-                audioStream.Codec,
-                audioStream.Channels,
+                audioStream.Map(a => a.Codec),
+                audioStream.Map(a => a.Channels),
                 Option<int>.None,
                 Option<int>.None,
                 Option<int>.None,
@@ -139,6 +143,17 @@ public class PipelineBuilder
                     currentState = decoder.NextState(currentState);
                     _pipelineSteps.Add(decoder);
                 }
+
+                if (_inputFiles.OfType<ConcatInputFile>().Any())
+                {
+                    IPipelineStep concatInputFormat = new ConcatInputFormat();
+                    currentState = concatInputFormat.NextState(currentState);
+                    _pipelineSteps.Add(concatInputFormat);
+
+                    IPipelineStep copyCodec = new EncoderCopyAll();
+                    currentState = copyCodec.NextState(currentState);
+                    _pipelineSteps.Add(copyCodec);
+                }
             }
 
             // TODO: while?
@@ -151,6 +166,13 @@ public class PipelineBuilder
                     _pipelineSteps.Add(step);
                 }
 
+                if (!currentState.InfiniteLoop && desiredState.InfiniteLoop)
+                {
+                    IPipelineStep step = new InfiniteLoopInputOption(currentState);
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+                
                 foreach (int desiredFrameRate in desiredState.FrameRate)
                 {
                     if (currentState.FrameRate != desiredFrameRate)
@@ -293,7 +315,7 @@ public class PipelineBuilder
             // TODO: if all video filters are software, use software pixel format for hwaccel output
             // might be able to skip scale_cuda=format=whatever,hwdownload,format=whatever
 
-            if (IsDesiredAudioState(currentState, desiredState))
+            if (audioStream.IsSome && IsDesiredAudioState(currentState, desiredState))
             {
                 _pipelineSteps.Add(new EncoderCopyAudio());
             }
@@ -304,17 +326,20 @@ public class PipelineBuilder
                 if (currentState.AudioFormat != desiredState.AudioFormat)
                 {
                     IEncoder step = AvailableEncoders.ForAudioFormat(desiredState);
-                    currentState = ((IPipelineStep)step).NextState(currentState);
-                    _pipelineSteps.Add(step);
-                }
-
-                if (currentState.AudioChannels != desiredState.AudioChannels)
-                {
-                    var step = new AudioChannelsOutputOption(desiredState.AudioChannels);
                     currentState = step.NextState(currentState);
                     _pipelineSteps.Add(step);
                 }
-                
+
+                foreach (int desiredAudioChannels in desiredState.AudioChannels)
+                {
+                    if (currentState.AudioChannels != desiredAudioChannels)
+                    {
+                        var step = new AudioChannelsOutputOption(desiredAudioChannels);
+                        currentState = step.NextState(currentState);
+                        _pipelineSteps.Add(step);
+                    }
+                }
+
                 foreach (int desiredBitrate in desiredState.AudioBitrate)
                 {
                     if (currentState.AudioBitrate != desiredBitrate)
@@ -425,7 +450,11 @@ public class PipelineBuilder
                     break;
             }
 
-            _pipelineSteps.Add(new ComplexFilter(_inputFiles, _audioFilterSteps, _videoFilterSteps));
+            // add a complex filter unless we are concatenating
+            if (!_inputFiles.OfType<ConcatInputFile>().Any())
+            {
+                _pipelineSteps.Add(new ComplexFilter(_inputFiles, _audioFilterSteps, _videoFilterSteps));
+            }
         }
 
         return _pipelineSteps;
@@ -435,11 +464,13 @@ public class PipelineBuilder
     {
         return currentState.HardwareAccelerationMode == desiredState.HardwareAccelerationMode &&
                currentState.VideoFormat == desiredState.VideoFormat &&
-               currentState.PixelFormat.Name == desiredState.PixelFormat.Name &&
+               currentState.PixelFormat.Match(pf => pf.Name, () => string.Empty) ==
+               desiredState.PixelFormat.Match(pf => pf.Name, string.Empty) &&
                (desiredState.VideoBitrate.IsNone || currentState.VideoBitrate == desiredState.VideoBitrate) &&
                (desiredState.VideoBufferSize.IsNone || currentState.VideoBufferSize == desiredState.VideoBufferSize) &&
                currentState.Realtime == desiredState.Realtime &&
-               (desiredState.VideoTrackTimeScale.IsNone || currentState.VideoTrackTimeScale == desiredState.VideoTrackTimeScale) &&
+               (desiredState.VideoTrackTimeScale.IsNone ||
+                currentState.VideoTrackTimeScale == desiredState.VideoTrackTimeScale) &&
                currentState.ScaledSize == desiredState.ScaledSize &&
                currentState.PaddedSize == desiredState.PaddedSize &&
                (desiredState.FrameRate.IsNone || currentState.FrameRate == desiredState.FrameRate);

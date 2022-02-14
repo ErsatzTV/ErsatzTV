@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -13,14 +14,14 @@ namespace ErsatzTV.Application.Streaming.Queries
 {
     public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetWrappedProcessByChannelNumber>
     {
-        private readonly IFFmpegProcessService _ffmpegProcessService;
+        private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
 
         public GetWrappedProcessByChannelNumberHandler(
             IDbContextFactory<TvContext> dbContextFactory,
-            IFFmpegProcessService ffmpegProcessService)
+            IFFmpegProcessServiceFactory ffmpegProcessServiceFactory)
             : base(dbContextFactory)
         {
-            _ffmpegProcessService = ffmpegProcessService;
+            _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
         }
 
         protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
@@ -33,7 +34,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
-            Process process = _ffmpegProcessService.WrapSegmenter(
+            IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
+            Process process = ffmpegProcessService.WrapSegmenter(
                 ffmpegPath,
                 saveReports,
                 channel,

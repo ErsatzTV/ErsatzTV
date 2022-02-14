@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.FFmpeg.Format;
+﻿using LanguageExt;
+
+namespace ErsatzTV.FFmpeg.Format;
 
 public static class AvailablePixelFormats
 {

@@ -25,14 +25,13 @@ public class ScaleFilter : BaseFilter
             string hwdownload = string.Empty;
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {
-                switch (_currentState.PixelFormat.FFmpegName)
+                hwdownload = "hwdownload,";
+                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
-                    case FFmpegFormat.NV12:
+                    if (pixelFormat.FFmpegName == FFmpegFormat.NV12)
+                    {
                         hwdownload = "hwdownload,format=nv12,";
-                        break;
-                    default:
-                        hwdownload = "hwdownload,";
-                        break;
+                    }
                 }
             }
 

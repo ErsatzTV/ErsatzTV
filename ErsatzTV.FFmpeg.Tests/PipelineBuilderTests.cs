@@ -25,14 +25,14 @@ public class PipelineGeneratorTests
             {
                 new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24"),
                 new AudioStream(1, AudioFormat.Aac, 2)
-            },
-            TimeSpan.FromMinutes(2));
+            });
 
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(
             HardwareAccelerationMode.None,
             true,
+            false,
             Option<TimeSpan>.None,
             Option<TimeSpan>.None,
             VideoFormat.H264,
@@ -78,14 +78,14 @@ public class PipelineGeneratorTests
             {
                 new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24"),
                 new AudioStream(1, AudioFormat.Aac, 2)
-            },
-            TimeSpan.FromMinutes(2));
+            });
 
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(
             HardwareAccelerationMode.None,
             true,
+            false,
             Option<TimeSpan>.None,
             Option<TimeSpan>.None,
             VideoFormat.Hevc,
@@ -118,6 +118,25 @@ public class PipelineGeneratorTests
 
         result.Should().Contain(p => p is EncoderLibx265);
         result.Should().Contain(p => p is EncoderAac);
+
+        PrintCommand(inputFiles, result);
+    }
+
+    [Test]
+    public void Concat_Test()
+    {
+        var resolution = new FrameSize(1920, 1080);
+        var desiredState = FrameState.Concat("Some Channel", resolution);
+
+        var inputFiles = new List<InputFile>
+        {
+            new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution)
+        };
+
+        var builder = new PipelineBuilder(inputFiles, _logger);
+        IList<IPipelineStep> result = builder.Build(desiredState);
+
+        result.Should().HaveCountGreaterThan(0);
 
         PrintCommand(inputFiles, result);
     }

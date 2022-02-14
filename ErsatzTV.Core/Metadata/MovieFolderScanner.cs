@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -41,7 +42,7 @@ namespace ErsatzTV.Core.Metadata
             ILibraryRepository libraryRepository,
             IMediaItemRepository mediaItemRepository,
             IMediator mediator,
-            IFFmpegProcessService ffmpegProcessService,
+            IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
             ITempFilePool tempFilePool,
             ILogger<MovieFolderScanner> logger)
             : base(
@@ -50,7 +51,7 @@ namespace ErsatzTV.Core.Metadata
                 metadataRepository,
                 mediaItemRepository,
                 imageCache,
-                ffmpegProcessService,
+                ffmpegProcessServiceFactory,
                 tempFilePool,
                 logger)
         {

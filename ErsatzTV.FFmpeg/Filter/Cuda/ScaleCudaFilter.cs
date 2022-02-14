@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.FFmpeg.Filter.Cuda;
+﻿using ErsatzTV.FFmpeg.Format;
+
+namespace ErsatzTV.FFmpeg.Filter.Cuda;
 
 public class ScaleCudaFilter : BaseFilter
 {
@@ -17,21 +19,36 @@ public class ScaleCudaFilter : BaseFilter
     {
         get
         {
-            string scale;
-            var format = $"format={_currentState.PixelFormat.FFmpegName}";
-
+            string scale = string.Empty;
             if (_currentState.ScaledSize == _scaledSize)
             {
-                // don't need scaling, but still need pixel format
-                scale = $"scale_cuda={format}";
+                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+                {
+                    // don't need scaling, but still need pixel format
+                    scale = $"scale_cuda=format={pixelFormat.FFmpegName}";
+                }
             }
             else
             {
                 string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
-                scale = $"scale_cuda={targetSize}:force_original_aspect_ratio=1:{format}";
+                string format = string.Empty;
+                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+                {
+                    format = $":format={pixelFormat.FFmpegName}";
+                }
+
+                scale = $"scale_cuda={targetSize}:force_original_aspect_ratio=1{format}";
             }
 
-            return _currentState.FrameDataLocation == FrameDataLocation.Hardware ? scale : $"hwupload_cuda,{scale}";
+            // TODO: this might not always upload to hardware, so NextState could be inaccurate
+            if (string.IsNullOrWhiteSpace(scale))
+            {
+                return scale;
+            }
+
+            return _currentState.FrameDataLocation == FrameDataLocation.Hardware
+                ? scale
+                : $"hwupload_cuda,{scale}";
         }
     }
 

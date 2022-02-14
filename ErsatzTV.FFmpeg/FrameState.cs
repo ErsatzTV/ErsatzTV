@@ -7,10 +7,11 @@ namespace ErsatzTV.FFmpeg;
 public record FrameState(
     HardwareAccelerationMode HardwareAccelerationMode,
     bool Realtime,
+    bool InfiniteLoop,
     Option<TimeSpan> Start,
     Option<TimeSpan> Finish,
     string VideoFormat,
-    IPixelFormat PixelFormat,
+    Option<IPixelFormat> PixelFormat,
     FrameSize ScaledSize,
     FrameSize PaddedSize,
     Option<int> FrameRate,
@@ -18,8 +19,8 @@ public record FrameState(
     Option<int> VideoBufferSize,
     Option<int> VideoTrackTimeScale,
     bool Deinterlaced,
-    string AudioFormat,
-    int AudioChannels,
+    Option<string> AudioFormat,
+    Option<int> AudioChannels,
     Option<int> AudioBitrate,
     Option<int> AudioBufferSize,
     Option<int> AudioSampleRate,
@@ -33,4 +34,37 @@ public record FrameState(
     Option<string> HlsPlaylistPath,
     Option<string> HlsSegmentTemplate,
     long PtsOffset,
-    FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown);
+    FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown)
+{
+    public static FrameState Concat(string channelName, FrameSize resolution) =>
+        new(
+            HardwareAccelerationMode.None,
+            true, // realtime
+            true, // infinite loop
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
+            Format.VideoFormat.Undetermined,
+            Option<IPixelFormat>.None,
+            resolution,
+            resolution,
+            Option<int>.None,
+            Option<int>.None,
+            Option<int>.None,
+            Option<int>.None,
+            false,
+            Option<string>.None,
+            Option<int>.None,
+            Option<int>.None,
+            Option<int>.None,
+            Option<int>.None,
+            Option<TimeSpan>.None,
+            false, // normalize loudness
+            true, // do not map metadata
+            "ErsatzTV",
+            channelName,
+            Option<string>.None,
+            OutputFormatKind.MpegTs,
+            Option<string>.None,
+            Option<string>.None,
+            0);
+}

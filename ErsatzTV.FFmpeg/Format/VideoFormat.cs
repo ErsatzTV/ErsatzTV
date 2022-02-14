@@ -12,4 +12,7 @@ public static class VideoFormat
     public const string Mpeg4 = "mpeg4";
     public const string Vp9 = "vp9";
     public const string Av1 = "av1";
+    public const string MpegTs = "mpegts";
+
+    public const string Undetermined = "";
 }

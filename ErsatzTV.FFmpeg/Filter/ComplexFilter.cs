@@ -73,7 +73,6 @@ public class ComplexFilter : IPipelineStep
         return result;
     }
 
-    public FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Unknown;
     public IList<string> GlobalOptions => Array.Empty<string>();
     public IList<string> InputOptions => Array.Empty<string>();
     public IList<string> FilterOptions => Arguments();

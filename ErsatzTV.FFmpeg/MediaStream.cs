@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Format;
+using LanguageExt;
 
 namespace ErsatzTV.FFmpeg;
 
@@ -12,9 +13,9 @@ public record AudioStream(int Index, string Codec, int Channels) : MediaStream(
 public record VideoStream(
     int Index,
     string Codec,
-    IPixelFormat PixelFormat,
+    Option<IPixelFormat> PixelFormat,
     FrameSize FrameSize,
-    string FrameRate) : MediaStream(
+    Option<string> FrameRate) : MediaStream(
     Index,
     Codec,
     StreamKind.Video);

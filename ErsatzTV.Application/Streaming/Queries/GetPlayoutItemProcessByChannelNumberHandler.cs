@@ -8,6 +8,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Jellyfin;
@@ -30,15 +31,15 @@ namespace ErsatzTV.Application.Streaming.Queries
         private readonly IMediaCollectionRepository _mediaCollectionRepository;
         private readonly ITelevisionRepository _televisionRepository;
         private readonly IArtistRepository _artistRepository;
-        private readonly IFFmpegProcessService _ffmpegProcessService;
         private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
+        private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
         private readonly ILocalFileSystem _localFileSystem;
         private readonly IPlexPathReplacementService _plexPathReplacementService;
         private readonly ISongVideoGenerator _songVideoGenerator;
 
         public GetPlayoutItemProcessByChannelNumberHandler(
             IDbContextFactory<TvContext> dbContextFactory,
-            IFFmpegProcessService ffmpegProcessService,
+            IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
             ILocalFileSystem localFileSystem,
             IPlexPathReplacementService plexPathReplacementService,
             IJellyfinPathReplacementService jellyfinPathReplacementService,
@@ -49,7 +50,7 @@ namespace ErsatzTV.Application.Streaming.Queries
             ISongVideoGenerator songVideoGenerator)
             : base(dbContextFactory)
         {
-            _ffmpegProcessService = ffmpegProcessService;
+            _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
             _localFileSystem = localFileSystem;
             _plexPathReplacementService = plexPathReplacementService;
             _jellyfinPathReplacementService = jellyfinPathReplacementService;
@@ -111,6 +112,8 @@ namespace ErsatzTV.Application.Streaming.Queries
                 maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, now);
             }
 
+            IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
+
             return await maybePlayoutItem.Match(
                 async playoutItemWithPath =>
                 {
@@ -141,7 +144,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                         .Map(result => result.IfNone(false));
 
-                    Process process = await _ffmpegProcessService.ForPlayoutItem(
+                    Process process = await ffmpegProcessService.ForPlayoutItem(
                         ffmpegPath,
                         saveReports,
                         channel,
@@ -190,7 +193,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         case UnableToLocatePlayoutItem:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                Process errorProcess = await _ffmpegProcessService.ForError(
+                                Process errorProcess = await ffmpegProcessService.ForError(
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
@@ -210,7 +213,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         case PlayoutItemDoesNotExistOnDisk:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                Process errorProcess = await _ffmpegProcessService.ForError(
+                                Process errorProcess = await ffmpegProcessService.ForError(
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,
@@ -230,7 +233,7 @@ namespace ErsatzTV.Application.Streaming.Queries
                         default:
                             if (channel.FFmpegProfile.Transcode)
                             {
-                                Process errorProcess = await _ffmpegProcessService.ForError(
+                                Process errorProcess = await ffmpegProcessService.ForError(
                                     ffmpegPath,
                                     channel,
                                     maybeDuration,

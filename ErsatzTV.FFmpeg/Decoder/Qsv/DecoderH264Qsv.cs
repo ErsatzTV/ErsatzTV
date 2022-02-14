@@ -8,8 +8,12 @@ public class DecoderH264Qsv : DecoderBase
 
     public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
 
-    public override FrameState NextState(FrameState currentState) => base.NextState(currentState) with
+    public override FrameState NextState(FrameState currentState)
     {
-        PixelFormat = new PixelFormatNv12(currentState.PixelFormat.Name) 
-    };
+        FrameState nextState = base.NextState(currentState);
+
+        return currentState.PixelFormat.Match(
+            pixelFormat => nextState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) },
+            () => nextState);
+    }
 }
