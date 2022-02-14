@@ -20,11 +20,18 @@ public class DecoderMpeg2Cuvid : DecoderBase
             {
                 result.Add("-deint");
                 result.Add("2");
+
+                // make sure we decode into software
+                result.Add("-hwaccel_output_format");
+                result.Add("nv12");
+            }
+            else
+            {
+                // make sure we decode into hardware
+                result.Add("-hwaccel_output_format");
+                result.Add("cuda");
             }
 
-            result.Add("-hwaccel_output_format");
-            result.Add("cuda");
-            
             return result;
         }
     }
@@ -36,7 +43,7 @@ public class DecoderMpeg2Cuvid : DecoderBase
         FrameState result = base.NextState(currentState);
         return _desiredState.Deinterlaced
             // when -deint is used, a hwupload_cuda is required to use more hw filters
-            ? result with { Deinterlaced = true }//, FrameDataLocation = FrameDataLocation.Software }
+            ? result with { Deinterlaced = true, FrameDataLocation = FrameDataLocation.Software }
             : result;
     }
 }

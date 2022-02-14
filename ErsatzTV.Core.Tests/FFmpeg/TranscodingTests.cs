@@ -63,27 +63,28 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             public static InputFormat[] InputFormats =
             {
-                // new("libx264", "yuv420p"),
-                // new("libx264", "yuvj420p"),
-                // new("libx264", "yuv420p10le"),
-                // new("libx264", "yuv444p10le"),
-                
-                new ("mpeg1video", "yuv420p"),
-                // new("mpeg2video", "yuv420p"),
-                //
-                // new("libx265", "yuv420p"),
-                // new("libx265", "yuv420p10le"),
-                //
-                // new("mpeg4", "yuv420p"),
-                //
-                // new("libvpx-vp9", "yuv420p"),
-                //
+                new("libx264", "yuv420p"),
+                new("libx264", "yuvj420p"),
+                new("libx264", "yuv420p10le"),
+                new("libx264", "yuv444p10le"),
+
+                new("mpeg1video", "yuv420p"),
+
+                new("mpeg2video", "yuv420p"),
+
+                new("libx265", "yuv420p"),
+                new("libx265", "yuv420p10le"),
+
+                new("mpeg4", "yuv420p"),
+
+                new("libvpx-vp9", "yuv420p"),
+
                 // new("libaom-av1", "yuv420p")
                 // av1    yuv420p10le    51
-                
-                new ("msmpeg4v2", "yuv420p"),
-                new ("msmpeg4v3", "yuv420p")
-            
+
+                new("msmpeg4v2", "yuv420p"),
+                new("msmpeg4v3", "yuv420p")
+
                 // wmv3    yuv420p    1
             };
             
@@ -195,12 +196,18 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 p1.ExitCode.Should().Be(0);
             }
 
-            var service = new FFmpegProcessService(
+            var oldService = new FFmpegProcessService(
                 new FFmpegPlaybackSettingsCalculator(),
                 new FakeStreamSelector(),
                 new Mock<IImageCache>().Object,
                 new Mock<ITempFilePool>().Object,
                 new Mock<ILogger<FFmpegProcessService>>().Object);
+
+            var service = new FFmpegLibraryProcessService(
+                oldService,
+                new FFmpegPlaybackSettingsCalculator(),
+                new FakeStreamSelector(),
+                new Mock<ILogger<FFmpegLibraryProcessService>>().Object);
 
             var v = new MediaVersion
             {
