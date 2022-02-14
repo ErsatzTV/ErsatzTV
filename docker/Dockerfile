@@ -18,6 +18,8 @@ COPY ErsatzTV/*.csproj ./ErsatzTV/
 COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
 COPY ErsatzTV.Core.Tests/*.csproj ./ErsatzTV.Core.Tests/
+COPY ErsatzTV.FFmpeg/*.csproj ./ErsatzTV.FFmpeg/
+COPY ErsatzTV.FFmpeg.Tests/*.csproj ./ErsatzTV.FFmpeg.Tests/
 COPY ErsatzTV.Infrastructure/*.csproj ./ErsatzTV.Infrastructure/
 RUN dotnet restore -r linux-x64
 
@@ -26,6 +28,8 @@ COPY ErsatzTV/. ./ErsatzTV/
 COPY ErsatzTV.Application/. ./ErsatzTV.Application/
 COPY ErsatzTV.Core/. ./ErsatzTV.Core/
 COPY ErsatzTV.Core.Tests/. ./ErsatzTV.Core.Tests/
+COPY ErsatzTV.FFmpeg/. ./ErsatzTV.FFmpeg/
+COPY ErsatzTV.FFmpeg.Tests/. ./ErsatzTV.FFmpeg.Tests/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
 WORKDIR /source/ErsatzTV
 ARG INFO_VERSION="unknown"
