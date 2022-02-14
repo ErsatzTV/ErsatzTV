@@ -2,7 +2,6 @@
 
 public abstract class EncoderBase : IEncoder
 {
-    public abstract FrameDataLocation OutputFrameDataLocation { get; }
     public IList<string> GlobalOptions => Array.Empty<string>();
     public IList<string> InputOptions => Array.Empty<string>();
     public IList<string> FilterOptions => Array.Empty<string>();
@@ -11,4 +10,5 @@ public abstract class EncoderBase : IEncoder
 
     public abstract string Name { get; }
     public abstract StreamKind Kind { get; }
+    public virtual string Filter => string.Empty;
 }

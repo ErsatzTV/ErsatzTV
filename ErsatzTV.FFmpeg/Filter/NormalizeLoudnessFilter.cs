@@ -1,10 +1,8 @@
 ﻿namespace ErsatzTV.FFmpeg.Filter;
 
-public class NormalizeLoudnessFilter : IPipelineFilterStep
+public class NormalizeLoudnessFilter : BaseFilter
 {
-    public StreamKind StreamKind => StreamKind.Audio;
+    public override string Filter => "loudnorm=I=-16:TP=-1.5:LRA=11";
 
-    public string Filter => "loudnorm=I=-16:TP=-1.5:LRA=11";
-
-    public FrameState NextState(FrameState currentState) => currentState with { NormalizeLoudness = true };
+    public override FrameState NextState(FrameState currentState) => currentState with { NormalizeLoudness = true };
 }

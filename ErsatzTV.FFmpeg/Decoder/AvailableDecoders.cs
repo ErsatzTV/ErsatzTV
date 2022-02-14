@@ -1,12 +1,13 @@
 ﻿using ErsatzTV.FFmpeg.Decoder.Cuvid;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Format;
+using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.Decoder;
 
 public static class AvailableDecoders
 {
-    public static IDecoder ForVideoFormat(FrameState currentState, FrameState desiredState)
+    public static Option<IDecoder> ForVideoFormat(FrameState currentState, FrameState desiredState)
     {
         return (currentState.HardwareAccelerationMode, currentState.VideoFormat, currentState.PixelFormat.Name) switch
         {
@@ -27,6 +28,9 @@ public static class AvailableDecoders
             (HardwareAccelerationMode.Qsv, VideoFormat.H264, _) => new DecoderH264Qsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Qsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.Vc1, _) => new DecoderVc1Qsv(),
+            
+            // vaapi should use implicit decoders
+            (HardwareAccelerationMode.Vaapi, _, _) => new DecoderVaapi(),
             
             (_, VideoFormat.Hevc, _) => new DecoderHevc(),
             (_, VideoFormat.H264, _) => new DecoderH264(),

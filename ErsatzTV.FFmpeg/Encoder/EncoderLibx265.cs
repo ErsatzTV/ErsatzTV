@@ -4,7 +4,6 @@ namespace ErsatzTV.FFmpeg.Encoder;
 
 public class EncoderLibx265 : EncoderBase
 {
-    public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
     // TODO: is tag:v needed for mpegts?
     public override IList<string> OutputOptions => new List<string> { "-c:v", Name, "-tag:v", "hvc1" };
     public override FrameState NextState(FrameState currentState) => currentState with { VideoFormat = VideoFormat.Hevc };

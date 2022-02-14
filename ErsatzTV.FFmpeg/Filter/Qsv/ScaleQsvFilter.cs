@@ -1,6 +1,6 @@
 ﻿namespace ErsatzTV.FFmpeg.Filter.Qsv;
 
-public class ScaleQsvFilter : IPipelineFilterStep
+public class ScaleQsvFilter : BaseFilter
 {
     private readonly FrameState _currentState;
     private readonly FrameSize _scaledSize;
@@ -11,8 +11,7 @@ public class ScaleQsvFilter : IPipelineFilterStep
         _scaledSize = scaledSize;
     }
 
-    public StreamKind StreamKind => StreamKind.Video;
-    public string Filter
+    public override string Filter
     {
         get
         {
@@ -36,7 +35,7 @@ public class ScaleQsvFilter : IPipelineFilterStep
         }
     }
 
-    public FrameState NextState(FrameState currentState) => currentState with
+    public override FrameState NextState(FrameState currentState) => currentState with
     {
         ScaledSize = _scaledSize,
         PaddedSize = _scaledSize,

@@ -8,6 +8,7 @@ public static class AvailableHardwareAccelerationOptions
         {
             HardwareAccelerationMode.Nvenc => new CudaHardwareAccelerationOption(),
             HardwareAccelerationMode.Qsv => new QsvHardwareAccelerationOption(),
+            HardwareAccelerationMode.Vaapi => new VaapiHardwareAccelerationOption(),
             _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
         };
     }

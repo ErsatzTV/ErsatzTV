@@ -1,8 +1,7 @@
 ﻿namespace ErsatzTV.FFmpeg.Filter;
 
-public class SetSarFilter : IPipelineFilterStep
+public class SetSarFilter : BaseFilter
 {
-    public StreamKind StreamKind => StreamKind.Video;
-    public string Filter => "setsar=1";
-    public FrameState NextState(FrameState currentState) => currentState;
+    public override string Filter => "setsar=1";
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

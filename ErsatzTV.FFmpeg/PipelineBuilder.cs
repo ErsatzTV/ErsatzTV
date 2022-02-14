@@ -134,12 +134,11 @@ public class PipelineBuilder
                     _pipelineSteps.Add(accel);
                 }
 
-                IDecoder decoder = AvailableDecoders.ForVideoFormat(currentState, desiredState);
-                currentState = decoder.NextState(currentState);
-                _pipelineSteps.Add(decoder);
-                
-                encoder = AvailableEncoders.ForVideoFormat(desiredState);
-                _pipelineSteps.Add(encoder);
+                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(currentState, desiredState))
+                {
+                    currentState = decoder.NextState(currentState);
+                    _pipelineSteps.Add(decoder);
+                }
             }
 
             // TODO: while?
@@ -282,7 +281,13 @@ public class PipelineBuilder
                 }
 
                 // after everything else is done, apply the encoder
-                currentState = encoder.NextState(currentState);
+                if (!_pipelineSteps.OfType<IEncoder>().Any())
+                {
+                    encoder = AvailableEncoders.ForVideoFormat(currentState, desiredState);
+                    _pipelineSteps.Add(encoder);
+                    _videoFilterSteps.Add(encoder);
+                    currentState = encoder.NextState(currentState);
+                }
             }
             
             // TODO: if all video filters are software, use software pixel format for hwaccel output
@@ -299,7 +304,7 @@ public class PipelineBuilder
                 if (currentState.AudioFormat != desiredState.AudioFormat)
                 {
                     IEncoder step = AvailableEncoders.ForAudioFormat(desiredState);
-                    currentState = step.NextState(currentState);
+                    currentState = ((IPipelineStep)step).NextState(currentState);
                     _pipelineSteps.Add(step);
                 }
 

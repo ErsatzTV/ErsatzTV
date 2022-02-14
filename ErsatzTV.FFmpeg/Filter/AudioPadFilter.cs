@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.FFmpeg.Filter;
 
-public class AudioPadFilter : IPipelineFilterStep
+public class AudioPadFilter : BaseFilter
 {
     private readonly TimeSpan _wholeDuration;
 
@@ -11,9 +11,7 @@ public class AudioPadFilter : IPipelineFilterStep
         _wholeDuration = wholeDuration;
     }
 
-    public StreamKind StreamKind => StreamKind.Audio;
-
-    public string Filter
+    public override string Filter
     {
         get
         {
@@ -22,5 +20,5 @@ public class AudioPadFilter : IPipelineFilterStep
         }
     }
 
-    public FrameState NextState(FrameState currentState) => currentState with { AudioDuration = _wholeDuration };
+    public override FrameState NextState(FrameState currentState) => currentState with { AudioDuration = _wholeDuration };
 }

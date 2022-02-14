@@ -1,16 +1,18 @@
-﻿namespace ErsatzTV.FFmpeg.Filter.Cuda;
+﻿namespace ErsatzTV.FFmpeg.Filter.Vaapi;
 
-public class YadifCudaFilter : BaseFilter
+public class DeinterlaceVaapiFilter : BaseFilter
 {
     private readonly FrameState _currentState;
 
-    public YadifCudaFilter(FrameState currentState)
+    public DeinterlaceVaapiFilter(FrameState currentState)
     {
         _currentState = currentState;
     }
 
     public override string Filter =>
-        _currentState.FrameDataLocation == FrameDataLocation.Hardware ? "yadif_cuda" : "hwupload_cuda,yadif_cuda";
+        _currentState.FrameDataLocation == FrameDataLocation.Hardware
+            ? "deinterlace_vaapi"
+            : "hwupload,deinterlace_vaapi";
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {

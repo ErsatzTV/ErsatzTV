@@ -4,8 +4,6 @@ namespace ErsatzTV.FFmpeg.Encoder.Qsv;
 
 public class EncoderHevcQsv : EncoderBase
 {
-    public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
-
     public override FrameState NextState(FrameState currentState) => currentState with
     {
         VideoFormat = VideoFormat.Hevc,

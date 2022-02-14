@@ -1,12 +1,12 @@
-﻿namespace ErsatzTV.FFmpeg.Filter.Cuda;
+﻿namespace ErsatzTV.FFmpeg.Filter.Vaapi;
 
-public class ScaleCudaFilter : BaseFilter
+public class ScaleVaapiFilter : BaseFilter
 {
     private readonly FrameState _currentState;
     private readonly FrameSize _scaledSize;
     private readonly FrameSize _paddedSize;
 
-    public ScaleCudaFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
+    public ScaleVaapiFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
     {
         _currentState = currentState;
         _scaledSize = scaledSize;
@@ -23,15 +23,15 @@ public class ScaleCudaFilter : BaseFilter
             if (_currentState.ScaledSize == _scaledSize)
             {
                 // don't need scaling, but still need pixel format
-                scale = $"scale_cuda={format}";
+                scale = $"scale_vaapi={format}";
             }
             else
             {
                 string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
-                scale = $"scale_cuda={targetSize}:force_original_aspect_ratio=1:{format}";
+                scale = $"scale_vaapi={targetSize}:force_original_aspect_ratio=1:force_divisible_by=2:{format}";
             }
 
-            return _currentState.FrameDataLocation == FrameDataLocation.Hardware ? scale : $"hwupload_cuda,{scale}";
+            return _currentState.FrameDataLocation == FrameDataLocation.Hardware ? scale : $"hwupload,{scale}";
         }
     }
 

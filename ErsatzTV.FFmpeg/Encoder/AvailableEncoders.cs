@@ -1,12 +1,13 @@
 ﻿using ErsatzTV.FFmpeg.Encoder.Nvenc;
 using ErsatzTV.FFmpeg.Encoder.Qsv;
+using ErsatzTV.FFmpeg.Encoder.Vaapi;
 using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Encoder;
 
 public static class AvailableEncoders
 {
-    public static IEncoder ForVideoFormat(FrameState desiredState) =>
+    public static IEncoder ForVideoFormat(FrameState currentState, FrameState desiredState) =>
         (desiredState.HardwareAccelerationMode, desiredState.VideoFormat )switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(),
@@ -14,6 +15,9 @@ public static class AvailableEncoders
 
             (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(),
+
+            (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(currentState),
+            (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(currentState),
 
             (_, VideoFormat.Hevc) => new EncoderLibx265(),
             (_, VideoFormat.H264) => new EncoderLibx264(),

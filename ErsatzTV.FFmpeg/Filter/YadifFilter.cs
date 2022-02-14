@@ -1,10 +1,39 @@
-﻿namespace ErsatzTV.FFmpeg.Filter;
+﻿using ErsatzTV.FFmpeg.Format;
 
-public class YadifFilter : IPipelineFilterStep
+namespace ErsatzTV.FFmpeg.Filter;
+
+public class YadifFilter : BaseFilter
 {
-    public StreamKind StreamKind => StreamKind.Video;
-    public string Filter => "yadif=1";
-    public FrameState NextState(FrameState currentState) => currentState with
+    private readonly FrameState _currentState;
+
+    public YadifFilter(FrameState currentState)
+    {
+        _currentState = currentState;
+    }
+
+    public override string Filter
+    {
+        get
+        {
+            string hwdownload = string.Empty;
+            if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
+            {
+                switch (_currentState.PixelFormat.FFmpegName)
+                {
+                    case FFmpegFormat.NV12:
+                        hwdownload = "hwdownload,format=nv12,";
+                        break;
+                    default:
+                        hwdownload = "hwdownload,";
+                        break;
+                }
+            }
+
+            return $"{hwdownload}yadif=1";
+        }
+    }
+
+    public override FrameState NextState(FrameState currentState) => currentState with
     {
         Deinterlaced = true,
         FrameDataLocation = FrameDataLocation.Software

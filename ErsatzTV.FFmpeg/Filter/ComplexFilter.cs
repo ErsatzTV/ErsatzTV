@@ -33,20 +33,24 @@ public class ComplexFilter : IPipelineStep
                 {
                     case StreamKind.Audio:
                         audioLabel = $"{i}:{stream.Index}";
-                        if (_audioFilters.Any())
+                        if (_audioFilters.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
                         {
                             audioFilterComplex += $"[{i}:{stream.Index}]";
-                            audioFilterComplex += string.Join(",", _audioFilters.Select(f => f.Filter));
+                            audioFilterComplex += string.Join(
+                                ",",
+                                _audioFilters.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
                             audioLabel = "[a]";
                             audioFilterComplex += audioLabel;
                         }
                         break;
                     case StreamKind.Video:
                         videoLabel = $"{i}:{stream.Index}";
-                        if (_videoFilters.Any())
+                        if (_videoFilters.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
                         {
                             videoFilterComplex += $"[{i}:{stream.Index}]";
-                            videoFilterComplex += string.Join(",", _videoFilters.Select(f => f.Filter));
+                            videoFilterComplex += string.Join(
+                                ",",
+                                _videoFilters.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
                             videoLabel = "[v]";
                             videoFilterComplex += videoLabel;
                         }

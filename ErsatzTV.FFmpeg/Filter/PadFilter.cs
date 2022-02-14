@@ -1,6 +1,6 @@
 ﻿namespace ErsatzTV.FFmpeg.Filter;
 
-public class PadFilter : IPipelineFilterStep
+public class PadFilter : BaseFilter
 {
     private readonly FrameState _currentState;
     private readonly FrameSize _paddedSize;
@@ -11,8 +11,7 @@ public class PadFilter : IPipelineFilterStep
         _paddedSize = paddedSize;
     }
 
-    public StreamKind StreamKind => StreamKind.Video;
-    public string Filter
+    public override string Filter
     {
         get
         {
@@ -23,7 +22,7 @@ public class PadFilter : IPipelineFilterStep
         }
     }
 
-    public FrameState NextState(FrameState currentState) => currentState with
+    public override FrameState NextState(FrameState currentState) => currentState with
     {
         PaddedSize = _paddedSize,
         FrameDataLocation = FrameDataLocation.Software
