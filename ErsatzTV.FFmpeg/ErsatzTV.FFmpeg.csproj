@@ -11,4 +11,8 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Remove="Format\PixelFormatYuv444P10Le.cs" />
+    </ItemGroup>
+
 </Project>

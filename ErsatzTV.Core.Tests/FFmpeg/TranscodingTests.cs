@@ -39,6 +39,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             Assert.Pass();
         }
 
+        public record InputFormat(string Encoder, string PixelFormat);
+
         public enum Padding
         {
             NoPadding,
@@ -58,22 +60,31 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 VideoScanKind.Progressive,
                 VideoScanKind.Interlaced
             };
-            
-            public static string[] InputCodecs =
-            {
-                "h264",
-                "mpeg2video",
-                "hevc",
-                "mpeg4"
-            };
 
-            public static string[] InputPixelFormats =
+            public static InputFormat[] InputFormats =
             {
-                "yuv420p",
-                "yuv420p10le",
-                // "yuvj420p",
-                // "yuv444p",
-                // "yuv444p10le"
+                // new("libx264", "yuv420p"),
+                // new("libx264", "yuvj420p"),
+                // new("libx264", "yuv420p10le"),
+                // new("libx264", "yuv444p10le"),
+                
+                new ("mpeg1video", "yuv420p"),
+                // new("mpeg2video", "yuv420p"),
+                //
+                // new("libx265", "yuv420p"),
+                // new("libx265", "yuv420p10le"),
+                //
+                // new("mpeg4", "yuv420p"),
+                //
+                // new("libvpx-vp9", "yuv420p"),
+                //
+                // new("libaom-av1", "yuv420p")
+                // av1    yuv420p10le    51
+                
+                new ("msmpeg4v2", "yuv420p"),
+                new ("msmpeg4v3", "yuv420p")
+            
+                // wmv3    yuv420p    1
             };
             
             public static Resolution[] Resolutions =
@@ -129,10 +140,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
         [Test, Combinatorial]
         public async Task Transcode(
-            [ValueSource(typeof(TestData), nameof(TestData.InputCodecs))]
-            string inputCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.InputPixelFormats))]
-            string inputPixelFormat,
+            [ValueSource(typeof(TestData), nameof(TestData.InputFormats))]
+            InputFormat inputFormat,
             [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
             Resolution profileResolution,
             [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
@@ -148,8 +157,17 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         {
+            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
+            {
+                if (videoScanKind == VideoScanKind.Interlaced)
+                {
+                    Assert.Inconclusive($"{inputFormat.Encoder} does not support interlaced content");
+                    return;
+                }
+            }
+
             string name = GetStringSha256Hash(
-                $"{inputCodec}_{inputPixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileCodec}_{profileAcceleration}");
+                $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileCodec}_{profileAcceleration}");
 
             string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
             if (!File.Exists(file))
@@ -160,7 +178,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 string flags = videoScanKind == VideoScanKind.Interlaced ? "-flags +ildct+ilme" : string.Empty;
                 
                 string args =
-                    $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {flags} {file}";
+                    $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
                 var p1 = new Process
                 {
                     StartInfo = new ProcessStartInfo

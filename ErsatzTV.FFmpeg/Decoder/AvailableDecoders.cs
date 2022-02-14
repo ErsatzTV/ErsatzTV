@@ -19,6 +19,7 @@ public static class AvailableDecoders
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264, _) => new DecoderH264Cuvid(desiredState),
             (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Cuvid(desiredState),
             (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1, _) => new DecoderVc1Cuvid(desiredState),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Vp9, _) => new DecoderVp9Cuvid(desiredState),
             (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4, _) => new DecoderMpeg4Cuvid(desiredState),
             
             // hevc_qsv decoder sometimes causes green lines with 10-bit content
@@ -28,16 +29,23 @@ public static class AvailableDecoders
             (HardwareAccelerationMode.Qsv, VideoFormat.H264, _) => new DecoderH264Qsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Qsv(),
             (HardwareAccelerationMode.Qsv, VideoFormat.Vc1, _) => new DecoderVc1Qsv(),
+            (HardwareAccelerationMode.Qsv, VideoFormat.Vp9, _) => new DecoderVp9Qsv(),
             
             // vaapi should use implicit decoders
             (HardwareAccelerationMode.Vaapi, _, _) => new DecoderVaapi(),
             
             (_, VideoFormat.Hevc, _) => new DecoderHevc(),
             (_, VideoFormat.H264, _) => new DecoderH264(),
+            (_, VideoFormat.Mpeg1Video, _) => new DecoderMpeg1Video(),
             (_, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Video(),
             (_, VideoFormat.Vc1, _) => new DecoderVc1(),
+            (_, VideoFormat.MsMpeg4V2, _) => new DecoderMsMpeg4V2(),
+            (_, VideoFormat.MsMpeg4V3, _) => new DecoderMsMpeg4V3(),
             (_, VideoFormat.Mpeg4, _) => new DecoderMpeg4(),
+            (_, VideoFormat.Vp9, _) => new DecoderVp9(),
             
+            // TODO: log warning and fall back to automatic decoder (i.e. None) instead of throwing?
+            // maybe have a special "unknown decoder" that sets frame loc to software without specifying any decoder
             _ => throw new ArgumentOutOfRangeException(nameof(currentState.VideoFormat), currentState.VideoFormat, null)
         };
     }
