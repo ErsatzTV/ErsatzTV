@@ -19,15 +19,18 @@ namespace ErsatzTV.Core.FFmpeg;
 
 public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
+    private readonly FFmpegProcessService _ffmpegProcessService;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
 
     public FFmpegLibraryProcessService(
+        FFmpegProcessService ffmpegProcessService,
         FFmpegPlaybackSettingsCalculator playbackSettingsCalculator,
         IFFmpegStreamSelector ffmpegStreamSelector,
         ILogger<FFmpegLibraryProcessService> logger)
     {
+        _ffmpegProcessService = ffmpegProcessService;
         _playbackSettingsCalculator = playbackSettingsCalculator;
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _logger = logger;
@@ -155,7 +158,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string errorMessage,
         bool hlsRealtime,
         long ptsOffset) =>
-        throw new NotSupportedException();
+        _ffmpegProcessService.ForError(ffmpegPath, channel, duration, errorMessage, hlsRealtime, ptsOffset);
 
     public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
     {
@@ -170,11 +173,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return GetProcess(ffmpegPath, inputFiles, desiredState);
     }
 
-    public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) => throw new NotSupportedException();
+    public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
+        _ffmpegProcessService.WrapSegmenter(ffmpegPath, saveReports, channel, scheme, host);
 
-    public Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile) => throw new NotSupportedException();
+    public Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile) =>
+        _ffmpegProcessService.ConvertToPng(ffmpegPath, inputFile, outputFile);
 
-    public Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile) => throw new NotSupportedException();
+    public Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile) =>
+        _ffmpegProcessService.ExtractAttachedPicAsPng(ffmpegPath, inputFile, streamIndex, outputFile);
 
     public Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
@@ -189,7 +195,19 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         int horizontalMarginPercent,
         int verticalMarginPercent,
         int watermarkWidthPercent) =>
-        throw new NotSupportedException();
+        _ffmpegProcessService.GenerateSongImage(
+            ffmpegPath,
+            subtitleFile,
+            channel,
+            globalWatermark,
+            videoVersion,
+            videoPath,
+            boxBlur,
+            watermarkPath,
+            watermarkLocation,
+            horizontalMarginPercent,
+            verticalMarginPercent,
+            watermarkWidthPercent);
 
     private Process GetProcess(string ffmpegPath, IList<InputFile> inputFiles, FrameState desiredState)
     {
