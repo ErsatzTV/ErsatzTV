@@ -86,6 +86,10 @@ namespace ErsatzTV.Application.FFmpegProfiles.Commands
             }
 
             await _configElementRepository.Upsert(
+                ConfigElementKey.FFmpegUseExperimentalTranscoder,
+                request.Settings.UseExperimentalTranscoder.ToString());
+
+            await _configElementRepository.Upsert(
                 ConfigElementKey.FFmpegPreferredLanguageCode,
                 request.Settings.PreferredLanguageCode);
 

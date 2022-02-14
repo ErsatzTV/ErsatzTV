@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -37,6 +39,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             Assert.Pass();
         }
 
+        public record InputFormat(string Encoder, string PixelFormat);
+
         public enum Padding
         {
             NoPadding,
@@ -56,22 +60,32 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 VideoScanKind.Progressive,
                 VideoScanKind.Interlaced
             };
-            
-            public static string[] InputCodecs =
-            {
-                "h264",
-                "mpeg2video",
-                "hevc",
-                "mpeg4"
-            };
 
-            public static string[] InputPixelFormats =
+            public static InputFormat[] InputFormats =
             {
-                "yuv420p",
-                "yuv420p10le",
-                // "yuvj420p",
-                // "yuv444p",
-                // "yuv444p10le"
+                new("libx264", "yuv420p"),
+                new("libx264", "yuvj420p"),
+                new("libx264", "yuv420p10le"),
+                new("libx264", "yuv444p10le"),
+
+                new("mpeg1video", "yuv420p"),
+
+                new("mpeg2video", "yuv420p"),
+
+                new("libx265", "yuv420p"),
+                new("libx265", "yuv420p10le"),
+
+                new("mpeg4", "yuv420p"),
+
+                new("libvpx-vp9", "yuv420p"),
+
+                // new("libaom-av1", "yuv420p")
+                // av1    yuv420p10le    51
+
+                new("msmpeg4v2", "yuv420p"),
+                new("msmpeg4v3", "yuv420p")
+
+                // wmv3    yuv420p    1
             };
             
             public static Resolution[] Resolutions =
@@ -127,10 +141,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
         [Test, Combinatorial]
         public async Task Transcode(
-            [ValueSource(typeof(TestData), nameof(TestData.InputCodecs))]
-            string inputCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.InputPixelFormats))]
-            string inputPixelFormat,
+            [ValueSource(typeof(TestData), nameof(TestData.InputFormats))]
+            InputFormat inputFormat,
             [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
             Resolution profileResolution,
             [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
@@ -146,8 +158,17 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         {
+            if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
+            {
+                if (videoScanKind == VideoScanKind.Interlaced)
+                {
+                    Assert.Inconclusive($"{inputFormat.Encoder} does not support interlaced content");
+                    return;
+                }
+            }
+
             string name = GetStringSha256Hash(
-                $"{inputCodec}_{inputPixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileCodec}_{profileAcceleration}");
+                $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileCodec}_{profileAcceleration}");
 
             string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
             if (!File.Exists(file))
@@ -158,7 +179,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 string flags = videoScanKind == VideoScanKind.Interlaced ? "-flags +ildct+ilme" : string.Empty;
                 
                 string args =
-                    $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputCodec} -shortest -pix_fmt {inputPixelFormat} -strict -2 {flags} {file}";
+                    $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
                 var p1 = new Process
                 {
                     StartInfo = new ProcessStartInfo
@@ -175,19 +196,35 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 p1.ExitCode.Should().Be(0);
             }
 
-            var service = new FFmpegProcessService(
+            var oldService = new FFmpegProcessService(
                 new FFmpegPlaybackSettingsCalculator(),
                 new FakeStreamSelector(),
                 new Mock<IImageCache>().Object,
                 new Mock<ITempFilePool>().Object,
                 new Mock<ILogger<FFmpegProcessService>>().Object);
 
-            MediaVersion v = new MediaVersion();
+            var service = new FFmpegLibraryProcessService(
+                oldService,
+                new FFmpegPlaybackSettingsCalculator(),
+                new FakeStreamSelector(),
+                new Mock<ILogger<FFmpegLibraryProcessService>>().Object);
+
+            var v = new MediaVersion
+            {
+                MediaFiles = new List<MediaFile>
+                {
+                    new() { Path = file }
+                }
+            };
 
             var metadataRepository = new Mock<IMetadataRepository>();
             metadataRepository
                 .Setup(r => r.UpdateLocalStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
-                .Callback<MediaItem, MediaVersion, bool>((_, version, _) => v = version);
+                .Callback<MediaItem, MediaVersion, bool>((_, version, _) =>
+                {
+                    version.MediaFiles = v.MediaFiles;
+                    v = version;
+                });
 
             var localStatisticsProvider = new LocalStatisticsProvider(
                 metadataRepository.Object,
@@ -217,6 +254,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 false,
                 new Channel(Guid.NewGuid())
                 {
+                    Number = "1",
                     FFmpegProfile = FFmpegProfile.New("test", profileResolution) with
                     {
                         HardwareAcceleration = profileAcceleration,
@@ -242,16 +280,11 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 None);
 
             process.StartInfo.RedirectStandardError = true;
+            process.EnableRaisingEvents = true;
             
             // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
 
             process.Start().Should().BeTrue();
-
-            process.BeginOutputReadLine();
-            string error = await process.StandardError.ReadToEndAsync();
-            await process.WaitForExitAsync();
-            // ReSharper disable once MethodHasAsyncOverload
-            process.WaitForExit();
 
             string[] unsupportedMessages =
             {
@@ -259,8 +292,39 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 "No usable",
                 "Provided device doesn't support"
             };
+
+            var errorBuffer = new StringBuilder();
             
-            if (profileAcceleration != HardwareAccelerationKind.None && unsupportedMessages.Any(error.Contains))
+            process.ErrorDataReceived += (_, errorLine) =>
+            {
+                string data = errorLine.Data ?? string.Empty;
+                errorBuffer.AppendLine(data);
+            };
+
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            // string error = await process.StandardError.ReadToEndAsync();
+
+            var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            try
+            {
+                await process.WaitForExitAsync(timeoutSignal.Token);
+                // ReSharper disable once MethodHasAsyncOverload
+                process.WaitForExit();
+            }
+            catch (OperationCanceledException)
+            {
+                process.Kill();
+
+                IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
+                Assert.Fail($"Transcode failure (timeout): ffmpeg {string.Join(" ", quotedArgs)}");
+                return;
+            }
+
+            var error = errorBuffer.ToString();
+            bool isUnsupported = unsupportedMessages.Any(error.Contains); 
+
+            if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
             {
                 var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
                 process.ExitCode.Should().Be(1, $"Error message with successful exit code? {string.Join(" ", quotedArgs)}");
@@ -273,8 +337,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
             else
             {
-                IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
-                process.ExitCode.Should().Be(0, error + Environment.NewLine + string.Join(" ", quotedArgs));
+                var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
+                process.ExitCode.Should().Be(0, errorBuffer + Environment.NewLine + string.Join(" ", quotedArgs));
+                if (process.ExitCode == 0)
+                {
+                    Console.WriteLine(string.Join(" ", quotedArgs));
+                }
             }
         }
         

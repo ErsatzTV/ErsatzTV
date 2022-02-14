@@ -222,7 +222,7 @@ namespace ErsatzTV.Core.FFmpeg
                 _arguments.Add($"{fr}");
             
                 _arguments.Add("-vsync");
-                _arguments.Add("1");
+                _arguments.Add("cfr");
             }
 
             return this;
