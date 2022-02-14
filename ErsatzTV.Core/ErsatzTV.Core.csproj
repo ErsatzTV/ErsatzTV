@@ -9,6 +9,7 @@
       <PackageReference Include="Flurl" Version="3.0.4" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
       <PackageReference Include="MediatR" Version="10.0.1" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.64">
@@ -24,6 +25,10 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
             <_Parameter1>ErsatzTV.Core.Tests</_Parameter1>
         </AssemblyAttribute>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\ErsatzTV.FFmpeg\ErsatzTV.FFmpeg.csproj" />
     </ItemGroup>
 
 </Project>

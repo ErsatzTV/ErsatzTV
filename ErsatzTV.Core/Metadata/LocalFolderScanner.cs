@@ -50,7 +50,7 @@ namespace ErsatzTV.Core.Metadata
             .ToList();
 
         private readonly IImageCache _imageCache;
-        private readonly IFFmpegProcessService _ffmpegProcessService;
+        private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
         private readonly ITempFilePool _tempFilePool;
 
         private readonly ILocalFileSystem _localFileSystem;
@@ -65,7 +65,7 @@ namespace ErsatzTV.Core.Metadata
             IMetadataRepository metadataRepository,
             IMediaItemRepository mediaItemRepository,
             IImageCache imageCache,
-            IFFmpegProcessService ffmpegProcessService, 
+            IFFmpegProcessServiceFactory ffmpegProcessServiceFactory, 
             ITempFilePool tempFilePool,
             ILogger logger)
         {
@@ -74,7 +74,7 @@ namespace ErsatzTV.Core.Metadata
             _metadataRepository = metadataRepository;
             _mediaItemRepository = mediaItemRepository;
             _imageCache = imageCache;
-            _ffmpegProcessService = ffmpegProcessService;
+            _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
             _tempFilePool = tempFilePool;
             _logger = logger;
         }
@@ -156,12 +156,14 @@ namespace ErsatzTV.Core.Metadata
                     // if ffmpeg path is passed, we need pre-processing
                     foreach (string path in ffmpegPath)
                     {
+                        IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
+                        
                         artworkFile = await attachedPicIndex.Match(
                             async picIndex =>
                             {
                                 // extract attached pic (and convert to png)
                                 string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                                using Process process = _ffmpegProcessService.ExtractAttachedPicAsPng(
+                                using Process process = ffmpegProcessService.ExtractAttachedPicAsPng(
                                     path,
                                     artworkFile,
                                     picIndex,
@@ -175,7 +177,7 @@ namespace ErsatzTV.Core.Metadata
                             {
                                 // no attached pic index means convert to png
                                 string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                                using Process process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
+                                using Process process = ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
                                 process.Start();
                                 await process.WaitForExitAsync();
 

@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.Images;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.FFmpeg
 {
@@ -182,23 +183,18 @@ namespace ErsatzTV.Core.FFmpeg
                 .WithMetadata(channel, maybeAudioStream)
                 .WithDuration(finish - now);
 
-            switch (channel.StreamingMode)
+            return channel.StreamingMode switch
             {
                 // HLS needs to segment and generate playlist
-                case StreamingMode.HttpLiveStreamingSegmenter:
-                    return builder.WithHls(
-                            channel.Number,
-                            videoVersion,
-                            ptsOffset,
-                            playbackSettings.VideoTrackTimeScale,
-                            playbackSettings.FrameRate)
-                        .Build();
-                default:
-                    return builder.WithFormat("mpegts")
-                        .WithInitialDiscontinuity()
-                        .WithPipe()
-                        .Build();
-            }
+                StreamingMode.HttpLiveStreamingSegmenter => builder.WithHls(
+                        channel.Number,
+                        videoVersion,
+                        ptsOffset,
+                        playbackSettings.VideoTrackTimeScale,
+                        playbackSettings.FrameRate)
+                    .Build(),
+                _ => builder.WithFormat("mpegts").WithInitialDiscontinuity().WithPipe().Build()
+            };
         }
 
         public async Task<Process> ForError(

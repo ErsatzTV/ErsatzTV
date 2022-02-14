@@ -19,16 +19,16 @@ namespace ErsatzTV.Core.FFmpeg
         
         private readonly ITempFilePool _tempFilePool;
         private readonly IImageCache _imageCache;
-        private readonly IFFmpegProcessService _ffmpegProcessService;
+        private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
 
         public SongVideoGenerator(
             ITempFilePool tempFilePool,
             IImageCache imageCache,
-            IFFmpegProcessService ffmpegProcessService)
+            IFFmpegProcessServiceFactory ffmpegProcessServiceFactory)
         {
             _tempFilePool = tempFilePool;
             _imageCache = imageCache;
-            _ffmpegProcessService = ffmpegProcessService;
+            _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
         }
 
         public async Task<Tuple<string, MediaVersion>> GenerateSongVideo(
@@ -208,7 +208,8 @@ namespace ErsatzTV.Core.FFmpeg
                 new() { Path = videoPath }
             };
 
-            Either<BaseError, string> maybeSongImage = await _ffmpegProcessService.GenerateSongImage(
+            IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
+            Either<BaseError, string> maybeSongImage = await ffmpegProcessService.GenerateSongImage(
                 ffmpegPath,
                 subtitleFile,
                 channel,

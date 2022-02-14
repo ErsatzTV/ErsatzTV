@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Fixed
+- Add improved but experimental transcoder logic, which can be toggled on and off in `Settings`
 - Fix `HLS Segmenter` bug when source video packet contains no duration (`N/A`)
 
 ## [0.4.1-alpha] - 2022-02-10
