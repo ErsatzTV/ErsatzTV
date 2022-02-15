@@ -132,13 +132,16 @@ public class PipelineBuilder
             }
             else
             {
-                // TODO: prioritize which codecs are used (hw accel)
                 if (currentState.HardwareAccelerationMode != desiredState.HardwareAccelerationMode)
                 {
-                    IPipelineStep accel =
-                        AvailableHardwareAccelerationOptions.ForMode(desiredState.HardwareAccelerationMode);
-                    currentState = accel.NextState(currentState);
-                    _pipelineSteps.Add(accel);
+                    foreach (IPipelineStep accel in AvailableHardwareAccelerationOptions.ForMode(
+                                 desiredState.HardwareAccelerationMode,
+                                 currentState.VaapiDevice,
+                                 _logger))
+                    {
+                        currentState = accel.NextState(currentState);
+                        _pipelineSteps.Add(accel);
+                    }
                 }
 
                 foreach (string desiredVaapiDriver in desiredState.VaapiDriver)
