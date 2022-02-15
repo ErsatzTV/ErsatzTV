@@ -226,12 +226,21 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         var pipelineBuilder = new PipelineBuilder(inputFiles, FileSystemLayout.FFmpegReportsFolder, _logger);
 
-        IList<IPipelineStep> pipelineSteps = pipelineBuilder.Build(desiredState);
+        FFmpegPipeline pipeline = pipelineBuilder.Build(desiredState);
 
-        _logger.LogDebug("FFmpeg pipeline {PipelineSteps}", pipelineSteps.Map(ps => ps.GetType().Name));
+        IEnumerable<string> loggedSteps = pipeline.PipelineSteps.Map(ps => ps.GetType().Name);
+        IEnumerable<string> loggedVideoFilters = pipeline.VideoFilterSteps.Map(vf => vf.GetType().Name);
+        IEnumerable<string> loggedAudioFilters = pipeline.AudioFilterSteps.Map(af => af.GetType().Name);
 
-        IList<EnvironmentVariable> environmentVariables = CommandGenerator.GenerateEnvironmentVariables(pipelineSteps);
-        IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
+        _logger.LogDebug(
+            "FFmpeg pipeline {PipelineSteps}, {AudioFilters}, {VideoFilters}",
+            loggedSteps,
+            loggedAudioFilters,
+            loggedVideoFilters
+        );
+
+        IList<EnvironmentVariable> environmentVariables = CommandGenerator.GenerateEnvironmentVariables(pipeline.PipelineSteps);
+        IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipeline.PipelineSteps);
 
         var startInfo = new ProcessStartInfo
         {
