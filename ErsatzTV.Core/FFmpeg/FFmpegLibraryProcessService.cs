@@ -73,19 +73,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hlsRealtime,
             targetFramerate);
 
+        var ffmpegVideoStream = new VideoStream(
+            videoStream.Index,
+            videoStream.Codec,
+            AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger),
+            new FrameSize(videoVersion.Width, videoVersion.Height),
+            videoVersion.RFrameRate);
+
         var inputFiles = new List<InputFile>
         {
-            new(
-                videoVersion.MediaFiles.Head().Path,
-                new List<ErsatzTV.FFmpeg.MediaStream>
-                {
-                    new VideoStream(
-                        videoStream.Index,
-                        videoStream.Codec,
-                        Some(AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat)),
-                        new FrameSize(videoVersion.Width, videoVersion.Height),
-                        videoVersion.RFrameRate)
-                })
+            new(videoVersion.MediaFiles.Head().Path, new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegVideoStream })
         };
 
         foreach (MediaStream audioStream in maybeAudioStream)
@@ -116,6 +113,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ? OutputFormatKind.Hls
             : OutputFormatKind.MpegTs;
 
+        Option<string> hlsPlaylistPath = outputFormat == OutputFormatKind.Hls
+            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8")
+            : Option<string>.None;
+
+        Option<string> hlsSegmentTemplate = outputFormat == OutputFormatKind.Hls
+            ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts")
+            : Option<string>.None;
+
         var desiredState = new FrameState(
             hwAccel,
             playbackSettings.RealtimeOutput,
@@ -123,7 +128,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.StreamSeek,
             finish - now,
             videoFormat,
-            Some(AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat)),
+            ffmpegVideoStream.PixelFormat,
             await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
                 .IfNoneAsync(new FrameSize(videoVersion.Width, videoVersion.Height)),
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
@@ -144,9 +149,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             channel.Name,
             maybeAudioStream.Map(s => Optional(s.Language)).Flatten(),
             outputFormat,
-            Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live.m3u8"),
-            Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts"),
+            hlsPlaylistPath,
+            hlsSegmentTemplate,
             ptsOffset);
+
+        _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
         return GetProcess(ffmpegPath, inputFiles, desiredState);
     }

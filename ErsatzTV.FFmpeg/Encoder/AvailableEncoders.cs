@@ -2,12 +2,14 @@
 using ErsatzTV.FFmpeg.Encoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder.Vaapi;
 using ErsatzTV.FFmpeg.Format;
+using Microsoft.Extensions.Logging;
+using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.Encoder;
 
 public static class AvailableEncoders
 {
-    public static IEncoder ForVideoFormat(FrameState currentState, FrameState desiredState) =>
+    public static Option<IEncoder> ForVideoFormat(FrameState currentState, FrameState desiredState, ILogger logger) =>
         (desiredState.HardwareAccelerationMode, desiredState.VideoFormat) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(),
@@ -25,22 +27,39 @@ public static class AvailableEncoders
 
             (_, VideoFormat.Undetermined) => new EncoderImplicitVideo(),
 
-            _ => throw new ArgumentOutOfRangeException(nameof(desiredState.VideoFormat), desiredState.VideoFormat, null)
+            var (accel, videoFormat) => LogUnknownEncoder(accel, videoFormat, logger)
         };
+    
+    private static Option<IEncoder> LogUnknownEncoder(
+        HardwareAccelerationMode hardwareAccelerationMode,
+        string videoFormat,
+        ILogger logger)
+    {
+        logger.LogWarning(
+            "Unable to determine video encoder for {AccelMode} - {VideoFormat}; may have playback issues",
+            hardwareAccelerationMode,
+            videoFormat);
+        return Option<IEncoder>.None;
+    }
 
-    public static IEncoder ForAudioFormat(FrameState desiredState)
+    public static Option<IEncoder> ForAudioFormat(FrameState desiredState, ILogger logger)
     {
         return desiredState.AudioFormat.Match(
             audioFormat =>
                 audioFormat switch
                 {
-                    AudioFormat.Aac => (IEncoder)new EncoderAac(),
+                    AudioFormat.Aac => (Option<IEncoder>)new EncoderAac(),
                     AudioFormat.Ac3 => new EncoderAc3(),
-                    _ => throw new ArgumentOutOfRangeException(nameof(audioFormat), audioFormat, null)
+                    _ => LogUnknownEncoder(audioFormat, logger)
                 },
-            () => throw new ArgumentOutOfRangeException(
-                nameof(desiredState.AudioFormat),
-                desiredState.AudioFormat,
-                null));
+            () => LogUnknownEncoder(string.Empty, logger));
+    }
+    
+    private static Option<IEncoder> LogUnknownEncoder(
+        string audioFormat,
+        ILogger logger)
+    {
+        logger.LogWarning("Unable to determine audio encoder for {AudioFormat}; may have playback issues", audioFormat);
+        return Option<IEncoder>.None;
     }
 }

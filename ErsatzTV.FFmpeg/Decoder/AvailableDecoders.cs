@@ -2,12 +2,13 @@
 using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Format;
 using LanguageExt;
+using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Decoder;
 
 public static class AvailableDecoders
 {
-    public static Option<IDecoder> ForVideoFormat(FrameState currentState, FrameState desiredState)
+    public static Option<IDecoder> ForVideoFormat(FrameState currentState, FrameState desiredState, ILogger logger)
     {
         return (currentState.HardwareAccelerationMode, currentState.VideoFormat,
                 currentState.PixelFormat.Match(pf => pf.Name, () => string.Empty)) switch
@@ -48,12 +49,21 @@ public static class AvailableDecoders
                 
                 (_, VideoFormat.Undetermined, _) => new DecoderImplicit(),
 
-                // TODO: log warning and fall back to automatic decoder (i.e. None) instead of throwing?
-                // maybe have a special "unknown decoder" that sets frame loc to software without specifying any decoder
-                _ => throw new ArgumentOutOfRangeException(
-                    nameof(currentState.VideoFormat),
-                    currentState.VideoFormat,
-                    null)
+                var (accel, videoFormat, pixelFormat) => LogUnknownDecoder(accel, videoFormat, pixelFormat, logger)
             };
+    }
+
+    private static Option<IDecoder> LogUnknownDecoder(
+        HardwareAccelerationMode hardwareAccelerationMode,
+        string videoFormat,
+        string pixelFormat,
+        ILogger logger)
+    {
+        logger.LogWarning(
+            "Unable to determine decoder for {AccelMode} - {VideoFormat} - {PixelFormat}; may have playback issues",
+            hardwareAccelerationMode,
+            videoFormat,
+            pixelFormat);
+        return Option<IDecoder>.None;
     }
 }
