@@ -19,9 +19,10 @@ public class PipelineBuilder
     private readonly List<IPipelineFilterStep> _audioFilterSteps;
     private readonly List<IPipelineFilterStep> _videoFilterSteps;
     private readonly IList<InputFile> _inputFiles;
+    private readonly string _reportsFolder;
     private readonly ILogger _logger;
 
-    public PipelineBuilder(IList<InputFile> inputFiles, ILogger logger)
+    public PipelineBuilder(IList<InputFile> inputFiles, string reportsFolder, ILogger logger)
     {
         _pipelineSteps = new List<IPipelineStep>
         {
@@ -39,6 +40,7 @@ public class PipelineBuilder
         _videoFilterSteps = new List<IPipelineFilterStep>();
 
         _inputFiles = inputFiles;
+        _reportsFolder = reportsFolder;
         _logger = logger;
     }
 
@@ -69,6 +71,7 @@ public class PipelineBuilder
             }
 
             var currentState = new FrameState(
+                false, // save report
                 HardwareAccelerationMode.None,
                 Option<string>.None,
                 Option<string>.None,
@@ -100,6 +103,13 @@ public class PipelineBuilder
                 Option<string>.None,
                 Option<string>.None,
                 0);
+
+            if (desiredState.SaveReport && !currentState.SaveReport)
+            {
+                IPipelineStep step = new FFReportVariable(_reportsFolder, _inputFiles);
+                currentState = step.NextState(currentState);
+                _pipelineSteps.Add(step);
+            }
 
             foreach (TimeSpan desiredStart in desiredState.Start)
             {

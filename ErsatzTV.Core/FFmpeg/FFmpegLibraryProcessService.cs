@@ -123,6 +123,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             : Option<string>.None;
 
         var desiredState = new FrameState(
+            saveReports,
             hwAccel,
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
@@ -173,7 +174,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
-        var desiredState = FrameState.Concat(channel.Name, resolution);
+        var desiredState = FrameState.Concat(saveReports, channel.Name, resolution);
 
         var inputFiles = new List<InputFile>
         {
@@ -221,7 +222,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
     private Process GetProcess(string ffmpegPath, IList<InputFile> inputFiles, FrameState desiredState)
     {
-        var pipelineBuilder = new PipelineBuilder(inputFiles, _logger);
+        var pipelineBuilder = new PipelineBuilder(inputFiles, FileSystemLayout.FFmpegReportsFolder, _logger);
 
         IList<IPipelineStep> pipelineSteps = pipelineBuilder.Build(desiredState);
 
