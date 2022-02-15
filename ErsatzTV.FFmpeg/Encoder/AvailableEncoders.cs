@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.FFmpeg.Encoder.Nvenc;
 using ErsatzTV.FFmpeg.Encoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder.Vaapi;
+using ErsatzTV.FFmpeg.Encoder.VideoToolbox;
 using ErsatzTV.FFmpeg.Format;
 using Microsoft.Extensions.Logging;
 using LanguageExt;
@@ -20,6 +21,9 @@ public static class AvailableEncoders
 
             (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(currentState),
             (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(currentState),
+
+            (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) => new EncoderHevcVideoToolbox(),
+            (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) => new EncoderH264VideoToolbox(),
 
             (_, VideoFormat.Hevc) => new EncoderLibx265(),
             (_, VideoFormat.H264) => new EncoderLibx264(),
