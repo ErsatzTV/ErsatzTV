@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
@@ -240,6 +241,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             CreateNoWindow = true,
             StandardOutputEncoding = Encoding.UTF8
         };
+
+        if (environmentVariables.Any())
+        {
+            _logger.LogDebug("FFmpeg environment variables {EnvVars}", environmentVariables);
+        }
 
         foreach ((string key, string value) in environmentVariables)
         {

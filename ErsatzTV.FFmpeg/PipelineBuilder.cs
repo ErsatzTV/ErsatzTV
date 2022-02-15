@@ -144,10 +144,21 @@ public class PipelineBuilder
             {
                 if (currentState.HardwareAccelerationMode != desiredState.HardwareAccelerationMode)
                 {
-                    foreach (IPipelineStep accel in AvailableHardwareAccelerationOptions.ForMode(
-                                 desiredState.HardwareAccelerationMode,
-                                 currentState.VaapiDevice,
-                                 _logger))
+                    Option<IPipelineStep> maybeAccel = AvailableHardwareAccelerationOptions.ForMode(
+                        desiredState.HardwareAccelerationMode,
+                        desiredState.VaapiDevice,
+                        _logger);
+
+                    if (maybeAccel.IsNone)
+                    {
+                        desiredState = desiredState with
+                        {
+                            // disable hw accel if we don't match anything
+                            HardwareAccelerationMode = HardwareAccelerationMode.None
+                        };
+                    }
+
+                    foreach (IPipelineStep accel in maybeAccel)
                     {
                         currentState = accel.NextState(currentState);
                         _pipelineSteps.Add(accel);
