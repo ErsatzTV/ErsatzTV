@@ -30,6 +30,7 @@ public static class AvailableEncoders
             (_, VideoFormat.Mpeg2Video) => new EncoderMpeg2Video(),
 
             (_, VideoFormat.Undetermined) => new EncoderImplicitVideo(),
+            (_, VideoFormat.Copy) => new EncoderCopyVideo(),
 
             var (accel, videoFormat) => LogUnknownEncoder(accel, videoFormat, logger)
         };
@@ -54,6 +55,7 @@ public static class AvailableEncoders
                 {
                     AudioFormat.Aac => (Option<IEncoder>)new EncoderAac(),
                     AudioFormat.Ac3 => new EncoderAc3(),
+                    AudioFormat.Copy => new EncoderCopyAudio(),
                     _ => LogUnknownEncoder(audioFormat, logger)
                 },
             () => LogUnknownEncoder(string.Empty, logger));
