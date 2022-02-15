@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
+using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Option;
@@ -69,6 +70,8 @@ public class PipelineBuilder
 
             var currentState = new FrameState(
                 HardwareAccelerationMode.None,
+                Option<string>.None,
+                Option<string>.None,
                 false, // realtime
                 false, // infinite loop
                 Option<TimeSpan>.None,
@@ -136,6 +139,16 @@ public class PipelineBuilder
                         AvailableHardwareAccelerationOptions.ForMode(desiredState.HardwareAccelerationMode);
                     currentState = accel.NextState(currentState);
                     _pipelineSteps.Add(accel);
+                }
+
+                foreach (string desiredVaapiDriver in desiredState.VaapiDriver)
+                {
+                    if (currentState.VaapiDriver != desiredVaapiDriver)
+                    {
+                        IPipelineStep step = new LibvaDriverNameVariable(desiredVaapiDriver);
+                        currentState = step.NextState(currentState);
+                        _pipelineSteps.Add(step);
+                    }
                 }
 
                 foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(currentState, desiredState, _logger))

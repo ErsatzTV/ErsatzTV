@@ -6,6 +6,8 @@ namespace ErsatzTV.FFmpeg;
 
 public record FrameState(
     HardwareAccelerationMode HardwareAccelerationMode,
+    Option<string> VaapiDriver,
+    Option<string> VaapiDevice,
     bool Realtime,
     bool InfiniteLoop,
     Option<TimeSpan> Start,
@@ -39,6 +41,8 @@ public record FrameState(
     public static FrameState Concat(string channelName, FrameSize resolution) =>
         new(
             HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
             true, // realtime
             true, // infinite loop
             Option<TimeSpan>.None,

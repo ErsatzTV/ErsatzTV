@@ -1,8 +1,10 @@
-﻿namespace ErsatzTV.FFmpeg.Protocol;
+﻿using ErsatzTV.FFmpeg.Environment;
+
+namespace ErsatzTV.FFmpeg.Protocol;
 
 public class PipeProtocol : IPipelineStep
 {
-    public FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
+    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
     public IList<string> InputOptions => Array.Empty<string>();
     public IList<string> FilterOptions => Array.Empty<string>();

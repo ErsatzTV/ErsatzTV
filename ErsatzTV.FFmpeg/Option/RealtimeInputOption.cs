@@ -1,7 +1,11 @@
-﻿namespace ErsatzTV.FFmpeg.Option;
+﻿using ErsatzTV.FFmpeg.Environment;
+
+namespace ErsatzTV.FFmpeg.Option;
 
 public class RealtimeInputOption : IPipelineStep
 {
+    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
+
     // some builds of ffmpeg seem to hang when realtime input is requested with multithreading,
     // so we force a single thread here
     public IList<string> GlobalOptions => new List<string> { "-threads", "1" };

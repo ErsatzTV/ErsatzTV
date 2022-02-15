@@ -1,7 +1,14 @@
-﻿namespace ErsatzTV.FFmpeg;
+﻿using ErsatzTV.FFmpeg.Environment;
+
+namespace ErsatzTV.FFmpeg;
 
 public static class CommandGenerator
 {
+    public static IList<EnvironmentVariable> GenerateEnvironmentVariables(IEnumerable<IPipelineStep> pipelineSteps)
+    {
+        return pipelineSteps.SelectMany(ps => ps.EnvironmentVariables).ToList();
+    }
+
     public static IList<string> GenerateArguments(
         IEnumerable<InputFile> inputFiles,
         IList<IPipelineStep> pipelineSteps)

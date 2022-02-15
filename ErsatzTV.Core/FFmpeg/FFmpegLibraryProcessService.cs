@@ -8,6 +8,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.FFmpeg;
+using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
 using LanguageExt;
@@ -123,6 +124,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var desiredState = new FrameState(
             hwAccel,
+            VaapiDriverName(hwAccel, vaapiDriver),
+            VaapiDeviceName(hwAccel, vaapiDevice),
             playbackSettings.RealtimeOutput,
             false,
             playbackSettings.StreamSeek,
@@ -222,8 +225,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         IList<IPipelineStep> pipelineSteps = pipelineBuilder.Build(desiredState);
 
-        _logger.LogDebug("FFmpeg pipeline {PipelineSteps}", pipelineSteps);
+        _logger.LogDebug("FFmpeg pipeline {PipelineSteps}", pipelineSteps.Map(ps => ps.GetType().Name));
 
+        IList<EnvironmentVariable> environmentVariables = CommandGenerator.GenerateEnvironmentVariables(pipelineSteps);
         IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
 
         var startInfo = new ProcessStartInfo
@@ -236,6 +240,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             StandardOutputEncoding = Encoding.UTF8
         };
 
+        foreach ((string key, string value) in environmentVariables)
+        {
+            startInfo.EnvironmentVariables[key] = value;
+        }
+
         foreach (string argument in arguments)
         {
             startInfo.ArgumentList.Add(argument);
@@ -245,5 +254,28 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         {
             StartInfo = startInfo
         };
+    }
+
+    private static Option<string> VaapiDriverName(HardwareAccelerationMode accelerationMode, VaapiDriver driver)
+    {
+        if (accelerationMode == HardwareAccelerationMode.Vaapi)
+        {
+            switch (driver)
+            {
+                case VaapiDriver.i965:
+                    return "i965";
+                case VaapiDriver.iHD:
+                    return "iHD";
+                case VaapiDriver.RadeonSI:
+                    return "radeonsi";
+            }
+        }
+        
+        return Option<string>.None;
+    }
+
+    private static Option<string> VaapiDeviceName(HardwareAccelerationMode accelerationMode, string vaapiDevice)
+    {
+        return accelerationMode == HardwareAccelerationMode.Vaapi ? vaapiDevice : Option<string>.None;
     }
 }

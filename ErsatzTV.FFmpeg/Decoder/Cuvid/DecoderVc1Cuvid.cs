@@ -28,7 +28,8 @@ public class DecoderVc1Cuvid : DecoderBase
             return result;
         }
     }
-    public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
+
+    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
         
     public override FrameState NextState(FrameState currentState)
     {

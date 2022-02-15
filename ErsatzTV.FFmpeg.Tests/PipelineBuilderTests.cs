@@ -31,6 +31,8 @@ public class PipelineGeneratorTests
 
         var desiredState = new FrameState(
             HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
             true,
             false,
             Option<TimeSpan>.None,
@@ -84,6 +86,8 @@ public class PipelineGeneratorTests
 
         var desiredState = new FrameState(
             HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
             true,
             false,
             Option<TimeSpan>.None,
