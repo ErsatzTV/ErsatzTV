@@ -4,7 +4,7 @@ namespace ErsatzTV.FFmpeg.Decoder;
 
 public class DecoderVaapi : DecoderBase
 {
-    public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
+    public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
     public override string Name => "implicit_vaapi";
     public override IList<string> InputOptions => Array.Empty<string>();
 

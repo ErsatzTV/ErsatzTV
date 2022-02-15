@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Filter.Cuda;
+using ErsatzTV.FFmpeg.Filter.Qsv;
 using ErsatzTV.FFmpeg.Filter.Vaapi;
 
 namespace ErsatzTV.FFmpeg.Filter;
@@ -11,6 +12,7 @@ public static class AvailableDeinterlaceFilters
         accelMode switch
         {
             HardwareAccelerationMode.Nvenc => new YadifCudaFilter(currentState),
+            HardwareAccelerationMode.Qsv => new DeinterlaceQsvFilter(currentState),
             HardwareAccelerationMode.Vaapi => new DeinterlaceVaapiFilter(currentState),
             _ => new YadifFilter(currentState)
         };

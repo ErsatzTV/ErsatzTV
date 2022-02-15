@@ -138,7 +138,7 @@ public class PipelineBuilder
                     _pipelineSteps.Add(accel);
                 }
 
-                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(currentState, desiredState))
+                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(currentState, desiredState, _logger))
                 {
                     currentState = decoder.NextState(currentState);
                     _pipelineSteps.Add(decoder);
@@ -305,10 +305,13 @@ public class PipelineBuilder
                 // after everything else is done, apply the encoder
                 if (!_pipelineSteps.OfType<IEncoder>().Any())
                 {
-                    encoder = AvailableEncoders.ForVideoFormat(currentState, desiredState);
-                    _pipelineSteps.Add(encoder);
-                    _videoFilterSteps.Add(encoder);
-                    currentState = encoder.NextState(currentState);
+                    foreach (IEncoder e in AvailableEncoders.ForVideoFormat(currentState, desiredState, _logger))
+                    {
+                        encoder = e;
+                        _pipelineSteps.Add(encoder);
+                        _videoFilterSteps.Add(encoder);
+                        currentState = encoder.NextState(currentState);
+                    }
                 }
             }
             
@@ -325,9 +328,11 @@ public class PipelineBuilder
             {
                 if (currentState.AudioFormat != desiredState.AudioFormat)
                 {
-                    IEncoder step = AvailableEncoders.ForAudioFormat(desiredState);
-                    currentState = step.NextState(currentState);
-                    _pipelineSteps.Add(step);
+                    foreach (IEncoder step in AvailableEncoders.ForAudioFormat(desiredState, _logger))
+                    {
+                        currentState = step.NextState(currentState);
+                        _pipelineSteps.Add(step);
+                    }
                 }
 
                 foreach (int desiredAudioChannels in desiredState.AudioChannels)

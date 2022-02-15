@@ -39,15 +39,18 @@ public class ScaleQsvFilter : BaseFilter
                 scale = $"scale_qsv={targetSize}{format}";
             }
 
-            // TODO: this might not always upload to hardware, so NextState could be inaccurate
-            if (string.IsNullOrWhiteSpace(scale))
+            if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {
                 return scale;
             }
 
-            return _currentState.FrameDataLocation == FrameDataLocation.Hardware
-                ? scale
-                : $"hwupload=extra_hw_frames=64,{scale}";
+            string initialPixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, FFmpegFormat.NV12);
+            if (!string.IsNullOrWhiteSpace(scale))
+            {
+                return $"format={initialPixelFormat},hwupload=extra_hw_frames=64,{scale}";
+            }
+
+            return $"format={initialPixelFormat},hwupload=extra_hw_frames=64";
         }
     }
 
