@@ -5,7 +5,10 @@ using LanguageExt;
 namespace ErsatzTV.FFmpeg;
 
 public record FrameState(
+    bool SaveReport,
     HardwareAccelerationMode HardwareAccelerationMode,
+    Option<string> VaapiDriver,
+    Option<string> VaapiDevice,
     bool Realtime,
     bool InfiniteLoop,
     Option<TimeSpan> Start,
@@ -36,9 +39,12 @@ public record FrameState(
     long PtsOffset,
     FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown)
 {
-    public static FrameState Concat(string channelName, FrameSize resolution) =>
+    public static FrameState Concat(bool saveReport, string channelName, FrameSize resolution) =>
         new(
+            saveReport,
             HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
             true, // realtime
             true, // infinite loop
             Option<TimeSpan>.None,

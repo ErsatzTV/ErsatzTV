@@ -1,4 +1,5 @@
-﻿using LanguageExt;
+﻿using ErsatzTV.FFmpeg.Environment;
+using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.OutputFormat;
 
@@ -21,7 +22,7 @@ public class OutputFormatHls : IPipelineStep
         _playlistPath = playlistPath;
     }
 
-    public FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
+    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
     public IList<string> InputOptions => Array.Empty<string>();
     public IList<string> FilterOptions => Array.Empty<string>();

@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.FFmpeg.Filter;
+﻿using ErsatzTV.FFmpeg.Environment;
+
+namespace ErsatzTV.FFmpeg.Filter;
 
 public class ComplexFilter : IPipelineStep
 {
@@ -73,6 +75,7 @@ public class ComplexFilter : IPipelineStep
         return result;
     }
 
+    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
     public IList<string> InputOptions => Array.Empty<string>();
     public IList<string> FilterOptions => Arguments();

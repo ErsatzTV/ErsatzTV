@@ -1,8 +1,11 @@
-﻿namespace ErsatzTV.FFmpeg.Decoder;
+﻿using ErsatzTV.FFmpeg.Environment;
+
+namespace ErsatzTV.FFmpeg.Decoder;
 
 public abstract class DecoderBase : IDecoder
 {
-    public abstract FrameDataLocation OutputFrameDataLocation { get; }
+    protected abstract FrameDataLocation OutputFrameDataLocation { get; }
+    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
     public virtual IList<string> InputOptions => new List<string> { "-c:v", Name };
     public IList<string> FilterOptions => Array.Empty<string>();
