@@ -11,11 +11,25 @@ public class QsvHardwareAccelerationOption : GlobalOption
         FFmpegFormat.P010LE
     };
 
-    public override IList<string> GlobalOptions => new List<string>
+    public override IList<string> GlobalOptions
     {
-        "-hwaccel", "qsv",
-        "-init_hw_device", "qsv=qsv:MFX_IMPL_hw_any"
-    };
+        get
+        {
+            string[] initDevices = OperatingSystem.IsWindows()
+                ? new[] { "-init_hw_device", "qsv=hw:hw,child_device_type=dxva2", "-filter_hw_device", "hw" }
+                : new[] { "-init_hw_device", "qsv=hw", "-filter_hw_device", "hw" };
+
+            var result = new List<string>
+            {
+                "-hwaccel", "qsv",
+                "-hwaccel_output_format", "qsv"
+            };
+
+            result.AddRange(initDevices);
+
+            return result;
+        }
+    }
 
     // qsv encoders want nv12
     public override FrameState NextState(FrameState currentState)
@@ -29,13 +43,9 @@ public class QsvHardwareAccelerationOption : GlobalOption
                 return result;
             }
 
-            return currentState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) };
+            return result with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) };
         }
 
-        return currentState with
-        {
-            HardwareAccelerationMode = HardwareAccelerationMode.Qsv,
-            PixelFormat = new PixelFormatNv12(new PixelFormatUnknown().Name)
-        };
+        return result with { PixelFormat = new PixelFormatNv12(new PixelFormatUnknown().Name) };
     }
 }

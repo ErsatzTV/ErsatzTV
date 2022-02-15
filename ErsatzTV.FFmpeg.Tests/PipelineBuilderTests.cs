@@ -64,9 +64,9 @@ public class PipelineGeneratorTests
             0);
 
         var builder = new PipelineBuilder(inputFiles, "", _logger);
-        IList<IPipelineStep> result = builder.Build(desiredState);
+        FFmpegPipeline result = builder.Build(desiredState);
 
-        result.Should().HaveCountGreaterThan(0);
+        result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
         PrintCommand(inputFiles, result);
     }
@@ -120,9 +120,9 @@ public class PipelineGeneratorTests
             0);
 
         var builder = new PipelineBuilder(inputFiles, "", _logger);
-        IList<IPipelineStep> result = builder.Build(desiredState);
+        FFmpegPipeline result = builder.Build(desiredState);
 
-        result.Should().HaveCountGreaterThan(0);
+        result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
         PrintCommand(inputFiles, result);
     }
@@ -139,16 +139,16 @@ public class PipelineGeneratorTests
         };
 
         var builder = new PipelineBuilder(inputFiles, "", _logger);
-        IList<IPipelineStep> result = builder.Build(desiredState);
+        FFmpegPipeline result = builder.Build(desiredState);
 
-        result.Should().HaveCountGreaterThan(0);
+        result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
         PrintCommand(inputFiles, result);
     }
 
-    private static void PrintCommand(IEnumerable<InputFile> inputFiles, IList<IPipelineStep> pipeline)
+    private static void PrintCommand(IEnumerable<InputFile> inputFiles, FFmpegPipeline pipeline)
     {
-        IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipeline);
+        IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipeline.PipelineSteps);
         Console.WriteLine($"Generated command: ffmpeg {string.Join(" ", arguments)}");
     }
 }

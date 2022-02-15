@@ -44,7 +44,7 @@ public class PipelineBuilder
         _logger = logger;
     }
 
-    public IList<IPipelineStep> Build(FrameState desiredState)
+    public FFmpegPipeline Build(FrameState desiredState)
     {
         var allVideoStreams = _inputFiles.SelectMany(f => f.Streams)
             .Filter(s => s.Kind == StreamKind.Video)
@@ -499,7 +499,7 @@ public class PipelineBuilder
             }
         }
 
-        return _pipelineSteps;
+        return new FFmpegPipeline(_pipelineSteps, _videoFilterSteps, _audioFilterSteps);
     }
 
     private static bool IsDesiredVideoState(FrameState currentState, FrameState desiredState)
