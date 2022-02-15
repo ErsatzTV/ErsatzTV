@@ -26,7 +26,7 @@ public class ScaleVaapiFilter : BaseFilter
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
                     // don't need scaling, but still need pixel format
-                    scale = $",scale_vaapi=format={pixelFormat.FFmpegName}";
+                    scale = $"scale_vaapi=format={pixelFormat.FFmpegName}";
                 }
             }
             else
@@ -38,10 +38,20 @@ public class ScaleVaapiFilter : BaseFilter
                 }
 
                 string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
-                scale = $",scale_vaapi={targetSize}:force_original_aspect_ratio=1:force_divisible_by=2{format}";
+                scale = $"scale_vaapi={targetSize}:force_original_aspect_ratio=1:force_divisible_by=2{format}";
             }
 
-            return $"format=nv12|vaapi,hwupload{scale}";
+            if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
+            {
+                return scale;
+            }
+
+            if (!string.IsNullOrWhiteSpace(scale))
+            {
+                return $"format=nv12|vaapi,hwupload,{scale}";
+            }
+
+            return "format=nv12|vaapi,hwupload";
         }
     }
 

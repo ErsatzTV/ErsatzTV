@@ -222,6 +222,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         IList<IPipelineStep> pipelineSteps = pipelineBuilder.Build(desiredState);
 
+        _logger.LogDebug("FFmpeg pipeline {PipelineSteps}", pipelineSteps);
+
         IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipelineSteps);
 
         var startInfo = new ProcessStartInfo

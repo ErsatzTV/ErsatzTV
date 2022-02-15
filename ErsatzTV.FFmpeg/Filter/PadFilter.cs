@@ -17,10 +17,18 @@ public class PadFilter : BaseFilter
         {
             string pad = $"pad={_paddedSize.Width}:{_paddedSize.Height}:-1:-1:color=black";
             string pixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, () => string.Empty);
-            
-            return _currentState.FrameDataLocation == FrameDataLocation.Hardware && !string.IsNullOrWhiteSpace(pixelFormat)
-                ? $"hwdownload,format={pixelFormat},{pad}" // TODO: does this apply to other accels?
-                : pad;
+
+            if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
+            {
+                if (!string.IsNullOrWhiteSpace(pixelFormat))
+                {
+                    return $"hwdownload,format={pixelFormat},{pad}";
+                }
+
+                return $"hwdownload,{pad}";
+            }
+
+            return pad;
         }
     }
 
