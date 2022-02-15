@@ -41,15 +41,17 @@ public class ScaleVaapiFilter : BaseFilter
                 scale = $"scale_vaapi={targetSize}:force_original_aspect_ratio=1:force_divisible_by=2{format}";
             }
 
-            // TODO: this might not always upload to hardware, so NextState could be inaccurate
-            if (string.IsNullOrWhiteSpace(scale))
+            if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
             {
                 return scale;
             }
 
-            return _currentState.FrameDataLocation == FrameDataLocation.Hardware
-                ? scale
-                : $"hwupload,{scale}";
+            if (!string.IsNullOrWhiteSpace(scale))
+            {
+                return $"format=nv12|vaapi,hwupload,{scale}";
+            }
+
+            return "format=nv12|vaapi,hwupload";
         }
     }
 

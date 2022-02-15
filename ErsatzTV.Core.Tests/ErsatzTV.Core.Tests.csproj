@@ -9,6 +9,8 @@
       <PackageReference Include="FluentAssertions" Version="6.4.0" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.3" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
       <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
       <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.64">
         <PrivateAssets>all</PrivateAssets>

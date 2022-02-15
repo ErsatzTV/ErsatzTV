@@ -12,7 +12,7 @@ public class DeinterlaceVaapiFilter : BaseFilter
     public override string Filter =>
         _currentState.FrameDataLocation == FrameDataLocation.Hardware
             ? "deinterlace_vaapi"
-            : "hwupload,deinterlace_vaapi";
+            : "format=nv12|vaapi,hwupload,deinterlace_vaapi";
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {

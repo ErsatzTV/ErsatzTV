@@ -66,7 +66,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 new("libx264", "yuv420p"),
                 new("libx264", "yuvj420p"),
                 new("libx264", "yuv420p10le"),
-                new("libx264", "yuv444p10le"),
+                // new("libx264", "yuv444p10le"),
 
                 new("mpeg1video", "yuv420p"),
 
@@ -137,6 +137,17 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             {
                 HardwareAccelerationKind.VideoToolbox
             };
+
+            public static string[] QsvCodecs =
+            {
+                "h264_qsv",
+                "hevc_qsv"
+            };
+
+            public static HardwareAccelerationKind[] QsvAcceleration =
+            {
+                HardwareAccelerationKind.Qsv
+            };
         }
 
         [Test, Combinatorial]
@@ -155,6 +166,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.QsvCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         {

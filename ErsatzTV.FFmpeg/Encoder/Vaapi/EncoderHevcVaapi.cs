@@ -21,6 +21,6 @@ public class EncoderHevcVaapi : EncoderBase
     public override StreamKind Kind => StreamKind.Video;
 
     public override string Filter => _currentState.FrameDataLocation == FrameDataLocation.Software
-        ? "hwupload"
+        ? "format=nv12|vaapi,hwupload"
         : string.Empty;
 }
