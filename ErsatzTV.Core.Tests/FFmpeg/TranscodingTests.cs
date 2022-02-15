@@ -66,7 +66,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 new("libx264", "yuv420p"),
                 new("libx264", "yuvj420p"),
                 new("libx264", "yuv420p10le"),
-                new("libx264", "yuv444p10le"),
+                // new("libx264", "yuv444p10le"),
 
                 new("mpeg1video", "yuv420p"),
 
