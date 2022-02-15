@@ -30,7 +30,10 @@ public class PipelineGeneratorTests
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(
+            false,
             HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
             true,
             false,
             Option<TimeSpan>.None,
@@ -60,7 +63,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             0);
 
-        var builder = new PipelineBuilder(inputFiles, _logger);
+        var builder = new PipelineBuilder(inputFiles, "", _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
 
         result.Should().HaveCountGreaterThan(0);
@@ -83,7 +86,10 @@ public class PipelineGeneratorTests
         var inputFiles = new List<InputFile> { testFile };
 
         var desiredState = new FrameState(
+            false,
             HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
             true,
             false,
             Option<TimeSpan>.None,
@@ -113,7 +119,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             0);
 
-        var builder = new PipelineBuilder(inputFiles, _logger);
+        var builder = new PipelineBuilder(inputFiles, "", _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
 
         result.Should().HaveCountGreaterThan(0);
@@ -125,14 +131,14 @@ public class PipelineGeneratorTests
     public void Concat_Test()
     {
         var resolution = new FrameSize(1920, 1080);
-        var desiredState = FrameState.Concat("Some Channel", resolution);
+        var desiredState = FrameState.Concat(false, "Some Channel", resolution);
 
         var inputFiles = new List<InputFile>
         {
             new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution)
         };
 
-        var builder = new PipelineBuilder(inputFiles, _logger);
+        var builder = new PipelineBuilder(inputFiles, "", _logger);
         IList<IPipelineStep> result = builder.Build(desiredState);
 
         result.Should().HaveCountGreaterThan(0);

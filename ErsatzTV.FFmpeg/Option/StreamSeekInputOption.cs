@@ -1,4 +1,6 @@
-﻿namespace ErsatzTV.FFmpeg.Option;
+﻿using ErsatzTV.FFmpeg.Environment;
+
+namespace ErsatzTV.FFmpeg.Option;
 
 public class StreamSeekInputOption : IPipelineStep
 {
@@ -10,6 +12,7 @@ public class StreamSeekInputOption : IPipelineStep
     }
 
     public FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Unknown;
+    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
     public IList<string> InputOptions =>
         _start == TimeSpan.Zero ? Array.Empty<string>() : new List<string> { "-ss", $"{_start:c}" };

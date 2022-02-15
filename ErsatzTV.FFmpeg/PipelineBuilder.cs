@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
+using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Option;
@@ -18,9 +19,10 @@ public class PipelineBuilder
     private readonly List<IPipelineFilterStep> _audioFilterSteps;
     private readonly List<IPipelineFilterStep> _videoFilterSteps;
     private readonly IList<InputFile> _inputFiles;
+    private readonly string _reportsFolder;
     private readonly ILogger _logger;
 
-    public PipelineBuilder(IList<InputFile> inputFiles, ILogger logger)
+    public PipelineBuilder(IList<InputFile> inputFiles, string reportsFolder, ILogger logger)
     {
         _pipelineSteps = new List<IPipelineStep>
         {
@@ -38,6 +40,7 @@ public class PipelineBuilder
         _videoFilterSteps = new List<IPipelineFilterStep>();
 
         _inputFiles = inputFiles;
+        _reportsFolder = reportsFolder;
         _logger = logger;
     }
 
@@ -68,7 +71,10 @@ public class PipelineBuilder
             }
 
             var currentState = new FrameState(
+                false, // save report
                 HardwareAccelerationMode.None,
+                Option<string>.None,
+                Option<string>.None,
                 false, // realtime
                 false, // infinite loop
                 Option<TimeSpan>.None,
@@ -97,6 +103,13 @@ public class PipelineBuilder
                 Option<string>.None,
                 Option<string>.None,
                 0);
+
+            if (desiredState.SaveReport && !currentState.SaveReport)
+            {
+                IPipelineStep step = new FFReportVariable(_reportsFolder, _inputFiles);
+                currentState = step.NextState(currentState);
+                _pipelineSteps.Add(step);
+            }
 
             foreach (TimeSpan desiredStart in desiredState.Start)
             {
@@ -129,13 +142,37 @@ public class PipelineBuilder
             }
             else
             {
-                // TODO: prioritize which codecs are used (hw accel)
                 if (currentState.HardwareAccelerationMode != desiredState.HardwareAccelerationMode)
                 {
-                    IPipelineStep accel =
-                        AvailableHardwareAccelerationOptions.ForMode(desiredState.HardwareAccelerationMode);
-                    currentState = accel.NextState(currentState);
-                    _pipelineSteps.Add(accel);
+                    Option<IPipelineStep> maybeAccel = AvailableHardwareAccelerationOptions.ForMode(
+                        desiredState.HardwareAccelerationMode,
+                        desiredState.VaapiDevice,
+                        _logger);
+
+                    if (maybeAccel.IsNone)
+                    {
+                        desiredState = desiredState with
+                        {
+                            // disable hw accel if we don't match anything
+                            HardwareAccelerationMode = HardwareAccelerationMode.None
+                        };
+                    }
+
+                    foreach (IPipelineStep accel in maybeAccel)
+                    {
+                        currentState = accel.NextState(currentState);
+                        _pipelineSteps.Add(accel);
+                    }
+                }
+
+                foreach (string desiredVaapiDriver in desiredState.VaapiDriver)
+                {
+                    if (currentState.VaapiDriver != desiredVaapiDriver)
+                    {
+                        IPipelineStep step = new LibvaDriverNameVariable(desiredVaapiDriver);
+                        currentState = step.NextState(currentState);
+                        _pipelineSteps.Add(step);
+                    }
                 }
 
                 foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(currentState, desiredState, _logger))

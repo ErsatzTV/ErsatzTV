@@ -3,5 +3,5 @@
 public class DecoderVc1 : DecoderBase
 {
     public override string Name => "vc1";
-    public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
+    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
 }

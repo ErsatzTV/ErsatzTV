@@ -4,5 +4,5 @@ public class DecoderHevcQsv : DecoderBase
 {
     public override string Name => "hevc_qsv";
 
-    public override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
+    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
 }

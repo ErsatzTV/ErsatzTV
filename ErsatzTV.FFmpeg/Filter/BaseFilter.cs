@@ -1,7 +1,10 @@
-﻿namespace ErsatzTV.FFmpeg.Filter;
+﻿using ErsatzTV.FFmpeg.Environment;
+
+namespace ErsatzTV.FFmpeg.Filter;
 
 public abstract class BaseFilter : IPipelineFilterStep
 {
+    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public virtual IList<string> GlobalOptions => Array.Empty<string>();
     public virtual IList<string> InputOptions => Array.Empty<string>();
     public virtual IList<string> FilterOptions => Array.Empty<string>();
