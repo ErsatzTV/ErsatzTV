@@ -16,13 +16,12 @@ public class QsvHardwareAccelerationOption : GlobalOption
         get
         {
             string[] initDevices = OperatingSystem.IsWindows()
-                ? new[] { "-init_hw_device", "qsv=hw:hw,child_device_type=dxva2" }
-                : new[] { "-init_hw_device", "qsv=hw" };
+                ? new[] { "-init_hw_device", "qsv=hw:hw,child_device_type=dxva2", "-filter_hw_device", "hw" }
+                : new[] { "-init_hw_device", "qsv=hw", "-filter_hw_device", "hw" };
 
             var result = new List<string>
             {
                 "-hwaccel", "qsv",
-                "-filter_hw_device", "hw",
                 "-hwaccel_output_format", "qsv"
             };
 
