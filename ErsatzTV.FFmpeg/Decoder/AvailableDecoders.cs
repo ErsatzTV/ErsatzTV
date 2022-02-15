@@ -28,6 +28,10 @@ public static class AvailableDecoders
                 // hevc_qsv decoder sometimes causes green lines with 10-bit content
                 (HardwareAccelerationMode.Qsv, VideoFormat.Hevc, PixelFormat.YUV420P10LE) => new DecoderHevc(),
 
+                // h264_qsv does not support decoding 10-bit content
+                (HardwareAccelerationMode.Qsv, VideoFormat.H264, PixelFormat.YUV420P10LE or PixelFormat.YUV444P10LE) =>
+                    new DecoderH264(),
+
                 (HardwareAccelerationMode.Qsv, VideoFormat.Hevc, _) => new DecoderHevcQsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.H264, _) => new DecoderH264Qsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Qsv(),
@@ -46,7 +50,7 @@ public static class AvailableDecoders
                 (_, VideoFormat.MsMpeg4V3, _) => new DecoderMsMpeg4V3(),
                 (_, VideoFormat.Mpeg4, _) => new DecoderMpeg4(),
                 (_, VideoFormat.Vp9, _) => new DecoderVp9(),
-                
+
                 (_, VideoFormat.Undetermined, _) => new DecoderImplicit(),
 
                 var (accel, videoFormat, pixelFormat) => LogUnknownDecoder(accel, videoFormat, pixelFormat, logger)

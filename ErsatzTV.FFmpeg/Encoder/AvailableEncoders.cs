@@ -16,7 +16,7 @@ public static class AvailableEncoders
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(),
 
             (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(),
-            (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(),
+            (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(currentState),
 
             (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(currentState),
             (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(currentState),
