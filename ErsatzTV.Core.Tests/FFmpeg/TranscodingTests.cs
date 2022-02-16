@@ -271,7 +271,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                     FFmpegProfile = FFmpegProfile.New("test", profileResolution) with
                     {
                         HardwareAcceleration = profileAcceleration,
-                        VideoCodec = profileCodec
+                        VideoCodec = profileCodec,
+                        AudioCodec = "aac"
                     },
                     StreamingMode = StreamingMode.TransportStream
                 },
