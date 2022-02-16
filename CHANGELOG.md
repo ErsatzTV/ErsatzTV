@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add improved but experimental transcoder logic, which can be toggled on and off in `Settings`
 - Fix `HLS Segmenter` bug when source video packet contains no duration (`N/A`)
 
+### Changed
+- Disable framerate normalization by default and on all ffmpeg profiles
+  - If framerate normalization is desired (not typically needed), it can be re-enabled manually
+
 ## [0.4.1-alpha] - 2022-02-10
 ### Fixed
 - Normalize smart quotes in search queries as they are unsupported by the search library

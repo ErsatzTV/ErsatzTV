@@ -26,6 +26,7 @@ public class PipelineBuilder
     {
         _pipelineSteps = new List<IPipelineStep>
         {
+            new ThreadCountOption(1), // try everything single-threaded
             new NoStandardInputOption(),
             new HideBannerOption(),
             new NoStatsOption(),
