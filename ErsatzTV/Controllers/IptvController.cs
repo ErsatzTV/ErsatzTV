@@ -26,17 +26,20 @@ namespace ErsatzTV.Controllers
     public class IptvController : ControllerBase
     {
         private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+        private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
         private readonly ILogger<IptvController> _logger;
         private readonly IMediator _mediator;
 
         public IptvController(
             IMediator mediator,
             ILogger<IptvController> logger,
-            IFFmpegSegmenterService ffmpegSegmenterService)
+            IFFmpegSegmenterService ffmpegSegmenterService,
+            IHlsPlaylistFilter hlsPlaylistFilter)
         {
             _mediator = mediator;
             _logger = logger;
             _ffmpegSegmenterService = ffmpegSegmenterService;
+            _hlsPlaylistFilter = hlsPlaylistFilter;
         }
 
         [HttpGet("iptv/channels.m3u")]
@@ -97,7 +100,7 @@ namespace ErsatzTV.Controllers
                     //     worker.PlaylistStart,
                     //     now);
 
-                    TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
+                    TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
                     return Content(result.Playlist, "application/vnd.apple.mpegurl");
                 }
             }
