@@ -360,19 +360,19 @@ public class PipelineBuilder
             {
                 _pipelineSteps.Add(new EncoderCopyAudio());
             }
-            
+            else
+            {
+                // always need to specify audio codec so ffmpeg doesn't default to a codec we don't want
+                foreach (IEncoder step in AvailableEncoders.ForAudioFormat(desiredState, _logger))
+                {
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+            }
+
             // TODO: while?
             if (!IsDesiredAudioState(currentState, desiredState))
             {
-                if (currentState.AudioFormat != desiredState.AudioFormat)
-                {
-                    foreach (IEncoder step in AvailableEncoders.ForAudioFormat(desiredState, _logger))
-                    {
-                        currentState = step.NextState(currentState);
-                        _pipelineSteps.Add(step);
-                    }
-                }
-
                 foreach (int desiredAudioChannels in desiredState.AudioChannels)
                 {
                     if (currentState.AudioChannels != desiredAudioChannels)
