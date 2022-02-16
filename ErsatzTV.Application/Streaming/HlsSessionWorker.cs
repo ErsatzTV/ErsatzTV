@@ -24,6 +24,7 @@ namespace ErsatzTV.Application.Streaming
     public class HlsSessionWorker : IHlsSessionWorker
     {
         private static int _workAheadCount;
+        private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<HlsSessionWorker> _logger;
         private DateTimeOffset _lastAccess;
@@ -33,8 +34,9 @@ namespace ErsatzTV.Application.Streaming
         private DateTimeOffset _playlistStart;
         private Option<int> _targetFramerate;
 
-        public HlsSessionWorker(IServiceScopeFactory serviceScopeFactory, ILogger<HlsSessionWorker> logger)
+        public HlsSessionWorker(IHlsPlaylistFilter hlsPlaylistFilter, IServiceScopeFactory serviceScopeFactory, ILogger<HlsSessionWorker> logger)
         {
+            _hlsPlaylistFilter = hlsPlaylistFilter;
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
         }
@@ -123,7 +125,11 @@ namespace ErsatzTV.Application.Streaming
             }
         }
 
-        private async Task<bool> Transcode(string channelNumber, bool firstProcess, bool realtime, CancellationToken cancellationToken)
+        private async Task<bool> Transcode(
+            string channelNumber,
+            bool firstProcess,
+            bool realtime,
+            CancellationToken cancellationToken)
         {
             try
             {
@@ -212,7 +218,7 @@ namespace ErsatzTV.Application.Streaming
 
             return true;
         }
-        
+
         private async Task TrimAndDelete(string channelNumber, CancellationToken cancellationToken)
         {
             string playlistFileName = Path.Combine(
@@ -224,7 +230,7 @@ namespace ErsatzTV.Application.Streaming
             {
                 // trim playlist and insert discontinuity before appending with new ffmpeg process
                 string[] lines = await File.ReadAllLinesAsync(playlistFileName, cancellationToken);
-                TrimPlaylistResult trimResult = HlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
+                TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
                     _playlistStart,
                     DateTimeOffset.Now.AddMinutes(-1),
                     lines);
@@ -246,13 +252,13 @@ namespace ErsatzTV.Application.Streaming
                 var toDelete = allSegments.Filter(s => s.SequenceNumber < trimResult.Sequence).ToList();
                 // if (toDelete.Count > 0)
                 // {
-                    // _logger.LogInformation(
-                    //     "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
-                    //     toDelete.Map(s => s.SequenceNumber).Min(),
-                    //     toDelete.Map(s => s.SequenceNumber).Max(),
-                    //     trimResult.Sequence);
+                // _logger.LogInformation(
+                //     "Deleting HLS segments {Min} to {Max} (less than {StartSequence})",
+                //     toDelete.Map(s => s.SequenceNumber).Min(),
+                //     toDelete.Map(s => s.SequenceNumber).Max(),
+                //     trimResult.Sequence);
                 // }
-                    
+
                 foreach (Segment segment in toDelete)
                 {
                     File.Delete(segment.File);
@@ -261,7 +267,7 @@ namespace ErsatzTV.Application.Streaming
                 _playlistStart = trimResult.PlaylistStart;
             }
         }
-        
+
         private async Task<long> GetPtsOffset(IMediator mediator, string channelNumber, CancellationToken cancellationToken)
         {
             var directory = new DirectoryInfo(Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber));
