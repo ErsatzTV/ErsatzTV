@@ -22,6 +22,7 @@ namespace ErsatzTV.Application.Streaming.Commands
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
         private readonly IConfigElementRepository _configElementRepository;
+        private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
         private readonly ILocalFileSystem _localFileSystem;
 
         public StartFFmpegSessionHandler(
@@ -29,13 +30,15 @@ namespace ErsatzTV.Application.Streaming.Commands
             ILogger<StartFFmpegSessionHandler> logger,
             IServiceScopeFactory serviceScopeFactory,
             IFFmpegSegmenterService ffmpegSegmenterService,
-            IConfigElementRepository configElementRepository)
+            IConfigElementRepository configElementRepository,
+            IHlsPlaylistFilter hlsPlaylistFilter)
         {
             _localFileSystem = localFileSystem;
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
             _ffmpegSegmenterService = ffmpegSegmenterService;
             _configElementRepository = configElementRepository;
+            _hlsPlaylistFilter = hlsPlaylistFilter;
         }
 
         public Task<Either<BaseError, Unit>> Handle(StartFFmpegSession request, CancellationToken cancellationToken) =>
@@ -78,7 +81,7 @@ namespace ErsatzTV.Application.Streaming.Commands
             return Unit.Default;
         }
 
-        private static async Task WaitForPlaylistSegments(string playlistFileName, int initialSegmentCount, IHlsSessionWorker worker)
+        private async Task WaitForPlaylistSegments(string playlistFileName, int initialSegmentCount, IHlsSessionWorker worker)
         {
             while (!File.Exists(playlistFileName))
             {
@@ -92,7 +95,7 @@ namespace ErsatzTV.Application.Streaming.Commands
                 
                 DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
                 string[] input = await File.ReadAllLinesAsync(playlistFileName);
-                TrimPlaylistResult result = HlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
+                TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
                 segmentCount = result.SegmentCount;
             }
         }
