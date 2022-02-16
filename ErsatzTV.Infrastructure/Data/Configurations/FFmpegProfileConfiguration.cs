@@ -6,6 +6,12 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
 {
     public class FFmpegProfileConfiguration : IEntityTypeConfiguration<FFmpegProfile>
     {
-        public void Configure(EntityTypeBuilder<FFmpegProfile> builder) => builder.ToTable("FFmpegProfile");
+        public void Configure(EntityTypeBuilder<FFmpegProfile> builder)
+        {
+            builder.ToTable("FFmpegProfile");
+
+            builder.Property(p => p.NormalizeFramerate)
+                .HasDefaultValue(false);
+        }
     }
 }
