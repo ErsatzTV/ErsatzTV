@@ -49,6 +49,7 @@ public class PipelineBuilder
     {
         var allVideoStreams = _inputFiles.SelectMany(f => f.Streams)
             .Filter(s => s.Kind == StreamKind.Video)
+            .OfType<VideoStream>()
             .ToList();
 
         // -sc_threshold 0 is unsupported with mpeg2video
@@ -57,9 +58,13 @@ public class PipelineBuilder
                 ? new NoSceneDetectOutputOption(0)
                 : new NoSceneDetectOutputOption(1_000_000_000));
 
-        InputFile head = _inputFiles.First();
-        var videoStream = head.Streams.First(s => s.Kind == StreamKind.Video) as VideoStream;
-        Option<AudioStream> audioStream = head.Streams.OfType<AudioStream>().Find(s => s.Kind == StreamKind.Audio);
+        var allAudioStreams = _inputFiles.SelectMany(f => f.Streams)
+            .Filter(s => s.Kind == StreamKind.Audio)
+            .OfType<AudioStream>()
+            .ToList();
+
+        VideoStream videoStream = allVideoStreams.Head();
+        Option<AudioStream> audioStream = allAudioStreams.HeadOrNone();
         if (videoStream != null)
         {
             Option<int> initialFrameRate = Option<int>.None;
@@ -192,6 +197,11 @@ public class PipelineBuilder
                     currentState = copyCodec.NextState(currentState);
                     _pipelineSteps.Add(copyCodec);
                 }
+            }
+
+            if (videoStream.StillImage)
+            {
+                _pipelineSteps.Add(new InfiniteLoopInputOption(currentState));
             }
 
             // TODO: while?

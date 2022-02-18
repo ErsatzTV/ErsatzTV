@@ -4,17 +4,14 @@ public class DecoderMpeg4Cuvid : DecoderBase
 {
     public override string Name => "mpeg4_cuvid";
 
-    public override IList<string> InputOptions
+    public override IList<string> InputOptions(InputFile inputFile)
     {
-        get
-        {
-            IList<string> result =  base.InputOptions;
+        IList<string> result = base.InputOptions(inputFile);
 
-            result.Add("-hwaccel_output_format");
-            result.Add("cuda");
+        result.Add("-hwaccel_output_format");
+        result.Add("cuda");
 
-            return result;
-        }
+        return result;
     }
 
     protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
