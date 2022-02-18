@@ -80,17 +80,26 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoStream.Codec,
             AvailablePixelFormats.ForPixelFormat(videoStream.PixelFormat, _logger),
             new FrameSize(videoVersion.Width, videoVersion.Height),
-            videoVersion.RFrameRate);
+            videoVersion.RFrameRate,
+            videoPath != audioPath); // still image when paths are different
 
         var inputFiles = new List<InputFile>
         {
-            new(videoVersion.MediaFiles.Head().Path, new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegVideoStream })
+            new(videoPath, new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegVideoStream })
         };
+
 
         foreach (MediaStream audioStream in maybeAudioStream)
         {
-            inputFiles.Head().Streams
-                .Add(new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels));
+            var ffmpegAudioStream = new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels);
+            if (videoPath == audioPath)
+            {
+                inputFiles.Head().Streams.Add(ffmpegAudioStream);
+            }
+            else
+            {
+                inputFiles.Add(new InputFile(audioPath, new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegAudioStream }));
+            }
         }
 
         // TODO: need formats for these codecs

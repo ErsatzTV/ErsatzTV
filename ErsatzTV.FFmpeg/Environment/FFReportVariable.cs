@@ -39,7 +39,7 @@ public class FFReportVariable : IPipelineStep
     }
 
     public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> InputOptions => Array.Empty<string>();
+    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
     public IList<string> FilterOptions => Array.Empty<string>();
     public IList<string> OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState with { SaveReport = true };

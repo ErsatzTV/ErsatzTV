@@ -7,7 +7,7 @@ public class ConcatInputFormat : IPipelineStep
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
 
-    public IList<string> InputOptions => new List<string>
+    public IList<string> InputOptions(InputFile inputFile) => new List<string>
     {
         "-f", "concat",
         "-safe", "0",

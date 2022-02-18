@@ -11,11 +11,15 @@ public class StreamSeekInputOption : IPipelineStep
         _start = start;
     }
 
-    public FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Unknown;
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> InputOptions =>
-        _start == TimeSpan.Zero ? Array.Empty<string>() : new List<string> { "-ss", $"{_start:c}" };
+
+    // don't seek into a still image
+    public IList<string> InputOptions(InputFile inputFile) =>
+        _start == TimeSpan.Zero || inputFile.Streams.OfType<VideoStream>().Any(s => s.StillImage)
+            ? Array.Empty<string>()
+            : new List<string> { "-ss", $"{_start:c}" };
+
     public IList<string> FilterOptions => Array.Empty<string>();
     public IList<string> OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState with { Start = _start };

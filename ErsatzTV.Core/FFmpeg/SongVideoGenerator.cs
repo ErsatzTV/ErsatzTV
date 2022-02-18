@@ -48,7 +48,7 @@ namespace ErsatzTV.Core.FFmpeg
                 SampleAspectRatio = "1:1",
                 Streams = new List<MediaStream>
                 {
-                    new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 }
+                    new() { MediaStreamKind = MediaStreamKind.Video, Index = 0, PixelFormat = "yuv420p" }
                 }
             };
             
@@ -235,7 +235,7 @@ namespace ErsatzTV.Core.FFmpeg
                     SampleAspectRatio = "1:1",
                     Streams = new List<MediaStream>
                     {
-                        new() { MediaStreamKind = MediaStreamKind.Video, Index = 0 },
+                        new() { MediaStreamKind = MediaStreamKind.Video, Index = 0, PixelFormat = "yuv420p" },
                     },
                     MediaFiles = new List<MediaFile>
                     {
