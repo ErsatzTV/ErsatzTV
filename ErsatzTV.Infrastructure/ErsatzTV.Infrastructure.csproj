@@ -10,7 +10,7 @@
       <PackageReference Include="Blurhash.ImageSharp" Version="1.1.1" />
       <PackageReference Include="Dapper" Version="2.0.123" />
       <PackageReference Include="Lucene.Net" Version="4.8.0-beta00015" />
-      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00015" />
+      <PackageReference Include="Lucene.Net.Analysis.Common" Version="4.8.0-beta00016" />
       <PackageReference Include="Lucene.Net.QueryParser" Version="4.8.0-beta00015" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.2" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.2">
