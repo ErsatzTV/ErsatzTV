@@ -24,7 +24,7 @@ public static class CommandGenerator
         {
             foreach (IPipelineStep step in pipelineSteps)
             {
-                arguments.AddRange(step.InputOptions);
+                arguments.AddRange(step.InputOptions(inputFile));
             }
 
             arguments.AddRange(new[] { "-i", inputFile.Path });

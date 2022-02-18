@@ -23,7 +23,7 @@ public class PipelineGeneratorTests
             "/tmp/whatever.mkv",
             new List<MediaStream>
             {
-                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24"),
+                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24", false),
                 new AudioStream(1, AudioFormat.Aac, 2)
             });
 
@@ -79,7 +79,7 @@ public class PipelineGeneratorTests
             "/tmp/whatever.mkv",
             new List<MediaStream>
             {
-                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24"),
+                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24", false),
                 new AudioStream(1, AudioFormat.Aac, 2)
             });
 
