@@ -10,6 +10,8 @@ namespace ErsatzTV.Application.Channels.Commands
         int ChannelId,
         string Name,
         string Number,
+        string Group,
+        string Categories,
         int FFmpegProfileId,
         string Logo,
         string PreferredLanguageCode,

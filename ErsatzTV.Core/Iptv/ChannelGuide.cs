@@ -53,6 +53,14 @@ namespace ErsatzTV.Core.Iptv
                     xml.WriteString(channel.Name);
                     xml.WriteEndElement(); // display-name
 
+                    foreach (string category in GetCategories(channel.Categories))
+                    {
+                        xml.WriteStartElement("category");
+                        xml.WriteAttributeString("lang", "en");
+                        xml.WriteString(category);
+                        xml.WriteEndElement(); // category
+                    }
+
                     xml.WriteStartElement("icon");
                     string logo = Optional(channel.Artwork).Flatten()
                         .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
@@ -490,6 +498,13 @@ namespace ErsatzTV.Core.Iptv
                         : new ContentRating(None, first);
                 }).Flatten();
         }
+
+        private static List<string> GetCategories(string categories) =>
+            (categories ?? string.Empty).Split(',')
+            .Map(s => s.Trim())
+            .Filter(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct()
+            .ToList();
 
         private record ContentRating(Option<string> System, string Value);
     }

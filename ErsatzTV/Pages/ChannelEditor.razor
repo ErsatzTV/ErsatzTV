@@ -31,6 +31,8 @@
                 <MudCardContent>
                     <MudTextField Label="Number" @bind-Value="_model.Number" For="@(() => _model.Number)" Immediate="true"/>
                     <MudTextField Class="mt-3" Label="Name" @bind-Value="_model.Name" For="@(() => _model.Name)"/>
+                    <MudTextField Class="mt-3" Label="Group" @bind-Value="_model.Group" For="@(() => _model.Group)"/>
+                    <MudTextField Class="mt-3" Label="Categories" @bind-Value="_model.Categories" For="@(() => _model.Categories)" Placeholder="Comma-separated list of categories"/>
                     <MudSelect Class="mt-3" Label="Streaming Mode" @bind-Value="_model.StreamingMode" For="@(() => _model.StreamingMode)">
                         <MudSelectItem Value="@(StreamingMode.TransportStreamHybrid)">MPEG-TS</MudSelectItem>
                         <MudSelectItem Value="@(StreamingMode.TransportStream)">MPEG-TS (Legacy)</MudSelectItem>
@@ -133,6 +135,8 @@
                 {
                     _model.Id = channelViewModel.Id;
                     _model.Name = channelViewModel.Name;
+                    _model.Group = channelViewModel.Group;
+                    _model.Categories = channelViewModel.Categories;
                     _model.Number = channelViewModel.Number;
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
                     _model.Logo = channelViewModel.Logo;
@@ -153,6 +157,7 @@
             int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
             _model.Number = (maxNumber + 1).ToString();
             _model.Name = "New Channel";
+            _model.Group = "ErsatzTV";
             _model.FFmpegProfileId = ffmpegSettings.DefaultFFmpegProfileId;
             _model.StreamingMode = StreamingMode.TransportStreamHybrid;
         }
