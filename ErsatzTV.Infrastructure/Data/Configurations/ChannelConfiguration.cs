@@ -33,6 +33,10 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .HasForeignKey(i => i.FallbackFillerId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .IsRequired(false);
+
+            builder.Property(c => c.Group)
+                .IsRequired()
+                .HasDefaultValue("ErsatzTV");
         }
     }
 }

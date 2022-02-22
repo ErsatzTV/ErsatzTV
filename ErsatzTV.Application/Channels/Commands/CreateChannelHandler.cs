@@ -27,7 +27,7 @@ namespace ErsatzTV.Application.Channels.Commands
             CreateChannel request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, Channel> validation = await Validate(dbContext, request);
             return await validation.Apply(c => PersistChannel(dbContext, c));
         }
@@ -65,6 +65,8 @@ namespace ErsatzTV.Application.Channels.Commands
                     {
                         Name = name,
                         Number = number,
+                        Group = request.Group,
+                        Categories = request.Categories,
                         FFmpegProfileId = ffmpegProfileId,
                         StreamingMode = request.StreamingMode,
                         Artwork = artwork,

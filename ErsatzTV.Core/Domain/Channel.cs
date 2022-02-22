@@ -13,6 +13,8 @@ namespace ErsatzTV.Core.Domain
         public Guid UniqueId { get; init; }
         public string Number { get; set; }
         public string Name { get; set; }
+        public string Group { get; set; }
+        public string Categories { get; set; }
         public int FFmpegProfileId { get; set; }
         public FFmpegProfile FFmpegProfile { get; set; }
         public int? WatermarkId { get; set; }

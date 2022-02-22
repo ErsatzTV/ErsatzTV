@@ -15,6 +15,7 @@ namespace ErsatzTV.Validators
                 .WithMessage("Invalid channel number; one decimal is allowed for subchannels");
 
             RuleFor(x => x.Name).NotEmpty();
+            RuleFor(x => x.Group).NotEmpty();
             RuleFor(x => x.FFmpegProfileId).GreaterThan(0);
 
             RuleFor(x => x.PreferredLanguageCode)

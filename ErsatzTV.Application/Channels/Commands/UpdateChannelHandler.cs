@@ -28,7 +28,7 @@ namespace ErsatzTV.Application.Channels.Commands
             UpdateChannel request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, Channel> validation = await Validate(dbContext, request);
             return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
         }
@@ -37,6 +37,8 @@ namespace ErsatzTV.Application.Channels.Commands
         {
             c.Name = update.Name;
             c.Number = update.Number;
+            c.Group = update.Group;
+            c.Categories = update.Categories;
             c.FFmpegProfileId = update.FFmpegProfileId;
             c.PreferredLanguageCode = update.PreferredLanguageCode;
             c.Artwork ??= new List<Artwork>();
