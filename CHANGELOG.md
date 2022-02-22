@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add improved but experimental transcoder logic, which can be toggled on and off in `Settings`
 - Fix `HLS Segmenter` bug when source video packet contains no duration (`N/A`)
 
+### Added
+- Add configurable channel group (M3U) and categories (XMLTV)
+
 ### Changed
 - Disable framerate normalization by default and on all ffmpeg profiles
   - If framerate normalization is desired (not typically needed), it can be re-enabled manually

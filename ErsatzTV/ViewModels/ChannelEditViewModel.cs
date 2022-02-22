@@ -7,6 +7,8 @@ namespace ErsatzTV.ViewModels
     {
         public int Id { get; set; }
         public string Name { get; set; }
+        public string Group { get; set; }
+        public string Categories { get; set; }
         public string Number { get; set; }
         public int FFmpegProfileId { get; set; }
         public string PreferredLanguageCode { get; set; }
@@ -20,6 +22,8 @@ namespace ErsatzTV.ViewModels
                 Id,
                 Name,
                 Number,
+                Group,
+                Categories,
                 FFmpegProfileId,
                 Logo,
                 PreferredLanguageCode,
@@ -31,6 +35,8 @@ namespace ErsatzTV.ViewModels
             new(
                 Name,
                 Number,
+                Group,
+                Categories,
                 FFmpegProfileId,
                 Logo,
                 PreferredLanguageCode,

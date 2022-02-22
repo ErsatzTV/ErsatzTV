@@ -11,6 +11,8 @@ namespace ErsatzTV.Application.Channels
                 channel.Id,
                 channel.Number,
                 channel.Name,
+                channel.Group,
+                channel.Categories,
                 channel.FFmpegProfileId,
                 GetLogo(channel),
                 channel.PreferredLanguageCode,
