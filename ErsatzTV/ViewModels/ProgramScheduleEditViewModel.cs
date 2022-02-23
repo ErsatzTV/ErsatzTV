@@ -9,11 +9,12 @@ namespace ErsatzTV.ViewModels
         public string Name { get; set; }
         public bool KeepMultiPartEpisodesTogether { get; set; }
         public bool TreatCollectionsAsShows { get; set; }
+        public bool ShuffleScheduleItems { get; set; }
 
         public UpdateProgramSchedule ToUpdate() =>
-            new(Id, Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows);
+            new(Id, Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows, ShuffleScheduleItems);
 
         public CreateProgramSchedule ToCreate() =>
-            new(Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows);
+            new(Name, KeepMultiPartEpisodesTogether, TreatCollectionsAsShows, ShuffleScheduleItems);
     }
 }

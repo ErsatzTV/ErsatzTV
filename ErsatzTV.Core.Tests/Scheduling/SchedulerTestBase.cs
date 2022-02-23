@@ -10,8 +10,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
 {
     public abstract class SchedulerTestBase
     {
-        protected static PlayoutBuilderState StartState => new(
-            0,
+        protected static PlayoutBuilderState StartState(IScheduleItemsEnumerator scheduleItemsEnumerator) => new(
+            scheduleItemsEnumerator,
             Prelude.None,
             Prelude.None,
             false,
@@ -24,7 +24,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
             StartTime = null
         };
 
-        protected static DateTimeOffset HardStop => StartState.CurrentTime.AddHours(6);
+        protected static DateTimeOffset HardStop(IScheduleItemsEnumerator scheduleItemsEnumerator) =>
+            StartState(scheduleItemsEnumerator).CurrentTime.AddHours(6);
 
         protected static Dictionary<CollectionKey, IMediaCollectionEnumerator> CollectionEnumerators(
             ProgramScheduleItem scheduleItem, IMediaCollectionEnumerator enumerator) =>

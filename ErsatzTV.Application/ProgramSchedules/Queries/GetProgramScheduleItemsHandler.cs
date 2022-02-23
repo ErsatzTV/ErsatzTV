@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
+using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,11 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
             GetProgramScheduleItems request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+            Option<ProgramSchedule> maybeProgramSchedule =
+                await dbContext.ProgramSchedules.SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id);
+
             return await dbContext.ProgramScheduleItems
                 .Filter(psi => psi.ProgramScheduleId == request.Id)
                 .Include(i => i.Collection)
@@ -51,7 +56,29 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
                 .Include(i => i.TailFiller)
                 .Include(i => i.FallbackFiller)
                 .ToListAsync(cancellationToken)
-                .Map(programScheduleItems => programScheduleItems.Map(ProjectToViewModel).ToList());
+                .Map(
+                    programScheduleItems => programScheduleItems.Map(ProjectToViewModel)
+                        .Map(psi => EnforceProperties(maybeProgramSchedule, psi)).ToList());
+        }
+
+        // shuffled schedule items supports a limited set of properly values
+        private ProgramScheduleItemViewModel EnforceProperties(
+            Option<ProgramSchedule> maybeProgramSchedule,
+            ProgramScheduleItemViewModel item)
+        {
+            foreach (ProgramSchedule programSchedule in maybeProgramSchedule)
+            {
+                if (programSchedule.ShuffleScheduleItems)
+                {
+                    item = item with { StartType = StartType.Dynamic };
+                    if (item.PlayoutMode == PlayoutMode.Flood)
+                    {
+                        item = item with { PlayoutMode = PlayoutMode.One };
+                    }
+                }
+            }
+
+            return item;
         }
     }
 }

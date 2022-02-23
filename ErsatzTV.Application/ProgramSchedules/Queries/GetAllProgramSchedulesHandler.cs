@@ -25,7 +25,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
                         ps.Id,
                         ps.Name,
                         ps.KeepMultiPartEpisodesTogether,
-                        ps.TreatCollectionsAsShows))
+                        ps.TreatCollectionsAsShows,
+                        ps.ShuffleScheduleItems))
                 .ToListAsync(cancellationToken);
         }
     }

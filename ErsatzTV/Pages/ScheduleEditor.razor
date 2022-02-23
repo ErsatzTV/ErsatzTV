@@ -31,6 +31,13 @@
                                          For="@(() => _model.TreatCollectionsAsShows)"/>
                         </MudTooltip>
                     </MudElement>
+                    <MudElement HtmlTag="div" Class="mt-3">
+                        <MudTooltip Text="Note: this disables fixed start times and flood mode">
+                            <MudCheckBox Label="Shuffle Schedule Items"
+                                         @bind-Checked="@_model.ShuffleScheduleItems"
+                                         For="@(() => _model.ShuffleScheduleItems)"/>
+                        </MudTooltip>
+                    </MudElement>
                 </MudCardContent>
                 <MudCardActions>
                     <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">
@@ -61,6 +68,7 @@
                 {
                     _model.Id = viewModel.Id;
                     _model.Name = viewModel.Name;
+                    _model.ShuffleScheduleItems = viewModel.ShuffleScheduleItems;
                     _model.KeepMultiPartEpisodesTogether = viewModel.KeepMultiPartEpisodesTogether;
                     _model.TreatCollectionsAsShows = viewModel.TreatCollectionsAsShows;
                 },

@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20220223000405_Add_ProgramScheduleShuffleScheduleItems")]
+    partial class Add_ProgramScheduleShuffleScheduleItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.2");
@@ -2880,36 +2882,28 @@ namespace ErsatzTV.Infrastructure.Migrations
                             b1.Property<int>("NextGuideGroup")
                                 .HasColumnType("INTEGER");
 
+                            b1.Property<int>("NextScheduleItemId")
+                                .HasColumnType("INTEGER");
+
                             b1.Property<DateTime>("NextStart")
                                 .HasColumnType("TEXT");
 
                             b1.HasKey("PlayoutId");
 
+                            b1.HasIndex("NextScheduleItemId");
+
                             b1.ToTable("PlayoutAnchor", (string)null);
+
+                            b1.HasOne("ErsatzTV.Core.Domain.ProgramScheduleItem", "NextScheduleItem")
+                                .WithMany()
+                                .HasForeignKey("NextScheduleItemId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
 
                             b1.WithOwner()
                                 .HasForeignKey("PlayoutId");
 
-                            b1.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "ScheduleItemsEnumeratorState", b2 =>
-                                {
-                                    b2.Property<int>("PlayoutAnchorPlayoutId")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.Property<int>("Index")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.Property<int>("Seed")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.HasKey("PlayoutAnchorPlayoutId");
-
-                                    b2.ToTable("ScheduleItemsEnumeratorState", (string)null);
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("PlayoutAnchorPlayoutId");
-                                });
-
-                            b1.Navigation("ScheduleItemsEnumeratorState");
+                            b1.Navigation("NextScheduleItem");
                         });
 
                     b.Navigation("Anchor");

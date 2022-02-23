@@ -97,10 +97,11 @@ namespace ErsatzTV.Core.Scheduling
 
                 nextState = nextState with
                 {
-                    ScheduleItemIndex = nextState.ScheduleItemIndex + 1,
                     MultipleRemaining = None,
                     NextGuideGroup = nextState.DecrementGuideGroup
                 };
+
+                nextState.ScheduleItemsEnumerator.MoveNext();
             }
             
             DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
