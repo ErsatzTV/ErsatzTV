@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Add configurable channel group (M3U) and categories (XMLTV)
+- Add `Shuffle Schedule Items` option to schedule configuration
+  - When this is enabled, schedule items will be shuffled rather than looped in order
+  - **To support this, all playouts will be rebuilt (one time) after upgrading to this version**
 
 ### Changed
 - Disable framerate normalization by default and on all ffmpeg profiles

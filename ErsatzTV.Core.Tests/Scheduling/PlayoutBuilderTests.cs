@@ -624,8 +624,11 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Anchor = new PlayoutAnchor
                 {
                     NextStart = HoursAfterMidnight(9).UtcDateTime,
-                    NextScheduleItem = items[0],
-                    NextScheduleItemId = 1,
+                    ScheduleItemsEnumeratorState = new CollectionEnumeratorState
+                    {
+                        Index = 0,
+                        Seed = 1
+                    },
                     InFlood = true
                 }
             };
@@ -918,8 +921,11 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Anchor = new PlayoutAnchor
                 {
                     NextStart = HoursAfterMidnight(1).UtcDateTime,
-                    NextScheduleItem = items[0],
-                    NextScheduleItemId = 1,
+                    ScheduleItemsEnumeratorState = new CollectionEnumeratorState
+                    {
+                        Index = 0,
+                        Seed = 1
+                    },
                     MultipleRemaining = 2
                 }
             };
@@ -951,7 +957,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4));
             result.Items[3].MediaItemId.Should().Be(2);
 
-            result.Anchor.NextScheduleItem.Should().Be(items[1]);
+            result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(1);
             result.Anchor.MultipleRemaining.Should().Be(1);
         }
 
@@ -1048,7 +1054,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             result.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4));
             result.Items[4].MediaItemId.Should().Be(5);
 
-            result.Anchor.NextScheduleItem.Should().Be(items[0]);
+            result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(0);
             result.Anchor.MultipleRemaining.Should().BeNull();
         }
 
@@ -1116,8 +1122,11 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 Anchor = new PlayoutAnchor
                 {
                     NextStart = HoursAfterMidnight(1).UtcDateTime,
-                    NextScheduleItem = items[0],
-                    NextScheduleItemId = 1,
+                    ScheduleItemsEnumeratorState = new CollectionEnumeratorState
+                    {
+                        Index = 0,
+                        Seed = 1
+                    },
                     DurationFinish = HoursAfterMidnight(3).UtcDateTime
                 }
             };
@@ -1149,7 +1158,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             result.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(4));
             result.Items[3].MediaItemId.Should().Be(2);
 
-            result.Anchor.NextScheduleItem.Should().Be(items[1]);
+            result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(1);
             result.Anchor.DurationFinish.Should().Be(HoursAfterMidnight(6).UtcDateTime);
         }
         
@@ -1284,7 +1293,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             result.Items[11].StartOffset.TimeOfDay.Should().Be(new TimeSpan(5, 55, 0));
             result.Items[11].MediaItemId.Should().Be(3);
             
-            result.Anchor.NextScheduleItem.Should().Be(items[0]);
+            result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(0);
             result.Anchor.DurationFinish.Should().BeNull();
         }
         
@@ -1361,7 +1370,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             result.Items[5].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(5));
             result.Items[5].MediaItemId.Should().Be(4);
 
-            result.Anchor.NextScheduleItem.Should().Be(items[0]);
+            result.Anchor.ScheduleItemsEnumeratorState.Index.Should().Be(0);
             result.Anchor.DurationFinish.Should().BeNull();
         }
 

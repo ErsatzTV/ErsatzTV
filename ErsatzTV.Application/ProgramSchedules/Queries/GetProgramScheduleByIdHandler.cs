@@ -21,7 +21,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Queries
             GetProgramScheduleById request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             return await dbContext.ProgramSchedules
                 .SelectOneAsync(ps => ps.Id, ps => ps.Id == request.Id)
                 .MapT(ProjectToViewModel);

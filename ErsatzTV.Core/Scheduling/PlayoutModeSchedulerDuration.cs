@@ -122,9 +122,10 @@ namespace ErsatzTV.Core.Scheduling
 
                     nextState = nextState with
                     {
-                        DurationFinish = None,
-                        ScheduleItemIndex = nextState.ScheduleItemIndex + 1
+                        DurationFinish = None
                     };
+
+                    nextState.ScheduleItemsEnumerator.MoveNext();
                 }
             }
 
@@ -133,9 +134,10 @@ namespace ErsatzTV.Core.Scheduling
             {
                 nextState = nextState with
                 {
-                    DurationFinish = None,
-                    ScheduleItemIndex = nextState.ScheduleItemIndex + 1
+                    DurationFinish = None
                 };
+
+                nextState.ScheduleItemsEnumerator.MoveNext();
             }
 
             if (playoutItems.Select(pi => pi.GuideGroup).Distinct().Count() != 1)

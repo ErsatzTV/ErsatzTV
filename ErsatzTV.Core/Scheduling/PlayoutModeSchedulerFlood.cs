@@ -12,12 +12,9 @@ namespace ErsatzTV.Core.Scheduling
 {
     public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramScheduleItemFlood>
     {
-        private readonly List<ProgramScheduleItem> _sortedScheduleItems;
-
-        public PlayoutModeSchedulerFlood(List<ProgramScheduleItem> sortedScheduleItems, ILogger logger)
+        public PlayoutModeSchedulerFlood(ILogger logger)
             : base(logger)
         {
-            _sortedScheduleItems = sortedScheduleItems;
         }
 
         public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
@@ -35,8 +32,7 @@ namespace ErsatzTV.Core.Scheduling
             IMediaCollectionEnumerator contentEnumerator =
                 collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
 
-            ProgramScheduleItem peekScheduleItem =
-                _sortedScheduleItems[(nextState.ScheduleItemIndex + 1) % _sortedScheduleItems.Count];
+            ProgramScheduleItem peekScheduleItem = nextScheduleItem;
 
             while (contentEnumerator.Current.IsSome && nextState.CurrentTime < hardStop && willFinishInTime)
             {
@@ -81,7 +77,7 @@ namespace ErsatzTV.Core.Scheduling
                 {
                     playoutItems.AddRange(
                         AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
-                    // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+                    LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
                     DateTimeOffset actualEndTime = playoutItems.Max(p => p.FinishOffset);
                     if (Math.Abs((itemEndTimeWithFiller - actualEndTime).TotalSeconds) > 1)
@@ -105,19 +101,19 @@ namespace ErsatzTV.Core.Scheduling
                 }
             }
 
-            // _logger.LogDebug(
-            //     "Advancing to next schedule item after playout mode {PlayoutMode}",
-            //     "Flood");
+            _logger.LogDebug(
+                "Advancing to next schedule item after playout mode {PlayoutMode}",
+                "Flood");
 
             nextState = nextState with
             {
-                ScheduleItemIndex = nextState.ScheduleItemIndex + 1,
                 InFlood = nextState.CurrentTime >= hardStop,
                 NextGuideGroup = nextState.DecrementGuideGroup
             };
-            
-            ProgramScheduleItem peekItem =
-                _sortedScheduleItems[nextState.ScheduleItemIndex % _sortedScheduleItems.Count];
+
+            nextState.ScheduleItemsEnumerator.MoveNext();
+
+            ProgramScheduleItem peekItem = nextScheduleItem;
             DateTimeOffset peekItemStart = GetStartTimeAfter(nextState, peekItem);
 
             if (scheduleItem.TailFiller != null)

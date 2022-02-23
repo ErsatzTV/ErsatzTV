@@ -6,10 +6,7 @@ namespace ErsatzTV.Core.Domain
 {
     public class PlayoutAnchor
     {
-        public int NextScheduleItemId { get; set; }
-
-        public ProgramScheduleItem NextScheduleItem { get; set; }
-
+        public CollectionEnumeratorState ScheduleItemsEnumeratorState { get; set; }
         public DateTime NextStart { get; set; }
         public int? MultipleRemaining { get; set; }
         public DateTime? DurationFinish { get; set; }

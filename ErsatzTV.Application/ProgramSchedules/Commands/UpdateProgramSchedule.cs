@@ -10,5 +10,6 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
         int ProgramScheduleId,
         string Name,
         bool KeepMultiPartEpisodesTogether,
-        bool TreatCollectionsAsShows) : IRequest<Either<BaseError, UpdateProgramScheduleResult>>;
+        bool TreatCollectionsAsShows,
+        bool ShuffleScheduleItems) : IRequest<Either<BaseError, UpdateProgramScheduleResult>>;
 }
