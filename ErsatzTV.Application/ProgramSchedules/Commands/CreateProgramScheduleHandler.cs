@@ -50,7 +50,8 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
                     {
                         Name = name,
                         KeepMultiPartEpisodesTogether = keepMultiPartEpisodesTogether,
-                        TreatCollectionsAsShows = keepMultiPartEpisodesTogether && request.TreatCollectionsAsShows
+                        TreatCollectionsAsShows = keepMultiPartEpisodesTogether && request.TreatCollectionsAsShows,
+                        ShuffleScheduleItems = request.ShuffleScheduleItems
                     };
                 });
 

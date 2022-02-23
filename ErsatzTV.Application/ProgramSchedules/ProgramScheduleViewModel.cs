@@ -4,5 +4,6 @@
         int Id,
         string Name,
         bool KeepMultiPartEpisodesTogether,
-        bool TreatCollectionsAsShows);
+        bool TreatCollectionsAsShows,
+        bool ShuffleScheduleItems);
 }

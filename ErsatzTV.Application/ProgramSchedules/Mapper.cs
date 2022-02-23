@@ -10,7 +10,8 @@ namespace ErsatzTV.Application.ProgramSchedules
                 programSchedule.Id,
                 programSchedule.Name,
                 programSchedule.KeepMultiPartEpisodesTogether,
-                programSchedule.TreatCollectionsAsShows);
+                programSchedule.TreatCollectionsAsShows,
+                programSchedule.ShuffleScheduleItems);
 
         internal static ProgramScheduleItemViewModel ProjectToViewModel(ProgramScheduleItem programScheduleItem) =>
             programScheduleItem switch

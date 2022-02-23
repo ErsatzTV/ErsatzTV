@@ -59,13 +59,13 @@
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
                                OnClick="@(_ => MoveItemUp(context))"
-                               Disabled="@(_schedule.Items.All(x => x.Index >= context.Index))">
+                               Disabled="@(_schedule.ShuffleScheduleItems || _schedule.Items.All(x => x.Index >= context.Index))">
                 </MudIconButton>
             </MudTd>
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
                                OnClick="@(_ => MoveItemDown(context))"
-                               Disabled="@(_schedule.Items.All(x => x.Index <= context.Index))">
+                               Disabled="@(_schedule.ShuffleScheduleItems || _schedule.Items.All(x => x.Index <= context.Index))">
                 </MudIconButton>
             </MudTd>
             <MudTd>
@@ -91,9 +91,10 @@
                     <MudCard>
                         <MudCardContent>
                             <MudSelect Label="Start Type" @bind-Value="_selectedItem.StartType" For="@(() => _selectedItem.StartType)">
-                                @foreach (StartType startType in Enum.GetValues<StartType>())
+                                <MudSelectItem Value="StartType.Dynamic">Dynamic</MudSelectItem>
+                                @if (!_schedule.ShuffleScheduleItems)
                                 {
-                                    <MudSelectItem Value="@startType">@startType</MudSelectItem>
+                                    <MudSelectItem Value="StartType.Fixed">Fixed</MudSelectItem>
                                 }
                             </MudSelect>
                             <MudTimePicker Class="mt-3" Label="Start Time" @bind-Time="@_selectedItem.StartTime" For="@(() => _selectedItem.StartTime)" Disabled="@(_selectedItem.StartType == StartType.Dynamic)"/>
@@ -197,10 +198,13 @@
                                 }
                             </MudSelect>
                             <MudSelect Class="mt-3" Label="Playout Mode" @bind-Value="@_selectedItem.PlayoutMode" For="@(() => _selectedItem.PlayoutMode)">
-                                @foreach (PlayoutMode playoutMode in Enum.GetValues<PlayoutMode>())
+                                @if (!_schedule.ShuffleScheduleItems)
                                 {
-                                    <MudSelectItem Value="@playoutMode">@playoutMode</MudSelectItem>
+                                    <MudSelectItem Value="PlayoutMode.Flood">Flood</MudSelectItem>
                                 }
+                                <MudSelectItem Value="PlayoutMode.One">One</MudSelectItem>
+                                <MudSelectItem Value="PlayoutMode.Multiple">Multiple</MudSelectItem>
+                                <MudSelectItem Value="PlayoutMode.Duration">Duration</MudSelectItem>
                             </MudSelect>
                             <MudTextField Class="mt-3" Label="Multiple Count" @bind-Value="@_selectedItem.MultipleCount" For="@(() => _selectedItem.MultipleCount)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Multiple)"/>
                             <MudTimePicker Class="mt-3" Label="Playout Duration" @bind-Time="@_selectedItem.PlayoutDuration" For="@(() => _selectedItem.PlayoutDuration)" Disabled="@(_selectedItem.PlayoutMode != PlayoutMode.Duration)"/>
@@ -315,8 +319,13 @@
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         string name = string.Empty;
+        var shuffleScheduleItems = false;
         Option<ProgramScheduleViewModel> maybeSchedule = await _mediator.Send(new GetProgramScheduleById(Id));
-        maybeSchedule.IfSome(vm => name = vm.Name);
+        foreach (ProgramScheduleViewModel schedule in maybeSchedule)
+        {
+            name = schedule.Name;
+            shuffleScheduleItems = schedule.ShuffleScheduleItems;
+        }
 
         Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await _mediator.Send(new GetProgramScheduleItems(Id));
         foreach (IEnumerable<ProgramScheduleItemViewModel> items in maybeResults)
@@ -324,6 +333,7 @@
             _schedule = new ProgramScheduleItemsEditViewModel
             {
                 Name = name,
+                ShuffleScheduleItems = shuffleScheduleItems,
                 Items = items.Map(ProjectToEditViewModel).ToList()
             };
 
