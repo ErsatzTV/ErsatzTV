@@ -67,10 +67,10 @@ namespace ErsatzTV.Core.Scheduling
 
                 PlayoutBuilderState nextState = playoutBuilderState with
                 {
-                    CurrentTime = itemEndTimeWithFiller,
-                    ScheduleItemIndex = playoutBuilderState.ScheduleItemIndex + 1
+                    CurrentTime = itemEndTimeWithFiller
                 };
 
+                nextState.ScheduleItemsEnumerator.MoveNext();
                 contentEnumerator.MoveNext();
 
                 // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);

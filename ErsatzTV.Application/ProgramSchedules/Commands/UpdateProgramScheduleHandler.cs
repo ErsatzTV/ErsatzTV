@@ -31,7 +31,7 @@ namespace ErsatzTV.Application.ProgramSchedules.Commands
             UpdateProgramSchedule request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
             return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));

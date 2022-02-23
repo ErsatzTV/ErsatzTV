@@ -57,16 +57,22 @@
                 </MudText>
             </MudTd>
             <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
-                               OnClick="@(_ => MoveItemUp(context))"
-                               Disabled="@(_schedule.ShuffleScheduleItems || _schedule.Items.All(x => x.Index >= context.Index))">
-                </MudIconButton>
+                @if (!_schedule.ShuffleScheduleItems)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward"
+                                   OnClick="@(_ => MoveItemUp(context))"
+                                   Disabled="@(_schedule.ShuffleScheduleItems || _schedule.Items.All(x => x.Index >= context.Index))">
+                    </MudIconButton>
+                }
             </MudTd>
             <MudTd>
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
-                               OnClick="@(_ => MoveItemDown(context))"
-                               Disabled="@(_schedule.ShuffleScheduleItems || _schedule.Items.All(x => x.Index <= context.Index))">
-                </MudIconButton>
+                @if (!_schedule.ShuffleScheduleItems)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward"
+                                   OnClick="@(_ => MoveItemDown(context))"
+                                   Disabled="@(_schedule.ShuffleScheduleItems || _schedule.Items.All(x => x.Index <= context.Index))">
+                    </MudIconButton>
+                }
             </MudTd>
             <MudTd>
                 <MudIconButton Icon="@Icons.Material.Filled.Delete"

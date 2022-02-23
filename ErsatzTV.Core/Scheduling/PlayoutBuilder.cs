@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt;
@@ -105,6 +104,12 @@ namespace ErsatzTV.Core.Scheduling
             }
 
             var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
+            CollectionEnumeratorState scheduleItemsEnumeratorState =
+                playout.Anchor?.ScheduleItemsEnumeratorState ?? new CollectionEnumeratorState
+                    { Seed = Random.Next(), Index = 0 };
+            IScheduleItemsEnumerator scheduleItemsEnumerator = playout.ProgramSchedule.ShuffleScheduleItems
+                ? new ShuffledScheduleItemsEnumerator(playout.ProgramSchedule.Items, scheduleItemsEnumeratorState)
+                : new OrderedScheduleItemsEnumerator(playout.ProgramSchedule.Items, scheduleItemsEnumeratorState);
             var collectionEnumerators = new Dictionary<CollectionKey, IMediaCollectionEnumerator>();
             foreach ((CollectionKey collectionKey, List<MediaItem> mediaItems) in collectionMediaItems)
             {
@@ -119,7 +124,7 @@ namespace ErsatzTV.Core.Scheduling
             }
 
             // find start anchor
-            PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, sortedScheduleItems);
+            PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, scheduleItemsEnumerator);
 
             // start at the previously-decided time
             DateTimeOffset currentTime = startAnchor.NextStartOffset.ToLocalTime();
@@ -142,7 +147,7 @@ namespace ErsatzTV.Core.Scheduling
             // start with the previously-decided schedule item
             // start with the previous multiple/duration states
             var playoutBuilderState = new PlayoutBuilderState(
-                sortedScheduleItems.IndexOf(startAnchor.NextScheduleItem),
+                scheduleItemsEnumerator,
                 Optional(startAnchor.MultipleRemaining),
                 startAnchor.DurationFinishOffset,
                 startAnchor.InFlood,
@@ -153,17 +158,15 @@ namespace ErsatzTV.Core.Scheduling
             var schedulerOne = new PlayoutModeSchedulerOne(_logger);
             var schedulerMultiple = new PlayoutModeSchedulerMultiple(collectionMediaItems, _logger);
             var schedulerDuration = new PlayoutModeSchedulerDuration(_logger);
-            var schedulerFlood = new PlayoutModeSchedulerFlood(sortedScheduleItems, _logger);
+            var schedulerFlood = new PlayoutModeSchedulerFlood(_logger);
 
             // loop until we're done filling the desired amount of time
             while (playoutBuilderState.CurrentTime < playoutFinish)
             {
                 // get the schedule item out of the sorted list
-                ProgramScheduleItem scheduleItem =
-                    sortedScheduleItems[playoutBuilderState.ScheduleItemIndex % sortedScheduleItems.Count];
+                ProgramScheduleItem scheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Current;
 
-                ProgramScheduleItem nextScheduleItem =
-                    sortedScheduleItems[(playoutBuilderState.ScheduleItemIndex + 1) % sortedScheduleItems.Count];
+                ProgramScheduleItem nextScheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Peek(1);
 
                 Tuple<PlayoutBuilderState, List<PlayoutItem>> result = scheduleItem switch
                 {
@@ -205,8 +208,7 @@ namespace ErsatzTV.Core.Scheduling
             }
 
             // once more to get playout anchor
-            ProgramScheduleItem anchorScheduleItem =
-                sortedScheduleItems[playoutBuilderState.ScheduleItemIndex % sortedScheduleItems.Count];
+            ProgramScheduleItem anchorScheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Current;
 
             // build program schedule anchors
             playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
@@ -226,8 +228,7 @@ namespace ErsatzTV.Core.Scheduling
 
             playout.Anchor = new PlayoutAnchor
             {
-                NextScheduleItem = anchorScheduleItem,
-                NextScheduleItemId = anchorScheduleItem.Id,
+                ScheduleItemsEnumeratorState = playoutBuilderState.ScheduleItemsEnumerator.State,
                 NextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(playoutBuilderState, anchorScheduleItem)
                     .UtcDateTime,
                 MultipleRemaining = playoutBuilderState.MultipleRemaining.IsSome
@@ -320,18 +321,17 @@ namespace ErsatzTV.Core.Scheduling
         private static PlayoutAnchor FindStartAnchor(
             Playout playout,
             DateTimeOffset start,
-            IReadOnlyCollection<ProgramScheduleItem> sortedScheduleItems) =>
+            IScheduleItemsEnumerator enumerator) =>
             Optional(playout.Anchor).IfNone(
                 () =>
                 {
-                    ProgramScheduleItem schedule = sortedScheduleItems.Head();
+                    ProgramScheduleItem schedule = enumerator.Current;
                     switch (schedule.StartType)
                     {
                         case StartType.Fixed:
                             return new PlayoutAnchor
                             {
-                                NextScheduleItem = schedule,
-                                NextScheduleItemId = schedule.Id,
+                                ScheduleItemsEnumeratorState = enumerator.State,
                                 NextStart = (start - start.TimeOfDay).UtcDateTime +
                                             schedule.StartTime.GetValueOrDefault()
                             };
@@ -339,8 +339,7 @@ namespace ErsatzTV.Core.Scheduling
                         default:
                             return new PlayoutAnchor
                             {
-                                NextScheduleItem = schedule,
-                                NextScheduleItemId = schedule.Id,
+                                ScheduleItemsEnumeratorState = enumerator.State,
                                 NextStart = (start - start.TimeOfDay).UtcDateTime
                             };
                     }

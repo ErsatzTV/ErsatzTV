@@ -16,7 +16,9 @@ namespace ErsatzTV.Infrastructure.Data.Configurations
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.OwnsOne(p => p.Anchor)
-                .ToTable("PlayoutAnchor");
+                .ToTable("PlayoutAnchor")
+                .OwnsOne(a => a.ScheduleItemsEnumeratorState)
+                .ToTable("ScheduleItemsEnumeratorState");
 
             builder.HasMany(p => p.ProgramScheduleAnchors)
                 .WithOne(a => a.Playout)

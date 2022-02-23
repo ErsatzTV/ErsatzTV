@@ -12,12 +12,9 @@ namespace ErsatzTV.Core.Scheduling
 {
     public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramScheduleItemFlood>
     {
-        private readonly List<ProgramScheduleItem> _sortedScheduleItems;
-
-        public PlayoutModeSchedulerFlood(List<ProgramScheduleItem> sortedScheduleItems, ILogger logger)
+        public PlayoutModeSchedulerFlood(ILogger logger)
             : base(logger)
         {
-            _sortedScheduleItems = sortedScheduleItems;
         }
 
         public override Tuple<PlayoutBuilderState, List<PlayoutItem>> Schedule(
@@ -35,8 +32,7 @@ namespace ErsatzTV.Core.Scheduling
             IMediaCollectionEnumerator contentEnumerator =
                 collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
 
-            ProgramScheduleItem peekScheduleItem =
-                _sortedScheduleItems[(nextState.ScheduleItemIndex + 1) % _sortedScheduleItems.Count];
+            ProgramScheduleItem peekScheduleItem = nextState.ScheduleItemsEnumerator.Peek(1);
 
             while (contentEnumerator.Current.IsSome && nextState.CurrentTime < hardStop && willFinishInTime)
             {
@@ -111,13 +107,13 @@ namespace ErsatzTV.Core.Scheduling
 
             nextState = nextState with
             {
-                ScheduleItemIndex = nextState.ScheduleItemIndex + 1,
                 InFlood = nextState.CurrentTime >= hardStop,
                 NextGuideGroup = nextState.DecrementGuideGroup
             };
-            
-            ProgramScheduleItem peekItem =
-                _sortedScheduleItems[nextState.ScheduleItemIndex % _sortedScheduleItems.Count];
+
+            nextState.ScheduleItemsEnumerator.MoveNext();
+
+            ProgramScheduleItem peekItem = nextState.ScheduleItemsEnumerator.Peek(1);
             DateTimeOffset peekItemStart = GetStartTimeAfter(nextState, peekItem);
 
             if (scheduleItem.TailFiller != null)
