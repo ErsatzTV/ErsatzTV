@@ -32,7 +32,7 @@ namespace ErsatzTV.Core.Scheduling
             IMediaCollectionEnumerator contentEnumerator =
                 collectionEnumerators[CollectionKey.ForScheduleItem(scheduleItem)];
 
-            ProgramScheduleItem peekScheduleItem = nextState.ScheduleItemsEnumerator.Peek(1);
+            ProgramScheduleItem peekScheduleItem = nextScheduleItem;
 
             while (contentEnumerator.Current.IsSome && nextState.CurrentTime < hardStop && willFinishInTime)
             {
@@ -77,7 +77,7 @@ namespace ErsatzTV.Core.Scheduling
                 {
                     playoutItems.AddRange(
                         AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
-                    // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+                    LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
                     DateTimeOffset actualEndTime = playoutItems.Max(p => p.FinishOffset);
                     if (Math.Abs((itemEndTimeWithFiller - actualEndTime).TotalSeconds) > 1)
@@ -101,9 +101,9 @@ namespace ErsatzTV.Core.Scheduling
                 }
             }
 
-            // _logger.LogDebug(
-            //     "Advancing to next schedule item after playout mode {PlayoutMode}",
-            //     "Flood");
+            _logger.LogDebug(
+                "Advancing to next schedule item after playout mode {PlayoutMode}",
+                "Flood");
 
             nextState = nextState with
             {
@@ -113,7 +113,7 @@ namespace ErsatzTV.Core.Scheduling
 
             nextState.ScheduleItemsEnumerator.MoveNext();
 
-            ProgramScheduleItem peekItem = nextState.ScheduleItemsEnumerator.Peek(1);
+            ProgramScheduleItem peekItem = nextScheduleItem;
             DateTimeOffset peekItemStart = GetStartTimeAfter(nextState, peekItem);
 
             if (scheduleItem.TailFiller != null)
