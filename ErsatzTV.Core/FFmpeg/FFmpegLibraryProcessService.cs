@@ -83,24 +83,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoVersion.RFrameRate,
             videoPath != audioPath); // still image when paths are different
 
-        var inputFiles = new List<InputFile>
-        {
-            new(videoPath, new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegVideoStream })
-        };
+        var videoInputFile = new VideoInputFile(videoPath, new List<VideoStream> { ffmpegVideoStream });
 
-
-        foreach (MediaStream audioStream in maybeAudioStream)
-        {
-            var ffmpegAudioStream = new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels);
-            if (videoPath == audioPath)
+        Option<AudioInputFile> audioInputFile = maybeAudioStream.Map(
+            audioStream =>
             {
-                inputFiles.Head().Streams.Add(ffmpegAudioStream);
-            }
-            else
-            {
-                inputFiles.Add(new InputFile(audioPath, new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegAudioStream }));
-            }
-        }
+                var ffmpegAudioStream = new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels);
+                return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream });
+            });
 
         // TODO: need formats for these codecs
         string videoFormat = playbackSettings.VideoCodec switch
@@ -170,7 +160,11 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
-        return GetProcess(ffmpegPath, inputFiles, desiredState);
+        var videoInputFiles = new List<VideoInputFile> { videoInputFile };
+        var audioInputFiles = new List<AudioInputFile>();
+        audioInputFiles.AddRange(audioInputFile);
+
+        return GetProcess(ffmpegPath, videoInputFiles, audioInputFiles, None, desiredState);
     }
 
     public Task<Process> ForError(
@@ -187,12 +181,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
         var desiredState = FrameState.Concat(saveReports, channel.Name, resolution);
 
-        var inputFiles = new List<InputFile>
-        {
-            new ConcatInputFile($"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}", resolution)
-        };
+        var concatInputFile = new ConcatInputFile(
+            $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
+            resolution);
 
-        return GetProcess(ffmpegPath, inputFiles, desiredState);
+        return GetProcess(
+            ffmpegPath,
+            System.Array.Empty<VideoInputFile>(),
+            System.Array.Empty<AudioInputFile>(),
+            concatInputFile,
+            desiredState);
     }
 
     public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
@@ -231,9 +229,19 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             verticalMarginPercent,
             watermarkWidthPercent);
 
-    private Process GetProcess(string ffmpegPath, IList<InputFile> inputFiles, FrameState desiredState)
+    private Process GetProcess(
+        string ffmpegPath,
+        IList<VideoInputFile> videoInputFiles,
+        IList<AudioInputFile> audioInputFiles,
+        Option<ConcatInputFile> concatInputFile,
+        FrameState desiredState)
     {
-        var pipelineBuilder = new PipelineBuilder(inputFiles, FileSystemLayout.FFmpegReportsFolder, _logger);
+        var pipelineBuilder = new PipelineBuilder(
+            videoInputFiles,
+            audioInputFiles,
+            concatInputFile,
+            FileSystemLayout.FFmpegReportsFolder,
+            _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(desiredState);
 
@@ -248,8 +256,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             loggedVideoFilters
         );
 
-        IList<EnvironmentVariable> environmentVariables = CommandGenerator.GenerateEnvironmentVariables(pipeline.PipelineSteps);
-        IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipeline.PipelineSteps);
+        IList<EnvironmentVariable> environmentVariables =
+            CommandGenerator.GenerateEnvironmentVariables(pipeline.PipelineSteps);
+        IList<string> arguments = CommandGenerator.GenerateArguments(
+            videoInputFiles,
+            audioInputFiles,
+            concatInputFile,
+            pipeline.PipelineSteps);
 
         var startInfo = new ProcessStartInfo
         {

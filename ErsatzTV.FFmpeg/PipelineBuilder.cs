@@ -18,11 +18,18 @@ public class PipelineBuilder
     private readonly List<IPipelineStep> _pipelineSteps;
     private readonly List<IPipelineFilterStep> _audioFilterSteps;
     private readonly List<IPipelineFilterStep> _videoFilterSteps;
-    private readonly IList<InputFile> _inputFiles;
+    private readonly IList<VideoInputFile> _videoInputFiles;
+    private readonly IList<AudioInputFile> _audioInputFiles;
+    private readonly Option<ConcatInputFile> _concatInputFile;
     private readonly string _reportsFolder;
     private readonly ILogger _logger;
 
-    public PipelineBuilder(IList<InputFile> inputFiles, string reportsFolder, ILogger logger)
+    public PipelineBuilder(
+        IList<VideoInputFile> videoInputFiles,
+        IList<AudioInputFile> audioInputFiles,
+        Option<ConcatInputFile> concatInputFile,
+        string reportsFolder,
+        ILogger logger)
     {
         _pipelineSteps = new List<IPipelineStep>
         {
@@ -40,17 +47,17 @@ public class PipelineBuilder
         _audioFilterSteps = new List<IPipelineFilterStep>();
         _videoFilterSteps = new List<IPipelineFilterStep>();
 
-        _inputFiles = inputFiles;
+        _videoInputFiles = videoInputFiles;
+        _audioInputFiles = audioInputFiles;
+        _concatInputFile = concatInputFile;
         _reportsFolder = reportsFolder;
         _logger = logger;
     }
 
     public FFmpegPipeline Build(FrameState desiredState)
     {
-        var allVideoStreams = _inputFiles.SelectMany(f => f.Streams)
-            .Filter(s => s.Kind == StreamKind.Video)
-            .OfType<VideoStream>()
-            .ToList();
+        var allVideoStreams = _videoInputFiles.SelectMany(f => f.Streams).ToList();
+        var allAudioStreams = _audioInputFiles.SelectMany(f => f.Streams).ToList();
 
         // -sc_threshold 0 is unsupported with mpeg2video
         _pipelineSteps.Add(
@@ -58,14 +65,33 @@ public class PipelineBuilder
                 ? new NoSceneDetectOutputOption(0)
                 : new NoSceneDetectOutputOption(1_000_000_000));
 
-        var allAudioStreams = _inputFiles.SelectMany(f => f.Streams)
-            .Filter(s => s.Kind == StreamKind.Audio)
-            .OfType<AudioStream>()
-            .ToList();
-
-        VideoStream videoStream = allVideoStreams.Head();
         Option<AudioStream> audioStream = allAudioStreams.HeadOrNone();
-        if (videoStream != null)
+
+        if (_concatInputFile.IsSome)
+        {
+            _pipelineSteps.Add(new ConcatInputFormat());
+            _pipelineSteps.Add(new EncoderCopyAll());
+            _pipelineSteps.Add(new RealtimeInputOption());
+            _pipelineSteps.Add(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
+
+            // TODO: ffmpeg desired state for not mapping metadata, including other metadata (i.e. NOT on concat)
+            _pipelineSteps.Add(new DoNotMapMetadataOutputOption());
+
+            foreach (string desiredServiceProvider in desiredState.MetadataServiceProvider)
+            {
+                _pipelineSteps.Add(new MetadataServiceProviderOutputOption(desiredServiceProvider));
+            }
+
+            foreach (string desiredServiceName in desiredState.MetadataServiceName)
+            {
+                _pipelineSteps.Add(new MetadataServiceNameOutputOption(desiredServiceName));
+            }
+            
+            _pipelineSteps.Add(new OutputFormatMpegTs());
+            _pipelineSteps.Add(new PipeProtocol());
+        }
+
+        foreach (VideoStream videoStream in allVideoStreams)
         {
             Option<int> initialFrameRate = Option<int>.None;
             foreach (string frameRateString in videoStream.FrameRate)
@@ -112,7 +138,7 @@ public class PipelineBuilder
 
             if (desiredState.SaveReport && !currentState.SaveReport)
             {
-                IPipelineStep step = new FFReportVariable(_reportsFolder, _inputFiles);
+                IPipelineStep step = new FFReportVariable(_reportsFolder, _concatInputFile);
                 currentState = step.NextState(currentState);
                 _pipelineSteps.Add(step);
             }
@@ -186,22 +212,11 @@ public class PipelineBuilder
                     currentState = decoder.NextState(currentState);
                     _pipelineSteps.Add(decoder);
                 }
-
-                if (_inputFiles.OfType<ConcatInputFile>().Any())
-                {
-                    IPipelineStep concatInputFormat = new ConcatInputFormat();
-                    currentState = concatInputFormat.NextState(currentState);
-                    _pipelineSteps.Add(concatInputFormat);
-
-                    IPipelineStep copyCodec = new EncoderCopyAll();
-                    currentState = copyCodec.NextState(currentState);
-                    _pipelineSteps.Add(copyCodec);
-                }
             }
 
             if (videoStream.StillImage)
             {
-                _pipelineSteps.Add(new InfiniteLoopInputOption(currentState));
+                _pipelineSteps.Add(new InfiniteLoopInputOption(currentState.HardwareAccelerationMode));
             }
 
             // TODO: while?
@@ -216,7 +231,7 @@ public class PipelineBuilder
 
                 if (!currentState.InfiniteLoop && desiredState.InfiniteLoop)
                 {
-                    IPipelineStep step = new InfiniteLoopInputOption(currentState);
+                    IPipelineStep step = new InfiniteLoopInputOption(currentState.HardwareAccelerationMode);
                     currentState = step.NextState(currentState);
                     _pipelineSteps.Add(step);
                 }
@@ -504,9 +519,10 @@ public class PipelineBuilder
             }
 
             // add a complex filter unless we are concatenating
-            if (!_inputFiles.OfType<ConcatInputFile>().Any())
+            if (_concatInputFile.IsNone)
             {
-                _pipelineSteps.Add(new ComplexFilter(_inputFiles, _audioFilterSteps, _videoFilterSteps));
+                _pipelineSteps.Add(
+                    new ComplexFilter(_videoInputFiles, _audioInputFiles, _audioFilterSteps, _videoFilterSteps));
             }
         }
 

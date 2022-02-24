@@ -15,8 +15,8 @@ public class StreamSeekInputOption : IPipelineStep
     public IList<string> GlobalOptions => Array.Empty<string>();
 
     // don't seek into a still image
-    public IList<string> InputOptions(InputFile inputFile) =>
-        _start == TimeSpan.Zero || inputFile.Streams.OfType<VideoStream>().Any(s => s.StillImage)
+    public IList<string> VideoInputOptions(VideoInputFile videoInputFile) =>
+        _start == TimeSpan.Zero || videoInputFile.Streams.Any(s => s.StillImage)
             ? Array.Empty<string>()
             : new List<string> { "-ss", $"{_start:c}" };
 

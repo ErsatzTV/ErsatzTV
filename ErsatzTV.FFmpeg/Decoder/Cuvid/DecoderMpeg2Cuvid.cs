@@ -3,9 +3,9 @@
 public class DecoderMpeg2Cuvid : DecoderBase
 {
     public override string Name => "mpeg2_cuvid";
-    public override IList<string> InputOptions(InputFile inputFile)
+    public override IList<string> VideoInputOptions(VideoInputFile videoInputFile)
     {
-        IList<string> result = base.InputOptions(inputFile);
+        IList<string> result = base.VideoInputOptions(videoInputFile);
 
         result.Add("-hwaccel_output_format");
         result.Add("cuda");

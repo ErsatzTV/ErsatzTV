@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.State;
 using LanguageExt;
 
 namespace ErsatzTV.FFmpeg;
@@ -15,3 +16,13 @@ public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(Url,
         Option<string>.None,
         false)
 });
+
+public record AudioInputFile(string Path, IList<AudioStream> Streams)
+{
+    public AudioState DesiredState { get; set; }
+}
+
+public record VideoInputFile(string Path, IList<VideoStream> Streams)
+{
+    public VideoState DesiredState { get; set; }
+}

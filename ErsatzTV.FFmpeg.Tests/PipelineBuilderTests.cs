@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
 using NUnit.Framework;
@@ -7,6 +8,7 @@ using FluentAssertions;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Moq;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.FFmpeg.Tests;
 
@@ -16,74 +18,22 @@ public class PipelineGeneratorTests
     private readonly ILogger _logger = new Mock<ILogger>().Object; 
     
     [Test]
-    [Ignore("These aren't useful yet")]
-    public void Correct_Codecs_And_Pixel_Format_Should_Copy()
-    {
-        var testFile = new InputFile(
-            "/tmp/whatever.mkv",
-            new List<MediaStream>
-            {
-                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24", false),
-                new AudioStream(1, AudioFormat.Aac, 2)
-            });
-
-        var inputFiles = new List<InputFile> { testFile };
-
-        var desiredState = new FrameState(
-            false,
-            HardwareAccelerationMode.None,
-            Option<string>.None,
-            Option<string>.None,
-            true,
-            false,
-            Option<TimeSpan>.None,
-            Option<TimeSpan>.None,
-            VideoFormat.H264,
-            new PixelFormatYuv420P(),
-            new FrameSize(1920, 1080),
-            new FrameSize(1920, 1080),
-            Option<int>.None,
-            2000,
-            4000,
-            90_000,
-            false,
-            AudioFormat.Aac,
-            2,
-            320,
-            640,
-            48,
-            Option<TimeSpan>.None,
-            false,
-            false,
-            Option<string>.None,
-            Option<string>.None,
-            Option<string>.None,
-            OutputFormatKind.MpegTs,
-            Option<string>.None,
-            Option<string>.None,
-            0);
-
-        var builder = new PipelineBuilder(inputFiles, "", _logger);
-        FFmpegPipeline result = builder.Build(desiredState);
-
-        result.PipelineSteps.Should().HaveCountGreaterThan(0);
-
-        PrintCommand(inputFiles, result);
-    }
-
-    [Test]
-    [Ignore("These aren't useful yet")]
     public void Incorrect_Video_Codec_Should_Use_Encoder()
     {
-        var testFile = new InputFile(
-            "/tmp/whatever.mkv",
-            new List<MediaStream>
-            {
-                new VideoStream(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24", false),
-                new AudioStream(1, AudioFormat.Aac, 2)
-            });
+        var videoInputFiles = new List<VideoInputFile>
+        {
+            new(
+                "/tmp/whatever.mkv",
+                new List<VideoStream>
+                    { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24", false) })
+        };
 
-        var inputFiles = new List<InputFile> { testFile };
+        var audioInputFiles = new List<AudioInputFile>
+        {
+            new(
+                "/tmp/whatever.mkv",
+                new List<AudioStream> { new(1, AudioFormat.Aac, 2) })
+        };
 
         var desiredState = new FrameState(
             false,
@@ -119,12 +69,13 @@ public class PipelineGeneratorTests
             Option<string>.None,
             0);
 
-        var builder = new PipelineBuilder(inputFiles, "", _logger);
+        var builder = new PipelineBuilder(videoInputFiles, audioInputFiles, None, "", _logger);
         FFmpegPipeline result = builder.Build(desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
+        result.PipelineSteps.Should().Contain(ps => ps is EncoderLibx265);
 
-        PrintCommand(inputFiles, result);
+        PrintCommand(videoInputFiles, audioInputFiles, None, result);
     }
 
     [Test]
@@ -133,22 +84,36 @@ public class PipelineGeneratorTests
         var resolution = new FrameSize(1920, 1080);
         var desiredState = FrameState.Concat(false, "Some Channel", resolution);
 
-        var inputFiles = new List<InputFile>
-        {
-            new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution)
-        };
+        var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
-        var builder = new PipelineBuilder(inputFiles, "", _logger);
+        var builder = new PipelineBuilder(
+            System.Array.Empty<VideoInputFile>(),
+            System.Array.Empty<AudioInputFile>(),
+            concatInputFile,
+            "",
+            _logger);
         FFmpegPipeline result = builder.Build(desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
-        PrintCommand(inputFiles, result);
+        PrintCommand(
+            System.Array.Empty<VideoInputFile>(),
+            System.Array.Empty<AudioInputFile>(),
+            concatInputFile,
+            result);
     }
 
-    private static void PrintCommand(IEnumerable<InputFile> inputFiles, FFmpegPipeline pipeline)
+    private static void PrintCommand(
+        IEnumerable<VideoInputFile> videoInputFiles,
+        IEnumerable<AudioInputFile> audioInputFiles,
+        Option<ConcatInputFile> concatInputFile,
+        FFmpegPipeline pipeline)
     {
-        IList<string> arguments = CommandGenerator.GenerateArguments(inputFiles, pipeline.PipelineSteps);
+        IList<string> arguments = CommandGenerator.GenerateArguments(
+            videoInputFiles,
+            audioInputFiles,
+            concatInputFile,
+            pipeline.PipelineSteps);
         Console.WriteLine($"Generated command: ffmpeg {string.Join(" ", arguments)}");
     }
 }
