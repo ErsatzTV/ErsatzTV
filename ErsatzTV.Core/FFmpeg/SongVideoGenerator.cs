@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.FFmpeg.Format;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -235,7 +236,12 @@ namespace ErsatzTV.Core.FFmpeg
                     SampleAspectRatio = "1:1",
                     Streams = new List<MediaStream>
                     {
-                        new() { MediaStreamKind = MediaStreamKind.Video, Index = 0, PixelFormat = "yuv420p" },
+                        new()
+                        {
+                            MediaStreamKind = MediaStreamKind.Video,
+                            Index = 0,
+                            PixelFormat = new PixelFormatUnknown().Name // the resulting pixel format is unknown
+                        },
                     },
                     MediaFiles = new List<MediaFile>
                     {

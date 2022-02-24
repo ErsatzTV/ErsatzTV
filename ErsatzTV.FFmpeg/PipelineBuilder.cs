@@ -365,6 +365,16 @@ public class PipelineBuilder
                     }
                 }
 
+                foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
+                {
+                    if (currentState.PixelFormat.Map(pf => pf.FFmpegName) != desiredPixelFormat.FFmpegName)
+                    {
+                        IPipelineStep step = new PixelFormatOutputOption(desiredPixelFormat);
+                        currentState = step.NextState(currentState);
+                        _pipelineSteps.Add(step);
+                    }
+                }
+
                 // after everything else is done, apply the encoder
                 if (!_pipelineSteps.OfType<IEncoder>().Any())
                 {

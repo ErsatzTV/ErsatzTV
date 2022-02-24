@@ -123,6 +123,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ? Path.Combine(FileSystemLayout.TranscodeFolder, channel.Number, "live%06d.ts")
             : Option<string>.None;
 
+        // normalize songs to yuv420p
+        Option<IPixelFormat> desiredPixelFormat =
+            videoPath == audioPath ? ffmpegVideoStream.PixelFormat : new PixelFormatYuv420P();
+
         var desiredState = new FrameState(
             saveReports,
             hwAccel,
@@ -133,7 +137,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.StreamSeek,
             finish - now,
             videoFormat,
-            ffmpegVideoStream.PixelFormat,
+            desiredPixelFormat,
             await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
                 .IfNoneAsync(new FrameSize(videoVersion.Width, videoVersion.Height)),
             new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height),
