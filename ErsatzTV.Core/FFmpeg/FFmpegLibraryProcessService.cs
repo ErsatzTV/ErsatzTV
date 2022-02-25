@@ -76,6 +76,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             outPoint,
             hlsRealtime,
             targetFramerate);
+        
+        var audioState = new AudioState(
+            finish - now,
+            playbackSettings.AudioCodec,
+            playbackSettings.AudioChannels,
+            playbackSettings.AudioBitrate,
+            playbackSettings.AudioBufferSize,
+            playbackSettings.AudioSampleRate,
+            videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
+            playbackSettings.NormalizeLoudness);
 
         var ffmpegVideoStream = new VideoStream(
             videoStream.Index,
@@ -91,7 +101,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             audioStream =>
             {
                 var ffmpegAudioStream = new AudioStream(audioStream.Index, audioStream.Codec, audioStream.Channels);
-                return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream });
+                return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
         // TODO: need formats for these codecs
@@ -144,18 +154,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoBufferSize,
             playbackSettings.VideoTrackTimeScale,
             playbackSettings.Deinterlace);
-
-        var audioState = new AudioState(
-            finish - now,
-            playbackSettings.AudioCodec,
-            playbackSettings.AudioChannels,
-            playbackSettings.AudioBitrate,
-            playbackSettings.AudioBufferSize,
-            playbackSettings.AudioSampleRate,
-            videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
-            playbackSettings.NormalizeLoudness);
-
-        audioInputFile = audioInputFile.Map(a => a with { DesiredState = audioState });
 
         var ffmpegState = new FFmpegState(
             saveReports,

@@ -17,12 +17,9 @@ public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(Url,
         false)
 });
 
-public record AudioInputFile(string Path, IList<AudioStream> AudioStreams) : InputFile(
+public record AudioInputFile(string Path, IList<AudioStream> AudioStreams, AudioState DesiredState) : InputFile(
     Path,
-    AudioStreams.Cast<MediaStream>().ToList())
-{
-    public AudioState DesiredState { get; set; }
-}
+    AudioStreams.Cast<MediaStream>().ToList());
 
 public record VideoInputFile(string Path, IList<VideoStream> VideoStreams) : InputFile(
     Path,

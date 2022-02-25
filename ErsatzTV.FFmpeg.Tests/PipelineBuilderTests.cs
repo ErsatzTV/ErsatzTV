@@ -28,9 +28,8 @@ public class PipelineGeneratorTests
 
         var audioInputFile = new AudioInputFile(
             "/tmp/whatever.mkv",
-            new List<AudioStream> { new(1, AudioFormat.Aac, 2) })
-        {
-            DesiredState = new AudioState(
+            new List<AudioStream> { new(1, AudioFormat.Aac, 2) },
+            new AudioState(
                 Option<TimeSpan>.None,
                 AudioFormat.Aac,
                 2,
@@ -38,10 +37,9 @@ public class PipelineGeneratorTests
                 640,
                 48,
                 Option<TimeSpan>.None,
-                false)
-        };
+                false));
 
-    var desiredState = new FrameState(
+        var desiredState = new FrameState(
             true,
             false,
             Option<TimeSpan>.None,
