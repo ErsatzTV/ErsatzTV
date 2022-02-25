@@ -42,8 +42,6 @@ public class PipelineGeneratorTests
         var desiredState = new FrameState(
             true,
             false,
-            Option<TimeSpan>.None,
-            Option<TimeSpan>.None,
             VideoFormat.Hevc,
             new PixelFormatYuv420P(),
             new FrameSize(1920, 1080),
@@ -59,6 +57,8 @@ public class PipelineGeneratorTests
             HardwareAccelerationMode.None,
             Option<string>.None,
             Option<string>.None,
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
             false,
             Option<string>.None,
             Option<string>.None,

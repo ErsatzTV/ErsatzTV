@@ -142,8 +142,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
             false,
-            playbackSettings.StreamSeek,
-            finish - now,
             videoFormat,
             desiredPixelFormat,
             await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
@@ -160,6 +158,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             hwAccel,
             VaapiDriverName(hwAccel, vaapiDriver),
             VaapiDeviceName(hwAccel, vaapiDevice),
+            playbackSettings.StreamSeek,
+            finish - now,
             channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
             "ErsatzTV",
             channel.Name,

@@ -8,6 +8,8 @@ public record FFmpegState(
     HardwareAccelerationMode HardwareAccelerationMode,
     Option<string> VaapiDriver,
     Option<string> VaapiDevice,
+    Option<TimeSpan> Start,
+    Option<TimeSpan> Finish,
     bool DoNotMapMetadata,
     Option<string> MetadataServiceProvider,
     Option<string> MetadataServiceName,
@@ -23,6 +25,8 @@ public record FFmpegState(
             HardwareAccelerationMode.None,
             Option<string>.None,
             Option<string>.None,
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
             true, // do not map metadata
             "ErsatzTV",
             channelName,

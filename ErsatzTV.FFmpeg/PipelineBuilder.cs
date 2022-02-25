@@ -54,9 +54,9 @@ public class PipelineBuilder
 
     public FFmpegPipeline Concat(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
     {
-        _pipelineSteps.Add(new ConcatInputFormat());
-        _pipelineSteps.Add(new RealtimeInputOption());
-        _pipelineSteps.Add(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
+        concatInputFile.AddOption(new ConcatInputFormat());
+        concatInputFile.AddOption(new RealtimeInputOption());
+        concatInputFile.AddOption(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
 
         _pipelineSteps.Add(new NoSceneDetectOutputOption(0));
         _pipelineSteps.Add(new EncoderCopyAll());
@@ -98,6 +98,31 @@ public class PipelineBuilder
                 ? new NoSceneDetectOutputOption(0)
                 : new NoSceneDetectOutputOption(1_000_000_000));
 
+        if (ffmpegState.SaveReport)
+        {
+            _pipelineSteps.Add(new FFReportVariable(_reportsFolder, None));
+        }
+
+        foreach (TimeSpan desiredStart in ffmpegState.Start.Filter(s => s > TimeSpan.Zero))
+        {
+            var option = new StreamSeekInputOption(desiredStart);
+            
+            foreach (AudioInputFile audioInputFile in _audioInputFile)
+            {
+                audioInputFile.AddOption(option);
+            }
+
+            foreach (VideoInputFile videoInputFile in _videoInputFile)
+            {
+                videoInputFile.AddOption(option);
+            }
+        }
+
+        foreach (TimeSpan desiredFinish in ffmpegState.Finish)
+        {
+            _pipelineSteps.Add(new TimeLimitOutputOption(desiredFinish));
+        }
+
         foreach (VideoStream videoStream in allVideoStreams)
         {
             Option<int> initialFrameRate = Option<int>.None;
@@ -112,8 +137,6 @@ public class PipelineBuilder
             var currentState = new FrameState(
                 false, // realtime
                 false, // infinite loop
-                Option<TimeSpan>.None,
-                Option<TimeSpan>.None,
                 videoStream.Codec,
                 videoStream.PixelFormat,
                 videoStream.FrameSize,
@@ -124,35 +147,6 @@ public class PipelineBuilder
                 Option<int>.None,
                 false); // deinterlace
             
-            if (ffmpegState.SaveReport)
-            {
-                IPipelineStep step = new FFReportVariable(_reportsFolder, None);
-                currentState = step.NextState(currentState);
-                _pipelineSteps.Add(step);
-            }
-
-            foreach (TimeSpan desiredStart in desiredState.Start)
-            {
-                if (currentState.Start != desiredStart)
-                {
-                    // _logger.LogInformation("Setting stream seek: {DesiredStart}", desiredStart);
-                    IPipelineStep step = new StreamSeekInputOption(desiredStart);
-                    currentState = step.NextState(currentState);
-                    _pipelineSteps.Add(step);
-                }
-            }
-
-            foreach (TimeSpan desiredFinish in desiredState.Finish)
-            {
-                if (currentState.Finish != desiredFinish)
-                {
-                    // _logger.LogInformation("Setting time limit: {DesiredFinish}", desiredFinish);
-                    IPipelineStep step = new TimeLimitOutputOption(desiredFinish);
-                    currentState = step.NextState(currentState);
-                    _pipelineSteps.Add(step);
-                }
-            }
-
             IEncoder encoder;
 
             if (IsDesiredVideoState(currentState, desiredState))
@@ -191,32 +185,56 @@ public class PipelineBuilder
 
                 foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(ffmpegState, currentState, _logger))
                 {
-                    currentState = decoder.NextState(currentState);
-                    _pipelineSteps.Add(decoder);
+                    foreach (VideoInputFile videoInputFile in _videoInputFile)
+                    {
+                        videoInputFile.AddOption(decoder);
+                        currentState = decoder.NextState(currentState);
+                    }
                 }
             }
 
             if (videoStream.StillImage)
             {
-                _pipelineSteps.Add(new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode));
+                var option = new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode);
+                
+                foreach (VideoInputFile videoInputFile in _videoInputFile)
+                {
+                    videoInputFile.AddOption(option);
+                }
             }
 
             if (!IsDesiredVideoState(currentState, desiredState))
             {
-                if (!currentState.Realtime && desiredState.Realtime)
+                if (desiredState.Realtime)
                 {
-                    IPipelineStep step = new RealtimeInputOption();
-                    currentState = step.NextState(currentState);
-                    _pipelineSteps.Add(step);
+                    var option = new RealtimeInputOption();
+
+                    foreach (AudioInputFile audioInputFile in _audioInputFile)
+                    {
+                        audioInputFile.AddOption(option);
+                    }
+
+                    foreach (VideoInputFile videoInputFile in _videoInputFile)
+                    {
+                        videoInputFile.AddOption(option);
+                    }
                 }
 
-                if (!currentState.InfiniteLoop && desiredState.InfiniteLoop)
+                if (desiredState.InfiniteLoop)
                 {
-                    IPipelineStep step = new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode);
-                    currentState = step.NextState(currentState);
-                    _pipelineSteps.Add(step);
+                    var option = new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode);
+
+                    foreach (AudioInputFile audioInputFile in _audioInputFile)
+                    {
+                        audioInputFile.AddOption(option);
+                    }
+
+                    foreach (VideoInputFile videoInputFile in _videoInputFile)
+                    {
+                        videoInputFile.AddOption(option);
+                    }
                 }
-                
+
                 foreach (int desiredFrameRate in desiredState.FrameRate)
                 {
                     if (currentState.FrameRate != desiredFrameRate)

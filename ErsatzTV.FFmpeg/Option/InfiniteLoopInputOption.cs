@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.FFmpeg.Option;
 
-public class InfiniteLoopInputOption : IPipelineStep
+public class InfiniteLoopInputOption : IInputOption
 {
     private readonly HardwareAccelerationMode _hardwareAccelerationMode;
 
@@ -16,20 +16,14 @@ public class InfiniteLoopInputOption : IPipelineStep
 
     public IList<string> InputOptions(InputFile inputFile)
     {
-        // never loop audio
-        if (inputFile.Streams.All(s => s.Kind == StreamKind.Video))
+        // loop 1 for still images
+        if (inputFile.Streams.OfType<VideoStream>().Any(s => s.StillImage))
         {
-            // loop 1 for still images
-            if (inputFile.Streams.OfType<VideoStream>().Any(s => s.StillImage))
-            {
-                return new List<string> { "-loop", "1" };
-            }
-
-            // stream_loop for looped video i.e. filler
-            return new List<string> { "-stream_loop", "-1" };
+            return new List<string> { "-loop", "1" };
         }
 
-        return Array.Empty<string>();
+        // stream_loop for looped video i.e. filler
+        return new List<string> { "-stream_loop", "-1" };
     }
 
     public IList<string> FilterOptions => Array.Empty<string>();
@@ -40,4 +34,7 @@ public class InfiniteLoopInputOption : IPipelineStep
             : Array.Empty<string>();
 
     public FrameState NextState(FrameState currentState) => currentState with { Realtime = true };
+    public bool AppliesTo(AudioInputFile audioInputFile) => false;
+    public bool AppliesTo(VideoInputFile videoInputFile) => true;
+    public bool AppliesTo(ConcatInputFile concatInputFile) => true;
 }

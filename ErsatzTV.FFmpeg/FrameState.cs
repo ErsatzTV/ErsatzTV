@@ -6,8 +6,6 @@ namespace ErsatzTV.FFmpeg;
 public record FrameState(
     bool Realtime,
     bool InfiniteLoop,
-    Option<TimeSpan> Start,
-    Option<TimeSpan> Finish,
     string VideoFormat,
     Option<IPixelFormat> PixelFormat,
     FrameSize ScaledSize,

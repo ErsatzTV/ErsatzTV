@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
+using ErsatzTV.FFmpeg.Option;
 using LanguageExt;
 
 namespace ErsatzTV.FFmpeg;
@@ -16,8 +17,6 @@ public static class CommandGenerator
         Option<ConcatInputFile> maybeConcatInputFile,
         IList<IPipelineStep> pipelineSteps)
     {
-        // TODO: handle when audio input file and video input file have the same path
-        
         var arguments = new List<string>();
 
         foreach (IPipelineStep step in pipelineSteps)
@@ -30,7 +29,7 @@ public static class CommandGenerator
         {
             includedPaths.Add(videoInputFile.Path);
             
-            foreach (IPipelineStep step in pipelineSteps)
+            foreach (IInputOption step in videoInputFile.InputOptions)
             {
                 arguments.AddRange(step.InputOptions(videoInputFile));
             }
@@ -44,7 +43,7 @@ public static class CommandGenerator
             {
                 includedPaths.Add(audioInputFile.Path);
                 
-                foreach (IPipelineStep step in pipelineSteps)
+                foreach (IInputOption step in audioInputFile.InputOptions)
                 {
                     arguments.AddRange(step.InputOptions(audioInputFile));
                 }
@@ -55,14 +54,9 @@ public static class CommandGenerator
 
         foreach (ConcatInputFile concatInputFile in maybeConcatInputFile)
         {
-            foreach (IPipelineStep step in pipelineSteps)
+            foreach (IInputOption step in concatInputFile.InputOptions)
             {
-                // TODO: this is kind of messy
-                arguments.AddRange(
-                    step.InputOptions(
-                        new VideoInputFile(
-                            string.Empty,
-                            Array.Empty<VideoStream>())));
+                arguments.AddRange(step.InputOptions(concatInputFile));
             }
 
             arguments.AddRange(new[] { "-i", concatInputFile.Path });
