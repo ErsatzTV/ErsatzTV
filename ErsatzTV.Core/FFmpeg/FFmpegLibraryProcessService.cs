@@ -163,8 +163,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ptsOffset);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
+        
+        var pipelineBuilder = new PipelineBuilder(
+            videoInputFile,
+            audioInputFile,
+            FileSystemLayout.FFmpegReportsFolder,
+            _logger);
 
-        return GetProcess(ffmpegPath, videoInputFile, audioInputFile, None, desiredState);
+        FFmpegPipeline pipeline = pipelineBuilder.Build(desiredState);
+
+        return GetProcess(ffmpegPath, videoInputFile, audioInputFile, None, pipeline);
     }
 
     public Task<Process> ForError(
@@ -179,13 +187,18 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
-        var desiredState = FrameState.Concat(saveReports, channel.Name, resolution);
 
         var concatInputFile = new ConcatInputFile(
             $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
             resolution);
 
-        return GetProcess(ffmpegPath, None, None, concatInputFile, desiredState);
+        var pipelineBuilder = new PipelineBuilder(None, None, FileSystemLayout.FFmpegReportsFolder, _logger);
+
+        FFmpegPipeline pipeline = pipelineBuilder.Concat(
+            concatInputFile,
+            FFmpegState.Concat(saveReports, channel.Name));
+
+        return GetProcess(ffmpegPath, None, None, concatInputFile, pipeline);
     }
 
     public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
@@ -229,18 +242,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<ConcatInputFile> concatInputFile,
-        FrameState desiredState)
+        FFmpegPipeline pipeline)
     {
-        var pipelineBuilder = new PipelineBuilder(
-            videoInputFile,
-            audioInputFile,
-            FileSystemLayout.FFmpegReportsFolder,
-            _logger);
-
-        FFmpegPipeline pipeline = concatInputFile.Match(
-            c => pipelineBuilder.Concat(c, desiredState),
-            () => pipelineBuilder.Build(desiredState));
-
         IEnumerable<string> loggedSteps = pipeline.PipelineSteps.Map(ps => ps.GetType().Name);
         IEnumerable<string> loggedVideoFilters = pipeline.VideoFilterSteps.Map(vf => vf.GetType().Name);
         IEnumerable<string> loggedAudioFilters = pipeline.AudioFilterSteps.Map(af => af.GetType().Name);

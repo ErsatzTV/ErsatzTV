@@ -52,7 +52,7 @@ public class PipelineBuilder
         _logger = logger;
     }
 
-    public FFmpegPipeline Concat(ConcatInputFile concatInputFile, FrameState desiredState)
+    public FFmpegPipeline Concat(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
     {
         _pipelineSteps.Add(new ConcatInputFormat());
         _pipelineSteps.Add(new RealtimeInputOption());
@@ -62,14 +62,17 @@ public class PipelineBuilder
         _pipelineSteps.Add(new EncoderCopyAll());
 
         // TODO: ffmpeg desired state for not mapping metadata, including other metadata (i.e. NOT on concat)
-        _pipelineSteps.Add(new DoNotMapMetadataOutputOption());
+        if (ffmpegState.DoNotMapMetadata)
+        {
+            _pipelineSteps.Add(new DoNotMapMetadataOutputOption());
+        }
 
-        foreach (string desiredServiceProvider in desiredState.MetadataServiceProvider)
+        foreach (string desiredServiceProvider in ffmpegState.MetadataServiceProvider)
         {
             _pipelineSteps.Add(new MetadataServiceProviderOutputOption(desiredServiceProvider));
         }
 
-        foreach (string desiredServiceName in desiredState.MetadataServiceName)
+        foreach (string desiredServiceName in ffmpegState.MetadataServiceName)
         {
             _pipelineSteps.Add(new MetadataServiceNameOutputOption(desiredServiceName));
         }
@@ -77,7 +80,7 @@ public class PipelineBuilder
         _pipelineSteps.Add(new OutputFormatMpegTs());
         _pipelineSteps.Add(new PipeProtocol());
         
-        if (desiredState.SaveReport)
+        if (ffmpegState.SaveReport)
         {
             _pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
         }

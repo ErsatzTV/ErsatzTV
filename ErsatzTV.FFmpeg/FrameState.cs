@@ -37,40 +37,4 @@ public record FrameState(
     Option<string> HlsPlaylistPath,
     Option<string> HlsSegmentTemplate,
     long PtsOffset,
-    FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown)
-{
-    public static FrameState Concat(bool saveReport, string channelName, FrameSize resolution) =>
-        new(
-            saveReport,
-            HardwareAccelerationMode.None,
-            Option<string>.None,
-            Option<string>.None,
-            true, // realtime
-            true, // infinite loop
-            Option<TimeSpan>.None,
-            Option<TimeSpan>.None,
-            Format.VideoFormat.Undetermined,
-            Option<IPixelFormat>.None,
-            resolution,
-            resolution,
-            Option<int>.None,
-            Option<int>.None,
-            Option<int>.None,
-            Option<int>.None,
-            false,
-            Option<string>.None,
-            Option<int>.None,
-            Option<int>.None,
-            Option<int>.None,
-            Option<int>.None,
-            Option<TimeSpan>.None,
-            false, // normalize loudness
-            true, // do not map metadata
-            "ErsatzTV",
-            channelName,
-            Option<string>.None,
-            OutputFormatKind.MpegTs,
-            Option<string>.None,
-            Option<string>.None,
-            0);
-}
+    FrameDataLocation FrameDataLocation = FrameDataLocation.Unknown);

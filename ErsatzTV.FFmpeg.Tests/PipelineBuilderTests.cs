@@ -76,12 +76,10 @@ public class PipelineGeneratorTests
     public void Concat_Test()
     {
         var resolution = new FrameSize(1920, 1080);
-        var desiredState = FrameState.Concat(false, "Some Channel", resolution);
-
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
         var builder = new PipelineBuilder(None, None, "", _logger);
-        FFmpegPipeline result = builder.Concat(concatInputFile, desiredState);
+        FFmpegPipeline result = builder.Concat(concatInputFile, FFmpegState.Concat(false, "Some Channel"));
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
