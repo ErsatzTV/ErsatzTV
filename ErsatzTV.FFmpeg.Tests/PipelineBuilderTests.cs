@@ -85,10 +85,13 @@ public class PipelineGeneratorTests
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
-        PrintCommand(None, None, concatInputFile, result);
+        string command = PrintCommand(None, None, concatInputFile, result);
+        
+        command.Should().Be(
+            "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -f concat -safe 0 -protocol_whitelist file,http,tcp,https,tcp,tls -probesize 32 -re -stream_loop -1 -i http://localhost:8080/ffmpeg/concat/1 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c copy -map_metadata -1 -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
-    private static void PrintCommand(
+    private static string PrintCommand(
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<ConcatInputFile> concatInputFile,
@@ -99,6 +102,11 @@ public class PipelineGeneratorTests
             audioInputFile,
             concatInputFile,
             pipeline.PipelineSteps);
+
+        var command = string.Join(" ", arguments);
+
         Console.WriteLine($"Generated command: ffmpeg {string.Join(" ", arguments)}");
+
+        return command;
     }
 }
