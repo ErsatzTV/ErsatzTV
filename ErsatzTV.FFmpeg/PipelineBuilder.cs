@@ -18,15 +18,15 @@ public class PipelineBuilder
     private readonly List<IPipelineStep> _pipelineSteps;
     private readonly List<IPipelineFilterStep> _audioFilterSteps;
     private readonly List<IPipelineFilterStep> _videoFilterSteps;
-    private readonly IList<VideoInputFile> _videoInputFiles;
-    private readonly IList<AudioInputFile> _audioInputFiles;
+    private readonly Option<VideoInputFile> _videoInputFile;
+    private readonly Option<AudioInputFile> _audioInputFile;
     private readonly Option<ConcatInputFile> _concatInputFile;
     private readonly string _reportsFolder;
     private readonly ILogger _logger;
 
     public PipelineBuilder(
-        IList<VideoInputFile> videoInputFiles,
-        IList<AudioInputFile> audioInputFiles,
+        Option<VideoInputFile> videoInputFile,
+        Option<AudioInputFile> audioInputFile,
         Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         ILogger logger)
@@ -47,8 +47,8 @@ public class PipelineBuilder
         _audioFilterSteps = new List<IPipelineFilterStep>();
         _videoFilterSteps = new List<IPipelineFilterStep>();
 
-        _videoInputFiles = videoInputFiles;
-        _audioInputFiles = audioInputFiles;
+        _videoInputFile = videoInputFile;
+        _audioInputFile = audioInputFile;
         _concatInputFile = concatInputFile;
         _reportsFolder = reportsFolder;
         _logger = logger;
@@ -56,8 +56,8 @@ public class PipelineBuilder
 
     public FFmpegPipeline Build(FrameState desiredState)
     {
-        var allVideoStreams = _videoInputFiles.SelectMany(f => f.Streams).ToList();
-        var allAudioStreams = _audioInputFiles.SelectMany(f => f.Streams).ToList();
+        var allVideoStreams = _videoInputFile.SelectMany(f => f.Streams).ToList();
+        var allAudioStreams = _audioInputFile.SelectMany(f => f.Streams).ToList();
 
         // -sc_threshold 0 is unsupported with mpeg2video
         _pipelineSteps.Add(
@@ -532,7 +532,7 @@ public class PipelineBuilder
             if (_concatInputFile.IsNone)
             {
                 _pipelineSteps.Add(
-                    new ComplexFilter(_videoInputFiles, _audioInputFiles, _audioFilterSteps, _videoFilterSteps));
+                    new ComplexFilter(_videoInputFile, _audioInputFile, _audioFilterSteps, _videoFilterSteps));
             }
         }
 

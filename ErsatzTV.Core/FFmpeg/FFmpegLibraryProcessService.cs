@@ -164,11 +164,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
 
-        var videoInputFiles = new List<VideoInputFile> { videoInputFile };
-        var audioInputFiles = new List<AudioInputFile>();
-        audioInputFiles.AddRange(audioInputFile);
-
-        return GetProcess(ffmpegPath, videoInputFiles, audioInputFiles, None, desiredState);
+        return GetProcess(ffmpegPath, videoInputFile, audioInputFile, None, desiredState);
     }
 
     public Task<Process> ForError(
@@ -189,12 +185,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
             resolution);
 
-        return GetProcess(
-            ffmpegPath,
-            System.Array.Empty<VideoInputFile>(),
-            System.Array.Empty<AudioInputFile>(),
-            concatInputFile,
-            desiredState);
+        return GetProcess(ffmpegPath, None, None, concatInputFile, desiredState);
     }
 
     public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
@@ -235,14 +226,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
     private Process GetProcess(
         string ffmpegPath,
-        IList<VideoInputFile> videoInputFiles,
-        IList<AudioInputFile> audioInputFiles,
+        Option<VideoInputFile> videoInputFile,
+        Option<AudioInputFile> audioInputFile,
         Option<ConcatInputFile> concatInputFile,
         FrameState desiredState)
     {
         var pipelineBuilder = new PipelineBuilder(
-            videoInputFiles,
-            audioInputFiles,
+            videoInputFile,
+            audioInputFile,
             concatInputFile,
             FileSystemLayout.FFmpegReportsFolder,
             _logger);
@@ -263,8 +254,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IList<EnvironmentVariable> environmentVariables =
             CommandGenerator.GenerateEnvironmentVariables(pipeline.PipelineSteps);
         IList<string> arguments = CommandGenerator.GenerateArguments(
-            videoInputFiles,
-            audioInputFiles,
+            videoInputFile,
+            audioInputFile,
             concatInputFile,
             pipeline.PipelineSteps);
 

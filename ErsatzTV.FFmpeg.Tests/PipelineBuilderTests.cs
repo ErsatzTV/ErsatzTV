@@ -20,20 +20,14 @@ public class PipelineGeneratorTests
     [Test]
     public void Incorrect_Video_Codec_Should_Use_Encoder()
     {
-        var videoInputFiles = new List<VideoInputFile>
-        {
-            new(
-                "/tmp/whatever.mkv",
-                new List<VideoStream>
-                    { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24", false) })
-        };
+        var videoInputFile = new VideoInputFile(
+            "/tmp/whatever.mkv",
+            new List<VideoStream>
+                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24", false) });
 
-        var audioInputFiles = new List<AudioInputFile>
-        {
-            new(
-                "/tmp/whatever.mkv",
-                new List<AudioStream> { new(1, AudioFormat.Aac, 2) })
-        };
+        var audioInputFile = new AudioInputFile(
+            "/tmp/whatever.mkv",
+            new List<AudioStream> { new(1, AudioFormat.Aac, 2) });
 
         var desiredState = new FrameState(
             false,
@@ -69,13 +63,13 @@ public class PipelineGeneratorTests
             Option<string>.None,
             0);
 
-        var builder = new PipelineBuilder(videoInputFiles, audioInputFiles, None, "", _logger);
+        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, "", _logger);
         FFmpegPipeline result = builder.Build(desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
         result.PipelineSteps.Should().Contain(ps => ps is EncoderLibx265);
 
-        PrintCommand(videoInputFiles, audioInputFiles, None, result);
+        PrintCommand(videoInputFile, audioInputFile, None, result);
     }
 
     [Test]
@@ -86,32 +80,23 @@ public class PipelineGeneratorTests
 
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
-        var builder = new PipelineBuilder(
-            System.Array.Empty<VideoInputFile>(),
-            System.Array.Empty<AudioInputFile>(),
-            concatInputFile,
-            "",
-            _logger);
+        var builder = new PipelineBuilder(None, None, concatInputFile, "", _logger);
         FFmpegPipeline result = builder.Build(desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
-        PrintCommand(
-            System.Array.Empty<VideoInputFile>(),
-            System.Array.Empty<AudioInputFile>(),
-            concatInputFile,
-            result);
+        PrintCommand(None, None, concatInputFile, result);
     }
 
     private static void PrintCommand(
-        IEnumerable<VideoInputFile> videoInputFiles,
-        IEnumerable<AudioInputFile> audioInputFiles,
+        Option<VideoInputFile> videoInputFile,
+        Option<AudioInputFile> audioInputFile,
         Option<ConcatInputFile> concatInputFile,
         FFmpegPipeline pipeline)
     {
         IList<string> arguments = CommandGenerator.GenerateArguments(
-            videoInputFiles,
-            audioInputFiles,
+            videoInputFile,
+            audioInputFile,
             concatInputFile,
             pipeline.PipelineSteps);
         Console.WriteLine($"Generated command: ffmpeg {string.Join(" ", arguments)}");

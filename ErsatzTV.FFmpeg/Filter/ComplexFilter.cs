@@ -1,22 +1,23 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
+using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
 public class ComplexFilter : IPipelineStep
 {
-    private readonly IList<VideoInputFile> _videoInputFiles;
-    private readonly IList<AudioInputFile> _audioInputFiles;
+    private readonly Option<VideoInputFile> _maybeVideoInputFile;
+    private readonly Option<AudioInputFile> _maybeAudioInputFile;
     private readonly IList<IPipelineFilterStep> _audioFilters;
     private readonly IList<IPipelineFilterStep> _videoFilters;
 
     public ComplexFilter(
-        IList<VideoInputFile> videoInputFiles,
-        IList<AudioInputFile> audioInputFiles,
+        Option<VideoInputFile> maybeVideoInputFile,
+        Option<AudioInputFile> maybeAudioInputFile,
         IList<IPipelineFilterStep> audioFilters,
         IList<IPipelineFilterStep> videoFilters)
     {
-        _videoInputFiles = videoInputFiles;
-        _audioInputFiles = audioInputFiles;
+        _maybeVideoInputFile = maybeVideoInputFile;
+        _maybeAudioInputFile = maybeAudioInputFile;
         _audioFilters = audioFilters;
         _videoFilters = videoFilters;
     }
@@ -34,7 +35,7 @@ public class ComplexFilter : IPipelineStep
         // TODO: handle when audio input file and video input file have the same path
 
         var distinctPaths = new List<string>();
-        foreach ((string path, _) in _videoInputFiles)
+        foreach ((string path, _) in _maybeVideoInputFile)
         {
             if (!distinctPaths.Contains(path))
             {
@@ -42,17 +43,16 @@ public class ComplexFilter : IPipelineStep
             }
         }
 
-        foreach ((string path, _) in _audioInputFiles)
+        foreach ((string path, _) in _maybeAudioInputFile)
         {
             if (!distinctPaths.Contains(path))
             {
                 distinctPaths.Add(path);
             }
         }
-        
-        for (var i = 0; i < _videoInputFiles.Count; i++)
+
+        foreach (VideoInputFile videoInputFile in _maybeVideoInputFile)
         {
-            VideoInputFile videoInputFile = _videoInputFiles[i];
             int inputIndex = distinctPaths.IndexOf(videoInputFile.Path);
             foreach ((int index, _, _) in videoInputFile.Streams)
             {
@@ -69,9 +69,8 @@ public class ComplexFilter : IPipelineStep
             }
         }
 
-        for (var i = 0; i < _audioInputFiles.Count; i++)
+        foreach (AudioInputFile audioInputFile in _maybeAudioInputFile)
         {
-            AudioInputFile audioInputFile = _audioInputFiles[i];
             int inputIndex = distinctPaths.IndexOf(audioInputFile.Path);
             foreach ((int index, _, _) in audioInputFile.Streams)
             {

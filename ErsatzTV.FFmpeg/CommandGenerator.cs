@@ -11,9 +11,9 @@ public static class CommandGenerator
     }
 
     public static IList<string> GenerateArguments(
-        IEnumerable<VideoInputFile> videoInputFiles,
-        IEnumerable<AudioInputFile> audioInputFiles,
-        Option<ConcatInputFile> concatInputFile,
+        Option<VideoInputFile> maybeVideoInputFile,
+        Option<AudioInputFile> maybeAudioInputFile,
+        Option<ConcatInputFile> maybeConcatInputFile,
         IList<IPipelineStep> pipelineSteps)
     {
         // TODO: handle when audio input file and video input file have the same path
@@ -26,7 +26,7 @@ public static class CommandGenerator
         }
 
         var includedPaths = new System.Collections.Generic.HashSet<string>();
-        foreach (VideoInputFile videoInputFile in videoInputFiles)
+        foreach (VideoInputFile videoInputFile in maybeVideoInputFile)
         {
             includedPaths.Add(videoInputFile.Path);
             
@@ -38,7 +38,7 @@ public static class CommandGenerator
             arguments.AddRange(new[] { "-i", videoInputFile.Path });
         }
         
-        foreach ((string path, _) in audioInputFiles)
+        foreach ((string path, _) in maybeAudioInputFile)
         {
             if (!includedPaths.Contains(path))
             {
@@ -47,7 +47,7 @@ public static class CommandGenerator
             }
         }
 
-        foreach (ConcatInputFile concat in concatInputFile)
+        foreach (ConcatInputFile concatInputFile in maybeConcatInputFile)
         {
             foreach (IPipelineStep step in pipelineSteps)
             {
@@ -59,7 +59,7 @@ public static class CommandGenerator
                             Array.Empty<VideoStream>())));
             }
 
-            arguments.AddRange(new[] { "-i", concat.Path });
+            arguments.AddRange(new[] { "-i", concatInputFile.Path });
         }
 
         foreach (IPipelineStep step in pipelineSteps)
