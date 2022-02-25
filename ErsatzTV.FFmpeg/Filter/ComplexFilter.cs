@@ -7,19 +7,11 @@ public class ComplexFilter : IPipelineStep
 {
     private readonly Option<VideoInputFile> _maybeVideoInputFile;
     private readonly Option<AudioInputFile> _maybeAudioInputFile;
-    private readonly IList<IPipelineFilterStep> _audioFilters;
-    private readonly IList<IPipelineFilterStep> _videoFilters;
 
-    public ComplexFilter(
-        Option<VideoInputFile> maybeVideoInputFile,
-        Option<AudioInputFile> maybeAudioInputFile,
-        IList<IPipelineFilterStep> audioFilters,
-        IList<IPipelineFilterStep> videoFilters)
+    public ComplexFilter(Option<VideoInputFile> maybeVideoInputFile, Option<AudioInputFile> maybeAudioInputFile)
     {
         _maybeVideoInputFile = maybeVideoInputFile;
         _maybeAudioInputFile = maybeAudioInputFile;
-        _audioFilters = audioFilters;
-        _videoFilters = videoFilters;
     }
 
     private IList<string> Arguments()
@@ -32,8 +24,6 @@ public class ComplexFilter : IPipelineStep
         string audioFilterComplex = string.Empty;
         string videoFilterComplex = string.Empty;
         
-        // TODO: handle when audio input file and video input file have the same path
-
         var distinctPaths = new List<string>();
         foreach ((string path, _) in _maybeVideoInputFile)
         {
@@ -57,12 +47,12 @@ public class ComplexFilter : IPipelineStep
             foreach ((int index, _, _) in videoInputFile.Streams)
             {
                 videoLabel = $"{inputIndex}:{index}";
-                if (_videoFilters.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
+                if (videoInputFile.FilterSteps.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
                 {
                     videoFilterComplex += $"[{inputIndex}:{index}]";
                     videoFilterComplex += string.Join(
                         ",",
-                        _videoFilters.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
+                        videoInputFile.FilterSteps.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
                     videoLabel = "[v]";
                     videoFilterComplex += videoLabel;
                 }
@@ -75,12 +65,12 @@ public class ComplexFilter : IPipelineStep
             foreach ((int index, _, _) in audioInputFile.Streams)
             {
                 audioLabel = $"{inputIndex}:{index}";
-                if (_audioFilters.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
+                if (audioInputFile.FilterSteps.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
                 {
                     audioFilterComplex += $"[{inputIndex}:{index}]";
                     audioFilterComplex += string.Join(
                         ",",
-                        _audioFilters.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
+                        audioInputFile.FilterSteps.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
                     audioLabel = "[a]";
                     audioFilterComplex += audioLabel;
                 }

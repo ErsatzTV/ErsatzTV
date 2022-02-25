@@ -8,6 +8,7 @@ namespace ErsatzTV.FFmpeg;
 public record InputFile(string Path, IList<MediaStream> Streams)
 {
     public IList<IInputOption> InputOptions { get; } = new List<IInputOption>();
+    public IList<IPipelineFilterStep> FilterSteps { get; } = new List<IPipelineFilterStep>();
 }
 
 public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(

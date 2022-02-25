@@ -141,7 +141,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var desiredState = new FrameState(
             playbackSettings.RealtimeOutput,
-            false,
+            false, // TODO: fallback filler needs to loop
             videoFormat,
             desiredPixelFormat,
             await playbackSettings.ScaledSize.Map(ss => new FrameSize(ss.Width, ss.Height))
@@ -252,8 +252,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FFmpegPipeline pipeline)
     {
         IEnumerable<string> loggedSteps = pipeline.PipelineSteps.Map(ps => ps.GetType().Name);
-        IEnumerable<string> loggedVideoFilters = pipeline.VideoFilterSteps.Map(vf => vf.GetType().Name);
-        IEnumerable<string> loggedAudioFilters = pipeline.AudioFilterSteps.Map(af => af.GetType().Name);
+        IEnumerable<string> loggedVideoFilters =
+            videoInputFile.Map(f => f.FilterSteps.Map(vf => vf.GetType().Name)).Flatten();
+        IEnumerable<string> loggedAudioFilters =
+            audioInputFile.Map(f => f.FilterSteps.Map(af => af.GetType().Name)).Flatten();
 
         _logger.LogDebug(
             "FFmpeg pipeline {PipelineSteps}, {AudioFilters}, {VideoFilters}",

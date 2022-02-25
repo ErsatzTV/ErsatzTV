@@ -17,8 +17,6 @@ namespace ErsatzTV.FFmpeg;
 public class PipelineBuilder
 {
     private readonly List<IPipelineStep> _pipelineSteps;
-    private readonly List<IPipelineFilterStep> _audioFilterSteps;
-    private readonly List<IPipelineFilterStep> _videoFilterSteps;
     private readonly Option<VideoInputFile> _videoInputFile;
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly string _reportsFolder;
@@ -43,9 +41,6 @@ public class PipelineBuilder
             new ClosedGopOutputOption(),
         };
 
-        _audioFilterSteps = new List<IPipelineFilterStep>();
-        _videoFilterSteps = new List<IPipelineFilterStep>();
-
         _videoInputFile = videoInputFile;
         _audioInputFile = audioInputFile;
         _reportsFolder = reportsFolder;
@@ -61,7 +56,6 @@ public class PipelineBuilder
         _pipelineSteps.Add(new NoSceneDetectOutputOption(0));
         _pipelineSteps.Add(new EncoderCopyAll());
 
-        // TODO: ffmpeg desired state for not mapping metadata, including other metadata (i.e. NOT on concat)
         if (ffmpegState.DoNotMapMetadata)
         {
             _pipelineSteps.Add(new DoNotMapMetadataOutputOption());
@@ -85,7 +79,7 @@ public class PipelineBuilder
             _pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
         }
         
-        return new FFmpegPipeline(_pipelineSteps, _videoFilterSteps, _audioFilterSteps);
+        return new FFmpegPipeline(_pipelineSteps);
     }
 
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
@@ -106,16 +100,8 @@ public class PipelineBuilder
         foreach (TimeSpan desiredStart in ffmpegState.Start.Filter(s => s > TimeSpan.Zero))
         {
             var option = new StreamSeekInputOption(desiredStart);
-            
-            foreach (AudioInputFile audioInputFile in _audioInputFile)
-            {
-                audioInputFile.AddOption(option);
-            }
-
-            foreach (VideoInputFile videoInputFile in _videoInputFile)
-            {
-                videoInputFile.AddOption(option);
-            }
+            _audioInputFile.Iter(f => f.AddOption(option));
+            _videoInputFile.Iter(f => f.AddOption(option));
         }
 
         foreach (TimeSpan desiredFinish in ffmpegState.Finish)
@@ -196,11 +182,7 @@ public class PipelineBuilder
             if (videoStream.StillImage)
             {
                 var option = new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode);
-                
-                foreach (VideoInputFile videoInputFile in _videoInputFile)
-                {
-                    videoInputFile.AddOption(option);
-                }
+                _videoInputFile.Iter(f => f.AddOption(option));
             }
 
             if (!IsDesiredVideoState(currentState, desiredState))
@@ -208,31 +190,15 @@ public class PipelineBuilder
                 if (desiredState.Realtime)
                 {
                     var option = new RealtimeInputOption();
-
-                    foreach (AudioInputFile audioInputFile in _audioInputFile)
-                    {
-                        audioInputFile.AddOption(option);
-                    }
-
-                    foreach (VideoInputFile videoInputFile in _videoInputFile)
-                    {
-                        videoInputFile.AddOption(option);
-                    }
+                    _audioInputFile.Iter(f => f.AddOption(option));
+                    _videoInputFile.Iter(f => f.AddOption(option));
                 }
 
                 if (desiredState.InfiniteLoop)
                 {
                     var option = new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode);
-
-                    foreach (AudioInputFile audioInputFile in _audioInputFile)
-                    {
-                        audioInputFile.AddOption(option);
-                    }
-
-                    foreach (VideoInputFile videoInputFile in _videoInputFile)
-                    {
-                        videoInputFile.AddOption(option);
-                    }
+                    _audioInputFile.Iter(f => f.AddOption(option));
+                    _videoInputFile.Iter(f => f.AddOption(option));
                 }
 
                 foreach (int desiredFrameRate in desiredState.FrameRate)
@@ -280,9 +246,8 @@ public class PipelineBuilder
                     IPipelineFilterStep step = AvailableDeinterlaceFilters.ForAcceleration(
                         ffmpegState.HardwareAccelerationMode,
                         currentState);
-
                     currentState = step.NextState(currentState);
-                    _videoFilterSteps.Add(step);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(step));
                 }
 
                 // TODO: this is a software-only flow, will need to be different for hardware accel
@@ -296,16 +261,16 @@ public class PipelineBuilder
                             desiredState.ScaledSize,
                             desiredState.PaddedSize);
                         currentState = scaleStep.NextState(currentState);
-                        _videoFilterSteps.Add(scaleStep);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(scaleStep));
 
                         // TODO: padding might not be needed, can we optimize this out?
                         IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
                         currentState = padStep.NextState(currentState);
-                        _videoFilterSteps.Add(padStep);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
 
                         IPipelineFilterStep sarStep = new SetSarFilter();
                         currentState = sarStep.NextState(currentState);
-                        _videoFilterSteps.Add(sarStep);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                     }
                 }
                 else if (currentState.ScaledSize != desiredState.ScaledSize)
@@ -316,19 +281,19 @@ public class PipelineBuilder
                         desiredState.ScaledSize,
                         desiredState.PaddedSize);
                     currentState = scaleFilter.NextState(currentState);
-                    _videoFilterSteps.Add(scaleFilter);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
 
                     // TODO: padding might not be needed, can we optimize this out?
                     if (currentState.PaddedSize != desiredState.PaddedSize)
                     {
                         IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
                         currentState = padStep.NextState(currentState);
-                        _videoFilterSteps.Add(padStep);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
                     
                     IPipelineFilterStep sarStep = new SetSarFilter();
                     currentState = sarStep.NextState(currentState);
-                    _videoFilterSteps.Add(sarStep);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                 }
                 else if (currentState.PaddedSize != desiredState.PaddedSize)
                 {
@@ -338,18 +303,18 @@ public class PipelineBuilder
                         desiredState.ScaledSize,
                         desiredState.PaddedSize);
                     currentState = scaleFilter.NextState(currentState);
-                    _videoFilterSteps.Add(scaleFilter);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
 
                     if (currentState.PaddedSize != desiredState.PaddedSize)
                     {
                         IPipelineFilterStep padStep = new PadFilter(currentState, desiredState.PaddedSize);
                         currentState = padStep.NextState(currentState);
-                        _videoFilterSteps.Add(padStep);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
 
                     IPipelineFilterStep sarStep = new SetSarFilter();
                     currentState = sarStep.NextState(currentState);
-                    _videoFilterSteps.Add(sarStep);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                 }
 
                 if (ffmpegState.PtsOffset > 0)
@@ -385,7 +350,7 @@ public class PipelineBuilder
                     {
                         encoder = e;
                         _pipelineSteps.Add(encoder);
-                        _videoFilterSteps.Add(encoder);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(encoder));
                         currentState = encoder.NextState(currentState);
                     }
                 }
@@ -425,12 +390,12 @@ public class PipelineBuilder
 
                 if (audioInputFile.DesiredState.NormalizeLoudness)
                 {
-                    _audioFilterSteps.Add(new NormalizeLoudnessFilter());
+                    _audioInputFile.Iter(f => f.FilterSteps.Add(new NormalizeLoudnessFilter()));
                 }
 
                 foreach (TimeSpan desiredDuration in audioInputFile.DesiredState.AudioDuration)
                 {
-                    _audioFilterSteps.Add(new AudioPadFilter(desiredDuration));
+                    _audioInputFile.Iter(f => f.FilterSteps.Add(new AudioPadFilter(desiredDuration)));
                 }
             }
 
@@ -479,12 +444,10 @@ public class PipelineBuilder
                     break;
             }
 
-            // add a complex filter unless we are concatenating
-            _pipelineSteps.Add(
-                new ComplexFilter(_videoInputFile, _audioInputFile, _audioFilterSteps, _videoFilterSteps));
+            _pipelineSteps.Add(new ComplexFilter(_videoInputFile, _audioInputFile));
         }
 
-        return new FFmpegPipeline(_pipelineSteps, _videoFilterSteps, _audioFilterSteps);
+        return new FFmpegPipeline(_pipelineSteps);
     }
 
     private static bool IsDesiredVideoState(FrameState currentState, FrameState desiredState)
