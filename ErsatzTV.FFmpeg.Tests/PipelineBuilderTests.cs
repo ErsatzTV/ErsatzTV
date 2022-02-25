@@ -63,7 +63,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             0);
 
-        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, "", _logger);
+        var builder = new PipelineBuilder(videoInputFile, audioInputFile, "", _logger);
         FFmpegPipeline result = builder.Build(desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
@@ -80,8 +80,8 @@ public class PipelineGeneratorTests
 
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
-        var builder = new PipelineBuilder(None, None, concatInputFile, "", _logger);
-        FFmpegPipeline result = builder.Build(desiredState);
+        var builder = new PipelineBuilder(None, None, "", _logger);
+        FFmpegPipeline result = builder.Concat(concatInputFile, desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
 

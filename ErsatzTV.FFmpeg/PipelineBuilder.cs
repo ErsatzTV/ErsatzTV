@@ -10,6 +10,7 @@ using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Protocol;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.FFmpeg;
 
@@ -20,14 +21,12 @@ public class PipelineBuilder
     private readonly List<IPipelineFilterStep> _videoFilterSteps;
     private readonly Option<VideoInputFile> _videoInputFile;
     private readonly Option<AudioInputFile> _audioInputFile;
-    private readonly Option<ConcatInputFile> _concatInputFile;
     private readonly string _reportsFolder;
     private readonly ILogger _logger;
 
     public PipelineBuilder(
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
-        Option<ConcatInputFile> concatInputFile,
         string reportsFolder,
         ILogger logger)
     {
@@ -49,9 +48,41 @@ public class PipelineBuilder
 
         _videoInputFile = videoInputFile;
         _audioInputFile = audioInputFile;
-        _concatInputFile = concatInputFile;
         _reportsFolder = reportsFolder;
         _logger = logger;
+    }
+
+    public FFmpegPipeline Concat(ConcatInputFile concatInputFile, FrameState desiredState)
+    {
+        _pipelineSteps.Add(new ConcatInputFormat());
+        _pipelineSteps.Add(new RealtimeInputOption());
+        _pipelineSteps.Add(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
+
+        _pipelineSteps.Add(new NoSceneDetectOutputOption(0));
+        _pipelineSteps.Add(new EncoderCopyAll());
+
+        // TODO: ffmpeg desired state for not mapping metadata, including other metadata (i.e. NOT on concat)
+        _pipelineSteps.Add(new DoNotMapMetadataOutputOption());
+
+        foreach (string desiredServiceProvider in desiredState.MetadataServiceProvider)
+        {
+            _pipelineSteps.Add(new MetadataServiceProviderOutputOption(desiredServiceProvider));
+        }
+
+        foreach (string desiredServiceName in desiredState.MetadataServiceName)
+        {
+            _pipelineSteps.Add(new MetadataServiceNameOutputOption(desiredServiceName));
+        }
+
+        _pipelineSteps.Add(new OutputFormatMpegTs());
+        _pipelineSteps.Add(new PipeProtocol());
+        
+        if (desiredState.SaveReport)
+        {
+            _pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
+        }
+        
+        return new FFmpegPipeline(_pipelineSteps, _videoFilterSteps, _audioFilterSteps);
     }
 
     public FFmpegPipeline Build(FrameState desiredState)
@@ -66,30 +97,6 @@ public class PipelineBuilder
                 : new NoSceneDetectOutputOption(1_000_000_000));
 
         Option<AudioStream> audioStream = allAudioStreams.HeadOrNone();
-
-        if (_concatInputFile.IsSome)
-        {
-            _pipelineSteps.Add(new ConcatInputFormat());
-            _pipelineSteps.Add(new EncoderCopyAll());
-            _pipelineSteps.Add(new RealtimeInputOption());
-            _pipelineSteps.Add(new InfiniteLoopInputOption(HardwareAccelerationMode.None));
-
-            // TODO: ffmpeg desired state for not mapping metadata, including other metadata (i.e. NOT on concat)
-            _pipelineSteps.Add(new DoNotMapMetadataOutputOption());
-
-            foreach (string desiredServiceProvider in desiredState.MetadataServiceProvider)
-            {
-                _pipelineSteps.Add(new MetadataServiceProviderOutputOption(desiredServiceProvider));
-            }
-
-            foreach (string desiredServiceName in desiredState.MetadataServiceName)
-            {
-                _pipelineSteps.Add(new MetadataServiceNameOutputOption(desiredServiceName));
-            }
-            
-            _pipelineSteps.Add(new OutputFormatMpegTs());
-            _pipelineSteps.Add(new PipeProtocol());
-        }
 
         foreach (VideoStream videoStream in allVideoStreams)
         {
@@ -138,7 +145,7 @@ public class PipelineBuilder
 
             if (desiredState.SaveReport && !currentState.SaveReport)
             {
-                IPipelineStep step = new FFReportVariable(_reportsFolder, _concatInputFile);
+                IPipelineStep step = new FFReportVariable(_reportsFolder, None);
                 currentState = step.NextState(currentState);
                 _pipelineSteps.Add(step);
             }
@@ -529,11 +536,8 @@ public class PipelineBuilder
             }
 
             // add a complex filter unless we are concatenating
-            if (_concatInputFile.IsNone)
-            {
-                _pipelineSteps.Add(
-                    new ComplexFilter(_videoInputFile, _audioInputFile, _audioFilterSteps, _videoFilterSteps));
-            }
+            _pipelineSteps.Add(
+                new ComplexFilter(_videoInputFile, _audioInputFile, _audioFilterSteps, _videoFilterSteps));
         }
 
         return new FFmpegPipeline(_pipelineSteps, _videoFilterSteps, _audioFilterSteps);

@@ -234,11 +234,12 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var pipelineBuilder = new PipelineBuilder(
             videoInputFile,
             audioInputFile,
-            concatInputFile,
             FileSystemLayout.FFmpegReportsFolder,
             _logger);
 
-        FFmpegPipeline pipeline = pipelineBuilder.Build(desiredState);
+        FFmpegPipeline pipeline = concatInputFile.Match(
+            c => pipelineBuilder.Concat(c, desiredState),
+            () => pipelineBuilder.Build(desiredState));
 
         IEnumerable<string> loggedSteps = pipeline.PipelineSteps.Map(ps => ps.GetType().Name);
         IEnumerable<string> loggedVideoFilters = pipeline.VideoFilterSteps.Map(vf => vf.GetType().Name);
