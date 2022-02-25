@@ -11,10 +11,9 @@ public class TimeLimitOutputOption : IPipelineStep
         _finish = finish;
     }
 
-    public FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Unknown;
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> VideoInputOptions(VideoInputFile videoInputFile) => Array.Empty<string>();
+    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
     public IList<string> FilterOptions => Array.Empty<string>();
     public IList<string> OutputOptions => new List<string> { "-t", $"{_finish:c}" };
     public FrameState NextState(FrameState currentState) => currentState with { Finish = _finish };

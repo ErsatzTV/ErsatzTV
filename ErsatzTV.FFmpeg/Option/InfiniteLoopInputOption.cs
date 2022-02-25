@@ -14,16 +14,22 @@ public class InfiniteLoopInputOption : IPipelineStep
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
 
-    public IList<string> VideoInputOptions(VideoInputFile videoInputFile)
+    public IList<string> InputOptions(InputFile inputFile)
     {
-        // loop 1 for still images
-        if (videoInputFile.Streams.Any(s => s.StillImage))
+        // never loop audio
+        if (inputFile.Streams.All(s => s.Kind == StreamKind.Video))
         {
-            return new List<string> { "-loop", "1" };
+            // loop 1 for still images
+            if (inputFile.Streams.OfType<VideoStream>().Any(s => s.StillImage))
+            {
+                return new List<string> { "-loop", "1" };
+            }
+
+            // stream_loop for looped video i.e. filler
+            return new List<string> { "-stream_loop", "-1" };
         }
 
-        // stream_loop for looped video i.e. filler
-        return new List<string> { "-stream_loop", "-1" };
+        return Array.Empty<string>();
     }
 
     public IList<string> FilterOptions => Array.Empty<string>();

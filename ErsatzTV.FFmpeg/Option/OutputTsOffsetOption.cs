@@ -19,5 +19,5 @@ public class OutputTsOffsetOption : OutputOption
         $"{(_ptsOffset / (double)_videoTrackTimeScale).ToString(NumberFormatInfo.InvariantInfo)}"
     };
 
-    public override FrameState NextState(FrameState currentState) => currentState with { PtsOffset = _ptsOffset };
+    // public override FrameState NextState(FrameState currentState) => currentState with { PtsOffset = _ptsOffset };
 }

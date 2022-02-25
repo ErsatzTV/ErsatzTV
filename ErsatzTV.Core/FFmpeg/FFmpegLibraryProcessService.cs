@@ -12,9 +12,11 @@ using ErsatzTV.FFmpeg;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.State;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
+using FFmpegState = ErsatzTV.FFmpeg.FFmpegState;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.FFmpeg;
@@ -128,10 +130,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoPath == audioPath ? ffmpegVideoStream.PixelFormat : new PixelFormatYuv420P();
 
         var desiredState = new FrameState(
-            saveReports,
-            hwAccel,
-            VaapiDriverName(hwAccel, vaapiDriver),
-            VaapiDeviceName(hwAccel, vaapiDevice),
             playbackSettings.RealtimeOutput,
             false,
             playbackSettings.StreamSeek,
@@ -145,14 +143,25 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             playbackSettings.VideoBitrate,
             playbackSettings.VideoBufferSize,
             playbackSettings.VideoTrackTimeScale,
-            playbackSettings.Deinterlace,
+            playbackSettings.Deinterlace);
+
+        var audioState = new AudioState(
+            finish - now,
             playbackSettings.AudioCodec,
             playbackSettings.AudioChannels,
             playbackSettings.AudioBitrate,
             playbackSettings.AudioBufferSize,
             playbackSettings.AudioSampleRate,
             videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None,
-            playbackSettings.NormalizeLoudness,
+            playbackSettings.NormalizeLoudness);
+
+        audioInputFile = audioInputFile.Map(a => a with { DesiredState = audioState });
+
+        var ffmpegState = new FFmpegState(
+            saveReports,
+            hwAccel,
+            VaapiDriverName(hwAccel, vaapiDriver),
+            VaapiDeviceName(hwAccel, vaapiDevice),
             channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect,
             "ErsatzTV",
             channel.Name,
@@ -170,7 +179,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FileSystemLayout.FFmpegReportsFolder,
             _logger);
 
-        FFmpegPipeline pipeline = pipelineBuilder.Build(desiredState);
+        FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
         return GetProcess(ffmpegPath, videoInputFile, audioInputFile, None, pipeline);
     }

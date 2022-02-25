@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
+using ErsatzTV.FFmpeg.State;
 using NUnit.Framework;
 using FluentAssertions;
 using LanguageExt;
@@ -15,8 +16,8 @@ namespace ErsatzTV.FFmpeg.Tests;
 [TestFixture]
 public class PipelineGeneratorTests
 {
-    private readonly ILogger _logger = new Mock<ILogger>().Object; 
-    
+    private readonly ILogger _logger = new Mock<ILogger>().Object;
+
     [Test]
     public void Incorrect_Video_Codec_Should_Use_Encoder()
     {
@@ -27,13 +28,20 @@ public class PipelineGeneratorTests
 
         var audioInputFile = new AudioInputFile(
             "/tmp/whatever.mkv",
-            new List<AudioStream> { new(1, AudioFormat.Aac, 2) });
+            new List<AudioStream> { new(1, AudioFormat.Aac, 2) })
+        {
+            DesiredState = new AudioState(
+                Option<TimeSpan>.None,
+                AudioFormat.Aac,
+                2,
+                320,
+                640,
+                48,
+                Option<TimeSpan>.None,
+                false)
+        };
 
-        var desiredState = new FrameState(
-            false,
-            HardwareAccelerationMode.None,
-            Option<string>.None,
-            Option<string>.None,
+    var desiredState = new FrameState(
             true,
             false,
             Option<TimeSpan>.None,
@@ -46,14 +54,13 @@ public class PipelineGeneratorTests
             2000,
             4000,
             90_000,
+            false);
+
+        var ffmpegState = new FFmpegState(
             false,
-            AudioFormat.Aac,
-            2,
-            320,
-            640,
-            48,
-            Option<TimeSpan>.None,
-            false,
+            HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
             false,
             Option<string>.None,
             Option<string>.None,
@@ -64,7 +71,7 @@ public class PipelineGeneratorTests
             0);
 
         var builder = new PipelineBuilder(videoInputFile, audioInputFile, "", _logger);
-        FFmpegPipeline result = builder.Build(desiredState);
+        FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
         result.PipelineSteps.Should().Contain(ps => ps is EncoderLibx265);

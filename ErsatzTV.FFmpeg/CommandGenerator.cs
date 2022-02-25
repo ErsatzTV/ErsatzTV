@@ -32,18 +32,24 @@ public static class CommandGenerator
             
             foreach (IPipelineStep step in pipelineSteps)
             {
-                arguments.AddRange(step.VideoInputOptions(videoInputFile));
+                arguments.AddRange(step.InputOptions(videoInputFile));
             }
 
             arguments.AddRange(new[] { "-i", videoInputFile.Path });
         }
         
-        foreach ((string path, _) in maybeAudioInputFile)
+        foreach (AudioInputFile audioInputFile in maybeAudioInputFile)
         {
-            if (!includedPaths.Contains(path))
+            if (!includedPaths.Contains(audioInputFile.Path))
             {
-                includedPaths.Add(path);
-                arguments.AddRange(new[] { "-i", path });
+                includedPaths.Add(audioInputFile.Path);
+                
+                foreach (IPipelineStep step in pipelineSteps)
+                {
+                    arguments.AddRange(step.InputOptions(audioInputFile));
+                }
+
+                arguments.AddRange(new[] { "-i", audioInputFile.Path });
             }
         }
 
@@ -53,7 +59,7 @@ public static class CommandGenerator
             {
                 // TODO: this is kind of messy
                 arguments.AddRange(
-                    step.VideoInputOptions(
+                    step.InputOptions(
                         new VideoInputFile(
                             string.Empty,
                             Array.Empty<VideoStream>())));

@@ -24,7 +24,7 @@ public class OutputFormatHls : IPipelineStep
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> VideoInputOptions(VideoInputFile videoInputFile) => Array.Empty<string>();
+    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
     public IList<string> FilterOptions => Array.Empty<string>();
 
     public IList<string> OutputOptions
@@ -52,6 +52,8 @@ public class OutputFormatHls : IPipelineStep
         }
     }
 
+    public FrameState NextState(FrameState currentState) => currentState;
+
     private int GetFrameRateFromMedia()
     {
         var frameRate = 24;
@@ -76,11 +78,4 @@ public class OutputFormatHls : IPipelineStep
 
         return frameRate;
     }
-
-    public FrameState NextState(FrameState currentState) => currentState with
-    {
-        OutputFormat = OutputFormatKind.Hls,
-        HlsPlaylistPath = _playlistPath,
-        HlsSegmentTemplate = _segmentTemplate
-    };
 }

@@ -14,7 +14,6 @@ public class VaapiHardwareAccelerationOption : GlobalOption
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {
-        HardwareAccelerationMode = HardwareAccelerationMode.Vaapi,
         FrameDataLocation = FrameDataLocation.Hardware
     };
 }

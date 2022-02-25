@@ -103,7 +103,7 @@ public class ComplexFilter : IPipelineStep
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> VideoInputOptions(VideoInputFile videoInputFile) => Array.Empty<string>();
+    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
     public IList<string> FilterOptions => Arguments();
     public IList<string> OutputOptions => Array.Empty<string>();
     public FrameState NextState(FrameState currentState) => currentState;

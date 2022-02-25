@@ -13,9 +13,4 @@ public class AudioBufferSizeOutputOption : OutputOption
     {
         "-bufsize:a", $"{_decoderBufferSize}k"
     };
-
-    public override FrameState NextState(FrameState currentState) => currentState with
-    {
-        AudioBufferSize = _decoderBufferSize
-    };
 }

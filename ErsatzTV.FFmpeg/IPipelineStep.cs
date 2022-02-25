@@ -6,7 +6,7 @@ public interface IPipelineStep
 {
     IList<EnvironmentVariable> EnvironmentVariables { get; }
     IList<string> GlobalOptions { get; }
-    IList<string> VideoInputOptions(VideoInputFile videoInputFile);
+    IList<string> InputOptions(InputFile inputFile);
     IList<string> FilterOptions { get; }
     IList<string> OutputOptions { get; }
 

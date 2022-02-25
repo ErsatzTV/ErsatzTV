@@ -88,18 +88,15 @@ public class PipelineBuilder
         return new FFmpegPipeline(_pipelineSteps, _videoFilterSteps, _audioFilterSteps);
     }
 
-    public FFmpegPipeline Build(FrameState desiredState)
+    public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
-        var allVideoStreams = _videoInputFile.SelectMany(f => f.Streams).ToList();
-        var allAudioStreams = _audioInputFile.SelectMany(f => f.Streams).ToList();
+        var allVideoStreams = _videoInputFile.SelectMany(f => f.VideoStreams).ToList();
 
         // -sc_threshold 0 is unsupported with mpeg2video
         _pipelineSteps.Add(
             allVideoStreams.All(s => s.Codec != VideoFormat.Mpeg2Video) && desiredState.VideoFormat != VideoFormat.Mpeg2Video
                 ? new NoSceneDetectOutputOption(0)
                 : new NoSceneDetectOutputOption(1_000_000_000));
-
-        Option<AudioStream> audioStream = allAudioStreams.HeadOrNone();
 
         foreach (VideoStream videoStream in allVideoStreams)
         {
@@ -113,10 +110,6 @@ public class PipelineBuilder
             }
 
             var currentState = new FrameState(
-                false, // save report
-                HardwareAccelerationMode.None,
-                Option<string>.None,
-                Option<string>.None,
                 false, // realtime
                 false, // infinite loop
                 Option<TimeSpan>.None,
@@ -129,24 +122,9 @@ public class PipelineBuilder
                 Option<int>.None,
                 Option<int>.None,
                 Option<int>.None,
-                false, // deinterlace
-                audioStream.Map(a => a.Codec),
-                audioStream.Map(a => a.Channels),
-                Option<int>.None,
-                Option<int>.None,
-                Option<int>.None,
-                Option<TimeSpan>.None,
-                false,
-                false,
-                Option<string>.None,
-                Option<string>.None,
-                Option<string>.None,
-                OutputFormatKind.None,
-                Option<string>.None,
-                Option<string>.None,
-                0);
-
-            if (desiredState.SaveReport && !currentState.SaveReport)
+                false); // deinterlace
+            
+            if (ffmpegState.SaveReport)
             {
                 IPipelineStep step = new FFReportVariable(_reportsFolder, None);
                 currentState = step.NextState(currentState);
@@ -184,40 +162,34 @@ public class PipelineBuilder
             }
             else
             {
-                if (currentState.HardwareAccelerationMode != desiredState.HardwareAccelerationMode)
+                Option<IPipelineStep> maybeAccel = AvailableHardwareAccelerationOptions.ForMode(
+                    ffmpegState.HardwareAccelerationMode,
+                    ffmpegState.VaapiDevice,
+                    _logger);
+
+                if (maybeAccel.IsNone)
                 {
-                    Option<IPipelineStep> maybeAccel = AvailableHardwareAccelerationOptions.ForMode(
-                        desiredState.HardwareAccelerationMode,
-                        desiredState.VaapiDevice,
-                        _logger);
-
-                    if (maybeAccel.IsNone)
+                    ffmpegState = ffmpegState with
                     {
-                        desiredState = desiredState with
-                        {
-                            // disable hw accel if we don't match anything
-                            HardwareAccelerationMode = HardwareAccelerationMode.None
-                        };
-                    }
-
-                    foreach (IPipelineStep accel in maybeAccel)
-                    {
-                        currentState = accel.NextState(currentState);
-                        _pipelineSteps.Add(accel);
-                    }
+                        // disable hw accel if we don't match anything
+                        HardwareAccelerationMode = HardwareAccelerationMode.None
+                    };
                 }
 
-                foreach (string desiredVaapiDriver in desiredState.VaapiDriver)
+                foreach (IPipelineStep accel in maybeAccel)
                 {
-                    if (currentState.VaapiDriver != desiredVaapiDriver)
-                    {
-                        IPipelineStep step = new LibvaDriverNameVariable(desiredVaapiDriver);
-                        currentState = step.NextState(currentState);
-                        _pipelineSteps.Add(step);
-                    }
+                    currentState = accel.NextState(currentState);
+                    _pipelineSteps.Add(accel);
                 }
 
-                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(currentState, desiredState, _logger))
+                foreach (string desiredVaapiDriver in ffmpegState.VaapiDriver)
+                {
+                    IPipelineStep step = new LibvaDriverNameVariable(desiredVaapiDriver);
+                    currentState = step.NextState(currentState);
+                    _pipelineSteps.Add(step);
+                }
+
+                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(ffmpegState, currentState, _logger))
                 {
                     currentState = decoder.NextState(currentState);
                     _pipelineSteps.Add(decoder);
@@ -226,10 +198,9 @@ public class PipelineBuilder
 
             if (videoStream.StillImage)
             {
-                _pipelineSteps.Add(new InfiniteLoopInputOption(currentState.HardwareAccelerationMode));
+                _pipelineSteps.Add(new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode));
             }
 
-            // TODO: while?
             if (!IsDesiredVideoState(currentState, desiredState))
             {
                 if (!currentState.Realtime && desiredState.Realtime)
@@ -241,7 +212,7 @@ public class PipelineBuilder
 
                 if (!currentState.InfiniteLoop && desiredState.InfiniteLoop)
                 {
-                    IPipelineStep step = new InfiniteLoopInputOption(currentState.HardwareAccelerationMode);
+                    IPipelineStep step = new InfiniteLoopInputOption(ffmpegState.HardwareAccelerationMode);
                     currentState = step.NextState(currentState);
                     _pipelineSteps.Add(step);
                 }
@@ -289,7 +260,7 @@ public class PipelineBuilder
                 if (desiredState.Deinterlaced && !currentState.Deinterlaced)
                 {
                     IPipelineFilterStep step = AvailableDeinterlaceFilters.ForAcceleration(
-                        currentState.HardwareAccelerationMode,
+                        ffmpegState.HardwareAccelerationMode,
                         currentState);
 
                     currentState = step.NextState(currentState);
@@ -297,7 +268,7 @@ public class PipelineBuilder
                 }
 
                 // TODO: this is a software-only flow, will need to be different for hardware accel
-                if (currentState.HardwareAccelerationMode == HardwareAccelerationMode.None)
+                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.None)
                 {
                     if (currentState.ScaledSize != desiredState.ScaledSize ||
                         currentState.PaddedSize != desiredState.PaddedSize)
@@ -322,7 +293,7 @@ public class PipelineBuilder
                 else if (currentState.ScaledSize != desiredState.ScaledSize)
                 {
                     IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
-                        currentState.HardwareAccelerationMode,
+                        ffmpegState.HardwareAccelerationMode,
                         currentState,
                         desiredState.ScaledSize,
                         desiredState.PaddedSize);
@@ -344,7 +315,7 @@ public class PipelineBuilder
                 else if (currentState.PaddedSize != desiredState.PaddedSize)
                 {
                     IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
-                        currentState.HardwareAccelerationMode,
+                        ffmpegState.HardwareAccelerationMode,
                         currentState,
                         desiredState.ScaledSize,
                         desiredState.PaddedSize);
@@ -363,12 +334,12 @@ public class PipelineBuilder
                     _videoFilterSteps.Add(sarStep);
                 }
 
-                if (currentState.PtsOffset != desiredState.PtsOffset)
+                if (ffmpegState.PtsOffset > 0)
                 {
                     foreach (int videoTrackTimeScale in desiredState.VideoTrackTimeScale)
                     {
                         IPipelineStep step = new OutputTsOffsetOption(
-                            desiredState.PtsOffset,
+                            ffmpegState.PtsOffset,
                             videoTrackTimeScale);
                         currentState = step.NextState(currentState);
                         _pipelineSteps.Add(step);
@@ -388,7 +359,11 @@ public class PipelineBuilder
                 // after everything else is done, apply the encoder
                 if (!_pipelineSteps.OfType<IEncoder>().Any())
                 {
-                    foreach (IEncoder e in AvailableEncoders.ForVideoFormat(currentState, desiredState, _logger))
+                    foreach (IEncoder e in AvailableEncoders.ForVideoFormat(
+                                 ffmpegState,
+                                 currentState,
+                                 desiredState,
+                                 _logger))
                     {
                         encoder = e;
                         _pipelineSteps.Add(encoder);
@@ -401,129 +376,77 @@ public class PipelineBuilder
             // TODO: if all video filters are software, use software pixel format for hwaccel output
             // might be able to skip scale_cuda=format=whatever,hwdownload,format=whatever
 
-            if (audioStream.IsSome && IsDesiredAudioState(currentState, desiredState))
-            {
-                _pipelineSteps.Add(new EncoderCopyAudio());
-            }
-            else
+            foreach (AudioInputFile audioInputFile in _audioInputFile)
             {
                 // always need to specify audio codec so ffmpeg doesn't default to a codec we don't want
-                foreach (IEncoder step in AvailableEncoders.ForAudioFormat(desiredState, _logger))
+                foreach (IEncoder step in AvailableEncoders.ForAudioFormat(audioInputFile.DesiredState, _logger))
                 {
                     currentState = step.NextState(currentState);
                     _pipelineSteps.Add(step);
                 }
+
+                foreach (int desiredAudioChannels in audioInputFile.DesiredState.AudioChannels)
+                {
+                    _pipelineSteps.Add(new AudioChannelsOutputOption(desiredAudioChannels));
+                }
+
+                foreach (int desiredBitrate in audioInputFile.DesiredState.AudioBitrate)
+                {
+                    _pipelineSteps.Add(new AudioBitrateOutputOption(desiredBitrate));
+                }
+
+                foreach (int desiredBufferSize in audioInputFile.DesiredState.AudioBufferSize)
+                {
+                    _pipelineSteps.Add(new AudioBufferSizeOutputOption(desiredBufferSize));
+                }
+
+                foreach (int desiredSampleRate in audioInputFile.DesiredState.AudioSampleRate)
+                {
+                    _pipelineSteps.Add(new AudioSampleRateOutputOption(desiredSampleRate));
+                }
+
+                if (audioInputFile.DesiredState.NormalizeLoudness)
+                {
+                    _audioFilterSteps.Add(new NormalizeLoudnessFilter());
+                }
+
+                foreach (TimeSpan desiredDuration in audioInputFile.DesiredState.AudioDuration)
+                {
+                    _audioFilterSteps.Add(new AudioPadFilter(desiredDuration));
+                }
             }
 
-            // TODO: while?
-            if (!IsDesiredAudioState(currentState, desiredState))
+            if (ffmpegState.DoNotMapMetadata)
             {
-                foreach (int desiredAudioChannels in desiredState.AudioChannels)
-                {
-                    if (currentState.AudioChannels != desiredAudioChannels)
-                    {
-                        var step = new AudioChannelsOutputOption(desiredAudioChannels);
-                        currentState = step.NextState(currentState);
-                        _pipelineSteps.Add(step);
-                    }
-                }
-
-                foreach (int desiredBitrate in desiredState.AudioBitrate)
-                {
-                    if (currentState.AudioBitrate != desiredBitrate)
-                    {
-                        IPipelineStep step = new AudioBitrateOutputOption(desiredBitrate);
-                        currentState = step.NextState(currentState);
-                        _pipelineSteps.Add(step);
-                    }
-                }
-
-                foreach (int desiredBufferSize in desiredState.AudioBufferSize)
-                {
-                    if (currentState.AudioBufferSize != desiredBufferSize)
-                    {
-                        IPipelineStep step = new AudioBufferSizeOutputOption(desiredBufferSize);
-                        currentState = step.NextState(currentState);
-                        _pipelineSteps.Add(step);
-                    }
-                }
-
-                foreach (int desiredSampleRate in desiredState.AudioSampleRate)
-                {
-                    if (currentState.AudioSampleRate != desiredSampleRate)
-                    {
-                        IPipelineStep step = new AudioSampleRateOutputOption(desiredSampleRate);
-                        currentState = step.NextState(currentState);
-                        _pipelineSteps.Add(step);
-                    }
-                }
-                
-                if (desiredState.NormalizeLoudness && !currentState.NormalizeLoudness)
-                {
-                    IPipelineFilterStep step = new NormalizeLoudnessFilter();
-                    currentState = step.NextState(currentState);
-                    _audioFilterSteps.Add(step);
-                }
-
-                foreach (TimeSpan desiredDuration in desiredState.AudioDuration)
-                {
-                    if (currentState.AudioDuration != desiredDuration)
-                    {
-                        IPipelineFilterStep step = new AudioPadFilter(desiredDuration);
-                        currentState = step.NextState(currentState);
-                        _audioFilterSteps.Add(step);
-                    }
-                }
+                _pipelineSteps.Add(new DoNotMapMetadataOutputOption());
             }
 
-            if (desiredState.DoNotMapMetadata && !currentState.DoNotMapMetadata)
+            foreach (string desiredServiceProvider in ffmpegState.MetadataServiceProvider)
             {
-                IPipelineStep step = new DoNotMapMetadataOutputOption();
-                currentState = step.NextState(currentState);
-                _pipelineSteps.Add(step);
+                _pipelineSteps.Add(new MetadataServiceProviderOutputOption(desiredServiceProvider));
             }
 
-            foreach (string desiredServiceProvider in desiredState.MetadataServiceProvider)
+            foreach (string desiredServiceName in ffmpegState.MetadataServiceName)
             {
-                if (currentState.MetadataServiceProvider != desiredServiceProvider)
-                {
-                    IPipelineStep step = new MetadataServiceProviderOutputOption(desiredServiceProvider);
-                    currentState = step.NextState(currentState);
-                    _pipelineSteps.Add(step);
-                }
+                _pipelineSteps.Add(new MetadataServiceNameOutputOption(desiredServiceName));
             }
 
-            foreach (string desiredServiceName in desiredState.MetadataServiceName)
+            foreach (string desiredAudioLanguage in ffmpegState.MetadataAudioLanguage)
             {
-                if (currentState.MetadataServiceName != desiredServiceName)
-                {
-                    IPipelineStep step = new MetadataServiceNameOutputOption(desiredServiceName);
-                    currentState = step.NextState(currentState);
-                    _pipelineSteps.Add(step);
-                }
+                _pipelineSteps.Add(new MetadataAudioLanguageOutputOption(desiredAudioLanguage));
             }
 
-            foreach (string desiredAudioLanguage in desiredState.MetadataAudioLanguage)
-            {
-                if (currentState.MetadataAudioLanguage != desiredAudioLanguage)
-                {
-                    IPipelineStep step = new MetadataAudioLanguageOutputOption(desiredAudioLanguage);
-                    currentState = step.NextState(currentState);
-                    _pipelineSteps.Add(step);
-                }
-            }
-
-            switch (desiredState.OutputFormat)
+            switch (ffmpegState.OutputFormat)
             {
                 case OutputFormatKind.MpegTs:
                     _pipelineSteps.Add(new OutputFormatMpegTs());
                     _pipelineSteps.Add(new PipeProtocol());
-                    currentState = currentState with { OutputFormat = OutputFormatKind.MpegTs };
+                    // currentState = currentState with { OutputFormat = OutputFormatKind.MpegTs };
                     break;
                 case OutputFormatKind.Hls:
-                    foreach (string playlistPath in desiredState.HlsPlaylistPath)
+                    foreach (string playlistPath in ffmpegState.HlsPlaylistPath)
                     {
-                        foreach (string segmentTemplate in desiredState.HlsSegmentTemplate)
+                        foreach (string segmentTemplate in ffmpegState.HlsSegmentTemplate)
                         {
                             var step = new OutputFormatHls(
                                 desiredState,
@@ -548,8 +471,7 @@ public class PipelineBuilder
 
     private static bool IsDesiredVideoState(FrameState currentState, FrameState desiredState)
     {
-        return currentState.HardwareAccelerationMode == desiredState.HardwareAccelerationMode &&
-               currentState.VideoFormat == desiredState.VideoFormat &&
+        return currentState.VideoFormat == desiredState.VideoFormat &&
                currentState.PixelFormat.Match(pf => pf.Name, () => string.Empty) ==
                desiredState.PixelFormat.Match(pf => pf.Name, string.Empty) &&
                (desiredState.VideoBitrate.IsNone || currentState.VideoBitrate == desiredState.VideoBitrate) &&
@@ -560,16 +482,5 @@ public class PipelineBuilder
                currentState.ScaledSize == desiredState.ScaledSize &&
                currentState.PaddedSize == desiredState.PaddedSize &&
                (desiredState.FrameRate.IsNone || currentState.FrameRate == desiredState.FrameRate);
-    }
-
-    private static bool IsDesiredAudioState(FrameState currentState, FrameState desiredState)
-    {
-        return currentState.AudioFormat == desiredState.AudioFormat &&
-               currentState.AudioChannels == desiredState.AudioChannels &&
-               (desiredState.AudioBitrate.IsNone || currentState.AudioBitrate == desiredState.AudioBitrate) &&
-               (desiredState.AudioBufferSize.IsNone || currentState.AudioBufferSize == desiredState.AudioBufferSize) &&
-               (desiredState.AudioSampleRate.IsNone || currentState.AudioSampleRate == desiredState.AudioSampleRate) &&
-               (desiredState.AudioDuration.IsNone || currentState.AudioDuration == desiredState.AudioDuration) &&
-               currentState.NormalizeLoudness == desiredState.NormalizeLoudness;
     }
 }
