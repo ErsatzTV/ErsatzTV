@@ -5,24 +5,38 @@ namespace ErsatzTV.FFmpeg.Filter;
 
 public class ComplexFilter : IPipelineStep
 {
+    private readonly FFmpegState _ffmpegState;
     private readonly Option<VideoInputFile> _maybeVideoInputFile;
     private readonly Option<AudioInputFile> _maybeAudioInputFile;
+    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
+    private readonly FrameSize _resolution;
 
-    public ComplexFilter(Option<VideoInputFile> maybeVideoInputFile, Option<AudioInputFile> maybeAudioInputFile)
+    public ComplexFilter(
+        FFmpegState ffmpegState,
+        Option<VideoInputFile> maybeVideoInputFile,
+        Option<AudioInputFile> maybeAudioInputFile,
+        Option<WatermarkInputFile> maybeWatermarkInputFile,
+        FrameSize resolution)
     {
+        _ffmpegState = ffmpegState;
         _maybeVideoInputFile = maybeVideoInputFile;
         _maybeAudioInputFile = maybeAudioInputFile;
+        _maybeWatermarkInputFile = maybeWatermarkInputFile;
+        _resolution = resolution;
     }
 
     private IList<string> Arguments()
     {
         var audioLabel = "0:a";
         var videoLabel = "0:v";
+        string watermarkLabel;
 
         var result = new List<string>();
 
         string audioFilterComplex = string.Empty;
         string videoFilterComplex = string.Empty;
+        string watermarkFilterComplex = string.Empty;
+        string overlayFilterComplex = string.Empty;
         
         var distinctPaths = new List<string>();
         foreach ((string path, _) in _maybeVideoInputFile)
@@ -34,6 +48,14 @@ public class ComplexFilter : IPipelineStep
         }
 
         foreach ((string path, _) in _maybeAudioInputFile)
+        {
+            if (!distinctPaths.Contains(path))
+            {
+                distinctPaths.Add(path);
+            }
+        }
+
+        foreach ((string path, _) in _maybeWatermarkInputFile)
         {
             if (!distinctPaths.Contains(path))
             {
@@ -77,11 +99,47 @@ public class ComplexFilter : IPipelineStep
             }
         }
 
+        foreach (WatermarkInputFile watermarkInputFile in _maybeWatermarkInputFile)
+        {
+            int inputIndex = distinctPaths.IndexOf(watermarkInputFile.Path);
+            foreach ((int index, _, _) in watermarkInputFile.Streams)
+            {
+                watermarkLabel = $"{inputIndex}:{index}";
+                if (watermarkInputFile.FilterSteps.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
+                {
+                    watermarkFilterComplex += $"[{inputIndex}:{index}]";
+                    watermarkFilterComplex += string.Join(
+                        ",",
+                        watermarkInputFile.FilterSteps.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
+                    watermarkLabel = "[wm]";
+                    watermarkFilterComplex += watermarkLabel;
+                }
+
+                IPipelineFilterStep overlayFilter = AvailableOverlayFilters.ForAcceleration(
+                    _ffmpegState.HardwareAccelerationMode,
+                    watermarkInputFile.DesiredState,
+                    _resolution);
+
+                if (overlayFilter.Filter != string.Empty)
+                {
+                    string tempVideoLabel = string.IsNullOrWhiteSpace(videoFilterComplex)
+                        ? $"[{videoLabel}]"
+                        : videoLabel;
+                    
+                    overlayFilterComplex = $"{tempVideoLabel}{watermarkLabel}{overlayFilter.Filter}[vf]";
+                    
+                    // change the mapped label
+                    videoLabel = "[vf]";
+                }
+            }
+        }
+
         if (!string.IsNullOrWhiteSpace(audioFilterComplex) || !string.IsNullOrWhiteSpace(videoFilterComplex))
         {
             var filterComplex = string.Join(
                 ";",
-                new[] { audioFilterComplex, videoFilterComplex }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                new[] { audioFilterComplex, videoFilterComplex, watermarkFilterComplex, overlayFilterComplex }.Where(
+                    s => !string.IsNullOrWhiteSpace(s)));
 
             result.AddRange(new[] { "-filter_complex", filterComplex });
         }

@@ -53,6 +53,7 @@ public static class AvailableDecoders
 
                 (_, VideoFormat.Undetermined, _) => new DecoderImplicit(),
                 (_, VideoFormat.Copy, _) => new DecoderImplicit(),
+                (_, VideoFormat.GeneratedImage, _) => new DecoderImplicit(),
 
                 var (accel, videoFormat, pixelFormat) => LogUnknownDecoder(accel, videoFormat, pixelFormat, logger)
             };

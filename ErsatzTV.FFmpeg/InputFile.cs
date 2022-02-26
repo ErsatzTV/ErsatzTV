@@ -5,10 +5,10 @@ using LanguageExt;
 
 namespace ErsatzTV.FFmpeg;
 
-public record InputFile(string Path, IList<MediaStream> Streams)
+public abstract record InputFile(string Path, IList<MediaStream> Streams)
 {
-    public IList<IInputOption> InputOptions { get; } = new List<IInputOption>();
-    public IList<IPipelineFilterStep> FilterSteps { get; } = new List<IPipelineFilterStep>();
+    public List<IInputOption> InputOptions { get; } = new();
+    public List<IPipelineFilterStep> FilterSteps { get; } = new();
 }
 
 public record ConcatInputFile(string Url, FrameSize Resolution) : InputFile(
@@ -50,8 +50,6 @@ public record VideoInputFile(string Path, IList<VideoStream> VideoStreams) : Inp
     Path,
     VideoStreams.Cast<MediaStream>().ToList())
 {
-    public VideoState DesiredState { get; set; }
-
     public void AddOption(IInputOption option)
     {
         if (option.AppliesTo(this))
@@ -60,3 +58,6 @@ public record VideoInputFile(string Path, IList<VideoStream> VideoStreams) : Inp
         }
     }
 }
+
+public record WatermarkInputFile
+    (string Path, IList<VideoStream> VideoStreams, WatermarkState DesiredState) : VideoInputFile(Path, VideoStreams);

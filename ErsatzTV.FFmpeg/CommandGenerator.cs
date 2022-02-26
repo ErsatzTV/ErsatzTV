@@ -14,6 +14,7 @@ public static class CommandGenerator
     public static IList<string> GenerateArguments(
         Option<VideoInputFile> maybeVideoInputFile,
         Option<AudioInputFile> maybeAudioInputFile,
+        Option<WatermarkInputFile> maybeWatermarkInputFile,
         Option<ConcatInputFile> maybeConcatInputFile,
         IList<IPipelineStep> pipelineSteps)
     {
@@ -49,6 +50,21 @@ public static class CommandGenerator
                 }
 
                 arguments.AddRange(new[] { "-i", audioInputFile.Path });
+            }
+        }
+
+        foreach (WatermarkInputFile watermarkInputFile in maybeWatermarkInputFile)
+        {
+            if (!includedPaths.Contains(watermarkInputFile.Path))
+            {
+                includedPaths.Add(watermarkInputFile.Path);
+
+                foreach (IInputOption step in watermarkInputFile.InputOptions)
+                {
+                    arguments.AddRange(step.InputOptions(watermarkInputFile));
+                }
+
+                arguments.AddRange(new[] { "-i", watermarkInputFile.Path });
             }
         }
 

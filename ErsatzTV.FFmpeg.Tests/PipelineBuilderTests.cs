@@ -30,7 +30,6 @@ public class PipelineGeneratorTests
             "/tmp/whatever.mkv",
             new List<AudioStream> { new(1, AudioFormat.Aac, 2) },
             new AudioState(
-                Option<TimeSpan>.None,
                 AudioFormat.Aac,
                 2,
                 320,
@@ -68,13 +67,13 @@ public class PipelineGeneratorTests
             Option<string>.None,
             0);
 
-        var builder = new PipelineBuilder(videoInputFile, audioInputFile, "", _logger);
+        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, "", _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
         result.PipelineSteps.Should().Contain(ps => ps is EncoderLibx265);
 
-        PrintCommand(videoInputFile, audioInputFile, None, result);
+        PrintCommand(videoInputFile, audioInputFile, None, None, result);
     }
 
     [Test]
@@ -83,12 +82,12 @@ public class PipelineGeneratorTests
         var resolution = new FrameSize(1920, 1080);
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
-        var builder = new PipelineBuilder(None, None, "", _logger);
+        var builder = new PipelineBuilder(None, None, None, "", _logger);
         FFmpegPipeline result = builder.Concat(concatInputFile, FFmpegState.Concat(false, "Some Channel"));
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
-        string command = PrintCommand(None, None, concatInputFile, result);
+        string command = PrintCommand(None, None, None, concatInputFile, result);
         
         command.Should().Be(
             "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -f concat -safe 0 -protocol_whitelist file,http,tcp,https,tcp,tls -probesize 32 -re -stream_loop -1 -i http://localhost:8080/ffmpeg/concat/1 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c copy -map_metadata -1 -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
@@ -97,12 +96,14 @@ public class PipelineGeneratorTests
     private static string PrintCommand(
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
+        Option<WatermarkInputFile> watermarkInputFile,
         Option<ConcatInputFile> concatInputFile,
         FFmpegPipeline pipeline)
     {
         IList<string> arguments = CommandGenerator.GenerateArguments(
             videoInputFile,
             audioInputFile,
+            watermarkInputFile,
             concatInputFile,
             pipeline.PipelineSteps);
 

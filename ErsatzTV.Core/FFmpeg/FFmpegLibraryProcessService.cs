@@ -76,9 +76,25 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             outPoint,
             hlsRealtime,
             targetFramerate);
+
+        Option<WatermarkOptions> watermarkOptions =
+            await _ffmpegProcessService.GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
+
+        Option<List<FadePoint>> maybeFadePoints = watermarkOptions
+            .Map(o => o.Watermark)
+            .Flatten()
+            .Where(wm => wm.Mode == ChannelWatermarkMode.Intermittent)
+            .Map(
+                wm =>
+                    WatermarkCalculator.CalculateFadePoints(
+                        start,
+                        inPoint,
+                        outPoint,
+                        playbackSettings.StreamSeek,
+                        wm.FrequencyMinutes,
+                        wm.DurationSeconds));
         
         var audioState = new AudioState(
-            finish - now,
             playbackSettings.AudioCodec,
             playbackSettings.AudioChannels,
             playbackSettings.AudioBitrate,
@@ -104,6 +120,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
+        var watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
+        
         // TODO: need formats for these codecs
         string videoFormat = playbackSettings.VideoCodec switch
         {
@@ -174,12 +192,74 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         var pipelineBuilder = new PipelineBuilder(
             videoInputFile,
             audioInputFile,
+            watermarkInputFile,
             FileSystemLayout.FFmpegReportsFolder,
             _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
-        return GetProcess(ffmpegPath, videoInputFile, audioInputFile, None, pipeline);
+        return GetProcess(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
+    }
+
+    private Option<WatermarkInputFile> GetWatermarkInputFile(
+        Option<WatermarkOptions> watermarkOptions,
+        Option<List<FadePoint>> maybeFadePoints)
+    {
+        foreach (WatermarkOptions options in watermarkOptions)
+        {
+            foreach (ChannelWatermark watermark in options.Watermark)
+            {
+                // skip watermark if intermittent and no fade points
+                if (watermark.Mode != ChannelWatermarkMode.None &&
+                    (watermark.Mode != ChannelWatermarkMode.Intermittent ||
+                     maybeFadePoints.Map(fp => fp.Count > 0).IfNone(false)))
+                {
+                    foreach (string path in options.ImagePath)
+                    {
+                        var watermarkInputFile = new WatermarkInputFile(
+                            path,
+                            new List<VideoStream>
+                            {
+                                new(
+                                    options.ImageStreamIndex.IfNone(0),
+                                    "unknown",
+                                    new PixelFormatUnknown(),
+                                    new FrameSize(1, 1),
+                                    Option<string>.None,
+                                    !options.IsAnimated)
+                            },
+                            new WatermarkState(
+                                maybeFadePoints.Map(
+                                    lst => lst.Map(
+                                        fp =>
+                                        {
+                                            return fp switch
+                                            {
+                                                FadeInPoint fip => (WatermarkFadePoint)new WatermarkFadeIn(
+                                                    fip.Time,
+                                                    fip.EnableStart,
+                                                    fip.EnableFinish),
+                                                FadeOutPoint fop => new WatermarkFadeOut(
+                                                    fop.Time,
+                                                    fop.EnableStart,
+                                                    fop.EnableFinish),
+                                                _ => throw new NotSupportedException() // this will never happen
+                                            };
+                                        }).ToList()),
+                                watermark.Location,
+                                watermark.Size,
+                                watermark.WidthPercent,
+                                watermark.HorizontalMarginPercent,
+                                watermark.VerticalMarginPercent,
+                                watermark.Opacity));
+
+                        return watermarkInputFile;
+                    }
+                }
+            }
+        }
+
+        return None;
     }
 
     public Task<Process> ForError(
@@ -199,13 +279,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
             resolution);
 
-        var pipelineBuilder = new PipelineBuilder(None, None, FileSystemLayout.FFmpegReportsFolder, _logger);
+        var pipelineBuilder = new PipelineBuilder(None, None, None, FileSystemLayout.FFmpegReportsFolder, _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Concat(
             concatInputFile,
             FFmpegState.Concat(saveReports, channel.Name));
 
-        return GetProcess(ffmpegPath, None, None, concatInputFile, pipeline);
+        return GetProcess(ffmpegPath, None, None, None, concatInputFile, pipeline);
     }
 
     public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
@@ -226,7 +306,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string videoPath,
         bool boxBlur,
         Option<string> watermarkPath,
-        ChannelWatermarkLocation watermarkLocation,
+        WatermarkLocation watermarkLocation,
         int horizontalMarginPercent,
         int verticalMarginPercent,
         int watermarkWidthPercent) =>
@@ -248,6 +328,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string ffmpegPath,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
+        Option<WatermarkInputFile> watermarkInputFile,
         Option<ConcatInputFile> concatInputFile,
         FFmpegPipeline pipeline)
     {
@@ -269,6 +350,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IList<string> arguments = CommandGenerator.GenerateArguments(
             videoInputFile,
             audioInputFile,
+            watermarkInputFile,
             concatInputFile,
             pipeline.PipelineSteps);
 

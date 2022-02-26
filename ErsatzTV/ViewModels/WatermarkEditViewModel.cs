@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Application.Watermarks.Commands;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.FFmpeg.State;
 
 namespace ErsatzTV.ViewModels
 {
@@ -32,8 +33,8 @@ namespace ErsatzTV.ViewModels
         public string Image { get; set; }
         public ChannelWatermarkMode Mode { get; set; }
         public ChannelWatermarkImageSource ImageSource { get; set; }
-        public ChannelWatermarkLocation Location { get; set; }
-        public ChannelWatermarkSize Size { get; set; }
+        public WatermarkLocation Location { get; set; }
+        public WatermarkSize Size { get; set; }
         public int Width { get; set; }
         public int HorizontalMargin { get; set; }
         public int VerticalMargin { get; set; }
