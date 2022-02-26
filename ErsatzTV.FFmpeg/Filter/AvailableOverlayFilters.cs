@@ -8,13 +8,13 @@ public static class AvailableOverlayFilters
 {
     public static IPipelineFilterStep ForAcceleration(
         HardwareAccelerationMode accelMode,
+        FrameState currentState,
         WatermarkState watermarkState,
         FrameSize resolution) =>
         accelMode switch
         {
-            HardwareAccelerationMode.Nvenc => new OverlayCudaFilter(watermarkState, resolution),
-            HardwareAccelerationMode.Qsv => new OverlayQsvFilter(watermarkState, resolution),
-            // HardwareAccelerationMode.Vaapi => new DeinterlaceVaapiFilter(),
-            _ => new OverlayFilter(watermarkState, resolution)
+            HardwareAccelerationMode.Nvenc => new OverlayCudaFilter(currentState, watermarkState, resolution),
+            HardwareAccelerationMode.Qsv => new OverlayQsvFilter(currentState, watermarkState, resolution),
+            _ => new OverlayFilter(currentState, watermarkState, resolution)
         };
 }

@@ -443,6 +443,14 @@ public class PipelineBuilder
 
             foreach (WatermarkInputFile watermarkInputFile in _watermarkInputFile)
             {
+                // vaapi uses a software overlay, so we need to ensure the background is already in software
+                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                {
+                    var downloadFilter = new HardwareDownloadFilter(currentState);
+                    currentState = downloadFilter.NextState(currentState);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(downloadFilter));
+                }
+
                 watermarkInputFile.FilterSteps.Add(
                     new WatermarkPixelFormatFilter(ffmpegState, watermarkInputFile.DesiredState));
 
@@ -475,7 +483,7 @@ public class PipelineBuilder
                     watermarkInputFile.FilterSteps.AddRange(fadePoints.Map(fp => new WatermarkFadeFilter(fp)));
                 }
 
-                watermarkInputFile.FilterSteps.Add(new HardwareUploadFilter(ffmpegState));
+                watermarkInputFile.FilterSteps.Add(new WatermarkHardwareUploadFilter(currentState, ffmpegState));
             }
 
             if (ffmpegState.DoNotMapMetadata)
@@ -524,6 +532,7 @@ public class PipelineBuilder
             }
 
             var complexFilter = new ComplexFilter(
+                currentState,
                 ffmpegState,
                 _videoInputFile,
                 _audioInputFile,

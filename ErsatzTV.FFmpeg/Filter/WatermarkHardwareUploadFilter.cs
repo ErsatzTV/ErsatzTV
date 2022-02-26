@@ -1,11 +1,13 @@
 ﻿namespace ErsatzTV.FFmpeg.Filter;
 
-public class HardwareUploadFilter : BaseFilter
+public class WatermarkHardwareUploadFilter : BaseFilter
 {
+    private readonly FrameState _currentState;
     private readonly FFmpegState _ffmpegState;
 
-    public HardwareUploadFilter(FFmpegState ffmpegState)
+    public WatermarkHardwareUploadFilter(FrameState currentState, FFmpegState ffmpegState)
     {
+        _currentState = currentState;
         _ffmpegState = ffmpegState;
     }
 
@@ -16,7 +18,11 @@ public class HardwareUploadFilter : BaseFilter
         HardwareAccelerationMode.None => string.Empty,
         HardwareAccelerationMode.Nvenc => "hwupload_cuda",
         HardwareAccelerationMode.Qsv => "hwupload=extra_hw_frames=64",
-        HardwareAccelerationMode.Vaapi => "format=nv12|vaapi,hwupload",
+        
+        // leave vaapi in software since we don't (yet) use overlay_vaapi
+        HardwareAccelerationMode.Vaapi when _currentState.FrameDataLocation == FrameDataLocation.Software =>
+            string.Empty,
+        
         _ => "hwupload"
     };
 }

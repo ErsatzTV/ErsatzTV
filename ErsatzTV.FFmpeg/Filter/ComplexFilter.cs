@@ -5,6 +5,7 @@ namespace ErsatzTV.FFmpeg.Filter;
 
 public class ComplexFilter : IPipelineStep
 {
+    private readonly FrameState _currentState;
     private readonly FFmpegState _ffmpegState;
     private readonly Option<VideoInputFile> _maybeVideoInputFile;
     private readonly Option<AudioInputFile> _maybeAudioInputFile;
@@ -12,12 +13,14 @@ public class ComplexFilter : IPipelineStep
     private readonly FrameSize _resolution;
 
     public ComplexFilter(
+        FrameState currentState,
         FFmpegState ffmpegState,
         Option<VideoInputFile> maybeVideoInputFile,
         Option<AudioInputFile> maybeAudioInputFile,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
         FrameSize resolution)
     {
+        _currentState = currentState;
         _ffmpegState = ffmpegState;
         _maybeVideoInputFile = maybeVideoInputFile;
         _maybeAudioInputFile = maybeAudioInputFile;
@@ -117,6 +120,7 @@ public class ComplexFilter : IPipelineStep
 
                 IPipelineFilterStep overlayFilter = AvailableOverlayFilters.ForAcceleration(
                     _ffmpegState.HardwareAccelerationMode,
+                    _currentState,
                     watermarkInputFile.DesiredState,
                     _resolution);
 
@@ -125,8 +129,20 @@ public class ComplexFilter : IPipelineStep
                     string tempVideoLabel = string.IsNullOrWhiteSpace(videoFilterComplex)
                         ? $"[{videoLabel}]"
                         : videoLabel;
+
+                    // vaapi uses software overlay and needs to upload
+                    string uploadFilter = string.Empty;
+                    if (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                    {
+                        uploadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(uploadFilter))
+                    {
+                        uploadFilter = "," + uploadFilter;
+                    }
                     
-                    overlayFilterComplex = $"{tempVideoLabel}{watermarkLabel}{overlayFilter.Filter}[vf]";
+                    overlayFilterComplex = $"{tempVideoLabel}{watermarkLabel}{overlayFilter.Filter}{uploadFilter}[vf]";
                     
                     // change the mapped label
                     videoLabel = "[vf]";
