@@ -24,7 +24,7 @@ public class ScaleQsvFilter : BaseFilter
                 foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
                 {
                     // don't need scaling, but still need pixel format
-                    scale = $"scale_qsv=format={pixelFormat.FFmpegName}";
+                    scale = $"vpp_qsv=format={pixelFormat.FFmpegName}";
                 }
             }
             else
@@ -35,8 +35,8 @@ public class ScaleQsvFilter : BaseFilter
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
-                string targetSize = $"{_scaledSize.Width}:{_scaledSize.Height}";
-                scale = $"scale_qsv={targetSize}{format}";
+                string targetSize = $"w={_scaledSize.Width}:h={_scaledSize.Height}";
+                scale = $"vpp_qsv={targetSize}{format}";
             }
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
