@@ -1,22 +1,44 @@
-﻿using ErsatzTV.FFmpeg.State;
+﻿using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.State;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
 public class OverlayFilter : BaseFilter
 {
+    private readonly FrameState _currentState;
     private readonly WatermarkState _watermarkState;
     private readonly FrameSize _resolution;
 
-    public OverlayFilter(WatermarkState watermarkState, FrameSize resolution)
+    public OverlayFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution)
     {
+        _currentState = currentState;
         _watermarkState = watermarkState;
         _resolution = resolution;
     }
 
     public override FrameState NextState(FrameState currentState) => currentState;
 
-    public override string Filter => $"overlay={Position}";
-    
+    public override string Filter
+    {
+        get
+        {
+            string hwdownload = string.Empty;
+            if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
+            {
+                hwdownload = "hwdownload,";
+                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+                {
+                    if (pixelFormat.FFmpegName == FFmpegFormat.NV12)
+                    {
+                        hwdownload = "hwdownload,format=nv12,";
+                    }
+                }
+            }
+
+            return $"{hwdownload}overlay={Position}";
+        }
+    }
+
     protected string Position
     {
         get

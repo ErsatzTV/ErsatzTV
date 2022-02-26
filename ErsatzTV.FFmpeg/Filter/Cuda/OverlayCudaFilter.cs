@@ -4,7 +4,10 @@ namespace ErsatzTV.FFmpeg.Filter.Cuda;
 
 public class OverlayCudaFilter : OverlayFilter
 {
-    public OverlayCudaFilter(WatermarkState watermarkState, FrameSize resolution) : base(watermarkState, resolution)
+    public OverlayCudaFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution) : base(
+        currentState,
+        watermarkState,
+        resolution)
     {
     }
 
