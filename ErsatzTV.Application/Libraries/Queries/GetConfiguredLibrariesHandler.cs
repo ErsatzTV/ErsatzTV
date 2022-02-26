@@ -10,13 +10,16 @@ using static ErsatzTV.Application.Libraries.Mapper;
 
 namespace ErsatzTV.Application.Libraries.Queries
 {
-    public class GetAllLibrariesHandler : IRequestHandler<GetAllLibraries, List<LibraryViewModel>>
+    public class GetConfiguredLibrariesHandler : IRequestHandler<GetConfiguredLibraries, List<LibraryViewModel>>
     {
         private readonly ILibraryRepository _libraryRepository;
 
-        public GetAllLibrariesHandler(ILibraryRepository libraryRepository) => _libraryRepository = libraryRepository;
+        public GetConfiguredLibrariesHandler(ILibraryRepository libraryRepository) =>
+            _libraryRepository = libraryRepository;
 
-        public Task<List<LibraryViewModel>> Handle(GetAllLibraries request, CancellationToken cancellationToken) =>
+        public Task<List<LibraryViewModel>> Handle(
+            GetConfiguredLibraries request,
+            CancellationToken cancellationToken) =>
             _libraryRepository.GetAll()
                 .Map(
                     list => list.Filter(ShouldIncludeLibrary)
@@ -28,7 +31,7 @@ namespace ErsatzTV.Application.Libraries.Queries
         private static bool ShouldIncludeLibrary(Library library) =>
             library switch
             {
-                LocalLibrary => true,
+                LocalLibrary => library.Paths.Count > 0,
                 PlexLibrary plex => plex.ShouldSyncItems,
                 JellyfinLibrary jellyfin => jellyfin.ShouldSyncItems,
                 EmbyLibrary emby => emby.ShouldSyncItems,

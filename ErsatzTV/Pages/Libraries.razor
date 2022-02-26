@@ -91,7 +91,7 @@
 
     private async Task LoadLibraries()
     {
-        _libraries = await _mediator.Send(new GetAllLibraries());
+        _libraries = await _mediator.Send(new GetConfiguredLibraries());
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }
 

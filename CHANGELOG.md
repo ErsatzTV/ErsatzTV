@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Disable framerate normalization by default and on all ffmpeg profiles
   - If framerate normalization is desired (not typically needed), it can be re-enabled manually
 - Show watermarks over songs
+- Hide unused local libraries
 
 ## [0.4.1-alpha] - 2022-02-10
 ### Fixed
