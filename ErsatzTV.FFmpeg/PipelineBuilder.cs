@@ -387,6 +387,7 @@ public class PipelineBuilder
                                  ffmpegState,
                                  currentState,
                                  desiredState,
+                                 _watermarkInputFile,
                                  _logger))
                     {
                         encoder = e;

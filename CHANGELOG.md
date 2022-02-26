@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Add improved but experimental transcoder logic, which can be toggled on and off in `Settings`
 - Fix `HLS Segmenter` bug when source video packet contains no duration (`N/A`)
+- Fix green line at the bottom of some content scaled using QSV acceleration
 
 ### Added
 - Add configurable channel group (M3U) and categories (XMLTV)

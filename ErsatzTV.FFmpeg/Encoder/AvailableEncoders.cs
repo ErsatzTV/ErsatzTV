@@ -11,13 +11,20 @@ namespace ErsatzTV.FFmpeg.Encoder;
 
 public static class AvailableEncoders
 {
-    public static Option<IEncoder> ForVideoFormat(FFmpegState ffmpegState, FrameState currentState, FrameState desiredState, ILogger logger) =>
+    public static Option<IEncoder> ForVideoFormat(
+        FFmpegState ffmpegState,
+        FrameState currentState,
+        FrameState desiredState,
+        Option<WatermarkInputFile> maybeWatermarkInputFile,
+        ILogger logger) =>
         (ffmpegState.HardwareAccelerationMode, desiredState.VideoFormat) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(),
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(),
 
-            (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(),
+            (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(
+                currentState,
+                maybeWatermarkInputFile),
             (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(currentState),
 
             (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(currentState),
