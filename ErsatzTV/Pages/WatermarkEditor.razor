@@ -3,6 +3,7 @@
 @using ErsatzTV.Application.Images.Commands
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Application.Watermarks.Queries
+@using ErsatzTV.FFmpeg.State
 @inject NavigationManager _navigationManager
 @inject ILogger<WatermarkEditor> _logger
 @inject ISnackbar _snackbar
@@ -55,22 +56,22 @@
                     <MudSelect Class="mt-3" Label="Location" @bind-Value="_model.Location"
                                For="@(() => _model.Location)"
                                Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.BottomRight)">Bottom Right</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.BottomMiddle)">Bottom Middle</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.BottomLeft)">Bottom Left</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.LeftMiddle)">Left Middle</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopLeft)">Top Left</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopMiddle)">Top Middle</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.TopRight)">Top Right</MudSelectItem>
-                        <MudSelectItem Value="@(ChannelWatermarkLocation.RightMiddle)">Right Middle</MudSelectItem>
+                        <MudSelectItem Value="@(WatermarkLocation.BottomRight)">Bottom Right</MudSelectItem>
+                        <MudSelectItem Value="@(WatermarkLocation.BottomMiddle)">Bottom Middle</MudSelectItem>
+                        <MudSelectItem Value="@(WatermarkLocation.BottomLeft)">Bottom Left</MudSelectItem>
+                        <MudSelectItem Value="@(WatermarkLocation.LeftMiddle)">Left Middle</MudSelectItem>
+                        <MudSelectItem Value="@(WatermarkLocation.TopLeft)">Top Left</MudSelectItem>
+                        <MudSelectItem Value="@(WatermarkLocation.TopMiddle)">Top Middle</MudSelectItem>
+                        <MudSelectItem Value="@(WatermarkLocation.TopRight)">Top Right</MudSelectItem>
+                        <MudSelectItem Value="@(WatermarkLocation.RightMiddle)">Right Middle</MudSelectItem>
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: start" Justify="Justify.Center">
                         <MudItem xs="6">
                             <MudSelect Label="Size" @bind-Value="_model.Size"
                                        For="@(() => _model.Size)"
                                        Disabled="@(_model.Mode == ChannelWatermarkMode.None)">
-                                <MudSelectItem Value="@(ChannelWatermarkSize.Scaled)">Scaled</MudSelectItem>
-                                <MudSelectItem Value="@(ChannelWatermarkSize.ActualSize)">Actual Size</MudSelectItem>
+                                <MudSelectItem Value="@(WatermarkSize.Scaled)">Scaled</MudSelectItem>
+                                <MudSelectItem Value="@(WatermarkSize.ActualSize)">Actual Size</MudSelectItem>
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="6">
@@ -78,7 +79,7 @@
                                           For="@(() => _model.Width)"
                                           Adornment="Adornment.End"
                                           AdornmentText="%"
-                                          Disabled="@(_model.Mode == ChannelWatermarkMode.None || _model.Size == ChannelWatermarkSize.ActualSize)"
+                                          Disabled="@(_model.Mode == ChannelWatermarkMode.None || _model.Size == WatermarkSize.ActualSize)"
                                           Immediate="true"/>
                         </MudItem>
                     </MudGrid>
@@ -169,8 +170,8 @@
                 Name = string.Empty,
                 Mode = ChannelWatermarkMode.Permanent,
                 Image = string.Empty,
-                Location = ChannelWatermarkLocation.BottomRight,
-                Size = ChannelWatermarkSize.Scaled,
+                Location = WatermarkLocation.BottomRight,
+                Size = WatermarkSize.Scaled,
                 Width = 15,
                 HorizontalMargin = 5,
                 VerticalMargin = 5,

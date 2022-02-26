@@ -14,9 +14,4 @@ public class AudioBitrateOutputOption : OutputOption
         "-b:a", $"{_bitrate}k",
         "-maxrate:a", $"{_bitrate}k",
     };
-
-    public override FrameState NextState(FrameState currentState) => currentState with
-    {
-        AudioBitrate = _bitrate
-    };
 }

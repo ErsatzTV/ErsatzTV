@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
+using ErsatzTV.FFmpeg.State;
 using LanguageExt;
 
 namespace ErsatzTV.Core.Interfaces.FFmpeg
@@ -56,7 +57,7 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg
             string videoPath,
             bool boxBlur,
             Option<string> watermarkPath,
-            ChannelWatermarkLocation watermarkLocation,
+            WatermarkLocation watermarkLocation,
             int horizontalMarginPercent,
             int verticalMarginPercent,
             int watermarkWidthPercent);

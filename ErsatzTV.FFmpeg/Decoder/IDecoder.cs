@@ -1,6 +1,8 @@
-﻿namespace ErsatzTV.FFmpeg.Decoder;
+﻿using ErsatzTV.FFmpeg.Option;
 
-public interface IDecoder : IPipelineStep
+namespace ErsatzTV.FFmpeg.Decoder;
+
+public interface IDecoder : IInputOption
 {
     string Name { get; }
 }

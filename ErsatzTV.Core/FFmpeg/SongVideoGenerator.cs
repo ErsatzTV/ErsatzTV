@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.State;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -71,9 +73,9 @@ namespace ErsatzTV.Core.FFmpeg
             const int HORIZONTAL_MARGIN_PERCENT = 3;
             const int VERTICAL_MARGIN_PERCENT = 5;
             const int WATERMARK_WIDTH_PERCENT = 25;
-            ChannelWatermarkLocation watermarkLocation = NextRandom(2) == 0
-                ? ChannelWatermarkLocation.BottomLeft
-                : ChannelWatermarkLocation.BottomRight;
+            WatermarkLocation watermarkLocation = NextRandom(2) == 0
+                ? WatermarkLocation.BottomLeft
+                : WatermarkLocation.BottomRight;
             
             foreach (SongMetadata metadata in song.SongMetadata)
             {
@@ -120,10 +122,10 @@ namespace ErsatzTV.Core.FFmpeg
                 {
                     switch (watermarkLocation)
                     {
-                        case ChannelWatermarkLocation.BottomLeft:
+                        case WatermarkLocation.BottomLeft:
                             leftMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
                             break;
-                        case ChannelWatermarkLocation.BottomRight:
+                        case WatermarkLocation.BottomRight:
                             leftMarginPercent = rightMarginPercent = HORIZONTAL_MARGIN_PERCENT;
                             rightMarginPercent += WATERMARK_WIDTH_PERCENT + HORIZONTAL_MARGIN_PERCENT;
                             break;
@@ -235,7 +237,13 @@ namespace ErsatzTV.Core.FFmpeg
                     SampleAspectRatio = "1:1",
                     Streams = new List<MediaStream>
                     {
-                        new() { MediaStreamKind = MediaStreamKind.Video, Index = 0, PixelFormat = "yuv420p" },
+                        new()
+                        {
+                            MediaStreamKind = MediaStreamKind.Video,
+                            Index = 0,
+                            Codec = VideoFormat.GeneratedImage,
+                            PixelFormat = new PixelFormatUnknown().Name // the resulting pixel format is unknown
+                        },
                     },
                     MediaFiles = new List<MediaFile>
                     {
