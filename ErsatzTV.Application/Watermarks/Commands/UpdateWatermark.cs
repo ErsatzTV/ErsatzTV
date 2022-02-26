@@ -1,5 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.FFmpeg.State;
 using LanguageExt;
 using MediatR;
 
@@ -11,8 +12,8 @@ namespace ErsatzTV.Application.Watermarks.Commands
         string Image,
         ChannelWatermarkMode Mode,
         ChannelWatermarkImageSource ImageSource,
-        ChannelWatermarkLocation Location,
-        ChannelWatermarkSize Size,
+        WatermarkLocation Location,
+        WatermarkSize Size,
         int Width,
         int HorizontalMargin,
         int VerticalMargin,

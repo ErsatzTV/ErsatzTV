@@ -1,23 +1,24 @@
 ﻿using System.Runtime.InteropServices;
+using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.Environment;
 
 public class FFReportVariable : IPipelineStep
 {
     private readonly string _reportsFolder;
-    private readonly IList<InputFile> _inputFiles;
+    private readonly Option<ConcatInputFile> _maybeConcatInputFile;
 
-    public FFReportVariable(string reportsFolder, IList<InputFile> inputFiles)
+    public FFReportVariable(string reportsFolder, Option<ConcatInputFile> maybeConcatInputFile)
     {
         _reportsFolder = reportsFolder;
-        _inputFiles = inputFiles;
+        _maybeConcatInputFile = maybeConcatInputFile;
     }
 
     public IList<EnvironmentVariable> EnvironmentVariables
     {
         get
         {
-            string fileName = _inputFiles.OfType<ConcatInputFile>().Any()
+            string fileName = _maybeConcatInputFile.IsSome
                 ? Path.Combine(_reportsFolder, "ffmpeg-%t-concat.log")
                 : Path.Combine(_reportsFolder, "ffmpeg-%t-transcode.log");
 
@@ -42,5 +43,5 @@ public class FFReportVariable : IPipelineStep
     public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
     public IList<string> FilterOptions => Array.Empty<string>();
     public IList<string> OutputOptions => Array.Empty<string>();
-    public FrameState NextState(FrameState currentState) => currentState with { SaveReport = true };
+    public FrameState NextState(FrameState currentState) => currentState;
 }

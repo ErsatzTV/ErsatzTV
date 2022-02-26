@@ -11,9 +11,4 @@ public class MetadataServiceProviderOutputOption : OutputOption
 
     public override IList<string> OutputOptions => new List<string>
         { "-metadata", $"service_provider=\"{_serviceProvider}\"" };
-
-    public override FrameState NextState(FrameState currentState) => currentState with
-    {
-        MetadataServiceProvider = _serviceProvider
-    };
 }

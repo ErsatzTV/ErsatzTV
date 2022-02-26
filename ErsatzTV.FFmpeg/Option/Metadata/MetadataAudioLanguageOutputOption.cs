@@ -11,9 +11,4 @@ public class MetadataAudioLanguageOutputOption : OutputOption
 
     public override IList<string> OutputOptions => new List<string>
         { "-metadata:s:a:0", $"language={_audioLanguage}" };
-
-    public override FrameState NextState(FrameState currentState) => currentState with
-    {
-        MetadataAudioLanguage = _audioLanguage
-    };
 }

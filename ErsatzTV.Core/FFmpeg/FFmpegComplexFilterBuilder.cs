@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
+using ErsatzTV.FFmpeg.State;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
@@ -330,13 +331,13 @@ namespace ErsatzTV.Core.FFmpeg
 
                     string position = watermark.Location switch
                     {
-                        ChannelWatermarkLocation.BottomLeft => $"x={horizontalMargin}:y=H-h-{verticalMargin}",
-                        ChannelWatermarkLocation.TopLeft => $"x={horizontalMargin}:y={verticalMargin}",
-                        ChannelWatermarkLocation.TopRight => $"x=W-w-{horizontalMargin}:y={verticalMargin}",
-                        ChannelWatermarkLocation.TopMiddle => $"x=(W-w)/2:y={verticalMargin}",
-                        ChannelWatermarkLocation.RightMiddle => $"x=W-w-{horizontalMargin}:y=(H-h)/2",
-                        ChannelWatermarkLocation.BottomMiddle => $"x=(W-w)/2:y=H-h-{verticalMargin}",
-                        ChannelWatermarkLocation.LeftMiddle => $"x={horizontalMargin}:y=(H-h)/2",
+                        WatermarkLocation.BottomLeft => $"x={horizontalMargin}:y=H-h-{verticalMargin}",
+                        WatermarkLocation.TopLeft => $"x={horizontalMargin}:y={verticalMargin}",
+                        WatermarkLocation.TopRight => $"x=W-w-{horizontalMargin}:y={verticalMargin}",
+                        WatermarkLocation.TopMiddle => $"x=(W-w)/2:y={verticalMargin}",
+                        WatermarkLocation.RightMiddle => $"x=W-w-{horizontalMargin}:y=(H-h)/2",
+                        WatermarkLocation.BottomMiddle => $"x=(W-w)/2:y=H-h-{verticalMargin}",
+                        WatermarkLocation.LeftMiddle => $"x={horizontalMargin}:y=(H-h)/2",
                         _ => $"x=W-w-{horizontalMargin}:y=H-h-{verticalMargin}"
                     };
 
@@ -346,7 +347,7 @@ namespace ErsatzTV.Core.FFmpeg
                         watermarkPreprocess.Add($"colorchannelmixer=aa={opacity:F2}");
                     }
 
-                    if (watermark.Size == ChannelWatermarkSize.Scaled)
+                    if (watermark.Size == WatermarkSize.Scaled)
                     {
                         double width = Math.Round(watermark.WidthPercent / 100.0 * _resolution.Width);
                         watermarkPreprocess.Add($"scale={width}:-1");

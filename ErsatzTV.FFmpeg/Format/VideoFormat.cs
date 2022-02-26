@@ -15,5 +15,6 @@ public static class VideoFormat
     public const string MpegTs = "mpegts";
 
     public const string Copy = "copy";
+    public const string GeneratedImage = "generated-image";
     public const string Undetermined = "";
 }

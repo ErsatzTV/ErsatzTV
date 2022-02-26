@@ -52,6 +52,8 @@ public class OutputFormatHls : IPipelineStep
         }
     }
 
+    public FrameState NextState(FrameState currentState) => currentState;
+
     private int GetFrameRateFromMedia()
     {
         var frameRate = 24;
@@ -76,11 +78,4 @@ public class OutputFormatHls : IPipelineStep
 
         return frameRate;
     }
-
-    public FrameState NextState(FrameState currentState) => currentState with
-    {
-        OutputFormat = OutputFormatKind.Hls,
-        HlsPlaylistPath = _playlistPath,
-        HlsSegmentTemplate = _segmentTemplate
-    };
 }

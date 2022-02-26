@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.FFmpeg.State;
 using ErsatzTV.ViewModels;
 using FluentValidation;
 
@@ -20,7 +21,7 @@ namespace ErsatzTV.Validators
                 .LessThanOrEqualTo(100)
                 .When(
                     vm => vm.Mode != ChannelWatermarkMode.None &&
-                          vm.Size == ChannelWatermarkSize.Scaled);
+                          vm.Size == WatermarkSize.Scaled);
 
             RuleFor(x => x.HorizontalMargin)
                 .GreaterThanOrEqualTo(0)

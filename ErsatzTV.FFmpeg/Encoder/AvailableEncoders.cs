@@ -3,6 +3,7 @@ using ErsatzTV.FFmpeg.Encoder.Qsv;
 using ErsatzTV.FFmpeg.Encoder.Vaapi;
 using ErsatzTV.FFmpeg.Encoder.VideoToolbox;
 using ErsatzTV.FFmpeg.Format;
+using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
 using LanguageExt;
 
@@ -10,8 +11,8 @@ namespace ErsatzTV.FFmpeg.Encoder;
 
 public static class AvailableEncoders
 {
-    public static Option<IEncoder> ForVideoFormat(FrameState currentState, FrameState desiredState, ILogger logger) =>
-        (desiredState.HardwareAccelerationMode, desiredState.VideoFormat) switch
+    public static Option<IEncoder> ForVideoFormat(FFmpegState ffmpegState, FrameState currentState, FrameState desiredState, ILogger logger) =>
+        (ffmpegState.HardwareAccelerationMode, desiredState.VideoFormat) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(),
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(),
@@ -47,7 +48,7 @@ public static class AvailableEncoders
         return Option<IEncoder>.None;
     }
 
-    public static Option<IEncoder> ForAudioFormat(FrameState desiredState, ILogger logger)
+    public static Option<IEncoder> ForAudioFormat(AudioState desiredState, ILogger logger)
     {
         return desiredState.AudioFormat.Match(
             audioFormat =>

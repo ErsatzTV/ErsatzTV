@@ -20,5 +20,5 @@ public class AudioPadFilter : BaseFilter
         }
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState with { AudioDuration = _wholeDuration };
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

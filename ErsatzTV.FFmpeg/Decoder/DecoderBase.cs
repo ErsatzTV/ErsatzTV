@@ -13,4 +13,9 @@ public abstract class DecoderBase : IDecoder
     public virtual FrameState NextState(FrameState currentState) =>
         currentState with { FrameDataLocation = OutputFrameDataLocation };
     public abstract string Name { get; }
+    public bool AppliesTo(AudioInputFile audioInputFile) => false;
+
+    public bool AppliesTo(VideoInputFile videoInputFile) => true;
+
+    public bool AppliesTo(ConcatInputFile concatInputFile) => false;
 }

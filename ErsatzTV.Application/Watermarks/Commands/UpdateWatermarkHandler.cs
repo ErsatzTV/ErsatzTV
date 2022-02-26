@@ -21,7 +21,7 @@ namespace ErsatzTV.Application.Watermarks.Commands
             UpdateWatermark request,
             CancellationToken cancellationToken)
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             Validation<BaseError, ChannelWatermark> validation = await Validate(dbContext, request);
             return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
         }

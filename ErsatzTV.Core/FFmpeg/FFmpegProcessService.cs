@@ -7,6 +7,7 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
+using ErsatzTV.FFmpeg.State;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -330,7 +331,7 @@ namespace ErsatzTV.Core.FFmpeg
             string videoPath,
             bool boxBlur,
             Option<string> watermarkPath,
-            ChannelWatermarkLocation watermarkLocation,
+            WatermarkLocation watermarkLocation,
             int horizontalMarginPercent,
             int verticalMarginPercent,
             int watermarkWidthPercent)
@@ -349,7 +350,7 @@ namespace ErsatzTV.Core.FFmpeg
                             HorizontalMarginPercent = horizontalMarginPercent,
                             VerticalMarginPercent = verticalMarginPercent,
                             Location = watermarkLocation,
-                            Size = ChannelWatermarkSize.Scaled,
+                            Size = WatermarkSize.Scaled,
                             WidthPercent = watermarkWidthPercent,
                             Opacity = 100
                         }
@@ -421,18 +422,13 @@ namespace ErsatzTV.Core.FFmpeg
         private bool NeedToPad(IDisplaySize target, IDisplaySize displaySize) =>
             displaySize.Width != target.Width || displaySize.Height != target.Height;
 
-        private async Task<WatermarkOptions> GetWatermarkOptions(
+        internal async Task<WatermarkOptions> GetWatermarkOptions(
             Channel channel,
             Option<ChannelWatermark> globalWatermark,
             MediaVersion videoVersion,
             Option<ChannelWatermark> watermarkOverride,
             Option<string> watermarkPath)
         {
-            if (videoVersion is BackgroundImageMediaVersion)
-            {
-                return new WatermarkOptions(None, None, None, false);
-            }
-
             if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && channel.FFmpegProfile.Transcode &&
                 channel.FFmpegProfile.NormalizeVideo)
             {

@@ -15,6 +15,7 @@ public static class AvailableHardwareAccelerationOptions
             HardwareAccelerationMode.Qsv => new QsvHardwareAccelerationOption(),
             HardwareAccelerationMode.Vaapi => GetVaapiAcceleration(vaapiDevice, logger),
             HardwareAccelerationMode.VideoToolbox => new VideoToolboxHardwareAccelerationOption(),
+            HardwareAccelerationMode.None => Option<IPipelineStep>.None,
             _ => LogUnknownMode(mode, logger)
         };
 
