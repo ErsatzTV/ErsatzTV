@@ -62,6 +62,7 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
             return context.Libraries
                 .AsNoTracking()
                 .Include(l => l.MediaSource)
+                .Include(l => l.Paths)
                 .ToListAsync();
         }
 
