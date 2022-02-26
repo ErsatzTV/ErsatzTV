@@ -17,6 +17,8 @@ public class ScaleQsvFilter : BaseFilter
     {
         get
         {
+            // use vpp_qsv because scale_qsv sometimes causes green lines at the bottom 
+
             string scale = string.Empty;
 
             if (_currentState.ScaledSize == _scaledSize)
