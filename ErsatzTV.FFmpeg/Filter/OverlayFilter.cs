@@ -18,26 +18,7 @@ public class OverlayFilter : BaseFilter
 
     public override FrameState NextState(FrameState currentState) => currentState;
 
-    public override string Filter
-    {
-        get
-        {
-            string hwdownload = string.Empty;
-            if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
-            {
-                hwdownload = "hwdownload,";
-                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
-                {
-                    if (pixelFormat.FFmpegName == FFmpegFormat.NV12)
-                    {
-                        hwdownload = "hwdownload,format=nv12,";
-                    }
-                }
-            }
-
-            return $"{hwdownload}overlay={Position}";
-        }
-    }
+    public override string Filter => $"overlay={Position}";
 
     protected string Position
     {

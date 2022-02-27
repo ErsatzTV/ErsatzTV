@@ -41,6 +41,9 @@ public static class AvailableDecoders
                 // vaapi should use implicit decoders
                 (HardwareAccelerationMode.Vaapi, _, _) => new DecoderVaapi(),
 
+                // videotoolbox should use implicit decoders
+                (HardwareAccelerationMode.VideoToolbox, _, _) => new DecoderVideoToolbox(),
+
                 (_, VideoFormat.Hevc, _) => new DecoderHevc(),
                 (_, VideoFormat.H264, _) => new DecoderH264(),
                 (_, VideoFormat.Mpeg1Video, _) => new DecoderMpeg1Video(),
