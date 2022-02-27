@@ -443,7 +443,8 @@ public class PipelineBuilder
 
             foreach (WatermarkInputFile watermarkInputFile in _watermarkInputFile)
             {
-                // vaapi uses a software overlay, so we need to ensure the background is already in software
+                // vaapi and videotoolbox use a software overlay, so we need to ensure the background is already in software
+                // though videotoolbox uses software decoders, so no need to download for that
                 if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
                 {
                     var downloadFilter = new HardwareDownloadFilter(currentState);

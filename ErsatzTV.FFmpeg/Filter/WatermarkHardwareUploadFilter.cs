@@ -22,7 +22,10 @@ public class WatermarkHardwareUploadFilter : BaseFilter
         // leave vaapi in software since we don't (yet) use overlay_vaapi
         HardwareAccelerationMode.Vaapi when _currentState.FrameDataLocation == FrameDataLocation.Software =>
             string.Empty,
-        
+
+        // leave videotoolbox in software since we use a software overlay filter
+        HardwareAccelerationMode.VideoToolbox => string.Empty,
+
         _ => "hwupload"
     };
 }
