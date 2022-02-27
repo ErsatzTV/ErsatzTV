@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.4.2-alpha] - 2022-02-26
 ### Fixed
 - Add improved but experimental transcoder logic, which can be toggled on and off in `Settings`
 - Fix `HLS Segmenter` bug when source video packet contains no duration (`N/A`)
@@ -983,7 +985,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.1-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.2-alpha...HEAD
+[0.4.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.1-alpha...v0.4.2-alpha
 [0.4.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.0-alpha...v0.4.1-alpha
 [0.4.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.8-alpha...v0.4.0-alpha
 [0.3.8-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.7-alpha...v0.3.8-alpha
