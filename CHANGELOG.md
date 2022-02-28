@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix song sorting with `Chronological` and `Shuffle In Order` playback orders
+- Fix watermark on scaled and/or padded video with NVIDIA acceleration
+- Fix playback of interlaced mpeg2video content with NVIDIA acceleration
 
 ## [0.4.2-alpha] - 2022-02-26
 ### Fixed
