@@ -315,6 +315,45 @@ namespace ErsatzTV.Infrastructure.Data.Repositories
                         false));
             }
 
+            var allArtists = items.OfType<Song>()
+                .SelectMany(s => s.SongMetadata)
+                .Map(sm => sm.Artist)
+                .Distinct()
+                .ToList();
+
+            if (!allArtists.Contains(string.Empty))
+            {
+                allArtists.Add(string.Empty);
+            }
+
+            var songArtistCollections = new Dictionary<int, List<MediaItem>>();
+            foreach (Song song in items.OfType<Song>())
+            {
+                int key = allArtists.IndexOf(song.SongMetadata.HeadOrNone().Match(sm => sm.Artist, string.Empty));
+                
+                List<MediaItem> list = songArtistCollections.ContainsKey(key)
+                        ? songArtistCollections[key]
+                        : new List<MediaItem>();
+
+                if (list.All(i => i.Id != song.Id))
+                {
+                    list.Add(song);
+                }
+
+                songArtistCollections[key] = list;
+            }
+
+            foreach ((int _, List<MediaItem> list) in songArtistCollections)
+            {
+                result.Add(
+                    new CollectionWithItems(
+                        id--,
+                        list,
+                        true,
+                        PlaybackOrder.Chronological,
+                        false));
+            }
+
             result.Add(
                 new CollectionWithItems(
                     id,
