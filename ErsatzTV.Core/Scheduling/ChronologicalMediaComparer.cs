@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Core.Scheduling
@@ -47,6 +46,23 @@ namespace ErsatzTV.Core.Scheduling
                 return date1.CompareTo(date2);
             }
 
+            string songDate1 = x switch
+            {
+                Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Date ?? string.Empty, () => string.Empty),
+                _ => string.Empty
+            };
+
+            string songDate2 = y switch
+            {
+                Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Date ?? string.Empty, () => string.Empty),
+                _ => string.Empty
+            };
+            
+            if (songDate1 != songDate2)
+            {
+                return string.Compare(songDate1, songDate2, StringComparison.Ordinal);
+            }
+
             int season1 = x switch
             {
                 Episode e => e.Season?.SeasonNumber ?? int.MaxValue,
@@ -83,6 +99,40 @@ namespace ErsatzTV.Core.Scheduling
             if (episode1 != episode2)
             {
                 return episode1.CompareTo(episode2);
+            }
+
+            string album1 = x switch
+            {
+                Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Album ?? string.Empty, () => string.Empty),
+                _ => string.Empty
+            };
+
+            string album2 = y switch
+            {
+                Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Album ?? string.Empty, () => string.Empty),
+                _ => string.Empty
+            };
+
+            if (album1 != album2)
+            {
+                return string.Compare(album1, album2, StringComparison.Ordinal);
+            }
+
+            string track1 = x switch
+            {
+                Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Track ?? string.Empty, () => string.Empty),
+                _ => string.Empty
+            };
+
+            string track2 = y switch
+            {
+                Song s => s.SongMetadata.HeadOrNone().Match(sm => sm.Track ?? string.Empty, () => string.Empty),
+                _ => string.Empty
+            };
+
+            if (track1 != track2)
+            {
+                return string.Compare(track1, track2, StringComparison.Ordinal);
             }
 
             return x.Id.CompareTo(y.Id);
