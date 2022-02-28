@@ -8,7 +8,11 @@ namespace ErsatzTV.FFmpeg.Decoder;
 
 public static class AvailableDecoders
 {
-    public static Option<IDecoder> ForVideoFormat(FFmpegState ffmpegState, FrameState currentState, ILogger logger)
+    public static Option<IDecoder> ForVideoFormat(
+        FFmpegState ffmpegState,
+        FrameState currentState,
+        FrameState desiredState,
+        ILogger logger)
     {
         return (ffmpegState.HardwareAccelerationMode, currentState.VideoFormat,
                 currentState.PixelFormat.Match(pf => pf.Name, () => string.Empty)) switch
@@ -20,7 +24,8 @@ public static class AvailableDecoders
                     => new DecoderH264(),
 
                 (HardwareAccelerationMode.Nvenc, VideoFormat.H264, _) => new DecoderH264Cuvid(),
-                (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Cuvid(),
+                (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Cuvid(
+                    desiredState.Deinterlaced),
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Vc1, _) => new DecoderVc1Cuvid(),
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Vp9, _) => new DecoderVp9Cuvid(),
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg4, _) => new DecoderMpeg4Cuvid(),

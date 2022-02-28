@@ -180,7 +180,7 @@ public class PipelineBuilder
                     _pipelineSteps.Add(step);
                 }
 
-                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(ffmpegState, currentState, _logger))
+                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(ffmpegState, currentState, desiredState, _logger))
                 {
                     foreach (VideoInputFile videoInputFile in _videoInputFile)
                     {
@@ -327,7 +327,8 @@ public class PipelineBuilder
                     currentState = sarStep.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                 }
-                else if (_watermarkInputFile.IsSome && currentState.PixelFormat != desiredState.PixelFormat)
+                
+                if (_watermarkInputFile.IsSome && currentState.PixelFormat != desiredState.PixelFormat)
                 {
                     // this should only happen with nvenc?
                     // use scale filter to fix pixel format
