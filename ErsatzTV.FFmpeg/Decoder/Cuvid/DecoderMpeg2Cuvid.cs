@@ -2,6 +2,13 @@
 
 public class DecoderMpeg2Cuvid : DecoderBase
 {
+    private readonly bool _contentIsInterlaced;
+
+    public DecoderMpeg2Cuvid(bool contentIsInterlaced)
+    {
+        _contentIsInterlaced = contentIsInterlaced;
+    }
+
     public override string Name => "mpeg2_cuvid";
     public override IList<string> InputOptions(InputFile inputFile)
     {
@@ -13,5 +20,6 @@ public class DecoderMpeg2Cuvid : DecoderBase
         return result;
     }
 
-    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
+    protected override FrameDataLocation OutputFrameDataLocation =>
+        _contentIsInterlaced ? FrameDataLocation.Software : FrameDataLocation.Hardware;
 }
