@@ -47,8 +47,25 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             WithPadding
         }
 
+        public enum Watermark
+        {
+            None,
+            PermanentOpaque,
+            PermanentTransparent,
+            IntermittentOpaque,
+            IntermittentTransparent
+            // TODO: animated vs static
+        }
+
         private class TestData
         {
+            public static Watermark[] Watermarks =
+            {
+                Watermark.None,
+                Watermark.PermanentOpaque,
+                Watermark.PermanentTransparent
+            };
+            
             public static Padding[] Paddings =
             {
                 Padding.NoPadding,
@@ -160,6 +177,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             Padding padding,
             [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
             VideoScanKind videoScanKind,
+            [ValueSource(typeof(TestData), nameof(TestData.Watermarks))]
+            Watermark watermark,
             // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
             [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
@@ -209,10 +228,20 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 p1.ExitCode.Should().Be(0);
             }
 
+            var imageCache = new Mock<IImageCache>();
+            
+            // always return the static watermark resource
+            imageCache.Setup(
+                    ic => ic.GetPathForImage(
+                        It.IsAny<string>(),
+                        It.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
+                        It.IsAny<Option<int>>()))
+                .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
+            
             var oldService = new FFmpegProcessService(
                 new FFmpegPlaybackSettingsCalculator(),
                 new FakeStreamSelector(),
-                new Mock<IImageCache>().Object,
+                imageCache.Object,
                 new Mock<ITempFilePool>().Object,
                 new Mock<ILogger<FFmpegProcessService>>().Object);
 
@@ -262,6 +291,51 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             DateTimeOffset now = DateTimeOffset.Now;
 
+            Option<ChannelWatermark> channelWatermark = Option<ChannelWatermark>.None;
+            switch (watermark)
+            {
+                case Watermark.None:
+                    break;
+                case Watermark.IntermittentOpaque:
+                    channelWatermark = new ChannelWatermark
+                    {
+                        ImageSource = ChannelWatermarkImageSource.Custom,
+                        Mode = ChannelWatermarkMode.Intermittent,
+                        // TODO: how do we make sure this actually appears
+                        FrequencyMinutes = 1,
+                        DurationSeconds = 2,
+                        Opacity = 100
+                    };
+                    break;
+                case Watermark.IntermittentTransparent:
+                    channelWatermark = new ChannelWatermark
+                    {
+                        ImageSource = ChannelWatermarkImageSource.Custom,
+                        Mode = ChannelWatermarkMode.Intermittent,
+                        // TODO: how do we make sure this actually appears
+                        FrequencyMinutes = 1,
+                        DurationSeconds = 2,
+                        Opacity = 80
+                    };
+                    break;
+                case Watermark.PermanentOpaque:
+                    channelWatermark = new ChannelWatermark
+                    {
+                        ImageSource = ChannelWatermarkImageSource.Custom,
+                        Mode = ChannelWatermarkMode.Permanent,
+                        Opacity = 100
+                    };
+                    break;
+                case Watermark.PermanentTransparent:
+                    channelWatermark = new ChannelWatermark
+                    {
+                        ImageSource = ChannelWatermarkImageSource.Custom,
+                        Mode = ChannelWatermarkMode.Permanent,
+                        Opacity = 80
+                    };
+                    break;
+            }
+
             Process process = await service.ForPlayoutItem(
                 "ffmpeg",
                 false,
@@ -283,7 +357,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 now,
                 now + TimeSpan.FromSeconds(5),
                 now,
-                None,
+                channelWatermark,
                 VaapiDriver.Default,
                 "/dev/dri/renderD128",
                 false,

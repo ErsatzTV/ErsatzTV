@@ -29,4 +29,10 @@
       <ProjectReference Include="..\ErsatzTV.Core\ErsatzTV.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="Resources\ErsatzTV.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+
 </Project>
