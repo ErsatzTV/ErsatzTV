@@ -37,8 +37,14 @@ public class ScaleVaapiFilter : BaseFilter
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
+                string aspectRatio = string.Empty;
+                if (_scaledSize != _paddedSize)
+                {
+                    aspectRatio = ":force_original_aspect_ratio=1";
+                }
+
                 string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
-                scale = $"scale_vaapi={targetSize}:force_original_aspect_ratio=1:force_divisible_by=2{format}";
+                scale = $"scale_vaapi={targetSize}:{aspectRatio}:force_divisible_by=2{format}";
             }
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)

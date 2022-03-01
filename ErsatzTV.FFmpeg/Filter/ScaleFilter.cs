@@ -19,8 +19,14 @@ public class ScaleFilter : BaseFilter
     {
         get
         {
+            string aspectRatio = string.Empty;
+            if (_scaledSize != _paddedSize)
+            {
+                aspectRatio = ":force_original_aspect_ratio=decrease";
+            }
+
             string scale =
-                $"scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear:force_original_aspect_ratio=decrease";
+                $"scale={_paddedSize.Width}:{_paddedSize.Height}:flags=fast_bilinear{aspectRatio}";
 
             string hwdownload = string.Empty;
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)
