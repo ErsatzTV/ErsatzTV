@@ -5,8 +5,11 @@ namespace ErsatzTV.FFmpeg.Decoder;
 public class DecoderVaapi : DecoderBase
 {
     protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Software;
+
     public override string Name => "implicit_vaapi";
-    public override IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
+
+    public override IList<string> InputOptions(InputFile inputFile) =>
+        new List<string> { "-hwaccel_output_format", "vaapi" };
 
     public override FrameState NextState(FrameState currentState)
     {

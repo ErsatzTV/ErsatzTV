@@ -44,7 +44,7 @@ public class ScaleVaapiFilter : BaseFilter
                 }
 
                 string targetSize = $"{_paddedSize.Width}:{_paddedSize.Height}";
-                scale = $"scale_vaapi={targetSize}:{aspectRatio}:force_divisible_by=2{format}";
+                scale = $"scale_vaapi={targetSize}{aspectRatio}:force_divisible_by=2{format}";
             }
 
             if (_currentState.FrameDataLocation == FrameDataLocation.Hardware)

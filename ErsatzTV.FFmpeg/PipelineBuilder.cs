@@ -189,7 +189,12 @@ public class PipelineBuilder
                     _pipelineSteps.Add(step);
                 }
 
-                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(ffmpegState, currentState, desiredState, _logger))
+                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(
+                             ffmpegState,
+                             currentState,
+                             desiredState,
+                             _watermarkInputFile,
+                             _logger))
                 {
                     foreach (VideoInputFile videoInputFile in _videoInputFile)
                     {
@@ -265,7 +270,9 @@ public class PipelineBuilder
                 {
                     IPipelineFilterStep step = AvailableDeinterlaceFilters.ForAcceleration(
                         ffmpegState.HardwareAccelerationMode,
-                        currentState);
+                        currentState,
+                        desiredState,
+                        _watermarkInputFile);
                     currentState = step.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(step));
                 }
@@ -351,9 +358,14 @@ public class PipelineBuilder
                             currentState = formatFilter.NextState(currentState);
                             _videoInputFile.Iter(f => f.FilterSteps.Add(formatFilter));
 
-                            var uploadFilter = new HardwareUploadFilter(ffmpegState);
-                            currentState = uploadFilter.NextState(currentState);
-                            _videoInputFile.Iter(f => f.FilterSteps.Add(uploadFilter));
+                            switch (ffmpegState.HardwareAccelerationMode)
+                            {
+                                case HardwareAccelerationMode.Nvenc:
+                                    var uploadFilter = new HardwareUploadFilter(ffmpegState);
+                                    currentState = uploadFilter.NextState(currentState);
+                                    _videoInputFile.Iter(f => f.FilterSteps.Add(uploadFilter));
+                                    break;
+                            }
                         }
                         else
                         {
