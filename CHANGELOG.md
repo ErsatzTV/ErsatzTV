@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix watermark on scaled and/or padded video with NVIDIA acceleration
 - Fix playback of interlaced mpeg2video content with NVIDIA acceleration
 
+### Changed
+- Framerate normalization will never normalize framerate below 24fps
+  - Instead, content with a lower framerate will be normalized up to 24fps
+
 ## [0.4.2-alpha] - 2022-02-26
 ### Fixed
 - Add improved but experimental transcoder logic, which can be toggled on and off in `Settings`
