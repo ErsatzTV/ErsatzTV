@@ -41,6 +41,11 @@ public static class AvailableDecoders
                 (HardwareAccelerationMode.Qsv, VideoFormat.H264, PixelFormat.YUV420P10LE or PixelFormat.YUV444P10LE) =>
                     new DecoderH264(),
 
+                // qsv uses software deinterlace filter, so decode in software
+                (HardwareAccelerationMode.Qsv, VideoFormat.H264, _) when desiredState.Deinterlaced => new DecoderH264(),
+                (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video, _) when desiredState.Deinterlaced =>
+                    new DecoderMpeg2Video(),
+
                 (HardwareAccelerationMode.Qsv, VideoFormat.Hevc, _) => new DecoderHevcQsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.H264, _) => new DecoderH264Qsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Qsv(),

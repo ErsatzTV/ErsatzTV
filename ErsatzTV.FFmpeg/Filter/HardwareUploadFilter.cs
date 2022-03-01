@@ -9,7 +9,11 @@ public class HardwareUploadFilter : BaseFilter
         _ffmpegState = ffmpegState;
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState;
+    public override FrameState NextState(FrameState currentState) => _ffmpegState.HardwareAccelerationMode switch
+    {
+        HardwareAccelerationMode.None => currentState,
+        _ => currentState with { FrameDataLocation = FrameDataLocation.Hardware }
+    };
 
     public override string Filter => _ffmpegState.HardwareAccelerationMode switch
     {

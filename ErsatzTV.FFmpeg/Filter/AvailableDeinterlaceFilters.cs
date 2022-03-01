@@ -12,7 +12,8 @@ public static class AvailableDeinterlaceFilters
         accelMode switch
         {
             HardwareAccelerationMode.Nvenc => new YadifCudaFilter(currentState),
-            HardwareAccelerationMode.Qsv => new DeinterlaceQsvFilter(currentState),
+            // deinterlace_qsv seems to create timestamp issues
+            // HardwareAccelerationMode.Qsv => new DeinterlaceQsvFilter(currentState),
             HardwareAccelerationMode.Vaapi => new DeinterlaceVaapiFilter(currentState),
             _ => new YadifFilter(currentState)
         };

@@ -181,12 +181,12 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             Watermark watermark,
             // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.QsvCodecs))] string profileCodec,
-            // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.QsvCodecs))] string profileCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
         {
@@ -216,7 +216,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = "ffmpeg",
+                        FileName = "ffmpeg.exe",
                         Arguments = args
                     }
                 };
@@ -274,7 +274,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 new Mock<ILogger<LocalStatisticsProvider>>().Object);
 
             await localStatisticsProvider.RefreshStatistics(
-                "ffprobe",
+                "ffprobe.exe",
                 new Movie
                 {
                     MediaVersions = new List<MediaVersion>
@@ -337,7 +337,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             Process process = await service.ForPlayoutItem(
-                "ffmpeg",
+                "ffmpeg.exe",
                 false,
                 new Channel(Guid.NewGuid())
                 {
