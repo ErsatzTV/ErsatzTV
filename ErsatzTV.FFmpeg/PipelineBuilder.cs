@@ -2,6 +2,7 @@
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
+using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Option;
 using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
@@ -372,6 +373,35 @@ public class PipelineBuilder
                         }
                     }
                 }
+                
+                // nvenc custom logic
+                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc)
+                {
+                    foreach (VideoInputFile videoInputFile in _videoInputFile)
+                    {
+                        // if we only deinterlace, we need to set pixel format again (using scale_cuda)
+                        bool onlyYadif = videoInputFile.FilterSteps.Count == 1 &&
+                                         videoInputFile.FilterSteps.Any(fs => fs is YadifCudaFilter);
+
+                        // if we have no filters and a watermark, we need to set pixel format
+                        bool unfilteredWithWatermark = videoInputFile.FilterSteps.Count == 0
+                                                       && _watermarkInputFile.IsSome;
+                        
+                        if (onlyYadif || unfilteredWithWatermark)
+                        {
+                            // the filter re-applies the current pixel format, so we have to set it first
+                            currentState = currentState with { PixelFormat = desiredState.PixelFormat };
+                
+                            IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                                ffmpegState.HardwareAccelerationMode,
+                                currentState,
+                                desiredState.ScaledSize,
+                                desiredState.PaddedSize);
+                            currentState = scaleFilter.NextState(currentState);
+                            videoInputFile.FilterSteps.Add(scaleFilter);
+                        }
+                    }
+                }
 
                 if (ffmpegState.PtsOffset > 0)
                 {
@@ -384,7 +414,7 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
-
+                
                 foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
                 {
                     if (currentState.PixelFormat.Map(pf => pf.FFmpegName) != desiredPixelFormat.FFmpegName)
