@@ -31,7 +31,7 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
     {
         // TODO: expand to check everything in collection rather than what's scheduled?
         _logger.LogDebug("Checking frame rates for channel {ChannelNumber}", request.ChannelNumber);
-        
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Playout> playouts = await dbContext.Playouts
@@ -58,12 +58,23 @@ public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, O
             .Map(mv => mv.RFrameRate)
             .ToList();
 
-
         var distinct = frameRates.Distinct().ToList();
         if (distinct.Count > 1)
         {
             // TODO: something more intelligent than minimum framerate?
             int result = frameRates.Map(ParseFrameRate).Min();
+            if (result < 24)
+            {
+                _logger.LogInformation(
+                    "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate} instead of min value {MinFrameRate}",
+                    request.ChannelNumber,
+                    distinct,
+                    24,
+                    result);
+
+                return 24;
+            }
+
             _logger.LogInformation(
                 "Normalizing frame rate for channel {ChannelNumber} from {Distinct} to {FrameRate}",
                 request.ChannelNumber,
