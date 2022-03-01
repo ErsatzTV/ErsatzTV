@@ -21,11 +21,11 @@ public class FFmpegProcessServiceFactory : IFFmpegProcessServiceFactory
 
     public async Task<IFFmpegProcessService> GetService()
     {
-        Option<bool> useExperimentalTranscoder =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseExperimentalTranscoder);
+        Option<bool> useLegacyTranscoder =
+            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseLegacyTranscoder);
 
-        return await useExperimentalTranscoder.IfNoneAsync(false)
-            ? _serviceProvider.GetRequiredService<FFmpegLibraryProcessService>()
-            : _serviceProvider.GetRequiredService<FFmpegProcessService>();
+        return await useLegacyTranscoder.IfNoneAsync(false)
+            ? _serviceProvider.GetRequiredService<FFmpegProcessService>()
+            : _serviceProvider.GetRequiredService<FFmpegLibraryProcessService>();
     }
 }

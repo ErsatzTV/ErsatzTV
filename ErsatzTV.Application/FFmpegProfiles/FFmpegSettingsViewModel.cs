@@ -12,6 +12,6 @@
         public int HlsSegmenterIdleTimeout { get; set; }
         public int WorkAheadSegmenterLimit { get; set; }
         public int InitialSegmentCount { get; set; }
-        public bool UseExperimentalTranscoder { get; set; }
+        public bool UseLegacyTranscoder { get; set; }
     }
 }
