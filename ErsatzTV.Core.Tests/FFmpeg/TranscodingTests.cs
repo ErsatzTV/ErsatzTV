@@ -194,10 +194,10 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             Watermark watermark,
             // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
-            // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
+            // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.QsvCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
             // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
