@@ -10,7 +10,7 @@ public class VaapiHardwareAccelerationOption : GlobalOption
     }
 
     public override IList<string> GlobalOptions => new List<string>
-        { "-hwaccel", "vaapi", "-vaapi_device", _vaapiDevice, "-hwaccel_output_format", "vaapi" };
+        { "-hwaccel", "vaapi", "-vaapi_device", _vaapiDevice };
 
     public override FrameState NextState(FrameState currentState) => currentState with
     {

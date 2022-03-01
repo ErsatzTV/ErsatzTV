@@ -19,6 +19,7 @@ using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using Serilog;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.FFmpeg
@@ -27,6 +28,18 @@ namespace ErsatzTV.Core.Tests.FFmpeg
     [Explicit]
     public class TranscodingTests
     {
+        private static readonly ILoggerFactory LoggerFactory;
+        
+        static TranscodingTests()
+        {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .CreateLogger();
+
+            LoggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
+        }
+
         [Test]
         [Explicit]
         public void DeleteTestVideos()
@@ -216,7 +229,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = "ffmpeg",
+                        FileName = ExecutableName("ffmpeg"),
                         Arguments = args
                     }
                 };
@@ -237,19 +250,19 @@ namespace ErsatzTV.Core.Tests.FFmpeg
                         It.Is<ArtworkKind>(x => x == ArtworkKind.Watermark),
                         It.IsAny<Option<int>>()))
                 .Returns(Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "ErsatzTV.png"));
-            
+
             var oldService = new FFmpegProcessService(
                 new FFmpegPlaybackSettingsCalculator(),
                 new FakeStreamSelector(),
                 imageCache.Object,
                 new Mock<ITempFilePool>().Object,
-                new Mock<ILogger<FFmpegProcessService>>().Object);
+                LoggerFactory.CreateLogger<FFmpegProcessService>());
 
             var service = new FFmpegLibraryProcessService(
                 oldService,
                 new FFmpegPlaybackSettingsCalculator(),
                 new FakeStreamSelector(),
-                new Mock<ILogger<FFmpegLibraryProcessService>>().Object);
+                LoggerFactory.CreateLogger<FFmpegLibraryProcessService>());
 
             var v = new MediaVersion
             {
@@ -270,11 +283,11 @@ namespace ErsatzTV.Core.Tests.FFmpeg
 
             var localStatisticsProvider = new LocalStatisticsProvider(
                 metadataRepository.Object,
-                new LocalFileSystem(new Mock<ILogger<LocalFileSystem>>().Object),
-                new Mock<ILogger<LocalStatisticsProvider>>().Object);
+                new LocalFileSystem(LoggerFactory.CreateLogger<LocalFileSystem>()),
+                LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
             await localStatisticsProvider.RefreshStatistics(
-                "ffprobe",
+                ExecutableName("ffprobe"),
                 new Movie
                 {
                     MediaVersions = new List<MediaVersion>
@@ -337,7 +350,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             Process process = await service.ForPlayoutItem(
-                "ffmpeg",
+                ExecutableName("ffmpeg"),
                 false,
                 new Channel(Guid.NewGuid())
                 {
@@ -442,7 +455,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             }
 
             using var sha = SHA256.Create();
-            byte[] textData = System.Text.Encoding.UTF8.GetBytes(text);
+            byte[] textData = Encoding.UTF8.GetBytes(text);
             byte[] hash = sha.ComputeHash(textData);
             return BitConverter.ToString(hash).Replace("-", string.Empty);
         }
@@ -455,5 +468,8 @@ namespace ErsatzTV.Core.Tests.FFmpeg
             public Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version) =>
                 Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
         }
+
+        private static string ExecutableName(string baseName) =>
+            OperatingSystem.IsWindows() ? $"{baseName}.exe" : baseName;
     }
 }
