@@ -173,7 +173,6 @@ public class PipelineBuilder
                     desiredState = desiredState with { PixelFormat = new PixelFormatYuv420P() };
                 }
 
-                // TODO: can we go back to hardware scale filter with qsv if we always target nv12?
                 // qsv should stay nv12
                 if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Qsv &&
                     _watermarkInputFile.IsSome)
