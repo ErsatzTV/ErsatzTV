@@ -36,8 +36,8 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters);
             Option<int> initialSegmentCount =
                 await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount);
-            Option<bool> useExperimentalTranscoder =
-                await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseExperimentalTranscoder);
+            Option<bool> useLegacyTranscoder =
+                await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseLegacyTranscoder);
 
             var result = new FFmpegSettingsViewModel
             {
@@ -49,7 +49,7 @@ namespace ErsatzTV.Application.FFmpegProfiles.Queries
                 HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
                 WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
                 InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1),
-                UseExperimentalTranscoder = await useExperimentalTranscoder.IfNoneAsync(false)
+                UseLegacyTranscoder = await useLegacyTranscoder.IfNoneAsync(false)
             };
 
             foreach (int watermarkId in watermark)
