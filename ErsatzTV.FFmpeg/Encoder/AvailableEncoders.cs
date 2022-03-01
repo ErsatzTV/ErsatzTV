@@ -19,16 +19,24 @@ public static class AvailableEncoders
         ILogger logger) =>
         (ffmpegState.HardwareAccelerationMode, desiredState.VideoFormat) switch
         {
-            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(),
-            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(
+                currentState,
+                maybeWatermarkInputFile),
+            (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(
+                currentState,
+                maybeWatermarkInputFile),
 
             (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(
                 currentState,
                 maybeWatermarkInputFile),
             (HardwareAccelerationMode.Qsv, VideoFormat.H264) => new EncoderH264Qsv(currentState),
 
-            (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(currentState),
-            (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(currentState),
+            (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(
+                currentState,
+                maybeWatermarkInputFile),
+            (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(
+                currentState,
+                maybeWatermarkInputFile),
 
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) => new EncoderHevcVideoToolbox(),
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) => new EncoderH264VideoToolbox(),

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix song sorting with `Chronological` and `Shuffle In Order` playback orders
 - Fix watermark on scaled and/or padded video with NVIDIA acceleration
 - Fix playback of interlaced mpeg2video content with NVIDIA acceleration
+- Fix playback of all interlaced content with QSV acceleration
 
 ### Changed
 - Framerate normalization will never normalize framerate below 24fps

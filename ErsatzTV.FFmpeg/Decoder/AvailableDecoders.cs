@@ -12,6 +12,7 @@ public static class AvailableDecoders
         FFmpegState ffmpegState,
         FrameState currentState,
         FrameState desiredState,
+        Option<WatermarkInputFile> watermarkInputFile,
         ILogger logger)
     {
         return (ffmpegState.HardwareAccelerationMode, currentState.VideoFormat,
@@ -41,14 +42,22 @@ public static class AvailableDecoders
                 (HardwareAccelerationMode.Qsv, VideoFormat.H264, PixelFormat.YUV420P10LE or PixelFormat.YUV444P10LE) =>
                     new DecoderH264(),
 
+                // qsv uses software deinterlace filter, so decode in software
+                (HardwareAccelerationMode.Qsv, VideoFormat.H264, _) when desiredState.Deinterlaced => new DecoderH264(),
+                (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video, _) when desiredState.Deinterlaced =>
+                    new DecoderMpeg2Video(),
+
                 (HardwareAccelerationMode.Qsv, VideoFormat.Hevc, _) => new DecoderHevcQsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.H264, _) => new DecoderH264Qsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Qsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.Vc1, _) => new DecoderVc1Qsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.Vp9, _) => new DecoderVp9Qsv(),
 
-                // vaapi should use implicit decoders
-                (HardwareAccelerationMode.Vaapi, _, _) => new DecoderVaapi(),
+                // vaapi should use implicit decoders when scaling or no watermark
+                // otherwise, fall back to software decoders
+                (HardwareAccelerationMode.Vaapi, _, _) when watermarkInputFile.IsNone ||
+                                                            (currentState.ScaledSize != desiredState.ScaledSize) =>
+                    new DecoderVaapi(),
 
                 // videotoolbox should use implicit decoders
                 (HardwareAccelerationMode.VideoToolbox, _, _) => new DecoderVideoToolbox(),

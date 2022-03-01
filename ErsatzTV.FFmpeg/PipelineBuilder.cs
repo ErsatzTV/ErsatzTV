@@ -2,6 +2,7 @@
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
+using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.Option;
 using ErsatzTV.FFmpeg.Option.HardwareAcceleration;
@@ -173,6 +174,14 @@ public class PipelineBuilder
                     desiredState = desiredState with { PixelFormat = new PixelFormatYuv420P() };
                 }
 
+                // qsv should stay nv12
+                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Qsv &&
+                    _watermarkInputFile.IsSome)
+                {
+                    IPixelFormat pixelFormat = desiredState.PixelFormat.IfNone(new PixelFormatYuv420P());
+                    desiredState = desiredState with { PixelFormat = new PixelFormatNv12(pixelFormat.Name) };
+                }
+
                 foreach (string desiredVaapiDriver in ffmpegState.VaapiDriver)
                 {
                     IPipelineStep step = new LibvaDriverNameVariable(desiredVaapiDriver);
@@ -180,7 +189,12 @@ public class PipelineBuilder
                     _pipelineSteps.Add(step);
                 }
 
-                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(ffmpegState, currentState, desiredState, _logger))
+                foreach (IDecoder decoder in AvailableDecoders.ForVideoFormat(
+                             ffmpegState,
+                             currentState,
+                             desiredState,
+                             _watermarkInputFile,
+                             _logger))
                 {
                     foreach (VideoInputFile videoInputFile in _videoInputFile)
                     {
@@ -256,7 +270,9 @@ public class PipelineBuilder
                 {
                     IPipelineFilterStep step = AvailableDeinterlaceFilters.ForAcceleration(
                         ffmpegState.HardwareAccelerationMode,
-                        currentState);
+                        currentState,
+                        desiredState,
+                        _watermarkInputFile);
                     currentState = step.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(step));
                 }
@@ -327,8 +343,9 @@ public class PipelineBuilder
                     currentState = sarStep.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
                 }
-                
-                if (_watermarkInputFile.IsSome && currentState.PixelFormat != desiredState.PixelFormat)
+
+                if (_watermarkInputFile.IsSome && currentState.PixelFormat.Map(pf => pf.FFmpegName) !=
+                    desiredState.PixelFormat.Map(pf => pf.FFmpegName))
                 {
                     // this should only happen with nvenc?
                     // use scale filter to fix pixel format
@@ -341,20 +358,59 @@ public class PipelineBuilder
                             currentState = formatFilter.NextState(currentState);
                             _videoInputFile.Iter(f => f.FilterSteps.Add(formatFilter));
 
-                            _videoInputFile.Iter(f => f.FilterSteps.Add(new HardwareUploadFilter(ffmpegState)));
+                            switch (ffmpegState.HardwareAccelerationMode)
+                            {
+                                case HardwareAccelerationMode.Nvenc:
+                                    var uploadFilter = new HardwareUploadFilter(ffmpegState);
+                                    currentState = uploadFilter.NextState(currentState);
+                                    _videoInputFile.Iter(f => f.FilterSteps.Add(uploadFilter));
+                                    break;
+                            }
                         }
                         else
                         {
+                            if (ffmpegState.HardwareAccelerationMode != HardwareAccelerationMode.Qsv)
+                            {
+                                // the filter re-applies the current pixel format, so we have to set it first
+                                currentState = currentState with { PixelFormat = desiredState.PixelFormat };
+
+                                IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                                    ffmpegState.HardwareAccelerationMode,
+                                    currentState,
+                                    desiredState.ScaledSize,
+                                    desiredState.PaddedSize);
+                                currentState = scaleFilter.NextState(currentState);
+                                _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
+                            }
+                        }
+                    }
+                }
+                
+                // nvenc custom logic
+                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc)
+                {
+                    foreach (VideoInputFile videoInputFile in _videoInputFile)
+                    {
+                        // if we only deinterlace, we need to set pixel format again (using scale_cuda)
+                        bool onlyYadif = videoInputFile.FilterSteps.Count == 1 &&
+                                         videoInputFile.FilterSteps.Any(fs => fs is YadifCudaFilter);
+
+                        // if we have no filters and a watermark, we need to set pixel format
+                        bool unfilteredWithWatermark = videoInputFile.FilterSteps.Count == 0
+                                                       && _watermarkInputFile.IsSome;
+                        
+                        if (onlyYadif || unfilteredWithWatermark)
+                        {
                             // the filter re-applies the current pixel format, so we have to set it first
                             currentState = currentState with { PixelFormat = desiredState.PixelFormat };
-
+                
                             IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
                                 ffmpegState.HardwareAccelerationMode,
                                 currentState,
                                 desiredState.ScaledSize,
                                 desiredState.PaddedSize);
                             currentState = scaleFilter.NextState(currentState);
-                            _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
+                            videoInputFile.FilterSteps.Add(scaleFilter);
                         }
                     }
                 }
@@ -370,14 +426,18 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
-
+                
                 foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
                 {
                     if (currentState.PixelFormat.Map(pf => pf.FFmpegName) != desiredPixelFormat.FFmpegName)
                     {
-                        IPipelineStep step = new PixelFormatOutputOption(desiredPixelFormat);
-                        currentState = step.NextState(currentState);
-                        _pipelineSteps.Add(step);
+                        // qsv doesn't seem to like this
+                        if (ffmpegState.HardwareAccelerationMode != HardwareAccelerationMode.Qsv)
+                        {
+                            IPipelineStep step = new PixelFormatOutputOption(desiredPixelFormat);
+                            currentState = step.NextState(currentState);
+                            _pipelineSteps.Add(step);
+                        }
                     }
                 }
 
