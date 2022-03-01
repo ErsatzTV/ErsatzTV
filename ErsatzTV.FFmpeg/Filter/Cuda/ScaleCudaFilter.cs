@@ -37,7 +37,13 @@ public class ScaleCudaFilter : BaseFilter
                     format = $":format={pixelFormat.FFmpegName}";
                 }
 
-                scale = $"scale_cuda={targetSize}:force_original_aspect_ratio=1{format}";
+                string aspectRatio = string.Empty;
+                if (_scaledSize != _paddedSize)
+                {
+                    aspectRatio = ":force_original_aspect_ratio=1";
+                }
+
+                scale = $"scale_cuda={targetSize}{aspectRatio}{format}";
             }
 
             // TODO: this might not always upload to hardware, so NextState could be inaccurate
