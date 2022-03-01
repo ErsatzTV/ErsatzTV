@@ -23,6 +23,10 @@ public static class AvailableDecoders
                 (HardwareAccelerationMode.Nvenc, VideoFormat.H264, PixelFormat.YUV420P10LE or PixelFormat.YUV444P10LE)
                     => new DecoderH264(),
 
+                // mpeg2_cuvid seems to have issues when yadif_cuda is used, so just use software decoding
+                (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) when desiredState.Deinterlaced =>
+                    new DecoderMpeg2Video(),
+
                 (HardwareAccelerationMode.Nvenc, VideoFormat.H264, _) => new DecoderH264Cuvid(),
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Mpeg2Video, _) => new DecoderMpeg2Cuvid(
                     desiredState.Deinterlaced),
