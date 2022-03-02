@@ -1,9 +1,11 @@
 ﻿@page "/"
 @using Microsoft.Extensions.Caching.Memory
 @using System.Reflection
+@using System.Threading
 @using ErsatzTV.Application.Health.Queries
 @using ErsatzTV.Core.Health
 @using ErsatzTV.Core.Interfaces.GitHub
+@implements IDisposable
 @inject IGitHubApiClient _gitHubApiClient
 @inject IMemoryCache _memoryCache
 @inject IMediator _mediator
@@ -71,9 +73,16 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     private string _releaseNotes;
     private MudTable<HealthCheckResult> _table;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -101,12 +110,12 @@
                                 gitHubVersion = $"v{gitHubVersion}";
                             }
 
-                            maybeNotes = await _gitHubApiClient.GetReleaseNotes(gitHubVersion);
+                            maybeNotes = await _gitHubApiClient.GetReleaseNotes(gitHubVersion, _cts.Token);
                             maybeNotes.IfRight(notes => _releaseNotes = notes);
                         }
                         else
                         {
-                            maybeNotes = await _gitHubApiClient.GetLatestReleaseNotes();
+                            maybeNotes = await _gitHubApiClient.GetLatestReleaseNotes(_cts.Token);
                             maybeNotes.IfRight(notes => _releaseNotes = notes);
                         }
                     }
@@ -126,7 +135,7 @@
     
     private async Task<TableData<HealthCheckResult>> ServerReload(TableState state)
     {
-        List<HealthCheckResult> healthCheckResults = await _mediator.Send(new GetAllHealthCheckResults());
+        List<HealthCheckResult> healthCheckResults = await _mediator.Send(new GetAllHealthCheckResults(), _cts.Token);
 
         return new TableData<HealthCheckResult>
         {

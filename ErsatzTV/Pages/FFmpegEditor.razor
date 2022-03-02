@@ -8,6 +8,8 @@
 @using ErsatzTV.Core.FFmpeg
 @using Microsoft.AspNetCore.Components
 @using Microsoft.Extensions.Caching.Memory
+@using System.Threading
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<FFmpegEditor> _logger
 @inject ISnackbar _snackbar
@@ -121,6 +123,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
@@ -132,20 +135,26 @@
     private List<ResolutionViewModel> _resolutions;
     private List<string> _vaapiDevices;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        _resolutions = await _mediator.Send(new GetAllResolutions());
+        _resolutions = await _mediator.Send(new GetAllResolutions(), _cts.Token);
 
         if (IsEdit)
         {
-            Option<FFmpegProfileViewModel> profile = await _mediator.Send(new GetFFmpegProfileById(Id));
+            Option<FFmpegProfileViewModel> profile = await _mediator.Send(new GetFFmpegProfileById(Id), _cts.Token);
             profile.Match(
                 ffmpegProfileViewModel => _model = new FFmpegProfileEditViewModel(ffmpegProfileViewModel),
                 () => _navigationManager.NavigateTo("404"));
         }
         else
         {
-            _model = new FFmpegProfileEditViewModel(await _mediator.Send(new NewFFmpegProfile()));
+            _model = new FFmpegProfileEditViewModel(await _mediator.Send(new NewFFmpegProfile(), _cts.Token));
         }
 
         _editContext = new EditContext(_model);
@@ -167,8 +176,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(_model.ToUpdate())).LeftToSeq() :
-                (await _mediator.Send(_model.ToCreate())).LeftToSeq();
+                (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
+                (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>

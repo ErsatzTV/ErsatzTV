@@ -9,6 +9,8 @@
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using Unit = LanguageExt.Unit
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject ILogger<TelevisionEpisodeList> _logger
 @inject ISnackbar _snackbar
@@ -156,6 +158,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int SeasonId { get; set; }
@@ -166,6 +169,12 @@
     private readonly int _pageNumber = 1;
 
     private TelevisionEpisodeCardResultsViewModel _data;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -179,10 +188,10 @@
 
     private async Task RefreshData()
     {
-        await _mediator.Send(new GetTelevisionSeasonById(SeasonId))
+        await _mediator.Send(new GetTelevisionSeasonById(SeasonId), _cts.Token)
             .IfSomeAsync(vm => _season = vm);
 
-        _data = await _mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize));
+        _data = await _mediator.Send(new GetTelevisionEpisodeCards(SeasonId, _pageNumber, _pageSize), _cts.Token);
     }
 
     private async Task AddToCollection()
@@ -194,7 +203,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await _mediator.Send(new AddSeasonToCollection(collection.Id, SeasonId));
+            await _mediator.Send(new AddSeasonToCollection(collection.Id, SeasonId), _cts.Token);
             _navigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }
@@ -209,7 +218,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null));
+            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.TelevisionSeason, null, null, null, SeasonId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null), _cts.Token);
             _navigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }
@@ -224,7 +233,7 @@
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
             var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
-            Either<BaseError, Unit> addResult = await _mediator.Send(request);
+            Either<BaseError, Unit> addResult = await _mediator.Send(request, _cts.Token);
             addResult.Match(
                 Left: error =>
                 {

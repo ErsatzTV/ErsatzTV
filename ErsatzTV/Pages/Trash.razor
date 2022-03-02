@@ -327,14 +327,14 @@
         _query = "state:FileNotFound";
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
-            _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50));
-            _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50));
-            _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50));
-            _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50));
-            _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50));
-            _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50));
-            _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50));
+            _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50), CancellationToken);
+            _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50), CancellationToken);
+            _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50), CancellationToken);
+            _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50), CancellationToken);
+            _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50), CancellationToken);
+            _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), CancellationToken);
+            _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), CancellationToken);
+            _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), CancellationToken);
         }
     }
 
@@ -486,7 +486,7 @@
                     .Append(songIds)
                     .ToList());
 
-            Either<BaseError, Unit> addResult = await Mediator.Send(request);
+            Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
             await addResult.Match(
                 Left: error =>
                 {
@@ -556,7 +556,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await Mediator.Send(request);
+            await Mediator.Send(request, CancellationToken);
             await RefreshData();
         }
     }

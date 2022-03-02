@@ -3,6 +3,8 @@
 @using ErsatzTV.Core.Jellyfin
 @using ErsatzTV.Application.Jellyfin.Queries
 @using ErsatzTV.Application.Jellyfin.Commands
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject NavigationManager _navigationManager
 @inject ISnackbar _snackbar
@@ -14,10 +16,17 @@
     SaveSecrets="SaveSecrets"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
-        JellyfinSecrets secrets = await _mediator.Send(new GetJellyfinSecrets());
+        JellyfinSecrets secrets = await _mediator.Send(new GetJellyfinSecrets(), _cts.Token);
         viewModel.Address = secrets.Address;
         viewModel.ApiKey = secrets.ApiKey;
         return Unit.Default;
@@ -26,7 +35,7 @@
     private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
         var secrets = new JellyfinSecrets { Address = viewModel.Address, ApiKey = viewModel.ApiKey };
-        return await _mediator.Send(new SaveJellyfinSecrets(secrets));
+        return await _mediator.Send(new SaveJellyfinSecrets(secrets), _cts.Token);
     }
 
 }

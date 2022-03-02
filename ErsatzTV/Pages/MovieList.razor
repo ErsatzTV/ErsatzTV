@@ -1,7 +1,6 @@
 ﻿@page "/media/movies"
 @page "/media/movies/page/{PageNumber:int}"
 @using LanguageExt.UnsafeValueAccess
-@using Microsoft.AspNetCore.WebUtilities
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
@@ -81,7 +80,7 @@
 
     private MovieCardResultsViewModel _data;
     private string _query;
-
+    
     protected override Task OnParametersSetAsync()
     {
         if (PageNumber == 0)
@@ -96,12 +95,12 @@
     protected override async Task RefreshData()
     {
         string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:movie" : $"type:movie AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexMovies(searchQuery, PageNumber, PageSize));
+        _data = await Mediator.Send(new QuerySearchIndexMovies(searchQuery, PageNumber, PageSize), CancellationToken);
     }
 
     private void PrevPage()
     {
-        var uri = $"/media/movies/page/{PageNumber - 1}";
+        string uri = $"/media/movies/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -112,7 +111,7 @@
 
     private void NextPage()
     {
-        var uri = $"/media/movies/page/{PageNumber + 1}";
+        string uri = $"/media/movies/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -143,7 +142,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddMovieToCollection(collection.Id, movie.MovieId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {

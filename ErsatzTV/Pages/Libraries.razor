@@ -78,6 +78,8 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private IList<LibraryViewModel> _libraries;
     private Dictionary<int, int> _progressByLibrary;
 
@@ -87,11 +89,11 @@
         _courier.Subscribe<LibraryScanProgress>(HandleScanProgress);
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadLibraries();
+    protected override async Task OnParametersSetAsync() => await LoadLibraries(_cts.Token);
 
-    private async Task LoadLibraries()
+    private async Task LoadLibraries(CancellationToken cancellationToken)
     {
-        _libraries = await _mediator.Send(new GetConfiguredLibraries());
+        _libraries = await _mediator.Send(new GetConfiguredLibraries(), cancellationToken);
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }
 
@@ -102,16 +104,16 @@
             switch (library)
             {
                 case LocalLibraryViewModel:
-                    await _workerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id));
+                    await _workerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), _cts.Token);
                     break;
                 case PlexLibraryViewModel:
-                    await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id));
+                    await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id), _cts.Token);
                     break;
                 case JellyfinLibraryViewModel:
-                    await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id));
+                    await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id), _cts.Token);
                     break;
                 case EmbyLibraryViewModel:
-                    await _embyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id));
+                    await _embyWorkerChannel.WriteAsync(new ForceSynchronizeEmbyLibraryById(library.Id), _cts.Token);
                     break;
             }
 
@@ -142,6 +144,9 @@
     {
         _locker.OnLibraryChanged -= LockChanged;
         _courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
+        
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
 }

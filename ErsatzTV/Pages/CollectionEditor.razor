@@ -3,6 +3,8 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
+@using System.Threading
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<CollectionEditor> _logger
 @inject ISnackbar _snackbar
@@ -29,19 +31,26 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
-
+    
     private readonly CollectionEditViewModel _model = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
     
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (IsEdit)
         {
-            Option<MediaCollectionViewModel> maybeCollection = await _mediator.Send(new GetCollectionById(Id));
+            Option<MediaCollectionViewModel> maybeCollection = await _mediator.Send(new GetCollectionById(Id), _cts.Token);
             maybeCollection.IfSome(collection =>
             {
                 _model.Id = collection.Id;
@@ -68,8 +77,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(new UpdateCollection(Id, _model.Name))).LeftToSeq() :
-                (await _mediator.Send(new CreateCollection(_model.Name))).LeftToSeq();
+                (await _mediator.Send(new UpdateCollection(Id, _model.Name), _cts.Token)).LeftToSeq() :
+                (await _mediator.Send(new CreateCollection(_model.Name), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>

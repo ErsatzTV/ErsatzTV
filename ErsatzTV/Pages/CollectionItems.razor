@@ -294,7 +294,7 @@
     protected override async Task RefreshData()
     {
         Either<BaseError, CollectionCardResultsViewModel> maybeResult =
-            await Mediator.Send(new GetCollectionCards(Id));
+            await Mediator.Send(new GetCollectionCards(Id), CancellationToken);
 
         maybeResult.Match(
             result => _data = result,
@@ -459,7 +459,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await Mediator.Send(request);
+            await Mediator.Send(request, CancellationToken);
             await RefreshData();
         }
     }
@@ -468,7 +468,7 @@
     {
         _data.UseCustomPlaybackOrder = !_data.UseCustomPlaybackOrder;
         var request = new UpdateCollection(Id, _data.Name) { UseCustomPlaybackOrder = _data.UseCustomPlaybackOrder };
-        await Mediator.Send(request);
+        await Mediator.Send(request, CancellationToken);
     }
 
 }
