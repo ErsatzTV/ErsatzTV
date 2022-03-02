@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Channels;
 using Blazored.LocalStorage;
+using Bugsnag.AspNet.Core;
 using Dapper;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Channels.Queries;
@@ -12,6 +13,7 @@ using ErsatzTV.Application.Streaming;
 using ErsatzTV.Application.Streaming.Commands;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
@@ -80,6 +82,23 @@ namespace ErsatzTV
 
         public void ConfigureServices(IServiceCollection services)
         {
+            BugsnagConfiguration bugsnagConfig = Configuration.GetSection("Bugsnag").Get<BugsnagConfiguration>();
+
+            services.AddBugsnag(
+                configuration =>
+                {
+                    configuration.ApiKey = bugsnagConfig.ApiKey;
+                    configuration.ProjectNamespaces = new[] { "ErsatzTV" };
+                    configuration.AppVersion = Assembly.GetEntryAssembly()
+                        ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                        ?.InformationalVersion ?? "unknown";
+                    
+                    configuration.NotifyReleaseStages = new[] { "public" };
+                    
+                    // effectively "disable" by tweaking app config
+                    configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
+                });
+            
             services.AddCors(
                 o => o.AddPolicy(
                     "AllowAll",

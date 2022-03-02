@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback of interlaced mpeg2video content with NVIDIA acceleration
 - Fix playback of all interlaced content with QSV acceleration
 
+### Added
+- Add automated error reporting via Bugsnag
+  - This can be disabled by editing the `appsettings.json` file or by setting the `Bugsnag:Enable` environment variable to `false`
+
 ### Changed
 - Framerate normalization will never normalize framerate below 24fps
   - Instead, content with a lower framerate will be normalized up to 24fps
