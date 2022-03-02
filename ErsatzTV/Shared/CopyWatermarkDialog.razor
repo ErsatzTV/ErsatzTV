@@ -1,5 +1,7 @@
 ﻿@using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Application.Watermarks.Commands
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
 @inject ILogger<CopyWatermarkDialog> _logger
@@ -27,6 +29,7 @@
 </MudDialog>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
@@ -39,6 +42,12 @@
     private readonly DummyModel _dummyModel = new();
 
     private string _newWatermarkName;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private bool CanSubmit() => !string.IsNullOrWhiteSpace(_newWatermarkName);
 
@@ -50,7 +59,7 @@
         }
 
         Either<BaseError, WatermarkViewModel> maybeResult =
-            await _mediator.Send(new CopyWatermark(WatermarkId, _newWatermarkName));
+            await _mediator.Send(new CopyWatermark(WatermarkId, _newWatermarkName), _cts.Token);
 
         maybeResult.Match(
             watermark => { MudDialog.Close(DialogResult.Ok(watermark)); },
