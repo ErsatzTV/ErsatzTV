@@ -1,6 +1,8 @@
 ﻿@using System.Globalization
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Playouts.Commands
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
 @inject ILogger<SchedulePlayoutRebuild> _logger
@@ -33,6 +35,7 @@
 </MudDialog>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
@@ -56,6 +59,12 @@
     private readonly DummyModel _dummyModel = new();
 
     private Option<TimeSpan> _rebuildTime;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override void OnParametersSet()
     {
@@ -65,7 +74,7 @@
     private async Task Submit()
     {
         Either<BaseError, PlayoutNameViewModel> maybeResult =
-            await _mediator.Send(new UpdatePlayout(PlayoutId, _rebuildTime));
+            await _mediator.Send(new UpdatePlayout(PlayoutId, _rebuildTime), _cts.Token);
 
         maybeResult.Match(
             playout => { MudDialog.Close(DialogResult.Ok(playout)); },

@@ -97,7 +97,7 @@
     protected override async Task RefreshData()
     {
         string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:artist" : $"type:artist AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexArtists(searchQuery, PageNumber, PageSize));
+        _data = await Mediator.Send(new QuerySearchIndexArtists(searchQuery, PageNumber, PageSize), CancellationToken);
     }
 
     private void PrevPage()
@@ -144,7 +144,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddArtistToCollection(collection.Id, artist.ArtistId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {

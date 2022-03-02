@@ -5,6 +5,8 @@
 @using ErsatzTV.Application.Filler.Commands
 @using ErsatzTV.Application.Filler.Queries
 @using ErsatzTV.Core.Domain.Filler
+@using System.Threading
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
@@ -69,13 +71,21 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private MudTable<FillerPresetViewModel> _fillerPresetsTable;
 
     private int _fillerPresetsRowsPerPage;
     
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        _fillerPresetsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize))
+        _fillerPresetsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.FillerPresetsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
     
@@ -88,16 +98,17 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeleteFillerPreset(fillerPreset.Id));
+            await _mediator.Send(new DeleteFillerPreset(fillerPreset.Id), _cts.Token);
             await _fillerPresetsTable.ReloadServerData();
         }
     }
 
     private async Task<TableData<FillerPresetViewModel>> ServerReloadFillerPresets(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()));
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.FillerPresetsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        PagedFillerPresetsViewModel data = await _mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize));
+        PagedFillerPresetsViewModel data = await _mediator.Send(new GetPagedFillerPresets(state.Page, state.PageSize), _cts.Token);
         return new TableData<FillerPresetViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
+
 }

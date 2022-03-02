@@ -7,6 +7,8 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Queries
 @using System.Globalization
+@using System.Threading
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
@@ -82,15 +84,23 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private MudTable<ChannelViewModel> _table;
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
 
     private int _rowsPerPage;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
-        _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize))
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
+        _rowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.ChannelsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
 
@@ -103,16 +113,16 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeleteChannel(channel.Id));
+            await _mediator.Send(new DeleteChannel(channel.Id), _cts.Token);
             await _table.ReloadServerData();
         }
     }
 
     private async Task<TableData<ChannelViewModel>> ServerReload(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsPageSize, state.PageSize.ToString()));
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.ChannelsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        List<ChannelViewModel> channels = await _mediator.Send(new GetAllChannels());
+        List<ChannelViewModel> channels = await _mediator.Send(new GetAllChannels(), _cts.Token);
         IOrderedEnumerable<ChannelViewModel> sorted = channels.OrderBy(c => decimal.Parse(c.Number));
 
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);

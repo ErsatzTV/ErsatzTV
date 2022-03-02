@@ -2,6 +2,8 @@
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.Libraries.Commands
 @using ErsatzTV.Application.Libraries.Queries
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject IMemoryCache _memoryCache
 @inject ISnackbar _snackbar
@@ -38,6 +40,7 @@
 
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [CascadingParameter]
     MudDialogInstance MudDialog { get; set; }
@@ -58,6 +61,12 @@
     private record DummyModel;
 
     private readonly DummyModel _dummyModel = new();
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private bool CanSubmit() =>
         _selectedLibrary != null && (_selectedLibrary != _newLibrary || !string.IsNullOrWhiteSpace(_newLibraryName));
@@ -66,7 +75,7 @@
     {
         _newLibrary = new LocalLibraryViewModel(-1, "(New Library)", MediaKind);
         
-        _libraries = await _mediator.Send(new GetAllLocalLibraries())
+        _libraries = await _mediator.Send(new GetAllLocalLibraries(), _cts.Token)
             .Map(list => list.Filter(ll => ll.MediaKind == MediaKind && ll.Id != SourceLibraryId))
             .Map(list => new[] { _newLibrary }.Append(list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase)).ToList());
 
@@ -90,7 +99,7 @@
         if (_selectedLibrary == _newLibrary)
         {
             Either<BaseError, LocalLibraryViewModel> maybeResult =
-                await _mediator.Send(new CreateLocalLibrary(_newLibraryName, MediaKind, new List<string>()));
+                await _mediator.Send(new CreateLocalLibrary(_newLibraryName, MediaKind, new List<string>()), _cts.Token);
 
             maybeResult.Match(
                 collection =>

@@ -4,6 +4,8 @@
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Application.Watermarks.Queries
 @using ErsatzTV.FFmpeg.State
+@using System.Threading
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<WatermarkEditor> _logger
 @inject ISnackbar _snackbar
@@ -146,7 +148,8 @@
 </MudContainer>
 
 @code {
-
+    private readonly CancellationTokenSource _cts = new();
+    
     [Parameter]
     public int Id { get; set; }
 
@@ -154,11 +157,17 @@
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         if (IsEdit)
         {
-            Option<WatermarkViewModel> watermark = await _mediator.Send(new GetWatermarkById(Id));
+            Option<WatermarkViewModel> watermark = await _mediator.Send(new GetWatermarkById(Id), _cts.Token);
             watermark.Match(
                 watermarkViewModel => _model = new WatermarkEditViewModel(watermarkViewModel),
                 () => _navigationManager.NavigateTo("404"));
@@ -193,8 +202,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(_model.ToUpdate())).LeftToSeq() :
-                (await _mediator.Send(_model.ToCreate())).LeftToSeq();
+                (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
+                (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
@@ -210,8 +219,9 @@
     {
         try
         {
-            Either<BaseError, string> maybeCacheFileName = await _mediator
-                .Send(new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Watermark));
+            Either<BaseError, string> maybeCacheFileName = await _mediator.Send(
+                new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Watermark),
+                _cts.Token);
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {

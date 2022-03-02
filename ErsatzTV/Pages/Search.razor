@@ -333,14 +333,14 @@
         _query = _navigationManager.Uri.GetSearchQuery();
         if (!string.IsNullOrWhiteSpace(_query))
         {
-            _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50));
-            _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50));
-            _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50));
-            _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50));
-            _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50));
-            _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50));
-            _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50));
-            _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50));
+            _movies = await Mediator.Send(new QuerySearchIndexMovies($"type:movie AND ({_query})", 1, 50), CancellationToken);
+            _shows = await Mediator.Send(new QuerySearchIndexShows($"type:show AND ({_query})", 1, 50), CancellationToken);
+            _seasons = await Mediator.Send(new QuerySearchIndexSeasons($"type:season AND ({_query})", 1, 50), CancellationToken);
+            _episodes = await Mediator.Send(new QuerySearchIndexEpisodes($"type:episode AND ({_query})", 1, 50), CancellationToken);
+            _musicVideos = await Mediator.Send(new QuerySearchIndexMusicVideos($"type:music_video AND ({_query})", 1, 50), CancellationToken);
+            _otherVideos = await Mediator.Send(new QuerySearchIndexOtherVideos($"type:other_video AND ({_query})", 1, 50), CancellationToken);
+            _songs = await Mediator.Send(new QuerySearchIndexSongs($"type:song AND ({_query})", 1, 50), CancellationToken);
+            _artists = await Mediator.Send(new QuerySearchIndexArtists($"type:artist AND ({_query})", 1, 50), CancellationToken);
         }
     }
 
@@ -374,7 +374,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddMovieToCollection(collection.Id, movie.MovieId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {
@@ -395,7 +395,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddShowToCollection(collection.Id, show.TelevisionShowId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {
@@ -416,7 +416,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddEpisodeToCollection(collection.Id, episode.EpisodeId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {
@@ -437,7 +437,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddArtistToCollection(collection.Id, artist.ArtistId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {
@@ -458,7 +458,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {
@@ -479,7 +479,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddOtherVideoToCollection(collection.Id, otherVideo.OtherVideoId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {
@@ -581,7 +581,7 @@
 
     private async Task AddAllToCollection(MouseEventArgs _)
     {
-        SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query));
+        SearchResultAllItemsViewModel results = await Mediator.Send(new QuerySearchIndexAllItems(_query), CancellationToken);
         await AddItemsToCollection(
             results.MovieIds,
             results.ShowIds,
@@ -606,7 +606,7 @@
                 collection.Id,
                 _query);
 
-            Either<BaseError, Unit> updateResult = await Mediator.Send(request);
+            Either<BaseError, Unit> updateResult = await Mediator.Send(request, CancellationToken);
             updateResult.Match(
                 Left: error =>
                 {

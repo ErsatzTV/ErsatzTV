@@ -6,6 +6,7 @@
 @using ErsatzTV.Application.Images.Commands
 @using ErsatzTV.Application.MediaItems.Queries
 @using System.Globalization
+@using System.Threading
 @using ErsatzTV.Application.Channels
 @using ErsatzTV.Application.Channels.Queries
 @using ErsatzTV.Application.Filler
@@ -13,6 +14,7 @@
 @using ErsatzTV.Application.Watermarks
 @using ErsatzTV.Application.Watermarks.Queries
 @using ErsatzTV.Core.Domain.Filler
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ChannelEditor> _logger
 @inject ISnackbar _snackbar
@@ -107,6 +109,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int? Id { get; set; }
@@ -119,17 +122,23 @@
     private List<CultureInfo> _availableCultures;
     private List<WatermarkViewModel> _watermarks;
     private List<FillerPresetViewModel> _fillerPresets;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadFFmpegProfiles();
-        _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
-        await LoadWatermarks();
-        await LoadFillerPresets();
+        await LoadFFmpegProfiles(_cts.Token);
+        _availableCultures = await _mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+        await LoadWatermarks(_cts.Token);
+        await LoadFillerPresets(_cts.Token);
 
         if (Id.HasValue)
         {
-            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelById(Id.Value));
+            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelById(Id.Value), _cts.Token);
             maybeChannel.Match(
                 channelViewModel =>
                 {
@@ -149,10 +158,10 @@
         }
         else
         {
-            FFmpegSettingsViewModel ffmpegSettings = await _mediator.Send(new GetFFmpegSettings());
+            FFmpegSettingsViewModel ffmpegSettings = await _mediator.Send(new GetFFmpegSettings(), _cts.Token);
 
     // TODO: command for new channel
-            IEnumerable<int> channelNumbers = await _mediator.Send(new GetAllChannels())
+            IEnumerable<int> channelNumbers = await _mediator.Send(new GetAllChannels(), _cts.Token)
                 .Map(list => list.Map(c => int.TryParse(c.Number.Split(".").Head(), out int result) ? result : 0));
             int maxNumber = Optional(channelNumbers).Flatten().DefaultIfEmpty(0).Max();
             _model.Number = (maxNumber + 1).ToString();
@@ -171,14 +180,14 @@
 
     private bool IsEdit => Id.HasValue;
 
-    private async Task LoadFFmpegProfiles() =>
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
+    private async Task LoadFFmpegProfiles(CancellationToken cancellationToken) =>
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), cancellationToken);
 
-    private async Task LoadWatermarks() =>
-        _watermarks = await _mediator.Send(new GetAllWatermarks());
+    private async Task LoadWatermarks(CancellationToken cancellationToken) =>
+        _watermarks = await _mediator.Send(new GetAllWatermarks(), cancellationToken);
 
-    private async Task LoadFillerPresets() =>
-        _fillerPresets = await _mediator.Send(new GetAllFillerPresets())
+    private async Task LoadFillerPresets(CancellationToken cancellationToken) =>
+        _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), cancellationToken)
             .Map(list => list.Filter(vm => vm.FillerKind == FillerKind.Fallback).ToList());
 
     private async Task HandleSubmitAsync()
@@ -187,8 +196,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(_model.ToUpdate())).LeftToSeq() :
-                (await _mediator.Send(_model.ToCreate())).LeftToSeq();
+                (await _mediator.Send(_model.ToUpdate(), _cts.Token)).LeftToSeq() :
+                (await _mediator.Send(_model.ToCreate(), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>
@@ -205,7 +214,7 @@
         try
         {
             Either<BaseError, string> maybeCacheFileName =
-                await _mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Logo));
+                await _mediator.Send(new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Logo), _cts.Token);
             maybeCacheFileName.Match(
                 relativeFileName =>
                 {

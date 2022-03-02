@@ -2,6 +2,8 @@
 @using ErsatzTV.Application.FFmpegProfiles
 @using ErsatzTV.Application.FFmpegProfiles.Commands
 @using ErsatzTV.Application.FFmpegProfiles.Queries
+@using System.Threading
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 @inject ILogger<FFmpeg> _logger
@@ -78,12 +80,20 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private List<FFmpegProfileViewModel> _ffmpegProfiles;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
-    protected override async Task OnParametersSetAsync() => await LoadFFmpegProfilesAsync();
+    protected override async Task OnParametersSetAsync() => await LoadFFmpegProfilesAsync(_cts.Token);
 
-    private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
+    private async Task LoadFFmpegProfilesAsync(CancellationToken cancellationToken) =>
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), cancellationToken);
 
     private async Task DeleteProfileAsync(FFmpegProfileViewModel ffmpegProfile)
     {
@@ -94,8 +104,8 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id));
-            await LoadFFmpegProfilesAsync();
+            await _mediator.Send(new DeleteFFmpegProfile(ffmpegProfile.Id), _cts.Token);
+            await LoadFFmpegProfilesAsync(_cts.Token);
         }
     }
 

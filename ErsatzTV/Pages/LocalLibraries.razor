@@ -2,6 +2,7 @@
 @using ErsatzTV.Application.Libraries
 @using ErsatzTV.Application.Libraries.Commands
 @using ErsatzTV.Application.Libraries.Queries
+@using System.Threading
 @implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
@@ -53,6 +54,8 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private IList<LocalLibraryViewModel> _libraries;
 
     protected override void OnInitialized()
@@ -60,11 +63,11 @@
         _locker.OnLibraryChanged += LockChanged;
     }
 
-    protected override async Task OnParametersSetAsync() => await LoadLibraries();
+    protected override async Task OnParametersSetAsync() => await LoadLibraries(_cts.Token);
 
-    private async Task LoadLibraries()
+    private async Task LoadLibraries(CancellationToken cancellationToken)
     {
-        _libraries = await _mediator.Send(new GetAllLocalLibraries());
+        _libraries = await _mediator.Send(new GetAllLocalLibraries(), cancellationToken);
     }
 
     private void LockChanged(object sender, EventArgs e) =>
@@ -72,7 +75,7 @@
 
     private async Task DeleteLibrary(LocalLibraryViewModel library)
     {
-        int count = await _mediator.Send(new CountMediaItemsByLibrary(library.Id));
+        int count = await _mediator.Send(new CountMediaItemsByLibrary(library.Id), _cts.Token);
         var parameters = new DialogParameters
         {
             { "EntityType", "library" },
@@ -86,14 +89,17 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            await _mediator.Send(new DeleteLocalLibrary(library.Id));
-            await LoadLibraries();
+            await _mediator.Send(new DeleteLocalLibrary(library.Id), _cts.Token);
+            await LoadLibraries(_cts.Token);
         }
     }
 
     void IDisposable.Dispose()
     {
         _locker.OnLibraryChanged -= LockChanged;
+        
+        _cts.Cancel();
+        _cts.Dispose();
     }
 
 }
