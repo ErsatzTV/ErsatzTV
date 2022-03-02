@@ -3,6 +3,8 @@
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.MediaCollections.Queries
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject NavigationManager _navigationManager
 @inject ISnackbar _snackbar
@@ -104,6 +106,8 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     [Parameter]
     public int Id { get; set; }
 
@@ -117,17 +121,23 @@
     private MudSelect<MediaCollectionViewModel> _collectionSelect;
     private MudSelect<SmartCollectionViewModel> _smartCollectionSelect;
     
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+
     protected override async Task OnParametersSetAsync()
     {
-        _collections = await _mediator.Send(new GetAllCollections())
+        _collections = await _mediator.Send(new GetAllCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
-        _smartCollections = await _mediator.Send(new GetAllSmartCollections())
+        _smartCollections = await _mediator.Send(new GetAllSmartCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         if (IsEdit)
         {
-            Option<MultiCollectionViewModel> maybeCollection = await _mediator.Send(new GetMultiCollectionById(Id));
+            Option<MultiCollectionViewModel> maybeCollection = await _mediator.Send(new GetMultiCollectionById(Id), _cts.Token);
             maybeCollection.IfSome(collection =>
             {
                 _model.Id = collection.Id;
@@ -170,8 +180,8 @@
         if (_editContext.Validate())
         {
             Seq<BaseError> errorMessage = IsEdit ?
-                (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, GetUpdateItems()))).LeftToSeq() :
-                (await _mediator.Send(new CreateMultiCollection(_model.Name, GetCreateItems()))).LeftToSeq();
+                (await _mediator.Send(new UpdateMultiCollection(Id, _model.Name, GetUpdateItems()), _cts.Token)).LeftToSeq() :
+                (await _mediator.Send(new CreateMultiCollection(_model.Name, GetCreateItems()), _cts.Token)).LeftToSeq();
 
             errorMessage.HeadOrNone().Match(
                 error =>

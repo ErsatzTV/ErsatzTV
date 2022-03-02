@@ -8,8 +8,10 @@
 @using ErsatzTV.Application.ProgramSchedules
 @using ErsatzTV.Application.ProgramSchedules.Commands
 @using System.Globalization
+@using System.Threading
 @using ErsatzTV.Extensions
 @using Unit = LanguageExt.Unit
+@implements IDisposable
 @inject IMediator _mediator
 @inject IDialogService _dialog
 @inject NavigationManager _navigationManager
@@ -185,6 +187,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int ArtistId { get; set; }
@@ -195,12 +198,18 @@
     private List<string> _sortedStyles = new();
     private List<string> _sortedMoods = new();
     private MusicVideoCardResultsViewModel _musicVideos;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override Task OnParametersSetAsync() => RefreshData();
 
     private async Task RefreshData()
     {
-        await _mediator.Send(new GetArtistById(ArtistId)).IfSomeAsync(vm =>
+        await _mediator.Send(new GetArtistById(ArtistId), _cts.Token).IfSomeAsync(vm =>
         {
             _artist = vm;
             _sortedLanguages = _artist.Languages.OrderBy(ci => ci.EnglishName).ToList();
@@ -209,7 +218,7 @@
             _sortedMoods = _artist.Moods.OrderBy(m => m).ToList();
         });
 
-        _musicVideos = await _mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100));
+        _musicVideos = await _mediator.Send(new GetMusicVideoCards(ArtistId, 1, 100), _cts.Token);
     }
 
     private async Task AddToCollection()
@@ -221,7 +230,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
-            await _mediator.Send(new AddArtistToCollection(collection.Id, ArtistId));
+            await _mediator.Send(new AddArtistToCollection(collection.Id, ArtistId), _cts.Token);
             _navigationManager.NavigateTo($"/media/collections/{collection.Id}");
         }
     }
@@ -235,7 +244,7 @@
         DialogResult result = await dialog.Result;
         if (!result.Cancelled && result.Data is ProgramScheduleViewModel schedule)
         {
-            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.Artist, null, null, null, ArtistId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null));
+            await _mediator.Send(new AddProgramScheduleItem(schedule.Id, StartType.Dynamic, null, PlayoutMode.One, ProgramScheduleItemCollectionType.Artist, null, null, null, ArtistId, PlaybackOrder.Shuffle, null, null, TailMode.None, null, GuideMode.Normal, null, null, null, null, null), _cts.Token);
             _navigationManager.NavigateTo($"/schedules/{schedule.Id}/items");
         }
     }
@@ -250,7 +259,7 @@
         if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
         {
             var request = new AddMusicVideoToCollection(collection.Id, musicVideo.MusicVideoId);
-            Either<BaseError, Unit> addResult = await _mediator.Send(request);
+            Either<BaseError, Unit> addResult = await _mediator.Send(request, _cts.Token);
             addResult.Match(
                 Left: error =>
                 {

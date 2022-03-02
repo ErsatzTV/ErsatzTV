@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Extensions;
 using Microsoft.AspNetCore.Components;
@@ -10,13 +11,23 @@ namespace ErsatzTV.Pages
 {
     public class FragmentNavigationBase : ComponentBase, IDisposable
     {
+        private readonly CancellationTokenSource _cts = new();
+
+        protected CancellationToken CancellationToken => _cts.Token;
+        
         [Inject]
         private NavigationManager NavManager { get; set; }
 
         [Inject]
         private IJSRuntime JsRuntime { get; set; }
 
-        public void Dispose() => NavManager.LocationChanged -= TryFragmentNavigation;
+        public void Dispose()
+        {
+            NavManager.LocationChanged -= TryFragmentNavigation;
+
+            _cts?.Cancel();
+            _cts?.Dispose();
+        }
 
         protected override void OnInitialized() => NavManager.LocationChanged += TryFragmentNavigation;
 

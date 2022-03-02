@@ -3,6 +3,8 @@
 @using ErsatzTV.Core.Emby
 @using ErsatzTV.Application.Emby.Queries
 @using ErsatzTV.Application.Emby.Commands
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject NavigationManager _navigationManager
 @inject ISnackbar _snackbar
@@ -14,10 +16,17 @@
     SaveSecrets="SaveSecrets"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private async Task<Unit> LoadSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
-        EmbySecrets secrets = await _mediator.Send(new GetEmbySecrets());
+        EmbySecrets secrets = await _mediator.Send(new GetEmbySecrets(), _cts.Token);
         viewModel.Address = secrets.Address;
         viewModel.ApiKey = secrets.ApiKey;
         return Unit.Default;
@@ -26,7 +35,7 @@
     private async Task<Either<BaseError, Unit>> SaveSecrets(RemoteMediaSourceEditViewModel viewModel)
     {
         var secrets = new EmbySecrets { Address = viewModel.Address, ApiKey = viewModel.ApiKey };
-        return await _mediator.Send(new SaveEmbySecrets(secrets));
+        return await _mediator.Send(new SaveEmbySecrets(secrets), _cts.Token);
     }
 
 }

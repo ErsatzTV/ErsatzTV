@@ -2,6 +2,8 @@
 @using ErsatzTV.Core.Interfaces.Jellyfin
 @using ErsatzTV.Application.Jellyfin.Commands
 @using ErsatzTV.Application.Jellyfin.Queries
+@using System.Threading
+@implements IDisposable
 @inject IJellyfinSecretStore _jellyfinSecretStore
 @inject ChannelWriter<IJellyfinBackgroundServiceRequest> _channel
 
@@ -16,8 +18,15 @@
     SecretStore="@_jellyfinSecretStore"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private async Task RefreshLibraries(int mediaSourceId) =>
-        await _channel.WriteAsync(new SynchronizeJellyfinLibraries(mediaSourceId));
+        await _channel.WriteAsync(new SynchronizeJellyfinLibraries(mediaSourceId), _cts.Token);
 
 }

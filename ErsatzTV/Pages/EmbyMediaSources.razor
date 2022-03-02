@@ -2,6 +2,8 @@
 @using ErsatzTV.Core.Interfaces.Emby
 @using ErsatzTV.Application.Emby.Commands
 @using ErsatzTV.Application.Emby.Queries
+@using System.Threading
+@implements IDisposable
 @inject IEmbySecretStore _embySecretStore
 @inject ChannelWriter<IEmbyBackgroundServiceRequest> _channel
 
@@ -16,8 +18,15 @@
     SecretStore="@_embySecretStore"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private async Task RefreshLibraries(int mediaSourceId) =>
-        await _channel.WriteAsync(new SynchronizeEmbyLibraries(mediaSourceId));
+        await _channel.WriteAsync(new SynchronizeEmbyLibraries(mediaSourceId), _cts.Token);
 
 }

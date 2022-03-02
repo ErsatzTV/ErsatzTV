@@ -4,6 +4,8 @@
 @using ErsatzTV.Application.Emby.Queries
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Emby
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject ChannelWriter<IEmbyBackgroundServiceRequest> _channel
 
@@ -16,9 +18,16 @@
     SynchronizeLibraryByIdIfNeeded="SynchronizeLibraryByIdIfNeeded"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private IRequest<Either<BaseError, Unit>> GetUpdateLibraryRequest(List<RemoteMediaSourceLibraryEditViewModel> libraries) =>
         new UpdateEmbyLibraryPreferences(
@@ -42,7 +51,7 @@
 
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
     {
-        await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(libraryId));
+        await _channel.WriteAsync(new SynchronizeEmbyLibraryByIdIfNeeded(libraryId), _cts.Token);
         return Unit.Default;
     }
 

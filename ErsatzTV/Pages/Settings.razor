@@ -16,6 +16,8 @@
 @using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Core.FFmpeg
 @using Microsoft.AspNetCore.Components
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
 @inject ILogger<Settings> _logger
@@ -177,6 +179,8 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private bool _success;
     private bool _hdhrSuccess;
     private bool _scannerSuccess;
@@ -189,22 +193,28 @@
     private int _tunerCount;
     private int _libraryRefreshInterval;
     private int _playoutDaysToBuild;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override async Task OnParametersSetAsync()
     {
         await LoadFFmpegProfilesAsync();
 
-        _ffmpegSettings = await _mediator.Send(new GetFFmpegSettings());
+        _ffmpegSettings = await _mediator.Send(new GetFFmpegSettings(), _cts.Token);
         _success = File.Exists(_ffmpegSettings.FFmpegPath) && File.Exists(_ffmpegSettings.FFprobePath);
-        _availableCultures = await _mediator.Send(new GetAllLanguageCodes());
-        _watermarks = await _mediator.Send(new GetAllWatermarks());
-        _fillerPresets = await _mediator.Send(new GetAllFillerPresets())
+        _availableCultures = await _mediator.Send(new GetAllLanguageCodes(), _cts.Token);
+        _watermarks = await _mediator.Send(new GetAllWatermarks(), _cts.Token);
+        _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), _cts.Token)
             .Map(list => list.Filter(fp => fp.FillerKind == FillerKind.Fallback).ToList());
-        _tunerCount = await _mediator.Send(new GetHDHRTunerCount());
+        _tunerCount = await _mediator.Send(new GetHDHRTunerCount(), _cts.Token);
         _hdhrSuccess = string.IsNullOrWhiteSpace(ValidateTunerCount(_tunerCount));
-        _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval());
+        _libraryRefreshInterval = await _mediator.Send(new GetLibraryRefreshInterval(), _cts.Token);
         _scannerSuccess = _libraryRefreshInterval > 0;
-        _playoutDaysToBuild = await _mediator.Send(new GetPlayoutDaysToBuild());
+        _playoutDaysToBuild = await _mediator.Send(new GetPlayoutDaysToBuild(), _cts.Token);
         _playoutSuccess = _playoutDaysToBuild > 0;
     }
 
@@ -223,11 +233,11 @@
     private static string ValidateInitialSegmentCount(int count) => count < 1 ? "HLS Segmenter initial segment count must be greater than or equal to 1" : null;
 
     private async Task LoadFFmpegProfilesAsync() =>
-        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles());
+        _ffmpegProfiles = await _mediator.Send(new GetAllFFmpegProfiles(), _cts.Token);
 
     private async Task SaveFFmpegSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateFFmpegSettings(_ffmpegSettings), _cts.Token);
         result.Match(
             Left: error =>
             {
@@ -239,7 +249,7 @@
 
     private async Task SaveHDHRSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateHDHRTunerCount(_tunerCount));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateHDHRTunerCount(_tunerCount), _cts.Token);
         result.Match(
             Left: error =>
             {
@@ -251,7 +261,7 @@
 
     private async Task SaveScannerSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdateLibraryRefreshInterval(_libraryRefreshInterval));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdateLibraryRefreshInterval(_libraryRefreshInterval), _cts.Token);
         result.Match(
             Left: error =>
             {
@@ -263,7 +273,7 @@
 
     private async Task SavePlayoutSettings()
     {
-        Either<BaseError, Unit> result = await _mediator.Send(new UpdatePlayoutDaysToBuild(_playoutDaysToBuild));
+        Either<BaseError, Unit> result = await _mediator.Send(new UpdatePlayoutDaysToBuild(_playoutDaysToBuild), _cts.Token);
         result.Match(
             Left: error =>
             {

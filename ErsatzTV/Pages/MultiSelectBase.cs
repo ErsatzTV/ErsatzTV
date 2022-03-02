@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Application.MediaCollections;
@@ -137,7 +138,7 @@ namespace ErsatzTV.Pages
                     otherVideoIds,
                     songIds);
 
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {
@@ -173,7 +174,8 @@ namespace ErsatzTV.Pages
                     new RemoveItemsFromCollection(collectionId)
                     {
                         MediaItemIds = itemIds
-                    });
+                    },
+                    CancellationToken);
 
                 await RefreshData();
                 ClearSelection();

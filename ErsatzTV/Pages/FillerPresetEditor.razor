@@ -9,6 +9,8 @@
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Core.Domain.Filler
 @using Microsoft.AspNetCore.Components
+@using System.Threading
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<FillerPresetEditor> _logger
 @inject ISnackbar _snackbar
@@ -134,6 +136,8 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     [Parameter]
     public int Id { get; set; }
     
@@ -148,24 +152,30 @@
     private List<NamedMediaItemViewModel> _televisionSeasons;
     private List<NamedMediaItemViewModel> _artists;
     
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+    
     protected override async Task OnParametersSetAsync()
     {
-        _mediaCollections = await _mediator.Send(new GetAllCollections())
+        _mediaCollections = await _mediator.Send(new GetAllCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _multiCollections = await _mediator.Send(new GetAllMultiCollections())
+        _multiCollections = await _mediator.Send(new GetAllMultiCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _smartCollections = await _mediator.Send(new GetAllSmartCollections())
+        _smartCollections = await _mediator.Send(new GetAllSmartCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionShows = await _mediator.Send(new GetAllTelevisionShows())
+        _televisionShows = await _mediator.Send(new GetAllTelevisionShows(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons())
+        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _artists = await _mediator.Send(new GetAllArtists())
+        _artists = await _mediator.Send(new GetAllArtists(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         if (IsEdit)
         {
-            Option<FillerPresetViewModel> maybeFillerPreset = await _mediator.Send(new GetFillerPresetById(Id));
+            Option<FillerPresetViewModel> maybeFillerPreset = await _mediator.Send(new GetFillerPresetById(Id), _cts.Token);
             maybeFillerPreset.IfSome(fillerPreset =>
             {
                 _model.Id = fillerPreset.Id;
@@ -212,7 +222,7 @@
         {
             IRequest<Either<BaseError, LanguageExt.Unit>> request = IsEdit ? _model.ToEdit() : _model.ToUpdate();
 
-            Seq<BaseError> errorMessage = await _mediator.Send(request)
+            Seq<BaseError> errorMessage = await _mediator.Send(request, _cts.Token)
                 .Map(result => result.LeftToSeq());
 
             errorMessage.HeadOrNone().Match(

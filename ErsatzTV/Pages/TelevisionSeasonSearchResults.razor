@@ -95,7 +95,7 @@
     protected override async Task RefreshData()
     {
         string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:season" : $"type:season AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexSeasons(searchQuery, PageNumber, PageSize));
+        _data = await Mediator.Send(new QuerySearchIndexSeasons(searchQuery, PageNumber, PageSize), CancellationToken);
     }
 
     private void PrevPage()
@@ -142,7 +142,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddSeasonToCollection(collection.Id, season.TelevisionSeasonId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {

@@ -10,6 +10,8 @@
 @using ErsatzTV.Application.Filler
 @using ErsatzTV.Application.Filler.Queries
 @using ErsatzTV.Core.Domain.Filler
+@using System.Threading
+@implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger
 @inject ISnackbar _snackbar
@@ -289,6 +291,7 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
@@ -303,37 +306,43 @@
     private List<FillerPresetViewModel> _fillerPresets;
 
     private ProgramScheduleItemEditViewModel _selectedItem;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override Task OnParametersSetAsync() => LoadScheduleItems();
 
     private async Task LoadScheduleItems()
     {
     // TODO: fix performance
-        _mediaCollections = await _mediator.Send(new GetAllCollections())
+        _mediaCollections = await _mediator.Send(new GetAllCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _multiCollections = await _mediator.Send(new GetAllMultiCollections())
+        _multiCollections = await _mediator.Send(new GetAllMultiCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _smartCollections = await _mediator.Send(new GetAllSmartCollections())
+        _smartCollections = await _mediator.Send(new GetAllSmartCollections(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionShows = await _mediator.Send(new GetAllTelevisionShows())
+        _televisionShows = await _mediator.Send(new GetAllTelevisionShows(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons())
+        _televisionSeasons = await _mediator.Send(new GetAllTelevisionSeasons(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _artists = await _mediator.Send(new GetAllArtists())
+        _artists = await _mediator.Send(new GetAllArtists(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
-        _fillerPresets = await _mediator.Send(new GetAllFillerPresets())
+        _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         string name = string.Empty;
         var shuffleScheduleItems = false;
-        Option<ProgramScheduleViewModel> maybeSchedule = await _mediator.Send(new GetProgramScheduleById(Id));
+        Option<ProgramScheduleViewModel> maybeSchedule = await _mediator.Send(new GetProgramScheduleById(Id), _cts.Token);
         foreach (ProgramScheduleViewModel schedule in maybeSchedule)
         {
             name = schedule.Name;
             shuffleScheduleItems = schedule.ShuffleScheduleItems;
         }
 
-        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await _mediator.Send(new GetProgramScheduleItems(Id));
+        Option<IEnumerable<ProgramScheduleItemViewModel>> maybeResults = await _mediator.Send(new GetProgramScheduleItems(Id), _cts.Token);
         foreach (IEnumerable<ProgramScheduleItemViewModel> items in maybeResults)
         {
             _schedule = new ProgramScheduleItemsEditViewModel
@@ -450,7 +459,7 @@
             item.TailFiller?.Id,
             item.FallbackFiller?.Id)).ToList();
 
-        Seq<BaseError> errorMessages = await _mediator.Send(new ReplaceProgramScheduleItems(Id, items)).Map(e => e.LeftToSeq());
+        Seq<BaseError> errorMessages = await _mediator.Send(new ReplaceProgramScheduleItems(Id, items), _cts.Token).Map(e => e.LeftToSeq());
 
         errorMessages.HeadOrNone().Match(
             error =>

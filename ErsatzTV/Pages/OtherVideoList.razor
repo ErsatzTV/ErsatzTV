@@ -96,7 +96,7 @@
     protected override async Task RefreshData()
     {
         string searchQuery = string.IsNullOrWhiteSpace(_query) ? "type:other_video" : $"type:other_video AND ({_query})";
-        _data = await Mediator.Send(new QuerySearchIndexOtherVideos(searchQuery, PageNumber, PageSize));
+        _data = await Mediator.Send(new QuerySearchIndexOtherVideos(searchQuery, PageNumber, PageSize), CancellationToken);
     }
 
     private void PrevPage()
@@ -143,7 +143,7 @@
             if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
             {
                 var request = new AddOtherVideoToCollection(collection.Id, otherVideo.OtherVideoId);
-                Either<BaseError, Unit> addResult = await Mediator.Send(request);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
                 addResult.Match(
                     Left: error =>
                     {

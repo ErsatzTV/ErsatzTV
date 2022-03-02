@@ -4,6 +4,8 @@
 @using ErsatzTV.Application.Configuration.Queries
 @using ErsatzTV.Application.Configuration.Commands
 @using ErsatzTV.Application.MediaCollections.Commands
+@using System.Threading
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 @inject ISnackbar _snackbar
@@ -75,9 +77,17 @@
 </MudContainer>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
+
     private MudTable<TraktListViewModel> _traktListsTable;
 
     private int _traktListsRowsPerPage;
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     protected override void OnInitialized()
     {
@@ -86,7 +96,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        _traktListsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize))
+        _traktListsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.TraktListsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
 
@@ -104,7 +114,7 @@
     {
         if (_locker.LockTrakt())
         {
-            await _workerChannel.WriteAsync(new MatchTraktListItems(traktList.Id));
+            await _workerChannel.WriteAsync(new MatchTraktListItems(traktList.Id), _cts.Token);
         }
     }
 
@@ -119,16 +129,16 @@
             DialogResult result = await dialog.Result;
             if (!result.Cancelled)
             {
-                await _workerChannel.WriteAsync(new DeleteTraktList(traktList.Id));
+                await _workerChannel.WriteAsync(new DeleteTraktList(traktList.Id), _cts.Token);
             }
         }
     }
 
     private async Task<TableData<TraktListViewModel>> ServerReloadTraktLists(TableState state)
     {
-        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TraktListsPageSize, state.PageSize.ToString()));
+        await _mediator.Send(new SaveConfigElementByKey(ConfigElementKey.TraktListsPageSize, state.PageSize.ToString()), _cts.Token);
 
-        PagedTraktListsViewModel data = await _mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize));
+        PagedTraktListsViewModel data = await _mediator.Send(new GetPagedTraktLists(state.Page, state.PageSize), _cts.Token);
         return new TableData<TraktListViewModel> { TotalItems = data.TotalCount, Items = data.Page };
     }
     
@@ -141,7 +151,7 @@
             DialogResult result = await dialog.Result;
             if (!result.Cancelled && result.Data is string url)
             {
-                await _workerChannel.WriteAsync(new AddTraktList(url));
+                await _workerChannel.WriteAsync(new AddTraktList(url), _cts.Token);
             }
         }
     }

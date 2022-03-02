@@ -4,6 +4,8 @@
 @using ErsatzTV.Application.Jellyfin.Queries
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Jellyfin
+@using System.Threading
+@implements IDisposable
 @inject IMediator _mediator
 @inject ChannelWriter<IJellyfinBackgroundServiceRequest> _channel
 
@@ -16,20 +18,27 @@
     SynchronizeLibraryByIdIfNeeded="SynchronizeLibraryByIdIfNeeded"/>
 
 @code {
+    private readonly CancellationTokenSource _cts = new();
 
     [Parameter]
     public int Id { get; set; }
+    
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     private IRequest<Either<BaseError, Unit>> GetUpdateLibraryRequest(List<RemoteMediaSourceLibraryEditViewModel> libraries) =>
         new UpdateJellyfinLibraryPreferences(
             libraries.Map(l => new JellyfinLibraryPreference(l.Id, l.ShouldSyncItems)).ToList());
 
-    private Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
-        _mediator.Send(new GetJellyfinLibrariesBySourceId(Id))
+    private async Task<List<RemoteMediaSourceLibraryEditViewModel>> GetLibrariesBySourceId(int mediaSourceId) =>
+        await _mediator.Send(new GetJellyfinLibrariesBySourceId(Id), _cts.Token)
             .Map(list => list.Map(ProjectToEditViewModel).OrderBy(x => x.MediaKind).ThenBy(x => x.Name).ToList());
 
-    private Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
-        _mediator.Send(new GetJellyfinMediaSourceById(Id))
+    private async Task<Option<RemoteMediaSourceViewModel>> GetMediaSourceById(int mediaSourceId) =>
+        await _mediator.Send(new GetJellyfinMediaSourceById(Id), _cts.Token)
             .MapT(vm => new RemoteMediaSourceViewModel(vm.Id, vm.Name, vm.Address));
 
     private RemoteMediaSourceLibraryEditViewModel ProjectToEditViewModel(JellyfinLibraryViewModel library) => new()
@@ -42,7 +51,7 @@
 
     private async Task<Unit> SynchronizeLibraryByIdIfNeeded(int libraryId)
     {
-        await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(libraryId));
+        await _channel.WriteAsync(new SynchronizeJellyfinLibraryByIdIfNeeded(libraryId), _cts.Token);
         return Unit.Default;
     }
 
