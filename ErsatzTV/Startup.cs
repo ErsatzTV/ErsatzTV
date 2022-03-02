@@ -83,6 +83,7 @@ namespace ErsatzTV
         public void ConfigureServices(IServiceCollection services)
         {
             BugsnagConfiguration bugsnagConfig = Configuration.GetSection("Bugsnag").Get<BugsnagConfiguration>();
+            services.Configure<BugsnagConfiguration>(Configuration.GetSection("Bugsnag"));
 
             services.AddBugsnag(
                 configuration =>
@@ -288,6 +289,7 @@ namespace ErsatzTV
             services.AddScoped<IZeroDurationHealthCheck, ZeroDurationHealthCheck>();
             services.AddScoped<IFileNotFoundHealthCheck, FileNotFoundHealthCheck>();
             services.AddScoped<IVaapiDriverHealthCheck, VaapiDriverHealthCheck>();
+            services.AddScoped<IErrorReportsHealthCheck, ErrorReportsHealthCheck>();
             services.AddScoped<IHealthCheckService, HealthCheckService>();
 
             services.AddScoped<IChannelRepository, ChannelRepository>();
