@@ -93,10 +93,14 @@ namespace ErsatzTV
                         ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                         ?.InformationalVersion ?? "unknown";
                     
-                    configuration.NotifyReleaseStages = new[] { "public" };
+                    configuration.NotifyReleaseStages = new[] { "public", "develop" };
                     
+#if DEBUG
+                    configuration.ReleaseStage = "develop";
+#else
                     // effectively "disable" by tweaking app config
                     configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
+#endif
                 });
             
             services.AddCors(
