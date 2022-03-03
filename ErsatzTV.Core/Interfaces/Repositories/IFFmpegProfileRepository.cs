@@ -1,10 +1,8 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Interfaces.Repositories
+namespace ErsatzTV.Core.Interfaces.Repositories;
+
+public interface IFFmpegProfileRepository
 {
-    public interface IFFmpegProfileRepository
-    {
-        Task<FFmpegProfile> Copy(int ffmpegProfileId, string name);
-    }
+    Task<FFmpegProfile> Copy(int ffmpegProfileId, string name);
 }

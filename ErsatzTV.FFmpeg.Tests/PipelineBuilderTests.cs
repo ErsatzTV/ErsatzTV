@@ -4,11 +4,11 @@ using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.State;
-using NUnit.Framework;
 using FluentAssertions;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NUnit.Framework;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.FFmpeg.Tests;

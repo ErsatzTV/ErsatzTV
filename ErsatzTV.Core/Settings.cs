@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Core
+﻿namespace ErsatzTV.Core;
+
+public static class Settings
 {
-    public static class Settings
-    {
-        public static int ListenPort { get; set; }
-    }
+    public static int ListenPort { get; set; }
 }

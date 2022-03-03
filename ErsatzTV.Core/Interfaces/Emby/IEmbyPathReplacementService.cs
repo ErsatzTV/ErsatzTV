@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Interfaces.Emby
+namespace ErsatzTV.Core.Interfaces.Emby;
+
+public interface IEmbyPathReplacementService
 {
-    public interface IEmbyPathReplacementService
-    {
-        Task<string> GetReplacementEmbyPath(int libraryPathId, string path);
-        string GetReplacementEmbyPath(List<EmbyPathReplacement> pathReplacements, string path, bool log = true);
-    }
+    Task<string> GetReplacementEmbyPath(int libraryPathId, string path);
+    string GetReplacementEmbyPath(List<EmbyPathReplacement> pathReplacements, string path, bool log = true);
 }

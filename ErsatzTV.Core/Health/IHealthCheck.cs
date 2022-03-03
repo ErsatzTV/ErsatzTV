@@ -1,9 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿namespace ErsatzTV.Core.Health;
 
-namespace ErsatzTV.Core.Health
+public interface IHealthCheck
 {
-    public interface IHealthCheck
-    {
-        Task<HealthCheckResult> Check();
-    }
+    Task<HealthCheckResult> Check();
 }

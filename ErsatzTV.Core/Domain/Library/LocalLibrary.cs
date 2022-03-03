@@ -1,6 +1,5 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class LocalLibrary : Library
 {
-    public class LocalLibrary : Library
-    {
-    }
 }

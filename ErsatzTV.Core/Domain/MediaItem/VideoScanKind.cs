@@ -1,9 +1,8 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public enum VideoScanKind
 {
-    public enum VideoScanKind
-    {
-        Unknown = 0,
-        Progressive = 1,
-        Interlaced = 2
-    }
+    Unknown = 0,
+    Progressive = 1,
+    Interlaced = 2
 }

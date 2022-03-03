@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public enum GuideMode
 {
-    public enum GuideMode
-    {
-        Normal = 0,
-        Filler = 1
-    }
+    Normal = 0,
+    Filler = 1
 }

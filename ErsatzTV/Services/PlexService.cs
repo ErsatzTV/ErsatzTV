@@ -1,156 +1,144 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Application;
-using ErsatzTV.Application.Plex.Commands;
+using ErsatzTV.Application.Plex;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using LanguageExt;
 using MediatR;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Unit = LanguageExt.Unit;
 
-namespace ErsatzTV.Services
+namespace ErsatzTV.Services;
+
+public class PlexService : BackgroundService
 {
-    public class PlexService : BackgroundService
+    private readonly ChannelReader<IPlexBackgroundServiceRequest> _channel;
+    private readonly ILogger<PlexService> _logger;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
+    public PlexService(
+        ChannelReader<IPlexBackgroundServiceRequest> channel,
+        IServiceScopeFactory serviceScopeFactory,
+        ILogger<PlexService> logger)
     {
-        private readonly ChannelReader<IPlexBackgroundServiceRequest> _channel;
-        private readonly ILogger<PlexService> _logger;
-        private readonly IServiceScopeFactory _serviceScopeFactory;
+        _channel = channel;
+        _serviceScopeFactory = serviceScopeFactory;
+        _logger = logger;
+    }
 
-        public PlexService(
-            ChannelReader<IPlexBackgroundServiceRequest> channel,
-            IServiceScopeFactory serviceScopeFactory,
-            ILogger<PlexService> logger)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        if (!File.Exists(FileSystemLayout.PlexSecretsPath))
         {
-            _channel = channel;
-            _serviceScopeFactory = serviceScopeFactory;
-            _logger = logger;
+            await File.WriteAllTextAsync(FileSystemLayout.PlexSecretsPath, "{}", cancellationToken);
         }
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+        _logger.LogInformation(
+            "Plex service started; secrets are at {PlexSecretsPath}",
+            FileSystemLayout.PlexSecretsPath);
+
+        // synchronize sources on startup
+        await SynchronizeSources(new SynchronizePlexMediaSources(), cancellationToken);
+
+        await foreach (IPlexBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
         {
-            if (!File.Exists(FileSystemLayout.PlexSecretsPath))
+            try
             {
-                await File.WriteAllTextAsync(FileSystemLayout.PlexSecretsPath, "{}", cancellationToken);
+                Task requestTask;
+                switch (request)
+                {
+                    case TryCompletePlexPinFlow pinRequest:
+                        requestTask = CompletePinFlow(pinRequest, cancellationToken);
+                        break;
+                    case SynchronizePlexMediaSources sourcesRequest:
+                        requestTask = SynchronizeSources(sourcesRequest, cancellationToken);
+                        break;
+                    case SynchronizePlexLibraries synchronizePlexLibrariesRequest:
+                        requestTask = SynchronizeLibraries(synchronizePlexLibrariesRequest, cancellationToken);
+                        break;
+                    case ISynchronizePlexLibraryById synchronizePlexLibraryById:
+                        requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, cancellationToken);
+                        break;
+                    default:
+                        throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
+                }
+
+                await requestTask;
             }
-
-            _logger.LogInformation(
-                "Plex service started; secrets are at {PlexSecretsPath}",
-                FileSystemLayout.PlexSecretsPath);
-
-            // synchronize sources on startup
-            await SynchronizeSources(new SynchronizePlexMediaSources(), cancellationToken);
-
-            await foreach (IPlexBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+            catch (Exception ex)
             {
-                try
-                {
-                    Task requestTask;
-                    switch (request)
-                    {
-                        case TryCompletePlexPinFlow pinRequest:
-                            requestTask = CompletePinFlow(pinRequest, cancellationToken);
-                            break;
-                        case SynchronizePlexMediaSources sourcesRequest:
-                            requestTask = SynchronizeSources(sourcesRequest, cancellationToken);
-                            break;
-                        case SynchronizePlexLibraries synchronizePlexLibrariesRequest:
-                            requestTask = SynchronizeLibraries(synchronizePlexLibrariesRequest, cancellationToken);
-                            break;
-                        case ISynchronizePlexLibraryById synchronizePlexLibraryById:
-                            requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, cancellationToken);
-                            break;
-                        default:
-                            throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
-                    }
-
-                    await requestTask;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to process plex background service request");
-                }
+                _logger.LogWarning(ex, "Failed to process plex background service request");
             }
         }
+    }
 
-        private async Task<List<PlexMediaSource>> SynchronizeSources(
-            SynchronizePlexMediaSources request,
-            CancellationToken cancellationToken)
-        {
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
-            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+    private async Task<List<PlexMediaSource>> SynchronizeSources(
+        SynchronizePlexMediaSources request,
+        CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            Either<BaseError, List<PlexMediaSource>> result = await mediator.Send(request, cancellationToken);
-            return result.Match(
-                sources =>
+        Either<BaseError, List<PlexMediaSource>> result = await mediator.Send(request, cancellationToken);
+        return result.Match(
+            sources =>
+            {
+                if (sources.Any())
                 {
-                    if (sources.Any())
-                    {
-                        _logger.LogInformation("Successfully synchronized plex media sources");
-                    }
+                    _logger.LogInformation("Successfully synchronized plex media sources");
+                }
 
-                    return sources;
-                },
-                error =>
-                {
-                    _logger.LogWarning(
-                        "Unable to synchronize plex media sources: {Error}",
-                        error.Value);
-                    return new List<PlexMediaSource>();
-                });
-        }
+                return sources;
+            },
+            error =>
+            {
+                _logger.LogWarning(
+                    "Unable to synchronize plex media sources: {Error}",
+                    error.Value);
+                return new List<PlexMediaSource>();
+            });
+    }
 
-        private async Task CompletePinFlow(
-            TryCompletePlexPinFlow request,
-            CancellationToken cancellationToken)
-        {
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
-            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+    private async Task CompletePinFlow(
+        TryCompletePlexPinFlow request,
+        CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            Either<BaseError, bool> result = await mediator.Send(request, cancellationToken);
-            result.BiIter(
-                success => _logger.LogInformation(
-                    success ? "Successfully authenticated with plex" : "Plex authentication timeout"),
-                error => _logger.LogWarning("Unable to poll plex token: {Error}", error.Value));
-        }
+        Either<BaseError, bool> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            success => _logger.LogInformation(
+                success ? "Successfully authenticated with plex" : "Plex authentication timeout"),
+            error => _logger.LogWarning("Unable to poll plex token: {Error}", error.Value));
+    }
 
-        private async Task SynchronizeLibraries(SynchronizePlexLibraries request, CancellationToken cancellationToken)
-        {
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
-            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+    private async Task SynchronizeLibraries(SynchronizePlexLibraries request, CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
-            result.BiIter(
-                _ => _logger.LogInformation(
-                    "Successfully synchronized plex libraries for source {MediaSourceId}",
-                    request.PlexMediaSourceId),
-                error => _logger.LogWarning(
-                    "Unable to synchronize plex libraries for source {MediaSourceId}: {Error}",
-                    request.PlexMediaSourceId,
-                    error.Value));
-        }
+        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            _ => _logger.LogInformation(
+                "Successfully synchronized plex libraries for source {MediaSourceId}",
+                request.PlexMediaSourceId),
+            error => _logger.LogWarning(
+                "Unable to synchronize plex libraries for source {MediaSourceId}: {Error}",
+                request.PlexMediaSourceId,
+                error.Value));
+    }
 
-        private async Task SynchronizePlexLibrary(
-            ISynchronizePlexLibraryById request,
-            CancellationToken cancellationToken)
-        {
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
-            IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+    private async Task SynchronizePlexLibrary(
+        ISynchronizePlexLibraryById request,
+        CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
-            result.BiIter(
-                name => _logger.LogDebug("Done synchronizing plex library {Name}", name),
-                error => _logger.LogWarning(
-                    "Unable to synchronize plex library {LibraryId}: {Error}",
-                    request.PlexLibraryId,
-                    error.Value));
-        }
+        Either<BaseError, string> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            name => _logger.LogDebug("Done synchronizing plex library {Name}", name),
+            error => _logger.LogWarning(
+                "Unable to synchronize plex library {LibraryId}: {Error}",
+                request.PlexLibraryId,
+                error.Value));
     }
 }

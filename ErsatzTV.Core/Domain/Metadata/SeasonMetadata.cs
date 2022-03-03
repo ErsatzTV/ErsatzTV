@@ -1,9 +1,8 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class SeasonMetadata : Metadata
 {
-    public class SeasonMetadata : Metadata
-    {
-        public string Outline { get; set; }
-        public int SeasonId { get; set; }
-        public Season Season { get; set; }
-    }
+    public string Outline { get; set; }
+    public int SeasonId { get; set; }
+    public Season Season { get; set; }
 }

@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Application.Libraries.Commands
+﻿namespace ErsatzTV.Application.Libraries;
+
+public interface ILocalLibraryRequest
 {
-    public interface ILocalLibraryRequest
-    {
-        public string Name { get; }
-    }
+    public string Name { get; }
 }

@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
-using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.Filter;
 

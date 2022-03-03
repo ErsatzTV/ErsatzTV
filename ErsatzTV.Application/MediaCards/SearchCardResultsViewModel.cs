@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
+﻿namespace ErsatzTV.Application.MediaCards;
 
-namespace ErsatzTV.Application.MediaCards
-{
-    public record SearchCardResultsViewModel(
-        List<MovieCardViewModel> MovieCards,
-        List<TelevisionShowCardViewModel> ShowCards);
-}
+public record SearchCardResultsViewModel(
+    List<MovieCardViewModel> MovieCards,
+    List<TelevisionShowCardViewModel> ShowCards);

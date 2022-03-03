@@ -1,16 +1,10 @@
 ﻿@page "/media/music/artists/{ArtistId:int}"
-@using ErsatzTV.Application.Artists
-@using ErsatzTV.Application.Artists.Queries
-@using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.MediaCards.Queries
-@using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Application.ProgramSchedules
-@using ErsatzTV.Application.ProgramSchedules.Commands
-@using System.Globalization
-@using System.Threading
 @using ErsatzTV.Extensions
-@using Unit = LanguageExt.Unit
+@using ErsatzTV.Application.Artists
+@using ErsatzTV.Application.MediaCards
+@using ErsatzTV.Application.MediaCollections
+@using ErsatzTV.Application.ProgramSchedules
+@using System.Globalization
 @implements IDisposable
 @inject IMediator _mediator
 @inject IDialogService _dialog

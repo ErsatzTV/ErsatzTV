@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Infrastructure.Trakt.Models
+﻿namespace ErsatzTV.Infrastructure.Trakt.Models;
+
+public class TraktUser
 {
-    public class TraktUser
-    {
-        public string Username { get; set; }
-    }
+    public string Username { get; set; }
 }

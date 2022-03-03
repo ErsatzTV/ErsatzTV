@@ -1,12 +1,10 @@
 ﻿@page "/media/music/songs"
 @page "/media/music/songs/page/{PageNumber:int}"
 @using LanguageExt.UnsafeValueAccess
+@using ErsatzTV.Extensions
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Application.Search.Queries
-@using ErsatzTV.Extensions
-@using Unit = LanguageExt.Unit
+@using ErsatzTV.Application.Search
 @inherits MultiSelectBase<SongList>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel

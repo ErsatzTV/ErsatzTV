@@ -5,7 +5,6 @@ using ErsatzTV.FFmpeg.Encoder.VideoToolbox;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
-using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.Encoder;
 

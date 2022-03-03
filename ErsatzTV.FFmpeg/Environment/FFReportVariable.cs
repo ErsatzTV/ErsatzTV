@@ -1,5 +1,4 @@
 ﻿using System.Runtime.InteropServices;
-using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.Environment;
 

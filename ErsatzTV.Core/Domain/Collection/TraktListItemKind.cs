@@ -1,10 +1,9 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public enum TraktListItemKind
 {
-    public enum TraktListItemKind
-    {
-        Movie,
-        Show,
-        Season,
-        Episode
-    }
+    Movie,
+    Show,
+    Season,
+    Episode
 }

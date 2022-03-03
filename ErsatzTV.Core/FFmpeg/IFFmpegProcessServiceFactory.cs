@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.FFmpeg;
+﻿using ErsatzTV.Core.Interfaces.FFmpeg;
 
 namespace ErsatzTV.Core.FFmpeg;
 

@@ -1,6 +1,5 @@
-﻿namespace ErsatzTV.Application
+﻿namespace ErsatzTV.Application;
+
+public interface IBackgroundServiceRequest
 {
-    public interface IBackgroundServiceRequest
-    {
-    }
 }

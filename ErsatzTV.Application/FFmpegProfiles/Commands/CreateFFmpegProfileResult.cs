@@ -1,4 +1,3 @@
-﻿namespace ErsatzTV.Application.FFmpegProfiles.Commands
-{
-    public record CreateFFmpegProfileResult(int FFmpegProfileId) : EntityIdResult(FFmpegProfileId);
-}
+﻿namespace ErsatzTV.Application.FFmpegProfiles;
+
+public record CreateFFmpegProfileResult(int FFmpegProfileId) : EntityIdResult(FFmpegProfileId);

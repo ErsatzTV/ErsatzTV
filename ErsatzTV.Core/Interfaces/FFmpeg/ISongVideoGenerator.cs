@@ -1,16 +1,12 @@
-﻿using System;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
-using LanguageExt;
+﻿using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Interfaces.FFmpeg
+namespace ErsatzTV.Core.Interfaces.FFmpeg;
+
+public interface ISongVideoGenerator
 {
-    public interface ISongVideoGenerator
-    {
-        Task<Tuple<string, MediaVersion>> GenerateSongVideo(
-            Song song,
-            Channel channel,
-            Option<ChannelWatermark> maybeGlobalWatermark,
-            string ffmpegPath);
-    }
+    Task<Tuple<string, MediaVersion>> GenerateSongVideo(
+        Song song,
+        Channel channel,
+        Option<ChannelWatermark> maybeGlobalWatermark,
+        string ffmpegPath);
 }

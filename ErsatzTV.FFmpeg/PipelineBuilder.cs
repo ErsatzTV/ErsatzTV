@@ -10,9 +10,7 @@ using ErsatzTV.FFmpeg.Option.Metadata;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.Protocol;
 using ErsatzTV.FFmpeg.State;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.FFmpeg;
 

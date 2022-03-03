@@ -1,9 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ErsatzTV.Core.FFmpeg;

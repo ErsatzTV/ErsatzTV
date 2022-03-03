@@ -1,6 +1,4 @@
 ﻿using ErsatzTV.FFmpeg.State;
-using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.FFmpeg.Filter;
 

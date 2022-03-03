@@ -1,4 +1,3 @@
-﻿namespace ErsatzTV.Application.ProgramSchedules.Commands
-{
-    public record UpdateProgramScheduleResult(int ProgramScheduleId) : EntityIdResult(ProgramScheduleId);
-}
+﻿namespace ErsatzTV.Application.ProgramSchedules;
+
+public record UpdateProgramScheduleResult(int ProgramScheduleId) : EntityIdResult(ProgramScheduleId);

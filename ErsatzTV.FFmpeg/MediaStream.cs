@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.FFmpeg.Format;
-using LanguageExt;
 
 namespace ErsatzTV.FFmpeg;
 

@@ -1,9 +1,8 @@
-﻿namespace ErsatzTV.Core.Errors
+﻿namespace ErsatzTV.Core.Errors;
+
+public class UnableToLocatePlayoutItem : BaseError
 {
-    public class UnableToLocatePlayoutItem : BaseError
+    public UnableToLocatePlayoutItem() : base("Unable to locate playout item")
     {
-        public UnableToLocatePlayoutItem() : base("Unable to locate playout item")
-        {
-        }
     }
 }

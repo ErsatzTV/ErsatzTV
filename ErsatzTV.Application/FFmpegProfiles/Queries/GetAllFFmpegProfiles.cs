@@ -1,7 +1,3 @@
-﻿using System.Collections.Generic;
-using MediatR;
+﻿namespace ErsatzTV.Application.FFmpegProfiles;
 
-namespace ErsatzTV.Application.FFmpegProfiles.Queries
-{
-    public record GetAllFFmpegProfiles : IRequest<List<FFmpegProfileViewModel>>;
-}
+public record GetAllFFmpegProfiles : IRequest<List<FFmpegProfileViewModel>>;

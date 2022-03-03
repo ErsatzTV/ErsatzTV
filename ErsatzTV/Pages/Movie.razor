@@ -1,12 +1,9 @@
 ﻿@page "/media/movies/{MovieId:int}"
+@using ErsatzTV.Extensions
 @using ErsatzTV.Application.Movies
-@using ErsatzTV.Application.Movies.Queries
 @using System.Globalization
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Extensions
-@using System.Threading
 @implements IDisposable
 @inject IMediator _mediator
 @inject IDialogService _dialog

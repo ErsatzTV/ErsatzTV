@@ -1,16 +1,11 @@
 ﻿@page "/schedules/{Id:int}/items"
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Queries
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Application.ProgramSchedules
-@using ErsatzTV.Application.ProgramSchedules.Commands
-@using ErsatzTV.Application.ProgramSchedules.Queries
-@using ErsatzTV.Application.Television.Queries
-@using ErsatzTV.Application.Artists.Queries
+@using ErsatzTV.Application.Television
 @using ErsatzTV.Application.Filler
-@using ErsatzTV.Application.Filler.Queries
 @using ErsatzTV.Core.Domain.Filler
-@using System.Threading
+@using ErsatzTV.Application.Artists
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger
