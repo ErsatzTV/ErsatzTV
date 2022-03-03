@@ -4,7 +4,6 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.State;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg;
 

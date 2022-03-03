@@ -1,11 +1,8 @@
 ﻿using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Health.Checks;
 

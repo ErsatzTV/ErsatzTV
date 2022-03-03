@@ -3,7 +3,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCollections;
 

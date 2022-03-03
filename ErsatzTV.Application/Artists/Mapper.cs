@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using ErsatzTV.Core.Domain;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Artists;
 

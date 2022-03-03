@@ -1,12 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Data;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 

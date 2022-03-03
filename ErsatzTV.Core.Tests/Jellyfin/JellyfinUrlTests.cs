@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Jellyfin;
 using FluentAssertions;
 using Flurl;
 using NUnit.Framework;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Jellyfin;
 

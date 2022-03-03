@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
-using LanguageExt;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Fakes;
 

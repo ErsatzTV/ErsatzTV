@@ -1,9 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Health;
+﻿using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
-using LanguageExt;
 
 namespace ErsatzTV.Infrastructure.Health;
 

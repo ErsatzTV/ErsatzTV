@@ -1,6 +1,5 @@
 ﻿using ErsatzTV.Core.Interfaces.Repositories;
 using static ErsatzTV.Application.Channels.Mapper;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Channels;
 

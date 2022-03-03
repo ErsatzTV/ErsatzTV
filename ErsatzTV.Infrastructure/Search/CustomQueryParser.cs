@@ -1,5 +1,4 @@
-﻿using System;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using Lucene.Net.Analysis;
 using Lucene.Net.Index;
 using Lucene.Net.QueryParsers.Classic;

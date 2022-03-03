@@ -3,7 +3,6 @@ using System.Runtime.InteropServices;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg;
 

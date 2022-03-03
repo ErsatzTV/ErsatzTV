@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Refit;
 

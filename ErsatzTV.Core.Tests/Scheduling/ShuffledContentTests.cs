@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
 using FluentAssertions;
 using NUnit.Framework;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 

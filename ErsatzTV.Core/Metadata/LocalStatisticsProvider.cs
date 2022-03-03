@@ -7,7 +7,6 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata;
 

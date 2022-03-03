@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Plex;
-using LanguageExt;
 using Newtonsoft.Json;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Plex;
 

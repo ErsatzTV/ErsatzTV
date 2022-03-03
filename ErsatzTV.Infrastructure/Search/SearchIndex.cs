@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Search;
-using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Lucene.Net.Analysis;
 using Lucene.Net.Analysis.Core;

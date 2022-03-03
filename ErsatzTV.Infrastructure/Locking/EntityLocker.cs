@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using ErsatzTV.Core.Interfaces.Locking;
 
 namespace ErsatzTV.Infrastructure.Locking;

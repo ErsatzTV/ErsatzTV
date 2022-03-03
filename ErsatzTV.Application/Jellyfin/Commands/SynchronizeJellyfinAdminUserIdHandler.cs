@@ -5,7 +5,6 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Jellyfin;
 

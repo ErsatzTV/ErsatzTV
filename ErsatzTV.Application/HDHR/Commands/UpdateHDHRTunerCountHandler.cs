@@ -1,7 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.HDHR;
 

@@ -1,8 +1,6 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core.Errors;
+﻿using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
-using LanguageExt;
 using Microsoft.Extensions.Options;
 
 namespace ErsatzTV.Infrastructure.Health.Checks;

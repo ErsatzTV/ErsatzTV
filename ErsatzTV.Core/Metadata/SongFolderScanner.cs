@@ -8,7 +8,6 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata;
 

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Core.Trakt;
 using ErsatzTV.Infrastructure.Trakt.Models;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;

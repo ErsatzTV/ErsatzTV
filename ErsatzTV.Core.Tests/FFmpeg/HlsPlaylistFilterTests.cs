@@ -1,5 +1,4 @@
-﻿using System;
-using ErsatzTV.Core.FFmpeg;
+﻿using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;

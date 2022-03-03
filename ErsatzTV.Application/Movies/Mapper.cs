@@ -4,7 +4,6 @@ using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Jellyfin;
 using Flurl;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Movies;
 

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using ErsatzTV.Infrastructure.Trakt.Models;
+﻿using ErsatzTV.Infrastructure.Trakt.Models;
 using Refit;
 
 namespace ErsatzTV.Infrastructure.Trakt;

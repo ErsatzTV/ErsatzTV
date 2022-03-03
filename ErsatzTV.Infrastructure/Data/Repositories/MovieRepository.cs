@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Data;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -10,11 +6,8 @@ using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 

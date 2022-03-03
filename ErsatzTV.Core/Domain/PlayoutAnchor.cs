@@ -1,6 +1,4 @@
-﻿using static LanguageExt.Prelude;
-
-namespace ErsatzTV.Core.Domain;
+﻿namespace ErsatzTV.Core.Domain;
 
 public class PlayoutAnchor
 {

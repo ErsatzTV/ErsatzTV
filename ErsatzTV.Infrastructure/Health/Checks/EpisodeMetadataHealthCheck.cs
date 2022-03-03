@@ -1,14 +1,8 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
 using Microsoft.EntityFrameworkCore;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Health.Checks;
 

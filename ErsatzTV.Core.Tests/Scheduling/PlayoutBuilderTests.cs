@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Scheduling;
@@ -13,7 +9,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Serilog;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 

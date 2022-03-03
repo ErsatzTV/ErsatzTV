@@ -2,7 +2,6 @@
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
-using static LanguageExt.Prelude;
 using static ErsatzTV.Application.FFmpegProfiles.Mapper;
 
 namespace ErsatzTV.Application.FFmpegProfiles;

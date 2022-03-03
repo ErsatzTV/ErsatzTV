@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ErsatzTV.Infrastructure.Plex;
+﻿namespace ErsatzTV.Infrastructure.Plex;
 
 public class PlexSecrets
 {

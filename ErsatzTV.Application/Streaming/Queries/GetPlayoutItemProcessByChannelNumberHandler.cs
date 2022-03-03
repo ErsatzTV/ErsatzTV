@@ -15,7 +15,6 @@ using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Streaming;
 

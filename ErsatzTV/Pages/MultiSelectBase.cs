@@ -7,7 +7,6 @@ using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Pages;
 

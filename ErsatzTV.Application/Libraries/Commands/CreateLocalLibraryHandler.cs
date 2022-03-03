@@ -6,7 +6,6 @@ using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Libraries.Mapper;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Libraries;
 

@@ -2,7 +2,6 @@
 using ErsatzTV.Application;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Services;
 

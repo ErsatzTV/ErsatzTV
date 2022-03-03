@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Scheduling;
 using FluentAssertions;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;

@@ -1,6 +1,4 @@
-﻿using LanguageExt;
-
-namespace ErsatzTV.FFmpeg.State;
+﻿namespace ErsatzTV.FFmpeg.State;
 
 public record WatermarkState(
     Option<List<WatermarkFadePoint>> MaybeFadePoints,

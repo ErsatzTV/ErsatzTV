@@ -3,7 +3,6 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 using Map = LanguageExt.Map;
 
 namespace ErsatzTV.Core.Scheduling;

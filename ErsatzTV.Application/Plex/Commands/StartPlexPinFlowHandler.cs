@@ -1,7 +1,6 @@
 ﻿using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Plex;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Plex;
 

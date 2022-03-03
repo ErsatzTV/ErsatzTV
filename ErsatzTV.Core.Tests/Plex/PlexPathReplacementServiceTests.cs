@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
 using ErsatzTV.Core.Plex;
 using FluentAssertions;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;

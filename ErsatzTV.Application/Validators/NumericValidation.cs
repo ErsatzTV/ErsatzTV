@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
 using ErsatzTV.Core;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV;
 

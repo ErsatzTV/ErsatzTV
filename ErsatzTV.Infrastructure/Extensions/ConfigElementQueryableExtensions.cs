@@ -1,8 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
-using LanguageExt;
+﻿using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Infrastructure.Extensions;
 

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
 using FluentAssertions;
 using NUnit.Framework;

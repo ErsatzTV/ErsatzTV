@@ -5,7 +5,6 @@ using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Emby;
 

@@ -1,11 +1,7 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Jellyfin;
-using LanguageExt;
 using Newtonsoft.Json;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Jellyfin;
 

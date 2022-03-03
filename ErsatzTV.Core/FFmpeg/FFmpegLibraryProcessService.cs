@@ -9,7 +9,6 @@ using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.OutputFormat;
 using ErsatzTV.FFmpeg.State;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 using MediaStream = ErsatzTV.Core.Domain.MediaStream;
 
 namespace ErsatzTV.Core.FFmpeg;

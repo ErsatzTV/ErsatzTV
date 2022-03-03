@@ -1,11 +1,7 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
-using LanguageExt;
 using Newtonsoft.Json;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Emby;
 

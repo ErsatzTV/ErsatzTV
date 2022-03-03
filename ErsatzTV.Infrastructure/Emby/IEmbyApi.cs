@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Infrastructure.Emby.Models;
+﻿using ErsatzTV.Infrastructure.Emby.Models;
 using Refit;
 
 namespace ErsatzTV.Infrastructure.Emby;

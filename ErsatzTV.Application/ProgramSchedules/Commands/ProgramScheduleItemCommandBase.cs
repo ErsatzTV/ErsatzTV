@@ -4,7 +4,6 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 

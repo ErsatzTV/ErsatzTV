@@ -7,7 +7,6 @@ using ErsatzTV.Core.Metadata;
 using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Plex;
 

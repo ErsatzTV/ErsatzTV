@@ -6,7 +6,6 @@ using ErsatzTV.Core.Interfaces.Metadata.Nfo;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata.Nfo;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata;
 

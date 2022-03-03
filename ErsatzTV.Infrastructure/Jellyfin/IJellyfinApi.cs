@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Infrastructure.Jellyfin.Models;
+﻿using ErsatzTV.Infrastructure.Jellyfin.Models;
 using Refit;
 
 namespace ErsatzTV.Infrastructure.Jellyfin;

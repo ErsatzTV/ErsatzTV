@@ -4,7 +4,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
-using static LanguageExt.Prelude;
 using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Playouts;

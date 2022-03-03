@@ -1,9 +1,7 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Health;
 using ErsatzTV.Core.Health.Checks;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
 
 namespace ErsatzTV.Infrastructure.Health.Checks;
 

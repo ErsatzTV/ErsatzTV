@@ -5,7 +5,6 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
 using Serilog;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Iptv;
 

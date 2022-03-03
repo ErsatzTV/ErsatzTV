@@ -1,20 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Infrastructure.Jellyfin.Models;
-using LanguageExt;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Refit;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Jellyfin;
 

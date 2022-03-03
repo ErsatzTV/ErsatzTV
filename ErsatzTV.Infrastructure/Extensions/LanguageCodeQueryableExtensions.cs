@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Extensions;

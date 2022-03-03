@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
@@ -15,12 +9,10 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using FluentAssertions;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Serilog;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 

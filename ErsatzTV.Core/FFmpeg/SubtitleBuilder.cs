@@ -1,6 +1,5 @@
 ﻿using System.Text;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg;
 

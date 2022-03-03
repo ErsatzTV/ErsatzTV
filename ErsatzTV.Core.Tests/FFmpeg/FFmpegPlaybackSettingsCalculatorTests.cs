@@ -1,10 +1,8 @@
-﻿using System;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using FluentAssertions;
 using NUnit.Framework;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.FFmpeg;
 

@@ -3,7 +3,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Jellyfin;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCards;
 

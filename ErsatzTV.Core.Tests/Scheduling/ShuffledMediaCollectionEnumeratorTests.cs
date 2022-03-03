@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Scheduling;
 using FluentAssertions;
-using LanguageExt;
 using LanguageExt.UnsafeValueAccess;
 using NUnit.Framework;
 

@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using ErsatzTV.Core.Health;
 using Lucene.Net.Util;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Health.Checks;
 

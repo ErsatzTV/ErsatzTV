@@ -1,7 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Images;
 using Winista.Mime;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Images;
 

@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Metadata;
 

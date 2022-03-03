@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
-using LanguageExt;
 
 namespace ErsatzTV.Core.Tests.Scheduling;
 

@@ -7,7 +7,6 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 using Seq = LanguageExt.Seq;
 
 namespace ErsatzTV.Core.Metadata;

@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Emby.Models;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Refit;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Emby;
 

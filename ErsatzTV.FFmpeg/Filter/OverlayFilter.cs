@@ -1,5 +1,4 @@
-﻿using ErsatzTV.FFmpeg.Format;
-using ErsatzTV.FFmpeg.State;
+﻿using ErsatzTV.FFmpeg.State;
 
 namespace ErsatzTV.FFmpeg.Filter;
 

@@ -20,7 +20,6 @@
 
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg;
 

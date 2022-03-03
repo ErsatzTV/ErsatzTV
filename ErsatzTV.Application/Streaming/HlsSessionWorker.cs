@@ -8,7 +8,6 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 using Timer = System.Timers.Timer;
 
 namespace ErsatzTV.Application.Streaming;

@@ -1,6 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Option;
-using LanguageExt;
 
 namespace ErsatzTV.FFmpeg;
 

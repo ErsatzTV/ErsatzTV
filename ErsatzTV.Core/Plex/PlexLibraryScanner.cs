@@ -1,7 +1,6 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Plex;
 

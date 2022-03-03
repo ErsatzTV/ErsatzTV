@@ -1,7 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using ErsatzTV.Core.Domain;
 using LanguageExt.UnsafeValueAccess;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Scheduling;
 

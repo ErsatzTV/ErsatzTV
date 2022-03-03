@@ -6,7 +6,6 @@ using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Channels.Mapper;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Channels;
 

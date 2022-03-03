@@ -7,7 +7,6 @@ using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCollections;
 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Core.Tests.Fakes;
+﻿namespace ErsatzTV.Core.Tests.Fakes;
 
 public record FakeFileEntry(string Path)
 {

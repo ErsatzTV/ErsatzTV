@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ErsatzTV.Infrastructure.Plex.Models;
+﻿namespace ErsatzTV.Infrastructure.Plex.Models;
 
 public class PlexResource
 {

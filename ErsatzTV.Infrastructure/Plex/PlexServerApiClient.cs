@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Plex;
 using ErsatzTV.Infrastructure.Plex.Models;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 using Refit;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Infrastructure.Plex;
 

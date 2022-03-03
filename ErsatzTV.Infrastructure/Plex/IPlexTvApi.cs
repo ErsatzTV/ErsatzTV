@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using ErsatzTV.Infrastructure.Plex.Models;
+﻿using ErsatzTV.Infrastructure.Plex.Models;
 using Refit;
 
 namespace ErsatzTV.Infrastructure.Plex;
