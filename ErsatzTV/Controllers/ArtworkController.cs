@@ -25,12 +25,12 @@ namespace ErsatzTV.Controllers
     [ResponseCache(Duration = 3600)]
     [ApiController]
     [ApiExplorerSettings(IgnoreApi = true)]
-    public class PostersController : ControllerBase
+    public class ArtworkController : ControllerBase
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IMediator _mediator;
 
-        public PostersController(IMediator mediator, IHttpClientFactory httpClientFactory)
+        public ArtworkController(IMediator mediator, IHttpClientFactory httpClientFactory)
         {
             _mediator = mediator;
             _httpClientFactory = httpClientFactory;
