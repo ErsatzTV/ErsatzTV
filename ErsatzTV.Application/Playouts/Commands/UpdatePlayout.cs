@@ -1,7 +1,4 @@
-﻿using System;
-using ErsatzTV.Core;
-using LanguageExt;
-using MediatR;
+﻿using ErsatzTV.Core;
 
 namespace ErsatzTV.Application.Playouts;
 

@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Health;
-using MediatR;
+﻿using ErsatzTV.Core.Health;
 
 namespace ErsatzTV.Application.Health;
 

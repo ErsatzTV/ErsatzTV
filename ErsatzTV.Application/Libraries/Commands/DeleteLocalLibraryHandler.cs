@@ -1,18 +1,11 @@
-﻿using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Data;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.Libraries;
 
@@ -39,7 +32,7 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, LocalLibrary> validation =  await LocalLibraryMustExist(dbContext, request);
-        return await validation.Apply(localLibrary => DoDeletion(dbContext, localLibrary));
+        return await LanguageExtensions.Apply(validation, localLibrary => DoDeletion(dbContext, localLibrary));
     }
 
     private async Task<Unit> DoDeletion(TvContext dbContext, LocalLibrary localLibrary)

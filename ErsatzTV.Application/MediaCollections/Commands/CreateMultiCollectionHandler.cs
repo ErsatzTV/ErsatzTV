@@ -1,12 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
 using static LanguageExt.Prelude;
@@ -27,7 +21,7 @@ public class CreateMultiCollectionHandler :
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, MultiCollection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => PersistCollection(dbContext, c));
+        return await LanguageExtensions.Apply(validation, c => PersistCollection(dbContext, c));
     }
 
     private static async Task<MultiCollectionViewModel> PersistCollection(

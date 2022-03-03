@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Application.MediaItems;
-using MediatR;
+﻿using ErsatzTV.Application.MediaItems;
 
 namespace ErsatzTV.Application.Television;
 

@@ -1,11 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Hdhr;
+﻿using ErsatzTV.Core.Hdhr;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
-using MediatR;
 
 namespace ErsatzTV.Application.Channels;
 

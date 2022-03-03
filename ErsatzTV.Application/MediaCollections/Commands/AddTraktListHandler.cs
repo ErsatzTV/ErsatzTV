@@ -1,17 +1,12 @@
 ﻿using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.MediaCollections;
 

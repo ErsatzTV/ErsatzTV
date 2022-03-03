@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Application.MediaSources;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -12,8 +6,6 @@ using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Libraries.Mapper;
 
@@ -45,7 +37,7 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => UpdateLocalLibrary(dbContext, parameters));
+        return await LanguageExtensions.Apply(validation, parameters => UpdateLocalLibrary(dbContext, parameters));
     }
 
     private async Task<LocalLibraryViewModel> UpdateLocalLibrary(TvContext dbContext, Parameters parameters)

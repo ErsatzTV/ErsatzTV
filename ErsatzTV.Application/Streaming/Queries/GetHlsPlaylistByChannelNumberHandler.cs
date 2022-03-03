@@ -1,12 +1,7 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 
@@ -33,7 +28,7 @@ public class GetHlsPlaylistByChannelNumberHandler :
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         DateTimeOffset now = DateTimeOffset.Now;
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request, now);
-        return await validation.Apply(parameters => GetPlaylist(dbContext, request, parameters, now));
+        return await LanguageExtensions.Apply(validation, parameters => GetPlaylist(dbContext, request, parameters, now));
     }
 
     private Task<string> GetPlaylist(

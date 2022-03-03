@@ -1,8 +1,5 @@
-﻿using System.IO;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using LanguageExt;
-using MediatR;
 
 namespace ErsatzTV.Application.Images;
 

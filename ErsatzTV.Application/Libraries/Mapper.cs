@@ -1,5 +1,4 @@
-﻿using System;
-using ErsatzTV.Application.Emby;
+﻿using ErsatzTV.Application.Emby;
 using ErsatzTV.Application.Jellyfin;
 using ErsatzTV.Core.Domain;
 

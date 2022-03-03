@@ -1,11 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Interfaces.Images;
-using LanguageExt;
-using MediatR;
 using Winista.Mime;
 using static LanguageExt.Prelude;
 

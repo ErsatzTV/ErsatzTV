@@ -1,11 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Application.MediaItems;
+﻿using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
-using MediatR;
 using static ErsatzTV.Application.MediaItems.Mapper;
 
 namespace ErsatzTV.Application.Artists;

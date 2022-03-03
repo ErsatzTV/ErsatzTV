@@ -1,6 +1,4 @@
-﻿using MediatR;
-
-namespace ErsatzTV.Application.FFmpegProfiles;
+﻿namespace ErsatzTV.Application.FFmpegProfiles;
 
 /// <summary>
 ///     Requests a new ffmpeg profile (view model) that contains

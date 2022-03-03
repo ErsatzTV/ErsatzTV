@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Infrastructure.Data;
-using MediatR;
+﻿using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.ProgramSchedules;

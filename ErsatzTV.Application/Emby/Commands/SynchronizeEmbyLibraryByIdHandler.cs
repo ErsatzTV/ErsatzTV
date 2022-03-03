@@ -1,18 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.Emby;
 

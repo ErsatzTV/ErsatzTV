@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Data;
 using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -10,11 +6,8 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.Libraries;
 
@@ -46,7 +39,7 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => MovePath(dbContext, parameters));
+        return await LanguageExtensions.Apply(validation, parameters => MovePath(dbContext, parameters));
     }
 
     private async Task<Unit> MovePath(TvContext dbContext, Parameters parameters)

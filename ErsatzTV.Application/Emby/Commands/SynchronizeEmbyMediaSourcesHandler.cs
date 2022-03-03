@@ -1,12 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
-using MediatR;
 
 namespace ErsatzTV.Application.Emby;
 

@@ -1,8 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Jellyfin;
+﻿using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Jellyfin;
-using MediatR;
 
 namespace ErsatzTV.Application.Jellyfin;
 

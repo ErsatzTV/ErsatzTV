@@ -1,5 +1,3 @@
-﻿using MediatR;
-
-namespace ErsatzTV.Application.Libraries;
+﻿namespace ErsatzTV.Application.Libraries;
 
 public record CountMediaItemsByLibrary(int LibraryId) : IRequest<int>;

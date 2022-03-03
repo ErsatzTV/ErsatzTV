@@ -1,8 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Emby;
+﻿using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
-using MediatR;
 
 namespace ErsatzTV.Application.Emby;
 

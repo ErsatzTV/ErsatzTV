@@ -1,9 +1,5 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Repositories;
+﻿using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Iptv;
-using LanguageExt;
-using MediatR;
 
 namespace ErsatzTV.Application.Channels;
 

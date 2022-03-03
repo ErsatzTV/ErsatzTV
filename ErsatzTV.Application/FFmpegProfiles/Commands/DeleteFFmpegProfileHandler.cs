@@ -1,11 +1,7 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
@@ -23,7 +19,7 @@ public class DeleteFFmpegProfileHandler : IRequestHandler<DeleteFFmpegProfile, E
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, FFmpegProfile> validation = await FFmpegProfileMustExist(dbContext, request);
-        return await validation.Apply(p => DoDeletion(dbContext, p));
+        return await LanguageExtensions.Apply(validation, p => DoDeletion(dbContext, p));
     }
 
     private static async Task<LanguageExt.Unit> DoDeletion(TvContext dbContext, FFmpegProfile ffmpegProfile)

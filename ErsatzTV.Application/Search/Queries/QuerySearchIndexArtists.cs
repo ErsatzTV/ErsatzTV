@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Application.MediaCards;
-using MediatR;
 
 namespace ErsatzTV.Application.Search;
 

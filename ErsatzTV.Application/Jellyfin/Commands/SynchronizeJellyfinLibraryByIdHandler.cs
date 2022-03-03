@@ -1,18 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
-using LanguageExt;
-using MediatR;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.Jellyfin;
 

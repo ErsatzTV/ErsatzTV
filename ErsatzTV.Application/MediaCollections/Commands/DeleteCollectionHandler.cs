@@ -1,10 +1,7 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
@@ -23,7 +20,7 @@ public class DeleteCollectionHandler : MediatR.IRequestHandler<DeleteCollection,
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
         Validation<BaseError, Collection> validation = await CollectionMustExist(dbContext, request);
-        return await validation.Apply(c => DoDeletion(dbContext, c));
+        return await LanguageExtensions.Apply(validation, c => DoDeletion(dbContext, c));
     }
 
     private static Task<Unit> DoDeletion(TvContext dbContext, Collection collection)

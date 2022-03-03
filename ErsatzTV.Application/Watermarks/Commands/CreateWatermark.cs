@@ -1,8 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.FFmpeg.State;
-using LanguageExt;
-using MediatR;
 
 namespace ErsatzTV.Application.Watermarks;
 

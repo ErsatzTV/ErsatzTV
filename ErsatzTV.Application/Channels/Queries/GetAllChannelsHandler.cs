@@ -1,9 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Repositories;
-using MediatR;
+﻿using ErsatzTV.Core.Interfaces.Repositories;
 using static ErsatzTV.Application.Channels.Mapper;
 using static LanguageExt.Prelude;
 

@@ -1,12 +1,8 @@
 ﻿using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 

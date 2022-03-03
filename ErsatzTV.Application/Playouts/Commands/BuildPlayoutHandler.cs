@@ -1,11 +1,8 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Playouts;
@@ -25,7 +22,7 @@ public class BuildPlayoutHandler : MediatR.IRequestHandler<BuildPlayout, Either<
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout));
+        return await LanguageExtensions.Apply(validation, playout => ApplyUpdateRequest(dbContext, request, playout));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, BuildPlayout request, Playout playout)

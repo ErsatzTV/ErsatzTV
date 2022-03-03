@@ -1,7 +1,5 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using ErsatzTV.Core;
-using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV;

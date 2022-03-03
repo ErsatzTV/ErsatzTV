@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Repositories;
-using MediatR;
+﻿using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.Libraries;
 

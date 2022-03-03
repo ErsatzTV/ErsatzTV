@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Health;
-using MediatR;
+﻿using ErsatzTV.Core.Health;
 
 namespace ErsatzTV.Application.Health;
 

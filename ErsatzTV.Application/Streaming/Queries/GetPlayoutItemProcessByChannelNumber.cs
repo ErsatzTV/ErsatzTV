@@ -1,7 +1,4 @@
-﻿using System;
-using LanguageExt;
-
-namespace ErsatzTV.Application.Streaming;
+﻿namespace ErsatzTV.Application.Streaming;
 
 public record GetPlayoutItemProcessByChannelNumber(string ChannelNumber,
     string Mode,

@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Search;
-using LanguageExt;
+﻿using ErsatzTV.Core.Search;
 
 namespace ErsatzTV.Application.MediaCards;
 

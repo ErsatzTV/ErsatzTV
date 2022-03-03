@@ -1,14 +1,10 @@
-﻿using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
@@ -46,7 +42,7 @@ public class DeleteTraktListHandler : TraktCommandBase, MediatR.IRequestHandler<
             await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
             Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
-            return await validation.Apply(c => DoDeletion(dbContext, c));
+            return await LanguageExtensions.Apply(validation, c => DoDeletion(dbContext, c));
         }
         finally
         {

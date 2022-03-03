@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using ErsatzTV.Core.Domain;
-using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.Artists;

@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
+﻿using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.Configuration;
 

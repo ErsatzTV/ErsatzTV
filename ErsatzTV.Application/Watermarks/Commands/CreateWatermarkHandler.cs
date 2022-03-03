@@ -1,10 +1,6 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Watermarks;
@@ -22,7 +18,7 @@ public class CreateWatermarkHandler : IRequestHandler<CreateWatermark, Either<Ba
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, ChannelWatermark> validation = Validate(request);
-        return await validation.Apply(profile => PersistChannelWatermark(dbContext, profile));
+        return await LanguageExtensions.Apply(validation, profile => PersistChannelWatermark(dbContext, profile));
     }
 
     private static async Task<CreateWatermarkResult> PersistChannelWatermark(

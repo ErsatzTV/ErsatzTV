@@ -1,14 +1,10 @@
-﻿using System.Linq;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
@@ -36,7 +32,7 @@ public class RemoveItemsFromCollectionHandler :
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, Collection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyRemoveItemsRequest(dbContext, request, c));
+        return await LanguageExtensions.Apply(validation, c => ApplyRemoveItemsRequest(dbContext, request, c));
     }
 
     private async Task<Unit> ApplyRemoveItemsRequest(

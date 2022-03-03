@@ -1,14 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.ProgramSchedules;
@@ -34,7 +29,7 @@ public class UpdateProgramScheduleHandler :
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
+        return await LanguageExtensions.Apply(validation, ps => ApplyUpdateRequest(dbContext, ps, request));
     }
 
     private async Task<UpdateProgramScheduleResult> ApplyUpdateRequest(

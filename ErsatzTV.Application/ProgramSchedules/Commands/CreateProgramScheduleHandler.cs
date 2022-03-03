@@ -1,13 +1,8 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
-using ValidationT_AsyncSync_Extensions = LanguageExt.ValidationT_AsyncSync_Extensions;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
@@ -26,7 +21,7 @@ public class CreateProgramScheduleHandler :
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => PersistProgramSchedule(dbContext, ps));
+        return await LanguageExtensions.Apply(validation, ps => PersistProgramSchedule(dbContext, ps));
     }
 
     private static async Task<CreateProgramScheduleResult> PersistProgramSchedule(

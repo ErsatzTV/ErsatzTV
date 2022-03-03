@@ -1,8 +1,5 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using ErsatzTV.Core.Domain;
-using LanguageExt;
-using MediatR;
 
 namespace ErsatzTV.Application.Logs;
 

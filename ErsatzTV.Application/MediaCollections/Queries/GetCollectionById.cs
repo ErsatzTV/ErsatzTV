@@ -1,6 +1,3 @@
-﻿using LanguageExt;
-using MediatR;
-
-namespace ErsatzTV.Application.MediaCollections;
+﻿namespace ErsatzTV.Application.MediaCollections;
 
 public record GetCollectionById(int Id) : IRequest<Option<MediaCollectionViewModel>>;

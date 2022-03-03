@@ -1,18 +1,11 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
-using LanguageExt;
-using MediatR;
 using Microsoft.Extensions.Logging;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.MediaSources;
 

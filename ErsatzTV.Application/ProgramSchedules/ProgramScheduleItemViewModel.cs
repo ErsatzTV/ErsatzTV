@@ -1,5 +1,4 @@
-﻿using System;
-using ErsatzTV.Application.Filler;
+﻿using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
 using ErsatzTV.Core.Domain;

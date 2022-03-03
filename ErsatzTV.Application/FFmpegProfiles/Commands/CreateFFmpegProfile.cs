@@ -1,8 +1,6 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
-using LanguageExt;
-using MediatR;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 

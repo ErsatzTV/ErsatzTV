@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core.Iptv;
-using MediatR;
 
 namespace ErsatzTV.Application.Channels;
 

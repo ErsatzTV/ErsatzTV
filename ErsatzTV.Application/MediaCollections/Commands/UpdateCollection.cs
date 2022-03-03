@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core;
-using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCollections;

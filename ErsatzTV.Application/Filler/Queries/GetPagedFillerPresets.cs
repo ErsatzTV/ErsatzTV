@@ -1,5 +1,3 @@
-﻿using MediatR;
-
-namespace ErsatzTV.Application.Filler;
+﻿namespace ErsatzTV.Application.Filler;
 
 public record GetPagedFillerPresets(int PageNum, int PageSize) : IRequest<PagedFillerPresetsViewModel>;

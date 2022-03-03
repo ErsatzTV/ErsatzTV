@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using System.Globalization;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 
@@ -29,7 +22,7 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Channel> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => PersistChannel(dbContext, c));
+        return await LanguageExtensions.Apply(validation, c => PersistChannel(dbContext, c));
     }
 
     private static async Task<CreateChannelResult> PersistChannel(TvContext dbContext, Channel channel)

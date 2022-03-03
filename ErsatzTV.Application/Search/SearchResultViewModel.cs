@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ErsatzTV.Application.Search;
+﻿namespace ErsatzTV.Application.Search;
 
 public class SearchResultViewModel<T>
 {

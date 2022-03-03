@@ -1,7 +1,5 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Plex;
-using LanguageExt;
-using MediatR;
 
 namespace ErsatzTV.Application.Plex;
 

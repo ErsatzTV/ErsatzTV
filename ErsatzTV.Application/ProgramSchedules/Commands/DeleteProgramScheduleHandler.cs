@@ -1,13 +1,8 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
@@ -24,7 +19,7 @@ public class DeleteProgramScheduleHandler : IRequestHandler<DeleteProgramSchedul
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, ProgramSchedule> validation = await ProgramScheduleMustExist(dbContext, request);
-        return await validation.Apply(ps => DoDeletion(dbContext, ps));
+        return await LanguageExtensions.Apply(validation, ps => DoDeletion(dbContext, ps));
     }
 
     private static Task<Unit> DoDeletion(TvContext dbContext, ProgramSchedule programSchedule)

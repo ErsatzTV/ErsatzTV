@@ -1,13 +1,10 @@
-﻿using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
@@ -35,7 +32,7 @@ public class AddArtistToCollectionHandler :
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => ApplyAddArtistRequest(dbContext, parameters));
+        return await LanguageExtensions.Apply(validation, parameters => ApplyAddArtistRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddArtistRequest(TvContext dbContext, Parameters parameters)

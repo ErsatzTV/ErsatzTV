@@ -1,9 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using System.Timers;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
@@ -11,12 +6,10 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Repositories;
-using LanguageExt;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Timer = System.Timers.Timer;
 using static LanguageExt.Prelude;
+using Timer = System.Timers.Timer;
 
 namespace ErsatzTV.Application.Streaming;
 

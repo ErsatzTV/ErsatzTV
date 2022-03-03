@@ -1,13 +1,8 @@
-﻿using System.Linq;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static LanguageExt.Prelude;
 using Channel = ErsatzTV.Core.Domain.Channel;
@@ -34,7 +29,7 @@ public class CreatePlayoutHandler : IRequestHandler<CreatePlayout, Either<BaseEr
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
 
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await validation.Apply(playout => PersistPlayout(dbContext, playout));
+        return await LanguageExtensions.Apply(validation, playout => PersistPlayout(dbContext, playout));
     }
 
     private async Task<CreatePlayoutResponse> PersistPlayout(TvContext dbContext, Playout playout)

@@ -1,10 +1,8 @@
-﻿using System.Linq;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Jellyfin;
-using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Application.MediaCards;

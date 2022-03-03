@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Application.Streaming;
+﻿namespace ErsatzTV.Application.Streaming;
 
 public record GetWrappedProcessByChannelNumber : FFmpegProcessRequest
 {

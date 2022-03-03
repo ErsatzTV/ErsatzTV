@@ -1,11 +1,7 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
@@ -24,7 +20,7 @@ public class
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
-        return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
+        return await LanguageExtensions.Apply(validation, p => ApplyUpdateRequest(dbContext, p, request));
     }
 
     private async Task<UpdateFFmpegProfileResult> ApplyUpdateRequest(

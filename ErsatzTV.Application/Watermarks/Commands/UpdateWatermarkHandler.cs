@@ -1,11 +1,7 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Watermarks;
@@ -23,7 +19,7 @@ public class UpdateWatermarkHandler : IRequestHandler<UpdateWatermark, Either<Ba
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ChannelWatermark> validation = await Validate(dbContext, request);
-        return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
+        return await LanguageExtensions.Apply(validation, p => ApplyUpdateRequest(dbContext, p, request));
     }
 
     private static async Task<UpdateWatermarkResult> ApplyUpdateRequest(

@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core;
-using LanguageExt;
-using MediatR;
+﻿using ErsatzTV.Core;
 
 namespace ErsatzTV.Application.Libraries;
 

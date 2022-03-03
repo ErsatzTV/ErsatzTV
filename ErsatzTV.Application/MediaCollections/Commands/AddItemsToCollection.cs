@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core;
-using LanguageExt;
+﻿using ErsatzTV.Core;
 
 namespace ErsatzTV.Application.MediaCollections;
 

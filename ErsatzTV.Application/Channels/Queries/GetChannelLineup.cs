@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Hdhr;
-using MediatR;
+﻿using ErsatzTV.Core.Hdhr;
 
 namespace ErsatzTV.Application.Channels;
 

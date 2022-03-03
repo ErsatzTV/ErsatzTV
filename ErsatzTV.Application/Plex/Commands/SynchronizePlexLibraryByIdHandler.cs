@@ -1,18 +1,10 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Locking;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Plex;
-using LanguageExt;
-using MediatR;
 using Microsoft.Extensions.Logging;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.Plex;
 

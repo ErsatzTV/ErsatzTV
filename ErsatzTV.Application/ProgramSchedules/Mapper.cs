@@ -1,5 +1,4 @@
-﻿using System;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules;
 

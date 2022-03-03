@@ -1,13 +1,8 @@
-﻿using System.Linq;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
-using LanguageExt;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.ProgramSchedules.Mapper;
 
@@ -33,7 +28,7 @@ public class AddProgramScheduleItemHandler : ProgramScheduleItemCommandBase,
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => PersistItem(dbContext, request, ps));
+        return await LanguageExtensions.Apply(validation, ps => PersistItem(dbContext, request, ps));
     }
 
     private async Task<ProgramScheduleItemViewModel> PersistItem(

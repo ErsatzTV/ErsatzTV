@@ -1,7 +1,4 @@
-﻿using System;
-using LanguageExt;
-
-namespace ErsatzTV.Application.Playouts;
+﻿namespace ErsatzTV.Application.Playouts;
 
 public record PlayoutNameViewModel(
     int PlayoutId,

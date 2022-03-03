@@ -1,6 +1,5 @@
 ﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Jellyfin;
-using LanguageExt;
 
 namespace ErsatzTV.Application.Jellyfin;
 

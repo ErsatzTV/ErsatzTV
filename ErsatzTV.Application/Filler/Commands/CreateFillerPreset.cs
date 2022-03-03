@@ -1,10 +1,6 @@
-﻿using System;
-using ErsatzTV.Core;
+﻿using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
-using LanguageExt;
-using MediatR;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Application.Filler;
 
