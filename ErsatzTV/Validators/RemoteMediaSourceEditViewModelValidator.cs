@@ -1,5 +1,4 @@
-﻿using System;
-using ErsatzTV.ViewModels;
+﻿using ErsatzTV.ViewModels;
 using FluentValidation;
 
 namespace ErsatzTV.Validators;

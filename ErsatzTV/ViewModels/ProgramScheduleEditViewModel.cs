@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Application.ProgramSchedules;
-using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.ViewModels;
 

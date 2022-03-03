@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Application.MediaCards;
+﻿using ErsatzTV.Application.MediaCards;
 using Microsoft.AspNetCore.Components;
 
 namespace ErsatzTV.Shared;

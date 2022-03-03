@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ErsatzTV.ViewModels;
+﻿namespace ErsatzTV.ViewModels;
 
 public class MultiCollectionEditViewModel
 {

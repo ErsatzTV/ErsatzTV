@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.ViewModels;
 using FluentValidation;
 

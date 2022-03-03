@@ -1,9 +1,9 @@
 ﻿@page "/"
 @using Microsoft.Extensions.Caching.Memory
 @using System.Reflection
-@using ErsatzTV.Application.Health
-@using ErsatzTV.Core.Health
 @using ErsatzTV.Core.Interfaces.GitHub
+@using ErsatzTV.Core.Health
+@using ErsatzTV.Application.Health
 @implements IDisposable
 @inject IGitHubApiClient _gitHubApiClient
 @inject IMemoryCache _memoryCache

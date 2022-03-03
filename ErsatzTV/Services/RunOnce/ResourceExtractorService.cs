@@ -1,9 +1,5 @@
-﻿using System.IO;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Reflection;
 using ErsatzTV.Core;
-using Microsoft.Extensions.Hosting;
 
 namespace ErsatzTV.Services.RunOnce;
 

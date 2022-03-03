@@ -1,10 +1,10 @@
 ﻿@page "/media/music/artists/{ArtistId:int}"
+@using ErsatzTV.Extensions
 @using ErsatzTV.Application.Artists
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.ProgramSchedules
 @using System.Globalization
-@using ErsatzTV.Extensions
 @implements IDisposable
 @inject IMediator _mediator
 @inject IDialogService _dialog

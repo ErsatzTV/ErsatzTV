@@ -1,10 +1,10 @@
 ﻿@page "/media/movies"
 @page "/media/movies/page/{PageNumber:int}"
 @using LanguageExt.UnsafeValueAccess
+@using ErsatzTV.Extensions
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
 @using ErsatzTV.Application.Search
-@using ErsatzTV.Extensions
 @inherits MultiSelectBase<MovieList>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel

@@ -3,7 +3,6 @@ using ErsatzTV.Application;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using LanguageExt;
 using MediatR;
 
 namespace ErsatzTV.Services;

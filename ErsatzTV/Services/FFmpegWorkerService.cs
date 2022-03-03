@@ -1,14 +1,7 @@
-﻿using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Channels;
-using System.Threading.Tasks;
+﻿using System.Threading.Channels;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Services;

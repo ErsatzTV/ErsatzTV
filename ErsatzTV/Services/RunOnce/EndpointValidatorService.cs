@@ -1,12 +1,6 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using ErsatzTV.Core;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Services.RunOnce;
 
