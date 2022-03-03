@@ -313,15 +313,23 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await _jsRuntime.InvokeVoidAsync("sortableCollection", Id);
-        if (_data.UseCustomPlaybackOrder)
+        try
         {
-            await _jsRuntime.InvokeVoidAsync("enableSorting");
+            await _jsRuntime.InvokeVoidAsync("sortableCollection", Id);
+            if (_data.UseCustomPlaybackOrder)
+            {
+                await _jsRuntime.InvokeVoidAsync("enableSorting");
+            }
+            else
+            {
+                await _jsRuntime.InvokeVoidAsync("disableSorting");
+            }
         }
-        else
+        catch (Exception)
         {
-            await _jsRuntime.InvokeVoidAsync("disableSorting");
+            // ignored
         }
+        
         await base.OnAfterRenderAsync(firstRender);
     }
 

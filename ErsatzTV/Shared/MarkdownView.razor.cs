@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Ganss.XSS;
 using Markdig;
 using Microsoft.AspNetCore.Components;
@@ -48,8 +49,16 @@ namespace ErsatzTV.Shared
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            await JsRuntime.InvokeVoidAsync("styleMarkdown");
-            await base.OnAfterRenderAsync(firstRender);
+            try
+            {
+                await JsRuntime.InvokeVoidAsync("styleMarkdown");
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+
+            await base.OnAfterRenderAsync(true);
         }
     }
 }
