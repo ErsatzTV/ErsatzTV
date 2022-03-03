@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class MetadataGuid
 {
-    public class MetadataGuid
-    {
-        public int Id { get; set; }
-        public string Guid { get; set; }
-    }
+    public int Id { get; set; }
+    public string Guid { get; set; }
 }

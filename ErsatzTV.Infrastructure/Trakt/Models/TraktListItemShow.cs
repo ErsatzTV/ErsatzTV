@@ -1,9 +1,8 @@
-﻿namespace ErsatzTV.Infrastructure.Trakt.Models
+﻿namespace ErsatzTV.Infrastructure.Trakt.Models;
+
+public class TraktListItemShow
 {
-    public class TraktListItemShow
-    {
-        public string Title { get; set; }
-        public int? Year { get; set; }
-        public TraktListItemIds Ids { get; set; }
-    }
+    public string Title { get; set; }
+    public int? Year { get; set; }
+    public TraktListItemIds Ids { get; set; }
 }

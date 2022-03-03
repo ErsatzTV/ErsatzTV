@@ -1,13 +1,8 @@
 ﻿@page "/channels"
 @using ErsatzTV.Application.Channels
-@using ErsatzTV.Application.Channels.Commands
-@using ErsatzTV.Application.Channels.Queries
-@using ErsatzTV.Application.Configuration.Commands
-@using ErsatzTV.Application.Configuration.Queries
 @using ErsatzTV.Application.FFmpegProfiles
-@using ErsatzTV.Application.FFmpegProfiles.Queries
 @using System.Globalization
-@using System.Threading
+@using ErsatzTV.Application.Configuration
 @implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator

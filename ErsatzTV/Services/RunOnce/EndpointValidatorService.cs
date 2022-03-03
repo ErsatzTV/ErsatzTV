@@ -8,56 +8,55 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Services.RunOnce
-{
-    public class EndpointValidatorService : IHostedService
-    {
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<EndpointValidatorService> _logger;
+namespace ErsatzTV.Services.RunOnce;
 
-        public EndpointValidatorService(IConfiguration configuration, ILogger<EndpointValidatorService> logger)
+public class EndpointValidatorService : IHostedService
+{
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<EndpointValidatorService> _logger;
+
+    public EndpointValidatorService(IConfiguration configuration, ILogger<EndpointValidatorService> logger)
+    {
+        _configuration = configuration;
+        _logger = logger;
+    }
+
+    public Task StartAsync(CancellationToken cancellationToken)
+    {
+        string urls = _configuration.GetValue<string>("Kestrel:Endpoints:Http:Url");
+        if (urls.Split(";").Length > 1)
         {
-            _configuration = configuration;
-            _logger = logger;
+            throw new NotSupportedException($"Multiple endpoints are not supported: {urls}");
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        const string PATTERN = @"http:\/\/(.*):(\d+)";
+        Match match = Regex.Match(urls, PATTERN);
+        if (match.Success)
         {
-            string urls = _configuration.GetValue<string>("Kestrel:Endpoints:Http:Url");
-            if (urls.Split(";").Length > 1)
-            {
-                throw new NotSupportedException($"Multiple endpoints are not supported: {urls}");
-            }
+            string hostname = match.Groups[1].Value;
+            Settings.ListenPort = int.Parse(match.Groups[2].Value);
 
-            const string PATTERN = @"http:\/\/(.*):(\d+)";
-            Match match = Regex.Match(urls, PATTERN);
-            if (match.Success)
+            // IP address must be 0.0.0.0 or 127.0.0.1
+            if (IPAddress.TryParse(hostname, out IPAddress address))
             {
-                string hostname = match.Groups[1].Value;
-                Settings.ListenPort = int.Parse(match.Groups[2].Value);
-
-                // IP address must be 0.0.0.0 or 127.0.0.1
-                if (IPAddress.TryParse(hostname, out IPAddress address))
+                if (!address.Equals(IPAddress.Parse("0.0.0.0")) && !IPAddress.IsLoopback(address))
                 {
-                    if (!address.Equals(IPAddress.Parse("0.0.0.0")) && !IPAddress.IsLoopback(address))
-                    {
-                        throw new NotSupportedException($"Endpoint MUST include loopback: {urls}");
-                    }
+                    throw new NotSupportedException($"Endpoint MUST include loopback: {urls}");
                 }
             }
-            else
-            {
-                throw new NotSupportedException($"Invalid endpoint format: {urls}");
-            }
-
-            _logger.LogInformation(
-                "Server will listen on port {Port} - try UI at {UI}",
-                Settings.ListenPort,
-                $"http://localhost:{Settings.ListenPort}");
-
-            return Task.CompletedTask;
+        }
+        else
+        {
+            throw new NotSupportedException($"Invalid endpoint format: {urls}");
         }
 
-        public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+        _logger.LogInformation(
+            "Server will listen on port {Port} - try UI at {UI}",
+            Settings.ListenPort,
+            $"http://localhost:{Settings.ListenPort}");
+
+        return Task.CompletedTask;
     }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

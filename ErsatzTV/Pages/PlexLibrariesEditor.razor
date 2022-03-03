@@ -1,10 +1,6 @@
 ﻿@page "/media/sources/plex/{Id:int}/libraries"
-@using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Plex.Commands
-@using ErsatzTV.Application.Plex.Queries
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
-@using System.Threading
 @implements IDisposable
 @inject IMediator _mediator
 @inject ChannelWriter<IPlexBackgroundServiceRequest> _channel

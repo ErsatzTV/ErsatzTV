@@ -2,14 +2,13 @@
 using ErsatzTV.Core.Domain;
 using LanguageExt;
 
-namespace ErsatzTV.Core.Interfaces.Metadata
+namespace ErsatzTV.Core.Interfaces.Metadata;
+
+public interface IOtherVideoFolderScanner
 {
-    public interface IOtherVideoFolderScanner
-    {
-        Task<Either<BaseError, Unit>> ScanFolder(
-            LibraryPath libraryPath,
-            string ffprobePath,
-            decimal progressMin,
-            decimal progressMax);
-    }
+    Task<Either<BaseError, Unit>> ScanFolder(
+        LibraryPath libraryPath,
+        string ffprobePath,
+        decimal progressMin,
+        decimal progressMax);
 }

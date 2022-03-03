@@ -8,72 +8,70 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Interfaces.Trakt;
 using ErsatzTV.Infrastructure.Data;
-using ErsatzTV.Infrastructure.Extensions;
 using LanguageExt;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
-namespace ErsatzTV.Application.MediaCollections.Commands
+namespace ErsatzTV.Application.MediaCollections;
+
+public class DeleteTraktListHandler : TraktCommandBase, MediatR.IRequestHandler<DeleteTraktList, Either<BaseError, Unit>>
 {
-    public class DeleteTraktListHandler : TraktCommandBase, MediatR.IRequestHandler<DeleteTraktList, Either<BaseError, Unit>>
+    private readonly ISearchRepository _searchRepository;
+    private readonly ISearchIndex _searchIndex;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IEntityLocker _entityLocker;
+
+    public DeleteTraktListHandler(
+        ITraktApiClient traktApiClient,
+        ISearchRepository searchRepository,
+        ISearchIndex searchIndex,
+        IDbContextFactory<TvContext> dbContextFactory,
+        ILogger<DeleteTraktListHandler> logger,
+        IEntityLocker entityLocker)
+        : base(traktApiClient, searchRepository, searchIndex, logger)
     {
-        private readonly ISearchRepository _searchRepository;
-        private readonly ISearchIndex _searchIndex;
-        private readonly IDbContextFactory<TvContext> _dbContextFactory;
-        private readonly IEntityLocker _entityLocker;
+        _searchRepository = searchRepository;
+        _searchIndex = searchIndex;
+        _dbContextFactory = dbContextFactory;
+        _entityLocker = entityLocker;
+    }
 
-        public DeleteTraktListHandler(
-            ITraktApiClient traktApiClient,
-            ISearchRepository searchRepository,
-            ISearchIndex searchIndex,
-            IDbContextFactory<TvContext> dbContextFactory,
-            ILogger<DeleteTraktListHandler> logger,
-            IEntityLocker entityLocker)
-            : base(traktApiClient, searchRepository, searchIndex, logger)
+    public async Task<Either<BaseError, Unit>> Handle(
+        DeleteTraktList request,
+        CancellationToken cancellationToken)
+    {
+        try
         {
-            _searchRepository = searchRepository;
-            _searchIndex = searchIndex;
-            _dbContextFactory = dbContextFactory;
-            _entityLocker = entityLocker;
+            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+
+            Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
+            return await validation.Apply(c => DoDeletion(dbContext, c));
         }
-
-        public async Task<Either<BaseError, Unit>> Handle(
-            DeleteTraktList request,
-            CancellationToken cancellationToken)
+        finally
         {
-            try
-            {
-                await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-
-                Validation<BaseError, TraktList> validation = await TraktListMustExist(dbContext, request.TraktListId);
-                return await validation.Apply(c => DoDeletion(dbContext, c));
-            }
-            finally
-            {
-                _entityLocker.UnlockTrakt();
-            }
+            _entityLocker.UnlockTrakt();
         }
+    }
 
-        private async Task<Unit> DoDeletion(TvContext dbContext, TraktList traktList)
+    private async Task<Unit> DoDeletion(TvContext dbContext, TraktList traktList)
+    {
+        var mediaItemIds = traktList.Items.Bind(i => Optional(i.MediaItemId)).ToList();
+
+        dbContext.TraktLists.Remove(traktList);
+        if (await dbContext.SaveChangesAsync() > 0)
         {
-            var mediaItemIds = traktList.Items.Bind(i => Optional(i.MediaItemId)).ToList();
-
-            dbContext.TraktLists.Remove(traktList);
-            if (await dbContext.SaveChangesAsync() > 0)
+            foreach (int mediaItemId in mediaItemIds)
             {
-                foreach (int mediaItemId in mediaItemIds)
+                foreach (MediaItem mediaItem in await _searchRepository.GetItemToIndex(mediaItemId))
                 {
-                    foreach (MediaItem mediaItem in await _searchRepository.GetItemToIndex(mediaItemId))
-                    {
-                        await _searchIndex.UpdateItems(_searchRepository, new[] { mediaItem }.ToList());
-                    }
+                    await _searchIndex.UpdateItems(_searchRepository, new[] { mediaItem }.ToList());
                 }
             }
-
-            _searchIndex.Commit();
-
-            return Unit.Default;
         }
+
+        _searchIndex.Commit();
+
+        return Unit.Default;
     }
 }

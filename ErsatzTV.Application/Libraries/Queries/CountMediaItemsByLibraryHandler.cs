@@ -4,22 +4,21 @@ using System.Threading.Tasks;
 using Dapper;
 using MediatR;
 
-namespace ErsatzTV.Application.Libraries.Queries
+namespace ErsatzTV.Application.Libraries;
+
+public class CountMediaItemsByLibraryHandler : IRequestHandler<CountMediaItemsByLibrary, int>
 {
-    public class CountMediaItemsByLibraryHandler : IRequestHandler<CountMediaItemsByLibrary, int>
+    private readonly IDbConnection _dbConnection;
+
+    public CountMediaItemsByLibraryHandler(IDbConnection dbConnection)
     {
-        private readonly IDbConnection _dbConnection;
+        _dbConnection = dbConnection;
+    }
 
-        public CountMediaItemsByLibraryHandler(IDbConnection dbConnection)
-        {
-            _dbConnection = dbConnection;
-        }
-
-        public Task<int> Handle(CountMediaItemsByLibrary request, CancellationToken cancellationToken) =>
-            _dbConnection.QuerySingleAsync<int>(
-                @"SELECT COUNT(*) FROM MediaItem
+    public Task<int> Handle(CountMediaItemsByLibrary request, CancellationToken cancellationToken) =>
+        _dbConnection.QuerySingleAsync<int>(
+            @"SELECT COUNT(*) FROM MediaItem
                   INNER JOIN LibraryPath LP on MediaItem.LibraryPathId = LP.Id
                   WHERE LP.LibraryId = @LibraryId",
-                new { request.LibraryId });
-    }
+            new { request.LibraryId });
 }

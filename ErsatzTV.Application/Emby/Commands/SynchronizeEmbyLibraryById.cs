@@ -2,22 +2,21 @@
 using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Emby.Commands
+namespace ErsatzTV.Application.Emby;
+
+public interface ISynchronizeEmbyLibraryById : IRequest<Either<BaseError, string>>,
+    IEmbyBackgroundServiceRequest
 {
-    public interface ISynchronizeEmbyLibraryById : IRequest<Either<BaseError, string>>,
-        IEmbyBackgroundServiceRequest
-    {
-        int EmbyLibraryId { get; }
-        bool ForceScan { get; }
-    }
+    int EmbyLibraryId { get; }
+    bool ForceScan { get; }
+}
 
-    public record SynchronizeEmbyLibraryByIdIfNeeded(int EmbyLibraryId) : ISynchronizeEmbyLibraryById
-    {
-        public bool ForceScan => false;
-    }
+public record SynchronizeEmbyLibraryByIdIfNeeded(int EmbyLibraryId) : ISynchronizeEmbyLibraryById
+{
+    public bool ForceScan => false;
+}
 
-    public record ForceSynchronizeEmbyLibraryById(int EmbyLibraryId) : ISynchronizeEmbyLibraryById
-    {
-        public bool ForceScan => true;
-    }
+public record ForceSynchronizeEmbyLibraryById(int EmbyLibraryId) : ISynchronizeEmbyLibraryById
+{
+    public bool ForceScan => true;
 }

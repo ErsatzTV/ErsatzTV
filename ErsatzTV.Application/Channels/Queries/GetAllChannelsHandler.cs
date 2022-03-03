@@ -7,15 +7,14 @@ using MediatR;
 using static ErsatzTV.Application.Channels.Mapper;
 using static LanguageExt.Prelude;
 
-namespace ErsatzTV.Application.Channels.Queries
+namespace ErsatzTV.Application.Channels;
+
+public class GetAllChannelsHandler : IRequestHandler<GetAllChannels, List<ChannelViewModel>>
 {
-    public class GetAllChannelsHandler : IRequestHandler<GetAllChannels, List<ChannelViewModel>>
-    {
-        private readonly IChannelRepository _channelRepository;
+    private readonly IChannelRepository _channelRepository;
 
-        public GetAllChannelsHandler(IChannelRepository channelRepository) => _channelRepository = channelRepository;
+    public GetAllChannelsHandler(IChannelRepository channelRepository) => _channelRepository = channelRepository;
 
-        public async Task<List<ChannelViewModel>> Handle(GetAllChannels request, CancellationToken cancellationToken) =>
-            Optional(await _channelRepository.GetAll()).Flatten().Map(ProjectToViewModel).ToList();
-    }
+    public async Task<List<ChannelViewModel>> Handle(GetAllChannels request, CancellationToken cancellationToken) =>
+        Optional(await _channelRepository.GetAll()).Flatten().Map(ProjectToViewModel).ToList();
 }

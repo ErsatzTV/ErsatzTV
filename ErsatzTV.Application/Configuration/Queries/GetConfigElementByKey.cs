@@ -2,7 +2,6 @@
 using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Configuration.Queries
-{
-    public record GetConfigElementByKey(ConfigElementKey Key) : IRequest<Option<ConfigElementViewModel>>;
-}
+namespace ErsatzTV.Application.Configuration;
+
+public record GetConfigElementByKey(ConfigElementKey Key) : IRequest<Option<ConfigElementViewModel>>;

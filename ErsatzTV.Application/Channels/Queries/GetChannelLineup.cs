@@ -2,7 +2,6 @@
 using ErsatzTV.Core.Hdhr;
 using MediatR;
 
-namespace ErsatzTV.Application.Channels.Queries
-{
-    public record GetChannelLineup(string Scheme, string Host) : IRequest<List<LineupItem>>;
-}
+namespace ErsatzTV.Application.Channels;
+
+public record GetChannelLineup(string Scheme, string Host) : IRequest<List<LineupItem>>;

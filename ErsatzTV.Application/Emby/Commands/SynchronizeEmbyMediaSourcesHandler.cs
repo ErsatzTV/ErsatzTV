@@ -8,34 +8,33 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Emby.Commands
+namespace ErsatzTV.Application.Emby;
+
+public class SynchronizeEmbyMediaSourcesHandler : IRequestHandler<SynchronizeEmbyMediaSources,
+    Either<BaseError, List<EmbyMediaSource>>>
 {
-    public class SynchronizeEmbyMediaSourcesHandler : IRequestHandler<SynchronizeEmbyMediaSources,
-        Either<BaseError, List<EmbyMediaSource>>>
+    private readonly ChannelWriter<IEmbyBackgroundServiceRequest> _channel;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
+
+    public SynchronizeEmbyMediaSourcesHandler(
+        IMediaSourceRepository mediaSourceRepository,
+        ChannelWriter<IEmbyBackgroundServiceRequest> channel)
     {
-        private readonly ChannelWriter<IEmbyBackgroundServiceRequest> _channel;
-        private readonly IMediaSourceRepository _mediaSourceRepository;
+        _mediaSourceRepository = mediaSourceRepository;
+        _channel = channel;
+    }
 
-        public SynchronizeEmbyMediaSourcesHandler(
-            IMediaSourceRepository mediaSourceRepository,
-            ChannelWriter<IEmbyBackgroundServiceRequest> channel)
+    public async Task<Either<BaseError, List<EmbyMediaSource>>> Handle(
+        SynchronizeEmbyMediaSources request,
+        CancellationToken cancellationToken)
+    {
+        List<EmbyMediaSource> mediaSources = await _mediaSourceRepository.GetAllEmby();
+        foreach (EmbyMediaSource mediaSource in mediaSources)
         {
-            _mediaSourceRepository = mediaSourceRepository;
-            _channel = channel;
+            // await _channel.WriteAsync(new SynchronizeEmbyAdminUserId(mediaSource.Id), cancellationToken);
+            await _channel.WriteAsync(new SynchronizeEmbyLibraries(mediaSource.Id), cancellationToken);
         }
 
-        public async Task<Either<BaseError, List<EmbyMediaSource>>> Handle(
-            SynchronizeEmbyMediaSources request,
-            CancellationToken cancellationToken)
-        {
-            List<EmbyMediaSource> mediaSources = await _mediaSourceRepository.GetAllEmby();
-            foreach (EmbyMediaSource mediaSource in mediaSources)
-            {
-                // await _channel.WriteAsync(new SynchronizeEmbyAdminUserId(mediaSource.Id), cancellationToken);
-                await _channel.WriteAsync(new SynchronizeEmbyLibraries(mediaSource.Id), cancellationToken);
-            }
-
-            return mediaSources;
-        }
+        return mediaSources;
     }
 }

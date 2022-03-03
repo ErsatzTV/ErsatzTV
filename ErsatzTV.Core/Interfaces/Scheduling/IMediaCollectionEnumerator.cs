@@ -1,13 +1,12 @@
 ﻿using ErsatzTV.Core.Domain;
 using LanguageExt;
 
-namespace ErsatzTV.Core.Interfaces.Scheduling
+namespace ErsatzTV.Core.Interfaces.Scheduling;
+
+public interface IMediaCollectionEnumerator
 {
-    public interface IMediaCollectionEnumerator
-    {
-        CollectionEnumeratorState State { get; }
-        Option<MediaItem> Current { get; }
-        void MoveNext();
-        Option<MediaItem> Peek(int offset);
-    }
+    CollectionEnumeratorState State { get; }
+    Option<MediaItem> Current { get; }
+    void MoveNext();
+    Option<MediaItem> Peek(int offset);
 }

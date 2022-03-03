@@ -10,80 +10,79 @@ using ErsatzTV.Core.Interfaces.Runtime;
 using LanguageExt;
 using Microsoft.Extensions.Logging;
 
-namespace ErsatzTV.Core.Emby
+namespace ErsatzTV.Core.Emby;
+
+public class EmbyPathReplacementService : IEmbyPathReplacementService
 {
-    public class EmbyPathReplacementService : IEmbyPathReplacementService
+    private readonly ILogger<EmbyPathReplacementService> _logger;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IRuntimeInfo _runtimeInfo;
+
+    public EmbyPathReplacementService(
+        IMediaSourceRepository mediaSourceRepository,
+        IRuntimeInfo runtimeInfo,
+        ILogger<EmbyPathReplacementService> logger)
     {
-        private readonly ILogger<EmbyPathReplacementService> _logger;
-        private readonly IMediaSourceRepository _mediaSourceRepository;
-        private readonly IRuntimeInfo _runtimeInfo;
+        _mediaSourceRepository = mediaSourceRepository;
+        _runtimeInfo = runtimeInfo;
+        _logger = logger;
+    }
 
-        public EmbyPathReplacementService(
-            IMediaSourceRepository mediaSourceRepository,
-            IRuntimeInfo runtimeInfo,
-            ILogger<EmbyPathReplacementService> logger)
-        {
-            _mediaSourceRepository = mediaSourceRepository;
-            _runtimeInfo = runtimeInfo;
-            _logger = logger;
-        }
+    public async Task<string> GetReplacementEmbyPath(int libraryPathId, string path)
+    {
+        List<EmbyPathReplacement> replacements =
+            await _mediaSourceRepository.GetEmbyPathReplacementsByLibraryId(libraryPathId);
 
-        public async Task<string> GetReplacementEmbyPath(int libraryPathId, string path)
-        {
-            List<EmbyPathReplacement> replacements =
-                await _mediaSourceRepository.GetEmbyPathReplacementsByLibraryId(libraryPathId);
+        return GetReplacementEmbyPath(replacements, path);
+    }
 
-            return GetReplacementEmbyPath(replacements, path);
-        }
-
-        public string GetReplacementEmbyPath(
-            List<EmbyPathReplacement> pathReplacements,
-            string path,
-            bool log = true)
-        {
-            Option<EmbyPathReplacement> maybeReplacement = pathReplacements
-                .SingleOrDefault(
-                    r =>
-                    {
-                        string separatorChar = IsWindows(r.EmbyMediaSource, path) ? @"\" : @"/";
-                        string prefix = r.EmbyPath.EndsWith(separatorChar)
-                            ? r.EmbyPath
-                            : r.EmbyPath + separatorChar;
-                        return path.StartsWith(prefix);
-                    });
-
-            return maybeReplacement.Match(
-                replacement =>
+    public string GetReplacementEmbyPath(
+        List<EmbyPathReplacement> pathReplacements,
+        string path,
+        bool log = true)
+    {
+        Option<EmbyPathReplacement> maybeReplacement = pathReplacements
+            .SingleOrDefault(
+                r =>
                 {
-                    string finalPath = path.Replace(replacement.EmbyPath, replacement.LocalPath);
-                    if (IsWindows(replacement.EmbyMediaSource, path) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        finalPath = finalPath.Replace(@"\", @"/");
-                    }
-                    else if (!IsWindows(replacement.EmbyMediaSource, path) &&
-                             _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        finalPath = finalPath.Replace(@"/", @"\");
-                    }
+                    string separatorChar = IsWindows(r.EmbyMediaSource, path) ? @"\" : @"/";
+                    string prefix = r.EmbyPath.EndsWith(separatorChar)
+                        ? r.EmbyPath
+                        : r.EmbyPath + separatorChar;
+                    return path.StartsWith(prefix);
+                });
 
-                    if (log)
-                    {
-                        _logger.LogInformation(
-                            "Replacing emby path {EmbyPath} with {LocalPath} resulting in {FinalPath}",
-                            replacement.EmbyPath,
-                            replacement.LocalPath,
-                            finalPath);
-                    }
+        return maybeReplacement.Match(
+            replacement =>
+            {
+                string finalPath = path.Replace(replacement.EmbyPath, replacement.LocalPath);
+                if (IsWindows(replacement.EmbyMediaSource, path) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+                {
+                    finalPath = finalPath.Replace(@"\", @"/");
+                }
+                else if (!IsWindows(replacement.EmbyMediaSource, path) &&
+                         _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+                {
+                    finalPath = finalPath.Replace(@"/", @"\");
+                }
 
-                    return finalPath;
-                },
-                () => path);
-        }
+                if (log)
+                {
+                    _logger.LogInformation(
+                        "Replacing emby path {EmbyPath} with {LocalPath} resulting in {FinalPath}",
+                        replacement.EmbyPath,
+                        replacement.LocalPath,
+                        finalPath);
+                }
 
-        private static bool IsWindows(EmbyMediaSource embyMediaSource, string path)
-        {
-            bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
-            return isUnc || embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
-        }
+                return finalPath;
+            },
+            () => path);
+    }
+
+    private static bool IsWindows(EmbyMediaSource embyMediaSource, string path)
+    {
+        bool isUnc = Uri.TryCreate(path, UriKind.Absolute, out Uri uri) && uri.IsUnc;
+        return isUnc || embyMediaSource.OperatingSystem.ToLowerInvariant().StartsWith("windows");
     }
 }

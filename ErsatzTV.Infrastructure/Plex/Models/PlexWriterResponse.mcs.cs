@@ -1,10 +1,9 @@
 ﻿using System.Xml.Serialization;
 
-namespace ErsatzTV.Infrastructure.Plex.Models
+namespace ErsatzTV.Infrastructure.Plex.Models;
+
+public class PlexWriterResponse
 {
-    public class PlexWriterResponse
-    {
-        [XmlAttribute("tag")]
-        public string Tag { get; set; }
-    }
+    [XmlAttribute("tag")]
+    public string Tag { get; set; }
 }

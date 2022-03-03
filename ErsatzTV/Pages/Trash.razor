@@ -1,9 +1,8 @@
 ﻿@page "/media/trash"
 @using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.Search.Queries
 @using ErsatzTV.Extensions
-@using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Maintenance.Commands
+@using ErsatzTV.Application.Maintenance
+@using ErsatzTV.Application.Search
 @inherits MultiSelectBase<Search>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel

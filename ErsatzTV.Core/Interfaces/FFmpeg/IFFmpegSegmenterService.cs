@@ -1,11 +1,10 @@
 ﻿using System.Collections.Concurrent;
 
-namespace ErsatzTV.Core.Interfaces.FFmpeg
-{
-    public interface IFFmpegSegmenterService
-    {
-        ConcurrentDictionary<string, IHlsSessionWorker> SessionWorkers { get; }
+namespace ErsatzTV.Core.Interfaces.FFmpeg;
 
-        void TouchChannel(string channelNumber);
-    }
+public interface IFFmpegSegmenterService
+{
+    ConcurrentDictionary<string, IHlsSessionWorker> SessionWorkers { get; }
+
+    void TouchChannel(string channelNumber);
 }

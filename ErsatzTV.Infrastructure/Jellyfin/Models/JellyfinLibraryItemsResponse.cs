@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace ErsatzTV.Infrastructure.Jellyfin.Models
+namespace ErsatzTV.Infrastructure.Jellyfin.Models;
+
+public class JellyfinLibraryItemsResponse
 {
-    public class JellyfinLibraryItemsResponse
-    {
-        public List<JellyfinLibraryItemResponse> Items { get; set; }
-    }
+    public List<JellyfinLibraryItemResponse> Items { get; set; }
 }

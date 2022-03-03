@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using MediatR;
 
-namespace ErsatzTV.Application.Resolutions.Queries
-{
-    public record GetAllResolutions : IRequest<List<ResolutionViewModel>>;
-}
+namespace ErsatzTV.Application.Resolutions;
+
+public record GetAllResolutions : IRequest<List<ResolutionViewModel>>;

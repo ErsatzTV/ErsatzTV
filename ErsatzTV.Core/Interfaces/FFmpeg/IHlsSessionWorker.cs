@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace ErsatzTV.Core.Interfaces.FFmpeg
+namespace ErsatzTV.Core.Interfaces.FFmpeg;
+
+public interface IHlsSessionWorker
 {
-    public interface IHlsSessionWorker
-    {
-        DateTimeOffset PlaylistStart { get; }
-        void Touch();
-    }
+    DateTimeOffset PlaylistStart { get; }
+    void Touch();
 }

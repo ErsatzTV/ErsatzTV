@@ -1,11 +1,10 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public enum LibraryMediaKind
 {
-    public enum LibraryMediaKind
-    {
-        Movies = 1,
-        Shows = 2,
-        MusicVideos = 3,
-        OtherVideos = 4,
-        Songs = 5
-    }
+    Movies = 1,
+    Shows = 2,
+    MusicVideos = 3,
+    OtherVideos = 4,
+    Songs = 5
 }

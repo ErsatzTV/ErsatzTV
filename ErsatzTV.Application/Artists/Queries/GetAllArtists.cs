@@ -2,7 +2,6 @@
 using ErsatzTV.Application.MediaItems;
 using MediatR;
 
-namespace ErsatzTV.Application.Artists.Queries
-{
-    public record GetAllArtists : IRequest<List<NamedMediaItemViewModel>>;
-}
+namespace ErsatzTV.Application.Artists;
+
+public record GetAllArtists : IRequest<List<NamedMediaItemViewModel>>;

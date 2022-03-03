@@ -5,19 +5,18 @@ using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.Plex.Mapper;
 
-namespace ErsatzTV.Application.Plex.Queries
+namespace ErsatzTV.Application.Plex;
+
+public class
+    GetPlexMediaSourceByIdHandler : IRequestHandler<GetPlexMediaSourceById, Option<PlexMediaSourceViewModel>>
 {
-    public class
-        GetPlexMediaSourceByIdHandler : IRequestHandler<GetPlexMediaSourceById, Option<PlexMediaSourceViewModel>>
-    {
-        private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
 
-        public GetPlexMediaSourceByIdHandler(IMediaSourceRepository mediaSourceRepository) =>
-            _mediaSourceRepository = mediaSourceRepository;
+    public GetPlexMediaSourceByIdHandler(IMediaSourceRepository mediaSourceRepository) =>
+        _mediaSourceRepository = mediaSourceRepository;
 
-        public Task<Option<PlexMediaSourceViewModel>> Handle(
-            GetPlexMediaSourceById request,
-            CancellationToken cancellationToken) =>
-            _mediaSourceRepository.GetPlex(request.PlexMediaSourceId).MapT(ProjectToViewModel);
-    }
+    public Task<Option<PlexMediaSourceViewModel>> Handle(
+        GetPlexMediaSourceById request,
+        CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetPlex(request.PlexMediaSourceId).MapT(ProjectToViewModel);
 }

@@ -1,6 +1,5 @@
 ﻿using MediatR;
 
-namespace ErsatzTV.Application.Configuration.Queries
-{
-    public record GetLibraryRefreshInterval : IRequest<int>;
-}
+namespace ErsatzTV.Application.Configuration;
+
+public record GetLibraryRefreshInterval : IRequest<int>;

@@ -3,74 +3,73 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.ViewModels;
 using FluentValidation;
 
-namespace ErsatzTV.Validators
+namespace ErsatzTV.Validators;
+
+public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfileEditViewModel>
 {
-    public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfileEditViewModel>
+    private static readonly List<string> QsvEncoders = new() { "h264_qsv", "hevc_qsv", "mpeg2_qsv" };
+    private static readonly List<string> NvencEncoders = new() { "h264_nvenc", "hevc_nvenc" };
+    private static readonly List<string> VaapiEncoders = new() { "h264_vaapi", "hevc_vaapi", "mpeg2_vaapi" };
+    private static readonly List<string> VideoToolboxEncoders = new() { "h264_videotoolbox", "hevc_videotoolbox" };
+
+    public FFmpegProfileEditViewModelValidator()
     {
-        private static readonly List<string> QsvEncoders = new() { "h264_qsv", "hevc_qsv", "mpeg2_qsv" };
-        private static readonly List<string> NvencEncoders = new() { "h264_nvenc", "hevc_nvenc" };
-        private static readonly List<string> VaapiEncoders = new() { "h264_vaapi", "hevc_vaapi", "mpeg2_vaapi" };
-        private static readonly List<string> VideoToolboxEncoders = new() { "h264_videotoolbox", "hevc_videotoolbox" };
+        RuleFor(x => x.Name).NotEmpty();
+        RuleFor(x => x.ThreadCount).GreaterThanOrEqualTo(0);
 
-        public FFmpegProfileEditViewModelValidator()
-        {
-            RuleFor(x => x.Name).NotEmpty();
-            RuleFor(x => x.ThreadCount).GreaterThanOrEqualTo(0);
+        When(
+            x => x.Transcode,
+            () =>
+            {
+                RuleFor(x => x.VideoCodec).NotEmpty();
+                RuleFor(x => x.VideoBitrate).GreaterThan(0);
+                RuleFor(x => x.VideoBufferSize).GreaterThan(0);
 
-            When(
-                x => x.Transcode,
-                () =>
-                {
-                    RuleFor(x => x.VideoCodec).NotEmpty();
-                    RuleFor(x => x.VideoBitrate).GreaterThan(0);
-                    RuleFor(x => x.VideoBufferSize).GreaterThan(0);
+                RuleFor(x => x.AudioCodec).NotEmpty();
+                RuleFor(x => x.AudioBitrate).GreaterThan(0);
+                RuleFor(x => x.AudioChannels).GreaterThan(0);
+            });
 
-                    RuleFor(x => x.AudioCodec).NotEmpty();
-                    RuleFor(x => x.AudioBitrate).GreaterThan(0);
-                    RuleFor(x => x.AudioChannels).GreaterThan(0);
-                });
+        When(
+            x => x.HardwareAcceleration == HardwareAccelerationKind.Qsv,
+            () =>
+            {
+                RuleFor(x => x.VideoCodec).Must(c => QsvEncoders.Contains(c))
+                    .WithMessage("QSV codec is required (h264_qsv, hevc_qsv, mpeg2_qsv)");
+            });
 
-            When(
-                x => x.HardwareAcceleration == HardwareAccelerationKind.Qsv,
-                () =>
-                {
-                    RuleFor(x => x.VideoCodec).Must(c => QsvEncoders.Contains(c))
-                        .WithMessage("QSV codec is required (h264_qsv, hevc_qsv, mpeg2_qsv)");
-                });
+        When(
+            x => x.HardwareAcceleration == HardwareAccelerationKind.Nvenc,
+            () =>
+            {
+                RuleFor(x => x.VideoCodec).Must(c => NvencEncoders.Contains(c))
+                    .WithMessage("NVENC codec is required (h264_nvenc, hevc_nvenc)");
+            });
 
-            When(
-                x => x.HardwareAcceleration == HardwareAccelerationKind.Nvenc,
-                () =>
-                {
-                    RuleFor(x => x.VideoCodec).Must(c => NvencEncoders.Contains(c))
-                        .WithMessage("NVENC codec is required (h264_nvenc, hevc_nvenc)");
-                });
+        When(
+            x => x.HardwareAcceleration == HardwareAccelerationKind.Vaapi,
+            () =>
+            {
+                RuleFor(x => x.VideoCodec).Must(c => VaapiEncoders.Contains(c))
+                    .WithMessage("VAAPI codec is required (h264_vaapi, hevc_vaapi, mpeg2_vaapi)");
+            });
 
-            When(
-                x => x.HardwareAcceleration == HardwareAccelerationKind.Vaapi,
-                () =>
-                {
-                    RuleFor(x => x.VideoCodec).Must(c => VaapiEncoders.Contains(c))
-                        .WithMessage("VAAPI codec is required (h264_vaapi, hevc_vaapi, mpeg2_vaapi)");
-                });
+        When(
+            x => x.HardwareAcceleration == HardwareAccelerationKind.VideoToolbox,
+            () =>
+            {
+                RuleFor(x => x.VideoCodec).Must(c => VideoToolboxEncoders.Contains(c))
+                    .WithMessage("VideoToolbox codec is required (h264_videotoolbox, hevc_videotoolbox)");
+            });
 
-            When(
-                x => x.HardwareAcceleration == HardwareAccelerationKind.VideoToolbox,
-                () =>
-                {
-                    RuleFor(x => x.VideoCodec).Must(c => VideoToolboxEncoders.Contains(c))
-                        .WithMessage("VideoToolbox codec is required (h264_videotoolbox, hevc_videotoolbox)");
-                });
-
-            When(
-                x => x.HardwareAcceleration == HardwareAccelerationKind.None,
-                () =>
-                {
-                    RuleFor(x => x.VideoCodec).Must(
-                            c => !QsvEncoders.Contains(c) && !NvencEncoders.Contains(c) && !VaapiEncoders.Contains(c) &&
-                                 !VideoToolboxEncoders.Contains(c))
-                        .WithMessage("Hardware acceleration is required for this codec");
-                });
-        }
+        When(
+            x => x.HardwareAcceleration == HardwareAccelerationKind.None,
+            () =>
+            {
+                RuleFor(x => x.VideoCodec).Must(
+                        c => !QsvEncoders.Contains(c) && !NvencEncoders.Contains(c) && !VaapiEncoders.Contains(c) &&
+                             !VideoToolboxEncoders.Contains(c))
+                    .WithMessage("Hardware acceleration is required for this codec");
+            });
     }
 }

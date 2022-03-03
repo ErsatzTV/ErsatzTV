@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Infrastructure.Plex.Models
+﻿namespace ErsatzTV.Infrastructure.Plex.Models;
+
+public class PlexTokenResponse
 {
-    public class PlexTokenResponse
-    {
-        public string AuthToken { get; set; }
-    }
+    public string AuthToken { get; set; }
 }

@@ -1,13 +1,10 @@
 ﻿@page "/media/music/videos"
 @page "/media/music/videos/page/{PageNumber:int}"
 @using LanguageExt.UnsafeValueAccess
-@using Microsoft.AspNetCore.WebUtilities
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
-@using ErsatzTV.Application.Search.Queries
+@using ErsatzTV.Application.Search
 @using ErsatzTV.Extensions
-@using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<MusicVideoList>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel

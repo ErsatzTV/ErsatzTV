@@ -3,14 +3,13 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Plex;
 using LanguageExt;
 
-namespace ErsatzTV.Core.Interfaces.Plex
+namespace ErsatzTV.Core.Interfaces.Plex;
+
+public interface IPlexMovieLibraryScanner
 {
-    public interface IPlexMovieLibraryScanner
-    {
-        Task<Either<BaseError, Unit>> ScanLibrary(
-            PlexConnection connection,
-            PlexServerAuthToken token,
-            PlexLibrary library,
-            string ffprobePath);
-    }
+    Task<Either<BaseError, Unit>> ScanLibrary(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexLibrary library,
+        string ffprobePath);
 }

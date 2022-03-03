@@ -1,8 +1,6 @@
 ﻿@page "/media/sources/jellyfin"
 @using ErsatzTV.Core.Interfaces.Jellyfin
-@using ErsatzTV.Application.Jellyfin.Commands
-@using ErsatzTV.Application.Jellyfin.Queries
-@using System.Threading
+@using ErsatzTV.Application.Jellyfin
 @implements IDisposable
 @inject IJellyfinSecretStore _jellyfinSecretStore
 @inject ChannelWriter<IJellyfinBackgroundServiceRequest> _channel

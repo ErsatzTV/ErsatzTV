@@ -2,7 +2,6 @@
 using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Plex.Commands
-{
-    public record StartPlexPinFlow : IRequest<Either<BaseError, string>>;
-}
+namespace ErsatzTV.Application.Plex;
+
+public record StartPlexPinFlow : IRequest<Either<BaseError, string>>;

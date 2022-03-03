@@ -4,6 +4,6 @@ using LanguageExt;
 using MediatR;
 using Unit = LanguageExt.Unit;
 
-namespace ErsatzTV.Application.Maintenance.Commands;
+namespace ErsatzTV.Application.Maintenance;
 
 public record DeleteItemsFromDatabase(List<int> MediaItemIds) : IRequest<Either<BaseError, Unit>>;

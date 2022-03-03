@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Infrastructure.Emby.Models
+﻿namespace ErsatzTV.Infrastructure.Emby.Models;
+
+public class EmbySystemInformationResponse
 {
-    public class EmbySystemInformationResponse
-    {
-        public string ServerName { get; set; }
-        public string OperatingSystem { get; set; }
-    }
+    public string ServerName { get; set; }
+    public string OperatingSystem { get; set; }
 }

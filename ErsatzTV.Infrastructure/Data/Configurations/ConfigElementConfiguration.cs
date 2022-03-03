@@ -2,16 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
-{
-    public class ConfigElementConfiguration : IEntityTypeConfiguration<ConfigElement>
-    {
-        public void Configure(EntityTypeBuilder<ConfigElement> builder)
-        {
-            builder.ToTable("ConfigElement");
+namespace ErsatzTV.Infrastructure.Data.Configurations;
 
-            builder.HasIndex(ce => ce.Key)
-                .IsUnique();
-        }
+public class ConfigElementConfiguration : IEntityTypeConfiguration<ConfigElement>
+{
+    public void Configure(EntityTypeBuilder<ConfigElement> builder)
+    {
+        builder.ToTable("ConfigElement");
+
+        builder.HasIndex(ce => ce.Key)
+            .IsUnique();
     }
 }

@@ -2,7 +2,6 @@
 using System.Globalization;
 using MediatR;
 
-namespace ErsatzTV.Application.MediaItems.Queries
-{
-    public record GetAllLanguageCodes : IRequest<List<CultureInfo>>;
-}
+namespace ErsatzTV.Application.MediaItems;
+
+public record GetAllLanguageCodes : IRequest<List<CultureInfo>>;

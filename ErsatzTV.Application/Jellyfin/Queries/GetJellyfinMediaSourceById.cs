@@ -1,8 +1,7 @@
 ﻿using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Jellyfin.Queries
-{
-    public record GetJellyfinMediaSourceById
-        (int JellyfinMediaSourceId) : IRequest<Option<JellyfinMediaSourceViewModel>>;
-}
+namespace ErsatzTV.Application.Jellyfin;
+
+public record GetJellyfinMediaSourceById
+    (int JellyfinMediaSourceId) : IRequest<Option<JellyfinMediaSourceViewModel>>;

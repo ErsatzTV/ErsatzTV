@@ -6,40 +6,39 @@ using ErsatzTV.Core.Interfaces.Scheduling;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
-namespace ErsatzTV.Core.Scheduling
+namespace ErsatzTV.Core.Scheduling;
+
+public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
 {
-    public class CustomOrderCollectionEnumerator : IMediaCollectionEnumerator
+    private readonly Collection _collection;
+    private readonly IList<MediaItem> _sortedMediaItems;
+
+    public CustomOrderCollectionEnumerator(
+        Collection collection,
+        IList<MediaItem> mediaItems,
+        CollectionEnumeratorState state)
     {
-        private readonly Collection _collection;
-        private readonly IList<MediaItem> _sortedMediaItems;
+        _collection = collection;
 
-        public CustomOrderCollectionEnumerator(
-            Collection collection,
-            IList<MediaItem> mediaItems,
-            CollectionEnumeratorState state)
+        // TODO: this will break if we allow shows and seasons
+        _sortedMediaItems = collection.CollectionItems
+            .OrderBy(ci => ci.CustomIndex)
+            .Map(ci => mediaItems.First(mi => mi.Id == ci.MediaItemId))
+            .ToList();
+
+        State = new CollectionEnumeratorState { Seed = state.Seed };
+        while (State.Index < state.Index)
         {
-            _collection = collection;
-
-            // TODO: this will break if we allow shows and seasons
-            _sortedMediaItems = collection.CollectionItems
-                .OrderBy(ci => ci.CustomIndex)
-                .Map(ci => mediaItems.First(mi => mi.Id == ci.MediaItemId))
-                .ToList();
-
-            State = new CollectionEnumeratorState { Seed = state.Seed };
-            while (State.Index < state.Index)
-            {
-                MoveNext();
-            }
+            MoveNext();
         }
-
-        public CollectionEnumeratorState State { get; }
-
-        public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
-
-        public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
-
-        public Option<MediaItem> Peek(int offset) =>
-            throw new NotSupportedException();
     }
+
+    public CollectionEnumeratorState State { get; }
+
+    public Option<MediaItem> Current => _sortedMediaItems.Any() ? _sortedMediaItems[State.Index] : None;
+
+    public void MoveNext() => State.Index = (State.Index + 1) % _sortedMediaItems.Count;
+
+    public Option<MediaItem> Peek(int offset) =>
+        throw new NotSupportedException();
 }

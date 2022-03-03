@@ -2,7 +2,6 @@
 using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Jellyfin.Queries
-{
-    public record GetJellyfinConnectionParameters : IRequest<Either<BaseError, JellyfinConnectionParametersViewModel>>;
-}
+namespace ErsatzTV.Application.Jellyfin;
+
+public record GetJellyfinConnectionParameters : IRequest<Either<BaseError, JellyfinConnectionParametersViewModel>>;

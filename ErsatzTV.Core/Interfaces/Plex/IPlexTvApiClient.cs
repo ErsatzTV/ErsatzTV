@@ -4,12 +4,11 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Plex;
 using LanguageExt;
 
-namespace ErsatzTV.Core.Interfaces.Plex
+namespace ErsatzTV.Core.Interfaces.Plex;
+
+public interface IPlexTvApiClient
 {
-    public interface IPlexTvApiClient
-    {
-        Task<Either<BaseError, PlexAuthPin>> StartPinFlow();
-        Task<bool> TryCompletePinFlow(PlexAuthPin authPin);
-        Task<Either<BaseError, List<PlexMediaSource>>> GetServers();
-    }
+    Task<Either<BaseError, PlexAuthPin>> StartPinFlow();
+    Task<bool> TryCompletePinFlow(PlexAuthPin authPin);
+    Task<Either<BaseError, List<PlexMediaSource>>> GetServers();
 }

@@ -2,22 +2,21 @@
 using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Jellyfin.Commands
+namespace ErsatzTV.Application.Jellyfin;
+
+public interface ISynchronizeJellyfinLibraryById : IRequest<Either<BaseError, string>>,
+    IJellyfinBackgroundServiceRequest
 {
-    public interface ISynchronizeJellyfinLibraryById : IRequest<Either<BaseError, string>>,
-        IJellyfinBackgroundServiceRequest
-    {
-        int JellyfinLibraryId { get; }
-        bool ForceScan { get; }
-    }
+    int JellyfinLibraryId { get; }
+    bool ForceScan { get; }
+}
 
-    public record SynchronizeJellyfinLibraryByIdIfNeeded(int JellyfinLibraryId) : ISynchronizeJellyfinLibraryById
-    {
-        public bool ForceScan => false;
-    }
+public record SynchronizeJellyfinLibraryByIdIfNeeded(int JellyfinLibraryId) : ISynchronizeJellyfinLibraryById
+{
+    public bool ForceScan => false;
+}
 
-    public record ForceSynchronizeJellyfinLibraryById(int JellyfinLibraryId) : ISynchronizeJellyfinLibraryById
-    {
-        public bool ForceScan => true;
-    }
+public record ForceSynchronizeJellyfinLibraryById(int JellyfinLibraryId) : ISynchronizeJellyfinLibraryById
+{
+    public bool ForceScan => true;
 }

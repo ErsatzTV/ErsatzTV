@@ -7,21 +7,20 @@ using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.Jellyfin.Mapper;
 
-namespace ErsatzTV.Application.Jellyfin.Queries
+namespace ErsatzTV.Application.Jellyfin;
+
+public class
+    GetJellyfinLibrariesBySourceIdHandler : IRequestHandler<GetJellyfinLibrariesBySourceId,
+        List<JellyfinLibraryViewModel>>
 {
-    public class
-        GetJellyfinLibrariesBySourceIdHandler : IRequestHandler<GetJellyfinLibrariesBySourceId,
-            List<JellyfinLibraryViewModel>>
-    {
-        private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
 
-        public GetJellyfinLibrariesBySourceIdHandler(IMediaSourceRepository mediaSourceRepository) =>
-            _mediaSourceRepository = mediaSourceRepository;
+    public GetJellyfinLibrariesBySourceIdHandler(IMediaSourceRepository mediaSourceRepository) =>
+        _mediaSourceRepository = mediaSourceRepository;
 
-        public Task<List<JellyfinLibraryViewModel>> Handle(
-            GetJellyfinLibrariesBySourceId request,
-            CancellationToken cancellationToken) =>
-            _mediaSourceRepository.GetJellyfinLibraries(request.JellyfinMediaSourceId)
-                .Map(list => list.Map(ProjectToViewModel).ToList());
-    }
+    public Task<List<JellyfinLibraryViewModel>> Handle(
+        GetJellyfinLibrariesBySourceId request,
+        CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetJellyfinLibraries(request.JellyfinMediaSourceId)
+            .Map(list => list.Map(ProjectToViewModel).ToList());
 }

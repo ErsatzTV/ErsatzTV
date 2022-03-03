@@ -1,15 +1,12 @@
 ﻿@page "/media/filler/presets/{Id:int}/edit"
 @page "/media/filler/presets/add"
 @using ErsatzTV.Application.Filler
-@using ErsatzTV.Application.Filler.Queries
-@using ErsatzTV.Application.Television.Queries
-@using ErsatzTV.Application.Artists.Queries
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Queries
 @using ErsatzTV.Application.MediaItems
 @using ErsatzTV.Core.Domain.Filler
 @using Microsoft.AspNetCore.Components
-@using System.Threading
+@using ErsatzTV.Application.Artists
+@using ErsatzTV.Application.Television
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<FillerPresetEditor> _logger
@@ -220,7 +217,7 @@
         _messageStore.Clear();
         if (_editContext.Validate())
         {
-            IRequest<Either<BaseError, LanguageExt.Unit>> request = IsEdit ? _model.ToEdit() : _model.ToUpdate();
+            IRequest<Either<BaseError, Unit>> request = IsEdit ? _model.ToEdit() : _model.ToUpdate();
 
             Seq<BaseError> errorMessage = await _mediator.Send(request, _cts.Token)
                 .Map(result => result.LeftToSeq());

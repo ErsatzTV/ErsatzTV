@@ -2,7 +2,6 @@
 using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Emby.Queries
-{
-    public record GetEmbyConnectionParameters : IRequest<Either<BaseError, EmbyConnectionParametersViewModel>>;
-}
+namespace ErsatzTV.Application.Emby;
+
+public record GetEmbyConnectionParameters : IRequest<Either<BaseError, EmbyConnectionParametersViewModel>>;

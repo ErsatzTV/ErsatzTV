@@ -1,14 +1,13 @@
 ﻿using ErsatzTV.ViewModels;
 using FluentValidation;
 
-namespace ErsatzTV.Validators
+namespace ErsatzTV.Validators;
+
+public class PlexPathReplacementEditViewModelValidator : AbstractValidator<PlexPathReplacementEditViewModel>
 {
-    public class PlexPathReplacementEditViewModelValidator : AbstractValidator<PlexPathReplacementEditViewModel>
+    public PlexPathReplacementEditViewModelValidator()
     {
-        public PlexPathReplacementEditViewModelValidator()
-        {
-            RuleFor(vm => vm.PlexPath).NotEmpty();
-            RuleFor(vm => vm.LocalPath).NotEmpty();
-        }
+        RuleFor(vm => vm.PlexPath).NotEmpty();
+        RuleFor(vm => vm.LocalPath).NotEmpty();
     }
 }

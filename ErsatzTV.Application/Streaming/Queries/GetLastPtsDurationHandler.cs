@@ -10,7 +10,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using LanguageExt;
 using MediatR;
 
-namespace ErsatzTV.Application.Streaming.Queries;
+namespace ErsatzTV.Application.Streaming;
 
 public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Either<BaseError, PtsAndDuration>>
 {

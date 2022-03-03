@@ -1,6 +1,5 @@
-﻿namespace ErsatzTV.Core.Health.Checks
+﻿namespace ErsatzTV.Core.Health.Checks;
+
+public interface IMovieMetadataHealthCheck : IHealthCheck
 {
-    public interface IMovieMetadataHealthCheck : IHealthCheck
-    {
-    }
 }

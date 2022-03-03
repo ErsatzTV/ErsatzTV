@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using static LanguageExt.Prelude;
 
-namespace ErsatzTV.Application.Channels.Queries;
+namespace ErsatzTV.Application.Channels;
 
 public class GetChannelFramerateHandler : IRequestHandler<GetChannelFramerate, Option<int>>
 {

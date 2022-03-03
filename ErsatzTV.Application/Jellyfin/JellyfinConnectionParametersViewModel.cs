@@ -1,4 +1,3 @@
-﻿namespace ErsatzTV.Application.Jellyfin
-{
-    public record JellyfinConnectionParametersViewModel(string Address);
-}
+﻿namespace ErsatzTV.Application.Jellyfin;
+
+public record JellyfinConnectionParametersViewModel(string Address);

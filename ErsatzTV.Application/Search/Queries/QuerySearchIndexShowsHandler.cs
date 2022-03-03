@@ -11,45 +11,44 @@ using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
-namespace ErsatzTV.Application.Search.Queries
+namespace ErsatzTV.Application.Search;
+
+public class
+    QuerySearchIndexShowsHandler : IRequestHandler<QuerySearchIndexShows, TelevisionShowCardResultsViewModel>
 {
-    public class
-        QuerySearchIndexShowsHandler : IRequestHandler<QuerySearchIndexShows, TelevisionShowCardResultsViewModel>
+    private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly ISearchIndex _searchIndex;
+    private readonly ITelevisionRepository _televisionRepository;
+
+    public QuerySearchIndexShowsHandler(
+        ISearchIndex searchIndex,
+        ITelevisionRepository televisionRepository,
+        IMediaSourceRepository mediaSourceRepository)
     {
-        private readonly IMediaSourceRepository _mediaSourceRepository;
-        private readonly ISearchIndex _searchIndex;
-        private readonly ITelevisionRepository _televisionRepository;
+        _searchIndex = searchIndex;
+        _televisionRepository = televisionRepository;
+        _mediaSourceRepository = mediaSourceRepository;
+    }
 
-        public QuerySearchIndexShowsHandler(
-            ISearchIndex searchIndex,
-            ITelevisionRepository televisionRepository,
-            IMediaSourceRepository mediaSourceRepository)
-        {
-            _searchIndex = searchIndex;
-            _televisionRepository = televisionRepository;
-            _mediaSourceRepository = mediaSourceRepository;
-        }
+    public async Task<TelevisionShowCardResultsViewModel> Handle(
+        QuerySearchIndexShows request,
+        CancellationToken cancellationToken)
+    {
+        SearchResult searchResult = await _searchIndex.Search(
+            request.Query,
+            (request.PageNumber - 1) * request.PageSize,
+            request.PageSize);
 
-        public async Task<TelevisionShowCardResultsViewModel> Handle(
-            QuerySearchIndexShows request,
-            CancellationToken cancellationToken)
-        {
-            SearchResult searchResult = await _searchIndex.Search(
-                request.Query,
-                (request.PageNumber - 1) * request.PageSize,
-                request.PageSize);
+        Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
+            .Map(list => list.HeadOrNone());
 
-            Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
-                .Map(list => list.HeadOrNone());
+        Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
+            .Map(list => list.HeadOrNone());
 
-            Option<EmbyMediaSource> maybeEmby = await _mediaSourceRepository.GetAllEmby()
-                .Map(list => list.HeadOrNone());
+        List<TelevisionShowCardViewModel> items = await _televisionRepository
+            .GetShowsForCards(searchResult.Items.Map(i => i.Id).ToList())
+            .Map(list => list.Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby)).ToList());
 
-            List<TelevisionShowCardViewModel> items = await _televisionRepository
-                .GetShowsForCards(searchResult.Items.Map(i => i.Id).ToList())
-                .Map(list => list.Map(s => ProjectToViewModel(s, maybeJellyfin, maybeEmby)).ToList());
-
-            return new TelevisionShowCardResultsViewModel(searchResult.TotalCount, items, searchResult.PageMap);
-        }
+        return new TelevisionShowCardResultsViewModel(searchResult.TotalCount, items, searchResult.PageMap);
     }
 }

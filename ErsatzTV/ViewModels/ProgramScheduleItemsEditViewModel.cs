@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 
-namespace ErsatzTV.ViewModels
+namespace ErsatzTV.ViewModels;
+
+public class ProgramScheduleItemsEditViewModel
 {
-    public class ProgramScheduleItemsEditViewModel
-    {
-        public string Name { get; set; }
-        public bool ShuffleScheduleItems { get; set; }
-        public List<ProgramScheduleItemEditViewModel> Items { get; set; }
-    }
+    public string Name { get; set; }
+    public bool ShuffleScheduleItems { get; set; }
+    public List<ProgramScheduleItemEditViewModel> Items { get; set; }
 }

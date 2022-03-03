@@ -7,20 +7,19 @@ using LanguageExt;
 using MediatR;
 using static ErsatzTV.Application.Emby.Mapper;
 
-namespace ErsatzTV.Application.Emby.Queries
+namespace ErsatzTV.Application.Emby;
+
+public class
+    GetEmbyLibrariesBySourceIdHandler : IRequestHandler<GetEmbyLibrariesBySourceId, List<EmbyLibraryViewModel>>
 {
-    public class
-        GetEmbyLibrariesBySourceIdHandler : IRequestHandler<GetEmbyLibrariesBySourceId, List<EmbyLibraryViewModel>>
-    {
-        private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
 
-        public GetEmbyLibrariesBySourceIdHandler(IMediaSourceRepository mediaSourceRepository) =>
-            _mediaSourceRepository = mediaSourceRepository;
+    public GetEmbyLibrariesBySourceIdHandler(IMediaSourceRepository mediaSourceRepository) =>
+        _mediaSourceRepository = mediaSourceRepository;
 
-        public Task<List<EmbyLibraryViewModel>> Handle(
-            GetEmbyLibrariesBySourceId request,
-            CancellationToken cancellationToken) =>
-            _mediaSourceRepository.GetEmbyLibraries(request.EmbyMediaSourceId)
-                .Map(list => list.Map(ProjectToViewModel).ToList());
-    }
+    public Task<List<EmbyLibraryViewModel>> Handle(
+        GetEmbyLibrariesBySourceId request,
+        CancellationToken cancellationToken) =>
+        _mediaSourceRepository.GetEmbyLibraries(request.EmbyMediaSourceId)
+            .Map(list => list.Map(ProjectToViewModel).ToList());
 }

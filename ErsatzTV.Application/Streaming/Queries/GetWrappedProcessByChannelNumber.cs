@@ -1,22 +1,21 @@
 ﻿using System;
 
-namespace ErsatzTV.Application.Streaming.Queries
-{
-    public record GetWrappedProcessByChannelNumber : FFmpegProcessRequest
-    {
-        public GetWrappedProcessByChannelNumber(string scheme, string host, string channelNumber) : base(
-            channelNumber,
-            "ts",
-            DateTimeOffset.Now,
-            false,
-            true,
-            0)
-        {
-            Scheme = scheme;
-            Host = host;
-        }
+namespace ErsatzTV.Application.Streaming;
 
-        public string Scheme { get; }
-        public string Host { get; }
+public record GetWrappedProcessByChannelNumber : FFmpegProcessRequest
+{
+    public GetWrappedProcessByChannelNumber(string scheme, string host, string channelNumber) : base(
+        channelNumber,
+        "ts",
+        DateTimeOffset.Now,
+        false,
+        true,
+        0)
+    {
+        Scheme = scheme;
+        Host = host;
     }
+
+    public string Scheme { get; }
+    public string Host { get; }
 }

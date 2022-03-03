@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ErsatzTV.Core.Health
+namespace ErsatzTV.Core.Health;
+
+public interface IHealthCheckService
 {
-    public interface IHealthCheckService
-    {
-        Task<List<HealthCheckResult>> PerformHealthChecks();
-    }
+    Task<List<HealthCheckResult>> PerformHealthChecks();
 }

@@ -2,16 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
-{
-    public class FFmpegProfileConfiguration : IEntityTypeConfiguration<FFmpegProfile>
-    {
-        public void Configure(EntityTypeBuilder<FFmpegProfile> builder)
-        {
-            builder.ToTable("FFmpegProfile");
+namespace ErsatzTV.Infrastructure.Data.Configurations;
 
-            builder.Property(p => p.NormalizeFramerate)
-                .HasDefaultValue(false);
-        }
+public class FFmpegProfileConfiguration : IEntityTypeConfiguration<FFmpegProfile>
+{
+    public void Configure(EntityTypeBuilder<FFmpegProfile> builder)
+    {
+        builder.ToTable("FFmpegProfile");
+
+        builder.Property(p => p.NormalizeFramerate)
+            .HasDefaultValue(false);
     }
 }

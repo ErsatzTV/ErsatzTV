@@ -1,9 +1,9 @@
-﻿namespace ErsatzTV.Core.Hdhr
+﻿namespace ErsatzTV.Core.Hdhr;
+
+public record DeviceXml(string Scheme, string Host)
 {
-    public record DeviceXml(string Scheme, string Host)
-    {
-        public string ToXml() =>
-            @$"<root xmlns=""urn:schemas-upnp-org:device-1-0"">
+    public string ToXml() =>
+        @$"<root xmlns=""urn:schemas-upnp-org:device-1-0"">
     <URLBase>{Scheme}://{Host}</URLBase>
     <specVersion>
         <major>1</major>
@@ -19,5 +19,4 @@
         <UDN>uuid:2020-03-S3LA-BG3LIA:2</UDN>
     </device>
 </root>";
-    }
 }

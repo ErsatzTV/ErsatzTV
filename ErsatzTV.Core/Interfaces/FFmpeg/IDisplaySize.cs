@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Core.Interfaces.FFmpeg
+﻿namespace ErsatzTV.Core.Interfaces.FFmpeg;
+
+public interface IDisplaySize
 {
-    public interface IDisplaySize
-    {
-        int Width { get; }
-        int Height { get; }
-    }
+    int Width { get; }
+    int Height { get; }
 }

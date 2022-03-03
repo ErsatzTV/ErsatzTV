@@ -25,277 +25,276 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using LanguageExt;
 using static LanguageExt.Prelude;
 
-namespace ErsatzTV.Core.FFmpeg
+namespace ErsatzTV.Core.FFmpeg;
+
+public class FFmpegPlaybackSettingsCalculator
 {
-    public class FFmpegPlaybackSettingsCalculator
+    private static readonly List<string> CommonFormatFlags = new()
     {
-        private static readonly List<string> CommonFormatFlags = new()
-        {
-            "+genpts",
-            "+discardcorrupt",
-            "+igndts"
-        };
+        "+genpts",
+        "+discardcorrupt",
+        "+igndts"
+    };
 
-        private static readonly List<string> SegmenterFormatFlags = new()
-        {
-            "+discardcorrupt",
-            "+igndts"
-        };
+    private static readonly List<string> SegmenterFormatFlags = new()
+    {
+        "+discardcorrupt",
+        "+igndts"
+    };
 
-        public FFmpegPlaybackSettings ConcatSettings => new()
-        {
-            ThreadCount = 1,
-            FormatFlags = CommonFormatFlags
-        };
+    public FFmpegPlaybackSettings ConcatSettings => new()
+    {
+        ThreadCount = 1,
+        FormatFlags = CommonFormatFlags
+    };
 
-        public FFmpegPlaybackSettings CalculateSettings(
-            StreamingMode streamingMode,
-            FFmpegProfile ffmpegProfile,
-            MediaVersion videoVersion,
-            Option<MediaStream> videoStream,
-            Option<MediaStream> audioStream,
-            DateTimeOffset start,
-            DateTimeOffset now,
-            TimeSpan inPoint,
-            TimeSpan outPoint,
-            bool hlsRealtime,
-            Option<int> targetFramerate)
+    public FFmpegPlaybackSettings CalculateSettings(
+        StreamingMode streamingMode,
+        FFmpegProfile ffmpegProfile,
+        MediaVersion videoVersion,
+        Option<MediaStream> videoStream,
+        Option<MediaStream> audioStream,
+        DateTimeOffset start,
+        DateTimeOffset now,
+        TimeSpan inPoint,
+        TimeSpan outPoint,
+        bool hlsRealtime,
+        Option<int> targetFramerate)
+    {
+        var result = new FFmpegPlaybackSettings
         {
-            var result = new FFmpegPlaybackSettings
+            FormatFlags = streamingMode switch
             {
-                FormatFlags = streamingMode switch
-                {
-                    StreamingMode.HttpLiveStreamingSegmenter => SegmenterFormatFlags,
-                    _ => CommonFormatFlags,
-                },
-                RealtimeOutput = streamingMode switch
-                {
-                    StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
-                    _ => true
-                }
-            };
-
-            // always use one thread with realtime output
-            result.ThreadCount = result.RealtimeOutput ? 1 : ffmpegProfile.ThreadCount;
-
-            if (now != start || inPoint != TimeSpan.Zero)
+                StreamingMode.HttpLiveStreamingSegmenter => SegmenterFormatFlags,
+                _ => CommonFormatFlags,
+            },
+            RealtimeOutput = streamingMode switch
             {
-                result.StreamSeek = now - start + inPoint;
+                StreamingMode.HttpLiveStreamingSegmenter => hlsRealtime,
+                _ => true
             }
+        };
 
-            switch (streamingMode)
-            {
-                case StreamingMode.HttpLiveStreamingDirect:
-                    result.AudioCodec = "copy";
-                    result.VideoCodec = "copy";
-                    result.Deinterlace = false;
-                    break;
-                case StreamingMode.TransportStreamHybrid:
-                case StreamingMode.HttpLiveStreamingSegmenter:
-                case StreamingMode.TransportStream:
-                    result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
+        // always use one thread with realtime output
+        result.ThreadCount = result.RealtimeOutput ? 1 : ffmpegProfile.ThreadCount;
 
-                    if (NeedToScale(ffmpegProfile, videoVersion))
+        if (now != start || inPoint != TimeSpan.Zero)
+        {
+            result.StreamSeek = now - start + inPoint;
+        }
+
+        switch (streamingMode)
+        {
+            case StreamingMode.HttpLiveStreamingDirect:
+                result.AudioCodec = "copy";
+                result.VideoCodec = "copy";
+                result.Deinterlace = false;
+                break;
+            case StreamingMode.TransportStreamHybrid:
+            case StreamingMode.HttpLiveStreamingSegmenter:
+            case StreamingMode.TransportStream:
+                result.HardwareAcceleration = ffmpegProfile.HardwareAcceleration;
+
+                if (NeedToScale(ffmpegProfile, videoVersion))
+                {
+                    IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, videoVersion);
+                    if (!scaledSize.IsSameSizeAs(videoVersion))
                     {
-                        IDisplaySize scaledSize = CalculateScaledSize(ffmpegProfile, videoVersion);
-                        if (!scaledSize.IsSameSizeAs(videoVersion))
-                        {
-                            int fixedHeight = scaledSize.Height + scaledSize.Height % 2;
-                            int fixedWidth = scaledSize.Width + scaledSize.Width % 2;
-                            result.ScaledSize = Some((IDisplaySize) new DisplaySize(fixedWidth, fixedHeight));
-                        }
+                        int fixedHeight = scaledSize.Height + scaledSize.Height % 2;
+                        int fixedWidth = scaledSize.Width + scaledSize.Width % 2;
+                        result.ScaledSize = Some((IDisplaySize) new DisplaySize(fixedWidth, fixedHeight));
+                    }
+                }
+
+                IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(videoVersion);
+                if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
+                {
+                    result.PadToDesiredResolution = true;
+                }
+
+                if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo)
+                {
+                    if (ffmpegProfile.NormalizeFramerate)
+                    {
+                        result.FrameRate = targetFramerate;
                     }
 
-                    IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(videoVersion);
-                    if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
+                    result.VideoTrackTimeScale = 90000;
+                }
+
+                foreach (MediaStream stream in videoStream.Where(s => s.AttachedPic == false))
+                {
+                    if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
+                        NeedToNormalizeVideoCodec(ffmpegProfile, stream))
                     {
-                        result.PadToDesiredResolution = true;
-                    }
+                        result.VideoCodec = ffmpegProfile.VideoCodec;
+                        result.VideoBitrate = ffmpegProfile.VideoBitrate;
+                        result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
 
-                    if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo)
-                    {
-                        if (ffmpegProfile.NormalizeFramerate)
-                        {
-                            result.FrameRate = targetFramerate;
-                        }
-
-                        result.VideoTrackTimeScale = 90000;
-                    }
-
-                    foreach (MediaStream stream in videoStream.Where(s => s.AttachedPic == false))
-                    {
-                        if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
-                            NeedToNormalizeVideoCodec(ffmpegProfile, stream))
-                        {
-                            result.VideoCodec = ffmpegProfile.VideoCodec;
-                            result.VideoBitrate = ffmpegProfile.VideoBitrate;
-                            result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
-
-                            result.VideoDecoder =
-                                (result.HardwareAcceleration, stream.Codec, stream.PixelFormat) switch
-                                {
-                                    (HardwareAccelerationKind.Nvenc, "h264", "yuv420p10le" or "yuv444p" or "yuv444p10le"
-                                        ) =>
-                                        "h264",
-                                    (HardwareAccelerationKind.Nvenc, "hevc", "yuv444p" or "yuv444p10le") => "hevc",
-                                    (HardwareAccelerationKind.Nvenc, "h264", _) => "h264_cuvid",
-                                    (HardwareAccelerationKind.Nvenc, "hevc", _) => "hevc_cuvid",
-                                    (HardwareAccelerationKind.Nvenc, "mpeg2video", _) => "mpeg2_cuvid",
-                                    (HardwareAccelerationKind.Nvenc, "mpeg4", _) => "mpeg4_cuvid",
-                                    (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
-                                    (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
-                                    (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
-                                    
-                                    // temp disable mpeg4 hardware decoding for all vaapi
-                                    // TODO: check for codec support
-                                    (HardwareAccelerationKind.Vaapi, "mpeg4", _) => "mpeg4",
-                                    
-                                    _ => null
-                                };
-                        }
-                        else
-                        {
-                            result.VideoCodec = "copy";
-                        }
-                    }
-
-                    if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeAudio)
-                    {
-                        result.AudioCodec = ffmpegProfile.AudioCodec;
-                        result.AudioBitrate = ffmpegProfile.AudioBitrate;
-                        result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
-
-                        audioStream.IfSome(
-                            stream =>
+                        result.VideoDecoder =
+                            (result.HardwareAcceleration, stream.Codec, stream.PixelFormat) switch
                             {
-                                if (stream.Channels != ffmpegProfile.AudioChannels)
-                                {
-                                    result.AudioChannels = ffmpegProfile.AudioChannels;
-                                }
-                            });
-
-                        result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
-                        result.AudioDuration = outPoint - inPoint;
-                        result.NormalizeLoudness = ffmpegProfile.NormalizeLoudness;
+                                (HardwareAccelerationKind.Nvenc, "h264", "yuv420p10le" or "yuv444p" or "yuv444p10le"
+                                    ) =>
+                                    "h264",
+                                (HardwareAccelerationKind.Nvenc, "hevc", "yuv444p" or "yuv444p10le") => "hevc",
+                                (HardwareAccelerationKind.Nvenc, "h264", _) => "h264_cuvid",
+                                (HardwareAccelerationKind.Nvenc, "hevc", _) => "hevc_cuvid",
+                                (HardwareAccelerationKind.Nvenc, "mpeg2video", _) => "mpeg2_cuvid",
+                                (HardwareAccelerationKind.Nvenc, "mpeg4", _) => "mpeg4_cuvid",
+                                (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
+                                (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
+                                (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
+                                    
+                                // temp disable mpeg4 hardware decoding for all vaapi
+                                // TODO: check for codec support
+                                (HardwareAccelerationKind.Vaapi, "mpeg4", _) => "mpeg4",
+                                    
+                                _ => null
+                            };
                     }
                     else
                     {
-                        result.AudioCodec = "copy";
+                        result.VideoCodec = "copy";
                     }
+                }
 
-                    if (videoVersion.VideoScanKind == VideoScanKind.Interlaced)
-                    {
-                        result.Deinterlace = true;
-                    }
-
-                    break;
-            }
-
-            return result;
-        }
-
-        public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile)
-        {
-            string softwareCodec = ffmpegProfile.VideoCodec switch
-            {
-                { } c when c.Contains("hevc") || c.Contains("265") => "libx265",
-                { } c when c.Contains("264") => "libx264",
-                { } c when c.Contains("mpeg2") => "mpeg2video",
-                _ => "libx264"
-            };
-            
-            return new FFmpegPlaybackSettings
-            {
-                ThreadCount = ffmpegProfile.ThreadCount,
-                FormatFlags = CommonFormatFlags,
-                VideoCodec = softwareCodec,
-                AudioCodec = ffmpegProfile.AudioCodec,
-            };
-        }
-
-        private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
-            ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo &&
-            IsIncorrectSize(ffmpegProfile.Resolution, version) ||
-            IsTooLarge(ffmpegProfile.Resolution, version) ||
-            IsOddSize(version);
-
-        private static bool IsIncorrectSize(IDisplaySize desiredResolution, MediaVersion version) =>
-            IsAnamorphic(version) ||
-            version.Width != desiredResolution.Width ||
-            version.Height != desiredResolution.Height;
-
-        private static bool IsTooLarge(IDisplaySize desiredResolution, IDisplaySize displaySize) =>
-            displaySize.Height > desiredResolution.Height ||
-            displaySize.Width > desiredResolution.Width;
-
-        private static bool IsOddSize(MediaVersion version) =>
-            version.Height % 2 == 1 || version.Width % 2 == 1;
-
-        private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaStream videoStream) =>
-            ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo && ffmpegProfile.VideoCodec != videoStream.Codec;
-
-        private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
-        {
-            IDisplaySize sarSize = SARSize(version);
-            int p = version.Width * sarSize.Width;
-            int q = version.Height * sarSize.Height;
-            int g = Gcd(q, p);
-            p = p / g;
-            q = q / g;
-            IDisplaySize targetSize = ffmpegProfile.Resolution;
-            int hw1 = targetSize.Width;
-            int hh1 = hw1 * q / p;
-            int hh2 = targetSize.Height;
-            int hw2 = targetSize.Height * p / q;
-            if (hh1 <= targetSize.Height)
-            {
-                return new DisplaySize(hw1, hh1);
-            }
-
-            return new DisplaySize(hw2, hh2);
-        }
-
-        private static int Gcd(int a, int b)
-        {
-            while (a != 0 && b != 0)
-            {
-                if (a > b)
+                if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeAudio)
                 {
-                    a %= b;
+                    result.AudioCodec = ffmpegProfile.AudioCodec;
+                    result.AudioBitrate = ffmpegProfile.AudioBitrate;
+                    result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
+
+                    audioStream.IfSome(
+                        stream =>
+                        {
+                            if (stream.Channels != ffmpegProfile.AudioChannels)
+                            {
+                                result.AudioChannels = ffmpegProfile.AudioChannels;
+                            }
+                        });
+
+                    result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
+                    result.AudioDuration = outPoint - inPoint;
+                    result.NormalizeLoudness = ffmpegProfile.NormalizeLoudness;
                 }
                 else
                 {
-                    b %= a;
+                    result.AudioCodec = "copy";
                 }
-            }
 
-            return a | b;
+                if (videoVersion.VideoScanKind == VideoScanKind.Interlaced)
+                {
+                    result.Deinterlace = true;
+                }
+
+                break;
         }
 
-        private static bool IsAnamorphic(MediaVersion version)
+        return result;
+    }
+
+    public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile)
+    {
+        string softwareCodec = ffmpegProfile.VideoCodec switch
         {
-            if (version.SampleAspectRatio == "1:1")
-            {
-                return false;
-            }
-
-            if (version.SampleAspectRatio != "0:1")
-            {
-                return true;
-            }
-
-            if (version.DisplayAspectRatio == "0:1")
-            {
-                return false;
-            }
-
-            return version.DisplayAspectRatio != $"{version.Width}:{version.Height}";
-        }
-
-        private static IDisplaySize SARSize(MediaVersion version)
+            { } c when c.Contains("hevc") || c.Contains("265") => "libx265",
+            { } c when c.Contains("264") => "libx264",
+            { } c when c.Contains("mpeg2") => "mpeg2video",
+            _ => "libx264"
+        };
+            
+        return new FFmpegPlaybackSettings
         {
-            string[] split = version.SampleAspectRatio.Split(":");
-            return new DisplaySize(int.Parse(split[0]), int.Parse(split[1]));
+            ThreadCount = ffmpegProfile.ThreadCount,
+            FormatFlags = CommonFormatFlags,
+            VideoCodec = softwareCodec,
+            AudioCodec = ffmpegProfile.AudioCodec,
+        };
+    }
+
+    private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
+        ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo &&
+        IsIncorrectSize(ffmpegProfile.Resolution, version) ||
+        IsTooLarge(ffmpegProfile.Resolution, version) ||
+        IsOddSize(version);
+
+    private static bool IsIncorrectSize(IDisplaySize desiredResolution, MediaVersion version) =>
+        IsAnamorphic(version) ||
+        version.Width != desiredResolution.Width ||
+        version.Height != desiredResolution.Height;
+
+    private static bool IsTooLarge(IDisplaySize desiredResolution, IDisplaySize displaySize) =>
+        displaySize.Height > desiredResolution.Height ||
+        displaySize.Width > desiredResolution.Width;
+
+    private static bool IsOddSize(MediaVersion version) =>
+        version.Height % 2 == 1 || version.Width % 2 == 1;
+
+    private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaStream videoStream) =>
+        ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo && ffmpegProfile.VideoCodec != videoStream.Codec;
+
+    private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
+    {
+        IDisplaySize sarSize = SARSize(version);
+        int p = version.Width * sarSize.Width;
+        int q = version.Height * sarSize.Height;
+        int g = Gcd(q, p);
+        p = p / g;
+        q = q / g;
+        IDisplaySize targetSize = ffmpegProfile.Resolution;
+        int hw1 = targetSize.Width;
+        int hh1 = hw1 * q / p;
+        int hh2 = targetSize.Height;
+        int hw2 = targetSize.Height * p / q;
+        if (hh1 <= targetSize.Height)
+        {
+            return new DisplaySize(hw1, hh1);
         }
+
+        return new DisplaySize(hw2, hh2);
+    }
+
+    private static int Gcd(int a, int b)
+    {
+        while (a != 0 && b != 0)
+        {
+            if (a > b)
+            {
+                a %= b;
+            }
+            else
+            {
+                b %= a;
+            }
+        }
+
+        return a | b;
+    }
+
+    private static bool IsAnamorphic(MediaVersion version)
+    {
+        if (version.SampleAspectRatio == "1:1")
+        {
+            return false;
+        }
+
+        if (version.SampleAspectRatio != "0:1")
+        {
+            return true;
+        }
+
+        if (version.DisplayAspectRatio == "0:1")
+        {
+            return false;
+        }
+
+        return version.DisplayAspectRatio != $"{version.Width}:{version.Height}";
+    }
+
+    private static IDisplaySize SARSize(MediaVersion version)
+    {
+        string[] split = version.SampleAspectRatio.Split(":");
+        return new DisplaySize(int.Parse(split[0]), int.Parse(split[1]));
     }
 }

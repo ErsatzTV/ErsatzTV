@@ -4,32 +4,31 @@ using ErsatzTV.Core.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace ErsatzTV.Infrastructure.Data.Repositories
+namespace ErsatzTV.Infrastructure.Data.Repositories;
+
+public class FFmpegProfileRepository : IFFmpegProfileRepository
 {
-    public class FFmpegProfileRepository : IFFmpegProfileRepository
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+
+    public FFmpegProfileRepository(IDbContextFactory<TvContext> dbContextFactory) =>
+        _dbContextFactory = dbContextFactory;
+
+    public async Task<FFmpegProfile> Copy(int ffmpegProfileId, string name)
     {
-        private readonly IDbContextFactory<TvContext> _dbContextFactory;
+        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        FFmpegProfile ffmpegProfile = await dbContext.FFmpegProfiles.FindAsync(ffmpegProfileId);
 
-        public FFmpegProfileRepository(IDbContextFactory<TvContext> dbContextFactory) =>
-            _dbContextFactory = dbContextFactory;
+        PropertyValues values = dbContext.Entry(ffmpegProfile).CurrentValues.Clone();
+        values["Id"] = 0;
 
-        public async Task<FFmpegProfile> Copy(int ffmpegProfileId, string name)
-        {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            FFmpegProfile ffmpegProfile = await dbContext.FFmpegProfiles.FindAsync(ffmpegProfileId);
+        var clone = new FFmpegProfile();
+        await dbContext.AddAsync(clone);
+        dbContext.Entry(clone).CurrentValues.SetValues(values);
+        clone.Name = name;
 
-            PropertyValues values = dbContext.Entry(ffmpegProfile).CurrentValues.Clone();
-            values["Id"] = 0;
+        await dbContext.SaveChangesAsync();
+        await dbContext.Entry(clone).Reference(f => f.Resolution).LoadAsync();
 
-            var clone = new FFmpegProfile();
-            await dbContext.AddAsync(clone);
-            dbContext.Entry(clone).CurrentValues.SetValues(values);
-            clone.Name = name;
-
-            await dbContext.SaveChangesAsync();
-            await dbContext.Entry(clone).Reference(f => f.Resolution).LoadAsync();
-
-            return clone;
-        }
+        return clone;
     }
 }

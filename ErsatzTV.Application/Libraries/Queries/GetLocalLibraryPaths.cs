@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using MediatR;
 
-namespace ErsatzTV.Application.Libraries.Queries
-{
-    public record GetLocalLibraryPaths(int LocalLibraryId) : IRequest<List<LocalLibraryPathViewModel>>;
-}
+namespace ErsatzTV.Application.Libraries;
+
+public record GetLocalLibraryPaths(int LocalLibraryId) : IRequest<List<LocalLibraryPathViewModel>>;

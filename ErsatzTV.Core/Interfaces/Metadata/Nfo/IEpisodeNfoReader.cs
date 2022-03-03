@@ -3,10 +3,9 @@ using System.IO;
 using System.Threading.Tasks;
 using ErsatzTV.Core.Metadata.Nfo;
 
-namespace ErsatzTV.Core.Interfaces.Metadata.Nfo
+namespace ErsatzTV.Core.Interfaces.Metadata.Nfo;
+
+public interface IEpisodeNfoReader
 {
-    public interface IEpisodeNfoReader
-    {
-        Task<List<TvShowEpisodeNfo>> Read(Stream input);
-    }
+    Task<List<TvShowEpisodeNfo>> Read(Stream input);
 }
