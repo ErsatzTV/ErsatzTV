@@ -134,7 +134,12 @@ public class Startup
         services.AddServerSideBlazor();
 
         services.AddMudServices();
-        services.AddCourier(Assembly.GetAssembly(typeof(LibraryScanProgress)));
+
+        var coreAssembly = Assembly.GetAssembly(typeof(LibraryScanProgress));
+        if (coreAssembly != null)
+        {
+            services.AddCourier(coreAssembly);
+        }
 
         Console.OutputEncoding = Encoding.UTF8;
 
