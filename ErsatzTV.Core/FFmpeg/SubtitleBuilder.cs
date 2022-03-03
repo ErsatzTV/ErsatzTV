@@ -1,8 +1,5 @@
-﻿using System.IO;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg;

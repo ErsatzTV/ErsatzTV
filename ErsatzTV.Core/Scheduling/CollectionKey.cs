@@ -1,7 +1,5 @@
-﻿using System;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
-using LanguageExt;
 
 namespace ErsatzTV.Core.Scheduling;
 

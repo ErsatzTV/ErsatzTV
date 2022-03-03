@@ -1,8 +1,5 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using LanguageExt;
 
 namespace ErsatzTV.Core.Interfaces.Images;
 

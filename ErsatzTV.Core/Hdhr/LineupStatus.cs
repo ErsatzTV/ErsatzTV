@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ErsatzTV.Core.Hdhr;
+﻿namespace ErsatzTV.Core.Hdhr;
 
 public class LineupStatus
 {

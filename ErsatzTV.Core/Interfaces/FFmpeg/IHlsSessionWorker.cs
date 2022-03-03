@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Core.Interfaces.FFmpeg;
+﻿namespace ErsatzTV.Core.Interfaces.FFmpeg;
 
 public interface IHlsSessionWorker
 {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Core.Domain;
+﻿namespace ErsatzTV.Core.Domain;
 
 public class MediaChapter
 {

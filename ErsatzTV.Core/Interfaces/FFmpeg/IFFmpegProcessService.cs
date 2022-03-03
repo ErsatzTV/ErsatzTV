@@ -1,11 +1,8 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.FFmpeg.State;
-using LanguageExt;
 
 namespace ErsatzTV.Core.Interfaces.FFmpeg;
 

@@ -1,7 +1,4 @@
-﻿using System.Threading.Tasks;
-using LanguageExt;
-
-namespace ErsatzTV.Core.Interfaces.MediaSources;
+﻿namespace ErsatzTV.Core.Interfaces.MediaSources;
 
 public interface IRemoteMediaSourceSecretStore<TSecrets>
 {

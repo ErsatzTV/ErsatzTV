@@ -1,7 +1,5 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Plex;
-using LanguageExt;
 
 namespace ErsatzTV.Core.Interfaces.Plex;
 

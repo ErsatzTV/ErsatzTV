@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core.Domain;
-using LanguageExt;
 
 namespace ErsatzTV.Core.FFmpeg;
 

@@ -1,7 +1,4 @@
-﻿using System;
-using System.IO;
-
-namespace ErsatzTV.Core;
+﻿namespace ErsatzTV.Core;
 
 public static class FileSystemLayout
 {

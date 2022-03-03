@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.FFmpeg.Format;
 using ErsatzTV.FFmpeg.State;
-using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg;

@@ -18,11 +18,8 @@
 //    misrepresented as being the original software.
 // 3. This notice may not be removed or altered from any source distribution.
 
-using System;
-using System.Collections.Generic;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
-using LanguageExt;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.FFmpeg;

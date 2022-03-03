@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Core.Scheduling;
+﻿namespace ErsatzTV.Core.Scheduling;
 
 public class CloneableRandom
 {

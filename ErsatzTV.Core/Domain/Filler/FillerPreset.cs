@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Core.Domain.Filler;
+﻿namespace ErsatzTV.Core.Domain.Filler;
 
 public class FillerPreset
 {

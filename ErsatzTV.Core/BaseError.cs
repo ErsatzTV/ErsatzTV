@@ -1,6 +1,4 @@
-﻿using LanguageExt;
-
-namespace ErsatzTV.Core;
+﻿namespace ErsatzTV.Core;
 
 public class BaseError : NewType<BaseError, string>
 {

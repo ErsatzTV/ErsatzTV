@@ -1,5 +1,4 @@
-﻿using System;
-using ErsatzTV.Core.Domain.Filler;
+﻿using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain;
 

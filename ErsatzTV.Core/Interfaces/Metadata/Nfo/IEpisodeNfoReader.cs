@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Metadata.Nfo;
+﻿using ErsatzTV.Core.Metadata.Nfo;
 
 namespace ErsatzTV.Core.Interfaces.Metadata.Nfo;
 

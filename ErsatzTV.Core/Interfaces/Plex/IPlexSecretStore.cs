@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Plex;
-using LanguageExt;
+﻿using ErsatzTV.Core.Plex;
 
 namespace ErsatzTV.Core.Interfaces.Plex;
 

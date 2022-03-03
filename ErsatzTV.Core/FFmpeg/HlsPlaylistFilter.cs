@@ -1,6 +1,4 @@
-﻿using System;
-using System.Globalization;
-using System.IO;
+﻿using System.Globalization;
 using System.Text;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using Microsoft.Extensions.Logging;

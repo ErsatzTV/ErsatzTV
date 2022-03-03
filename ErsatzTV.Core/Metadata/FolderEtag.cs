@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using ErsatzTV.Core.Interfaces.Metadata;
 using static LanguageExt.Prelude;

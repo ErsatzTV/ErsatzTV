@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using ErsatzTV.Core.Domain.Filler;
+﻿using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain;
 

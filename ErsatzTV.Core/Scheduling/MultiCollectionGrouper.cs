@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace ErsatzTV.Core.Scheduling;
+﻿namespace ErsatzTV.Core.Scheduling;
 
 public class MultiCollectionGrouper
 {

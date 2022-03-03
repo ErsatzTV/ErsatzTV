@@ -1,6 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
 using Flurl;
-using LanguageExt;
 
 namespace ErsatzTV.Core.Emby;
 

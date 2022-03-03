@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Core;
+﻿namespace ErsatzTV.Core;
 
 public static class SystemTime
 {

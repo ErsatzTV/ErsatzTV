@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using ErsatzTV.Core.Interfaces.FFmpeg;
+﻿using ErsatzTV.Core.Interfaces.FFmpeg;
 
 namespace ErsatzTV.Core.FFmpeg;
 

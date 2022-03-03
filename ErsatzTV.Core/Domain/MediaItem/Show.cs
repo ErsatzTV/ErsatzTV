@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace ErsatzTV.Core.Domain;
+﻿namespace ErsatzTV.Core.Domain;
 
 public class Show : MediaItem
 {

@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using LanguageExt;
-
-namespace ErsatzTV.Core.Search;
+﻿namespace ErsatzTV.Core.Search;
 
 public record SearchResult(List<SearchItem> Items, int TotalCount)
 {

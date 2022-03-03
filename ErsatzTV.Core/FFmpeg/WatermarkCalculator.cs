@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using LanguageExt;
-
-namespace ErsatzTV.Core.FFmpeg;
+﻿namespace ErsatzTV.Core.FFmpeg;
 
 public static class WatermarkCalculator
 {

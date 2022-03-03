@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Scheduling;

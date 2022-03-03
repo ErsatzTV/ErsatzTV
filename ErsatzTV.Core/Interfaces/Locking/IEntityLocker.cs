@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Core.Interfaces.Locking;
+﻿namespace ErsatzTV.Core.Interfaces.Locking;
 
 public interface IEntityLocker
 {

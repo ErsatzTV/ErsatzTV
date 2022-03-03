@@ -1,8 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using LanguageExt;
-
-namespace ErsatzTV.Core.Interfaces.GitHub;
+﻿namespace ErsatzTV.Core.Interfaces.GitHub;
 
 public interface IGitHubApiClient
 {

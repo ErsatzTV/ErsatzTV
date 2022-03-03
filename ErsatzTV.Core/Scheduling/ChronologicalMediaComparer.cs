@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Core.Scheduling;
 

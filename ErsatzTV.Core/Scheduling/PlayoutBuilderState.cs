@@ -1,6 +1,4 @@
-﻿using System;
-using ErsatzTV.Core.Interfaces.Scheduling;
-using LanguageExt;
+﻿using ErsatzTV.Core.Interfaces.Scheduling;
 
 namespace ErsatzTV.Core.Scheduling;
 

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using LanguageExt;
-using static LanguageExt.Prelude;
+﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core;
 
