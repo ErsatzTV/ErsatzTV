@@ -1,7 +1,6 @@
 ﻿using ErsatzTV.FFmpeg.Decoder.Cuvid;
 using ErsatzTV.FFmpeg.Decoder.Qsv;
 using ErsatzTV.FFmpeg.Format;
-using LanguageExt;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.FFmpeg.Decoder;

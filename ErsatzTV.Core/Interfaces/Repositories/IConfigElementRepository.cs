@@ -1,15 +1,12 @@
-﻿using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
-using LanguageExt;
+﻿using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Core.Interfaces.Repositories
+namespace ErsatzTV.Core.Interfaces.Repositories;
+
+public interface IConfigElementRepository
 {
-    public interface IConfigElementRepository
-    {
-        Task<Unit> Upsert<T>(ConfigElementKey configElementKey, T value);
-        Task<Option<ConfigElement>> Get(ConfigElementKey key);
-        Task<Option<T>> GetValue<T>(ConfigElementKey key);
-        Task Delete(ConfigElement configElement);
-        Task<Unit> Delete(ConfigElementKey configElementKey);
-    }
+    Task<Unit> Upsert<T>(ConfigElementKey configElementKey, T value);
+    Task<Option<ConfigElement>> Get(ConfigElementKey key);
+    Task<Option<T>> GetValue<T>(ConfigElementKey key);
+    Task Delete(ConfigElement configElement);
+    Task<Unit> Delete(ConfigElementKey configElementKey);
 }

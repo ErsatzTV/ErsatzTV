@@ -1,11 +1,8 @@
 ﻿@page "/search"
+@using ErsatzTV.Extensions
 @using ErsatzTV.Application.MediaCards
 @using ErsatzTV.Application.MediaCollections
-@using ErsatzTV.Application.MediaCollections.Commands
 @using ErsatzTV.Application.Search
-@using ErsatzTV.Application.Search.Queries
-@using ErsatzTV.Extensions
-@using Unit = LanguageExt.Unit
 @inherits MultiSelectBase<Search>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel

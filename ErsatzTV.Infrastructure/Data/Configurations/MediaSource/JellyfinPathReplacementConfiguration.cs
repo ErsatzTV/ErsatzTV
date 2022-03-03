@@ -2,11 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ErsatzTV.Infrastructure.Data.Configurations
+namespace ErsatzTV.Infrastructure.Data.Configurations;
+
+public class JellyfinPathReplacementConfiguration : IEntityTypeConfiguration<JellyfinPathReplacement>
 {
-    public class JellyfinPathReplacementConfiguration : IEntityTypeConfiguration<JellyfinPathReplacement>
-    {
-        public void Configure(EntityTypeBuilder<JellyfinPathReplacement> builder) =>
-            builder.ToTable("JellyfinPathReplacement");
-    }
+    public void Configure(EntityTypeBuilder<JellyfinPathReplacement> builder) =>
+        builder.ToTable("JellyfinPathReplacement");
 }

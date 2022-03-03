@@ -1,6 +1,3 @@
-﻿using LanguageExt;
+﻿namespace ErsatzTV.Application.Search;
 
-namespace ErsatzTV.Application.Search.Commands
-{
-    public record RebuildSearchIndex : MediatR.IRequest<Unit>, IBackgroundServiceRequest;
-}
+public record RebuildSearchIndex : MediatR.IRequest<Unit>, IBackgroundServiceRequest;

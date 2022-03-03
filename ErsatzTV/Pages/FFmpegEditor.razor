@@ -1,14 +1,9 @@
 ﻿@page "/ffmpeg/{Id:int}"
 @page "/ffmpeg/add"
-@using ErsatzTV.Application.Resolutions
-@using ErsatzTV.Application.Resolutions.Queries
-@using ErsatzTV.Application.FFmpegProfiles
-@using ErsatzTV.Application.FFmpegProfiles.Commands
-@using ErsatzTV.Application.FFmpegProfiles.Queries
-@using ErsatzTV.Core.FFmpeg
-@using Microsoft.AspNetCore.Components
 @using Microsoft.Extensions.Caching.Memory
-@using System.Threading
+@using ErsatzTV.Application.Resolutions
+@using ErsatzTV.Core.FFmpeg
+@using ErsatzTV.Application.FFmpegProfiles
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<FFmpegEditor> _logger

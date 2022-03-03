@@ -1,16 +1,15 @@
 ﻿using ErsatzTV.ViewModels;
 using FluentValidation;
 
-namespace ErsatzTV.Validators
+namespace ErsatzTV.Validators;
+
+public class
+    RemoteMediaSourcePathReplacementEditViewModelValidator : AbstractValidator<
+        RemoteMediaSourcePathReplacementEditViewModel>
 {
-    public class
-        RemoteMediaSourcePathReplacementEditViewModelValidator : AbstractValidator<
-            RemoteMediaSourcePathReplacementEditViewModel>
+    public RemoteMediaSourcePathReplacementEditViewModelValidator()
     {
-        public RemoteMediaSourcePathReplacementEditViewModelValidator()
-        {
-            RuleFor(vm => vm.RemotePath).NotEmpty();
-            RuleFor(vm => vm.LocalPath).NotEmpty();
-        }
+        RuleFor(vm => vm.RemotePath).NotEmpty();
+        RuleFor(vm => vm.LocalPath).NotEmpty();
     }
 }

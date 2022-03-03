@@ -1,10 +1,6 @@
 ﻿@page "/media/sources/emby/{Id:int}/libraries"
-@using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Emby.Commands
-@using ErsatzTV.Application.Emby.Queries
-@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Emby
-@using System.Threading
+@using ErsatzTV.Application.MediaSources
 @implements IDisposable
 @inject IMediator _mediator
 @inject ChannelWriter<IEmbyBackgroundServiceRequest> _channel

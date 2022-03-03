@@ -1,7 +1,3 @@
-﻿using System.Collections.Generic;
-using MediatR;
+﻿namespace ErsatzTV.Application.Libraries;
 
-namespace ErsatzTV.Application.Libraries.Queries
-{
-    public record GetConfiguredLibraries : IRequest<List<LibraryViewModel>>;
-}
+public record GetConfiguredLibraries : IRequest<List<LibraryViewModel>>;

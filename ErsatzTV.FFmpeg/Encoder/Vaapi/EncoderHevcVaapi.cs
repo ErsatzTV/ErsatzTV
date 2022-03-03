@@ -1,7 +1,6 @@
 ﻿using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Encoder.Vaapi;
-using LanguageExt;
 
 public class EncoderHevcVaapi : EncoderBase
 {

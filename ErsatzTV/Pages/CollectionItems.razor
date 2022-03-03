@@ -1,7 +1,6 @@
 ﻿@page "/media/collections/{Id:int}"
 @using ErsatzTV.Application.MediaCards
-@using ErsatzTV.Application.MediaCards.Queries
-@using ErsatzTV.Application.MediaCollections.Commands
+@using ErsatzTV.Application.MediaCollections
 @inherits MultiSelectBase<CollectionItems>
 @inject NavigationManager _navigationManager
 @inject ChannelWriter<IBackgroundServiceRequest> _channel

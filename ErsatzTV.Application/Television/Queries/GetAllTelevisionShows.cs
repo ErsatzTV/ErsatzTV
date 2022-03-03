@@ -1,8 +1,5 @@
-﻿using System.Collections.Generic;
-using ErsatzTV.Application.MediaItems;
-using MediatR;
+﻿using ErsatzTV.Application.MediaItems;
 
-namespace ErsatzTV.Application.Television.Queries
-{
-    public record GetAllTelevisionShows : IRequest<List<NamedMediaItemViewModel>>;
-}
+namespace ErsatzTV.Application.Television;
+
+public record GetAllTelevisionShows : IRequest<List<NamedMediaItemViewModel>>;

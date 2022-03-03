@@ -1,6 +1,3 @@
-﻿using MediatR;
+﻿namespace ErsatzTV.Application.FFmpegProfiles;
 
-namespace ErsatzTV.Application.FFmpegProfiles.Queries
-{
-    public record GetFFmpegSettings : IRequest<FFmpegSettingsViewModel>;
-}
+public record GetFFmpegSettings : IRequest<FFmpegSettingsViewModel>;

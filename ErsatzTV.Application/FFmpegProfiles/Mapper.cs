@@ -1,34 +1,33 @@
 ﻿using ErsatzTV.Application.Resolutions;
 using ErsatzTV.Core.Domain;
 
-namespace ErsatzTV.Application.FFmpegProfiles
-{
-    internal static class Mapper
-    {
-        internal static FFmpegProfileViewModel ProjectToViewModel(FFmpegProfile profile) =>
-            new(
-                profile.Id,
-                profile.Name,
-                profile.ThreadCount,
-                profile.Transcode,
-                profile.HardwareAcceleration,
-                profile.VaapiDriver,
-                profile.VaapiDevice,
-                Project(profile.Resolution),
-                profile.NormalizeVideo,
-                profile.VideoCodec,
-                profile.VideoBitrate,
-                profile.VideoBufferSize,
-                profile.AudioCodec,
-                profile.AudioBitrate,
-                profile.AudioBufferSize,
-                profile.NormalizeLoudness,
-                profile.AudioChannels,
-                profile.AudioSampleRate,
-                profile.NormalizeAudio,
-                profile.NormalizeVideo && profile.NormalizeFramerate);
+namespace ErsatzTV.Application.FFmpegProfiles;
 
-        private static ResolutionViewModel Project(Resolution resolution) =>
-            new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);
-    }
+internal static class Mapper
+{
+    internal static FFmpegProfileViewModel ProjectToViewModel(FFmpegProfile profile) =>
+        new(
+            profile.Id,
+            profile.Name,
+            profile.ThreadCount,
+            profile.Transcode,
+            profile.HardwareAcceleration,
+            profile.VaapiDriver,
+            profile.VaapiDevice,
+            Project(profile.Resolution),
+            profile.NormalizeVideo,
+            profile.VideoCodec,
+            profile.VideoBitrate,
+            profile.VideoBufferSize,
+            profile.AudioCodec,
+            profile.AudioBitrate,
+            profile.AudioBufferSize,
+            profile.NormalizeLoudness,
+            profile.AudioChannels,
+            profile.AudioSampleRate,
+            profile.NormalizeAudio,
+            profile.NormalizeVideo && profile.NormalizeFramerate);
+
+    private static ResolutionViewModel Project(Resolution resolution) =>
+        new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);
 }

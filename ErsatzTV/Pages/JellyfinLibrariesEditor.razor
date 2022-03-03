@@ -1,10 +1,6 @@
 ﻿@page "/media/sources/jellyfin/{Id:int}/libraries"
-@using Unit = LanguageExt.Unit
-@using ErsatzTV.Application.Jellyfin.Commands
-@using ErsatzTV.Application.Jellyfin.Queries
-@using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Jellyfin
-@using System.Threading
+@using ErsatzTV.Application.MediaSources
 @implements IDisposable
 @inject IMediator _mediator
 @inject ChannelWriter<IJellyfinBackgroundServiceRequest> _channel

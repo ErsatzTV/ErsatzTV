@@ -1,9 +1,6 @@
 ﻿@page "/media/libraries/local/{Id:int}/add"
 @using ErsatzTV.Application.Libraries
-@using ErsatzTV.Application.Libraries.Commands
-@using ErsatzTV.Application.Libraries.Queries
-@using ErsatzTV.Application.MediaSources.Commands
-@using System.Threading
+@using ErsatzTV.Application.MediaSources
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<LocalLibraryPathEditor> _logger

@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.Core.Emby
+﻿namespace ErsatzTV.Core.Emby;
+
+public class EmbyItemEtag
 {
-    public class EmbyItemEtag
-    {
-        public string ItemId { get; set; }
-        public string Etag { get; set; }
-    }
+    public string ItemId { get; set; }
+    public string Etag { get; set; }
 }

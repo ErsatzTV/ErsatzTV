@@ -1,10 +1,6 @@
 ﻿@page "/media/sources/jellyfin/{Id:int}/paths"
 @using ErsatzTV.Application.MediaSources
-@using ErsatzTV.Application.Jellyfin.Queries
 @using ErsatzTV.Application.Jellyfin
-@using ErsatzTV.Application.Jellyfin.Commands
-@using Unit = LanguageExt.Unit
-@using System.Threading
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger

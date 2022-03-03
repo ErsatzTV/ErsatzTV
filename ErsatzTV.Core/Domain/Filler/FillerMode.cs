@@ -1,10 +1,9 @@
-﻿namespace ErsatzTV.Core.Domain.Filler
+﻿namespace ErsatzTV.Core.Domain.Filler;
+
+public enum FillerMode
 {
-    public enum FillerMode
-    {
-        None = 0,
-        Duration = 1,
-        Count = 2,
-        Pad = 3
-    }
+    None = 0,
+    Duration = 1,
+    Count = 2,
+    Pad = 3
 }

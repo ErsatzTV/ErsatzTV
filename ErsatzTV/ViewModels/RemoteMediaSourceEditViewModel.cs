@@ -1,8 +1,7 @@
-﻿namespace ErsatzTV.ViewModels
+﻿namespace ErsatzTV.ViewModels;
+
+public class RemoteMediaSourceEditViewModel
 {
-    public class RemoteMediaSourceEditViewModel
-    {
-        public string Address { get; set; }
-        public string ApiKey { get; set; }
-    }
+    public string Address { get; set; }
+    public string ApiKey { get; set; }
 }

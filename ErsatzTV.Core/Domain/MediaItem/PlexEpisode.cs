@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class PlexEpisode : Episode
 {
-    public class PlexEpisode : Episode
-    {
-        public string Key { get; set; }
-    }
+    public string Key { get; set; }
 }

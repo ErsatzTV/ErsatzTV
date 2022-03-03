@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ErsatzTV.Core.FFmpeg;
+﻿namespace ErsatzTV.Core.FFmpeg;
 
 public interface IHlsPlaylistFilter
 {

@@ -1,6 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Filter.Cuda;
 using ErsatzTV.FFmpeg.Filter.Vaapi;
-using LanguageExt;
 
 namespace ErsatzTV.FFmpeg.Filter;
 

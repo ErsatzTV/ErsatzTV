@@ -1,9 +1,8 @@
-﻿namespace ErsatzTV.Infrastructure.Emby.Models
+﻿namespace ErsatzTV.Infrastructure.Emby.Models;
+
+public class EmbyProviderIdsResponse
 {
-    public class EmbyProviderIdsResponse
-    {
-        public string Imdb { get; set; }
-        public string Tmdb { get; set; }
-        public string Tvdb { get; set; }
-    }
+    public string Imdb { get; set; }
+    public string Tmdb { get; set; }
+    public string Tvdb { get; set; }
 }

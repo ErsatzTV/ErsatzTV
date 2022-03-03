@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Infrastructure.Jellyfin.Models
+﻿namespace ErsatzTV.Infrastructure.Jellyfin.Models;
+
+public class JellyfinUserPolicyResponse
 {
-    public class JellyfinUserPolicyResponse
-    {
-        public bool IsAdministrator { get; set; }
-    }
+    public bool IsAdministrator { get; set; }
 }

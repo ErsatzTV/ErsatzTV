@@ -1,43 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using ErsatzTV.Core.Hdhr;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace ErsatzTV.Formatters
+namespace ErsatzTV.Formatters;
+
+public class HdhrJsonOutputFormatter : TextOutputFormatter
 {
-    public class HdhrJsonOutputFormatter : TextOutputFormatter
+    private readonly JsonSerializerSettings _jsonSerializerSettings;
+
+    public HdhrJsonOutputFormatter()
     {
-        private readonly JsonSerializerSettings _jsonSerializerSettings;
+        SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
 
-        public HdhrJsonOutputFormatter()
+        SupportedEncodings.Add(Encoding.UTF8);
+        SupportedEncodings.Add(Encoding.Unicode);
+
+        _jsonSerializerSettings = new JsonSerializerSettings
         {
-            SupportedMediaTypes.Add(MediaTypeHeaderValue.Parse("application/json"));
-
-            SupportedEncodings.Add(Encoding.UTF8);
-            SupportedEncodings.Add(Encoding.Unicode);
-
-            _jsonSerializerSettings = new JsonSerializerSettings
+            ContractResolver = new DefaultContractResolver
             {
-                ContractResolver = new DefaultContractResolver
-                {
-                    NamingStrategy = new DefaultNamingStrategy()
-                }
-            };
-        }
-
-        protected override bool CanWriteType(Type type) =>
-            typeof(Discover).IsAssignableFrom(type) || typeof(LineupStatus).IsAssignableFrom(type) ||
-            typeof(IEnumerable<LineupItem>).IsAssignableFrom(type);
-
-        public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding) =>
-            // ReSharper disable once PossibleNullReferenceException
-            context.HttpContext.Response.WriteAsync(
-                JsonConvert.SerializeObject(context.Object, _jsonSerializerSettings));
+                NamingStrategy = new DefaultNamingStrategy()
+            }
+        };
     }
+
+    protected override bool CanWriteType(Type type) =>
+        typeof(Discover).IsAssignableFrom(type) || typeof(LineupStatus).IsAssignableFrom(type) ||
+        typeof(IEnumerable<LineupItem>).IsAssignableFrom(type);
+
+    public override Task WriteResponseBodyAsync(OutputFormatterWriteContext context, Encoding selectedEncoding) =>
+        // ReSharper disable once PossibleNullReferenceException
+        context.HttpContext.Response.WriteAsync(
+            JsonConvert.SerializeObject(context.Object, _jsonSerializerSettings));
 }

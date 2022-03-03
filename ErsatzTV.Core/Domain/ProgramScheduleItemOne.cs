@@ -1,6 +1,5 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class ProgramScheduleItemOne : ProgramScheduleItem
 {
-    public class ProgramScheduleItemOne : ProgramScheduleItem
-    {
-    }
 }

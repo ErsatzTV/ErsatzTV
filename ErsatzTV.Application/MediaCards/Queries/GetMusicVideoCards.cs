@@ -1,7 +1,4 @@
-﻿using MediatR;
+﻿namespace ErsatzTV.Application.MediaCards;
 
-namespace ErsatzTV.Application.MediaCards.Queries
-{
-    public record GetMusicVideoCards
-        (int ArtistId, int PageNumber, int PageSize) : IRequest<MusicVideoCardResultsViewModel>;
-}
+public record GetMusicVideoCards
+    (int ArtistId, int PageNumber, int PageSize) : IRequest<MusicVideoCardResultsViewModel>;

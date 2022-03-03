@@ -1,10 +1,6 @@
 ﻿@page "/media/sources/plex/{Id:int}/paths"
 @using ErsatzTV.Application.MediaSources
 @using ErsatzTV.Application.Plex
-@using ErsatzTV.Application.Plex.Commands
-@using ErsatzTV.Application.Plex.Queries
-@using Unit = LanguageExt.Unit
-@using System.Threading
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger

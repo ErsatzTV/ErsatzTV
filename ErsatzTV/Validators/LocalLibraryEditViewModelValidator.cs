@@ -1,10 +1,9 @@
 ﻿using ErsatzTV.ViewModels;
 using FluentValidation;
 
-namespace ErsatzTV.Validators
+namespace ErsatzTV.Validators;
+
+public class LocalLibraryEditViewModelValidator : AbstractValidator<LocalLibraryEditViewModel>
 {
-    public class LocalLibraryEditViewModelValidator : AbstractValidator<LocalLibraryEditViewModel>
-    {
-        public LocalLibraryEditViewModelValidator() => RuleFor(c => c.Name).NotEmpty();
-    }
+    public LocalLibraryEditViewModelValidator() => RuleFor(c => c.Name).NotEmpty();
 }

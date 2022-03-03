@@ -1,9 +1,8 @@
-﻿namespace ErsatzTV.ViewModels
+﻿namespace ErsatzTV.ViewModels;
+
+public class PlexPathReplacementEditViewModel
 {
-    public class PlexPathReplacementEditViewModel
-    {
-        public int Id { get; set; }
-        public string PlexPath { get; set; }
-        public string LocalPath { get; set; }
-    }
+    public int Id { get; set; }
+    public string PlexPath { get; set; }
+    public string LocalPath { get; set; }
 }

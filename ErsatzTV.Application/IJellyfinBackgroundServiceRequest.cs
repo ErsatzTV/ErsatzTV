@@ -1,6 +1,5 @@
-﻿namespace ErsatzTV.Application
+﻿namespace ErsatzTV.Application;
+
+public interface IJellyfinBackgroundServiceRequest
 {
-    public interface IJellyfinBackgroundServiceRequest
-    {
-    }
 }

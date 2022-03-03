@@ -1,7 +1,6 @@
-﻿namespace ErsatzTV.Core.Domain
+﻿namespace ErsatzTV.Core.Domain;
+
+public class PlexMovie : Movie
 {
-    public class PlexMovie : Movie
-    {
-        public string Key { get; set; }
-    }
+    public string Key { get; set; }
 }

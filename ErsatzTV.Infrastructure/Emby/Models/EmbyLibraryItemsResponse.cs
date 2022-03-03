@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
+﻿namespace ErsatzTV.Infrastructure.Emby.Models;
 
-namespace ErsatzTV.Infrastructure.Emby.Models
+public class EmbyLibraryItemsResponse
 {
-    public class EmbyLibraryItemsResponse
-    {
-        public List<EmbyLibraryItemResponse> Items { get; set; }
-    }
+    public List<EmbyLibraryItemResponse> Items { get; set; }
 }

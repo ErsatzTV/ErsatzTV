@@ -1,6 +1,3 @@
-﻿using System.Collections.Generic;
+﻿namespace ErsatzTV.Core.Search;
 
-namespace ErsatzTV.Core.Search
-{
-    public record SearchPageMap(Dictionary<char, int> PageMap);
-}
+public record SearchPageMap(Dictionary<char, int> PageMap);
