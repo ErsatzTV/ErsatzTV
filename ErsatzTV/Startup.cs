@@ -4,7 +4,6 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Channels;
-using Blazored.LocalStorage;
 using Bugsnag.AspNet.Core;
 using Dapper;
 using ErsatzTV.Application;
@@ -139,7 +138,6 @@ namespace ErsatzTV
 
             services.AddMudServices();
             services.AddCourier(Assembly.GetAssembly(typeof(LibraryScanProgress)));
-            services.AddBlazoredLocalStorage();
 
             Console.OutputEncoding = Encoding.UTF8;
 
