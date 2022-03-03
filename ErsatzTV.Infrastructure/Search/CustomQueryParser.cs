@@ -5,6 +5,7 @@ using Lucene.Net.Index;
 using Lucene.Net.QueryParsers.Classic;
 using Lucene.Net.Search;
 using Lucene.Net.Util;
+using Query = Lucene.Net.Search.Query;
 
 namespace ErsatzTV.Infrastructure.Search;
 

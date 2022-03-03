@@ -19,8 +19,6 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
-using static LanguageExt.Prelude;
-using Unit = LanguageExt.Unit;
 
 namespace ErsatzTV.Core.Tests.Metadata;
 

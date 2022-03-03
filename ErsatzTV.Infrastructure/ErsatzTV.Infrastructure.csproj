@@ -4,6 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
         <NoWarn>VSTHRD200</NoWarn>
+        <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
     <ItemGroup>
