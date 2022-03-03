@@ -12,12 +12,12 @@
       <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
-      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.0.0" />
-      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.0.64">
+      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+      <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.1.46">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Moq" Version="4.16.1" />
+      <PackageReference Include="Moq" Version="4.17.1" />
       <PackageReference Include="NUnit" Version="3.13.2" />
       <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
       <PackageReference Include="Serilog" Version="2.10.0" />
