@@ -180,7 +180,14 @@
     {
         if (firstRender)
         {
-            await _navigationManager.NavigateToFragmentAsync(_jsRuntime);
+            try
+            {
+                await _navigationManager.NavigateToFragmentAsync(_jsRuntime);
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
     }
 

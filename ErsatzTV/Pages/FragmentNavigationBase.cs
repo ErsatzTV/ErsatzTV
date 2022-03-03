@@ -35,7 +35,14 @@ namespace ErsatzTV.Pages
         {
             if (firstRender)
             {
-                await NavManager.NavigateToFragmentAsync(JsRuntime);
+                try
+                {
+                    await NavManager.NavigateToFragmentAsync(JsRuntime);
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }
         }
 

@@ -125,7 +125,17 @@
         {
             Either<BaseError, string> maybeUrl = await _mediator.Send(new StartPlexPinFlow());
             await maybeUrl.Match(
-                async url => await _jsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" }),
+                async url =>
+                {
+                    try
+                    {
+                        await _jsRuntime.InvokeAsync<object>("open", new object[] { url, "_blank" });
+                    }
+                    catch (Exception)
+                    {
+                        // ignored
+                    }
+                },
                 error =>
                 {
                     _locker.UnlockPlex();
