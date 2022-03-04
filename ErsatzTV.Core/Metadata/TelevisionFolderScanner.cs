@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
@@ -36,6 +37,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         IMediator mediator,
         IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
         ITempFilePool tempFilePool,
+        IClient client,
         ILogger<TelevisionFolderScanner> logger) : base(
         localFileSystem,
         localStatisticsProvider,
@@ -44,6 +46,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         imageCache,
         ffmpegProcessServiceFactory,
         tempFilePool,
+        client,
         logger)
     {
         _localFileSystem = localFileSystem;

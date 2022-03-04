@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
@@ -19,6 +20,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     private readonly ISearchRepository _searchRepository;
     private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IClient _client;
     private readonly ILogger<OtherVideoFolderScanner> _logger;
 
     public OtherVideoFolderScanner(
@@ -35,6 +37,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         IMediaItemRepository mediaItemRepository,
         IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
         ITempFilePool tempFilePool,
+        IClient client,
         ILogger<OtherVideoFolderScanner> logger) : base(
         localFileSystem,
         localStatisticsProvider,
@@ -43,6 +46,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         imageCache,
         ffmpegProcessServiceFactory,
         tempFilePool,
+        client,
         logger)
     {
         _localFileSystem = localFileSystem;
@@ -52,6 +56,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         _searchRepository = searchRepository;
         _otherVideoRepository = otherVideoRepository;
         _libraryRepository = libraryRepository;
+        _client = client;
         _logger = logger;
     }
 
@@ -191,6 +196,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Emby;
 using ErsatzTV.Core;
@@ -65,6 +66,19 @@ public class EmbyService : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to process Emby background service request");
+
+                try
+                {
+                    using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                    {
+                        IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                        client.Notify(ex);
+                    }
+                }
+                catch (Exception)
+                {
+                    // do nothing
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Timers;
+using Bugsnag;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -122,6 +123,8 @@ public class HlsSessionWorker : IHlsSessionWorker
         bool realtime,
         CancellationToken cancellationToken)
     {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+
         try
         {
             if (!realtime)
@@ -136,7 +139,6 @@ public class HlsSessionWorker : IHlsSessionWorker
                     channelNumber);
             }
 
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
             long ptsOffset = await GetPtsOffset(mediator, channelNumber, cancellationToken);
@@ -200,6 +202,17 @@ public class HlsSessionWorker : IHlsSessionWorker
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error transcoding channel {Channel}", channelNumber);
+            
+            try
+            {
+                IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                client.Notify(ex);
+            }
+            catch (Exception)
+            {
+                // do nothing
+            }
+
             return false;
         }
         finally

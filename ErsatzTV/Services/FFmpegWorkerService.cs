@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Streaming;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -30,10 +31,10 @@ public class FFmpegWorkerService : BackgroundService
 
         await foreach (IFFmpegWorkerRequest request in _channel.ReadAllAsync(cancellationToken))
         {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+
             try
             {
-                using IServiceScope scope = _serviceScopeFactory.CreateScope();
-                // IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                 switch (request)
                 {
@@ -49,6 +50,16 @@ public class FFmpegWorkerService : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to handle ffmpeg worker request");
+                
+                try
+                {
+                    IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                    client.Notify(ex);
+                }
+                catch (Exception)
+                {
+                    // do nothing
+                }
             }
         }
     }

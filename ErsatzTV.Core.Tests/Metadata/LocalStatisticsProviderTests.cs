@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
@@ -20,6 +21,7 @@ public class LocalStatisticsProviderTests
         var provider = new LocalStatisticsProvider(
             new Mock<IMetadataRepository>().Object,
             new Mock<ILocalFileSystem>().Object,
+            new Mock<IClient>().Object,
             new Mock<ILogger<LocalStatisticsProvider>>().Object);
 
         var input = new LocalStatisticsProvider.FFprobe(

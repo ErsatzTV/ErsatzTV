@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Application.MediaCollections;
@@ -32,9 +33,10 @@ public class WorkerService : BackgroundService
 
         await foreach (IBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
         {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+
             try
             {
-                using IServiceScope scope = _serviceScopeFactory.CreateScope();
                 IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
                 switch (request)
@@ -84,6 +86,16 @@ public class WorkerService : BackgroundService
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to process background service request");
+
+                try
+                {
+                    IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                    client.Notify(ex);
+                }
+                catch (Exception)
+                {
+                    // do nothing
+                }
             }
         }
     }

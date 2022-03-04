@@ -1,6 +1,8 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
 using FluentAssertions;
+using Moq;
 using NUnit.Framework;
 
 namespace ErsatzTV.Core.Tests.Metadata;
@@ -9,7 +11,7 @@ namespace ErsatzTV.Core.Tests.Metadata;
 public class FallbackMetadataProviderTests
 {
     [SetUp]
-    public void SetUp() => _fallbackMetadataProvider = new FallbackMetadataProvider();
+    public void SetUp() => _fallbackMetadataProvider = new FallbackMetadataProvider(new Mock<IClient>().Object);
 
     private FallbackMetadataProvider _fallbackMetadataProvider;
 

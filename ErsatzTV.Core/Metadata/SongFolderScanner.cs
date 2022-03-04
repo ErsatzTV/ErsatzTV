@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -20,6 +21,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     private readonly ISearchRepository _searchRepository;
     private readonly ISongRepository _songRepository;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IClient _client;
     private readonly ILogger<SongFolderScanner> _logger;
 
     public SongFolderScanner(
@@ -36,6 +38,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         IMediaItemRepository mediaItemRepository,
         IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
         ITempFilePool tempFilePool,
+        IClient client,
         ILogger<SongFolderScanner> logger) : base(
         localFileSystem,
         localStatisticsProvider,
@@ -44,6 +47,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         imageCache,
         ffmpegProcessServiceFactory,
         tempFilePool,
+        client,
         logger)
     {
         _localFileSystem = localFileSystem;
@@ -53,6 +57,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         _searchRepository = searchRepository;
         _songRepository = songRepository;
         _libraryRepository = libraryRepository;
+        _client = client;
         _logger = logger;
     }
 
@@ -200,6 +205,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -236,6 +242,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

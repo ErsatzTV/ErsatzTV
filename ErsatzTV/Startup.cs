@@ -85,6 +85,7 @@ public class Startup
                 configuration.AppVersion = Assembly.GetEntryAssembly()
                     ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "unknown";
+                configuration.AutoNotify = false;
                     
                 configuration.NotifyReleaseStages = new[] { "public", "develop" };
                     
