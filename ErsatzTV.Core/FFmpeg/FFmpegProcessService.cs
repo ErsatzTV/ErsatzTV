@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -13,6 +14,7 @@ public class FFmpegProcessService : IFFmpegProcessService
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly IImageCache _imageCache;
     private readonly ITempFilePool _tempFilePool;
+    private readonly IClient _client;
     private readonly ILogger<FFmpegProcessService> _logger;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
@@ -21,12 +23,14 @@ public class FFmpegProcessService : IFFmpegProcessService
         IFFmpegStreamSelector ffmpegStreamSelector,
         IImageCache imageCache,
         ITempFilePool tempFilePool,
+        IClient client,
         ILogger<FFmpegProcessService> logger)
     {
         _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
         _ffmpegStreamSelector = ffmpegStreamSelector;
         _imageCache = imageCache;
         _tempFilePool = tempFilePool;
+        _client = client;
         _logger = logger;
     }
 
@@ -408,6 +412,7 @@ public class FFmpegProcessService : IFFmpegProcessService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error generating song image");
+            _client.Notify(ex);
             return Left(BaseError.New(ex.Message));
         }
     }

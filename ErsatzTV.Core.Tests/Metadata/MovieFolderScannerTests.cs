@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
@@ -587,6 +588,7 @@ public class MovieFolderScannerTests
                 new Mock<IMediator>().Object,
                 null,
                 new Mock<ITempFilePool>().Object,
+                new Mock<IClient>().Object,
                 new Mock<ILogger<MovieFolderScanner>>().Object
             );
             
@@ -605,6 +607,7 @@ public class MovieFolderScannerTests
                 new Mock<IMediator>().Object,
                 null,
                 new Mock<ITempFilePool>().Object,
+                new Mock<IClient>().Object,
                 new Mock<ILogger<MovieFolderScanner>>().Object
             );
     }

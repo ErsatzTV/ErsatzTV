@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -13,16 +14,19 @@ namespace ErsatzTV.Core.Metadata;
 public class LocalStatisticsProvider : ILocalStatisticsProvider
 {
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IClient _client;
     private readonly ILogger<LocalStatisticsProvider> _logger;
     private readonly IMetadataRepository _metadataRepository;
 
     public LocalStatisticsProvider(
         IMetadataRepository metadataRepository,
         ILocalFileSystem localFileSystem,
+        IClient client,
         ILogger<LocalStatisticsProvider> logger)
     {
         _metadataRepository = metadataRepository;
         _localFileSystem = localFileSystem;
+        _client = client;
         _logger = logger;
     }
 
@@ -36,6 +40,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
+            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }
@@ -60,6 +65,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to refresh statistics for media item {Id}", mediaItem.Id);
+            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }
@@ -114,6 +120,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to get format tags for media item {Id}", mediaItem.Id);
+            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }

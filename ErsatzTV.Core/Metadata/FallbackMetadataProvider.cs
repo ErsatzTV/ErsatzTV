@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 
@@ -6,6 +7,13 @@ namespace ErsatzTV.Core.Metadata;
 
 public class FallbackMetadataProvider : IFallbackMetadataProvider
 {
+    private readonly IClient _client;
+
+    public FallbackMetadataProvider(IClient client)
+    {
+        _client = client;
+    }
+
     public ShowMetadata GetFallbackMetadataForShow(string showFolder)
     {
         string fileName = Path.GetFileName(showFolder);
@@ -142,7 +150,7 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
         return title;
     }
 
-    private static List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
+    private List<EpisodeMetadata> GetEpisodeMetadata(string fileName, EpisodeMetadata baseMetadata)
     {
         var result = new List<EpisodeMetadata>();
 
@@ -186,9 +194,9 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
                 return result;
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // ignored
+            _client.Notify(ex);
         }
 
         return result;
@@ -208,9 +216,9 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
                 metadata.DateUpdated = DateTime.UtcNow;
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // ignored
+            _client.Notify(ex);
         }
 
         return metadata;
@@ -232,8 +240,9 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 
             return metadata;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _client.Notify(ex);
             return None;
         }
     }
@@ -269,8 +278,9 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 
             return metadata;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _client.Notify(ex);
             return None;
         }
     }
@@ -306,8 +316,9 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 
             return metadata;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _client.Notify(ex);
             return None;
         }
     }
@@ -326,9 +337,9 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
                 metadata.DateUpdated = DateTime.UtcNow;
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // ignored
+            _client.Notify(ex);
         }
 
         return metadata;

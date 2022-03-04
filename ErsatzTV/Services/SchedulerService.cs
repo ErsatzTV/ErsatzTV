@@ -1,4 +1,5 @@
 ﻿using System.Threading.Channels;
+using Bugsnag;
 using ErsatzTV.Application;
 using ErsatzTV.Application.Maintenance;
 using ErsatzTV.Application.MediaCollections;
@@ -83,6 +84,19 @@ public class SchedulerService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error during scheduler run");
+            
+            try
+            {
+                using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                {
+                    IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                    client.Notify(ex);
+                }
+            }
+            catch (Exception)
+            {
+                // do nothing
+            }
         }
     }
 
@@ -110,6 +124,19 @@ public class SchedulerService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error during scheduler run");
+            
+            try
+            {
+                using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                {
+                    IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                    client.Notify(ex);
+                }
+            }
+            catch (Exception)
+            {
+                // do nothing
+            }
         }
     }
 
