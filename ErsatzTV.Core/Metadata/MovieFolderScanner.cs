@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
@@ -18,6 +19,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediator _mediator;
+    private readonly IClient _client;
     private readonly IMovieRepository _movieRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -36,6 +38,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         IMediator mediator,
         IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
         ITempFilePool tempFilePool,
+        IClient client,
         ILogger<MovieFolderScanner> logger)
         : base(
             localFileSystem,
@@ -45,6 +48,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             imageCache,
             ffmpegProcessServiceFactory,
             tempFilePool,
+            client,
             logger)
     {
         _localFileSystem = localFileSystem;
@@ -54,6 +58,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         _searchRepository = searchRepository;
         _libraryRepository = libraryRepository;
         _mediator = mediator;
+        _client = client;
         _logger = logger;
     }
 
@@ -216,6 +221,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -238,6 +244,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

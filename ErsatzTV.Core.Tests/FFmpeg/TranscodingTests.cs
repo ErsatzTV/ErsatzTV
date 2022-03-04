@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
@@ -248,6 +249,7 @@ public class TranscodingTests
             new FakeStreamSelector(),
             imageCache.Object,
             new Mock<ITempFilePool>().Object,
+            new Mock<IClient>().Object,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -276,6 +278,7 @@ public class TranscodingTests
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository.Object,
             new LocalFileSystem(LoggerFactory.CreateLogger<LocalFileSystem>()),
+            new Mock<IClient>().Object,
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
         await localStatisticsProvider.RefreshStatistics(

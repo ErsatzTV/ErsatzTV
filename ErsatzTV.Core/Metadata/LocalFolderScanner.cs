@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
@@ -46,6 +47,7 @@ public abstract class LocalFolderScanner
     private readonly IImageCache _imageCache;
     private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
     private readonly ITempFilePool _tempFilePool;
+    private readonly IClient _client;
 
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
@@ -61,6 +63,7 @@ public abstract class LocalFolderScanner
         IImageCache imageCache,
         IFFmpegProcessServiceFactory ffmpegProcessServiceFactory, 
         ITempFilePool tempFilePool,
+        IClient client,
         ILogger logger)
     {
         _localFileSystem = localFileSystem;
@@ -70,6 +73,7 @@ public abstract class LocalFolderScanner
         _imageCache = imageCache;
         _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
         _tempFilePool = tempFilePool;
+        _client = client;
         _logger = logger;
     }
 
@@ -109,6 +113,7 @@ public abstract class LocalFolderScanner
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }
@@ -258,6 +263,7 @@ public abstract class LocalFolderScanner
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Error refreshing artwork");
+                _client.Notify(ex);
             }
         }
 
@@ -283,6 +289,7 @@ public abstract class LocalFolderScanner
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
