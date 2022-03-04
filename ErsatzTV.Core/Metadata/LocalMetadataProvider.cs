@@ -70,18 +70,15 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             maybeMetadata = await LoadTelevisionShowMetadata(nfoFileName);
         }
 
-        return maybeMetadata.Match(
-            metadata =>
-            {
-                metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
-                return metadata;
-            },
-            () =>
-            {
-                ShowMetadata metadata = _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder);
-                metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
-                return metadata;
-            });
+        foreach (ShowMetadata metadata in maybeMetadata)
+        {
+            metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+            return metadata;
+        }
+
+        ShowMetadata fallbackMetadata = _fallbackMetadataProvider.GetFallbackMetadataForShow(showFolder);
+        fallbackMetadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(fallbackMetadata.Title);
+        return fallbackMetadata;
     }
 
     public async Task<ArtistMetadata> GetMetadataForArtist(string artistFolder)
@@ -93,18 +90,15 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             maybeMetadata = await LoadArtistMetadata(nfoFileName);
         }
 
-        return maybeMetadata.Match(
-            metadata =>
-            {
-                metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
-                return metadata;
-            },
-            () =>
-            {
-                ArtistMetadata metadata = _fallbackMetadataProvider.GetFallbackMetadataForArtist(artistFolder);
-                metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
-                return metadata;
-            });
+        foreach (ArtistMetadata metadata in maybeMetadata)
+        {
+            metadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(metadata.Title);
+            return metadata;
+        }
+
+        ArtistMetadata fallbackMetadata = _fallbackMetadataProvider.GetFallbackMetadataForArtist(artistFolder);
+        fallbackMetadata.SortTitle = _fallbackMetadataProvider.GetSortTitle(fallbackMetadata.Title);
+        return fallbackMetadata;
     }
 
     public Task<bool> RefreshSidecarMetadata(Movie movie, string nfoFileName) =>
@@ -173,8 +167,9 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
             Option<MusicVideoNfo> maybeNfo = MusicVideoSerializer.Deserialize(fileStream) as MusicVideoNfo;
-            return maybeNfo.Match<Option<MusicVideoMetadata>>(
-                nfo => new MusicVideoMetadata
+            foreach (MusicVideoNfo nfo in maybeNfo)
+            {
+                return new MusicVideoMetadata
                 {
                     MetadataKind = MetadataKind.Sidecar,
                     DateAdded = DateTime.UtcNow,
@@ -187,8 +182,10 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
                     Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList()
-                },
-                None);
+                };
+            }
+
+            return None;
         }
         catch (Exception ex)
         {
@@ -811,34 +808,34 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
             Option<TvShowNfo> maybeNfo = TvShowSerializer.Deserialize(fileStream) as TvShowNfo;
-            return maybeNfo.Match<Option<ShowMetadata>>(
-                nfo =>
-                {
-                    DateTime dateAdded = DateTime.UtcNow;
-                    DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+            foreach (TvShowNfo nfo in maybeNfo)
+            {
+                DateTime dateAdded = DateTime.UtcNow;
+                DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
 
-                    return new ShowMetadata
-                    {
-                        MetadataKind = MetadataKind.Sidecar,
-                        DateAdded = dateAdded,
-                        DateUpdated = dateUpdated,
-                        Title = nfo.Title,
-                        Plot = nfo.Plot,
-                        Outline = nfo.Outline,
-                        Tagline = nfo.Tagline,
-                        ContentRating = nfo.ContentRating,
-                        Year = GetYear(nfo.Year, nfo.Premiered),
-                        ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
-                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
-                        Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
-                        Guids = nfo.UniqueIds
-                            .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
-                            .ToList()
-                    };
-                },
-                None);
+                return new ShowMetadata
+                {
+                    MetadataKind = MetadataKind.Sidecar,
+                    DateAdded = dateAdded,
+                    DateUpdated = dateUpdated,
+                    Title = nfo.Title,
+                    Plot = nfo.Plot,
+                    Outline = nfo.Outline,
+                    Tagline = nfo.Tagline,
+                    ContentRating = nfo.ContentRating,
+                    Year = GetYear(nfo.Year, nfo.Premiered),
+                    ReleaseDate = GetAired(nfo.Year, nfo.Premiered),
+                    Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                    Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                    Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                    Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
+                    Guids = nfo.UniqueIds
+                        .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
+                        .ToList()
+                };
+            }
+
+            return None;
         }
         catch (Exception ex)
         {
@@ -854,8 +851,9 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
             Option<ArtistNfo> maybeNfo = ArtistSerializer.Deserialize(fileStream) as ArtistNfo;
-            return maybeNfo.Match<Option<ArtistMetadata>>(
-                nfo => new ArtistMetadata
+            foreach (ArtistNfo nfo in maybeNfo)
+            {
+                return new ArtistMetadata
                 {
                     MetadataKind = MetadataKind.Sidecar,
                     DateAdded = DateTime.UtcNow,
@@ -866,8 +864,10 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
                     Styles = nfo.Styles.Map(s => new Style { Name = s }).ToList(),
                     Moods = nfo.Moods.Map(m => new Mood { Name = m }).ToList()
-                },
-                None);
+                };
+            }
+
+            return None;
         }
         catch (Exception ex)
         {
@@ -931,36 +931,36 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         {
             await using FileStream fileStream = File.Open(nfoFileName, FileMode.Open, FileAccess.Read);
             Option<MovieNfo> maybeNfo = MovieSerializer.Deserialize(fileStream) as MovieNfo;
-            return maybeNfo.Match<Option<MovieMetadata>>(
-                nfo =>
-                {
-                    DateTime dateAdded = DateTime.UtcNow;
-                    DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
+            foreach (MovieNfo nfo in maybeNfo)
+            {
+                DateTime dateAdded = DateTime.UtcNow;
+                DateTime dateUpdated = File.GetLastWriteTimeUtc(nfoFileName);
 
-                    return new MovieMetadata
-                    {
-                        MetadataKind = MetadataKind.Sidecar,
-                        DateAdded = dateAdded,
-                        DateUpdated = dateUpdated,
-                        Title = nfo.Title,
-                        Year = nfo.Year,
-                        ContentRating = nfo.ContentRating,
-                        ReleaseDate = nfo.Premiered,
-                        Plot = nfo.Plot,
-                        Outline = nfo.Outline,
-                        Tagline = nfo.Tagline,
-                        Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
-                        Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
-                        Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
-                        Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
-                        Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
-                        Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList(),
-                        Guids = nfo.UniqueIds
-                            .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
-                            .ToList()
-                    };
-                },
-                None);
+                return new MovieMetadata
+                {
+                    MetadataKind = MetadataKind.Sidecar,
+                    DateAdded = dateAdded,
+                    DateUpdated = dateUpdated,
+                    Title = nfo.Title,
+                    Year = nfo.Year,
+                    ContentRating = nfo.ContentRating,
+                    ReleaseDate = nfo.Premiered,
+                    Plot = nfo.Plot,
+                    Outline = nfo.Outline,
+                    Tagline = nfo.Tagline,
+                    Genres = nfo.Genres.Map(g => new Genre { Name = g }).ToList(),
+                    Tags = nfo.Tags.Map(t => new Tag { Name = t }).ToList(),
+                    Studios = nfo.Studios.Map(s => new Studio { Name = s }).ToList(),
+                    Actors = Actors(nfo.Actors, dateAdded, dateUpdated),
+                    Directors = nfo.Directors.Map(d => new Director { Name = d }).ToList(),
+                    Writers = nfo.Writers.Map(w => new Writer { Name = w }).ToList(),
+                    Guids = nfo.UniqueIds
+                        .Map(id => new MetadataGuid { Guid = $"{id.Type}://{id.Guid}" })
+                        .ToList()
+                };
+            }
+
+            return None;
         }
         catch (Exception ex)
         {
