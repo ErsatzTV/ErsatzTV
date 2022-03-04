@@ -207,74 +207,74 @@ public class LocalMetadataProvider : ILocalMetadataProvider
             Either<BaseError, Dictionary<string, string>> maybeTags =
                 await _localStatisticsProvider.GetFormatTags(ffprobePath, song);
 
-            return maybeTags.Match(
-                tags =>
+            foreach (Dictionary<string, string> tags in maybeTags.RightToSeq())
+            {
+                Option<SongMetadata> maybeFallbackMetadata =
+                    _fallbackMetadataProvider.GetFallbackMetadata(song);
+
+                var result = new SongMetadata
                 {
-                    Option<SongMetadata> maybeFallbackMetadata =
-                        _fallbackMetadataProvider.GetFallbackMetadata(song);
-                        
-                    var result = new SongMetadata
+                    MetadataKind = MetadataKind.Embedded,
+                    DateAdded = DateTime.UtcNow,
+                    DateUpdated = File.GetLastWriteTimeUtc(path),
+
+                    Artwork = new List<Artwork>(),
+                    Actors = new List<Actor>(),
+                    Genres = new List<Genre>(),
+                    Studios = new List<Studio>(),
+                    Tags = new List<Tag>()
+                };
+
+                if (tags.TryGetValue(MetadataFormatTag.Album, out string album))
+                {
+                    result.Album = album;
+                }
+
+                if (tags.TryGetValue(MetadataFormatTag.Artist, out string artist))
+                {
+                    result.Artist = artist;
+                }
+
+                if (tags.TryGetValue(MetadataFormatTag.Date, out string date))
+                {
+                    result.Date = date;
+                }
+
+                if (tags.TryGetValue(MetadataFormatTag.Genre, out string genre))
+                {
+                    result.Genres.AddRange(SplitGenres(genre).Map(n => new Genre { Name = n }));
+                }
+
+                if (tags.TryGetValue(MetadataFormatTag.Title, out string title))
+                {
+                    result.Title = title;
+                }
+
+                if (tags.TryGetValue(MetadataFormatTag.Track, out string track))
+                {
+                    result.Track = track;
+                }
+
+                foreach (SongMetadata fallbackMetadata in maybeFallbackMetadata)
+                {
+                    if (string.IsNullOrWhiteSpace(result.Title))
                     {
-                        MetadataKind = MetadataKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = File.GetLastWriteTimeUtc(path),
-                            
-                        Artwork = new List<Artwork>(),
-                        Actors = new List<Actor>(),
-                        Genres = new List<Genre>(),
-                        Studios = new List<Studio>(),
-                        Tags = new List<Tag>()
-                    };
-                        
-                    if (tags.TryGetValue(MetadataFormatTag.Album, out string album))
-                    {
-                        result.Album = album;
+                        result.Title = fallbackMetadata.Title;
                     }
 
-                    if (tags.TryGetValue(MetadataFormatTag.Artist, out string artist))
+                    result.OriginalTitle = fallbackMetadata.OriginalTitle;
+
+                    // preserve folder tagging - maybe someone uses this
+                    foreach (Tag tag in fallbackMetadata.Tags)
                     {
-                        result.Artist = artist;
+                        result.Tags.Add(tag);
                     }
+                }
 
-                    if (tags.TryGetValue(MetadataFormatTag.Date, out string date))
-                    {
-                        result.Date = date;
-                    }
+                return result;
+            }
 
-                    if (tags.TryGetValue(MetadataFormatTag.Genre, out string genre))
-                    {
-                        result.Genres.AddRange(SplitGenres(genre).Map(n => new Genre { Name = n }));
-                    }
-
-                    if (tags.TryGetValue(MetadataFormatTag.Title, out string title))
-                    {
-                        result.Title = title;
-                    }
-
-                    if (tags.TryGetValue(MetadataFormatTag.Track, out string track))
-                    {
-                        result.Track = track;
-                    }
-
-                    foreach (SongMetadata fallbackMetadata in maybeFallbackMetadata)
-                    {
-                        if (string.IsNullOrWhiteSpace(result.Title))
-                        {
-                            result.Title = fallbackMetadata.Title;
-                        }
-
-                        result.OriginalTitle = fallbackMetadata.OriginalTitle;
-
-                        // preserve folder tagging - maybe someone uses this
-                        foreach (Tag tag in fallbackMetadata.Tags)
-                        {
-                            result.Tags.Add(tag);
-                        }
-                    }
-
-                    return result;
-                },
-                _ => Option<SongMetadata>.None);
+            return Option<SongMetadata>.None;
         }
         catch (Exception ex)
         {
@@ -320,109 +320,8 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         {
             Option<EpisodeMetadata> maybeIncoming =
                 episodeMetadata.Find(em => em.EpisodeNumber == existing.EpisodeNumber);
-            updated = await maybeIncoming.Match(
-                async metadata =>
-                {
-                    existing.Outline = metadata.Outline;
-                    existing.Plot = metadata.Plot;
-                    existing.Tagline = metadata.Tagline;
-                    existing.Title = metadata.Title;
-
-                    if (existing.DateAdded == SystemTime.MinValueUtc)
-                    {
-                        existing.DateAdded = metadata.DateAdded;
-                    }
-
-                    existing.DateUpdated = metadata.DateUpdated;
-                    existing.MetadataKind = metadata.MetadataKind;
-                    existing.OriginalTitle = metadata.OriginalTitle;
-                    existing.ReleaseDate = metadata.ReleaseDate;
-                    existing.Year = metadata.Year;
-                    existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                        ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                        : metadata.SortTitle;
-
-                    updated = await UpdateMetadataCollections(
-                        existing,
-                        metadata,
-                        (_, _) => Task.FromResult(false),
-                        (_, _) => Task.FromResult(false),
-                        (_, _) => Task.FromResult(false),
-                        _televisionRepository.AddActor) || updated;
-
-                    foreach (Director director in existing.Directors
-                                 .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
-                    {
-                        existing.Directors.Remove(director);
-                        if (await _metadataRepository.RemoveDirector(director))
-                        {
-                            updated = true;
-                        }
-                    }
-
-                    foreach (Director director in metadata.Directors
-                                 .Filter(d => existing.Directors.All(d2 => d2.Name != d.Name)).ToList())
-                    {
-                        existing.Directors.Add(director);
-                        if (await _televisionRepository.AddDirector(existing, director))
-                        {
-                            updated = true;
-                        }
-                    }
-
-                    foreach (Writer writer in existing.Writers
-                                 .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name)).ToList())
-                    {
-                        existing.Writers.Remove(writer);
-                        if (await _metadataRepository.RemoveWriter(writer))
-                        {
-                            updated = true;
-                        }
-                    }
-
-                    foreach (Writer writer in metadata.Writers
-                                 .Filter(w => existing.Writers.All(w2 => w2.Name != w.Name)).ToList())
-                    {
-                        existing.Writers.Add(writer);
-                        if (await _televisionRepository.AddWriter(existing, writer))
-                        {
-                            updated = true;
-                        }
-                    }
-
-                    foreach (MetadataGuid guid in existing.Guids
-                                 .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
-                    {
-                        existing.Guids.Remove(guid);
-                        if (await _metadataRepository.RemoveGuid(guid))
-                        {
-                            updated = true;
-                        }
-                    }
-
-                    foreach (MetadataGuid guid in metadata.Guids
-                                 .Filter(g => existing.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
-                    {
-                        existing.Guids.Add(guid);
-                        if (await _metadataRepository.AddGuid(existing, guid))
-                        {
-                            updated = true;
-                        }
-                    }
-
-                    return await _metadataRepository.Update(existing) || updated;
-                },
-                () => Task.FromResult(updated)) || updated;
-        }
-
-        return updated;
-    }
-
-    private Task<bool> ApplyMetadataUpdate(Movie movie, MovieMetadata metadata) =>
-        Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
-            async existing =>
+            foreach (EpisodeMetadata metadata in maybeIncoming)
             {
-                existing.ContentRating = metadata.ContentRating;
                 existing.Outline = metadata.Outline;
                 existing.Plot = metadata.Plot;
                 existing.Tagline = metadata.Tagline;
@@ -442,13 +341,13 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
                     : metadata.SortTitle;
 
-                bool updated = await UpdateMetadataCollections(
+                updated = await UpdateMetadataCollections(
                     existing,
                     metadata,
-                    _movieRepository.AddGenre,
-                    _movieRepository.AddTag,
-                    _movieRepository.AddStudio,
-                    _movieRepository.AddActor);
+                    (_, _) => Task.FromResult(false),
+                    (_, _) => Task.FromResult(false),
+                    (_, _) => Task.FromResult(false),
+                    _televisionRepository.AddActor) || updated;
 
                 foreach (Director director in existing.Directors
                              .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
@@ -464,7 +363,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                              .Filter(d => existing.Directors.All(d2 => d2.Name != d.Name)).ToList())
                 {
                     existing.Directors.Add(director);
-                    if (await _movieRepository.AddDirector(existing, director))
+                    if (await _televisionRepository.AddDirector(existing, director))
                     {
                         updated = true;
                     }
@@ -484,7 +383,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                              .Filter(w => existing.Writers.All(w2 => w2.Name != w.Name)).ToList())
                 {
                     existing.Writers.Add(writer);
-                    if (await _movieRepository.AddWriter(existing, writer))
+                    if (await _televisionRepository.AddWriter(existing, writer))
                     {
                         updated = true;
                     }
@@ -511,301 +410,400 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                 }
 
                 return await _metadataRepository.Update(existing) || updated;
-            },
-            async () =>
+            }
+        }
+
+        return updated;
+    }
+
+    private async Task<bool> ApplyMetadataUpdate(Movie movie, MovieMetadata metadata)
+    {
+        Option<MovieMetadata> maybeMetadata = Optional(movie.MovieMetadata).Flatten().HeadOrNone();
+        foreach (MovieMetadata existing in maybeMetadata)
+        {
+            existing.ContentRating = metadata.ContentRating;
+            existing.Outline = metadata.Outline;
+            existing.Plot = metadata.Plot;
+            existing.Tagline = metadata.Tagline;
+            existing.Title = metadata.Title;
+
+            if (existing.DateAdded == SystemTime.MinValueUtc)
             {
-                metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-                metadata.MovieId = movie.Id;
-                movie.MovieMetadata = new List<MovieMetadata> { metadata };
+                existing.DateAdded = metadata.DateAdded;
+            }
 
-                return await _metadataRepository.Add(metadata);
-            });
+            existing.DateUpdated = metadata.DateUpdated;
+            existing.MetadataKind = metadata.MetadataKind;
+            existing.OriginalTitle = metadata.OriginalTitle;
+            existing.ReleaseDate = metadata.ReleaseDate;
+            existing.Year = metadata.Year;
+            existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                : metadata.SortTitle;
 
-    private Task<bool> ApplyMetadataUpdate(Show show, ShowMetadata metadata) =>
-        Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
-            async existing =>
+            bool updated = await UpdateMetadataCollections(
+                existing,
+                metadata,
+                _movieRepository.AddGenre,
+                _movieRepository.AddTag,
+                _movieRepository.AddStudio,
+                _movieRepository.AddActor);
+
+            foreach (Director director in existing.Directors
+                         .Filter(d => metadata.Directors.All(d2 => d2.Name != d.Name)).ToList())
             {
-                existing.ContentRating = metadata.ContentRating;
-                existing.Outline = metadata.Outline;
-                existing.Plot = metadata.Plot;
-                existing.Tagline = metadata.Tagline;
-                existing.Title = metadata.Title;
-
-                if (existing.DateAdded == SystemTime.MinValueUtc)
+                existing.Directors.Remove(director);
+                if (await _metadataRepository.RemoveDirector(director))
                 {
-                    existing.DateAdded = metadata.DateAdded;
+                    updated = true;
                 }
+            }
 
-                existing.DateUpdated = metadata.DateUpdated;
-                existing.MetadataKind = metadata.MetadataKind;
-                existing.OriginalTitle = metadata.OriginalTitle;
-                existing.ReleaseDate = metadata.ReleaseDate;
-                existing.Year = metadata.Year;
-                existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-
-                bool updated = await UpdateMetadataCollections(
-                    existing,
-                    metadata,
-                    _televisionRepository.AddGenre,
-                    _televisionRepository.AddTag,
-                    _televisionRepository.AddStudio,
-                    _televisionRepository.AddActor);
-
-                foreach (MetadataGuid guid in existing.Guids
-                             .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
-                {
-                    existing.Guids.Remove(guid);
-                    if (await _metadataRepository.RemoveGuid(guid))
-                    {
-                        updated = true;
-                    }
-                }
-
-                foreach (MetadataGuid guid in metadata.Guids
-                             .Filter(g => existing.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
-                {
-                    existing.Guids.Add(guid);
-                    if (await _metadataRepository.AddGuid(existing, guid))
-                    {
-                        updated = true;
-                    }
-                }
-
-                return await _metadataRepository.Update(existing) || updated;
-            },
-            async () =>
+            foreach (Director director in metadata.Directors
+                         .Filter(d => existing.Directors.All(d2 => d2.Name != d.Name)).ToList())
             {
-                metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-                metadata.ShowId = show.Id;
-                show.ShowMetadata = new List<ShowMetadata> { metadata };
+                existing.Directors.Add(director);
+                if (await _movieRepository.AddDirector(existing, director))
+                {
+                    updated = true;
+                }
+            }
 
-                return await _metadataRepository.Add(metadata);
-            });
-
-    private Task<bool> ApplyMetadataUpdate(Artist artist, ArtistMetadata metadata) =>
-        Optional(artist.ArtistMetadata).Flatten().HeadOrNone().Match(
-            async existing =>
+            foreach (Writer writer in existing.Writers
+                         .Filter(w => metadata.Writers.All(w2 => w2.Name != w.Name)).ToList())
             {
-                existing.Title = metadata.Title;
-                existing.Disambiguation = metadata.Disambiguation;
-                existing.Biography = metadata.Biography;
-
-                if (existing.DateAdded == SystemTime.MinValueUtc)
+                existing.Writers.Remove(writer);
+                if (await _metadataRepository.RemoveWriter(writer))
                 {
-                    existing.DateAdded = metadata.DateAdded;
+                    updated = true;
                 }
+            }
 
-                existing.DateUpdated = metadata.DateUpdated;
-                existing.MetadataKind = metadata.MetadataKind;
-                existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-
-                var updated = false;
-
-                foreach (Genre genre in existing.Genres.Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
-                             .ToList())
-                {
-                    existing.Genres.Remove(genre);
-                    if (await _metadataRepository.RemoveGenre(genre))
-                    {
-                        updated = true;
-                    }
-                }
-
-                foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
-                             .ToList())
-                {
-                    existing.Genres.Add(genre);
-                    if (await _artistRepository.AddGenre(existing, genre))
-                    {
-                        updated = true;
-                    }
-                }
-
-                foreach (Style style in existing.Styles.Filter(s => metadata.Styles.All(s2 => s2.Name != s.Name))
-                             .ToList())
-                {
-                    existing.Styles.Remove(style);
-                    if (await _metadataRepository.RemoveStyle(style))
-                    {
-                        updated = true;
-                    }
-                }
-
-                foreach (Style style in metadata.Styles.Filter(s => existing.Styles.All(s2 => s2.Name != s.Name))
-                             .ToList())
-                {
-                    existing.Styles.Add(style);
-                    if (await _artistRepository.AddStyle(existing, style))
-                    {
-                        updated = true;
-                    }
-                }
-
-                foreach (Mood mood in existing.Moods.Filter(m => metadata.Moods.All(m2 => m2.Name != m.Name))
-                             .ToList())
-                {
-                    existing.Moods.Remove(mood);
-                    if (await _metadataRepository.RemoveMood(mood))
-                    {
-                        updated = true;
-                    }
-                }
-
-                foreach (Mood mood in metadata.Moods.Filter(s => existing.Moods.All(m2 => m2.Name != s.Name))
-                             .ToList())
-                {
-                    existing.Moods.Add(mood);
-                    if (await _artistRepository.AddMood(existing, mood))
-                    {
-                        updated = true;
-                    }
-                }
-
-                return await _metadataRepository.Update(existing) || updated;
-            },
-            async () =>
+            foreach (Writer writer in metadata.Writers
+                         .Filter(w => existing.Writers.All(w2 => w2.Name != w.Name)).ToList())
             {
-                metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-                metadata.ArtistId = artist.Id;
-                artist.ArtistMetadata = new List<ArtistMetadata> { metadata };
-
-                return await _metadataRepository.Add(metadata);
-            });
-
-    private Task<bool> ApplyMetadataUpdate(MusicVideo musicVideo, MusicVideoMetadata metadata) =>
-        Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone().Match(
-            async existing =>
-            {
-                existing.Title = metadata.Title;
-                existing.Year = metadata.Year;
-                existing.Plot = metadata.Plot;
-                existing.Album = metadata.Album;
-
-                if (existing.DateAdded == SystemTime.MinValueUtc)
+                existing.Writers.Add(writer);
+                if (await _movieRepository.AddWriter(existing, writer))
                 {
-                    existing.DateAdded = metadata.DateAdded;
+                    updated = true;
                 }
+            }
 
-                existing.DateUpdated = metadata.DateUpdated;
-                existing.MetadataKind = metadata.MetadataKind;
-                existing.OriginalTitle = metadata.OriginalTitle;
-                existing.ReleaseDate = metadata.ReleaseDate;
-                existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-
-                bool updated = await UpdateMetadataCollections(
-                    existing,
-                    metadata,
-                    _musicVideoRepository.AddGenre,
-                    _musicVideoRepository.AddTag,
-                    _musicVideoRepository.AddStudio,
-                    (_, _) => Task.FromResult(false));
-
-                return await _metadataRepository.Update(existing) || updated;
-            },
-            async () =>
+            foreach (MetadataGuid guid in existing.Guids
+                         .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
             {
-                metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-                metadata.MusicVideoId = musicVideo.Id;
-                musicVideo.MusicVideoMetadata = new List<MusicVideoMetadata> { metadata };
-
-                return await _metadataRepository.Add(metadata);
-            });
-        
-    private Task<bool> ApplyMetadataUpdate(OtherVideo otherVideo, OtherVideoMetadata metadata) =>
-        Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone().Match(
-            async existing =>
-            {
-                existing.Title = metadata.Title;
-
-                if (existing.DateAdded == SystemTime.MinValueUtc)
+                existing.Guids.Remove(guid);
+                if (await _metadataRepository.RemoveGuid(guid))
                 {
-                    existing.DateAdded = metadata.DateAdded;
+                    updated = true;
                 }
+            }
 
-                existing.DateUpdated = metadata.DateUpdated;
-                existing.MetadataKind = metadata.MetadataKind;
-                existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-                existing.OriginalTitle = metadata.OriginalTitle;
-
-                bool updated = await UpdateMetadataCollections(
-                    existing,
-                    metadata,
-                    (_, _) => Task.FromResult(false),
-                    _otherVideoRepository.AddTag,
-                    (_, _) => Task.FromResult(false),
-                    (_, _) => Task.FromResult(false));
-
-                return await _metadataRepository.Update(existing) || updated;
-            },
-            async () =>
+            foreach (MetadataGuid guid in metadata.Guids
+                         .Filter(g => existing.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
             {
-                metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-                metadata.OtherVideoId = otherVideo.Id;
-                otherVideo.OtherVideoMetadata = new List<OtherVideoMetadata> { metadata };
-
-                return await _metadataRepository.Add(metadata);
-            });
-        
-    private Task<bool> ApplyMetadataUpdate(Song song, SongMetadata metadata) =>
-        Optional(song.SongMetadata).Flatten().HeadOrNone().Match(
-            async existing =>
-            {
-                existing.Title = metadata.Title;
-                existing.Artist = metadata.Artist;
-                existing.Album = metadata.Album;
-                existing.Date = metadata.Date;
-                existing.Track = metadata.Track;
-
-                if (existing.DateAdded == SystemTime.MinValueUtc)
+                existing.Guids.Add(guid);
+                if (await _metadataRepository.AddGuid(existing, guid))
                 {
-                    existing.DateAdded = metadata.DateAdded;
+                    updated = true;
                 }
+            }
 
-                existing.DateUpdated = metadata.DateUpdated;
-                existing.MetadataKind = metadata.MetadataKind;
-                existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-                existing.OriginalTitle = metadata.OriginalTitle;
+            return await _metadataRepository.Update(existing) || updated;
+        }
 
-                bool updated = await UpdateMetadataCollections(
-                    existing,
-                    metadata,
-                    _songRepository.AddGenre,
-                    _songRepository.AddTag,
-                    (_, _) => Task.FromResult(false),
-                    (_, _) => Task.FromResult(false));
+        metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            : metadata.SortTitle;
+        metadata.MovieId = movie.Id;
+        movie.MovieMetadata = new List<MovieMetadata> { metadata };
 
-                return await _metadataRepository.Update(existing) || updated;
-            },
-            async () =>
+        return await _metadataRepository.Add(metadata);
+    }
+
+    private async Task<bool> ApplyMetadataUpdate(Show show, ShowMetadata metadata)
+    {
+        Option<ShowMetadata> maybeMetadata = Optional(show.ShowMetadata).Flatten().HeadOrNone();
+        foreach (ShowMetadata existing in maybeMetadata)
+        {
+            existing.ContentRating = metadata.ContentRating;
+            existing.Outline = metadata.Outline;
+            existing.Plot = metadata.Plot;
+            existing.Tagline = metadata.Tagline;
+            existing.Title = metadata.Title;
+
+            if (existing.DateAdded == SystemTime.MinValueUtc)
             {
-                metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
-                    ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
-                    : metadata.SortTitle;
-                metadata.SongId = song.Id;
-                song.SongMetadata = new List<SongMetadata> { metadata };
+                existing.DateAdded = metadata.DateAdded;
+            }
 
-                return await _metadataRepository.Add(metadata);
-            });
+            existing.DateUpdated = metadata.DateUpdated;
+            existing.MetadataKind = metadata.MetadataKind;
+            existing.OriginalTitle = metadata.OriginalTitle;
+            existing.ReleaseDate = metadata.ReleaseDate;
+            existing.Year = metadata.Year;
+            existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                : metadata.SortTitle;
+
+            bool updated = await UpdateMetadataCollections(
+                existing,
+                metadata,
+                _televisionRepository.AddGenre,
+                _televisionRepository.AddTag,
+                _televisionRepository.AddStudio,
+                _televisionRepository.AddActor);
+
+            foreach (MetadataGuid guid in existing.Guids
+                         .Filter(g => metadata.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+            {
+                existing.Guids.Remove(guid);
+                if (await _metadataRepository.RemoveGuid(guid))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (MetadataGuid guid in metadata.Guids
+                         .Filter(g => existing.Guids.All(g2 => g2.Guid != g.Guid)).ToList())
+            {
+                existing.Guids.Add(guid);
+                if (await _metadataRepository.AddGuid(existing, guid))
+                {
+                    updated = true;
+                }
+            }
+
+            return await _metadataRepository.Update(existing) || updated;
+        }
+
+        metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            : metadata.SortTitle;
+        metadata.ShowId = show.Id;
+        show.ShowMetadata = new List<ShowMetadata> { metadata };
+
+        return await _metadataRepository.Add(metadata);
+    }
+
+    private async Task<bool> ApplyMetadataUpdate(Artist artist, ArtistMetadata metadata)
+    {
+        Option<ArtistMetadata> maybeMetadata = Optional(artist.ArtistMetadata).Flatten().HeadOrNone();
+        foreach (ArtistMetadata existing in maybeMetadata)
+        {
+            existing.Title = metadata.Title;
+            existing.Disambiguation = metadata.Disambiguation;
+            existing.Biography = metadata.Biography;
+
+            if (existing.DateAdded == SystemTime.MinValueUtc)
+            {
+                existing.DateAdded = metadata.DateAdded;
+            }
+
+            existing.DateUpdated = metadata.DateUpdated;
+            existing.MetadataKind = metadata.MetadataKind;
+            existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                : metadata.SortTitle;
+
+            var updated = false;
+
+            foreach (Genre genre in existing.Genres.Filter(g => metadata.Genres.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existing.Genres.Remove(genre);
+                if (await _metadataRepository.RemoveGenre(genre))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Genre genre in metadata.Genres.Filter(g => existing.Genres.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existing.Genres.Add(genre);
+                if (await _artistRepository.AddGenre(existing, genre))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Style style in existing.Styles.Filter(s => metadata.Styles.All(s2 => s2.Name != s.Name))
+                         .ToList())
+            {
+                existing.Styles.Remove(style);
+                if (await _metadataRepository.RemoveStyle(style))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Style style in metadata.Styles.Filter(s => existing.Styles.All(s2 => s2.Name != s.Name))
+                         .ToList())
+            {
+                existing.Styles.Add(style);
+                if (await _artistRepository.AddStyle(existing, style))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Mood mood in existing.Moods.Filter(m => metadata.Moods.All(m2 => m2.Name != m.Name))
+                         .ToList())
+            {
+                existing.Moods.Remove(mood);
+                if (await _metadataRepository.RemoveMood(mood))
+                {
+                    updated = true;
+                }
+            }
+
+            foreach (Mood mood in metadata.Moods.Filter(s => existing.Moods.All(m2 => m2.Name != s.Name))
+                         .ToList())
+            {
+                existing.Moods.Add(mood);
+                if (await _artistRepository.AddMood(existing, mood))
+                {
+                    updated = true;
+                }
+            }
+
+            return await _metadataRepository.Update(existing) || updated;
+        }
+
+        metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            : metadata.SortTitle;
+        metadata.ArtistId = artist.Id;
+        artist.ArtistMetadata = new List<ArtistMetadata> { metadata };
+
+        return await _metadataRepository.Add(metadata);
+    }
+
+    private async Task<bool> ApplyMetadataUpdate(MusicVideo musicVideo, MusicVideoMetadata metadata)
+    {
+        Option<MusicVideoMetadata> maybeMetadata = Optional(musicVideo.MusicVideoMetadata).Flatten().HeadOrNone();
+        foreach (MusicVideoMetadata existing in maybeMetadata)
+        {
+            existing.Title = metadata.Title;
+            existing.Year = metadata.Year;
+            existing.Plot = metadata.Plot;
+            existing.Album = metadata.Album;
+
+            if (existing.DateAdded == SystemTime.MinValueUtc)
+            {
+                existing.DateAdded = metadata.DateAdded;
+            }
+
+            existing.DateUpdated = metadata.DateUpdated;
+            existing.MetadataKind = metadata.MetadataKind;
+            existing.OriginalTitle = metadata.OriginalTitle;
+            existing.ReleaseDate = metadata.ReleaseDate;
+            existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                : metadata.SortTitle;
+
+            bool updated = await UpdateMetadataCollections(
+                existing,
+                metadata,
+                _musicVideoRepository.AddGenre,
+                _musicVideoRepository.AddTag,
+                _musicVideoRepository.AddStudio,
+                (_, _) => Task.FromResult(false));
+
+            return await _metadataRepository.Update(existing) || updated;
+        }
+
+        metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            : metadata.SortTitle;
+        metadata.MusicVideoId = musicVideo.Id;
+        musicVideo.MusicVideoMetadata = new List<MusicVideoMetadata> { metadata };
+
+        return await _metadataRepository.Add(metadata);
+    }
+
+    private async Task<bool> ApplyMetadataUpdate(OtherVideo otherVideo, OtherVideoMetadata metadata)
+    {
+        Option<OtherVideoMetadata> maybeMetadata = Optional(otherVideo.OtherVideoMetadata).Flatten().HeadOrNone();
+        foreach (OtherVideoMetadata existing in maybeMetadata)
+        {
+            existing.Title = metadata.Title;
+
+            if (existing.DateAdded == SystemTime.MinValueUtc)
+            {
+                existing.DateAdded = metadata.DateAdded;
+            }
+
+            existing.DateUpdated = metadata.DateUpdated;
+            existing.MetadataKind = metadata.MetadataKind;
+            existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                : metadata.SortTitle;
+            existing.OriginalTitle = metadata.OriginalTitle;
+
+            bool updated = await UpdateMetadataCollections(
+                existing,
+                metadata,
+                (_, _) => Task.FromResult(false),
+                _otherVideoRepository.AddTag,
+                (_, _) => Task.FromResult(false),
+                (_, _) => Task.FromResult(false));
+
+            return await _metadataRepository.Update(existing) || updated;
+        }
+
+        metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            : metadata.SortTitle;
+        metadata.OtherVideoId = otherVideo.Id;
+        otherVideo.OtherVideoMetadata = new List<OtherVideoMetadata> { metadata };
+
+        return await _metadataRepository.Add(metadata);
+    }
+
+    private async Task<bool> ApplyMetadataUpdate(Song song, SongMetadata metadata)
+    {
+        Option<SongMetadata> maybeMetadata = Optional(song.SongMetadata).Flatten().HeadOrNone();
+        foreach (SongMetadata existing in maybeMetadata)
+        {
+            existing.Title = metadata.Title;
+            existing.Artist = metadata.Artist;
+            existing.Album = metadata.Album;
+            existing.Date = metadata.Date;
+            existing.Track = metadata.Track;
+
+            if (existing.DateAdded == SystemTime.MinValueUtc)
+            {
+                existing.DateAdded = metadata.DateAdded;
+            }
+
+            existing.DateUpdated = metadata.DateUpdated;
+            existing.MetadataKind = metadata.MetadataKind;
+            existing.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+                ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+                : metadata.SortTitle;
+            existing.OriginalTitle = metadata.OriginalTitle;
+
+            bool updated = await UpdateMetadataCollections(
+                existing,
+                metadata,
+                _songRepository.AddGenre,
+                _songRepository.AddTag,
+                (_, _) => Task.FromResult(false),
+                (_, _) => Task.FromResult(false));
+
+            return await _metadataRepository.Update(existing) || updated;
+        }
+
+        metadata.SortTitle = string.IsNullOrWhiteSpace(metadata.SortTitle)
+            ? _fallbackMetadataProvider.GetSortTitle(metadata.Title)
+            : metadata.SortTitle;
+        metadata.SongId = song.Id;
+        song.SongMetadata = new List<SongMetadata> { metadata };
+
+        return await _metadataRepository.Add(metadata);
+    }
 
     private async Task<Option<ShowMetadata>> LoadTelevisionShowMetadata(string nfoFileName)
     {
