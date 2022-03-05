@@ -377,7 +377,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     public record FFprobeFormatTags(
         string title,
         string artist,
-        [property: JsonProperty(PropertyName = "album artist")]
+        [property: JsonProperty(PropertyName = "album_artist")]
         string albumArtist,
         string album,
         string track,

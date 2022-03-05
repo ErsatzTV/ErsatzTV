@@ -4,7 +4,7 @@
 
 namespace ErsatzTV.Infrastructure.Migrations
 {
-    public partial class Reset_SongMetadataAlbumArtist : Migration
+    public partial class Reset_SongMetadataAlbumArtistAgain : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {

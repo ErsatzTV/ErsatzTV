@@ -9,11 +9,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix watermark on scaled and/or padded video with NVIDIA acceleration
 - Fix playback of interlaced mpeg2video content with NVIDIA acceleration
 - Fix playback of all interlaced content with QSV acceleration
+- Fix adding songs to collections from search results page
 
 ### Added
 - Add automated error reporting via Bugsnag
   - This can be disabled by editing the `appsettings.json` file or by setting the `Bugsnag:Enable` environment variable to `false`
 - Add `album_artist` to song metadata and to search index
+- Display `album_artist` on some song videos when it's different than the `artist`
 
 ### Changed
 - Framerate normalization will never normalize framerate below 24fps
