@@ -37,36 +37,41 @@ public class PlexPathReplacementService : IPlexPathReplacementService
             .SingleOrDefault(
                 r =>
                 {
+                    if (string.IsNullOrWhiteSpace(r.PlexPath))
+                    {
+                        return false;
+                    }
+
                     string separatorChar = IsWindows(r.PlexMediaSource) ? @"\" : @"/";
                     string prefix = r.PlexPath.EndsWith(separatorChar) ? r.PlexPath : r.PlexPath + separatorChar;
                     return path.StartsWith(prefix);
                 });
 
-        return maybeReplacement.Match(
-            replacement =>
+        foreach (PlexPathReplacement replacement in maybeReplacement)
+        {
+            string finalPath = path.Replace(replacement.PlexPath, replacement.LocalPath);
+            if (IsWindows(replacement.PlexMediaSource) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
             {
-                string finalPath = path.Replace(replacement.PlexPath, replacement.LocalPath);
-                if (IsWindows(replacement.PlexMediaSource) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                {
-                    finalPath = finalPath.Replace(@"\", @"/");
-                }
-                else if (!IsWindows(replacement.PlexMediaSource) && _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                {
-                    finalPath = finalPath.Replace(@"/", @"\");
-                }
+                finalPath = finalPath.Replace(@"\", @"/");
+            }
+            else if (!IsWindows(replacement.PlexMediaSource) && _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            {
+                finalPath = finalPath.Replace(@"/", @"\");
+            }
 
-                if (log)
-                {
-                    _logger.LogInformation(
-                        "Replacing plex path {PlexPath} with {LocalPath} resulting in {FinalPath}",
-                        replacement.PlexPath,
-                        replacement.LocalPath,
-                        finalPath);
-                }
+            if (log)
+            {
+                _logger.LogInformation(
+                    "Replacing plex path {PlexPath} with {LocalPath} resulting in {FinalPath}",
+                    replacement.PlexPath,
+                    replacement.LocalPath,
+                    finalPath);
+            }
 
-                return finalPath;
-            },
-            () => path);
+            return finalPath;
+        }
+
+        return path;
     }
 
     private static bool IsWindows(PlexMediaSource plexMediaSource) =>
