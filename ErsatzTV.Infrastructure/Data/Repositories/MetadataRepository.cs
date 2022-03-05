@@ -24,7 +24,7 @@ public class MetadataRepository : IMetadataRepository
 
     public async Task<bool> Update(Metadata metadata)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         dbContext.Entry(metadata).State = EntityState.Modified;
         return await dbContext.SaveChangesAsync() > 0;
     }

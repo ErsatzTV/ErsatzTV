@@ -52,6 +52,7 @@ public sealed class SearchIndex : ISearchIndex
     private const string MinutesField = "minutes";
     private const string ArtistField = "artist";
     private const string StateField = "state";
+    private const string AlbumArtistField = "album_artist";
 
     public const string MovieType = "movie";
     public const string ShowType = "show";
@@ -892,6 +893,11 @@ public sealed class SearchIndex : ISearchIndex
                 if (!string.IsNullOrWhiteSpace(metadata.Artist))
                 {
                     doc.Add(new TextField(ArtistField, metadata.Artist, Field.Store.NO));
+                }
+
+                if (!string.IsNullOrWhiteSpace(metadata.AlbumArtist))
+                {
+                    doc.Add(new TextField(AlbumArtistField, metadata.AlbumArtist, Field.Store.NO));
                 }
 
                 foreach (Tag tag in metadata.Tags)

@@ -88,9 +88,20 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         result.Add(MetadataFormatTag.Album, ffprobe.format.tags.album);
                     }
 
+                    if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.albumArtist))
+                    {
+                        result.Add(MetadataFormatTag.AlbumArtist, ffprobe.format.tags.albumArtist);
+                    }
+
                     if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.artist))
                     {
                         result.Add(MetadataFormatTag.Artist, ffprobe.format.tags.artist);
+
+                        // if no album artist is present, use the track artist
+                        if (!result.ContainsKey(MetadataFormatTag.AlbumArtist))
+                        {
+                            result.Add(MetadataFormatTag.AlbumArtist, ffprobe.format.tags.artist);
+                        }
                     }
 
                     if (!string.IsNullOrWhiteSpace(ffprobe?.format?.tags?.date))
@@ -366,6 +377,8 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     public record FFprobeFormatTags(
         string title,
         string artist,
+        [property: JsonProperty(PropertyName = "album artist")]
+        string albumArtist,
         string album,
         string track,
         string genre,
