@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix playback of interlaced mpeg2video content with NVIDIA acceleration
 - Fix playback of all interlaced content with QSV acceleration
 - Fix adding songs to collections from search results page
+- Fix bug scheduling mid-roll filler with content that contains one chapter
+  - No mid-roll filler will be inserted for content with zero or one chapters
 
 ### Added
 - Add automated error reporting via Bugsnag
