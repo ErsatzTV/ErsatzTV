@@ -486,6 +486,27 @@
                     Right: _ => Snackbar.Add($"Added {otherVideo.Title} to collection {collection.Name}", Severity.Success));
             }
         }
+        
+        if (card is SongCardViewModel song)
+        {
+            var parameters = new DialogParameters { { "EntityType", "song" }, { "EntityName", song.Title } };
+            var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+            IDialogReference dialog = Dialog.Show<AddToCollectionDialog>("Add To Collection", parameters, options);
+            DialogResult result = await dialog.Result;
+            if (!result.Cancelled && result.Data is MediaCollectionViewModel collection)
+            {
+                var request = new AddSongToCollection(collection.Id, song.SongId);
+                Either<BaseError, Unit> addResult = await Mediator.Send(request, CancellationToken);
+                addResult.Match(
+                    Left: error =>
+                    {
+                        Snackbar.Add($"Unexpected error adding song to collection: {error.Value}");
+                        Logger.LogError("Unexpected error adding song to collection: {Error}", error.Value);
+                    },
+                    Right: _ => Snackbar.Add($"Added {song.Title} to collection {collection.Name}", Severity.Success));
+            }
+        }
     }
 
     private string GetMoviesLink()
