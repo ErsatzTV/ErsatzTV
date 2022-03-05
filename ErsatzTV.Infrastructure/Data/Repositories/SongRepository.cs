@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -10,12 +9,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class SongRepository : ISongRepository
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public SongRepository(IDbConnection dbConnection, IDbContextFactory<TvContext> dbContextFactory)
+    public SongRepository(IDbContextFactory<TvContext> dbContextFactory)
     {
-        _dbConnection = dbConnection;
         _dbContextFactory = dbContextFactory;
     }
 
@@ -53,8 +50,10 @@ public class SongRepository : ISongRepository
             async () => await AddSong(dbContext, libraryPath.Id, path));
     }
 
-    public Task<IEnumerable<string>> FindSongPaths(LibraryPath libraryPath) =>
-        _dbConnection.QueryAsync<string>(
+    public async Task<IEnumerable<string>> FindSongPaths(LibraryPath libraryPath)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
             @"SELECT MF.Path
                 FROM MediaFile MF
                 INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
@@ -62,10 +61,13 @@ public class SongRepository : ISongRepository
                 INNER JOIN MediaItem MI on O.Id = MI.Id
                 WHERE MI.LibraryPathId = @LibraryPathId",
             new { LibraryPathId = libraryPath.Id });
+    }
 
     public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT O.Id
             FROM Song O
             INNER JOIN MediaItem MI on O.Id = MI.Id
@@ -74,7 +76,6 @@ public class SongRepository : ISongRepository
             WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
             new { LibraryPathId = libraryPath.Id, Path = path }).Map(result => result.ToList());
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         foreach (int songId in ids)
         {
             Song song = await dbContext.Songs.FindAsync(songId);
@@ -89,15 +90,21 @@ public class SongRepository : ISongRepository
         return ids;
     }
 
-    public Task<bool> AddGenre(SongMetadata metadata, Genre genre) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddGenre(SongMetadata metadata, Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Genre (Name, SongMetadataId) VALUES (@Name, @MetadataId)",
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddTag(SongMetadata metadata, Tag tag) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddTag(SongMetadata metadata, Tag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Tag (Name, SongMetadataId) VALUES (@Name, @MetadataId)",
             new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
     public async Task<List<SongMetadata>> GetSongsForCards(List<int> ids)
     {

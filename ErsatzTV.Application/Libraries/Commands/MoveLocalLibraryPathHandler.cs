@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -16,20 +15,17 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IDbConnection _dbConnection;
     private readonly ILogger<MoveLocalLibraryPathHandler> _logger;
 
     public MoveLocalLibraryPathHandler(
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
         IDbContextFactory<TvContext> dbContextFactory,
-        IDbConnection dbConnection,
         ILogger<MoveLocalLibraryPathHandler> logger)
     {
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _dbContextFactory = dbContextFactory;
-        _dbConnection = dbConnection;
         _logger = logger;
     }
 
@@ -37,9 +33,9 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
         MoveLocalLibraryPath request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => MovePath(dbContext, parameters));
+        return await validation.Apply(parameters => MovePath(dbContext, parameters));
     }
 
     private async Task<Unit> MovePath(TvContext dbContext, Parameters parameters)
@@ -50,7 +46,7 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
         path.LibraryId = newLibrary.Id;
         if (await dbContext.SaveChangesAsync() > 0)
         {
-            List<int> ids = await _dbConnection.QueryAsync<int>(
+            List<int> ids = await dbContext.Connection.QueryAsync<int>(
                     @"SELECT MediaItem.Id FROM MediaItem WHERE LibraryPathId = @LibraryPathId",
                     new { LibraryPathId = path.Id })
                 .Map(result => result.ToList());
@@ -60,7 +56,7 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
                 Option<MediaItem> maybeMediaItem = await _searchRepository.GetItemToIndex(id);
                 foreach (MediaItem mediaItem in maybeMediaItem)
                 {
-                    _logger.LogInformation("Moving item at {Path}", await GetPath(mediaItem));
+                    _logger.LogInformation("Moving item at {Path}", await GetPath(dbContext, mediaItem));
                     await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { mediaItem });
                 }
             }
@@ -91,21 +87,24 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
             .SelectOneAsync(a => a.Id, a => a.Id == request.TargetLibraryId)
             .Map(o => o.ToValidation<BaseError>("LocalLibrary does not exist"));
 
-    private async Task<string> GetPath(MediaItem mediaItem) =>
+    private async Task<string> GetPath(TvContext dbContext, MediaItem mediaItem) =>
         mediaItem switch
         {
-            Movie => await _dbConnection.QuerySingleAsync<string>(
+            Movie => await dbContext.Connection.QuerySingleAsync<string>(
                 @"SELECT Path FROM MediaFile
                       INNER JOIN MediaVersion MV on MediaFile.MediaVersionId = MV.Id
-                      WHERE MV.MovieId = @Id", new { mediaItem.Id }),
-            Episode => await _dbConnection.QuerySingleAsync<string>(
+                      WHERE MV.MovieId = @Id",
+                new { mediaItem.Id }),
+            Episode => await dbContext.Connection.QuerySingleAsync<string>(
                 @"SELECT Path FROM MediaFile
                       INNER JOIN MediaVersion MV on MediaFile.MediaVersionId = MV.Id
-                      WHERE MV.EpisodeId = @Id", new { mediaItem.Id }),
-            MusicVideo => await _dbConnection.QuerySingleAsync<string>(
+                      WHERE MV.EpisodeId = @Id",
+                new { mediaItem.Id }),
+            MusicVideo => await dbContext.Connection.QuerySingleAsync<string>(
                 @"SELECT Path FROM MediaFile
                       INNER JOIN MediaVersion MV on MediaFile.MediaVersionId = MV.Id
-                      WHERE MV.MusicVideoId = @Id", new { mediaItem.Id }),
+                      WHERE MV.MusicVideoId = @Id",
+                new { mediaItem.Id }),
             _ => null
         };
 

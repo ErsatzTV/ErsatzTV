@@ -1,4 +1,3 @@
-using System.Data;
 using System.Reflection;
 using System.Text;
 using System.Threading.Channels;
@@ -55,7 +54,6 @@ using Ganss.XSS;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using MudBlazor.Services;
@@ -200,7 +198,6 @@ public class Startup
                     o.MigrationsAssembly("ErsatzTV.Infrastructure");
                 }));
             
-        services.AddTransient<IDbConnection>(_ => new SqliteConnection(connectionString));
         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
         SqlMapper.AddTypeHandler(new GuidHandler());
         SqlMapper.AddTypeHandler(new TimeSpanHandler());

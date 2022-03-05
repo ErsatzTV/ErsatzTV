@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -9,18 +8,21 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MetadataRepository : IMetadataRepository
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+    public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
-        _dbConnection = dbConnection;
     }
 
-    public Task<bool> RemoveActor(Actor actor) =>
-        _dbConnection.ExecuteAsync("DELETE FROM Actor WHERE Id = @ActorId", new { ActorId = actor.Id })
+    public async Task<bool> RemoveActor(Actor actor)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Actor WHERE Id = @ActorId",
+                new { ActorId = actor.Id })
             .Map(result => result > 0);
+    }
 
     public async Task<bool> Update(Metadata metadata)
     {
@@ -31,7 +33,7 @@ public class MetadataRepository : IMetadataRepository
 
     public async Task<bool> Add(Metadata metadata)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         dbContext.Entry(metadata).State = EntityState.Added;
 
         foreach (Genre genre in Optional(metadata.Genres).Flatten())
@@ -111,7 +113,7 @@ public class MetadataRepository : IMetadataRepository
         bool updateVersion = true)
     {
         int mediaVersionId = mediaItem.GetHeadVersion().Id;
-            
+
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<MediaVersion> maybeVersion = await dbContext.MediaVersions
             .Include(v => v.Streams)
@@ -164,7 +166,7 @@ public class MetadataRepository : IMetadataRepository
                     existingStream.PixelFormat = incomingStream.PixelFormat;
                     existingStream.BitsPerRawSample = incomingStream.BitsPerRawSample;
                 }
-                    
+
                 var chaptersToAdd = incoming.Chapters
                     .Filter(s => existing.Chapters.All(es => es.ChapterId != s.ChapterId))
                     .ToList();
@@ -225,8 +227,10 @@ public class MetadataRepository : IMetadataRepository
             () => Task.FromResult(false));
     }
 
-    public Task<bool> UpdatePlexStatistics(int mediaVersionId, MediaVersion incoming) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> UpdatePlexStatistics(int mediaVersionId, MediaVersion incoming)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MediaVersion SET
                   DateUpdated = @DateUpdated
                   WHERE Id = @MediaVersionId",
@@ -235,14 +239,24 @@ public class MetadataRepository : IMetadataRepository
                 incoming.DateUpdated,
                 MediaVersionId = mediaVersionId
             }).Map(result => result > 0);
+    }
 
-    public Task<Unit> UpdateArtworkPath(Artwork artwork) =>
-        _dbConnection.ExecuteAsync(
-            "UPDATE Artwork SET Path = @Path, SourcePath = @SourcePath, DateUpdated = @DateUpdated, BlurHash43 = @BlurHash43, BlurHash54 = @BlurHash54, BlurHash64 = @BlurHash64 WHERE Id = @Id",
-            new { artwork.Path, artwork.SourcePath, artwork.DateUpdated, artwork.BlurHash43, artwork.BlurHash54, artwork.BlurHash64, artwork.Id }).ToUnit();
-
-    public Task<Unit> AddArtwork(Metadata metadata, Artwork artwork)
+    public async Task<Unit> UpdateArtworkPath(Artwork artwork)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE Artwork SET Path = @Path, SourcePath = @SourcePath, DateUpdated = @DateUpdated, BlurHash43 = @BlurHash43, BlurHash54 = @BlurHash54, BlurHash64 = @BlurHash64 WHERE Id = @Id",
+            new
+            {
+                artwork.Path, artwork.SourcePath, artwork.DateUpdated, artwork.BlurHash43, artwork.BlurHash54,
+                artwork.BlurHash64, artwork.Id
+            }).ToUnit();
+    }
+
+    public async Task<Unit> AddArtwork(Metadata metadata, Artwork artwork)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
         var parameters = new
         {
             artwork.ArtworkKind, metadata.Id, artwork.DateAdded, artwork.DateUpdated, artwork.Path,
@@ -251,50 +265,53 @@ public class MetadataRepository : IMetadataRepository
 
         return metadata switch
         {
-            MovieMetadata => _dbConnection.ExecuteAsync(
+            MovieMetadata => await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Artwork (ArtworkKind, MovieMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
-            ShowMetadata => _dbConnection.ExecuteAsync(
+            ShowMetadata => await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Artwork (ArtworkKind, ShowMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
-            SeasonMetadata => _dbConnection.ExecuteAsync(
+            SeasonMetadata => await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Artwork (ArtworkKind, SeasonMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
-            EpisodeMetadata => _dbConnection.ExecuteAsync(
+            EpisodeMetadata => await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Artwork (ArtworkKind, EpisodeMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
-            ArtistMetadata => _dbConnection.ExecuteAsync(
+            ArtistMetadata => await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Artwork (ArtworkKind, ArtistMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
                             Values (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
-            MusicVideoMetadata => _dbConnection.ExecuteAsync(
+            MusicVideoMetadata => await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Artwork (ArtworkKind, MusicVideoMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
-            SongMetadata => _dbConnection.ExecuteAsync(
+            SongMetadata => await dbContext.Connection.ExecuteAsync(
                     @"INSERT INTO Artwork (ArtworkKind, SongMetadataId, DateAdded, DateUpdated, Path, SourcePath, BlurHash43, BlurHash54, BlurHash64)
                             VALUES (@ArtworkKind, @Id, @DateAdded, @DateUpdated, @Path, @SourcePath, @BlurHash43, @BlurHash54, @BlurHash64)",
                     parameters)
                 .ToUnit(),
-            _ => Task.FromResult(Unit.Default)
+            _ => Unit.Default
         };
     }
 
-    public Task<Unit> RemoveArtwork(Metadata metadata, ArtworkKind artworkKind) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> RemoveArtwork(Metadata metadata, ArtworkKind artworkKind)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM Artwork WHERE ArtworkKind = @ArtworkKind AND (MovieMetadataId = @Id
                 OR ShowMetadataId = @Id OR SeasonMetadataId = @Id OR EpisodeMetadataId = @Id)",
             new { ArtworkKind = artworkKind, metadata.Id }).ToUnit();
+    }
 
     public async Task<bool> CloneArtwork(
         Metadata metadata,
@@ -342,101 +359,164 @@ public class MetadataRepository : IMetadataRepository
         return false;
     }
 
-    public Task<Unit> MarkAsUpdated(ShowMetadata metadata, DateTime dateUpdated) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> MarkAsUpdated(ShowMetadata metadata, DateTime dateUpdated)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE ShowMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
             new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
+    }
 
-    public Task<Unit> MarkAsUpdated(SeasonMetadata metadata, DateTime dateUpdated) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> MarkAsUpdated(SeasonMetadata metadata, DateTime dateUpdated)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE SeasonMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
             new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
+    }
 
-    public Task<Unit> MarkAsUpdated(MovieMetadata metadata, DateTime dateUpdated) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> MarkAsUpdated(MovieMetadata metadata, DateTime dateUpdated)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MovieMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
             new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
+    }
 
-    public Task<Unit> MarkAsUpdated(EpisodeMetadata metadata, DateTime dateUpdated) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> MarkAsUpdated(EpisodeMetadata metadata, DateTime dateUpdated)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE EpisodeMetadata SET DateUpdated = @DateUpdated WHERE Id = @Id",
             new { DateUpdated = dateUpdated, metadata.Id }).ToUnit();
+    }
 
-    public Task<Unit> MarkAsExternal(ShowMetadata metadata) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> MarkAsExternal(ShowMetadata metadata)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE ShowMetadata SET MetadataKind = @Kind WHERE Id = @Id",
-            new { metadata.Id, Kind = (int) MetadataKind.External }).ToUnit();
+            new { metadata.Id, Kind = (int)MetadataKind.External }).ToUnit();
+    }
 
-    public Task<Unit> SetContentRating(ShowMetadata metadata, string contentRating) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> SetContentRating(ShowMetadata metadata, string contentRating)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE ShowMetadata SET ContentRating = @ContentRating WHERE Id = @Id",
             new { metadata.Id, ContentRating = contentRating }).ToUnit();
+    }
 
-    public Task<Unit> MarkAsExternal(MovieMetadata metadata) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> MarkAsExternal(MovieMetadata metadata)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MovieMetadata SET MetadataKind = @Kind WHERE Id = @Id",
-            new { metadata.Id, Kind = (int) MetadataKind.External }).ToUnit();
+            new { metadata.Id, Kind = (int)MetadataKind.External }).ToUnit();
+    }
 
-    public Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> SetContentRating(MovieMetadata metadata, string contentRating)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MovieMetadata SET ContentRating = @ContentRating WHERE Id = @Id",
             new { metadata.Id, ContentRating = contentRating }).ToUnit();
+    }
 
-    public Task<bool> RemoveGuid(MetadataGuid guid) =>
-        _dbConnection.ExecuteAsync("DELETE FROM MetadataGuid WHERE Id = @GuidId", new { GuidId = guid.Id })
+    public async Task<bool> RemoveGuid(MetadataGuid guid)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM MetadataGuid WHERE Id = @GuidId",
+                new { GuidId = guid.Id })
             .Map(result => result > 0);
+    }
 
-    public Task<bool> AddGuid(Metadata metadata, MetadataGuid guid) =>
-        metadata switch
+    public async Task<bool> AddGuid(Metadata metadata, MetadataGuid guid)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return metadata switch
         {
             MovieMetadata =>
-                _dbConnection.ExecuteAsync(
+                await dbContext.Connection.ExecuteAsync(
                     "INSERT INTO MetadataGuid (Guid, MovieMetadataId) VALUES (@Guid, @MetadataId)",
                     new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
             ShowMetadata =>
-                _dbConnection.ExecuteAsync(
+                await dbContext.Connection.ExecuteAsync(
                     "INSERT INTO MetadataGuid (Guid, ShowMetadataId) VALUES (@Guid, @MetadataId)",
                     new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
             SeasonMetadata =>
-                _dbConnection.ExecuteAsync(
+                await dbContext.Connection.ExecuteAsync(
                     "INSERT INTO MetadataGuid (Guid, SeasonMetadataId) VALUES (@Guid, @MetadataId)",
                     new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
             EpisodeMetadata =>
-                _dbConnection.ExecuteAsync(
+                await dbContext.Connection.ExecuteAsync(
                     "INSERT INTO MetadataGuid (Guid, EpisodeMetadataId) VALUES (@Guid, @MetadataId)",
                     new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
             ArtistMetadata =>
-                _dbConnection.ExecuteAsync(
+                await dbContext.Connection.ExecuteAsync(
                     "INSERT INTO MetadataGuid (Guid, ArtistMetadataId) VALUES (@Guid, @MetadataId)",
                     new { guid.Guid, MetadataId = metadata.Id }).Map(result => result > 0),
             _ => throw new NotSupportedException()
         };
+    }
 
-    public Task<bool> RemoveDirector(Director director) =>
-        _dbConnection.ExecuteAsync("DELETE FROM Director WHERE Id = @DirectorId", new { DirectorId = director.Id })
+    public async Task<bool> RemoveDirector(Director director)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Director WHERE Id = @DirectorId",
+                new { DirectorId = director.Id })
             .Map(result => result > 0);
+    }
 
-    public Task<bool> RemoveWriter(Writer writer) =>
-        _dbConnection.ExecuteAsync("DELETE FROM Writer WHERE Id = @WriterId", new { WriterId = writer.Id })
+    public async Task<bool> RemoveWriter(Writer writer)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Writer WHERE Id = @WriterId",
+                new { WriterId = writer.Id })
             .Map(result => result > 0);
+    }
 
-    public Task<bool> RemoveGenre(Genre genre) =>
-        _dbConnection.ExecuteAsync("DELETE FROM Genre WHERE Id = @GenreId", new { GenreId = genre.Id })
+    public async Task<bool> RemoveGenre(Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Genre WHERE Id = @GenreId",
+                new { GenreId = genre.Id })
             .Map(result => result > 0);
+    }
 
-    public Task<bool> RemoveTag(Tag tag) =>
-        _dbConnection.ExecuteAsync("DELETE FROM Tag WHERE Id = @TagId", new { TagId = tag.Id })
+    public async Task<bool> RemoveTag(Tag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync("DELETE FROM Tag WHERE Id = @TagId", new { TagId = tag.Id })
             .Map(result => result > 0);
+    }
 
-    public Task<bool> RemoveStudio(Studio studio) =>
-        _dbConnection.ExecuteAsync("DELETE FROM Studio WHERE Id = @StudioId", new { StudioId = studio.Id })
+    public async Task<bool> RemoveStudio(Studio studio)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Studio WHERE Id = @StudioId",
+                new { StudioId = studio.Id })
             .Map(result => result > 0);
+    }
 
-    public Task<bool> RemoveStyle(Style style) =>
-        _dbConnection.ExecuteAsync("DELETE FROM Style WHERE Id = @StyleId", new { StyleId = style.Id })
+    public async Task<bool> RemoveStyle(Style style)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Style WHERE Id = @StyleId",
+                new { StyleId = style.Id })
             .Map(result => result > 0);
+    }
 
-    public Task<bool> RemoveMood(Mood mood) =>
-        _dbConnection.ExecuteAsync("DELETE FROM Mood WHERE Id = @MoodId", new { MoodId = mood.Id })
+    public async Task<bool> RemoveMood(Mood mood)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync("DELETE FROM Mood WHERE Id = @MoodId", new { MoodId = mood.Id })
             .Map(result => result > 0);
+    }
 }

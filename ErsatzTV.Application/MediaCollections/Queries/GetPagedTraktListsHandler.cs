@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.MediaCollections.Mapper;
@@ -8,22 +7,19 @@ namespace ErsatzTV.Application.MediaCollections;
 
 public class GetPagedTraktListsHandler : IRequestHandler<GetPagedTraktLists, PagedTraktListsViewModel>
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetPagedTraktListsHandler(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+    public GetPagedTraktListsHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
-        _dbConnection = dbConnection;
     }
 
     public async Task<PagedTraktListsViewModel> Handle(
         GetPagedTraktLists request,
         CancellationToken cancellationToken)
     {
-        int count = await _dbConnection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM TraktList");
-
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        int count = await dbContext.Connection.QuerySingleAsync<int>(@"SELECT COUNT (*) FROM TraktList");
         List<TraktListViewModel> page = await dbContext.TraktLists.FromSqlRaw(
                 @"SELECT * FROM TraktList
                     ORDER BY Name

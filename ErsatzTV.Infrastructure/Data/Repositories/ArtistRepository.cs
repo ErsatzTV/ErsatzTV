@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -10,18 +9,16 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class ArtistRepository : IArtistRepository
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public ArtistRepository(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+    public ArtistRepository(IDbContextFactory<TvContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
-        _dbConnection = dbConnection;
     }
 
     public async Task<Option<Artist>> GetArtistByMetadata(int libraryPathId, ArtistMetadata metadata)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<int> maybeId = await dbContext.ArtistMetadata
             .Where(
                 s => s.Title == metadata.Title && (metadata.MetadataKind == MetadataKind.Fallback ||
@@ -58,7 +55,7 @@ public class ArtistRepository : IArtistRepository
         string artistFolder,
         ArtistMetadata metadata)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         try
         {
@@ -87,7 +84,7 @@ public class ArtistRepository : IArtistRepository
 
     public async Task<List<int>> DeleteEmptyArtists(LibraryPath libraryPath)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         List<Artist> artists = await dbContext.Artists
             .Filter(a => a.LibraryPathId == libraryPath.Id)
             .Filter(a => a.MusicVideos.Count == 0)
@@ -100,7 +97,7 @@ public class ArtistRepository : IArtistRepository
 
     public async Task<Option<Artist>> GetArtist(int artistId)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Artists
             .Include(m => m.ArtistMetadata)
             .ThenInclude(m => m.Artwork)
@@ -127,20 +124,29 @@ public class ArtistRepository : IArtistRepository
             .ToListAsync();
     }
 
-    public Task<bool> AddGenre(ArtistMetadata metadata, Genre genre) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddGenre(ArtistMetadata metadata, Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Genre (Name, ArtistMetadataId) VALUES (@Name, @MetadataId)",
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddStyle(ArtistMetadata metadata, Style style) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddStyle(ArtistMetadata metadata, Style style)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Style (Name, ArtistMetadataId) VALUES (@Name, @MetadataId)",
             new { style.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddMood(ArtistMetadata metadata, Mood mood) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddMood(ArtistMetadata metadata, Mood mood)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Mood (Name, ArtistMetadataId) VALUES (@Name, @MetadataId)",
             new { mood.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
     public async Task<List<MusicVideo>> GetArtistItems(int artistId)
     {
@@ -160,7 +166,7 @@ public class ArtistRepository : IArtistRepository
 
     public async Task<List<Artist>> GetAllArtists()
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Artists
             .AsNoTracking()
             .Include(a => a.ArtistMetadata)
