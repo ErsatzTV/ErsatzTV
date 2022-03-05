@@ -13,10 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add automated error reporting via Bugsnag
   - This can be disabled by editing the `appsettings.json` file or by setting the `Bugsnag:Enable` environment variable to `false`
+- Add `album_artist` to song metadata and to search index
 
 ### Changed
 - Framerate normalization will never normalize framerate below 24fps
   - Instead, content with a lower framerate will be normalized up to 24fps
+- `Shuffle In Order` will group songs by album artist instead of by track artist
 
 ## [0.4.2-alpha] - 2022-02-26
 ### Fixed
