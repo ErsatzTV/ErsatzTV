@@ -2,43 +2,43 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Runtime;
-using ErsatzTV.Core.Jellyfin;
+using ErsatzTV.Core.Emby;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
-namespace ErsatzTV.Core.Tests.Jellyfin;
+namespace ErsatzTV.Core.Tests.Emby;
 
 [TestFixture]
-public class JellyfinPathReplacementServiceTests
+public class EmbyPathReplacementServiceTests
 {
     [Test]
-    public async Task JellyfinWindows_To_EtvWindows()
+    public async Task EmbyWindows_To_EtvWindows()
     {
-        var replacements = new List<JellyfinPathReplacement>
+        var replacements = new List<EmbyPathReplacement>
         {
             new()
             {
                 Id = 1,
-                JellyfinPath = @"C:\Something\Some Shared Folder",
+                EmbyPath = @"C:\Something\Some Shared Folder",
                 LocalPath = @"C:\Something Else\Some Shared Folder",
-                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Windows" }
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Windows" }
             }
         };
 
         var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetJellyfinPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
 
         var runtime = new Mock<IRuntimeInfo>();
         runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(true);
 
-        var service = new JellyfinPathReplacementService(
+        var service = new EmbyPathReplacementService(
             repo.Object,
             runtime.Object,
-            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
 
-        string result = await service.GetReplacementJellyfinPath(
+        string result = await service.GetReplacementEmbyPath(
             0,
             @"C:\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
@@ -46,31 +46,31 @@ public class JellyfinPathReplacementServiceTests
     }
 
     [Test]
-    public async Task JellyfinWindows_To_EtvLinux()
+    public async Task EmbyWindows_To_EtvLinux()
     {
-        var replacements = new List<JellyfinPathReplacement>
+        var replacements = new List<EmbyPathReplacement>
         {
             new()
             {
                 Id = 1,
-                JellyfinPath = @"C:\Something\Some Shared Folder",
+                EmbyPath = @"C:\Something\Some Shared Folder",
                 LocalPath = @"/mnt/something else/Some Shared Folder",
-                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Windows" }
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Windows" }
             }
         };
 
         var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetJellyfinPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
 
         var runtime = new Mock<IRuntimeInfo>();
         runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
 
-        var service = new JellyfinPathReplacementService(
+        var service = new EmbyPathReplacementService(
             repo.Object,
             runtime.Object,
-            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
 
-        string result = await service.GetReplacementJellyfinPath(
+        string result = await service.GetReplacementEmbyPath(
             0,
             @"C:\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
@@ -78,31 +78,31 @@ public class JellyfinPathReplacementServiceTests
     }
 
     [Test]
-    public async Task JellyfinWindows_To_EtvLinux_UncPath()
+    public async Task EmbyWindows_To_EtvLinux_UncPath()
     {
-        var replacements = new List<JellyfinPathReplacement>
+        var replacements = new List<EmbyPathReplacement>
         {
             new()
             {
                 Id = 1,
-                JellyfinPath = @"\\192.168.1.100\Something\Some Shared Folder",
+                EmbyPath = @"\\192.168.1.100\Something\Some Shared Folder",
                 LocalPath = @"/mnt/something else/Some Shared Folder",
-                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Windows" }
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Windows" }
             }
         };
 
         var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetJellyfinPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
 
         var runtime = new Mock<IRuntimeInfo>();
         runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
 
-        var service = new JellyfinPathReplacementService(
+        var service = new EmbyPathReplacementService(
             repo.Object,
             runtime.Object,
-            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
 
-        string result = await service.GetReplacementJellyfinPath(
+        string result = await service.GetReplacementEmbyPath(
             0,
             @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
@@ -110,31 +110,31 @@ public class JellyfinPathReplacementServiceTests
     }
 
     [Test]
-    public async Task JellyfinWindows_To_EtvLinux_UncPathWithTrailingSlash()
+    public async Task EmbyWindows_To_EtvLinux_UncPathWithTrailingSlash()
     {
-        var replacements = new List<JellyfinPathReplacement>
+        var replacements = new List<EmbyPathReplacement>
         {
             new()
             {
                 Id = 1,
-                JellyfinPath = @"\\192.168.1.100\Something\Some Shared Folder\",
+                EmbyPath = @"\\192.168.1.100\Something\Some Shared Folder\",
                 LocalPath = @"/mnt/something else/Some Shared Folder/",
-                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Windows" }
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Windows" }
             }
         };
 
         var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetJellyfinPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
 
         var runtime = new Mock<IRuntimeInfo>();
         runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
 
-        var service = new JellyfinPathReplacementService(
+        var service = new EmbyPathReplacementService(
             repo.Object,
             runtime.Object,
-            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
 
-        string result = await service.GetReplacementJellyfinPath(
+        string result = await service.GetReplacementEmbyPath(
             0,
             @"\\192.168.1.100\Something\Some Shared Folder\Some Movie\Some Movie.mkv");
 
@@ -142,31 +142,31 @@ public class JellyfinPathReplacementServiceTests
     }
 
     [Test]
-    public async Task JellyfinLinux_To_EtvWindows()
+    public async Task EmbyLinux_To_EtvWindows()
     {
-        var replacements = new List<JellyfinPathReplacement>
+        var replacements = new List<EmbyPathReplacement>
         {
             new()
             {
                 Id = 1,
-                JellyfinPath = @"/mnt/something/Some Shared Folder",
+                EmbyPath = @"/mnt/something/Some Shared Folder",
                 LocalPath = @"C:\Something Else\Some Shared Folder",
-                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Linux" }
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Linux" }
             }
         };
 
         var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetJellyfinPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
 
         var runtime = new Mock<IRuntimeInfo>();
         runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(true);
 
-        var service = new JellyfinPathReplacementService(
+        var service = new EmbyPathReplacementService(
             repo.Object,
             runtime.Object,
-            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
 
-        string result = await service.GetReplacementJellyfinPath(
+        string result = await service.GetReplacementEmbyPath(
             0,
             @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
 
@@ -174,31 +174,31 @@ public class JellyfinPathReplacementServiceTests
     }
 
     [Test]
-    public async Task JellyfinLinux_To_EtvLinux()
+    public async Task EmbyLinux_To_EtvLinux()
     {
-        var replacements = new List<JellyfinPathReplacement>
+        var replacements = new List<EmbyPathReplacement>
         {
             new()
             {
                 Id = 1,
-                JellyfinPath = @"/mnt/something/Some Shared Folder",
+                EmbyPath = @"/mnt/something/Some Shared Folder",
                 LocalPath = @"/mnt/something else/Some Shared Folder",
-                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Linux" }
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Linux" }
             }
         };
 
         var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetJellyfinPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
 
         var runtime = new Mock<IRuntimeInfo>();
         runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
 
-        var service = new JellyfinPathReplacementService(
+        var service = new EmbyPathReplacementService(
             repo.Object,
             runtime.Object,
-            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
 
-        string result = await service.GetReplacementJellyfinPath(
+        string result = await service.GetReplacementEmbyPath(
             0,
             @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
 
@@ -206,31 +206,31 @@ public class JellyfinPathReplacementServiceTests
     }
     
     [Test]
-    public async Task Should_Not_Throw_For_Null_JellyfinPath()
+    public async Task Should_Not_Throw_For_Null_EmbyPath()
     {
-        var replacements = new List<JellyfinPathReplacement>
+        var replacements = new List<EmbyPathReplacement>
         {
             new()
             {
                 Id = 1,
-                JellyfinPath = null,
+                EmbyPath = null,
                 LocalPath = @"/mnt/something else/Some Shared Folder",
-                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Linux" }
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Linux" }
             }
         };
 
         var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetJellyfinPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
 
         var runtime = new Mock<IRuntimeInfo>();
         runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
 
-        var service = new JellyfinPathReplacementService(
+        var service = new EmbyPathReplacementService(
             repo.Object,
             runtime.Object,
-            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
 
-        string result = await service.GetReplacementJellyfinPath(
+        string result = await service.GetReplacementEmbyPath(
             0,
             @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
 
@@ -240,29 +240,29 @@ public class JellyfinPathReplacementServiceTests
     [Test]
     public async Task Should_Not_Throw_For_Null_LocalPath()
     {
-        var replacements = new List<JellyfinPathReplacement>
+        var replacements = new List<EmbyPathReplacement>
         {
             new()
             {
                 Id = 1,
-                JellyfinPath = @"/mnt/something/Some Shared Folder",
+                EmbyPath = @"/mnt/something/Some Shared Folder",
                 LocalPath = null,
-                JellyfinMediaSource = new JellyfinMediaSource { OperatingSystem = "Linux" }
+                EmbyMediaSource = new EmbyMediaSource { OperatingSystem = "Linux" }
             }
         };
 
         var repo = new Mock<IMediaSourceRepository>();
-        repo.Setup(x => x.GetJellyfinPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+        repo.Setup(x => x.GetEmbyPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
 
         var runtime = new Mock<IRuntimeInfo>();
         runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
 
-        var service = new JellyfinPathReplacementService(
+        var service = new EmbyPathReplacementService(
             repo.Object,
             runtime.Object,
-            new Mock<ILogger<JellyfinPathReplacementService>>().Object);
+            new Mock<ILogger<EmbyPathReplacementService>>().Object);
 
-        string result = await service.GetReplacementJellyfinPath(
+        string result = await service.GetReplacementEmbyPath(
             0,
             @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
 

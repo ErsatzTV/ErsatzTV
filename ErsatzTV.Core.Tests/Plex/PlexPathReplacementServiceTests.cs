@@ -204,4 +204,68 @@ public class PlexPathReplacementServiceTests
 
         result.Should().Be(@"/mnt/something else/Some Shared Folder/Some Movie/Some Movie.mkv");
     }
+    
+    [Test]
+    public async Task Should_Not_Throw_For_Null_PlexPath()
+    {
+        var replacements = new List<PlexPathReplacement>
+        {
+            new()
+            {
+                Id = 1,
+                PlexPath = null,
+                LocalPath = @"/mnt/something else/Some Shared Folder",
+                PlexMediaSource = new PlexMediaSource { Platform = "Linux" }
+            }
+        };
+
+        var repo = new Mock<IMediaSourceRepository>();
+        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+
+        var runtime = new Mock<IRuntimeInfo>();
+        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+
+        var service = new PlexPathReplacementService(
+            repo.Object,
+            runtime.Object,
+            new Mock<ILogger<PlexPathReplacementService>>().Object);
+
+        string result = await service.GetReplacementPlexPath(
+            0,
+            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
+
+        result.Should().Be(@"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
+    }
+    
+    [Test]
+    public async Task Should_Not_Throw_For_Null_LocalPath()
+    {
+        var replacements = new List<PlexPathReplacement>
+        {
+            new()
+            {
+                Id = 1,
+                PlexPath = @"/mnt/something/Some Shared Folder",
+                LocalPath = null,
+                PlexMediaSource = new PlexMediaSource { Platform = "Linux" }
+            }
+        };
+
+        var repo = new Mock<IMediaSourceRepository>();
+        repo.Setup(x => x.GetPlexPathReplacementsByLibraryId(It.IsAny<int>())).Returns(replacements.AsTask());
+
+        var runtime = new Mock<IRuntimeInfo>();
+        runtime.Setup(x => x.IsOSPlatform(OSPlatform.Windows)).Returns(false);
+
+        var service = new PlexPathReplacementService(
+            repo.Object,
+            runtime.Object,
+            new Mock<ILogger<PlexPathReplacementService>>().Object);
+
+        string result = await service.GetReplacementPlexPath(
+            0,
+            @"/mnt/something/Some Shared Folder/Some Movie/Some Movie.mkv");
+
+        result.Should().Be(@"/Some Movie/Some Movie.mkv");
+    }
 }

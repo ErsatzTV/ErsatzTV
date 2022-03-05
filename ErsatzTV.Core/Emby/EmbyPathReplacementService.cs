@@ -40,6 +40,11 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
             .SingleOrDefault(
                 r =>
                 {
+                    if (string.IsNullOrWhiteSpace(r.EmbyPath))
+                    {
+                        return false;
+                    }
+
                     string separatorChar = IsWindows(r.EmbyMediaSource, path) ? @"\" : @"/";
                     string prefix = r.EmbyPath.EndsWith(separatorChar)
                         ? r.EmbyPath
@@ -47,32 +52,32 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
                     return path.StartsWith(prefix);
                 });
 
-        return maybeReplacement.Match(
-            replacement =>
+        foreach (EmbyPathReplacement replacement in maybeReplacement)
+        {
+            string finalPath = path.Replace(replacement.EmbyPath, replacement.LocalPath);
+            if (IsWindows(replacement.EmbyMediaSource, path) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
             {
-                string finalPath = path.Replace(replacement.EmbyPath, replacement.LocalPath);
-                if (IsWindows(replacement.EmbyMediaSource, path) && !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                {
-                    finalPath = finalPath.Replace(@"\", @"/");
-                }
-                else if (!IsWindows(replacement.EmbyMediaSource, path) &&
-                         _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                {
-                    finalPath = finalPath.Replace(@"/", @"\");
-                }
+                finalPath = finalPath.Replace(@"\", @"/");
+            }
+            else if (!IsWindows(replacement.EmbyMediaSource, path) &&
+                     _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            {
+                finalPath = finalPath.Replace(@"/", @"\");
+            }
 
-                if (log)
-                {
-                    _logger.LogInformation(
-                        "Replacing emby path {EmbyPath} with {LocalPath} resulting in {FinalPath}",
-                        replacement.EmbyPath,
-                        replacement.LocalPath,
-                        finalPath);
-                }
+            if (log)
+            {
+                _logger.LogInformation(
+                    "Replacing emby path {EmbyPath} with {LocalPath} resulting in {FinalPath}",
+                    replacement.EmbyPath,
+                    replacement.LocalPath,
+                    finalPath);
+            }
 
-                return finalPath;
-            },
-            () => path);
+            return finalPath;
+        }
+
+        return path;
     }
 
     private static bool IsWindows(EmbyMediaSource embyMediaSource, string path)
