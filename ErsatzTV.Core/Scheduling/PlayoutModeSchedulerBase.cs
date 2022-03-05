@@ -310,7 +310,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         return itemStartTime + totalDuration;
     }
 
-    protected List<PlayoutItem> AddFiller(
+    internal static List<PlayoutItem> AddFiller(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
         ProgramScheduleItem scheduleItem,
@@ -333,7 +333,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         }
 
         List<MediaChapter> effectiveChapters = chapters;
-        if (allFiller.All(fp => fp.FillerKind != FillerKind.MidRoll))
+        if (allFiller.All(fp => fp.FillerKind != FillerKind.MidRoll) || effectiveChapters.Count <= 1)
         {
             effectiveChapters = new List<MediaChapter>();
         }
@@ -356,7 +356,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             }
         }
 
-        if (!effectiveChapters.Any())
+        if (effectiveChapters.Count <= 1)
         {
             result.Add(playoutItem);
         }
@@ -493,7 +493,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         ? remainingToFill
                         : remainingToFill / (effectiveChapters.Count - 1);
                     TimeSpan filled = TimeSpan.Zero;
-                    for (var i = 0; i < chapters.Count; i++)
+                    for (var i = 0; i < effectiveChapters.Count; i++)
                     {
                         result.Add(playoutItem.ForChapter(effectiveChapters[i]));
                         if (i < effectiveChapters.Count - 1)
@@ -650,7 +650,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         return result;
     }
 
-    private Option<PlayoutItem> FallbackFillerForPad(
+    private static Option<PlayoutItem> FallbackFillerForPad(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
         ProgramScheduleItem scheduleItem,
