@@ -102,6 +102,14 @@ public class SongVideoGenerator : ISongVideoGenerator
                     sb.Append($"\\N\"{metadata.Title}\"");
                 }
 
+                if (!string.IsNullOrWhiteSpace(metadata.AlbumArtist) && !string.Equals(
+                        metadata.Artist,
+                        metadata.AlbumArtist,
+                        StringComparison.Ordinal))
+                {
+                    sb.Append($"\\N{metadata.AlbumArtist}");
+                }
+
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
                 {
                     sb.Append($"\\N{metadata.Album}");
