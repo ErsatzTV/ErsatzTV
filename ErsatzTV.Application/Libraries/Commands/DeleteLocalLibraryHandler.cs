@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Search;
@@ -13,16 +12,13 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
     IRequestHandler<DeleteLocalLibrary, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IDbConnection _dbConnection;
     private readonly ISearchIndex _searchIndex;
 
     public DeleteLocalLibraryHandler(
         IDbContextFactory<TvContext> dbContextFactory,
-        IDbConnection dbConnection,
         ISearchIndex searchIndex)
     {
         _dbContextFactory = dbContextFactory;
-        _dbConnection = dbConnection;
         _searchIndex = searchIndex;
     }
 
@@ -30,14 +26,14 @@ public class DeleteLocalLibraryHandler : LocalLibraryHandlerBase,
         DeleteLocalLibrary request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, LocalLibrary> validation =  await LocalLibraryMustExist(dbContext, request);
-        return await LanguageExtensions.Apply(validation, localLibrary => DoDeletion(dbContext, localLibrary));
+        return await validation.Apply(localLibrary => DoDeletion(dbContext, localLibrary));
     }
 
     private async Task<Unit> DoDeletion(TvContext dbContext, LocalLibrary localLibrary)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
                 @"SELECT MediaItem.Id FROM MediaItem
                       INNER JOIN LibraryPath LP on MediaItem.LibraryPathId = LP.Id
                       WHERE LP.LibraryId = @LibraryId",

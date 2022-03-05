@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
@@ -10,17 +9,17 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public JellyfinTelevisionRepository(IDbConnection dbConnection, IDbContextFactory<TvContext> dbContextFactory)
+    public JellyfinTelevisionRepository(IDbContextFactory<TvContext> dbContextFactory)
     {
-        _dbConnection = dbConnection;
         _dbContextFactory = dbContextFactory;
     }
 
-    public Task<List<JellyfinItemEtag>> GetExistingShows(JellyfinLibrary library) =>
-        _dbConnection.QueryAsync<JellyfinItemEtag>(
+    public async Task<List<JellyfinItemEtag>> GetExistingShows(JellyfinLibrary library)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<JellyfinItemEtag>(
                 @"SELECT ItemId, Etag FROM JellyfinShow
                       INNER JOIN Show S on JellyfinShow.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
@@ -28,9 +27,12 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                       WHERE LP.LibraryId = @LibraryId",
                 new { LibraryId = library.Id })
             .Map(result => result.ToList());
+    }
 
-    public Task<List<JellyfinItemEtag>> GetExistingSeasons(JellyfinLibrary library, string showItemId) =>
-        _dbConnection.QueryAsync<JellyfinItemEtag>(
+    public async Task<List<JellyfinItemEtag>> GetExistingSeasons(JellyfinLibrary library, string showItemId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<JellyfinItemEtag>(
                 @"SELECT JellyfinSeason.ItemId, JellyfinSeason.Etag FROM JellyfinSeason
                       INNER JOIN Season S on JellyfinSeason.Id = S.Id
                       INNER JOIN MediaItem MI on S.Id = MI.Id
@@ -40,9 +42,12 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                       WHERE LP.LibraryId = @LibraryId AND JS.ItemId = @ShowItemId",
                 new { LibraryId = library.Id, ShowItemId = showItemId })
             .Map(result => result.ToList());
+    }
 
-    public Task<List<JellyfinItemEtag>> GetExistingEpisodes(JellyfinLibrary library, string seasonItemId) =>
-        _dbConnection.QueryAsync<JellyfinItemEtag>(
+    public async Task<List<JellyfinItemEtag>> GetExistingEpisodes(JellyfinLibrary library, string seasonItemId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<JellyfinItemEtag>(
                 @"SELECT JellyfinEpisode.ItemId, JellyfinEpisode.Etag FROM JellyfinEpisode
                       INNER JOIN Episode E on JellyfinEpisode.Id = E.Id
                       INNER JOIN MediaItem MI on E.Id = MI.Id
@@ -52,10 +57,11 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
                       WHERE LP.LibraryId = @LibraryId AND JS.ItemId = @SeasonItemId",
                 new { LibraryId = library.Id, SeasonItemId = seasonItemId })
             .Map(result => result.ToList());
+    }
 
     public async Task<bool> AddShow(JellyfinShow show)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         await dbContext.AddAsync(show);
         if (await dbContext.SaveChangesAsync() <= 0)
         {
@@ -69,7 +75,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Option<JellyfinShow>> Update(JellyfinShow show)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<JellyfinShow> maybeExisting = await dbContext.JellyfinShows
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -262,11 +268,12 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         try
         {
-            season.ShowId = await _dbConnection.ExecuteScalarAsync<int>(
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+            season.ShowId = await dbContext.Connection.ExecuteScalarAsync<int>(
                 @"SELECT Id FROM JellyfinShow WHERE ItemId = @ItemId",
                 new { show.ItemId });
 
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             await dbContext.AddAsync(season);
             if (await dbContext.SaveChangesAsync() <= 0)
             {
@@ -285,7 +292,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Option<JellyfinSeason>> Update(JellyfinSeason season)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<JellyfinSeason> maybeExisting = await dbContext.JellyfinSeasons
             .Include(m => m.LibraryPath)
             .Include(m => m.SeasonMetadata)
@@ -385,11 +392,12 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
     {
         try
         {
-            episode.SeasonId = await _dbConnection.ExecuteScalarAsync<int>(
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+            episode.SeasonId = await dbContext.Connection.ExecuteScalarAsync<int>(
                 @"SELECT Id FROM JellyfinSeason WHERE ItemId = @ItemId",
                 new { season.ItemId });
 
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
             await dbContext.AddAsync(episode);
             if (await dbContext.SaveChangesAsync() <= 0)
             {
@@ -409,7 +417,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Option<JellyfinEpisode>> Update(JellyfinEpisode episode)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<JellyfinEpisode> maybeExisting = await dbContext.JellyfinEpisodes
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -552,39 +560,44 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<List<int>> RemoveMissingShows(JellyfinLibrary library, List<string> showIds)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN JellyfinShow js ON js.Id = m.Id
                 INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
                 WHERE lp.LibraryId = @LibraryId AND js.ItemId IN @ShowIds",
             new { LibraryId = library.Id, ShowIds = showIds }).Map(result => result.ToList());
 
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             "DELETE FROM MediaItem WHERE Id IN @Ids",
             new { Ids = ids });
 
         return ids;
     }
 
-    public Task<Unit> RemoveMissingSeasons(JellyfinLibrary library, List<string> seasonIds) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> RemoveMissingSeasons(JellyfinLibrary library, List<string> seasonIds)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
                 INNER JOIN JellyfinSeason js ON js.Id = m.Id
                 INNER JOIN LibraryPath LP on m.LibraryPathId = LP.Id
                 WHERE LP.LibraryId = @LibraryId AND js.ItemId IN @SeasonIds)",
             new { LibraryId = library.Id, SeasonIds = seasonIds }).ToUnit();
+    }
 
     public async Task<List<int>> RemoveMissingEpisodes(JellyfinLibrary library, List<string> episodeIds)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN JellyfinEpisode je ON je.Id = m.Id
                 INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
                 WHERE lp.LibraryId = @LibraryId AND je.ItemId IN @EpisodeIds",
             new { LibraryId = library.Id, EpisodeIds = episodeIds }).Map(result => result.ToList());
 
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             "DELETE FROM MediaItem WHERE Id IN @Ids",
             new { Ids = ids });
 
@@ -593,7 +606,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<Unit> DeleteEmptySeasons(JellyfinLibrary library)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         List<JellyfinSeason> seasons = await dbContext.JellyfinSeasons
             .Filter(s => s.LibraryPath.LibraryId == library.Id)
             .Filter(s => s.Episodes.Count == 0)
@@ -605,7 +618,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 
     public async Task<List<int>> DeleteEmptyShows(JellyfinLibrary library)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         List<JellyfinShow> shows = await dbContext.JellyfinShows
             .Filter(s => s.LibraryPath.LibraryId == library.Id)
             .Filter(s => s.Seasons.Count == 0)
