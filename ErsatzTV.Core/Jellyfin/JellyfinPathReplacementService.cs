@@ -40,6 +40,11 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
             .SingleOrDefault(
                 r =>
                 {
+                    if (string.IsNullOrWhiteSpace(r.JellyfinPath))
+                    {
+                        return false;
+                    }
+
                     string separatorChar = IsWindows(r.JellyfinMediaSource, path) ? @"\" : @"/";
                     string prefix = r.JellyfinPath.EndsWith(separatorChar)
                         ? r.JellyfinPath
@@ -47,33 +52,33 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
                     return path.StartsWith(prefix);
                 });
 
-        return maybeReplacement.Match(
-            replacement =>
+        foreach (JellyfinPathReplacement replacement in maybeReplacement)
+        {
+            string finalPath = path.Replace(replacement.JellyfinPath, replacement.LocalPath);
+            if (IsWindows(replacement.JellyfinMediaSource, path) &&
+                !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
             {
-                string finalPath = path.Replace(replacement.JellyfinPath, replacement.LocalPath);
-                if (IsWindows(replacement.JellyfinMediaSource, path) &&
-                    !_runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                {
-                    finalPath = finalPath.Replace(@"\", @"/");
-                }
-                else if (!IsWindows(replacement.JellyfinMediaSource, path) &&
-                         _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
-                {
-                    finalPath = finalPath.Replace(@"/", @"\");
-                }
+                finalPath = finalPath.Replace(@"\", @"/");
+            }
+            else if (!IsWindows(replacement.JellyfinMediaSource, path) &&
+                     _runtimeInfo.IsOSPlatform(OSPlatform.Windows))
+            {
+                finalPath = finalPath.Replace(@"/", @"\");
+            }
 
-                if (log)
-                {
-                    _logger.LogInformation(
-                        "Replacing jellyfin path {JellyfinPath} with {LocalPath} resulting in {FinalPath}",
-                        replacement.JellyfinPath,
-                        replacement.LocalPath,
-                        finalPath);
-                }
+            if (log)
+            {
+                _logger.LogInformation(
+                    "Replacing jellyfin path {JellyfinPath} with {LocalPath} resulting in {FinalPath}",
+                    replacement.JellyfinPath,
+                    replacement.LocalPath,
+                    finalPath);
+            }
 
-                return finalPath;
-            },
-            () => path);
+            return finalPath;
+        }
+
+        return path;
     }
 
     private static bool IsWindows(JellyfinMediaSource jellyfinMediaSource, string path)
