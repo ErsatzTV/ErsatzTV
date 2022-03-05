@@ -1,19 +1,24 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MediaItemRepository : IMediaItemRepository
 {
-    private readonly IDbConnection _dbConnection;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MediaItemRepository(IDbConnection dbConnection) => _dbConnection = dbConnection;
+    public MediaItemRepository(IDbContextFactory<TvContext> dbContextFactory)
+    {
+        _dbContextFactory = dbContextFactory;
+    }
 
-    public Task<List<string>> GetAllLanguageCodes() =>
-        _dbConnection.QueryAsync<string>(
+    public async Task<List<string>> GetAllLanguageCodes()
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
                 @"SELECT LanguageCode FROM
                     (SELECT Language AS LanguageCode
                     FROM MediaStream WHERE Language IS NOT NULL
@@ -22,10 +27,13 @@ public class MediaItemRepository : IMediaItemRepository
                     GROUP BY LanguageCode
                     ORDER BY COUNT(LanguageCode) DESC")
             .Map(result => result.ToList());
+    }
 
     public async Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
                 @"SELECT M.Id
                 FROM MediaItem M
                 INNER JOIN MediaVersion MV on M.Id = COALESCE(MovieId, MusicVideoId, OtherVideoId, SongId, EpisodeId)
@@ -34,7 +42,7 @@ public class MediaItemRepository : IMediaItemRepository
                 new { LibraryPathId = libraryPath.Id, Path = path })
             .Map(result => result.ToList());
 
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             @"UPDATE MediaItem SET State = 1 WHERE Id IN @Ids",
             new { Ids = ids });
 
@@ -43,18 +51,22 @@ public class MediaItemRepository : IMediaItemRepository
 
     public async Task<Unit> FlagNormal(MediaItem mediaItem)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
         mediaItem.State = MediaItemState.Normal;
             
-        return await _dbConnection.ExecuteAsync(
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
             new { mediaItem.Id }).ToUnit();
     }
 
     public async Task<Either<BaseError, Unit>> DeleteItems(List<int> mediaItemIds)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
         foreach (int mediaItemId in mediaItemIds)
         {
-            await _dbConnection.ExecuteAsync(
+            await dbContext.Connection.ExecuteAsync(
                 "DELETE FROM MediaItem WHERE Id = @Id",
                 new { Id = mediaItemId });
         }

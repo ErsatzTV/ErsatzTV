@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
@@ -13,24 +12,25 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MovieRepository : IMovieRepository
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MovieRepository(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+    public MovieRepository(IDbContextFactory<TvContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
-        _dbConnection = dbConnection;
     }
 
-    public Task<bool> AllMoviesExist(List<int> movieIds) =>
-        _dbConnection.QuerySingleAsync<int>(
+    public async Task<bool> AllMoviesExist(List<int> movieIds)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QuerySingleAsync<int>(
                 "SELECT COUNT(*) FROM Movie WHERE Id in @MovieIds",
                 new { MovieIds = movieIds })
             .Map(c => c == movieIds.Count);
+    }
 
     public async Task<Option<Movie>> GetMovie(int movieId)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Movies
             .Include(m => m.MovieMetadata)
             .ThenInclude(m => m.Artwork)
@@ -101,7 +101,7 @@ public class MovieRepository : IMovieRepository
         PlexLibrary library,
         PlexMovie item)
     {
-        await using TvContext context = _dbContextFactory.CreateDbContext();
+        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
         Option<PlexMovie> maybeExisting = await context.PlexMovies
             .AsNoTracking()
             .Include(i => i.MovieMetadata)
@@ -153,8 +153,10 @@ public class MovieRepository : IMovieRepository
             .ToListAsync();
     }
 
-    public Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath) =>
-        _dbConnection.QueryAsync<string>(
+    public async Task<IEnumerable<string>> FindMoviePaths(LibraryPath libraryPath)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
             @"SELECT MF.Path
                 FROM MediaFile MF
                 INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
@@ -162,11 +164,12 @@ public class MovieRepository : IMovieRepository
                 INNER JOIN MediaItem MI on M.Id = MI.Id
                 WHERE MI.LibraryPathId = @LibraryPathId",
             new { LibraryPathId = libraryPath.Id });
+    }
 
     public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
                 @"SELECT M.Id
                 FROM Movie M
                 INNER JOIN MediaItem MI on M.Id = MI.Id
@@ -188,42 +191,53 @@ public class MovieRepository : IMovieRepository
         bool changed = await dbContext.SaveChangesAsync() > 0;
         return changed ? ids : new List<int>();
     }
-        
-    public Task<bool> AddGenre(MovieMetadata metadata, Genre genre) =>
-        _dbConnection.ExecuteAsync(
+
+    public async Task<bool> AddGenre(MovieMetadata metadata, Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Genre (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddTag(MovieMetadata metadata, Tag tag) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddTag(MovieMetadata metadata, Tag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Tag (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
             new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddStudio(MovieMetadata metadata, Studio studio) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddStudio(MovieMetadata metadata, Studio studio)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Studio (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
             new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
     public async Task<bool> AddActor(MovieMetadata metadata, Actor actor)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
         int? artworkId = null;
 
         if (actor.Artwork != null)
         {
-            artworkId = await _dbConnection.QuerySingleAsync<int>(
+            artworkId = await dbContext.Connection.QuerySingleAsync<int>(
                 @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
                       VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
                       SELECT last_insert_rowid()",
                 new
                 {
-                    ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                    ArtworkKind = (int)actor.Artwork.ArtworkKind,
                     actor.Artwork.DateAdded,
                     actor.Artwork.DateUpdated,
                     actor.Artwork.Path
                 });
         }
 
-        return await _dbConnection.ExecuteAsync(
+        return await dbContext.Connection.ExecuteAsync(
                 "INSERT INTO Actor (Name, Role, \"Order\", MovieMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
@@ -231,27 +245,34 @@ public class MovieRepository : IMovieRepository
 
     public async Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN PlexMovie pm ON pm.Id = m.Id
                 INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
                 WHERE lp.LibraryId = @LibraryId AND pm.Key not in @Keys",
             new { LibraryId = library.Id, Keys = movieKeys }).Map(result => result.ToList());
 
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             "DELETE FROM MediaItem WHERE Id IN @Ids",
             new { Ids = ids });
 
         return ids;
     }
 
-    public Task<bool> UpdateSortTitle(MovieMetadata movieMetadata) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> UpdateSortTitle(MovieMetadata movieMetadata)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MovieMetadata SET SortTitle = @SortTitle WHERE Id = @Id",
             new { movieMetadata.SortTitle, movieMetadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<List<JellyfinItemEtag>> GetExistingJellyfinMovies(JellyfinLibrary library) =>
-        _dbConnection.QueryAsync<JellyfinItemEtag>(
+    public async Task<List<JellyfinItemEtag>> GetExistingJellyfinMovies(JellyfinLibrary library)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<JellyfinItemEtag>(
                 @"SELECT ItemId, Etag FROM JellyfinMovie
                       INNER JOIN Movie M on JellyfinMovie.Id = M.Id
                       INNER JOIN MediaItem MI on M.Id = MI.Id
@@ -259,10 +280,13 @@ public class MovieRepository : IMovieRepository
                       WHERE LP.LibraryId = @LibraryId",
                 new { LibraryId = library.Id })
             .Map(result => result.ToList());
+    }
 
     public async Task<List<int>> RemoveMissingJellyfinMovies(JellyfinLibrary library, List<string> movieIds)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT JellyfinMovie.Id FROM JellyfinMovie
                   INNER JOIN Movie M on JellyfinMovie.Id = M.Id
                   INNER JOIN MediaItem MI on M.Id = MI.Id
@@ -270,7 +294,7 @@ public class MovieRepository : IMovieRepository
                   WHERE LP.LibraryId = @LibraryId AND ItemId IN @ItemIds",
             new { LibraryId = library.Id, ItemIds = movieIds }).Map(result => result.ToList());
 
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             "DELETE FROM MediaItem WHERE Id IN @Ids",
             new { Ids = ids });
 
@@ -279,7 +303,7 @@ public class MovieRepository : IMovieRepository
 
     public async Task<bool> AddJellyfin(JellyfinMovie movie)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         await dbContext.AddAsync(movie);
         if (await dbContext.SaveChangesAsync() <= 0)
         {
@@ -293,7 +317,7 @@ public class MovieRepository : IMovieRepository
 
     public async Task<Option<JellyfinMovie>> UpdateJellyfin(JellyfinMovie movie)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<JellyfinMovie> maybeExisting = await dbContext.JellyfinMovies
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -506,8 +530,10 @@ public class MovieRepository : IMovieRepository
         return maybeExisting;
     }
 
-    public Task<List<EmbyItemEtag>> GetExistingEmbyMovies(EmbyLibrary library) =>
-        _dbConnection.QueryAsync<EmbyItemEtag>(
+    public async Task<List<EmbyItemEtag>> GetExistingEmbyMovies(EmbyLibrary library)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<EmbyItemEtag>(
                 @"SELECT ItemId, Etag FROM EmbyMovie
                       INNER JOIN Movie M on EmbyMovie.Id = M.Id
                       INNER JOIN MediaItem MI on M.Id = MI.Id
@@ -515,10 +541,13 @@ public class MovieRepository : IMovieRepository
                       WHERE LP.LibraryId = @LibraryId",
                 new { LibraryId = library.Id })
             .Map(result => result.ToList());
+    }
 
     public async Task<List<int>> RemoveMissingEmbyMovies(EmbyLibrary library, List<string> movieIds)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT EmbyMovie.Id FROM EmbyMovie
                   INNER JOIN Movie M on EmbyMovie.Id = M.Id
                   INNER JOIN MediaItem MI on M.Id = MI.Id
@@ -526,7 +555,7 @@ public class MovieRepository : IMovieRepository
                   WHERE LP.LibraryId = @LibraryId AND ItemId IN @ItemIds",
             new { LibraryId = library.Id, ItemIds = movieIds }).Map(result => result.ToList());
 
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             "DELETE FROM MediaItem WHERE Id IN @Ids",
             new { Ids = ids });
 
@@ -535,7 +564,7 @@ public class MovieRepository : IMovieRepository
 
     public async Task<bool> AddEmby(EmbyMovie movie)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         await dbContext.AddAsync(movie);
         if (await dbContext.SaveChangesAsync() <= 0)
         {
@@ -549,7 +578,7 @@ public class MovieRepository : IMovieRepository
 
     public async Task<Option<EmbyMovie>> UpdateEmby(EmbyMovie movie)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<EmbyMovie> maybeExisting = await dbContext.EmbyMovies
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
@@ -762,20 +791,29 @@ public class MovieRepository : IMovieRepository
         return maybeExisting;
     }
 
-    public Task<bool> AddDirector(MovieMetadata metadata, Director director) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddDirector(MovieMetadata metadata, Director director)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Director (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
             new { director.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddWriter(MovieMetadata metadata, Writer writer) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddWriter(MovieMetadata metadata, Writer writer)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Writer (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
             new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<Unit> UpdatePath(int mediaFileId, string path) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> UpdatePath(int mediaFileId, string path)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
             new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
+    }
 
     private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
         TvContext dbContext,

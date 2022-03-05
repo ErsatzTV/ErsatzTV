@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -10,12 +9,10 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class OtherVideoRepository : IOtherVideoRepository
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public OtherVideoRepository(IDbConnection dbConnection, IDbContextFactory<TvContext> dbContextFactory)
+    public OtherVideoRepository(IDbContextFactory<TvContext> dbContextFactory)
     {
-        _dbConnection = dbConnection;
         _dbContextFactory = dbContextFactory;
     }
 
@@ -23,7 +20,7 @@ public class OtherVideoRepository : IOtherVideoRepository
         LibraryPath libraryPath,
         string path)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<OtherVideo> maybeExisting = await dbContext.OtherVideos
             .AsNoTracking()
             .Include(ov => ov.OtherVideoMetadata)
@@ -48,8 +45,10 @@ public class OtherVideoRepository : IOtherVideoRepository
             async () => await AddOtherVideo(dbContext, libraryPath.Id, path));
     }
 
-    public Task<IEnumerable<string>> FindOtherVideoPaths(LibraryPath libraryPath) =>
-        _dbConnection.QueryAsync<string>(
+    public async Task<IEnumerable<string>> FindOtherVideoPaths(LibraryPath libraryPath)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
             @"SELECT MF.Path
                 FROM MediaFile MF
                 INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
@@ -57,10 +56,13 @@ public class OtherVideoRepository : IOtherVideoRepository
                 INNER JOIN MediaItem MI on O.Id = MI.Id
                 WHERE MI.LibraryPathId = @LibraryPathId",
             new { LibraryPathId = libraryPath.Id });
+    }
 
     public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT O.Id
             FROM OtherVideo O
             INNER JOIN MediaItem MI on O.Id = MI.Id
@@ -69,11 +71,13 @@ public class OtherVideoRepository : IOtherVideoRepository
             WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
             new { LibraryPathId = libraryPath.Id, Path = path }).Map(result => result.ToList());
 
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
         foreach (int otherVideoId in ids)
         {
             OtherVideo otherVideo = await dbContext.OtherVideos.FindAsync(otherVideoId);
-            dbContext.OtherVideos.Remove(otherVideo);
+            if (otherVideo != null)
+            {
+                dbContext.OtherVideos.Remove(otherVideo);
+            }
         }
 
         await dbContext.SaveChangesAsync();
@@ -81,14 +85,17 @@ public class OtherVideoRepository : IOtherVideoRepository
         return ids;
     }
 
-    public Task<bool> AddTag(OtherVideoMetadata metadata, Tag tag) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddTag(OtherVideoMetadata metadata, Tag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Tag (Name, OtherVideoMetadataId) VALUES (@Name, @MetadataId)",
             new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
     public async Task<List<OtherVideoMetadata>> GetOtherVideosForCards(List<int> ids)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.OtherVideoMetadata
             .AsNoTracking()
             .Filter(ovm => ids.Contains(ovm.OtherVideoId))

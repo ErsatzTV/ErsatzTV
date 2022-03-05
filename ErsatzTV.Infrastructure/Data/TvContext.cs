@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using System.Data;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,8 @@ public class TvContext : DbContext
     public TvContext(DbContextOptions<TvContext> options, ILoggerFactory loggerFactory)
         : base(options) =>
         _loggerFactory = loggerFactory;
+
+    public IDbConnection Connection => Database.GetDbConnection();
 
     public DbSet<ConfigElement> ConfigElements { get; set; }
     public DbSet<Channel> Channels { get; set; }

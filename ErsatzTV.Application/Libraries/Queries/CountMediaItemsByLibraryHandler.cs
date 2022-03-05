@@ -1,21 +1,25 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
+using ErsatzTV.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Libraries;
 
 public class CountMediaItemsByLibraryHandler : IRequestHandler<CountMediaItemsByLibrary, int>
 {
-    private readonly IDbConnection _dbConnection;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public CountMediaItemsByLibraryHandler(IDbConnection dbConnection)
+    public CountMediaItemsByLibraryHandler(IDbContextFactory<TvContext> dbContextFactory)
     {
-        _dbConnection = dbConnection;
+        _dbContextFactory = dbContextFactory;
     }
 
-    public Task<int> Handle(CountMediaItemsByLibrary request, CancellationToken cancellationToken) =>
-        _dbConnection.QuerySingleAsync<int>(
+    public async Task<int> Handle(CountMediaItemsByLibrary request, CancellationToken cancellationToken)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        return await dbContext.Connection.QuerySingleAsync<int>(
             @"SELECT COUNT(*) FROM MediaItem
                   INNER JOIN LibraryPath LP on MediaItem.LibraryPathId = LP.Id
                   WHERE LP.LibraryId = @LibraryId",
             new { request.LibraryId });
+    }
 }

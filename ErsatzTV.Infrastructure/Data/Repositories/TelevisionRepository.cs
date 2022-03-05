@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -10,32 +9,39 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class TelevisionRepository : ITelevisionRepository
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public TelevisionRepository(IDbConnection dbConnection, IDbContextFactory<TvContext> dbContextFactory)
+    public TelevisionRepository(IDbContextFactory<TvContext> dbContextFactory)
     {
-        _dbConnection = dbConnection;
         _dbContextFactory = dbContextFactory;
     }
 
-    public Task<bool> AllShowsExist(List<int> showIds) =>
-        _dbConnection.QuerySingleAsync<int>(
+    public async Task<bool> AllShowsExist(List<int> showIds)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QuerySingleAsync<int>(
                 "SELECT COUNT(*) FROM Show WHERE Id in @ShowIds",
                 new { ShowIds = showIds })
             .Map(c => c == showIds.Count);
+    }
 
-    public Task<bool> AllSeasonsExist(List<int> seasonIds) =>
-        _dbConnection.QuerySingleAsync<int>(
+    public async Task<bool> AllSeasonsExist(List<int> seasonIds)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QuerySingleAsync<int>(
                 "SELECT COUNT(*) FROM Season WHERE Id in @SeasonIds",
                 new { SeasonIds = seasonIds })
             .Map(c => c == seasonIds.Count);
+    }
 
-    public Task<bool> AllEpisodesExist(List<int> episodeIds) =>
-        _dbConnection.QuerySingleAsync<int>(
+    public async Task<bool> AllEpisodesExist(List<int> episodeIds)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QuerySingleAsync<int>(
                 "SELECT COUNT(*) FROM Episode WHERE Id in @EpisodeIds",
                 new { EpisodeIds = episodeIds })
             .Map(c => c == episodeIds.Count);
+    }
 
     public async Task<List<Show>> GetAllShows()
     {
@@ -161,7 +167,9 @@ public class TelevisionRepository : ITelevisionRepository
 
     public async Task<List<Season>> GetPagedSeasons(int televisionShowId, int pageNumber, int pageSize)
     {
-        List<int> showIds = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> showIds = await dbContext.Connection.QueryAsync<int>(
                 @"SELECT m1.ShowId
                 FROM ShowMetadata m1
                 LEFT OUTER JOIN ShowMetadata m2 ON m2.ShowId = @ShowId
@@ -169,7 +177,6 @@ public class TelevisionRepository : ITelevisionRepository
                 new { ShowId = televisionShowId })
             .Map(results => results.ToList());
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Seasons
             .AsNoTracking()
             .Where(s => showIds.Contains(s.ShowId))
@@ -357,7 +364,7 @@ public class TelevisionRepository : ITelevisionRepository
                     episode.SeasonId = season.Id;
                     episode.Season = season;
 
-                    await _dbConnection.ExecuteAsync(
+                    await dbContext.Connection.ExecuteAsync(
                         @"UPDATE Episode SET SeasonId = @SeasonId WHERE Id = @EpisodeId",
                         new { SeasonId = season.Id, EpisodeId = episode.Id });
                 }
@@ -367,8 +374,10 @@ public class TelevisionRepository : ITelevisionRepository
             async () => await AddEpisode(dbContext, season, libraryPath.Id, path));
     }
 
-    public Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath) =>
-        _dbConnection.QueryAsync<string>(
+    public async Task<IEnumerable<string>> FindEpisodePaths(LibraryPath libraryPath)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
             @"SELECT MF.Path
                 FROM MediaFile MF
                 INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
@@ -376,10 +385,13 @@ public class TelevisionRepository : ITelevisionRepository
                 INNER JOIN MediaItem MI on E.Id = MI.Id
                 WHERE MI.LibraryPathId = @LibraryPathId",
             new { LibraryPathId = libraryPath.Id });
+    }
 
     public async Task<Unit> DeleteByPath(LibraryPath libraryPath, string path)
     {
-        IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT E.Id
                 FROM Episode E
                 INNER JOIN MediaItem MI on E.Id = MI.Id
@@ -388,7 +400,6 @@ public class TelevisionRepository : ITelevisionRepository
                 WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
             new { LibraryPathId = libraryPath.Id, Path = path });
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         foreach (int episodeId in ids)
         {
             Episode episode = await dbContext.Episodes.FindAsync(episodeId);
@@ -521,8 +532,10 @@ public class TelevisionRepository : ITelevisionRepository
             async () => await AddPlexEpisode(dbContext, library, item));
     }
 
-    public Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
                 INNER JOIN Season s ON m.Id = s.Id
@@ -530,10 +543,13 @@ public class TelevisionRepository : ITelevisionRepository
                 INNER JOIN PlexShow P on P.Id = s.ShowId
                 WHERE P.Key = @ShowKey AND ps.Key not in @Keys)",
             new { ShowKey = showKey, Keys = seasonKeys }).ToUnit();
+    }
 
     public async Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN Episode e ON m.Id = e.Id
                 INNER JOIN PlexEpisode pe ON pe.Id = m.Id
@@ -541,7 +557,7 @@ public class TelevisionRepository : ITelevisionRepository
                 WHERE P.Key = @SeasonKey AND pe.Key not in @Keys",
             new { SeasonKey = seasonKey, Keys = episodeKeys }).Map(result => result.ToList());
 
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             "DELETE FROM MediaItem WHERE Id IN @Ids",
             new { Ids = ids });
 
@@ -550,38 +566,49 @@ public class TelevisionRepository : ITelevisionRepository
 
     public async Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         episode.EpisodeMetadata.Remove(metadata);
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM EpisodeMetadata WHERE Id = @MetadataId",
             new { MetadataId = metadata.Id });
         return Unit.Default;
     }
 
-    public Task<bool> AddDirector(EpisodeMetadata metadata, Director director) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddDirector(EpisodeMetadata metadata, Director director)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Director (Name, EpisodeMetadataId) VALUES (@Name, @MetadataId)",
             new { director.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Writer (Name, EpisodeMetadataId) VALUES (@Name, @MetadataId)",
             new { writer.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<Unit> UpdatePath(int mediaFileId, string path) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<Unit> UpdatePath(int mediaFileId, string path)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
             new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
+    }
 
     public async Task<List<Episode>> GetShowItems(int showId)
     {
-        IEnumerable<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        IEnumerable<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT Episode.Id FROM Show
             INNER JOIN Season ON Season.ShowId = Show.Id
             INNER JOIN Episode ON Episode.SeasonId = Season.Id
             WHERE Show.Id = @ShowId",
             new { ShowId = showId });
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Episodes
             .AsNoTracking()
             .Include(e => e.EpisodeMetadata)
@@ -613,28 +640,39 @@ public class TelevisionRepository : ITelevisionRepository
             .ToListAsync();
     }
 
-    public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddGenre(ShowMetadata metadata, Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Genre (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddTag(ShowMetadata metadata, Tag tag) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddTag(ShowMetadata metadata, Tag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Tag (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
             new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddStudio(ShowMetadata metadata, Studio studio) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddStudio(ShowMetadata metadata, Studio studio)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Studio (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
             new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
     public async Task<bool> AddActor(ShowMetadata metadata, Actor actor)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
         int? artworkId = null;
 
         if (actor.Artwork != null)
         {
-            artworkId = await _dbConnection.QuerySingleAsync<int>(
+            artworkId = await dbContext.Connection.QuerySingleAsync<int>(
                 @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
                       VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
                       SELECT last_insert_rowid()",
@@ -647,7 +685,7 @@ public class TelevisionRepository : ITelevisionRepository
                 });
         }
 
-        return await _dbConnection.ExecuteAsync(
+        return await dbContext.Connection.ExecuteAsync(
                 "INSERT INTO Actor (Name, Role, \"Order\", ShowMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
@@ -655,11 +693,13 @@ public class TelevisionRepository : ITelevisionRepository
 
     public async Task<bool> AddActor(EpisodeMetadata metadata, Actor actor)
     {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
         int? artworkId = null;
 
         if (actor.Artwork != null)
         {
-            artworkId = await _dbConnection.QuerySingleAsync<int>(
+            artworkId = await dbContext.Connection.QuerySingleAsync<int>(
                 @"INSERT INTO Artwork (ArtworkKind, DateAdded, DateUpdated, Path)
                       VALUES (@ArtworkKind, @DateAdded, @DateUpdated, @Path);
                       SELECT last_insert_rowid()",
@@ -672,7 +712,7 @@ public class TelevisionRepository : ITelevisionRepository
                 });
         }
 
-        return await _dbConnection.ExecuteAsync(
+        return await dbContext.Connection.ExecuteAsync(
                 "INSERT INTO Actor (Name, Role, \"Order\", EpisodeMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
@@ -680,14 +720,16 @@ public class TelevisionRepository : ITelevisionRepository
 
     public async Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN PlexShow ps ON ps.Id = m.Id
                 INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
                 WHERE lp.LibraryId = @LibraryId AND ps.Key not in @Keys",
             new { LibraryId = library.Id, Keys = showKeys }).Map(result => result.ToList());
 
-        await _dbConnection.ExecuteAsync(
+        await dbContext.Connection.ExecuteAsync(
             "DELETE FROM MediaItem WHERE Id IN @Ids",
             new { Ids = ids });
 

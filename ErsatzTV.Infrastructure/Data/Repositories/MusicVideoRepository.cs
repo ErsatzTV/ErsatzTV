@@ -1,5 +1,4 @@
-﻿using System.Data;
-using Dapper;
+﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -10,13 +9,11 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MusicVideoRepository : IMusicVideoRepository
 {
-    private readonly IDbConnection _dbConnection;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MusicVideoRepository(IDbContextFactory<TvContext> dbContextFactory, IDbConnection dbConnection)
+    public MusicVideoRepository(IDbContextFactory<TvContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
-        _dbConnection = dbConnection;
     }
 
     public async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(
@@ -53,7 +50,7 @@ public class MusicVideoRepository : IMusicVideoRepository
             {
                 if (mediaItem.ArtistId != artist.Id)
                 {
-                    await _dbConnection.ExecuteAsync(
+                    await dbContext.Connection.ExecuteAsync(
                         @"UPDATE MusicVideo SET ArtistId = @ArtistId WHERE Id = @Id",
                         new { mediaItem.Id, ArtistId = artist.Id });
 
@@ -67,8 +64,10 @@ public class MusicVideoRepository : IMusicVideoRepository
             async () => await AddMusicVideo(dbContext, artist, libraryPath.Id, path));
     }
 
-    public Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath) =>
-        _dbConnection.QueryAsync<string>(
+    public async Task<IEnumerable<string>> FindMusicVideoPaths(LibraryPath libraryPath)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
             @"SELECT MF.Path
                 FROM MediaFile MF
                 INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
@@ -76,10 +75,12 @@ public class MusicVideoRepository : IMusicVideoRepository
                 INNER JOIN MediaItem MI on M.Id = MI.Id
                 WHERE MI.LibraryPathId = @LibraryPathId",
             new { LibraryPathId = libraryPath.Id });
+    }
 
     public async Task<List<int>> DeleteByPath(LibraryPath libraryPath, string path)
     {
-        List<int> ids = await _dbConnection.QueryAsync<int>(
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        List<int> ids = await dbContext.Connection.QueryAsync<int>(
             @"SELECT M.Id
                 FROM MusicVideo M
                 INNER JOIN MediaItem MI on M.Id = MI.Id
@@ -88,7 +89,6 @@ public class MusicVideoRepository : IMusicVideoRepository
                 WHERE MI.LibraryPathId = @LibraryPathId AND MF.Path = @Path",
             new { LibraryPathId = libraryPath.Id, Path = path }).Map(result => result.ToList());
 
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         foreach (int musicVideoId in ids)
         {
             MusicVideo musicVideo = await dbContext.MusicVideos.FindAsync(musicVideoId);
@@ -103,20 +103,29 @@ public class MusicVideoRepository : IMusicVideoRepository
         return ids;
     }
         
-    public Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Genre (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddTag(MusicVideoMetadata metadata, Tag tag) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddTag(MusicVideoMetadata metadata, Tag tag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Tag (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
             new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
-    public Task<bool> AddStudio(MusicVideoMetadata metadata, Studio studio) =>
-        _dbConnection.ExecuteAsync(
+    public async Task<bool> AddStudio(MusicVideoMetadata metadata, Studio studio)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
             "INSERT INTO Studio (Name, MusicVideoMetadataId) VALUES (@Name, @MetadataId)",
             new { studio.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+    }
 
     public async Task<List<MusicVideoMetadata>> GetMusicVideosForCards(List<int> ids)
     {
@@ -135,8 +144,10 @@ public class MusicVideoRepository : IMusicVideoRepository
             .ToListAsync();
     }
 
-    public Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath) =>
-        _dbConnection.QueryAsync<string>(
+    public async Task<IEnumerable<string>> FindOrphanPaths(LibraryPath libraryPath)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
             @"SELECT MF.Path
                 FROM MediaFile MF
                 INNER JOIN MediaVersion MV on MF.MediaVersionId = MV.Id
@@ -145,11 +156,15 @@ public class MusicVideoRepository : IMusicVideoRepository
                 WHERE MI.LibraryPathId = @LibraryPathId
                   AND NOT EXISTS (SELECT * FROM MusicVideoMetadata WHERE MusicVideoId = M.Id)",
             new { LibraryPathId = libraryPath.Id });
+    }
 
-    public Task<int> GetMusicVideoCount(int artistId) =>
-        _dbConnection.QuerySingleAsync<int>(
+    public async Task<int> GetMusicVideoCount(int artistId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QuerySingleAsync<int>(
             @"SELECT COUNT(*) FROM MusicVideo WHERE ArtistId = @ArtistId",
             new { ArtistId = artistId });
+    }
 
     public async Task<List<MusicVideoMetadata>> GetPagedMusicVideos(int artistId, int pageNumber, int pageSize)
     {
