@@ -15,6 +15,7 @@ namespace ErsatzTV.Application.Streaming;
 
 public class HlsSessionWorker : IHlsSessionWorker
 {
+    private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -25,8 +26,12 @@ public class HlsSessionWorker : IHlsSessionWorker
     private readonly object _sync = new();
     private DateTimeOffset _playlistStart;
     private Option<int> _targetFramerate;
+    private string _channelNumber;
 
-    public HlsSessionWorker(IHlsPlaylistFilter hlsPlaylistFilter, IServiceScopeFactory serviceScopeFactory, ILogger<HlsSessionWorker> logger)
+    public HlsSessionWorker(
+        IHlsPlaylistFilter hlsPlaylistFilter,
+        IServiceScopeFactory serviceScopeFactory,
+        ILogger<HlsSessionWorker> logger)
     {
         _hlsPlaylistFilter = hlsPlaylistFilter;
         _serviceScopeFactory = serviceScopeFactory;
@@ -46,13 +51,23 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
+    public async Task<Option<TrimPlaylistResult>> TrimPlaylist(
+        DateTimeOffset filterBefore,
+        CancellationToken cancellationToken)
+    {
+        Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
+        return maybeLines.Map(input => _hlsPlaylistFilter.TrimPlaylist(PlaylistStart, filterBefore, input));
+    }
+
     public async Task Run(string channelNumber, TimeSpan idleTimeout)
     {
         var cts = new CancellationTokenSource();
         void Cancel(object o, ElapsedEventArgs e) => cts.Cancel();
-
+        
         try
         {
+            _channelNumber = channelNumber;
+            
             lock (_sync)
             {
                 _timer = new Timer(idleTimeout.TotalMilliseconds) { AutoReset = false };
@@ -75,7 +90,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             _playlistStart = _transcodedUntil;
 
             bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
-            if (!await Transcode(channelNumber, true, !initialWorkAhead, cancellationToken))
+            if (!await Transcode(true, !initialWorkAhead, cancellationToken))
             {
                 return;
             }
@@ -96,14 +111,14 @@ public class HlsSessionWorker : IHlsSessionWorker
                     bool realtime = transcodedBuffer >= TimeSpan.FromSeconds(30);
                     bool subsequentWorkAhead =
                         !realtime && Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
-                    if (!await Transcode(channelNumber, false, !subsequentWorkAhead, cancellationToken))
+                    if (!await Transcode(false, !subsequentWorkAhead, cancellationToken))
                     {
                         return;
                     }
                 }
                 else
                 {
-                    await TrimAndDelete(channelNumber, cancellationToken);
+                    await TrimAndDelete(cancellationToken);
                     await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
                 }
             }
@@ -118,7 +133,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     }
 
     private async Task<bool> Transcode(
-        string channelNumber,
         bool firstProcess,
         bool realtime,
         CancellationToken cancellationToken)
@@ -130,22 +144,22 @@ public class HlsSessionWorker : IHlsSessionWorker
             if (!realtime)
             {
                 Interlocked.Increment(ref _workAheadCount);
-                _logger.LogInformation("HLS segmenter will work ahead for channel {Channel}", channelNumber);
+                _logger.LogInformation("HLS segmenter will work ahead for channel {Channel}", _channelNumber);
             }
             else
             {
                 _logger.LogInformation(
                     "HLS segmenter will NOT work ahead for channel {Channel}",
-                    channelNumber);
+                    _channelNumber);
             }
 
             IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
-            long ptsOffset = await GetPtsOffset(mediator, channelNumber, cancellationToken);
+            long ptsOffset = await GetPtsOffset(mediator, _channelNumber, cancellationToken);
             // _logger.LogInformation("PTS offset: {PtsOffset}", ptsOffset);
 
             var request = new GetPlayoutItemProcessByChannelNumber(
-                channelNumber,
+                _channelNumber,
                 "segmenter",
                 firstProcess ? DateTimeOffset.Now : _transcodedUntil.AddSeconds(1),
                 !firstProcess,
@@ -163,7 +177,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 _logger.LogWarning(
                     "Failed to create process for HLS session on channel {Channel}: {Error}",
-                    channelNumber,
+                    _channelNumber,
                     error.ToString());
 
                 return false;
@@ -171,7 +185,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             foreach (PlayoutItemProcessModel processModel in result.RightAsEnumerable())
             {
-                await TrimAndDelete(channelNumber, cancellationToken);
+                await TrimAndDelete(cancellationToken);
 
                 Process process = processModel.Process;
 
@@ -187,21 +201,21 @@ public class HlsSessionWorker : IHlsSessionWorker
                 }
                 catch (TaskCanceledException)
                 {
-                    _logger.LogInformation("Terminating HLS process for channel {Channel}", channelNumber);
+                    _logger.LogInformation("Terminating HLS process for channel {Channel}", _channelNumber);
                     process.Kill();
                     process.WaitForExit();
 
                     return false;
                 }
 
-                _logger.LogInformation("HLS process has completed for channel {Channel}", channelNumber);
+                _logger.LogInformation("HLS process has completed for channel {Channel}", _channelNumber);
 
                 _transcodedUntil = processModel.Until;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error transcoding channel {Channel}", channelNumber);
+            _logger.LogError(ex, "Error transcoding channel {Channel}", _channelNumber);
             
             try
             {
@@ -223,26 +237,21 @@ public class HlsSessionWorker : IHlsSessionWorker
         return true;
     }
 
-    private async Task TrimAndDelete(string channelNumber, CancellationToken cancellationToken)
+    private async Task TrimAndDelete(CancellationToken cancellationToken)
     {
-        string playlistFileName = Path.Combine(
-            FileSystemLayout.TranscodeFolder,
-            channelNumber,
-            "live.m3u8");
-
-        if (File.Exists(playlistFileName))
+        Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
+        foreach (string[] lines in maybeLines)
         {
             // trim playlist and insert discontinuity before appending with new ffmpeg process
-            string[] lines = await File.ReadAllLinesAsync(playlistFileName, cancellationToken);
             TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
                 _playlistStart,
                 DateTimeOffset.Now.AddMinutes(-1),
                 lines);
-            await File.WriteAllTextAsync(playlistFileName, trimResult.Playlist, cancellationToken);
+            await WritePlaylist(trimResult.Playlist, cancellationToken);
 
             // delete old segments
             var allSegments = Directory.GetFiles(
-                    Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber),
+                    Path.Combine(FileSystemLayout.TranscodeFolder, _channelNumber),
                     "live*.ts")
                 .Map(
                     file =>
@@ -302,5 +311,43 @@ public class HlsSessionWorker : IHlsSessionWorker
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
     }
 
+    private async Task<Option<string[]>> ReadPlaylistLines(CancellationToken cancellationToken)
+    {
+        await Slim.WaitAsync(cancellationToken);
+        try
+        {
+            string fileName = PlaylistFileName();
+            if (File.Exists(fileName))
+            {
+                return await File.ReadAllLinesAsync(fileName, cancellationToken);
+            }
+
+            return None;
+        }
+        finally
+        {
+            Slim.Release();
+        }
+    }
+    
+    private async Task WritePlaylist(string playlist, CancellationToken cancellationToken)
+    {
+        await Slim.WaitAsync(cancellationToken);
+        try
+        {
+            string fileName = PlaylistFileName();
+            await File.WriteAllTextAsync(fileName, playlist, cancellationToken);
+        }
+        finally
+        {
+            Slim.Release();
+        }
+    }
+
+    private string PlaylistFileName() => Path.Combine(
+        FileSystemLayout.TranscodeFolder,
+        _channelNumber,
+        "live.m3u8");
+    
     private record Segment(string File, int SequenceNumber);
 }

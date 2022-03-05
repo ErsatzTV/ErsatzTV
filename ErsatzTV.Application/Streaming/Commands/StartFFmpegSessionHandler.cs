@@ -37,13 +37,13 @@ public class StartFFmpegSessionHandler : MediatR.IRequestHandler<StartFFmpegSess
 
     public Task<Either<BaseError, Unit>> Handle(StartFFmpegSession request, CancellationToken cancellationToken) =>
         Validate(request)
-            .MapT(_ => StartProcess(request))
+            .MapT(_ => StartProcess(request, cancellationToken))
             // this weirdness is needed to maintain the error type (.ToEitherAsync() just gives BaseError)
 #pragma warning disable VSTHRD103
             .Bind(v => v.ToEither().MapLeft(seq => seq.Head()).MapAsync<BaseError, Task<Unit>, Unit>(identity));
 #pragma warning restore VSTHRD103
 
-    private async Task<Unit> StartProcess(StartFFmpegSession request)
+    private async Task<Unit> StartProcess(StartFFmpegSession request, CancellationToken cancellationToken)
     {
         TimeSpan idleTimeout = await _configElementRepository
             .GetValue<int>(ConfigElementKey.FFmpegSegmenterTimeout)
@@ -70,27 +70,33 @@ public class StartFFmpegSessionHandler : MediatR.IRequestHandler<StartFFmpegSess
         int initialSegmentCount = await repo.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount)
             .Map(maybeCount => maybeCount.Match(identity, () => 1));
 
-        await WaitForPlaylistSegments(playlistFileName, initialSegmentCount, worker);
+        await WaitForPlaylistSegments(playlistFileName, initialSegmentCount, worker, cancellationToken);
 
         return Unit.Default;
     }
 
-    private async Task WaitForPlaylistSegments(string playlistFileName, int initialSegmentCount, IHlsSessionWorker worker)
+    private async Task WaitForPlaylistSegments(
+        string playlistFileName,
+        int initialSegmentCount,
+        IHlsSessionWorker worker,
+        CancellationToken cancellationToken)
     {
         while (!File.Exists(playlistFileName))
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(100));
+            await Task.Delay(TimeSpan.FromMilliseconds(100), cancellationToken);
         }
 
         var segmentCount = 0;
         while (segmentCount < initialSegmentCount)
         {
-            await Task.Delay(TimeSpan.FromMilliseconds(200));
-                
+            await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken);
+
             DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
-            string[] input = await File.ReadAllLinesAsync(playlistFileName);
-            TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
-            segmentCount = result.SegmentCount;
+            Option<TrimPlaylistResult> maybeResult = await worker.TrimPlaylist(now, cancellationToken);
+            foreach (TrimPlaylistResult result in maybeResult)
+            {
+                segmentCount = result.SegmentCount;
+            }
         }
     }
 
