@@ -232,6 +232,11 @@ public class LocalMetadataProvider : ILocalMetadataProvider
                     result.Artist = artist;
                 }
 
+                if (tags.TryGetValue(MetadataFormatTag.AlbumArtist, out string albumArtist))
+                {
+                    result.AlbumArtist = albumArtist;
+                }
+
                 if (tags.TryGetValue(MetadataFormatTag.Date, out string date))
                 {
                     result.Date = date;
@@ -766,6 +771,7 @@ public class LocalMetadataProvider : ILocalMetadataProvider
         {
             existing.Title = metadata.Title;
             existing.Artist = metadata.Artist;
+            existing.AlbumArtist = metadata.AlbumArtist;
             existing.Album = metadata.Album;
             existing.Date = metadata.Date;
             existing.Track = metadata.Track;

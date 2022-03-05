@@ -103,7 +103,8 @@ The following fields are available for searching songs:
 
 - `title`: The song title, or the filename of the song (without extension)
 - `album`: The song album
-- `artist`: The song artist
+- `artist`: The song/track artist
+- `album_artist`: The album artist
 - `genre`: The song genre
 - `tag`: All of the song's parent folders
 - `minutes`: the rounded-up whole number duration of the song in minutes
