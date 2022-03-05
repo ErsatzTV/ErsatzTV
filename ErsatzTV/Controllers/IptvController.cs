@@ -76,23 +76,14 @@ public class IptvController : ControllerBase
     }
 
     [HttpGet("iptv/session/{channelNumber}/hls.m3u8")]
-    public async Task<IActionResult> GetLivePlaylist(string channelNumber)
+    public async Task<IActionResult> GetLivePlaylist(string channelNumber, CancellationToken cancellationToken)
     {
         if (_ffmpegSegmenterService.SessionWorkers.TryGetValue(channelNumber, out IHlsSessionWorker worker))
         {
             DateTimeOffset now = DateTimeOffset.Now.AddSeconds(-30);
-            
-            string fileName = Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber, "live.m3u8");
-            if (System.IO.File.Exists(fileName))
+            Option<TrimPlaylistResult> maybePlaylist = await worker.TrimPlaylist(now, cancellationToken);
+            foreach (TrimPlaylistResult result in maybePlaylist)
             {
-                string[] input = await System.IO.File.ReadAllLinesAsync(fileName);
-
-                // _logger.LogInformation(
-                //     "Trimming playlist: {PlaylistStart} {FilterBefore}",
-                //     worker.PlaylistStart,
-                //     now);
-
-                TrimPlaylistResult result = _hlsPlaylistFilter.TrimPlaylist(worker.PlaylistStart, now, input);
                 return Content(result.Playlist, "application/vnd.apple.mpegurl");
             }
         }

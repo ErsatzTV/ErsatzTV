@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix adding songs to collections from search results page
 - Fix bug scheduling mid-roll filler with content that contains one chapter
   - No mid-roll filler will be inserted for content with zero or one chapters
+- Fix thread sync bug with `HLS Segmenter` (and `MPEG-TS`) streaming modes
 
 ### Added
 - Add automated error reporting via Bugsnag
