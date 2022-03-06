@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Bugsnag;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Logging;
 
@@ -6,10 +7,12 @@ namespace ErsatzTV.Core.Metadata;
 
 public class LocalFileSystem : ILocalFileSystem
 {
+    private readonly IClient _client;
     private readonly ILogger<LocalFileSystem> _logger;
 
-    public LocalFileSystem(ILogger<LocalFileSystem> logger)
+    public LocalFileSystem(IClient client, ILogger<LocalFileSystem> logger)
     {
+        _client = client;
         _logger = logger;
     }
 
@@ -44,9 +47,10 @@ public class LocalFileSystem : ILocalFileSystem
             {
                 return Directory.EnumerateDirectories(folder);
             }
-            catch
+            catch (Exception ex)
             {
                 // do nothing
+                _client.Notify(ex);
             }
         }
 
@@ -61,9 +65,10 @@ public class LocalFileSystem : ILocalFileSystem
             {
                 return Directory.EnumerateFiles(folder, "*", SearchOption.TopDirectoryOnly);
             }
-            catch
+            catch (Exception ex)
             {
                 // do nothing
+                _client.Notify(ex);
             }
         }
 
@@ -92,6 +97,7 @@ public class LocalFileSystem : ILocalFileSystem
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }

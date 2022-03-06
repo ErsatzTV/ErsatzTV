@@ -18,6 +18,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediator _mediator;
+    private readonly IClient _client;
     private readonly IMetadataRepository _metadataRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -57,6 +58,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _searchRepository = searchRepository;
         _libraryRepository = libraryRepository;
         _mediator = mediator;
+        _client = client;
         _logger = logger;
     }
 
@@ -287,6 +289,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -348,6 +351,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -371,6 +375,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -390,6 +395,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
@@ -411,6 +417,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.ToString());
         }
     }
