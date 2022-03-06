@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Infrastructure.Data;
@@ -9,26 +10,36 @@ namespace ErsatzTV.Application.Playouts;
 
 public class BuildPlayoutHandler : MediatR.IRequestHandler<BuildPlayout, Either<BaseError, Unit>>
 {
+    private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IPlayoutBuilder _playoutBuilder;
 
-    public BuildPlayoutHandler(IDbContextFactory<TvContext> dbContextFactory, IPlayoutBuilder playoutBuilder)
+    public BuildPlayoutHandler(IClient client, IDbContextFactory<TvContext> dbContextFactory, IPlayoutBuilder playoutBuilder)
     {
+        _client = client;
         _dbContextFactory = dbContextFactory;
         _playoutBuilder = playoutBuilder;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(BuildPlayout request, CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, playout => ApplyUpdateRequest(dbContext, request, playout));
+        return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, BuildPlayout request, Playout playout)
     {
-        await _playoutBuilder.BuildPlayoutItems(playout, request.Rebuild);
-        await dbContext.SaveChangesAsync();
+        try
+        {
+            await _playoutBuilder.BuildPlayoutItems(playout, request.Rebuild);
+            await dbContext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+        }
+
         return Unit.Default;
     }
 

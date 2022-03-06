@@ -277,7 +277,7 @@ public class TranscodingTests
 
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository.Object,
-            new LocalFileSystem(LoggerFactory.CreateLogger<LocalFileSystem>()),
+            new LocalFileSystem(new Mock<IClient>().Object, LoggerFactory.CreateLogger<LocalFileSystem>()),
             new Mock<IClient>().Object,
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 

@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using Bugsnag;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -7,10 +8,12 @@ namespace ErsatzTV.Application.Filler;
 
 public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Either<BaseError, Unit>>
 {
+    private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public CreateFillerPresetHandler(IDbContextFactory<TvContext> dbContextFactory)
+    public CreateFillerPresetHandler(IClient client, IDbContextFactory<TvContext> dbContextFactory)
     {
+        _client = client;
         _dbContextFactory = dbContextFactory;
     }
 
@@ -18,7 +21,7 @@ public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Eit
     {
         try
         {
-            await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+            await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             var fillerPreset = new FillerPreset
             {
@@ -42,6 +45,7 @@ public class CreateFillerPresetHandler : IRequestHandler<CreateFillerPreset, Eit
         }
         catch (Exception ex)
         {
+            _client.Notify(ex);
             return BaseError.New(ex.Message);
         }
     }
