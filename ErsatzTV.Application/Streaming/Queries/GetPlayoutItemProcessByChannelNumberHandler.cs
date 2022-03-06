@@ -18,8 +18,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Streaming;
 
-public class GetPlayoutItemProcessByChannelNumberHandler :
-    FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
+public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
 {
     private readonly IEmbyPathReplacementService _embyPathReplacementService;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
@@ -62,7 +61,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler :
         string ffmpegPath)
     {
         DateTimeOffset now = request.Now;
-            
+
         Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await dbContext.PlayoutItems
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Episode).MediaVersions)
@@ -108,144 +107,146 @@ public class GetPlayoutItemProcessByChannelNumberHandler :
 
         IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
 
-        return await maybePlayoutItem.Match(
-            async playoutItemWithPath =>
+        foreach (PlayoutItemWithPath playoutItemWithPath in maybePlayoutItem.RightToSeq())
+        {
+            MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
+
+            string videoPath = playoutItemWithPath.Path;
+            MediaVersion videoVersion = version;
+
+            string audioPath = playoutItemWithPath.Path;
+            MediaVersion audioVersion = version;
+
+            Option<ChannelWatermark> maybeGlobalWatermark = await dbContext.ConfigElements
+                .GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId)
+                .BindT(
+                    watermarkId => dbContext.ChannelWatermarks
+                        .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
+
+            if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
             {
-                MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
-
-                string videoPath = playoutItemWithPath.Path;
-                MediaVersion videoVersion = version;
-
-                string audioPath = playoutItemWithPath.Path;
-                MediaVersion audioVersion = version;
-
-                Option<ChannelWatermark> maybeGlobalWatermark = await dbContext.ConfigElements
-                    .GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId)
-                    .BindT(
-                        watermarkId => dbContext.ChannelWatermarks
-                            .SelectOneAsync(w => w.Id, w => w.Id == watermarkId));
-
-                if (playoutItemWithPath.PlayoutItem.MediaItem is Song song)
-                {
-                    (videoPath, videoVersion) = await _songVideoGenerator.GenerateSongVideo(
-                        song,
-                        channel,
-                        maybeGlobalWatermark,
-                        ffmpegPath);
-                }
-
-                bool saveReports = await dbContext.ConfigElements
-                    .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
-                    .Map(result => result.IfNone(false));
-
-                Process process = await ffmpegProcessService.ForPlayoutItem(
-                    ffmpegPath,
-                    saveReports,
+                (videoPath, videoVersion) = await _songVideoGenerator.GenerateSongVideo(
+                    song,
                     channel,
-                    videoVersion,
-                    audioVersion,
-                    videoPath,
-                    audioPath,
-                    playoutItemWithPath.PlayoutItem.StartOffset,
-                    playoutItemWithPath.PlayoutItem.FinishOffset,
-                    request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
                     maybeGlobalWatermark,
-                    channel.FFmpegProfile.VaapiDriver,
-                    channel.FFmpegProfile.VaapiDevice,
-                    request.HlsRealtime,
-                    playoutItemWithPath.PlayoutItem.FillerKind,
-                    playoutItemWithPath.PlayoutItem.InPoint,
-                    playoutItemWithPath.PlayoutItem.OutPoint,
-                    request.PtsOffset,
-                    request.TargetFramerate);
+                    ffmpegPath);
+            }
 
-                var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
+            bool saveReports = await dbContext.ConfigElements
+                .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
+                .Map(result => result.IfNone(false));
 
-                return Right<BaseError, PlayoutItemProcessModel>(result);
-            },
-            async error =>
+            Process process = await ffmpegProcessService.ForPlayoutItem(
+                ffmpegPath,
+                saveReports,
+                channel,
+                videoVersion,
+                audioVersion,
+                videoPath,
+                audioPath,
+                playoutItemWithPath.PlayoutItem.StartOffset,
+                playoutItemWithPath.PlayoutItem.FinishOffset,
+                request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
+                maybeGlobalWatermark,
+                channel.FFmpegProfile.VaapiDriver,
+                channel.FFmpegProfile.VaapiDevice,
+                request.HlsRealtime,
+                playoutItemWithPath.PlayoutItem.FillerKind,
+                playoutItemWithPath.PlayoutItem.InPoint,
+                playoutItemWithPath.PlayoutItem.OutPoint,
+                request.PtsOffset,
+                request.TargetFramerate);
+
+            var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
+
+            return Right<BaseError, PlayoutItemProcessModel>(result);
+        }
+
+        foreach (BaseError error in maybePlayoutItem.LeftToSeq())
+        {
+            var offlineTranscodeMessage =
+                $"offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'";
+
+            Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
+                .Where(transcode => transcode)
+                .Match(
+                    _ => dbContext.PlayoutItems
+                        .Filter(pi => pi.Playout.ChannelId == channel.Id)
+                        .Filter(pi => pi.Start > now.UtcDateTime)
+                        .OrderBy(pi => pi.Start)
+                        .FirstOrDefaultAsync()
+                        .Map(Optional)
+                        .MapT(pi => pi.StartOffset - now),
+                    () => Option<TimeSpan>.None.AsTask());
+
+            DateTimeOffset finish = maybeDuration.Match(d => now.Add(d), () => now);
+
+            switch (error)
             {
-                var offlineTranscodeMessage =
-                    $"offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'";
+                case UnableToLocatePlayoutItem:
+                    if (channel.FFmpegProfile.Transcode)
+                    {
+                        Process errorProcess = await ffmpegProcessService.ForError(
+                            ffmpegPath,
+                            channel,
+                            maybeDuration,
+                            "Channel is Offline",
+                            request.HlsRealtime,
+                            request.PtsOffset);
 
-                Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
-                    .Where(transcode => transcode)
-                    .Match(
-                        _ => dbContext.PlayoutItems
-                            .Filter(pi => pi.Playout.ChannelId == channel.Id)
-                            .Filter(pi => pi.Start > now.UtcDateTime)
-                            .OrderBy(pi => pi.Start)
-                            .FirstOrDefaultAsync()
-                            .Map(Optional)
-                            .MapT(pi => pi.StartOffset - now),
-                        () => Option<TimeSpan>.None.AsTask());
+                        return new PlayoutItemProcessModel(errorProcess, finish);
+                    }
+                    else
+                    {
+                        var message =
+                            $"Unable to locate playout item for channel {channel.Number}; {offlineTranscodeMessage}";
 
-                DateTimeOffset finish = maybeDuration.Match(d => now.Add(d), () => now);
+                        return BaseError.New(message);
+                    }
+                case PlayoutItemDoesNotExistOnDisk:
+                    if (channel.FFmpegProfile.Transcode)
+                    {
+                        Process errorProcess = await ffmpegProcessService.ForError(
+                            ffmpegPath,
+                            channel,
+                            maybeDuration,
+                            error.Value,
+                            request.HlsRealtime,
+                            request.PtsOffset);
 
-                switch (error)
-                {
-                    case UnableToLocatePlayoutItem:
-                        if (channel.FFmpegProfile.Transcode)
-                        {
-                            Process errorProcess = await ffmpegProcessService.ForError(
-                                ffmpegPath,
-                                channel,
-                                maybeDuration,
-                                "Channel is Offline",
-                                request.HlsRealtime,
-                                request.PtsOffset);
-                                
-                            return new PlayoutItemProcessModel(errorProcess, finish);
-                        }
-                        else
-                        {
-                            var message =
-                                $"Unable to locate playout item for channel {channel.Number}; {offlineTranscodeMessage}";
+                        return new PlayoutItemProcessModel(errorProcess, finish);
+                    }
+                    else
+                    {
+                        var message =
+                            $"Playout item does not exist on disk for channel {channel.Number}; {offlineTranscodeMessage}";
 
-                            return BaseError.New(message);
-                        }
-                    case PlayoutItemDoesNotExistOnDisk:
-                        if (channel.FFmpegProfile.Transcode)
-                        {
-                            Process errorProcess = await ffmpegProcessService.ForError(
-                                ffmpegPath,
-                                channel,
-                                maybeDuration,
-                                error.Value,
-                                request.HlsRealtime,
-                                request.PtsOffset);
+                        return BaseError.New(message);
+                    }
+                default:
+                    if (channel.FFmpegProfile.Transcode)
+                    {
+                        Process errorProcess = await ffmpegProcessService.ForError(
+                            ffmpegPath,
+                            channel,
+                            maybeDuration,
+                            "Channel is Offline",
+                            request.HlsRealtime,
+                            request.PtsOffset);
 
-                            return new PlayoutItemProcessModel(errorProcess, finish);
-                        }
-                        else
-                        {
-                            var message =
-                                $"Playout item does not exist on disk for channel {channel.Number}; {offlineTranscodeMessage}";
+                        return new PlayoutItemProcessModel(errorProcess, finish);
+                    }
+                    else
+                    {
+                        var message =
+                            $"Unexpected error locating playout item for channel {channel.Number}; {offlineTranscodeMessage}";
 
-                            return BaseError.New(message);
-                        }
-                    default:
-                        if (channel.FFmpegProfile.Transcode)
-                        {
-                            Process errorProcess = await ffmpegProcessService.ForError(
-                                ffmpegPath,
-                                channel,
-                                maybeDuration,
-                                "Channel is Offline",
-                                request.HlsRealtime,
-                                request.PtsOffset);
+                        return BaseError.New(message);
+                    }
+            }
+        }
 
-                            return new PlayoutItemProcessModel(errorProcess, finish);
-                        }
-                        else
-                        {
-                            var message =
-                                $"Unexpected error locating playout item for channel {channel.Number}; {offlineTranscodeMessage}";
-
-                            return BaseError.New(message);
-                        }
-                }
-            });
+        return BaseError.New($"Unexpected error locating playout item for channel {channel.Number}");
     }
 
     private async Task<Either<BaseError, PlayoutItemWithPath>> CheckForFallbackFiller(
