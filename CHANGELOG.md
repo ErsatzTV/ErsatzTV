@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.4.3-alpha] - 2022-03-05
 ### Fixed
 - Fix song sorting with `Chronological` and `Shuffle In Order` playback orders
 - Fix watermark on scaled and/or padded video with NVIDIA acceleration
@@ -1006,7 +1008,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.2-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.3-alpha...HEAD
+[0.4.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.2-alpha...v0.4.3-alpha
 [0.4.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.1-alpha...v0.4.2-alpha
 [0.4.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.0-alpha...v0.4.1-alpha
 [0.4.0-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.3.8-alpha...v0.4.0-alpha
