@@ -56,11 +56,11 @@ using MediatR.Courier.DependencyInjection;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
 using Serilog;
+using VueCliMiddleware;
 
 namespace ErsatzTV;
 
@@ -129,10 +129,14 @@ public class Startup
                     options.ImplicitlyValidateChildProperties = true;
                 });
 
-        services.AddRazorPages();
-        services.AddServerSideBlazor();
+        services.AddSpaStaticFiles(options => { options.RootPath = "client-app/dist"; });
 
-        services.AddMudServices();
+        services.AddMemoryCache();
+
+        // services.AddRazorPages();
+        // services.AddServerSideBlazor();
+
+        // services.AddMudServices();
 
         var coreAssembly = Assembly.GetAssembly(typeof(LibraryScanProgress));
         if (coreAssembly != null)
@@ -257,9 +261,20 @@ public class Startup
             endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapBlazorHub();
-                endpoints.MapFallbackToPage("/_Host");
+                // endpoints.MapBlazorHub();
+                // endpoints.MapFallbackToPage("/_Host");
             });
+        
+        app.UseSpaStaticFiles();
+        app.UseSpa(spa =>
+        {
+            spa.Options.SourcePath = "client-app";
+
+            if (env.IsDevelopment())
+            {
+                spa.UseVueCli(npmScript: "serve");
+            }
+        });
     }
 
     private void CustomServices(IServiceCollection services)
