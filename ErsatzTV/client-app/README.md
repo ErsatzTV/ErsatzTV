@@ -1,4 +1,4 @@
-# client-app
+# ErsatzTV Vuetify UI - WIP
 
 ## Project setup
 ```
