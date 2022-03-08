@@ -1,28 +1,39 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
-  </div>
+    <v-app>
+        <Toolbar />
+        <!-- Sizes your content based upon application components -->
+        <v-main>
+            <!-- Provides the application the proper gutter -->
+            <v-container fluid>
+                <!-- If using vue-router -->
+                <router-view></router-view>
+            </v-container>
+        </v-main>
+
+        <v-footer app>
+            <!-- -->
+        </v-footer>
+    </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
-
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
+import Vue from "vue";
+import Toolbar from "@/components/Navigation/NavToolbar.vue";
+export default Vue.extend({
+    name: "App",
+    components: { Toolbar },
+    data: () => ({})
+});
 </script>
-
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+main {
+    background-color: black;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+    background-position: center;
 }
 </style>
