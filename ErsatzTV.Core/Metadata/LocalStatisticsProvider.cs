@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -58,7 +59,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                 async ffprobe =>
                 {
                     MediaVersion version = ProjectToMediaVersion(mediaItemPath, ffprobe);
-                    if (version.Duration == TimeSpan.Zero)
+                    if (version.Duration.TotalSeconds < 1)
                     {
                         await AnalyzeDuration(ffmpegPath, mediaItemPath, version);
                     }
@@ -193,41 +194,61 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 
     private async Task AnalyzeDuration(string ffmpegPath, string path, MediaVersion version)
     {
-        _logger.LogInformation(
-            "Media item at {Path} is missing duration metadata and requires additional analysis (SLOW)",
-            path);
-        
-        var startInfo = new ProcessStartInfo
+        try
         {
-            FileName = ffmpegPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8
-        };
+            _logger.LogInformation(
+                "Media item at {Path} is missing duration metadata and requires additional analysis",
+                path);
 
-        startInfo.ArgumentList.Add("-i");
-        startInfo.ArgumentList.Add(path);
-        startInfo.ArgumentList.Add("-f");
-        startInfo.ArgumentList.Add("null");
-        startInfo.ArgumentList.Add("-");
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = ffmpegPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            };
 
-        var probe = new Process
-        {
-            StartInfo = startInfo
-        };
+            startInfo.ArgumentList.Add("-i");
+            startInfo.ArgumentList.Add(path);
+            startInfo.ArgumentList.Add("-f");
+            startInfo.ArgumentList.Add("null");
+            startInfo.ArgumentList.Add("-");
 
-        probe.Start();
-        string output = await probe.StandardOutput.ReadToEndAsync();
-        await probe.WaitForExitAsync();
-        if (probe.ExitCode == 0)
-        {
-            // TODO: something with output
-            _logger.LogInformation(output.Length.ToString());
+            var probe = new Process
+            {
+                StartInfo = startInfo
+            };
+
+            probe.Start();
+            string output = await probe.StandardError.ReadToEndAsync();
+            await probe.WaitForExitAsync();
+            if (probe.ExitCode == 0)
+            {
+                const string PATTERN = @"time=([^ ]+)";
+                IEnumerable<string> reversed = output.Split("\n").Reverse();
+                foreach (string line in reversed)
+                {
+                    Match match = Regex.Match(line, PATTERN);
+                    if (match.Success)
+                    {
+                        string time = match.Groups[1].Value;
+                        var duration = TimeSpan.Parse(time, NumberFormatInfo.InvariantInfo);
+                        _logger.LogInformation("Analyzed duration is {Duration}", duration);
+                        version.Duration = duration;
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                _logger.LogError("Duration analysis failed for media item at {Path}", path);
+            }
         }
-        else
+        catch (Exception ex)
         {
+            _client.Notify(ex);
             _logger.LogError("Duration analysis failed for media item at {Path}", path);
         }
     }
