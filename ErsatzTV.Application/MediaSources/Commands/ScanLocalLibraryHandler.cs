@@ -89,6 +89,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                     case LibraryMediaKind.Movies:
                         await _movieFolderScanner.ScanFolder(
                             libraryPath,
+                            ffmpegPath,
                             ffprobePath,
                             progressMin,
                             progressMax);
@@ -96,6 +97,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                     case LibraryMediaKind.Shows:
                         await _televisionFolderScanner.ScanFolder(
                             libraryPath,
+                            ffmpegPath,
                             ffprobePath,
                             progressMin,
                             progressMax);
@@ -103,6 +105,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                     case LibraryMediaKind.MusicVideos:
                         await _musicVideoFolderScanner.ScanFolder(
                             libraryPath,
+                            ffmpegPath,
                             ffprobePath,
                             progressMin,
                             progressMax);
@@ -110,6 +113,7 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                     case LibraryMediaKind.OtherVideos:
                         await _otherVideoFolderScanner.ScanFolder(
                             libraryPath,
+                            ffmpegPath,
                             ffprobePath,
                             progressMin,
                             progressMax);

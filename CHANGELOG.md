@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix `HLS Direct` streaming mode
 
+### Added
+- Perform additional duration analysis on files with missing duration metadata
+
 ## [0.4.3-alpha] - 2022-03-05
 ### Fixed
 - Fix song sorting with `Chronological` and `Shuffle In Order` playback orders
