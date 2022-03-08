@@ -281,26 +281,28 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
-    private async Task<long> GetPtsOffset(IMediator mediator, string channelNumber, CancellationToken cancellationToken)
+    private static async Task<long> GetPtsOffset(IMediator mediator, string channelNumber, CancellationToken cancellationToken)
     {
-        var directory = new DirectoryInfo(Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber));
-        Option<FileInfo> lastSegment =
-            Optional(directory.GetFiles("*.ts").OrderByDescending(f => f.Name).FirstOrDefault());
-
-        long result = 0;
-        foreach (FileInfo segment in lastSegment)
+        await Slim.WaitAsync(cancellationToken);
+        try
         {
+            long result = 0;
+
             Either<BaseError, PtsAndDuration> queryResult = await mediator.Send(
-                new GetLastPtsDuration(segment.FullName),
+                new GetLastPtsDuration(channelNumber),
                 cancellationToken);
 
-            foreach (PtsAndDuration ptsAndDuration in queryResult.RightToSeq())
+            foreach ((long pts, long duration) in queryResult.RightToSeq())
             {
-                result = ptsAndDuration.Pts + ptsAndDuration.Duration;
+                result = pts + duration;
             }
-        }
 
-        return result;
+            return result;
+        }
+        finally
+        {
+            Slim.Release();
+        }
     }
 
     private async Task<int> GetWorkAheadLimit()
