@@ -27,6 +27,10 @@ public class MovieFolderScannerTests
         ? @"C:\Movies"
         : "/movies";
 
+    private static readonly string FFmpegPath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+        ? @"C:\bin\ffmpeg.exe"
+        : "/bin/ffmpeg";
+
     private static readonly string FFprobePath = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
         ? @"C:\bin\ffprobe.exe"
         : "/bin/ffprobe";
@@ -52,8 +56,9 @@ public class MovieFolderScannerTests
             _localStatisticsProvider = new Mock<ILocalStatisticsProvider>();
             _localMetadataProvider = new Mock<ILocalMetadataProvider>();
 
-            _localStatisticsProvider.Setup(x => x.RefreshStatistics(It.IsAny<string>(), It.IsAny<MediaItem>()))
-                .Returns<string, MediaItem>((_, _) => Right<BaseError, bool>(true).AsTask());
+            _localStatisticsProvider.Setup(
+                    x => x.RefreshStatistics(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<MediaItem>()))
+                .Returns<string, string, MediaItem>((_, _, _) => Right<BaseError, bool>(true).AsTask());
 
             // fallback metadata adds metadata to a movie, so we need to replicate that here
             _localMetadataProvider.Setup(x => x.RefreshFallbackMetadata(It.IsAny<Movie>()))
@@ -90,6 +95,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -101,6 +107,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -131,6 +138,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -142,6 +150,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -173,6 +182,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -184,6 +194,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -219,6 +230,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -230,6 +242,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -268,6 +281,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -279,6 +293,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -317,6 +332,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -328,6 +344,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -365,6 +382,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -376,6 +394,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -407,6 +426,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -418,6 +438,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -451,6 +472,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -462,6 +484,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -489,6 +512,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -500,6 +524,7 @@ public class MovieFolderScannerTests
 
             _localStatisticsProvider.Verify(
                 x => x.RefreshStatistics(
+                    FFmpegPath,
                     FFprobePath,
                     It.Is<Movie>(i => i.MediaVersions.Head().MediaFiles.Head().Path == moviePath)),
                 Times.Once);
@@ -532,6 +557,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);
@@ -561,6 +587,7 @@ public class MovieFolderScannerTests
 
             Either<BaseError, Unit> result = await service.ScanFolder(
                 libraryPath,
+                FFmpegPath,
                 FFprobePath,
                 0,
                 1);

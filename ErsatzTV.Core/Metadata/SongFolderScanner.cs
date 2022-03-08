@@ -128,7 +128,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             {
                 Either<BaseError, MediaItemScanResult<Song>> maybeSong = await _songRepository
                     .GetOrAdd(libraryPath, file)
-                    .BindT(video => UpdateStatistics(video, ffprobePath))
+                    .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                     .BindT(video => UpdateMetadata(video, ffprobePath))
                     .BindT(video => UpdateThumbnail(video, ffmpegPath))
                     .BindT(FlagNormal);

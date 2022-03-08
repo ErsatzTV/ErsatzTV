@@ -68,6 +68,7 @@ public class
                         parameters.ConnectionParameters.ActiveConnection,
                         parameters.ConnectionParameters.PlexServerAuthToken,
                         parameters.Library,
+                        parameters.FFmpegPath,
                         parameters.FFprobePath);
                     break;
                 case LibraryMediaKind.Shows:
@@ -75,6 +76,7 @@ public class
                         parameters.ConnectionParameters.ActiveConnection,
                         parameters.ConnectionParameters.PlexServerAuthToken,
                         parameters.Library,
+                        parameters.FFmpegPath,
                         parameters.FFprobePath);
                     break;
             }
@@ -95,15 +97,17 @@ public class
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(ISynchronizePlexLibraryById request) =>
         (await ValidateConnection(request), await PlexLibraryMustExist(request),
-            await ValidateLibraryRefreshInterval(), await ValidateFFprobePath())
+            await ValidateLibraryRefreshInterval(), await ValidateFFmpegPath(), await ValidateFFprobePath())
         .Apply(
-            (connectionParameters, plexLibrary, libraryRefreshInterval, ffprobePath) => new RequestParameters(
-                connectionParameters,
-                plexLibrary,
-                request.ForceScan,
-                libraryRefreshInterval,
-                ffprobePath
-            ));
+            (connectionParameters, plexLibrary, libraryRefreshInterval, ffmpegPath, ffprobePath) =>
+                new RequestParameters(
+                    connectionParameters,
+                    plexLibrary,
+                    request.ForceScan,
+                    libraryRefreshInterval,
+                    ffmpegPath,
+                    ffprobePath
+                ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
         ISynchronizePlexLibraryById request) =>
@@ -146,6 +150,13 @@ public class
             .FilterT(lri => lri > 0)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
         
+    private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
+        _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
+            .FilterT(File.Exists)
+            .Map(
+                ffmpegPath =>
+                    ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
+
     private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
         _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
             .FilterT(File.Exists)
@@ -158,6 +169,7 @@ public class
         PlexLibrary Library,
         bool ForceScan,
         int LibraryRefreshInterval,
+        string FFmpegPath,
         string FFprobePath);
 
     private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
