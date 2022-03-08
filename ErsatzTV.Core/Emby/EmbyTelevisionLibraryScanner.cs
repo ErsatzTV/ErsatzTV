@@ -51,7 +51,6 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         string address,
         string apiKey,
         EmbyLibrary library,
-        string ffmpegPath,
         string ffprobePath)
     {
         List<EmbyItemEtag> existingShows = await _televisionRepository.GetExistingShows(library);
@@ -71,15 +70,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         await maybeShows.Match(
             async shows =>
             {
-                await ProcessShows(
-                    address,
-                    apiKey,
-                    library,
-                    ffmpegPath,
-                    ffprobePath,
-                    pathReplacements,
-                    existingShows,
-                    shows);
+                await ProcessShows(address, apiKey, library, ffprobePath, pathReplacements, existingShows, shows);
 
                 var incomingShowIds = shows.Map(s => s.ItemId).ToList();
                 var showIds = existingShows
@@ -113,7 +104,6 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         string address,
         string apiKey,
         EmbyLibrary library,
-        string ffmpegPath,
         string ffprobePath,
         List<EmbyPathReplacement> pathReplacements,
         List<EmbyItemEtag> existingShows,
@@ -177,7 +167,6 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                         address,
                         apiKey,
                         library,
-                        ffmpegPath,
                         ffprobePath,
                         pathReplacements,
                         incoming,
@@ -207,7 +196,6 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         string address,
         string apiKey,
         EmbyLibrary library,
-        string ffmpegPath,
         string ffprobePath,
         List<EmbyPathReplacement> pathReplacements,
         EmbyShow show,
@@ -298,7 +286,6 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                         show.ShowMetadata.Head().Title,
                         incoming.SeasonMetadata.Head().Title,
                         library,
-                        ffmpegPath,
                         ffprobePath,
                         pathReplacements,
                         incoming,
@@ -331,7 +318,6 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         string showName,
         string seasonName,
         EmbyLibrary library,
-        string ffmpegPath,
         string ffprobePath,
         List<EmbyPathReplacement> pathReplacements,
         EmbySeason season,
@@ -420,7 +406,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                 Either<BaseError, bool> refreshResult =
-                    await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, incomingEpisode, localPath);
+                    await _localStatisticsProvider.RefreshStatistics(ffprobePath, incomingEpisode, localPath);
 
                 refreshResult.Match(
                     _ => { },

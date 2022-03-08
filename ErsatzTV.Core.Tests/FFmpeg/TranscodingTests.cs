@@ -282,7 +282,6 @@ public class TranscodingTests
             LoggerFactory.CreateLogger<LocalStatisticsProvider>());
 
         await localStatisticsProvider.RefreshStatistics(
-            ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             new Movie
             {

@@ -54,7 +54,6 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexLibrary library,
-        string ffmpegPath,
         string ffprobePath)
     {
         List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
@@ -94,8 +93,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                     // TODO: figure out how to rebuild playlists
                     Either<BaseError, MediaItemScanResult<PlexMovie>> maybeMovie = await _movieRepository
                         .GetOrAdd(library, incoming)
-                        .BindT(
-                            existing => UpdateStatistics(pathReplacements, existing, incoming, ffmpegPath, ffprobePath))
+                        .BindT(existing => UpdateStatistics(pathReplacements, existing, incoming, ffprobePath))
                         .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
                         .BindT(existing => UpdateArtwork(existing, incoming));
 
@@ -147,7 +145,6 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         List<PlexPathReplacement> pathReplacements,
         MediaItemScanResult<PlexMovie> result,
         PlexMovie incoming,
-        string ffmpegPath,
         string ffprobePath)
     {
         PlexMovie existing = result.Item;
@@ -181,7 +178,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                 
             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
             Either<BaseError, bool> refreshResult =
-                await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, existing, localPath);
+                await _localStatisticsProvider.RefreshStatistics(ffprobePath, existing, localPath);
                 
             await refreshResult.Match(
                 async _ =>

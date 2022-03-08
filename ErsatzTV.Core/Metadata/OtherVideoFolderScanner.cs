@@ -62,7 +62,6 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 
     public async Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
-        string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
         decimal progressMax)
@@ -127,7 +126,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
             {
                 Either<BaseError, MediaItemScanResult<OtherVideo>> maybeVideo = await _otherVideoRepository
                     .GetOrAdd(libraryPath, file)
-                    .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
+                    .BindT(video => UpdateStatistics(video, ffprobePath))
                     .BindT(UpdateMetadata)
                     .BindT(FlagNormal);
 

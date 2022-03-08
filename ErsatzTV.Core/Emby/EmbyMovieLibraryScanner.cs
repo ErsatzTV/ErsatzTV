@@ -51,7 +51,6 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
         string address,
         string apiKey,
         EmbyLibrary library,
-        string ffmpegPath,
         string ffprobePath)
     {
         List<EmbyItemEtag> existingMovies = await _movieRepository.GetExistingEmbyMovies(library);
@@ -173,11 +172,7 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
 
                         _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                         Either<BaseError, bool> refreshResult =
-                            await _localStatisticsProvider.RefreshStatistics(
-                                ffmpegPath,
-                                ffprobePath,
-                                incomingMovie,
-                                localPath);
+                            await _localStatisticsProvider.RefreshStatistics(ffprobePath, incomingMovie, localPath);
 
                         await refreshResult.Match(
                             async _ =>

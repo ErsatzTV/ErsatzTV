@@ -64,7 +64,6 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
     public async Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
-        string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
         decimal progressMax)
@@ -132,7 +131,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                 // TODO: figure out how to rebuild playlists
                 Either<BaseError, MediaItemScanResult<Movie>> maybeMovie = await _movieRepository
                     .GetOrAdd(libraryPath, file)
-                    .BindT(movie => UpdateStatistics(movie, ffmpegPath, ffprobePath))
+                    .BindT(movie => UpdateStatistics(movie, ffprobePath))
                     .BindT(UpdateMetadata)
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster))
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt))

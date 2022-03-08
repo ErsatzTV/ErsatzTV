@@ -70,7 +70,6 @@ public class SynchronizeEmbyLibraryByIdHandler :
                         parameters.ConnectionParameters.ActiveConnection.Address,
                         parameters.ConnectionParameters.ApiKey,
                         parameters.Library,
-                        parameters.FFmpegPath,
                         parameters.FFprobePath);
                     break;
                 case LibraryMediaKind.Shows:
@@ -78,7 +77,6 @@ public class SynchronizeEmbyLibraryByIdHandler :
                         parameters.ConnectionParameters.ActiveConnection.Address,
                         parameters.ConnectionParameters.ApiKey,
                         parameters.Library,
-                        parameters.FFmpegPath,
                         parameters.FFprobePath);
                     break;
             }
@@ -100,17 +98,15 @@ public class SynchronizeEmbyLibraryByIdHandler :
     private async Task<Validation<BaseError, RequestParameters>> Validate(
         ISynchronizeEmbyLibraryById request) =>
         (await ValidateConnection(request), await EmbyLibraryMustExist(request),
-            await ValidateLibraryRefreshInterval(), await ValidateFFmpegPath(), await ValidateFFprobePath())
+            await ValidateLibraryRefreshInterval(), await ValidateFFprobePath())
         .Apply(
-            (connectionParameters, embyLibrary, libraryRefreshInterval, ffmpegPath, ffprobePath) =>
-                new RequestParameters(
-                    connectionParameters,
-                    embyLibrary,
-                    request.ForceScan,
-                    libraryRefreshInterval,
-                    ffmpegPath,
-                    ffprobePath
-                ));
+            (connectionParameters, embyLibrary, libraryRefreshInterval, ffprobePath) => new RequestParameters(
+                connectionParameters,
+                embyLibrary,
+                request.ForceScan,
+                libraryRefreshInterval,
+                ffprobePath
+            ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
         ISynchronizeEmbyLibraryById request) =>
@@ -153,13 +149,6 @@ public class SynchronizeEmbyLibraryByIdHandler :
             .FilterT(lri => lri > 0)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
 
-    private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
-        _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
-            .FilterT(File.Exists)
-            .Map(
-                ffmpegPath =>
-                    ffmpegPath.ToValidation<BaseError>("FFmpeg path does not exist on the file system"));
-
     private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
         _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
             .FilterT(File.Exists)
@@ -172,7 +161,6 @@ public class SynchronizeEmbyLibraryByIdHandler :
         EmbyLibrary Library,
         bool ForceScan,
         int LibraryRefreshInterval,
-        string FFmpegPath,
         string FFprobePath);
 
     private record ConnectionParameters(

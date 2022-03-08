@@ -9,6 +9,5 @@ public interface IPlexMovieLibraryScanner
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexLibrary library,
-        string ffmpegPath,
         string ffprobePath);
 }

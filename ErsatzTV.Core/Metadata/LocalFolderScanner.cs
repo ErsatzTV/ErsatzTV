@@ -79,7 +79,6 @@ public abstract class LocalFolderScanner
 
     protected async Task<Either<BaseError, MediaItemScanResult<T>>> UpdateStatistics<T>(
         MediaItemScanResult<T> mediaItem,
-        string ffmpegPath,
         string ffprobePath)
         where T : MediaItem
     {
@@ -93,7 +92,7 @@ public abstract class LocalFolderScanner
             {
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", path);
                 Either<BaseError, bool> refreshResult =
-                    await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, mediaItem.Item);
+                    await _localStatisticsProvider.RefreshStatistics(ffprobePath, mediaItem.Item);
                 refreshResult.Match(
                     result =>
                     {
