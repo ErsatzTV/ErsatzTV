@@ -607,6 +607,11 @@ public class PipelineBuilder
 
     private static bool IsDesiredVideoState(FrameState currentState, FrameState desiredState)
     {
+        if (desiredState.VideoFormat == VideoFormat.Copy)
+        {
+            return true;
+        }
+
         return currentState.VideoFormat == desiredState.VideoFormat &&
                currentState.PixelFormat.Match(pf => pf.Name, () => string.Empty) ==
                desiredState.PixelFormat.Match(pf => pf.Name, string.Empty) &&
