@@ -65,6 +65,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
     public async Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
         decimal progressMax)
@@ -95,6 +96,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 {
                     await ScanMusicVideos(
                         libraryPath,
+                        ffmpegPath,
                         ffprobePath,
                         result.Item,
                         artistFolder);
@@ -233,6 +235,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
     private async Task ScanMusicVideos(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         Artist artist,
         string artistFolder)
@@ -272,7 +275,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 // TODO: figure out how to rebuild playouts
                 Either<BaseError, MediaItemScanResult<MusicVideo>> maybeMusicVideo = await _musicVideoRepository
                     .GetOrAdd(artist, libraryPath, file)
-                    .BindT(musicVideo => UpdateStatistics(musicVideo, ffprobePath))
+                    .BindT(musicVideo => UpdateStatistics(musicVideo, ffmpegPath, ffprobePath))
                     .BindT(UpdateMetadata)
                     .BindT(UpdateThumbnail)
                     .BindT(FlagNormal);

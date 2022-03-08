@@ -51,6 +51,7 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
         string address,
         string apiKey,
         JellyfinLibrary library,
+        string ffmpegPath,
         string ffprobePath)
     {
         List<JellyfinItemEtag> existingMovies = await _movieRepository.GetExistingJellyfinMovies(library);
@@ -172,7 +173,11 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
 
                         _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                         Either<BaseError, bool> refreshResult =
-                            await _localStatisticsProvider.RefreshStatistics(ffprobePath, incomingMovie, localPath);
+                            await _localStatisticsProvider.RefreshStatistics(
+                                ffmpegPath,
+                                ffprobePath,
+                                incomingMovie,
+                                localPath);
 
                         await refreshResult.Match(
                             async _ =>

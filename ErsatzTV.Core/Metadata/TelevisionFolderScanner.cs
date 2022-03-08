@@ -64,6 +64,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
     public async Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
         decimal progressMax)
@@ -93,6 +94,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 {
                     await ScanSeasons(
                         libraryPath,
+                        ffmpegPath,
                         ffprobePath,
                         result.Item,
                         showFolder);
@@ -154,6 +156,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
     private async Task<Unit> ScanSeasons(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         Show show,
         string showFolder)
@@ -184,7 +187,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     await maybeSeason.Match(
                         async season =>
                         {
-                            await ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder);
+                            await ScanEpisodes(libraryPath, ffmpegPath, ffprobePath, season, seasonFolder);
                             await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
 
                             season.Show = show;
@@ -206,6 +209,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
     private async Task<Unit> ScanEpisodes(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         Season season,
         string seasonPath)
@@ -225,7 +229,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             Either<BaseError, Episode> maybeEpisode = await _televisionRepository
                 .GetOrAddEpisode(season, libraryPath, file)
                 .BindT(
-                    episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffprobePath)
+                    episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffmpegPath, ffprobePath)
                         .MapT(_ => episode))
                 .BindT(UpdateMetadata)
                 .BindT(UpdateThumbnail)

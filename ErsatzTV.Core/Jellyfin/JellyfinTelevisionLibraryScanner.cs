@@ -51,6 +51,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         string address,
         string apiKey,
         JellyfinLibrary library,
+        string ffmpegPath,
         string ffprobePath)
     {
         List<JellyfinItemEtag> existingShows = await _televisionRepository.GetExistingShows(library);
@@ -70,7 +71,15 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         await maybeShows.Match(
             async shows =>
             {
-                await ProcessShows(address, apiKey, library, ffprobePath, pathReplacements, existingShows, shows);
+                await ProcessShows(
+                    address,
+                    apiKey,
+                    library,
+                    ffmpegPath,
+                    ffprobePath,
+                    pathReplacements,
+                    existingShows,
+                    shows);
 
                 var incomingShowIds = shows.Map(s => s.ItemId).ToList();
                 var showIds = existingShows
@@ -104,6 +113,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         string address,
         string apiKey,
         JellyfinLibrary library,
+        string ffmpegPath,
         string ffprobePath,
         List<JellyfinPathReplacement> pathReplacements,
         List<JellyfinItemEtag> existingShows,
@@ -167,6 +177,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
                         address,
                         apiKey,
                         library,
+                        ffmpegPath,
                         ffprobePath,
                         pathReplacements,
                         incoming,
@@ -196,6 +207,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         string address,
         string apiKey,
         JellyfinLibrary library,
+        string ffmpegPath,
         string ffprobePath,
         List<JellyfinPathReplacement> pathReplacements,
         JellyfinShow show,
@@ -286,6 +298,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
                         show.ShowMetadata.Head().Title,
                         incoming.SeasonMetadata.Head().Title,
                         library,
+                        ffmpegPath,
                         ffprobePath,
                         pathReplacements,
                         incoming,
@@ -319,6 +332,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         string showName,
         string seasonName,
         JellyfinLibrary library,
+        string ffmpegPath,
         string ffprobePath,
         List<JellyfinPathReplacement> pathReplacements,
         JellyfinSeason season,
@@ -408,7 +422,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                 Either<BaseError, bool> refreshResult =
-                    await _localStatisticsProvider.RefreshStatistics(ffprobePath, incomingEpisode, localPath);
+                    await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, incomingEpisode, localPath);
 
                 refreshResult.Match(
                     _ => { },
