@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Streaming;
 
-public record GetLastPtsDuration(string FileName) : IRequest<Either<BaseError, PtsAndDuration>>;
+public record GetLastPtsDuration(string ChannelNumber) : IRequest<Either<BaseError, PtsAndDuration>>;

@@ -7,5 +7,6 @@ public enum TempFileCategory
     CoverArt = 2,
     CachedArtwork = 3,
 
+    BadTranscodeFolder = 98,
     BadPlaylist = 99
 }
