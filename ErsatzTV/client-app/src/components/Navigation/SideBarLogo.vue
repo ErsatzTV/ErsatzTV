@@ -7,10 +7,13 @@
 </template>
 
 <script>
+import { mapState } from 'pinia'
+import { useMenuToggleStore } from '@/stores/menuToggle'
+
 export default {
-    name: "Logo",
-    props:{
-        
-    }
+    name: "SideBarLogo",
+    computed: {
+        ...mapState(useMenuToggleStore, ['mini'])
+    },
 }
 </script>
