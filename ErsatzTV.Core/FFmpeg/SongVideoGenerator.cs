@@ -30,7 +30,8 @@ public class SongVideoGenerator : ISongVideoGenerator
         Song song,
         Channel channel,
         Option<ChannelWatermark> maybeGlobalWatermark,
-        string ffmpegPath)
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         Option<string> subtitleFile = None;
 
@@ -224,7 +225,8 @@ public class SongVideoGenerator : ISongVideoGenerator
             watermarkLocation,
             HORIZONTAL_MARGIN_PERCENT,
             VERTICAL_MARGIN_PERCENT,
-            WATERMARK_WIDTH_PERCENT);
+            WATERMARK_WIDTH_PERCENT,
+            cancellationToken);
 
         foreach (string si in maybeSongImage.RightToSeq())
         {

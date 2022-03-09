@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Bugsnag;
+using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -331,7 +332,8 @@ public class FFmpegProcessService : IFFmpegProcessService
         WatermarkLocation watermarkLocation,
         int horizontalMarginPercent,
         int verticalMarginPercent,
-        int watermarkWidthPercent)
+        int watermarkWidthPercent,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -404,8 +406,10 @@ public class FFmpegProcessService : IFFmpegProcessService
                 "ffmpeg song arguments {FFmpegArguments}",
                 string.Join(" ", process.StartInfo.ArgumentList));
 
-            process.Start();
-            await process.WaitForExitAsync();
+            await Cli.Wrap(process.StartInfo.FileName)
+                .WithArguments(process.StartInfo.ArgumentList)
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteAsync(cancellationToken);
 
             return outputFile;
         }

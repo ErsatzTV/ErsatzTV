@@ -16,7 +16,7 @@ public class ErrorReportsHealthCheck : BaseHealthCheck, IErrorReportsHealthCheck
 
     protected override string Title => "Error Reports";
 
-    public Task<HealthCheckResult> Check()
+    public Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
         if (_bugsnagConfiguration.Value.Enable)
         {
@@ -26,6 +26,7 @@ public class ErrorReportsHealthCheck : BaseHealthCheck, IErrorReportsHealthCheck
                 .AsTask();
         }
 
-        return InfoResult("Automated error reporting is disabled. Please enable to support bug fixing efforts!").AsTask();
+        return InfoResult("Automated error reporting is disabled. Please enable to support bug fixing efforts!")
+            .AsTask();
     }
 }

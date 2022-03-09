@@ -10,13 +10,12 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Streaming;
 
-public class StartFFmpegSessionHandler : MediatR.IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
+public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
 {
     private readonly ILogger<StartFFmpegSessionHandler> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILocalFileSystem _localFileSystem;
 
     public StartFFmpegSessionHandler(
@@ -24,15 +23,13 @@ public class StartFFmpegSessionHandler : MediatR.IRequestHandler<StartFFmpegSess
         ILogger<StartFFmpegSessionHandler> logger,
         IServiceScopeFactory serviceScopeFactory,
         IFFmpegSegmenterService ffmpegSegmenterService,
-        IConfigElementRepository configElementRepository,
-        IHlsPlaylistFilter hlsPlaylistFilter)
+        IConfigElementRepository configElementRepository)
     {
         _localFileSystem = localFileSystem;
         _logger = logger;
         _serviceScopeFactory = serviceScopeFactory;
         _ffmpegSegmenterService = ffmpegSegmenterService;
         _configElementRepository = configElementRepository;
-        _hlsPlaylistFilter = hlsPlaylistFilter;
     }
 
     public Task<Either<BaseError, Unit>> Handle(StartFFmpegSession request, CancellationToken cancellationToken) =>
@@ -54,7 +51,7 @@ public class StartFFmpegSessionHandler : MediatR.IRequestHandler<StartFFmpegSess
         _ffmpegSegmenterService.SessionWorkers.AddOrUpdate(request.ChannelNumber, _ => worker, (_, _) => worker);
 
         // fire and forget worker
-        _ = worker.Run(request.ChannelNumber, idleTimeout)
+        _ = worker.Run(request.ChannelNumber, idleTimeout, cancellationToken)
             .ContinueWith(
                 _ => _ffmpegSegmenterService.SessionWorkers.TryRemove(
                     request.ChannelNumber,

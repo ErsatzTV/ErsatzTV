@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using Bugsnag;
+using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
@@ -187,8 +188,10 @@ public class TranscodingTests
             Watermark watermark,
             // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))] string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))]
+            string profileCodec,
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))]
+            HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvCodecs))] string profileCodec,
@@ -213,9 +216,11 @@ public class TranscodingTests
         {
             string resolution = padding == Padding.WithPadding ? "1920x1060" : "1920x1080";
 
-            string videoFilter = videoScanKind == VideoScanKind.Interlaced ? "-vf tinterlace=interleave_top,fieldorder=tff" : string.Empty;
+            string videoFilter = videoScanKind == VideoScanKind.Interlaced
+                ? "-vf tinterlace=interleave_top,fieldorder=tff"
+                : string.Empty;
             string flags = videoScanKind == VideoScanKind.Interlaced ? "-flags +ildct+ilme" : string.Empty;
-                
+
             string args =
                 $"-y -f lavfi -i anoisesrc=color=brown -f lavfi -i testsrc=duration=1:size={resolution}:rate=30 {videoFilter} -c:a aac -c:v {inputFormat.Encoder} -shortest -pix_fmt {inputFormat.PixelFormat} -strict -2 {flags} {file}";
             var p1 = new Process
@@ -235,7 +240,7 @@ public class TranscodingTests
         }
 
         var imageCache = new Mock<IImageCache>();
-            
+
         // always return the static watermark resource
         imageCache.Setup(
                 ic => ic.GetPathForImage(
@@ -269,11 +274,12 @@ public class TranscodingTests
         var metadataRepository = new Mock<IMetadataRepository>();
         metadataRepository
             .Setup(r => r.UpdateLocalStatistics(It.IsAny<MediaItem>(), It.IsAny<MediaVersion>(), It.IsAny<bool>()))
-            .Callback<MediaItem, MediaVersion, bool>((_, version, _) =>
-            {
-                version.MediaFiles = v.MediaFiles;
-                v = version;
-            });
+            .Callback<MediaItem, MediaVersion, bool>(
+                (_, version, _) =>
+                {
+                    version.MediaFiles = v.MediaFiles;
+                    v = version;
+                });
 
         var localStatisticsProvider = new LocalStatisticsProvider(
             metadataRepository.Object,
@@ -345,7 +351,7 @@ public class TranscodingTests
                 break;
         }
 
-        Process process = await service.ForPlayoutItem(
+        using Process process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             false,
             new Channel(Guid.NewGuid())
@@ -376,12 +382,7 @@ public class TranscodingTests
             0,
             None);
 
-        process.StartInfo.RedirectStandardError = true;
-        process.EnableRaisingEvents = true;
-            
         // Console.WriteLine($"ffmpeg arguments {string.Join(" ", process.StartInfo.ArgumentList)}");
-
-        process.Start().Should().BeTrue();
 
         string[] unsupportedMessages =
         {
@@ -390,41 +391,31 @@ public class TranscodingTests
             "Provided device doesn't support"
         };
 
-        var errorBuffer = new StringBuilder();
-            
-        process.ErrorDataReceived += (_, errorLine) =>
-        {
-            string data = errorLine.Data ?? string.Empty;
-            errorBuffer.AppendLine(data);
-        };
-
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        // string error = await process.StandardError.ReadToEndAsync();
-
+        var sb = new StringBuilder();
+        CommandResult result;
         var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         try
         {
-            await process.WaitForExitAsync(timeoutSignal.Token);
-            // ReSharper disable once MethodHasAsyncOverload
-            process.WaitForExit();
+            result = await Cli.Wrap(process.StartInfo.FileName)
+                .WithArguments(process.StartInfo.ArgumentList)
+                .WithValidation(CommandResultValidation.None)
+                .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
+                .ExecuteAsync(timeoutSignal.Token);
         }
         catch (OperationCanceledException)
         {
-            process.Kill();
-
             IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
             Assert.Fail($"Transcode failure (timeout): ffmpeg {string.Join(" ", quotedArgs)}");
             return;
         }
 
-        var error = errorBuffer.ToString();
-        bool isUnsupported = unsupportedMessages.Any(error.Contains); 
+        string error = sb.ToString();
+        bool isUnsupported = unsupportedMessages.Any(error.Contains);
 
         if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
         {
             var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
-            process.ExitCode.Should().Be(1, $"Error message with successful exit code? {string.Join(" ", quotedArgs)}");
+            result.ExitCode.Should().Be(1, $"Error message with successful exit code? {string.Join(" ", quotedArgs)}");
             Assert.Warn($"Unsupported on this hardware: ffmpeg {string.Join(" ", quotedArgs)}");
         }
         else if (error.Contains("Impossible to convert between"))
@@ -435,14 +426,14 @@ public class TranscodingTests
         else
         {
             var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
-            process.ExitCode.Should().Be(0, errorBuffer + Environment.NewLine + string.Join(" ", quotedArgs));
-            if (process.ExitCode == 0)
+            result.ExitCode.Should().Be(0, error + Environment.NewLine + string.Join(" ", quotedArgs));
+            if (result.ExitCode == 0)
             {
                 Console.WriteLine(string.Join(" ", quotedArgs));
             }
         }
     }
-        
+
     private static string GetStringSha256Hash(string text)
     {
         if (string.IsNullOrEmpty(text))

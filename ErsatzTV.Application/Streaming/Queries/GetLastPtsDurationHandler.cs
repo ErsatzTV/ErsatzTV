@@ -57,42 +57,42 @@ public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Eit
         {
             string[] argumentList =
             {
-                // `-v 0` seems to prevent ffprobe from outputting anything on windows 
+                "-v", "0",
                 "-show_entries",
                 "packet=pts,duration",
-                "-of",
-                "compact=p=0:nk=1",
-                "-read_intervals",
-                "-999999",
+                "-of", "compact=p=0:nk=1",
+                // "-read_intervals", "999999", // read_intervals causes inconsistent behavior on windows
                 segment.FullName
             };
 
-            BufferedCommandResult probe = await Cli.Wrap(parameters.FFprobePath)
+            string lastLine = string.Empty;
+            Action<string> replaceLine = s =>
+            {
+                if (!string.IsNullOrWhiteSpace(s))
+                {
+                    lastLine = s.Trim();
+                }
+            };
+
+            CommandResult probe = await Cli.Wrap(parameters.FFprobePath)
                 .WithArguments(argumentList)
                 .WithValidation(CommandResultValidation.None)
-                .ExecuteBufferedAsync(cancellationToken);
+                .WithStandardOutputPipe(PipeTarget.ToDelegate(replaceLine))
+                .ExecuteAsync(cancellationToken);
 
             if (probe.ExitCode != 0)
             {
                 return BaseError.New($"FFprobe at {parameters.FFprobePath} exited with code {probe.ExitCode}");
             }
 
-            string output = probe.StandardOutput;
-            if (string.IsNullOrWhiteSpace(probe.StandardOutput))
-            {
-                output = probe.StandardError;
-            }
-
             try
             {
-                string[] lines = output.Split("\n");
-                IEnumerable<string> nonEmptyLines = lines.Filter(s => !string.IsNullOrWhiteSpace(s)).Map(l => l.Trim());
-                return PtsAndDuration.From(nonEmptyLines.Last());
+                return PtsAndDuration.From(lastLine);
             }
             catch (Exception ex)
             {
                 _client.Notify(ex);
-                await SaveTroubleshootingData(parameters.ChannelNumber, output);
+                await SaveTroubleshootingData(parameters.ChannelNumber, lastLine);
             }
         }
 

@@ -9,5 +9,6 @@ public interface IMovieFolderScanner
         string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
-        decimal progressMax);
+        decimal progressMax,
+        CancellationToken cancellationToken);
 }
