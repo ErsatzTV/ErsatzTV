@@ -8,8 +8,20 @@ const routes = [
     {
         path: "/",
         name: "Home",
-        icon: "mdi-view-dashboard-variant",
         component: HomePage,
+        meta: {
+            icon: "mdi-home",
+            disabled: false
+        }
+    },
+    {
+        path: "/Settings",
+        name: "Settings",
+        component: HomePage,
+        meta: {
+            icon: "mdi-home",
+            disabled: true
+        }
     },
 ];
 

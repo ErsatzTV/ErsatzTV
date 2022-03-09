@@ -11,9 +11,13 @@
         <v-list-item
             :to="nav.path"
             @click="toggle_tool_bar(true)"
+            :disabled="nav.meta.disabled"
         >
           <v-list-item-icon>
-            <v-icon v-text="nav.icon" />
+            <v-icon 
+                v-text="nav.meta.icon"
+                :disabled="nav.meta.disabled"
+            />
           </v-list-item-icon>
 
           <v-list-item-content>

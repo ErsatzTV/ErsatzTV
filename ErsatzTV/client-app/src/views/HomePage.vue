@@ -5,5 +5,9 @@
 </template>
 
 <script>
-export default {};
+export default {
+    title () {
+        return `Home`
+    }
+};
 </script>

@@ -8,20 +8,21 @@
             <v-app-bar-nav-icon @click.stop="mini = !mini" />
 
             <v-spacer />
-
+            
         </v-app-bar>
         <v-navigation-drawer
             app
             :mini-variant="mini"
             permanent
         >
+
             <Navigation @update_nav_drawer="update_drawer" />
         </v-navigation-drawer>
     </nav>
 </template>
 
 <script>
-import Navigation from "./NavSidebar.vue";
+import Navigation from "./SideBar.vue";
 
 export default {
     name: "NavToolbar",

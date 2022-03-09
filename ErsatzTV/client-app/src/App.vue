@@ -18,7 +18,7 @@
 
 <script>
 import Vue from "vue";
-import Toolbar from "@/components/Navigation/NavToolbar.vue";
+import Toolbar from "@/components/Navigation/ToolBar.vue";
 export default Vue.extend({
     name: "App",
     components: { Toolbar },
