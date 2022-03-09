@@ -18,7 +18,7 @@ const routes = [
         path: "/channels",
         name: "Channels",
         meta: {
-            icon: "mdi-cog",
+            icon: "mdi-broadcast",
             disabled: true
         }
     },
@@ -26,7 +26,7 @@ const routes = [
         path: "/ffmpeg-profiles",
         name: "FFmpeg Profiles",
         meta: {
-            icon: "mdi-cog",
+            icon: "mdi-video-input-component",
             disabled: true
         }
     },
@@ -34,7 +34,7 @@ const routes = [
         path: "/watermarks",
         name: "Watermarks",
         meta: {
-            icon: "mdi-cog",
+            icon: "mdi-watermark",
             disabled: true
         }
     },
@@ -42,7 +42,7 @@ const routes = [
         path: "/sources",
         name: "Media Sources",
         meta: {
-            icon: "mdi-cog",
+            icon: "mdi-server-network",
             disabled: false,
         },
         children: [
@@ -50,7 +50,7 @@ const routes = [
                 path: "/sources/local",
                 name: "Local",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-folder",
                     disabled: true
                 }
             },
@@ -58,7 +58,7 @@ const routes = [
                 path: "/sources/emby",
                 name: "Emby",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-emby",
                     disabled: true
                 }
             },
@@ -66,7 +66,7 @@ const routes = [
                 path: "/sources/jellyfin",
                 name: "Jellyfin",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-jellyfish",
                     disabled: true
                 }
             },
@@ -74,7 +74,7 @@ const routes = [
                 path: "/sources/plex",
                 name: "Plex",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-plex",
                     disabled: true
                 }
             },
@@ -92,7 +92,7 @@ const routes = [
                 path: "/media/libraries",
                 name: "Libraries",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-library",
                     disabled: true
                 }
             },
@@ -100,7 +100,7 @@ const routes = [
                 path: "/media/trash",
                 name: "Trash",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-trash-can",
                     disabled: true
                 }
             },
@@ -108,7 +108,7 @@ const routes = [
                 path: "/media/tv-shows",
                 name: "TV Shows",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-television-classic",
                     disabled: true
                 }
             },
@@ -116,7 +116,7 @@ const routes = [
                 path: "/media/movies",
                 name: "Movies",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-movie",
                     disabled: true
                 }
             },
@@ -124,7 +124,7 @@ const routes = [
                 path: "/media/music-videos",
                 name: "Music Videos",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-music-circle",
                     disabled: true
                 }
             },
@@ -132,7 +132,7 @@ const routes = [
                 path: "/media/other-videos",
                 name: "Other Videos",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-video",
                     disabled: true
                 }
             },
@@ -140,7 +140,7 @@ const routes = [
                 path: "/media/songs",
                 name: "Songs",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-album",
                     disabled: true
                 }
             },
@@ -150,7 +150,7 @@ const routes = [
         path: "/lists",
         name: "Lists",
         meta: {
-            icon: "mdi-cog",
+            icon: "mdi-format-list-bulleted",
             disabled: false,
         },
         children: [
@@ -158,7 +158,7 @@ const routes = [
                 path: "/lists/collections",
                 name: "Collections",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-collage",
                     disabled: true
                 }
             },
@@ -166,7 +166,7 @@ const routes = [
                 path: "/lists/trakt-lists",
                 name: "Trakt Lists",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-hammer",
                     disabled: true
                 }
             },
@@ -174,7 +174,7 @@ const routes = [
                 path: "/lists/filler-presets",
                 name: "Filler Presets",
                 meta: {
-                    icon: "mdi-cog",
+                    icon: "mdi-tune-vertical",
                     disabled: true
                 }
             },
@@ -184,7 +184,7 @@ const routes = [
         path: "/schedules",
         name: "Schedules",
         meta: {
-            icon: "mdi-cog",
+            icon: "mdi-calendar",
             disabled: true
         }
     },
@@ -192,7 +192,7 @@ const routes = [
         path: "/playouts",
         name: "Playouts",
         meta: {
-            icon: "mdi-cog",
+            icon: "mdi-clipboard-play-multiple",
             disabled: true
         }
     },
