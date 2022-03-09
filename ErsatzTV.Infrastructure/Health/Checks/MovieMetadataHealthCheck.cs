@@ -14,16 +14,16 @@ public class MovieMetadataHealthCheck : BaseHealthCheck, IMovieMetadataHealthChe
         _dbContextFactory = dbContextFactory;
 
     protected override string Title => "Movie Metadata";
-        
-    public async Task<HealthCheckResult> Check()
+
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
         List<Movie> movies = await dbContext.Movies
             .Filter(e => e.MovieMetadata.Count == 0)
             .Include(e => e.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (movies.Any())
         {
@@ -36,7 +36,8 @@ public class MovieMetadataHealthCheck : BaseHealthCheck, IMovieMetadataHealthChe
 
             var folders = string.Join(", ", paths);
 
-            return WarningResult($"There are {movies.Count} movies with missing metadata, including in the following folders: {folders}");
+            return WarningResult(
+                $"There are {movies.Count} movies with missing metadata, including in the following folders: {folders}");
         }
 
         return OkResult();

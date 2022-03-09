@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Bugsnag;
+using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.FFmpeg;
@@ -124,7 +125,8 @@ public abstract class LocalFolderScanner
         Domain.Metadata metadata,
         ArtworkKind artworkKind,
         Option<string> ffmpegPath,
-        Option<int> attachedPicIndex)
+        Option<int> attachedPicIndex,
+        CancellationToken cancellationToken)
     {
         DateTime lastWriteTime = _localFileSystem.GetLastWriteTime(artworkFile);
 
@@ -168,8 +170,11 @@ public abstract class LocalFolderScanner
                                 artworkFile,
                                 picIndex,
                                 tempName);
-                            process.Start();
-                            await process.WaitForExitAsync();
+
+                            await Cli.Wrap(process.StartInfo.FileName)
+                                .WithArguments(process.StartInfo.ArgumentList)
+                                .WithValidation(CommandResultValidation.None)
+                                .ExecuteAsync(cancellationToken);
 
                             return tempName;
                         },
@@ -178,8 +183,11 @@ public abstract class LocalFolderScanner
                             // no attached pic index means convert to png
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
                             using Process process = ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
-                            process.Start();
-                            await process.WaitForExitAsync();
+
+                            await Cli.Wrap(process.StartInfo.FileName)
+                                .WithArguments(process.StartInfo.ArgumentList)
+                                .WithValidation(CommandResultValidation.None)
+                                .ExecuteAsync(cancellationToken);
 
                             return tempName;
                         });

@@ -58,7 +58,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         TvContext dbContext,
         GetPlayoutItemProcessByChannelNumber request,
         Channel channel,
-        string ffmpegPath)
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         DateTimeOffset now = request.Now;
 
@@ -129,7 +130,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     song,
                     channel,
                     maybeGlobalWatermark,
-                    ffmpegPath);
+                    ffmpegPath,
+                    cancellationToken);
             }
 
             bool saveReports = await dbContext.ConfigElements

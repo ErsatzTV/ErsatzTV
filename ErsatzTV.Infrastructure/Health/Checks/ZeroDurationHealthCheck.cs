@@ -16,40 +16,40 @@ public class ZeroDurationHealthCheck : BaseHealthCheck, IZeroDurationHealthCheck
 
     protected override string Title => "Zero Duration";
 
-    public async Task<HealthCheckResult> Check()
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         List<Episode> episodes = await dbContext.Episodes
             .Filter(e => e.MediaVersions.Any(mv => mv.Duration == TimeSpan.Zero))
             .Include(e => e.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         List<Movie> movies = await dbContext.Movies
             .Filter(m => m.MediaVersions.Any(mv => mv.Duration == TimeSpan.Zero))
             .Include(m => m.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync();
-            
+            .ToListAsync(cancellationToken);
+
         List<MusicVideo> musicVideos = await dbContext.MusicVideos
             .Filter(mv => mv.MediaVersions.Any(v => v.Duration == TimeSpan.Zero))
             .Include(mv => mv.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync();
-            
+            .ToListAsync(cancellationToken);
+
         List<OtherVideo> otherVideos = await dbContext.OtherVideos
             .Filter(ov => ov.MediaVersions.Any(mv => mv.Duration == TimeSpan.Zero))
             .Include(ov => ov.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         List<Song> songs = await dbContext.Songs
             .Filter(s => s.MediaVersions.Any(mv => mv.Duration == TimeSpan.Zero))
             .Include(s => s.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync();
-            
+            .ToListAsync(cancellationToken);
+
         var all = movies.Map(m => m.MediaVersions.Head().MediaFiles.Head().Path)
             .Append(episodes.Map(e => e.MediaVersions.Head().MediaFiles.Head().Path))
             .Append(musicVideos.Map(mv => mv.GetHeadVersion().MediaFiles.Head().Path))

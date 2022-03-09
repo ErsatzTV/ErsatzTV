@@ -47,21 +47,20 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
         _logger = logger;
     }
 
-    public Task<Either<BaseError, string>> Handle(
+    Task<Either<BaseError, string>> IRequestHandler<ForceScanLocalLibrary, Either<BaseError, string>>.Handle(
         ForceScanLocalLibrary request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
-    public Task<Either<BaseError, string>> Handle(
+    Task<Either<BaseError, string>> IRequestHandler<ScanLocalLibraryIfNeeded, Either<BaseError, string>>.Handle(
         ScanLocalLibraryIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => Handle(request, cancellationToken);
 
-    private Task<Either<BaseError, string>>
-        Handle(IScanLocalLibrary request) =>
+    private Task<Either<BaseError, string>> Handle(IScanLocalLibrary request, CancellationToken cancellationToken) =>
         Validate(request)
-            .MapT(parameters => PerformScan(parameters).Map(_ => parameters.LocalLibrary.Name))
+            .MapT(parameters => PerformScan(parameters, cancellationToken).Map(_ => parameters.LocalLibrary.Name))
             .Bind(v => v.ToEitherAsync());
 
-    private async Task<Unit> PerformScan(RequestParameters parameters)
+    private async Task<Unit> PerformScan(RequestParameters parameters, CancellationToken cancellationToken)
     {
         (LocalLibrary localLibrary, string ffprobePath, string ffmpegPath, bool forceScan,
             int libraryRefreshInterval) = parameters;
@@ -92,7 +91,8 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                             ffmpegPath,
                             ffprobePath,
                             progressMin,
-                            progressMax);
+                            progressMax,
+                            cancellationToken);
                         break;
                     case LibraryMediaKind.Shows:
                         await _televisionFolderScanner.ScanFolder(
@@ -100,7 +100,8 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                             ffmpegPath,
                             ffprobePath,
                             progressMin,
-                            progressMax);
+                            progressMax,
+                            cancellationToken);
                         break;
                     case LibraryMediaKind.MusicVideos:
                         await _musicVideoFolderScanner.ScanFolder(
@@ -108,7 +109,8 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                             ffmpegPath,
                             ffprobePath,
                             progressMin,
-                            progressMax);
+                            progressMax,
+                            cancellationToken);
                         break;
                     case LibraryMediaKind.OtherVideos:
                         await _otherVideoFolderScanner.ScanFolder(
@@ -124,7 +126,8 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                             ffprobePath,
                             ffmpegPath,
                             progressMin,
-                            progressMax);
+                            progressMax,
+                            cancellationToken);
                         break;
                 }
 
