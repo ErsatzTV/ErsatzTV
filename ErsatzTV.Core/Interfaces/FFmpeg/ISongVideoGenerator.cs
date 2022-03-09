@@ -8,5 +8,6 @@ public interface ISongVideoGenerator
         Song song,
         Channel channel,
         Option<ChannelWatermark> maybeGlobalWatermark,
-        string ffmpegPath);
+        string ffmpegPath,
+        CancellationToken cancellationToken);
 }

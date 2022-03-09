@@ -14,16 +14,16 @@ public class EpisodeMetadataHealthCheck : BaseHealthCheck, IEpisodeMetadataHealt
         _dbContextFactory = dbContextFactory;
 
     protected override string Title => "Episode Metadata";
-        
-    public async Task<HealthCheckResult> Check()
+
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+
         List<Episode> episodes = await dbContext.Episodes
             .Filter(e => e.EpisodeMetadata.Count == 0)
             .Include(e => e.MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         if (episodes.Any())
         {
@@ -36,7 +36,8 @@ public class EpisodeMetadataHealthCheck : BaseHealthCheck, IEpisodeMetadataHealt
 
             var folders = string.Join(", ", paths);
 
-            return WarningResult($"There are {episodes.Count} episodes with missing metadata, including in the following folders: {folders}");
+            return WarningResult(
+                $"There are {episodes.Count} episodes with missing metadata, including in the following folders: {folders}");
         }
 
         return OkResult();

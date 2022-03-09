@@ -33,6 +33,6 @@ public class HealthCheckService : IHealthCheckService
         };
     }
 
-    public Task<List<HealthCheckResult>> PerformHealthChecks() =>
-        _checks.Map(c => c.Check()).SequenceParallel().Map(results => results.ToList());
+    public Task<List<HealthCheckResult>> PerformHealthChecks(CancellationToken cancellationToken) =>
+        _checks.Map(c => c.Check(cancellationToken)).SequenceParallel().Map(results => results.ToList());
 }

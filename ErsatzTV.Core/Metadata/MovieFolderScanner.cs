@@ -67,7 +67,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
-        decimal progressMax)
+        decimal progressMax,
+        CancellationToken cancellationToken)
     {
         decimal progressSpread = progressMax - progressMin;
 
@@ -134,8 +135,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     .GetOrAdd(libraryPath, file)
                     .BindT(movie => UpdateStatistics(movie, ffmpegPath, ffprobePath))
                     .BindT(UpdateMetadata)
-                    .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster))
-                    .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt))
+                    .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
+                    .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
                     .BindT(FlagNormal);
 
                 await maybeMovie.Match(
@@ -229,7 +230,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
     private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateArtwork(
         MediaItemScanResult<Movie> result,
-        ArtworkKind artworkKind)
+        ArtworkKind artworkKind,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -238,7 +240,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                 async posterFile =>
                 {
                     MovieMetadata metadata = movie.MovieMetadata.Head();
-                    await RefreshArtwork(posterFile, metadata, artworkKind, None, None);
+                    await RefreshArtwork(posterFile, metadata, artworkKind, None, None, cancellationToken);
                 });
 
             return result;

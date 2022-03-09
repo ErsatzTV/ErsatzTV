@@ -18,13 +18,13 @@ public class VaapiDriverHealthCheck : BaseHealthCheck, IVaapiDriverHealthCheck
 
     protected override string Title => "VAAPI Driver";
 
-    public async Task<HealthCheckResult> Check()
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         List<FFmpegProfile> profiles = await dbContext.FFmpegProfiles
             .Filter(p => p.HardwareAcceleration == HardwareAccelerationKind.Vaapi)
-            .ToListAsync();
-            
+            .ToListAsync(cancellationToken);
+
         if (profiles.Count == 0)
         {
             return NotApplicableResult();

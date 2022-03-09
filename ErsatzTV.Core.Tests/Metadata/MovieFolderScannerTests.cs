@@ -98,7 +98,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -141,7 +142,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -185,7 +187,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -233,7 +236,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -284,7 +288,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -335,7 +340,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -385,7 +391,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -429,7 +436,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -475,7 +483,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -515,7 +524,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -560,7 +570,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 
@@ -590,7 +601,8 @@ public class MovieFolderScannerTests
                 FFmpegPath,
                 FFprobePath,
                 0,
-                1);
+                1,
+                CancellationToken.None);
 
             result.IsRight.Should().BeTrue();
 

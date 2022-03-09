@@ -19,7 +19,7 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Tuple<Channel, string>> validation = await Validate(dbContext, request);
         return await validation.Match(
-            tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2),
+            tuple => GetProcess(dbContext, request, tuple.Item1, tuple.Item2, cancellationToken),
             error => Task.FromResult<Either<BaseError, PlayoutItemProcessModel>>(error.Join()));
     }
 
@@ -27,7 +27,8 @@ public abstract class FFmpegProcessHandler<T> : IRequestHandler<T, Either<BaseEr
         TvContext dbContext,
         T request,
         Channel channel,
-        string ffmpegPath);
+        string ffmpegPath,
+        CancellationToken cancellationToken);
 
     private static async Task<Validation<BaseError, Tuple<Channel, string>>> Validate(
         TvContext dbContext,

@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
+using CliWrap.Buffered;
 using ErsatzTV.Core.Health;
-using Lucene.Net.Util;
 
 namespace ErsatzTV.Infrastructure.Health.Checks;
 
@@ -28,27 +28,17 @@ public abstract class BaseHealthCheck
 
     protected HealthCheckResult InfoResult(string message) =>
         new(Title, HealthCheckStatus.Info, message, None);
-        
-    protected static async Task<string> GetProcessOutput(string path, IEnumerable<string> arguments)
+
+    protected static async Task<string> GetProcessOutput(
+        string path,
+        IEnumerable<string> arguments,
+        CancellationToken cancellationToken)
     {
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = path,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false
-        };
+        BufferedCommandResult result = await Cli.Wrap(path)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync(cancellationToken);
 
-        startInfo.ArgumentList.AddRange(arguments);
-
-        var process = new Process
-        {
-            StartInfo = startInfo
-        };
-
-        process.Start();
-        string result = await process.StandardOutput.ReadToEndAsync();
-        await process.WaitForExitAsync();
-        return result;
+        return result.StandardOutput;
     }
 }

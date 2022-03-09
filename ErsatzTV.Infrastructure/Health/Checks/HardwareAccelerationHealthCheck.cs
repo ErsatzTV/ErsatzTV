@@ -22,7 +22,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
         _configElementRepository = configElementRepository;
     }
 
-    public async Task<HealthCheckResult> Check()
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
         Option<ConfigElement> maybeFFmpegPath = await _configElementRepository.Get(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
@@ -49,7 +49,8 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
 
         if (!accelerationKinds.Any())
         {
-            accelerationKinds.AddRange(await GetSupportedAccelerationKinds(maybeFFmpegPath.ValueUnsafe().Value));
+            accelerationKinds.AddRange(
+                await GetSupportedAccelerationKinds(maybeFFmpegPath.ValueUnsafe().Value, cancellationToken));
         }
 
         if (!accelerationKinds.Any())
@@ -69,7 +70,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
     private async Task<Option<HealthCheckResult>> VerifyProfilesUseAcceleration(
         IEnumerable<HardwareAccelerationKind> accelerationKinds)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         List<Channel> badChannels = await dbContext.Channels
             .Filter(c => c.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
@@ -87,11 +88,13 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
         return None;
     }
 
-    private static async Task<List<HardwareAccelerationKind>> GetSupportedAccelerationKinds(string ffmpegPath)
+    private static async Task<List<HardwareAccelerationKind>> GetSupportedAccelerationKinds(
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         var result = new System.Collections.Generic.HashSet<HardwareAccelerationKind>();
-            
-        string output = await GetProcessOutput(ffmpegPath, new[] { "-v", "quiet", "-hwaccels" });
+
+        string output = await GetProcessOutput(ffmpegPath, new[] { "-v", "quiet", "-hwaccels" }, cancellationToken);
         foreach (string method in output.Split("\n").Map(s => s.Trim()).Skip(1))
         {
             switch (method)

@@ -301,7 +301,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         WatermarkLocation watermarkLocation,
         int horizontalMarginPercent,
         int verticalMarginPercent,
-        int watermarkWidthPercent) =>
+        int watermarkWidthPercent,
+        CancellationToken cancellationToken) =>
         _ffmpegProcessService.GenerateSongImage(
             ffmpegPath,
             subtitleFile,
@@ -314,7 +315,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkLocation,
             horizontalMarginPercent,
             verticalMarginPercent,
-            watermarkWidthPercent);
+            watermarkWidthPercent,
+            cancellationToken);
 
     private Process GetProcess(
         string ffmpegPath,

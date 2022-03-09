@@ -9,5 +9,6 @@ public interface ISongFolderScanner
         string ffprobePath,
         string ffmpegPath,
         decimal progressMin,
-        decimal progressMax);
+        decimal progressMax,
+        CancellationToken cancellationToken);
 }

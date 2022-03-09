@@ -57,5 +57,6 @@ public interface IFFmpegProcessService
         WatermarkLocation watermarkLocation,
         int horizontalMarginPercent,
         int verticalMarginPercent,
-        int watermarkWidthPercent);
+        int watermarkWidthPercent,
+        CancellationToken cancellationToken);
 }
