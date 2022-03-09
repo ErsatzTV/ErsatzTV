@@ -6,41 +6,37 @@
             dense
             absolute
         >
-            <v-app-bar-nav-icon @click.stop="toggle()" />
+            <v-app-bar-nav-icon @click.stop="toggleMiniNavigation()" />
 
             <v-spacer />
    
         </v-app-bar>
         <v-navigation-drawer
             app
-            :mini-variant="mini"
-            permanent
+            :mini-variant="isNavigationMini"
+            :permanent="!this.$vuetify.breakpoint.xsOnly"
         >
             <SideBarLogo />
-            <Navigation @update_nav_drawer="update_drawer" />
+            <SideBarMenu />
+            <template v-slot:append>
+                <SideBarVersion />
+            </template>
         </v-navigation-drawer>
     </nav>
 </template>
 
 <script>
 import SideBarLogo from "./SideBarLogo.vue";
-import Navigation from "./SideBarMenu.vue";
-import { mapState } from 'pinia'
-import { useMenuToggleStore } from '@/stores/menuToggle'
+import SideBarMenu from "./SideBarMenu.vue";
+import SideBarVersion from "./SideBarVersion";
+import { mapState } from 'pinia';
+import { applicationState } from '@/stores/applicationState';
 
 export default {
     name: "NavToolbar",
-    components: { Navigation, SideBarLogo },
-    data: () => ({
-        menu_reload_key: 0,
-    }),
+    components: { SideBarMenu, SideBarLogo, SideBarVersion },
     computed: {
-        ...mapState(useMenuToggleStore, ['mini', 'toggle'])
-    },
-    methods: {
-        update_drawer(toggle) {
-            this.mini = toggle;
-        },
-    },
+        ...mapState(applicationState, ['isNavigationMini', 'toggleMiniNavigation'])
+    }
 };
 </script>
