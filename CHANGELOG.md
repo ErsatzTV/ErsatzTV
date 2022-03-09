@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix `HLS Direct` streaming mode
+- Fix bug with `HLS Segmenter` (and `MPEG-TS`) on Windows that caused errors at program boundaries
 
 ### Added
 - Perform additional duration analysis on files with missing duration metadata

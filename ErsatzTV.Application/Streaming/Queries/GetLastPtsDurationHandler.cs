@@ -64,8 +64,7 @@ public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Eit
                 StandardErrorEncoding = Encoding.UTF8
             };
 
-            startInfo.ArgumentList.Add("-v");
-            startInfo.ArgumentList.Add("0");
+            // `-v 0` seems to prevent ffprobe from outputting anything on windows 
             startInfo.ArgumentList.Add("-show_entries");
             startInfo.ArgumentList.Add("packet=pts,duration");
             startInfo.ArgumentList.Add("-of");
