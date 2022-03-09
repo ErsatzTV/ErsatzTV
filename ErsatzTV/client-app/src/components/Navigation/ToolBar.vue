@@ -7,9 +7,10 @@
             absolute
         >
             <v-app-bar-nav-icon @click.stop="toggleMiniNavigation()" />
-
-            <v-spacer />
+            
             <ToolBarSearch />
+            <v-spacer />
+
             <ToolBarLinks />
         </v-app-bar>
         <v-navigation-drawer

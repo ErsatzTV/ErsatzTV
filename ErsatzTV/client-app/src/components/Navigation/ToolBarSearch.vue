@@ -1,8 +1,10 @@
 ﻿<template>
     <v-text-field
-        filled
+        outlined
+        class="ml-5"
         label="Search..."
-        prepend-icon="mdi-magnify"
+        prepend-inner-icon="mdi-magnify"
+        hide-details
         dense
     ></v-text-field>
 </template>
