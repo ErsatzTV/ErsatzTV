@@ -9,7 +9,7 @@
             <v-app-bar-nav-icon @click.stop="toggleMiniNavigation()" />
 
             <v-spacer />
-   
+            <ToolBarLinks />
         </v-app-bar>
         <v-navigation-drawer
             app
@@ -32,12 +32,13 @@
 import SideBarLogo from "./SideBarLogo.vue";
 import SideBarMenu from "./SideBarMenu.vue";
 import SideBarVersion from "./SideBarVersion";
+import ToolBarLinks from "./ToolBarLinks";
 import { mapState } from 'pinia';
 import { applicationState } from '@/stores/applicationState';
 
 export default {
     name: "NavToolbar",
-    components: { SideBarMenu, SideBarLogo, SideBarVersion },
+    components: { SideBarMenu, SideBarLogo, SideBarVersion, ToolBarLinks },
     computed: {
         ...mapState(applicationState, ['isNavigationMini', 'toggleMiniNavigation'])
     }

@@ -1,15 +1,17 @@
 ﻿import { defineStore } from 'pinia'
 
+const pageURL = `${window.location}`
+
 export const applicationState = defineStore('appState', {
     state: () => {
-        return { 
+        return {
             miniMenu: false,
             currentVersion: "0.4.3-7cd2f9a-docker-nvidia", // Needs to be pulled from API with an action when ready
-            m3uURL: window.location.hostname + "iptv/channels.m3u",
-            xmlURL: window.location.hostname + "iptv/xmltv.xml",
-            documentationURL: "",
-            githubURL: "",
-            discordURL: "",
+            m3uURL: pageURL + "iptv/channels.m3u",
+            xmlURL: pageURL + "iptv/xmltv.xml",
+            documentationURL: "https://ersatztv.org/",
+            githubURL: "https://github.com/jasongdove/ErsatzTV",
+            discordURL: "https://discord.gg/hHaJm3yGy6"
         }
     },
     getters: {
@@ -18,6 +20,15 @@ export const applicationState = defineStore('appState', {
         },
         currentServerVersion(state){
             return state.currentVersion
+        },
+        navBarURLs(state){
+            return {
+                m3uURL: state.m3uURL,
+                xmlURL: state.xmlURL,
+                documentationURL: state.documentationURL,
+                githubURL: state.githubURL,
+                discordURL: state.discordURL
+            }
         }
     },
     actions: {
