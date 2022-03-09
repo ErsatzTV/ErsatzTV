@@ -16,6 +16,7 @@
         /> 
         <SideBarMenuItemExpandable
             v-else
+            @click.native="disableMiniNavigation()"
             :name="nav.name"
             :icon="nav.meta.icon"
             :disabled="nav.meta.disabled"
@@ -28,6 +29,8 @@
 <script>
 import SideBarMenuItem from "./SideBarMenuItem"
 import SideBarMenuItemExpandable from "./SideBarMenuItemExpandable"
+import { mapState } from 'pinia';
+import { applicationState } from '@/stores/applicationState';
 
 export default {
     name: "NavSidebar",
@@ -35,6 +38,9 @@ export default {
     data: () => ({
         navigation: null,
     }),
+    computed: {
+        ...mapState(applicationState, ['disableMiniNavigation'])
+    },
     beforeMount: function() {
         //Pull in navigation from routes and load into DOM
         this.navigation = this.$router.options.routes;

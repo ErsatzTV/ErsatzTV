@@ -14,9 +14,12 @@
         <v-navigation-drawer
             app
             :mini-variant="isNavigationMini"
-            :permanent="!this.$vuetify.breakpoint.xsOnly"
+            permanent
         >
-            <SideBarLogo />
+            <template v-slot:prepend>
+                <SideBarLogo />
+            </template>
+  
             <SideBarMenu />
             <template v-slot:append>
                 <SideBarVersion />
