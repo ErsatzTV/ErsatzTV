@@ -1,6 +1,7 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 using Bugsnag;
+using CliWrap;
+using CliWrap.Buffered;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
@@ -54,36 +55,32 @@ public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Eit
         Option<FileInfo> maybeLastSegment = GetLastSegment(parameters.ChannelNumber);
         foreach (FileInfo segment in maybeLastSegment)
         {
-            var startInfo = new ProcessStartInfo
+            string[] argumentList =
             {
-                FileName = parameters.FFprobePath,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                StandardOutputEncoding = Encoding.UTF8,
-                StandardErrorEncoding = Encoding.UTF8
+                // `-v 0` seems to prevent ffprobe from outputting anything on windows 
+                "-show_entries",
+                "packet=pts,duration",
+                "-of",
+                "compact=p=0:nk=1",
+                "-read_intervals",
+                "-999999",
+                segment.FullName
             };
 
-            // `-v 0` seems to prevent ffprobe from outputting anything on windows 
-            startInfo.ArgumentList.Add("-show_entries");
-            startInfo.ArgumentList.Add("packet=pts,duration");
-            startInfo.ArgumentList.Add("-of");
-            startInfo.ArgumentList.Add("compact=p=0:nk=1");
-            startInfo.ArgumentList.Add("-read_intervals");
-            startInfo.ArgumentList.Add("-999999");
-            startInfo.ArgumentList.Add(segment.FullName);
+            BufferedCommandResult probe = await Cli.Wrap(parameters.FFprobePath)
+                .WithArguments(argumentList)
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync(cancellationToken);
 
-            var probe = new Process
-            {
-                StartInfo = startInfo
-            };
-
-            probe.Start();
-            string output = await probe.StandardOutput.ReadToEndAsync();
-            await probe.WaitForExitAsync(cancellationToken);
             if (probe.ExitCode != 0)
             {
                 return BaseError.New($"FFprobe at {parameters.FFprobePath} exited with code {probe.ExitCode}");
+            }
+
+            string output = probe.StandardOutput;
+            if (string.IsNullOrWhiteSpace(probe.StandardOutput))
+            {
+                output = probe.StandardError;
             }
 
             try
