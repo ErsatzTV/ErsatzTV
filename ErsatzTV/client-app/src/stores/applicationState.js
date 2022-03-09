@@ -22,7 +22,6 @@ export const applicationState = defineStore('appState', {
     },
     actions: {
         toggleMiniNavigation() {
-            // TODO could better react to mobile devices
             this.miniMenu = !this.miniMenu
         },
         disableMiniNavigation() {
