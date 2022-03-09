@@ -3,8 +3,8 @@
         v-model="snackbar"
         :timeout="timeout"
     >
-        {{snackbarStatus.currentMessage}}
-        <v-btn flat color="primary" @click.native="closeSnackbar()">Close</v-btn>
+        {{currentMessage}}
+        <v-btn text color="primary" @click.native="closeSnackbar()">Close</v-btn>
     </v-snackbar>
 </template>
 
@@ -17,10 +17,10 @@ export default {
         timeout: 4000,
     }),
     computed: {
-        ...mapState(snackbarState, ['snackbarStatus', 'closeSnackbar', 'openSnackbar']),
+        ...mapState(snackbarState, ['currentMessage', 'isVisible', 'closeSnackbar', 'openSnackbar']),
         snackbar: {
             get() {
-                return this.snackbarStatus.isVisible
+                return this.isVisible
             },
             set() {
                 this.closeSnackbar();

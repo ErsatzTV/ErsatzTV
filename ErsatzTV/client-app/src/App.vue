@@ -8,6 +8,7 @@
                 <!-- If using vue-router -->
                 <router-view></router-view>
             </v-container>
+            <SnackBar/>
         </v-main>
 
         <v-footer app>
@@ -19,9 +20,10 @@
 <script>
 import Vue from "vue";
 import Toolbar from "@/components/Navigation/ToolBar.vue";
+import SnackBar from "@/components/PopUps/SnackBar";
 export default Vue.extend({
     name: "App",
-    components: { Toolbar },
+    components: { Toolbar, SnackBar },
     data: () => ({})
 });
 </script>

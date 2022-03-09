@@ -8,16 +8,15 @@ export const snackbarState = defineStore('snackbarState', {
         }
     },
     getters: {
-        snackbarStatus(state) {
-            return {
-                isVisible: state.visible,
-                currentMessage: state.message
-            }
+        isVisible(state) {
+            return state.visible
+        },
+        currentMessage(state){
+            return state.message
         }
     },
     actions: {
         showSnackbar(message) {
-            console.log(message)
             this.message = message
             this.visible = true
         },
