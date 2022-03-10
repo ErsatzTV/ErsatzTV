@@ -27,40 +27,47 @@ public class FFmpegWorkerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("FFmpeg worker service started");
-
-        await foreach (IFFmpegWorkerRequest request in _channel.ReadAllAsync(cancellationToken))
+        try
         {
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            _logger.LogInformation("FFmpeg worker service started");
 
-            try
+            await foreach (IFFmpegWorkerRequest request in _channel.ReadAllAsync(cancellationToken))
             {
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
 
-                switch (request)
-                {
-                    case TouchFFmpegSession touchFFmpegSession:
-                        foreach (DirectoryInfo parent in Optional(Directory.GetParent(touchFFmpegSession.Path)))
-                        {
-                            _ffmpegSegmenterService.TouchChannel(parent.Name);
-                        }
-
-                        break;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to handle ffmpeg worker request");
-                
                 try
                 {
-                    IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
-                    client.Notify(ex);
+
+                    switch (request)
+                    {
+                        case TouchFFmpegSession touchFFmpegSession:
+                            foreach (DirectoryInfo parent in Optional(Directory.GetParent(touchFFmpegSession.Path)))
+                            {
+                                _ffmpegSegmenterService.TouchChannel(parent.Name);
+                            }
+
+                            break;
+                    }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    // do nothing
+                    _logger.LogWarning(ex, "Failed to handle ffmpeg worker request");
+
+                    try
+                    {
+                        IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                        client.Notify(ex);
+                    }
+                    catch (Exception)
+                    {
+                        // do nothing
+                    }
                 }
             }
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogInformation("FFmpeg worker service shutting down");
         }
     }
 }

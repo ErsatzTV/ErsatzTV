@@ -29,74 +29,90 @@ public class WorkerService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Worker service started");
-
-        await foreach (IBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+        try
         {
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            _logger.LogInformation("Worker service started");
 
-            try
+            await foreach (IBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
             {
-                IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-
-                switch (request)
+                if (cancellationToken.IsCancellationRequested)
                 {
-                    case BuildPlayout buildPlayout:
-                        Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
-                            buildPlayout,
-                            cancellationToken);
-                        buildPlayoutResult.BiIter(
-                            _ => _logger.LogDebug("Built playout {PlayoutId}", buildPlayout.PlayoutId),
-                            error => _logger.LogWarning(
-                                "Unable to build playout {PlayoutId}: {Error}",
-                                buildPlayout.PlayoutId,
-                                error.Value));
-                        break;
-                    case IScanLocalLibrary scanLocalLibrary:
-                        Either<BaseError, string> scanResult = await mediator.Send(
-                            scanLocalLibrary,
-                            cancellationToken);
-                        scanResult.BiIter(
-                            name => _logger.LogDebug(
-                                "Done scanning local library {Library}",
-                                name),
-                            error => _logger.LogWarning(
-                                "Unable to scan local library {LibraryId}: {Error}",
-                                scanLocalLibrary.LibraryId,
-                                error.Value));
-                        break;
-                    case RebuildSearchIndex rebuildSearchIndex:
-                        await mediator.Send(rebuildSearchIndex, cancellationToken);
-                        break;
-                    case DeleteOrphanedArtwork deleteOrphanedArtwork:
-                        _logger.LogInformation("Deleting orphaned artwork from the database");
-                        await mediator.Send(deleteOrphanedArtwork, cancellationToken);
-                        break;
-                    case AddTraktList addTraktList:
-                        await mediator.Send(addTraktList, cancellationToken);
-                        break;
-                    case DeleteTraktList deleteTraktList:
-                        await mediator.Send(deleteTraktList, cancellationToken);
-                        break;
-                    case MatchTraktListItems matchTraktListItems:
-                        await mediator.Send(matchTraktListItems, cancellationToken);
-                        break;
+                    break;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to process background service request");
+
+                using IServiceScope scope = _serviceScopeFactory.CreateScope();
 
                 try
                 {
-                    IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
-                    client.Notify(ex);
+                    IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                    switch (request)
+                    {
+                        case BuildPlayout buildPlayout:
+                            Either<BaseError, Unit> buildPlayoutResult = await mediator.Send(
+                                buildPlayout,
+                                cancellationToken);
+                            buildPlayoutResult.BiIter(
+                                _ => _logger.LogDebug("Built playout {PlayoutId}", buildPlayout.PlayoutId),
+                                error => _logger.LogWarning(
+                                    "Unable to build playout {PlayoutId}: {Error}",
+                                    buildPlayout.PlayoutId,
+                                    error.Value));
+                            break;
+                        case IScanLocalLibrary scanLocalLibrary:
+                            Either<BaseError, string> scanResult = await mediator.Send(
+                                scanLocalLibrary,
+                                cancellationToken);
+                            scanResult.BiIter(
+                                name => _logger.LogDebug(
+                                    "Done scanning local library {Library}",
+                                    name),
+                                error => _logger.LogWarning(
+                                    "Unable to scan local library {LibraryId}: {Error}",
+                                    scanLocalLibrary.LibraryId,
+                                    error.Value));
+                            break;
+                        case RebuildSearchIndex rebuildSearchIndex:
+                            await mediator.Send(rebuildSearchIndex, cancellationToken);
+                            break;
+                        case DeleteOrphanedArtwork deleteOrphanedArtwork:
+                            _logger.LogInformation("Deleting orphaned artwork from the database");
+                            await mediator.Send(deleteOrphanedArtwork, cancellationToken);
+                            break;
+                        case AddTraktList addTraktList:
+                            await mediator.Send(addTraktList, cancellationToken);
+                            break;
+                        case DeleteTraktList deleteTraktList:
+                            await mediator.Send(deleteTraktList, cancellationToken);
+                            break;
+                        case MatchTraktListItems matchTraktListItems:
+                            await mediator.Send(matchTraktListItems, cancellationToken);
+                            break;
+                    }
                 }
-                catch (Exception)
+                catch (ObjectDisposedException) when (cancellationToken.IsCancellationRequested)
                 {
-                    // do nothing
+                    // this can happen when we're shutting down
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to process background service request");
+
+                    try
+                    {
+                        IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                        client.Notify(ex);
+                    }
+                    catch (Exception)
+                    {
+                        // do nothing
+                    }
                 }
             }
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogInformation("Worker service shutting down");
         }
     }
 }
