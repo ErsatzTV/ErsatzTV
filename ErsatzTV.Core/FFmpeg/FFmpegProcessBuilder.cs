@@ -682,6 +682,9 @@ internal class FFmpegProcessBuilder
                 case VaapiDriver.RadeonSI:
                     startInfo.EnvironmentVariables["LIBVA_DRIVER_NAME"] = "radeonsi";
                     break;
+                case VaapiDriver.Nouveau:
+                    startInfo.EnvironmentVariables["LIBVA_DRIVER_NAME"] = "nouveau";
+                    break;
             }
         }
 

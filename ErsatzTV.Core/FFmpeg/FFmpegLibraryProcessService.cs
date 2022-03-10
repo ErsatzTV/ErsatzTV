@@ -391,6 +391,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     return "iHD";
                 case VaapiDriver.RadeonSI:
                     return "radeonsi";
+                case VaapiDriver.Nouveau:
+                    return "nouveau";
             }
         }
         
