@@ -53,9 +53,11 @@ using FluentValidation.AspNetCore;
 using Ganss.XSS;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
+using Microsoft.AspNetCore.SpaServices;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using MudBlazor.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
@@ -129,14 +131,14 @@ public class Startup
                     options.ImplicitlyValidateChildProperties = true;
                 });
 
-        services.AddSpaStaticFiles(options => { options.RootPath = "client-app/dist"; });
+        services.AddSpaStaticFiles(options => options.RootPath = "wwwroot/v2");
 
         services.AddMemoryCache();
 
-        // services.AddRazorPages();
-        // services.AddServerSideBlazor();
+        services.AddRazorPages();
+        services.AddServerSideBlazor();
 
-        // services.AddMudServices();
+        services.AddMudServices();
 
         var coreAssembly = Assembly.GetAssembly(typeof(LibraryScanProgress));
         if (coreAssembly != null)
@@ -257,24 +259,59 @@ public class Startup
 
         app.UseRouting();
 
+        if (!env.IsDevelopment())
+        {
+            app.Map(
+                "/v2",
+                app2 =>
+                {
+                    // var staticFileOptions = new StaticFileOptions
+                    // {
+                    //     RequestPath = "/v2",
+                    //     FileProvider = new PhysicalFileProvider(Path.Combine(env.WebRootPath, "v2"))
+                    // };
+                    // app2.UseSpaStaticFiles(staticFileOptions);
+                    // app2.UseSpa(
+                    //     spa =>
+                    //     {
+                    //         spa.Options.DefaultPage = "/v2/index.html";
+                    //         spa.Options.DefaultPageStaticFileOptions = staticFileOptions;
+                    //     });
+                    
+                    // app2.UseDefaultFiles();
+                    // app2.UseSpaStaticFiles();
+
+                    // if (string.IsNullOrWhiteSpace(env.WebRootPath))
+                    // {
+                    //     env.WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    // }
+
+                    app2.UseRouting();
+                    app2.UseEndpoints(e => e.MapFallbackToFile("index.html"));
+                    app2.UseFileServer(new FileServerOptions
+                    {
+                        FileProvider = new PhysicalFileProvider(Path.Combine(env.WebRootPath, "v2"))
+                    });
+                });
+        }
+
         app.UseEndpoints(
             endpoints =>
             {
                 endpoints.MapControllers();
-                // endpoints.MapBlazorHub();
-                // endpoints.MapFallbackToPage("/_Host");
-            });
-        
-        app.UseSpaStaticFiles();
-        app.UseSpa(spa =>
-        {
-            spa.Options.SourcePath = "client-app";
+                endpoints.MapBlazorHub();
+                endpoints.MapFallbackToPage("/_Host");
 
-            if (env.IsDevelopment())
-            {
-                spa.UseVueCli(npmScript: "serve");
-            }
-        });
+                if (env.IsDevelopment())
+                {
+                    endpoints.MapToVueCliProxy(
+                        "/v2/{*path}",
+                        new SpaOptions { SourcePath = "client-app" },
+                        env.IsDevelopment() ? "serve" : null,
+                        regex: "Compiled successfully",
+                        forceKill: true);
+                }
+            });
     }
 
     private void CustomServices(IServiceCollection services)

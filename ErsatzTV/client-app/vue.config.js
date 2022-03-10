@@ -7,4 +7,6 @@ module.exports = defineConfig({
     pwa: {
         name: "ErsatzTV",
     },
+    publicPath: "/v2/",
+    outputDir: "../wwwroot/v2",
 });
