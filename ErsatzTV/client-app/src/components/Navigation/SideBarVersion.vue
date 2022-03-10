@@ -1,9 +1,6 @@
 ﻿<template>
-    <span 
-        v-if="!isNavigationMini"
-        class="text-center"
-    >
-        <hr>
+    <span v-if="!isNavigationMini" class="text-center">
+        <hr />
         <h4 class="pt-2">ErsatzTV Version</h4>
 
         <p>{{ currentServerVersion }}</p>
@@ -11,17 +8,18 @@
 </template>
 
 <script>
-import { mapState } from 'pinia'
-import { applicationState } from '@/stores/applicationState'
+import { mapState } from "pinia";
+import { applicationState } from "@/stores/applicationState";
 
 export default {
-  name: "SideBarVersion",
-computed: {
-    ...mapState(applicationState, ['currentServerVersion', 'isNavigationMini'])
-}
-}
+    name: "SideBarVersion",
+    computed: {
+        ...mapState(applicationState, [
+            "currentServerVersion",
+            "isNavigationMini",
+        ]),
+    },
+};
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

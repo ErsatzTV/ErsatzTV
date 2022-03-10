@@ -1,14 +1,8 @@
 ﻿<template>
     <v-list-item-group color="primary">
-        <v-list-item
-            :to="path"
-            :disabled="disabled"
-        >
+        <v-list-item :to="path" :disabled="disabled">
             <v-list-item-icon>
-                <v-icon
-                    v-text="icon"
-                    :disabled="disabled"
-                />
+                <v-icon v-text="icon" :disabled="disabled" />
             </v-list-item-icon>
 
             <v-list-item-content>
@@ -23,21 +17,21 @@ export default {
     name: "SideBarMenuItem",
     props: {
         name: {
-          type: String,
-          required: true  
+            type: String,
+            required: true,
         },
         path: {
             type: String,
-            required: true
+            required: true,
         },
         icon: {
             type: String,
-            required: true
+            required: true,
         },
         disabled: {
             type: Boolean,
-            required: true
-        }
-    }
-}
+            required: true,
+        },
+    },
+};
 </script>

@@ -8,7 +8,7 @@
                 <!-- If using vue-router -->
                 <router-view></router-view>
             </v-container>
-            <SnackBar/>
+            <SnackBar />
         </v-main>
     </v-app>
 </template>
@@ -20,7 +20,7 @@ import SnackBar from "@/components/PopUps/SnackBar";
 export default Vue.extend({
     name: "App",
     components: { Toolbar, SnackBar },
-    data: () => ({})
+    data: () => ({}),
 });
 </script>
 <style>

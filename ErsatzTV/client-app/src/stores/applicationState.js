@@ -1,8 +1,8 @@
-﻿import { defineStore } from 'pinia'
+﻿import { defineStore } from "pinia";
 
-const pageURL = `${window.location}`
+const pageURL = `${window.location}`;
 
-export const applicationState = defineStore('appState', {
+export const applicationState = defineStore("appState", {
     state: () => {
         return {
             miniMenu: false,
@@ -11,32 +11,32 @@ export const applicationState = defineStore('appState', {
             xmlURL: pageURL + "iptv/xmltv.xml",
             documentationURL: "https://ersatztv.org/",
             githubURL: "https://github.com/jasongdove/ErsatzTV",
-            discordURL: "https://discord.gg/hHaJm3yGy6"
-        }
+            discordURL: "https://discord.gg/hHaJm3yGy6",
+        };
     },
     getters: {
         isNavigationMini(state) {
-            return state.miniMenu
+            return state.miniMenu;
         },
-        currentServerVersion(state){
-            return state.currentVersion
+        currentServerVersion(state) {
+            return state.currentVersion;
         },
-        navBarURLs(state){
+        navBarURLs(state) {
             return {
                 m3uURL: state.m3uURL,
                 xmlURL: state.xmlURL,
                 documentationURL: state.documentationURL,
                 githubURL: state.githubURL,
-                discordURL: state.discordURL
-            }
-        }
+                discordURL: state.discordURL,
+            };
+        },
     },
     actions: {
         toggleMiniNavigation() {
-            this.miniMenu = !this.miniMenu
+            this.miniMenu = !this.miniMenu;
         },
         disableMiniNavigation() {
-            this.miniMenu = false
+            this.miniMenu = false;
         },
     },
-})
+});

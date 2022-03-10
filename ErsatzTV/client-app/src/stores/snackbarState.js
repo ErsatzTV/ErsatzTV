@@ -1,27 +1,27 @@
-﻿import { defineStore } from 'pinia'
+﻿import { defineStore } from "pinia";
 
-export const snackbarState = defineStore('snackbarState', {
+export const snackbarState = defineStore("snackbarState", {
     state: () => {
         return {
             visible: false,
-            message: ""
-        }
+            message: "",
+        };
     },
     getters: {
         isVisible(state) {
-            return state.visible
+            return state.visible;
         },
-        currentMessage(state){
-            return state.message
-        }
+        currentMessage(state) {
+            return state.message;
+        },
     },
     actions: {
         showSnackbar(message) {
-            this.message = message
-            this.visible = true
+            this.message = message;
+            this.visible = true;
         },
         closeSnackbar() {
             this.visible = false;
         },
     },
-})
+});
