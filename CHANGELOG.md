@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Perform additional duration analysis on files with missing duration metadata
+- Add `nouveau` VAAPI driver option
 
 ## [0.4.3-alpha] - 2022-03-05
 ### Fixed
