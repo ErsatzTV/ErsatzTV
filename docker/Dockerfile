@@ -17,6 +17,7 @@ COPY nuget.config .
 COPY lib/nuget/* ./lib/nuget/
 COPY artwork/* ./artwork/
 COPY ErsatzTV/*.csproj ./ErsatzTV/
+COPY ErsatzTV/client-app/package*.json ./ErsatzTV/client-app/
 COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
 COPY ErsatzTV.Core.Tests/*.csproj ./ErsatzTV.Core.Tests/
@@ -24,7 +25,7 @@ COPY ErsatzTV.FFmpeg/*.csproj ./ErsatzTV.FFmpeg/
 COPY ErsatzTV.FFmpeg.Tests/*.csproj ./ErsatzTV.FFmpeg.Tests/
 COPY ErsatzTV.Infrastructure/*.csproj ./ErsatzTV.Infrastructure/
 RUN dotnet restore -r linux-x64
-WORKDIR /source/ErsatzTV/ErsatzTV/client-app
+WORKDIR /source/ErsatzTV/client-app
 RUN npm install
 WORKDIR /source
 
