@@ -10,7 +10,7 @@
             src="@/assets/images/ersatztv-500.png"
             class="ma-1"
         ></v-img>
-        <hr />
+        <v-divider inset></v-divider>
     </span>
 </template>
 

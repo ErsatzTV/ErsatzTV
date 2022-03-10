@@ -1,6 +1,6 @@
 ﻿<template>
     <span v-if="!isNavigationMini" class="text-center">
-        <hr />
+        <v-divider inset></v-divider>
         <h4 class="pt-2">ErsatzTV Version</h4>
 
         <p>{{ currentServerVersion }}</p>
