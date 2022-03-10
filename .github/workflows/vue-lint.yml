@@ -14,9 +14,9 @@ jobs:
         with:
           node-version: '14'
       # CD into the current client directory    
-      - run: cd ./ErsatzTV/client-app
+      - run: cd ./ErsatzTV/client-app/
       # Check that app successfully lints and builds, we use 'npm ci' because it doesn't touch package.json or the -lock file. 
-      - run: npm ci
+      - run: npm ci --no-optional
       - run: npm run lint
       - run: npm run build --if-present
           
