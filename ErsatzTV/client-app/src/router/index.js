@@ -11,32 +11,32 @@ const routes = [
         component: HomePage,
         meta: {
             icon: "mdi-home",
-            disabled: false
-        }
+            disabled: false,
+        },
     },
     {
         path: "/channels",
         name: "Channels",
         meta: {
             icon: "mdi-broadcast",
-            disabled: true
-        }
+            disabled: true,
+        },
     },
     {
         path: "/ffmpeg-profiles",
         name: "FFmpeg Profiles",
         meta: {
             icon: "mdi-video-input-component",
-            disabled: true
-        }
+            disabled: true,
+        },
     },
     {
         path: "/watermarks",
         name: "Watermarks",
         meta: {
             icon: "mdi-watermark",
-            disabled: true
-        }
+            disabled: true,
+        },
     },
     {
         path: "/sources",
@@ -51,34 +51,34 @@ const routes = [
                 name: "Local",
                 meta: {
                     icon: "mdi-folder",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/sources/emby",
                 name: "Emby",
                 meta: {
                     icon: "mdi-emby",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/sources/jellyfin",
                 name: "Jellyfin",
                 meta: {
                     icon: "mdi-jellyfish",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/sources/plex",
                 name: "Plex",
                 meta: {
                     icon: "mdi-plex",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
-        ]
+        ],
     },
     {
         path: "/media",
@@ -93,58 +93,58 @@ const routes = [
                 name: "Libraries",
                 meta: {
                     icon: "mdi-library",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/media/trash",
                 name: "Trash",
                 meta: {
                     icon: "mdi-trash-can",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/media/tv-shows",
                 name: "TV Shows",
                 meta: {
                     icon: "mdi-television-classic",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/media/movies",
                 name: "Movies",
                 meta: {
                     icon: "mdi-movie",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/media/music-videos",
                 name: "Music Videos",
                 meta: {
                     icon: "mdi-music-circle",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/media/other-videos",
                 name: "Other Videos",
                 meta: {
                     icon: "mdi-video",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/media/songs",
                 name: "Songs",
                 meta: {
                     icon: "mdi-album",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
-        ]
+        ],
     },
     {
         path: "/lists",
@@ -159,57 +159,57 @@ const routes = [
                 name: "Collections",
                 meta: {
                     icon: "mdi-collage",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/lists/trakt-lists",
                 name: "Trakt Lists",
                 meta: {
                     icon: "mdi-hammer",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
             {
                 path: "/lists/filler-presets",
                 name: "Filler Presets",
                 meta: {
                     icon: "mdi-tune-vertical",
-                    disabled: true
-                }
+                    disabled: true,
+                },
             },
-        ]
+        ],
     },
     {
         path: "/schedules",
         name: "Schedules",
         meta: {
             icon: "mdi-calendar",
-            disabled: true
-        }
+            disabled: true,
+        },
     },
     {
         path: "/playouts",
         name: "Playouts",
         meta: {
             icon: "mdi-clipboard-play-multiple",
-            disabled: true
-        }
+            disabled: true,
+        },
     },
     {
         path: "/settings",
         name: "Settings",
         meta: {
             icon: "mdi-cog",
-            disabled: true
-        }
+            disabled: true,
+        },
     },
     {
         path: "/Logs",
         name: "Logs",
         meta: {
             icon: "mdi-card-text",
-            disabled: true
+            disabled: true,
         },
     },
 ];

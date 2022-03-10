@@ -1,18 +1,17 @@
 ﻿<template>
-    <v-list-group 
+    <v-list-group
         color="primary"
         v-model="menuItemOpened"
         :disabled="disabled"
         :prepend-icon="icon"
         no-action
     >
-        
         <template v-slot:activator>
             <v-list-item-content>
                 <v-list-item-title v-text="name"></v-list-item-title>
             </v-list-item-content>
         </template>
-        
+
         <v-list-item
             v-for="child in children"
             :key="child.name"
@@ -29,7 +28,6 @@
                 <v-list-item-title v-text="child.name"></v-list-item-title>
             </v-list-item-content>
         </v-list-item>
-        
     </v-list-group>
 </template>
 
@@ -38,34 +36,34 @@ export default {
     name: "SideBarMenuItemExpandable",
     props: {
         name: {
-          type: String,
-          required: true  
+            type: String,
+            required: true,
         },
         icon: {
             type: String,
-            required: true
+            required: true,
         },
         disabled: {
             type: Boolean,
-            required: true
+            required: true,
         },
         children: {
             type: Array,
-            required: true
-        }
+            required: true,
+        },
     },
     data: () => ({
         opened: false,
     }),
     computed: {
         menuItemOpened: {
-            get: function() {
-                return this.opened
+            get: function () {
+                return this.opened;
             },
-            set: function() {
-                return !this.opened
-            }
-        }
-    }
-}
+            set: function () {
+                return !this.opened;
+            },
+        },
+    },
+};
 </script>
