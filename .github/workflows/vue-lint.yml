@@ -9,13 +9,12 @@ jobs:
       - name: Checkout current repository
         uses: actions/checkout@v2
       # Setup NodeJS version 14  
-      - name: Setup NodeJs v14.x  
+      - name: Build and Lint the client
       - uses: actions/setup-node@v2
         with:
           node-version: '14'
       # CD into the current client directory    
-      - name: Build and Lint the client
-        run: cd ./ErsatzTV/client-app
+      - run: cd ./ErsatzTV/client-app
       # Check that app successfully lints and builds, we use 'npm ci' because it doesn't touch package.json or the -lock file. 
       - run: npm ci
       - run: npm run lint
