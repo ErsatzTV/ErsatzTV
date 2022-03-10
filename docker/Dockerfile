@@ -7,7 +7,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
 # https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 RUN apt-get update && apt-get install -y ca-certificates
-RUN curl -fsSL https://deb.nodesource.com/setup_17.x | bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash -
 RUN apt-get install -y nodejs
 WORKDIR /source
 
@@ -26,7 +26,7 @@ COPY ErsatzTV.FFmpeg.Tests/*.csproj ./ErsatzTV.FFmpeg.Tests/
 COPY ErsatzTV.Infrastructure/*.csproj ./ErsatzTV.Infrastructure/
 RUN dotnet restore -r linux-x64
 WORKDIR /source/ErsatzTV/client-app
-RUN npm install
+RUN npm ci
 WORKDIR /source
 
 # copy everything else and build app
