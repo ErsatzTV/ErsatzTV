@@ -26,60 +26,67 @@ public class PlexService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        if (!File.Exists(FileSystemLayout.PlexSecretsPath))
+        try
         {
-            await File.WriteAllTextAsync(FileSystemLayout.PlexSecretsPath, "{}", cancellationToken);
-        }
-
-        _logger.LogInformation(
-            "Plex service started; secrets are at {PlexSecretsPath}",
-            FileSystemLayout.PlexSecretsPath);
-
-        // synchronize sources on startup
-        await SynchronizeSources(new SynchronizePlexMediaSources(), cancellationToken);
-
-        await foreach (IPlexBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
-        {
-            try
+            if (!File.Exists(FileSystemLayout.PlexSecretsPath))
             {
-                Task requestTask;
-                switch (request)
-                {
-                    case TryCompletePlexPinFlow pinRequest:
-                        requestTask = CompletePinFlow(pinRequest, cancellationToken);
-                        break;
-                    case SynchronizePlexMediaSources sourcesRequest:
-                        requestTask = SynchronizeSources(sourcesRequest, cancellationToken);
-                        break;
-                    case SynchronizePlexLibraries synchronizePlexLibrariesRequest:
-                        requestTask = SynchronizeLibraries(synchronizePlexLibrariesRequest, cancellationToken);
-                        break;
-                    case ISynchronizePlexLibraryById synchronizePlexLibraryById:
-                        requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, cancellationToken);
-                        break;
-                    default:
-                        throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
-                }
-
-                await requestTask;
+                await File.WriteAllTextAsync(FileSystemLayout.PlexSecretsPath, "{}", cancellationToken);
             }
-            catch (Exception ex)
+
+            _logger.LogInformation(
+                "Plex service started; secrets are at {PlexSecretsPath}",
+                FileSystemLayout.PlexSecretsPath);
+
+            // synchronize sources on startup
+            await SynchronizeSources(new SynchronizePlexMediaSources(), cancellationToken);
+
+            await foreach (IPlexBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
             {
-                _logger.LogWarning(ex, "Failed to process plex background service request");
-                
                 try
                 {
-                    using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                    Task requestTask;
+                    switch (request)
                     {
-                        IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
-                        client.Notify(ex);
+                        case TryCompletePlexPinFlow pinRequest:
+                            requestTask = CompletePinFlow(pinRequest, cancellationToken);
+                            break;
+                        case SynchronizePlexMediaSources sourcesRequest:
+                            requestTask = SynchronizeSources(sourcesRequest, cancellationToken);
+                            break;
+                        case SynchronizePlexLibraries synchronizePlexLibrariesRequest:
+                            requestTask = SynchronizeLibraries(synchronizePlexLibrariesRequest, cancellationToken);
+                            break;
+                        case ISynchronizePlexLibraryById synchronizePlexLibraryById:
+                            requestTask = SynchronizePlexLibrary(synchronizePlexLibraryById, cancellationToken);
+                            break;
+                        default:
+                            throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
+                    }
+
+                    await requestTask;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to process plex background service request");
+
+                    try
+                    {
+                        using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                        {
+                            IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                            client.Notify(ex);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // do nothing
                     }
                 }
-                catch (Exception)
-                {
-                    // do nothing
-                }
             }
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogInformation("Plex service shutting down");
         }
     }
 
