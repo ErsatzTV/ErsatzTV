@@ -49,8 +49,8 @@
     "rules": {
         "prettier/prettier": [
           "error", { 
-          "endOfLine": "auto",
-          "tabWidth": 4
+            "endOfLine": "auto",
+            "tabWidth": 4
           }
         ]
     }
