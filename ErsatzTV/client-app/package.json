@@ -46,7 +46,14 @@
     "parserOptions": {
       "parser": "@babel/eslint-parser"
     },
-    "rules": {}
+    "rules": {
+        "prettier/prettier": [
+          "error", { 
+          "endOfLine": "auto",
+          "tabWidth": 4
+          }
+        ]
+    }
   },
   "browserslist": [
     "> 1%",
