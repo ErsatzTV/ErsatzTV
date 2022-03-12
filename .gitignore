@@ -43,3 +43,4 @@ scripts/generate-api-sdk/swagger.json
 
 docker-compose.override.yml
 
+ErsatzTV/wwwroot/v2/
