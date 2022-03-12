@@ -9,4 +9,5 @@ module.exports = defineConfig({
     },
     publicPath: "/v2/",
     outputDir: "../wwwroot/v2",
+    filenameHashing: false
 });
