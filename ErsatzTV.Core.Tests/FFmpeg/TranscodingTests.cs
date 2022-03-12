@@ -118,21 +118,15 @@ public class TranscodingTests
             new() { Width = 1280, Height = 720 }
         };
 
-        public static string[] SoftwareCodecs =
-        {
-            "libx264",
-            "libx265"
-        };
-
         public static HardwareAccelerationKind[] NoAcceleration =
         {
             HardwareAccelerationKind.None
         };
 
-        public static string[] NvidiaCodecs =
+        public static FFmpegProfileVideoFormat[] VideoFormats =
         {
-            "h264_nvenc",
-            "hevc_nvenc"
+            FFmpegProfileVideoFormat.H264,
+            FFmpegProfileVideoFormat.Hevc
         };
 
         public static HardwareAccelerationKind[] NvidiaAcceleration =
@@ -140,32 +134,14 @@ public class TranscodingTests
             HardwareAccelerationKind.Nvenc
         };
 
-        public static string[] VaapiCodecs =
-        {
-            "h264_vaapi",
-            "hevc_vaapi"
-        };
-
         public static HardwareAccelerationKind[] VaapiAcceleration =
         {
             HardwareAccelerationKind.Vaapi
         };
 
-        public static string[] VideoToolboxCodecs =
-        {
-            "h264_videotoolbox",
-            "hevc_videotoolbox"
-        };
-
         public static HardwareAccelerationKind[] VideoToolboxAcceleration =
         {
             HardwareAccelerationKind.VideoToolbox
-        };
-
-        public static string[] QsvCodecs =
-        {
-            "h264_qsv",
-            "hevc_qsv"
         };
 
         public static HardwareAccelerationKind[] QsvAcceleration =
@@ -176,27 +152,16 @@ public class TranscodingTests
 
     [Test, Combinatorial]
     public async Task Transcode(
-            [ValueSource(typeof(TestData), nameof(TestData.InputFormats))]
-            InputFormat inputFormat,
-            [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
-            Resolution profileResolution,
-            [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
-            Padding padding,
-            [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
-            VideoScanKind videoScanKind,
-            [ValueSource(typeof(TestData), nameof(TestData.Watermarks))]
-            Watermark watermark,
-            // [ValueSource(typeof(TestData), nameof(TestData.SoftwareCodecs))] string profileCodec,
-            // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaCodecs))]
-            string profileCodec,
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))]
-            HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.VaapiCodecs))] string profileCodec,
+        [ValueSource(typeof(TestData), nameof(TestData.InputFormats))] InputFormat inputFormat,
+        [ValueSource(typeof(TestData), nameof(TestData.Resolutions))] Resolution profileResolution,
+        [ValueSource(typeof(TestData), nameof(TestData.Paddings))] Padding padding,
+        [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))] VideoScanKind videoScanKind,
+        [ValueSource(typeof(TestData), nameof(TestData.Watermarks))] Watermark watermark,
+        [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))] FFmpegProfileVideoFormat profileVideoFormat,
+        // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
+        [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.QsvCodecs))] string profileCodec,
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxCodecs))] string profileCodec,
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
     {
         if (inputFormat.Encoder is "mpeg1video" or "msmpeg4v2" or "msmpeg4v3")
@@ -209,7 +174,7 @@ public class TranscodingTests
         }
 
         string name = GetStringSha256Hash(
-            $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileCodec}_{profileAcceleration}");
+            $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileVideoFormat}_{profileAcceleration}");
 
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
         if (!File.Exists(file))
@@ -360,8 +325,8 @@ public class TranscodingTests
                 FFmpegProfile = FFmpegProfile.New("test", profileResolution) with
                 {
                     HardwareAcceleration = profileAcceleration,
-                    VideoCodec = profileCodec,
-                    AudioCodec = "aac"
+                    VideoFormat = profileVideoFormat,
+                    AudioFormat = FFmpegProfileAudioFormat.Aac
                 },
                 StreamingMode = StreamingMode.TransportStream
             },

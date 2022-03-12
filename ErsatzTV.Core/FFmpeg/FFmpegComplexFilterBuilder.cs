@@ -22,7 +22,7 @@ public class FFmpegComplexFilterBuilder
     private Option<int> _watermarkIndex;
     private string _pixelFormat;
     private string _videoDecoder;
-    private string _videoEncoder;
+    private FFmpegProfileVideoFormat _videoFormat;
     private Option<string> _subtitle;
     private bool _boxBlur;
 
@@ -131,9 +131,9 @@ public class FFmpegComplexFilterBuilder
         return this;
     }
 
-    public FFmpegComplexFilterBuilder WithVideoEncoder(string videoEncoder)
+    public FFmpegComplexFilterBuilder WithVideoFormat(FFmpegProfileVideoFormat videoFormat)
     {
-        _videoEncoder = videoEncoder;
+        _videoFormat = videoFormat;
         return this;
     }
 
@@ -379,21 +379,21 @@ public class FFmpegComplexFilterBuilder
         string outputPixelFormat = null;
         if (!usesSoftwareFilters && string.IsNullOrWhiteSpace(watermarkOverlay))
         {
-            switch (acceleration, _videoEncoder, _pixelFormat)
+            switch (acceleration, _videoFormat, _pixelFormat)
             {
-                case (HardwareAccelerationKind.Nvenc, "h264_nvenc", "yuv420p10le"):
+                case (HardwareAccelerationKind.Nvenc, FFmpegProfileVideoFormat.H264, "yuv420p10le"):
                     outputPixelFormat = "yuv420p";
                     break;
-                case (HardwareAccelerationKind.Nvenc, "h264_nvenc", "yuv444p10le"):
+                case (HardwareAccelerationKind.Nvenc, FFmpegProfileVideoFormat.H264, "yuv444p10le"):
                     outputPixelFormat = "yuv444p";
                     break;
             }
         }
 
-        string outputFormat = (_videoEncoder, _pixelFormat) switch
+        string outputFormat = (acceleration, _videoFormat, _pixelFormat) switch
         {
-            ("hevc_nvenc", "yuv420p10le") => "p010le",
-            ("h264_nvenc", "yuv420p10le") => "p010le",
+            (HardwareAccelerationKind.Nvenc, FFmpegProfileVideoFormat.Hevc, "yuv420p10le") => "p010le",
+            (HardwareAccelerationKind.Nvenc, FFmpegProfileVideoFormat.H264, "yuv420p10le") => "p010le",
             _ => null
         };
 
@@ -485,7 +485,7 @@ public class FFmpegComplexFilterBuilder
 
         // vaapi downsample 10bit hevc to 8bit h264
         if (acceleration == HardwareAccelerationKind.Vaapi && !videoFilterQueue.Any() &&
-            _pixelFormat == "yuv420p10le" && _videoEncoder.StartsWith("h264"))
+            _pixelFormat == "yuv420p10le" && _videoFormat == FFmpegProfileVideoFormat.H264)
         {
             videoFilterQueue.Add("scale_vaapi=format=nv12");
         }

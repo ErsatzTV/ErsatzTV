@@ -44,8 +44,8 @@ public class ChannelPlaylist
                 _ => "ts?mode=ts-legacy"
             };
 
-            string vcodec = channel.FFmpegProfile.VideoCodec.Split("_").Head();
-            string acodec = channel.FFmpegProfile.AudioCodec;
+            string vcodec = channel.FFmpegProfile.VideoFormat.ToString().ToLowerInvariant();
+            string acodec = channel.FFmpegProfile.AudioFormat.ToString().ToLowerInvariant();
 
             sb.AppendLine(
                 $"#EXTINF:0 tvg-id=\"{channel.Number}.etv\" channel-id=\"{shortUniqueId}\" channel-number=\"{channel.Number}\" CUID=\"{shortUniqueId}\" tvg-chno=\"{channel.Number}\" tvg-name=\"{channel.Name}\" tvg-logo=\"{logo}\" group-title=\"{channel.Group}\" tvc-stream-vcodec=\"{vcodec}\" tvc-stream-acodec=\"{acodec}\", {channel.Name}");
