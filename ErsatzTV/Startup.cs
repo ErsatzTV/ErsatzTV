@@ -265,33 +265,18 @@ public class Startup
                 "/v2",
                 app2 =>
                 {
-                    // var staticFileOptions = new StaticFileOptions
-                    // {
-                    //     RequestPath = "/v2",
-                    //     FileProvider = new PhysicalFileProvider(Path.Combine(env.WebRootPath, "v2"))
-                    // };
-                    // app2.UseSpaStaticFiles(staticFileOptions);
-                    // app2.UseSpa(
-                    //     spa =>
-                    //     {
-                    //         spa.Options.DefaultPage = "/v2/index.html";
-                    //         spa.Options.DefaultPageStaticFileOptions = staticFileOptions;
-                    //     });
-                    
-                    // app2.UseDefaultFiles();
-                    // app2.UseSpaStaticFiles();
-
-                    // if (string.IsNullOrWhiteSpace(env.WebRootPath))
-                    // {
-                    //     env.WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                    // }
+                    if (string.IsNullOrWhiteSpace(env.WebRootPath))
+                    {
+                        env.WebRootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                    }
 
                     app2.UseRouting();
                     app2.UseEndpoints(e => e.MapFallbackToFile("index.html"));
-                    app2.UseFileServer(new FileServerOptions
-                    {
-                        FileProvider = new PhysicalFileProvider(Path.Combine(env.WebRootPath, "v2"))
-                    });
+                    app2.UseFileServer(
+                        new FileServerOptions
+                        {
+                            FileProvider = new PhysicalFileProvider(Path.Combine(env.WebRootPath, "v2"))
+                        });
                 });
         }
 
@@ -307,7 +292,7 @@ public class Startup
                     endpoints.MapToVueCliProxy(
                         "/v2/{*path}",
                         new SpaOptions { SourcePath = "client-app" },
-                        env.IsDevelopment() ? "serve" : null,
+                        "serve",
                         regex: "Compiled successfully",
                         forceKill: true);
                 }
