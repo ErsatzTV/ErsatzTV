@@ -18,9 +18,9 @@ public class
         UpdateFFmpegProfile request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, p => ApplyUpdateRequest(dbContext, p, request));
+        return await validation.Apply(p => ApplyUpdateRequest(dbContext, p, request));
     }
 
     private async Task<UpdateFFmpegProfileResult> ApplyUpdateRequest(
@@ -36,10 +36,10 @@ public class
         p.VaapiDevice = update.VaapiDevice;
         p.ResolutionId = update.ResolutionId;
         p.NormalizeVideo = update.Transcode && update.NormalizeVideo;
-        p.VideoCodec = update.VideoCodec;
+        p.VideoFormat = update.VideoFormat;
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
-        p.AudioCodec = update.AudioCodec;
+        p.AudioFormat = update.AudioFormat;
         p.AudioBitrate = update.AudioBitrate;
         p.AudioBufferSize = update.AudioBufferSize;
         p.NormalizeLoudness = update.Transcode && update.NormalizeLoudness;

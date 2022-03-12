@@ -44,7 +44,11 @@
                             </MudItem>
                             <MudItem>
                                 <MudText Typo="Typo.h6">Video</MudText>
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Codec" @bind-Value="_model.VideoCodec" For="@(() => _model.VideoCodec)"/>
+                                <MudSelect Disabled="@(!_model.Transcode)" Label="Format" @bind-Value="_model.VideoFormat" For="@(() => _model.VideoFormat)">
+                                    <MudSelectItem Value="@FFmpegProfileVideoFormat.H264">h264</MudSelectItem>
+                                    <MudSelectItem Value="@FFmpegProfileVideoFormat.Hevc">hevc</MudSelectItem>
+                                    <MudSelectItem Value="@FFmpegProfileVideoFormat.Mpeg2Video">mpeg-2</MudSelectItem>
+                                </MudSelect>
                                 <MudElement HtmlTag="div" Class="mt-3">
                                     <MudTextField Disabled="@(!_model.Transcode)" Label="Bitrate" @bind-Value="_model.VideoBitrate" For="@(() => _model.VideoBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
                                 </MudElement>
@@ -84,7 +88,10 @@
                             </MudItem>
                             <MudItem>
                                 <MudText Typo="Typo.h6">Audio</MudText>
-                                <MudTextField Disabled="@(!_model.Transcode)" Label="Codec" @bind-Value="_model.AudioCodec" For="@(() => _model.AudioCodec)"/>
+                                <MudSelect Disabled="@(!_model.Transcode)" Label="Format" @bind-Value="_model.AudioFormat" For="@(() => _model.AudioFormat)">
+                                    <MudSelectItem Value="@FFmpegProfileAudioFormat.Aac">aac</MudSelectItem>
+                                    <MudSelectItem Value="@FFmpegProfileAudioFormat.Ac3">ac3</MudSelectItem>
+                                </MudSelect>
                                 <MudElement HtmlTag="div" Class="mt-3">
                                     <MudTextField Disabled="@(!_model.Transcode)" Label="Bitrate" @bind-Value="_model.AudioBitrate" For="@(() => _model.AudioBitrate)" Adornment="Adornment.End" AdornmentText="kBit/s"/>
                                 </MudElement>

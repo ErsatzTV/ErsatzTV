@@ -18,9 +18,9 @@ public class CreateFFmpegProfileHandler :
         CreateFFmpegProfile request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, FFmpegProfile> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, profile => PersistFFmpegProfile(dbContext, profile));
+        return await validation.Apply(profile => PersistFFmpegProfile(dbContext, profile));
     }
 
     private static async Task<CreateFFmpegProfileResult> PersistFFmpegProfile(
@@ -45,10 +45,10 @@ public class CreateFFmpegProfileHandler :
                 VaapiDevice = request.VaapiDevice,
                 ResolutionId = resolutionId,
                 NormalizeVideo = request.NormalizeVideo,
-                VideoCodec = request.VideoCodec,
+                VideoFormat = request.VideoFormat,
                 VideoBitrate = request.VideoBitrate,
                 VideoBufferSize = request.VideoBufferSize,
-                AudioCodec = request.AudioCodec,
+                AudioFormat = request.AudioFormat,
                 AudioBitrate = request.AudioBitrate,
                 AudioBufferSize = request.AudioBufferSize,
                 NormalizeLoudness = request.NormalizeLoudness,
