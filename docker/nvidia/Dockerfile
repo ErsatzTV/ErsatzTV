@@ -14,25 +14,18 @@ COPY ErsatzTV/*.csproj ./ErsatzTV/
 COPY ErsatzTV/client-app/package*.json ./ErsatzTV/client-app/
 COPY ErsatzTV.Application/*.csproj ./ErsatzTV.Application/
 COPY ErsatzTV.Core/*.csproj ./ErsatzTV.Core/
-COPY ErsatzTV.Core.Tests/*.csproj ./ErsatzTV.Core.Tests/
 COPY ErsatzTV.FFmpeg/*.csproj ./ErsatzTV.FFmpeg/
-COPY ErsatzTV.FFmpeg.Tests/*.csproj ./ErsatzTV.FFmpeg.Tests/
 COPY ErsatzTV.Infrastructure/*.csproj ./ErsatzTV.Infrastructure/
-RUN dotnet restore -r linux-x64
-WORKDIR /source/ErsatzTV/client-app
-RUN npm ci
-WORKDIR /source
+RUN dotnet restore -r linux-x64 ErsatzTV/
 
 # copy everything else and build app
 COPY ErsatzTV/. ./ErsatzTV/
 COPY ErsatzTV.Application/. ./ErsatzTV.Application/
 COPY ErsatzTV.Core/. ./ErsatzTV.Core/
-COPY ErsatzTV.Core.Tests/. ./ErsatzTV.Core.Tests/
 COPY ErsatzTV.FFmpeg/. ./ErsatzTV.FFmpeg/
-COPY ErsatzTV.FFmpeg.Tests/. ./ErsatzTV.FFmpeg.Tests/
 COPY ErsatzTV.Infrastructure/. ./ErsatzTV.Infrastructure/
 ARG INFO_VERSION="unknown"
-RUN dotnet publish -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
+RUN dotnet publish ErsatzTV/ErsatzTV.csproj -c release -o /app -r linux-x64 --self-contained false --no-restore /p:DebugType=Embedded /p:InformationalVersion=${INFO_VERSION}
 
 # final stage/image
 FROM jasongdove/ffmpeg:5.0-nvidia2004 AS runtime-base
