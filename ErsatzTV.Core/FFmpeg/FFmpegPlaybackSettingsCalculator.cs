@@ -82,8 +82,8 @@ public class FFmpegPlaybackSettingsCalculator
         switch (streamingMode)
         {
             case StreamingMode.HttpLiveStreamingDirect:
-                result.AudioCodec = "copy";
-                result.VideoCodec = "copy";
+                result.AudioFormat = FFmpegProfileAudioFormat.Copy;
+                result.VideoFormat = FFmpegProfileVideoFormat.Copy;
                 result.Deinterlace = false;
                 break;
             case StreamingMode.TransportStreamHybrid:
@@ -121,9 +121,9 @@ public class FFmpegPlaybackSettingsCalculator
                 foreach (MediaStream stream in videoStream.Where(s => s.AttachedPic == false))
                 {
                     if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
-                        NeedToNormalizeVideoCodec(ffmpegProfile, stream))
+                        NeedToNormalizeVideo(ffmpegProfile))
                     {
-                        result.VideoCodec = ffmpegProfile.VideoCodec;
+                        result.VideoFormat = ffmpegProfile.VideoFormat;
                         result.VideoBitrate = ffmpegProfile.VideoBitrate;
                         result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
 
@@ -141,23 +141,23 @@ public class FFmpegPlaybackSettingsCalculator
                                 (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
                                 (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
                                 (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
-                                    
+
                                 // temp disable mpeg4 hardware decoding for all vaapi
                                 // TODO: check for codec support
                                 (HardwareAccelerationKind.Vaapi, "mpeg4", _) => "mpeg4",
-                                    
+
                                 _ => null
                             };
                     }
                     else
                     {
-                        result.VideoCodec = "copy";
+                        result.VideoFormat = FFmpegProfileVideoFormat.Copy;
                     }
                 }
 
                 if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeAudio)
                 {
-                    result.AudioCodec = ffmpegProfile.AudioCodec;
+                    result.AudioFormat = ffmpegProfile.AudioFormat;
                     result.AudioBitrate = ffmpegProfile.AudioBitrate;
                     result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
 
@@ -176,7 +176,7 @@ public class FFmpegPlaybackSettingsCalculator
                 }
                 else
                 {
-                    result.AudioCodec = "copy";
+                    result.AudioFormat = FFmpegProfileAudioFormat.Copy;
                 }
 
                 if (videoVersion.VideoScanKind == VideoScanKind.Interlaced)
@@ -192,20 +192,13 @@ public class FFmpegPlaybackSettingsCalculator
 
     public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile)
     {
-        string softwareCodec = ffmpegProfile.VideoCodec switch
-        {
-            { } c when c.Contains("hevc") || c.Contains("265") => "libx265",
-            { } c when c.Contains("264") => "libx264",
-            { } c when c.Contains("mpeg2") => "mpeg2video",
-            _ => "libx264"
-        };
-            
         return new FFmpegPlaybackSettings
         {
+            HardwareAcceleration = HardwareAccelerationKind.None,
             ThreadCount = ffmpegProfile.ThreadCount,
             FormatFlags = CommonFormatFlags,
-            VideoCodec = softwareCodec,
-            AudioCodec = ffmpegProfile.AudioCodec,
+            VideoFormat = ffmpegProfile.VideoFormat,
+            AudioFormat = ffmpegProfile.AudioFormat
         };
     }
 
@@ -227,8 +220,8 @@ public class FFmpegPlaybackSettingsCalculator
     private static bool IsOddSize(MediaVersion version) =>
         version.Height % 2 == 1 || version.Width % 2 == 1;
 
-    private static bool NeedToNormalizeVideoCodec(FFmpegProfile ffmpegProfile, MediaStream videoStream) =>
-        ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo && ffmpegProfile.VideoCodec != videoStream.Codec;
+    private static bool NeedToNormalizeVideo(FFmpegProfile ffmpegProfile) =>
+        ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo;
 
     private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
     {

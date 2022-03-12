@@ -35,7 +35,7 @@ public class FFmpegProcessService : IFFmpegProcessService
         _logger = logger;
     }
 
-    public async Task<Process> ForPlayoutItem(
+    public Task<Process> ForPlayoutItem(
         string ffmpegPath,
         bool saveReports,
         Channel channel,
@@ -56,144 +56,7 @@ public class FFmpegProcessService : IFFmpegProcessService
         long ptsOffset,
         Option<int> targetFramerate)
     {
-        MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
-        Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
-
-        FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
-            channel.StreamingMode,
-            channel.FFmpegProfile,
-            videoVersion,
-            videoStream,
-            maybeAudioStream,
-            start,
-            now,
-            inPoint,
-            outPoint,
-            hlsRealtime,
-            targetFramerate);
-
-        Option<WatermarkOptions> watermarkOptions =
-            await GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
-
-        Option<List<FadePoint>> maybeFadePoints = watermarkOptions
-            .Map(o => o.Watermark)
-            .Flatten()
-            .Where(wm => wm.Mode == ChannelWatermarkMode.Intermittent)
-            .Map(
-                wm =>
-                    WatermarkCalculator.CalculateFadePoints(
-                        start,
-                        inPoint,
-                        outPoint,
-                        playbackSettings.StreamSeek,
-                        wm.FrequencyMinutes,
-                        wm.DurationSeconds));
-
-        // foreach (List<FadePoint> fadePoints in maybeFadePoints)
-        // {
-        //     foreach (FadePoint fadePoint in fadePoints)
-        //     {
-        //         _logger.LogDebug("Fade point filter: {FadePointFilter}", fadePoint.ToFilter());
-        //     }
-        // }
-
-        FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
-            .WithThreads(playbackSettings.ThreadCount)
-            .WithVaapiDriver(vaapiDriver, vaapiDevice)
-            .WithHardwareAcceleration(
-                playbackSettings.HardwareAcceleration,
-                videoStream.PixelFormat,
-                playbackSettings.VideoCodec)
-            .WithQuiet()
-            .WithFormatFlags(playbackSettings.FormatFlags)
-            .WithRealtimeOutput(playbackSettings.RealtimeOutput)
-            .WithInputCodec(
-                playbackSettings.StreamSeek,
-                fillerKind == FillerKind.Fallback,
-                videoPath,
-                audioPath,
-                playbackSettings.VideoDecoder,
-                videoStream.Codec,
-                videoStream.PixelFormat,
-                playbackSettings.Deinterlace)
-            .WithWatermark(watermarkOptions, maybeFadePoints, channel.FFmpegProfile.Resolution)
-            .WithFrameRate(playbackSettings.FrameRate)
-            .WithVideoTrackTimeScale(playbackSettings.VideoTrackTimeScale)
-            .WithAlignedAudio(videoPath == audioPath ? playbackSettings.AudioDuration : Option<TimeSpan>.None)
-            .WithNormalizeLoudness(playbackSettings.NormalizeLoudness);
-
-        playbackSettings.ScaledSize.Match(
-            scaledSize =>
-            {
-                builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
-                    .WithScaling(scaledSize);
-
-                if (NeedToPad(channel.FFmpegProfile.Resolution, scaledSize))
-                {
-                    builder = builder.WithBlackBars(channel.FFmpegProfile.Resolution);
-                }
-
-                builder = builder
-                    .WithFilterComplex(
-                        videoStream,
-                        maybeAudioStream,
-                        videoPath,
-                        audioPath,
-                        channel.FFmpegProfile.VideoCodec);
-            },
-            () =>
-            {
-                if (playbackSettings.PadToDesiredResolution)
-                {
-                    builder = builder
-                        .WithDeinterlace(playbackSettings.Deinterlace)
-                        .WithBlackBars(channel.FFmpegProfile.Resolution)
-                        .WithFilterComplex(
-                            videoStream,
-                            maybeAudioStream,
-                            videoPath,
-                            audioPath,
-                            channel.FFmpegProfile.VideoCodec);
-                }
-                else if (playbackSettings.Deinterlace)
-                {
-                    builder = builder.WithDeinterlace(playbackSettings.Deinterlace)
-                        .WithAlignedAudio(playbackSettings.AudioDuration)
-                        .WithFilterComplex(
-                            videoStream,
-                            maybeAudioStream,
-                            videoPath,
-                            audioPath,
-                            channel.FFmpegProfile.VideoCodec);
-                }
-                else
-                {
-                    builder = builder
-                        .WithFilterComplex(
-                            videoStream,
-                            maybeAudioStream,
-                            videoPath,
-                            audioPath,
-                            channel.FFmpegProfile.VideoCodec);
-                }
-            });
-
-        builder = builder.WithPlaybackArgs(playbackSettings)
-            .WithMetadata(channel, maybeAudioStream)
-            .WithDuration(finish - now);
-
-        return channel.StreamingMode switch
-        {
-            // HLS needs to segment and generate playlist
-            StreamingMode.HttpLiveStreamingSegmenter => builder.WithHls(
-                    channel.Number,
-                    videoVersion,
-                    ptsOffset,
-                    playbackSettings.VideoTrackTimeScale,
-                    playbackSettings.FrameRate)
-                .Build(),
-            _ => builder.WithFormat("mpegts").WithInitialDiscontinuity().WithPipe().Build()
-        };
+        throw new NotSupportedException();
     }
 
     public async Task<Process> ForError(
@@ -225,6 +88,19 @@ public class FFmpegProcessService : IFFmpegProcessService
         var videoStream = new MediaStream { Index = 0 };
         var audioStream = new MediaStream { Index = 0 };
 
+        string videoCodec = playbackSettings.VideoFormat switch
+        {
+            FFmpegProfileVideoFormat.Hevc => "libx265",
+            FFmpegProfileVideoFormat.Mpeg2Video => "mpeg2video",
+            _ => "libx264"
+        };
+
+        string audioCodec = playbackSettings.AudioFormat switch
+        {
+            FFmpegProfileAudioFormat.Ac3 => "ac3",
+            _ => "aac"
+        };
+
         FFmpegProcessBuilder builder = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
             .WithThreads(1)
             .WithQuiet()
@@ -239,9 +115,9 @@ public class FFmpegProcessService : IFFmpegProcessService
                 audioStream,
                 Path.Combine(FileSystemLayout.ResourcesCacheFolder, "background.png"),
                 "fake-audio-path",
-                playbackSettings.VideoCodec)
+                playbackSettings.VideoFormat)
             .WithPixfmt("yuv420p")
-            .WithPlaybackArgs(playbackSettings)
+            .WithPlaybackArgs(playbackSettings, videoCodec, audioCodec)
             .WithMetadata(channel, None);
 
         await duration.IfSomeAsync(d => builder = builder.WithDuration(d));
@@ -266,19 +142,7 @@ public class FFmpegProcessService : IFFmpegProcessService
 
     public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
     {
-        FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
-
-        return new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
-            .WithThreads(1)
-            .WithQuiet()
-            .WithFormatFlags(playbackSettings.FormatFlags)
-            .WithRealtimeOutput(playbackSettings.RealtimeOutput)
-            .WithInfiniteLoop()
-            .WithConcat($"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}")
-            .WithMetadata(channel, None)
-            .WithFormat("mpegts")
-            .WithPipe()
-            .Build();
+        throw new NotSupportedException();
     }
 
     public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
@@ -398,7 +262,7 @@ public class FFmpegProcessService : IFFmpegProcessService
                     None,
                     videoPath,
                     None,
-                    playbackSettings.VideoCodec)
+                    playbackSettings.VideoFormat)
                 .WithOutputFormat("apng", outputFile)
                 .Build();
 
