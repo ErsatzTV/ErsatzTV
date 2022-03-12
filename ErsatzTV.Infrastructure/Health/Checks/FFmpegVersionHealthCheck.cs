@@ -16,7 +16,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
         _configElementRepository = configElementRepository;
     }
 
-    public async Task<HealthCheckResult> Check()
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
         Option<ConfigElement> maybeFFmpegPath = await _configElementRepository.Get(ConfigElementKey.FFmpegPath);
         if (maybeFFmpegPath.IsNone)
@@ -29,9 +29,10 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
         {
             return FailResult("Unable to locate ffprobe");
         }
+
         foreach (ConfigElement ffmpegPath in maybeFFmpegPath)
         {
-            Option<string> maybeVersion = await GetVersion(ffmpegPath.Value);
+            Option<string> maybeVersion = await GetVersion(ffmpegPath.Value, cancellationToken);
             if (maybeVersion.IsNone)
             {
                 return WarningResult("Unable to determine ffmpeg version");
@@ -48,7 +49,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
         foreach (ConfigElement ffprobePath in maybeFFprobePath)
         {
-            Option<string> maybeVersion = await GetVersion(ffprobePath.Value);
+            Option<string> maybeVersion = await GetVersion(ffprobePath.Value, cancellationToken);
             if (maybeVersion.IsNone)
             {
                 return WarningResult("Unable to determine ffprobe version");
@@ -65,7 +66,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
         return new HealthCheckResult("FFmpeg Version", HealthCheckStatus.Pass, string.Empty, None);
     }
-        
+
     private Option<HealthCheckResult> ValidateVersion(string version, string app)
     {
         if (version.StartsWith("3.") || version.StartsWith("4."))
@@ -82,9 +83,9 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
         return None;
     }
 
-    private static async Task<Option<string>> GetVersion(string path)
+    private static async Task<Option<string>> GetVersion(string path, CancellationToken cancellationToken)
     {
-        Option<string> maybeLine = await GetProcessOutput(path, new[] { "-version" })
+        Option<string> maybeLine = await GetProcessOutput(path, new[] { "-version" }, cancellationToken)
             .Map(s => s.Split("\n").HeadOrNone().Map(h => h.Trim()));
         foreach (string line in maybeLine)
         {

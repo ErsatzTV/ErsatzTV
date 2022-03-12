@@ -51,8 +51,16 @@ public class SchedulerService : BackgroundService
             int currentMinutes = DateTime.Now.TimeOfDay.Minutes;
             int toWait = currentMinutes < 30 ? 30 - currentMinutes : 60 - currentMinutes;
             _logger.LogDebug("Scheduler sleeping for {Minutes} minutes", toWait);
-            await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
-                
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+                // do nothing
+            }
+
             if (!cancellationToken.IsCancellationRequested)
             {
                 var roundedMinute = (int)(Math.Round(DateTime.Now.Minute / 5.0) * 5);

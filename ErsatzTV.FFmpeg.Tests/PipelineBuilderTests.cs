@@ -93,6 +93,68 @@ public class PipelineGeneratorTests
             "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -f concat -safe 0 -protocol_whitelist file,http,tcp,https,tcp,tls -probesize 32 -re -stream_loop -1 -i http://localhost:8080/ffmpeg/concat/1 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c copy -map_metadata -1 -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
+    [Test]
+    public void HlsDirect_Test()
+    {
+        var videoInputFile = new VideoInputFile(
+            "/tmp/whatever.mkv",
+            new List<VideoStream>
+                { new(0, VideoFormat.H264, new PixelFormatYuv420P(), new FrameSize(1920, 1080), "24", false) });
+
+        var audioInputFile = new AudioInputFile(
+            "/tmp/whatever.mkv",
+            new List<AudioStream> { new(1, AudioFormat.Aac, 2) },
+            new AudioState(
+                AudioFormat.Copy,
+                None,
+                None,
+                None,
+                None,
+                None,
+                false));
+
+        var desiredState = new FrameState(
+            true,
+            false,
+            VideoFormat.Copy,
+            new PixelFormatYuv420P(),
+            new FrameSize(1920, 1080),
+            new FrameSize(1920, 1080),
+            Option<int>.None,
+            2000,
+            4000,
+            90_000,
+            false);
+
+        var ffmpegState = new FFmpegState(
+            false,
+            HardwareAccelerationMode.None,
+            Option<string>.None,
+            Option<string>.None,
+            Option<TimeSpan>.None,
+            Option<TimeSpan>.None,
+            false,
+            Option<string>.None,
+            Option<string>.None,
+            Option<string>.None,
+            OutputFormatKind.MpegTs,
+            Option<string>.None,
+            Option<string>.None,
+            0);
+
+        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, "", _logger);
+        FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
+
+        result.PipelineSteps.Should().HaveCountGreaterThan(0);
+        result.PipelineSteps.Should().Contain(ps => ps is EncoderCopyVideo);
+        result.PipelineSteps.Should().Contain(ps => ps is EncoderCopyAudio);
+
+        string command = PrintCommand(videoInputFile, audioInputFile, None, None, result);
+
+        command.Should().Be(
+            "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
+    }
+
     private static string PrintCommand(
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,

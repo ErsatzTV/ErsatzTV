@@ -64,9 +64,11 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
     public async Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
-        decimal progressMax)
+        decimal progressMax,
+        CancellationToken cancellationToken)
     {
         decimal progressSpread = progressMax - progressMin;
 
@@ -84,18 +86,20 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             Either<BaseError, MediaItemScanResult<Show>> maybeShow =
                 await FindOrCreateShow(libraryPath.Id, showFolder)
                     .BindT(show => UpdateMetadataForShow(show, showFolder))
-                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Poster))
-                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt))
-                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Thumbnail));
+                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Poster, cancellationToken))
+                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt, cancellationToken))
+                    .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Thumbnail, cancellationToken));
 
             await maybeShow.Match(
                 async result =>
                 {
                     await ScanSeasons(
                         libraryPath,
+                        ffmpegPath,
                         ffprobePath,
                         result.Item,
-                        showFolder);
+                        showFolder,
+                        cancellationToken);
 
                     if (result.IsAdded)
                     {
@@ -154,9 +158,11 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
     private async Task<Unit> ScanSeasons(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         Show show,
-        string showFolder)
+        string showFolder,
+        CancellationToken cancellationToken)
     {
         foreach (string seasonFolder in _localFileSystem.ListSubdirectories(showFolder).Filter(ShouldIncludeFolder)
                      .OrderBy(identity))
@@ -179,12 +185,12 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     Either<BaseError, Season> maybeSeason = await _televisionRepository
                         .GetOrAddSeason(show, libraryPath.Id, seasonNumber)
                         .BindT(EnsureMetadataExists)
-                        .BindT(season => UpdatePoster(season, seasonFolder));
+                        .BindT(season => UpdatePoster(season, seasonFolder, cancellationToken));
 
                     await maybeSeason.Match(
                         async season =>
                         {
-                            await ScanEpisodes(libraryPath, ffprobePath, season, seasonFolder);
+                            await ScanEpisodes(libraryPath, ffmpegPath, ffprobePath, season, seasonFolder, cancellationToken);
                             await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
 
                             season.Show = show;
@@ -206,9 +212,11 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
     private async Task<Unit> ScanEpisodes(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         Season season,
-        string seasonPath)
+        string seasonPath,
+        CancellationToken cancellationToken)
     {
         var allSeasonFiles = _localFileSystem.ListSubdirectories(seasonPath)
             .Map(_localFileSystem.ListFiles)
@@ -225,10 +233,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             Either<BaseError, Episode> maybeEpisode = await _televisionRepository
                 .GetOrAddEpisode(season, libraryPath, file)
                 .BindT(
-                    episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffprobePath)
+                    episode => UpdateStatistics(new MediaItemScanResult<Episode>(episode), ffmpegPath, ffprobePath)
                         .MapT(_ => episode))
                 .BindT(UpdateMetadata)
-                .BindT(UpdateThumbnail)
+                .BindT(e => UpdateThumbnail(e, cancellationToken))
                 .BindT(e => FlagNormal(new MediaItemScanResult<Episode>(e)))
                 .MapT(r => r.Item);
 
@@ -359,7 +367,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private async Task<Either<BaseError, MediaItemScanResult<Show>>> UpdateArtworkForShow(
         MediaItemScanResult<Show> result,
         string showFolder,
-        ArtworkKind artworkKind)
+        ArtworkKind artworkKind,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -368,7 +377,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 async artworkFile =>
                 {
                     ShowMetadata metadata = show.ShowMetadata.Head();
-                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None);
+                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
                 });
 
             return result;
@@ -380,7 +389,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
     }
 
-    private async Task<Either<BaseError, Season>> UpdatePoster(Season season, string seasonFolder)
+    private async Task<Either<BaseError, Season>> UpdatePoster(Season season, string seasonFolder, CancellationToken cancellationToken)
     {
         try
         {
@@ -388,7 +397,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 async posterFile =>
                 {
                     SeasonMetadata metadata = season.SeasonMetadata.Head();
-                    await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None);
+                    await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None, cancellationToken);
                 });
 
             return season;
@@ -400,7 +409,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
     }
 
-    private async Task<Either<BaseError, Episode>> UpdateThumbnail(Episode episode)
+    private async Task<Either<BaseError, Episode>> UpdateThumbnail(Episode episode, CancellationToken cancellationToken)
     {
         try
         {
@@ -409,7 +418,13 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 {
                     foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
                     {
-                        await RefreshArtwork(posterFile, metadata, ArtworkKind.Thumbnail, None, None);
+                        await RefreshArtwork(
+                            posterFile,
+                            metadata,
+                            ArtworkKind.Thumbnail,
+                            None,
+                            None,
+                            cancellationToken);
                     }
                 });
 

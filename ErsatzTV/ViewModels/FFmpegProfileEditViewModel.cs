@@ -16,7 +16,7 @@ public class FFmpegProfileEditViewModel
         AudioBitrate = viewModel.AudioBitrate;
         AudioBufferSize = viewModel.AudioBufferSize;
         AudioChannels = viewModel.AudioChannels;
-        AudioCodec = viewModel.AudioCodec;
+        AudioFormat = viewModel.AudioFormat;
         AudioSampleRate = viewModel.AudioSampleRate;
         NormalizeLoudness = viewModel.NormalizeLoudness;
         Id = viewModel.Id;
@@ -32,13 +32,13 @@ public class FFmpegProfileEditViewModel
         VaapiDevice = viewModel.VaapiDevice;
         VideoBitrate = viewModel.VideoBitrate;
         VideoBufferSize = viewModel.VideoBufferSize;
-        VideoCodec = viewModel.VideoCodec;
+        VideoFormat = viewModel.VideoFormat;
     }
 
     public int AudioBitrate { get; set; }
     public int AudioBufferSize { get; set; }
     public int AudioChannels { get; set; }
-    public string AudioCodec { get; set; }
+    public FFmpegProfileAudioFormat AudioFormat { get; set; }
     public int AudioSampleRate { get; set; }
     public bool NormalizeLoudness { get; set; }
     public int Id { get; set; }
@@ -54,7 +54,7 @@ public class FFmpegProfileEditViewModel
     public string VaapiDevice { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
-    public string VideoCodec { get; set; }
+    public FFmpegProfileVideoFormat VideoFormat { get; set; }
 
     public CreateFFmpegProfile ToCreate() =>
         new(
@@ -66,10 +66,10 @@ public class FFmpegProfileEditViewModel
             VaapiDevice,
             Resolution.Id,
             NormalizeVideo,
-            VideoCodec,
+            VideoFormat,
             VideoBitrate,
             VideoBufferSize,
-            AudioCodec,
+            AudioFormat,
             AudioBitrate,
             AudioBufferSize,
             NormalizeLoudness,
@@ -90,10 +90,10 @@ public class FFmpegProfileEditViewModel
             VaapiDevice,
             Resolution.Id,
             NormalizeVideo,
-            VideoCodec,
+            VideoFormat,
             VideoBitrate,
             VideoBufferSize,
-            AudioCodec,
+            AudioFormat,
             AudioBitrate,
             AudioBufferSize,
             NormalizeLoudness,

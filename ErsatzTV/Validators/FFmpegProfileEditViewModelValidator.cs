@@ -6,10 +6,31 @@ namespace ErsatzTV.Validators;
 
 public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfileEditViewModel>
 {
-    private static readonly List<string> QsvEncoders = new() { "h264_qsv", "hevc_qsv", "mpeg2_qsv" };
-    private static readonly List<string> NvencEncoders = new() { "h264_nvenc", "hevc_nvenc" };
-    private static readonly List<string> VaapiEncoders = new() { "h264_vaapi", "hevc_vaapi", "mpeg2_vaapi" };
-    private static readonly List<string> VideoToolboxEncoders = new() { "h264_videotoolbox", "hevc_videotoolbox" };
+    private static readonly List<FFmpegProfileVideoFormat> QsvFormats = new()
+    {
+        FFmpegProfileVideoFormat.H264,
+        FFmpegProfileVideoFormat.Hevc,
+        FFmpegProfileVideoFormat.Mpeg2Video
+    };
+
+    private static readonly List<FFmpegProfileVideoFormat> NvencFormats = new()
+    {
+        FFmpegProfileVideoFormat.H264,
+        FFmpegProfileVideoFormat.Hevc
+    };
+
+    private static readonly List<FFmpegProfileVideoFormat> VaapiFormats = new()
+    {
+        FFmpegProfileVideoFormat.H264,
+        FFmpegProfileVideoFormat.Hevc,
+        FFmpegProfileVideoFormat.Mpeg2Video
+    };
+
+    private static readonly List<FFmpegProfileVideoFormat> VideoToolboxFormats = new()
+    {
+        FFmpegProfileVideoFormat.H264,
+        FFmpegProfileVideoFormat.Hevc
+    };
 
     public FFmpegProfileEditViewModelValidator()
     {
@@ -20,11 +41,11 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
             x => x.Transcode,
             () =>
             {
-                RuleFor(x => x.VideoCodec).NotEmpty();
+                RuleFor(x => x.VideoFormat).NotEqual(FFmpegProfileVideoFormat.None);
                 RuleFor(x => x.VideoBitrate).GreaterThan(0);
                 RuleFor(x => x.VideoBufferSize).GreaterThan(0);
 
-                RuleFor(x => x.AudioCodec).NotEmpty();
+                RuleFor(x => x.AudioFormat).NotEqual(FFmpegProfileAudioFormat.None);
                 RuleFor(x => x.AudioBitrate).GreaterThan(0);
                 RuleFor(x => x.AudioChannels).GreaterThan(0);
             });
@@ -33,42 +54,32 @@ public class FFmpegProfileEditViewModelValidator : AbstractValidator<FFmpegProfi
             x => x.HardwareAcceleration == HardwareAccelerationKind.Qsv,
             () =>
             {
-                RuleFor(x => x.VideoCodec).Must(c => QsvEncoders.Contains(c))
-                    .WithMessage("QSV codec is required (h264_qsv, hevc_qsv, mpeg2_qsv)");
+                RuleFor(x => x.VideoFormat).Must(c => QsvFormats.Contains(c))
+                    .WithMessage("QSV supports formats (h264, hevc, mpeg2video)");
             });
 
         When(
             x => x.HardwareAcceleration == HardwareAccelerationKind.Nvenc,
             () =>
             {
-                RuleFor(x => x.VideoCodec).Must(c => NvencEncoders.Contains(c))
-                    .WithMessage("NVENC codec is required (h264_nvenc, hevc_nvenc)");
+                RuleFor(x => x.VideoFormat).Must(c => NvencFormats.Contains(c))
+                    .WithMessage("NVENC supports formats (h264, hevc)");
             });
 
         When(
             x => x.HardwareAcceleration == HardwareAccelerationKind.Vaapi,
             () =>
             {
-                RuleFor(x => x.VideoCodec).Must(c => VaapiEncoders.Contains(c))
-                    .WithMessage("VAAPI codec is required (h264_vaapi, hevc_vaapi, mpeg2_vaapi)");
+                RuleFor(x => x.VideoFormat).Must(c => VaapiFormats.Contains(c))
+                    .WithMessage("VAAPI supports formats (h264, hevc, mpeg2video)");
             });
 
         When(
             x => x.HardwareAcceleration == HardwareAccelerationKind.VideoToolbox,
             () =>
             {
-                RuleFor(x => x.VideoCodec).Must(c => VideoToolboxEncoders.Contains(c))
-                    .WithMessage("VideoToolbox codec is required (h264_videotoolbox, hevc_videotoolbox)");
-            });
-
-        When(
-            x => x.HardwareAcceleration == HardwareAccelerationKind.None,
-            () =>
-            {
-                RuleFor(x => x.VideoCodec).Must(
-                        c => !QsvEncoders.Contains(c) && !NvencEncoders.Contains(c) && !VaapiEncoders.Contains(c) &&
-                             !VideoToolboxEncoders.Contains(c))
-                    .WithMessage("Hardware acceleration is required for this codec");
+                RuleFor(x => x.VideoFormat).Must(c => VideoToolboxFormats.Contains(c))
+                    .WithMessage("VideoToolbox supports formats (h264, hevc)");
             });
     }
 }

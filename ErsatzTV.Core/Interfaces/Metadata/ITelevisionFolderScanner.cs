@@ -6,7 +6,9 @@ public interface ITelevisionFolderScanner
 {
     Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
-        decimal progressMax);
+        decimal progressMax,
+        CancellationToken cancellationToken);
 }

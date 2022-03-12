@@ -8,5 +8,6 @@ public interface IJellyfinMovieLibraryScanner
         string address,
         string apiKey,
         JellyfinLibrary library,
+        string ffmpegPath,
         string ffprobePath);
 }

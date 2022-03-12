@@ -40,14 +40,21 @@
                     @context.Resolution.Name
                 </MudText>
             </MudTd>
-            <MudTd DataLabel="Video Codec">
+            <MudTd DataLabel="Video Format">
                 <MudText Color="@(context.Transcode && context.NormalizeVideo ? Color.Tertiary : Color.Inherit)">
-                    @context.VideoCodec
+                    @if (context.HardwareAcceleration != HardwareAccelerationKind.None)
+                    {
+                        @($"{context.VideoFormat.ToString().ToLowerInvariant()} / {context.HardwareAcceleration.ToString().ToLowerInvariant()}")
+                    }
+                    else
+                    {
+                        @context.VideoFormat.ToString().ToLowerInvariant()
+                    }
                 </MudText>
             </MudTd>
-            <MudTd DataLabel="Audio Codec">
+            <MudTd DataLabel="Audio Format">
                 <MudText Color="@(context.Transcode && context.NormalizeAudio ? Color.Tertiary : Color.Inherit)">
-                    @context.AudioCodec
+                    @context.AudioFormat.ToString().ToLowerInvariant()
                 </MudText>
             </MudTd>
             <MudTd>

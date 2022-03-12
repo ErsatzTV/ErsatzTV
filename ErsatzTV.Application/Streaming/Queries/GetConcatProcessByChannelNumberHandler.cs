@@ -25,7 +25,8 @@ public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetCo
         TvContext dbContext,
         GetConcatProcessByChannelNumber request,
         Channel channel,
-        string ffmpegPath)
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         bool saveReports = await dbContext.ConfigElements
             .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)

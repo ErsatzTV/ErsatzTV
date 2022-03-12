@@ -26,60 +26,67 @@ public class EmbyService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        if (!File.Exists(FileSystemLayout.EmbySecretsPath))
+        try
         {
-            await File.WriteAllTextAsync(FileSystemLayout.EmbySecretsPath, "{}", cancellationToken);
-        }
-
-        _logger.LogInformation(
-            "Emby service started; secrets are at {EmbySecretsPath}",
-            FileSystemLayout.EmbySecretsPath);
-
-        // synchronize sources on startup
-        await SynchronizeSources(new SynchronizeEmbyMediaSources(), cancellationToken);
-
-        await foreach (IEmbyBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
-        {
-            try
+            if (!File.Exists(FileSystemLayout.EmbySecretsPath))
             {
-                Task requestTask;
-                switch (request)
-                {
-                    case SynchronizeEmbyMediaSources synchronizeEmbyMediaSources:
-                        requestTask = SynchronizeSources(synchronizeEmbyMediaSources, cancellationToken);
-                        break;
-                    // case SynchronizeEmbyAdminUserId synchronizeEmbyAdminUserId:
-                    //     requestTask = SynchronizeAdminUserId(synchronizeEmbyAdminUserId, cancellationToken);
-                    //     break;
-                    case SynchronizeEmbyLibraries synchronizeEmbyLibraries:
-                        requestTask = SynchronizeLibraries(synchronizeEmbyLibraries, cancellationToken);
-                        break;
-                    case ISynchronizeEmbyLibraryById synchronizeEmbyLibraryById:
-                        requestTask = SynchronizeEmbyLibrary(synchronizeEmbyLibraryById, cancellationToken);
-                        break;
-                    default:
-                        throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
-                }
-
-                await requestTask;
+                await File.WriteAllTextAsync(FileSystemLayout.EmbySecretsPath, "{}", cancellationToken);
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Failed to process Emby background service request");
 
+            _logger.LogInformation(
+                "Emby service started; secrets are at {EmbySecretsPath}",
+                FileSystemLayout.EmbySecretsPath);
+
+            // synchronize sources on startup
+            await SynchronizeSources(new SynchronizeEmbyMediaSources(), cancellationToken);
+
+            await foreach (IEmbyBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
+            {
                 try
                 {
-                    using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                    Task requestTask;
+                    switch (request)
                     {
-                        IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
-                        client.Notify(ex);
+                        case SynchronizeEmbyMediaSources synchronizeEmbyMediaSources:
+                            requestTask = SynchronizeSources(synchronizeEmbyMediaSources, cancellationToken);
+                            break;
+                        // case SynchronizeEmbyAdminUserId synchronizeEmbyAdminUserId:
+                        //     requestTask = SynchronizeAdminUserId(synchronizeEmbyAdminUserId, cancellationToken);
+                        //     break;
+                        case SynchronizeEmbyLibraries synchronizeEmbyLibraries:
+                            requestTask = SynchronizeLibraries(synchronizeEmbyLibraries, cancellationToken);
+                            break;
+                        case ISynchronizeEmbyLibraryById synchronizeEmbyLibraryById:
+                            requestTask = SynchronizeEmbyLibrary(synchronizeEmbyLibraryById, cancellationToken);
+                            break;
+                        default:
+                            throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
+                    }
+
+                    await requestTask;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to process Emby background service request");
+
+                    try
+                    {
+                        using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                        {
+                            IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                            client.Notify(ex);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // do nothing
                     }
                 }
-                catch (Exception)
-                {
-                    // do nothing
-                }
             }
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogInformation("Emby service shutting down");
         }
     }
 

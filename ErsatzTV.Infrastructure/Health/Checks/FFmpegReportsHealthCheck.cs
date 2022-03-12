@@ -12,7 +12,7 @@ public class FFmpegReportsHealthCheck : BaseHealthCheck, IFFmpegReportsHealthChe
     public FFmpegReportsHealthCheck(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
 
-    public async Task<HealthCheckResult> Check()
+    public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
         Option<bool> saveReports =
             await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);

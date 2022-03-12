@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text;
+using System.Text.RegularExpressions;
 using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -30,12 +31,12 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
         _logger = logger;
     }
 
-    public async Task<Either<BaseError, bool>> RefreshStatistics(string ffprobePath, MediaItem mediaItem)
+    public async Task<Either<BaseError, bool>> RefreshStatistics(string ffmpegPath, string ffprobePath, MediaItem mediaItem)
     {
         try
         {
             string filePath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
-            return await RefreshStatistics(ffprobePath, mediaItem, filePath);
+            return await RefreshStatistics(ffmpegPath, ffprobePath, mediaItem, filePath);
         }
         catch (Exception ex)
         {
@@ -46,6 +47,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
     }
 
     public async Task<Either<BaseError, bool>> RefreshStatistics(
+        string ffmpegPath,
         string ffprobePath,
         MediaItem mediaItem,
         string mediaItemPath)
@@ -57,6 +59,11 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                 async ffprobe =>
                 {
                     MediaVersion version = ProjectToMediaVersion(mediaItemPath, ffprobe);
+                    if (version.Duration.TotalSeconds < 1)
+                    {
+                        await AnalyzeDuration(ffmpegPath, mediaItemPath, version);
+                    }
+
                     bool result = await ApplyVersionUpdate(mediaItem, version, mediaItemPath);
                     return Right<BaseError, bool>(result);
                 },
@@ -185,6 +192,67 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
             });
     }
 
+    private async Task AnalyzeDuration(string ffmpegPath, string path, MediaVersion version)
+    {
+        try
+        {
+            _logger.LogInformation(
+                "Media item at {Path} is missing duration metadata and requires additional analysis",
+                path);
+
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = ffmpegPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
+            };
+
+            startInfo.ArgumentList.Add("-i");
+            startInfo.ArgumentList.Add(path);
+            startInfo.ArgumentList.Add("-f");
+            startInfo.ArgumentList.Add("null");
+            startInfo.ArgumentList.Add("-");
+
+            var probe = new Process
+            {
+                StartInfo = startInfo
+            };
+
+            probe.Start();
+            string output = await probe.StandardError.ReadToEndAsync();
+            await probe.WaitForExitAsync();
+            if (probe.ExitCode == 0)
+            {
+                const string PATTERN = @"time=([^ ]+)";
+                IEnumerable<string> reversed = output.Split("\n").Reverse();
+                foreach (string line in reversed)
+                {
+                    Match match = Regex.Match(line, PATTERN);
+                    if (match.Success)
+                    {
+                        string time = match.Groups[1].Value;
+                        var duration = TimeSpan.Parse(time, NumberFormatInfo.InvariantInfo);
+                        _logger.LogInformation("Analyzed duration is {Duration}", duration);
+                        version.Duration = duration;
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                _logger.LogError("Duration analysis failed for media item at {Path}", path);
+            }
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            _logger.LogError("Duration analysis failed for media item at {Path}", path);
+        }
+    }
+
     internal MediaVersion ProjectToMediaVersion(string path, FFprobe probeOutput) =>
         Optional(probeOutput)
             .Filter(json => json?.format != null && json.streams != null)
@@ -210,13 +278,13 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         var seconds = TimeSpan.FromSeconds(duration);
                         version.Duration = seconds;
                     }
-                    else
-                    {
-                        _logger.LogWarning(
-                            "Media item at {Path} has a missing or invalid duration {Duration} and will cause scheduling issues",
-                            path,
-                            json.format.duration);
-                    }
+                    // else
+                    // {
+                    //     _logger.LogWarning(
+                    //         "Media item at {Path} has a missing or invalid duration {Duration} and will cause scheduling issues",
+                    //         path,
+                    //         json.format.duration);
+                    // }
 
                     foreach (FFprobeStream audioStream in json.streams.Filter(s => s.codec_type == "audio"))
                     {

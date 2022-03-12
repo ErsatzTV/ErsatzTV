@@ -25,7 +25,8 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
         TvContext dbContext,
         GetWrappedProcessByChannelNumber request,
         Channel channel,
-        string ffmpegPath)
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         bool saveReports = await dbContext.ConfigElements
             .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)

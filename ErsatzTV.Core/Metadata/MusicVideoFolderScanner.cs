@@ -65,9 +65,11 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
     public async Task<Either<BaseError, Unit>> ScanFolder(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         decimal progressMin,
-        decimal progressMax)
+        decimal progressMax,
+        CancellationToken cancellationToken)
     {
         decimal progressSpread = progressMax - progressMin;
 
@@ -87,17 +89,19 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             Either<BaseError, MediaItemScanResult<Artist>> maybeArtist =
                 await FindOrCreateArtist(libraryPath.Id, artistFolder)
                     .BindT(artist => UpdateMetadataForArtist(artist, artistFolder))
-                    .BindT(artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.Thumbnail))
-                    .BindT(artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.FanArt));
+                    .BindT(artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.Thumbnail, cancellationToken))
+                    .BindT(artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.FanArt, cancellationToken));
 
             await maybeArtist.Match(
                 async result =>
                 {
                     await ScanMusicVideos(
                         libraryPath,
+                        ffmpegPath,
                         ffprobePath,
                         result.Item,
-                        artistFolder);
+                        artistFolder,
+                        cancellationToken);
 
                     if (result.IsAdded)
                     {
@@ -210,7 +214,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private async Task<Either<BaseError, MediaItemScanResult<Artist>>> UpdateArtworkForArtist(
         MediaItemScanResult<Artist> result,
         string artistFolder,
-        ArtworkKind artworkKind)
+        ArtworkKind artworkKind,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -219,7 +224,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 async artworkFile =>
                 {
                     ArtistMetadata metadata = artist.ArtistMetadata.Head();
-                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None);
+                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
                 });
 
             return result;
@@ -233,9 +238,11 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
 
     private async Task ScanMusicVideos(
         LibraryPath libraryPath,
+        string ffmpegPath,
         string ffprobePath,
         Artist artist,
-        string artistFolder)
+        string artistFolder,
+        CancellationToken cancellationToken)
     {
         var folderQueue = new Queue<string>();
         folderQueue.Enqueue(artistFolder);
@@ -272,9 +279,9 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 // TODO: figure out how to rebuild playouts
                 Either<BaseError, MediaItemScanResult<MusicVideo>> maybeMusicVideo = await _musicVideoRepository
                     .GetOrAdd(artist, libraryPath, file)
-                    .BindT(musicVideo => UpdateStatistics(musicVideo, ffprobePath))
+                    .BindT(musicVideo => UpdateStatistics(musicVideo, ffmpegPath, ffprobePath))
                     .BindT(UpdateMetadata)
-                    .BindT(UpdateThumbnail)
+                    .BindT(result => UpdateThumbnail(result, cancellationToken))
                     .BindT(FlagNormal);
 
                 await maybeMusicVideo.Match(
@@ -376,7 +383,8 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateThumbnail(
-        MediaItemScanResult<MusicVideo> result)
+        MediaItemScanResult<MusicVideo> result,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -385,7 +393,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 async thumbnailFile =>
                 {
                     MusicVideoMetadata metadata = musicVideo.MusicVideoMetadata.Head();
-                    await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None);
+                    await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
                 });
 
             return result;

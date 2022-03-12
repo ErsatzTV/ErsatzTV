@@ -85,9 +85,17 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                         playbackSettings.StreamSeek,
                         wm.FrequencyMinutes,
                         wm.DurationSeconds));
+
+        string audioFormat = playbackSettings.AudioFormat switch
+        {
+            FFmpegProfileAudioFormat.Aac => AudioFormat.Aac,
+            FFmpegProfileAudioFormat.Ac3 => AudioFormat.Ac3,
+            FFmpegProfileAudioFormat.Copy => AudioFormat.Copy,
+            _ => throw new ArgumentOutOfRangeException($"unexpected audio format {playbackSettings.VideoFormat}")
+        };
         
         var audioState = new AudioState(
-            playbackSettings.AudioCodec,
+            audioFormat,
             playbackSettings.AudioChannels,
             playbackSettings.AudioBitrate,
             playbackSettings.AudioBufferSize,
@@ -114,14 +122,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         var watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
         
-        // TODO: need formats for these codecs
-        string videoFormat = playbackSettings.VideoCodec switch
+        string videoFormat = playbackSettings.VideoFormat switch
         {
-            "libx265" or "hevc_nvenc" or "hevc_qsv" or "hevc_vaapi" or "hevc_videotoolbox" => VideoFormat.Hevc,
-            "libx264" or "h264_nvenc" or "h264_qsv" or "h264_vaapi" or "h264_videotoolbox" => VideoFormat.H264,
-            "mpeg2video" => VideoFormat.Mpeg2Video,
-            "copy" => VideoFormat.Copy,
-            _ => throw new ArgumentOutOfRangeException($"unexpected video codec {playbackSettings.VideoCodec}")
+            FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
+            FFmpegProfileVideoFormat.H264 => VideoFormat.H264,
+            FFmpegProfileVideoFormat.Mpeg2Video => VideoFormat.Mpeg2Video,
+            FFmpegProfileVideoFormat.Copy => VideoFormat.Copy,
+            _ => throw new ArgumentOutOfRangeException($"unexpected video format {playbackSettings.VideoFormat}")
         };
 
         HardwareAccelerationMode hwAccel = playbackSettings.HardwareAcceleration switch
@@ -301,7 +308,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         WatermarkLocation watermarkLocation,
         int horizontalMarginPercent,
         int verticalMarginPercent,
-        int watermarkWidthPercent) =>
+        int watermarkWidthPercent,
+        CancellationToken cancellationToken) =>
         _ffmpegProcessService.GenerateSongImage(
             ffmpegPath,
             subtitleFile,
@@ -314,7 +322,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkLocation,
             horizontalMarginPercent,
             verticalMarginPercent,
-            watermarkWidthPercent);
+            watermarkWidthPercent,
+            cancellationToken);
 
     private Process GetProcess(
         string ffmpegPath,
@@ -389,6 +398,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     return "iHD";
                 case VaapiDriver.RadeonSI:
                     return "radeonsi";
+                case VaapiDriver.Nouveau:
+                    return "nouveau";
             }
         }
         

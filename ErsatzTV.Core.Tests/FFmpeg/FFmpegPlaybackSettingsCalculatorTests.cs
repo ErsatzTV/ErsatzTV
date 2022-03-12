@@ -445,14 +445,14 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetDesiredVideoCodec_When_ContentIsPadded_ForTransportStream()
+        public void Should_SetDesiredVideoFormat_When_ContentIsPadded_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
                 Transcode = true,
                 NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
-                VideoCodec = "testCodec"
+                VideoFormat = FFmpegProfileVideoFormat.H264
             };
 
             // not anamorphic
@@ -473,19 +473,19 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             actual.ScaledSize.IsNone.Should().BeTrue();
             actual.PadToDesiredResolution.Should().BeTrue();
-            actual.VideoCodec.Should().Be("testCodec");
+            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.H264);
         }
 
         [Test]
         public void
-            Should_SetDesiredVideoCodec_When_ContentIsCorrectSize_And_NormalizingVideo_ForTransportStream()
+            Should_SetDesiredVideoFormat_When_ContentIsCorrectSize_And_NormalizingVideo_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
                 Transcode = true,
                 NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
-                VideoCodec = "testCodec"
+                VideoFormat = FFmpegProfileVideoFormat.H264
             };
 
             // not anamorphic
@@ -507,19 +507,19 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             actual.ScaledSize.IsNone.Should().BeTrue();
             actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoCodec.Should().Be("testCodec");
+            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.H264);
         }
 
         [Test]
         public void
-            Should_SetCopyVideoCodec_When_ContentIsCorrectSize_And_NormalizingVideo_ForHttpLiveStreaming()
+            Should_SetCopyVideoFormat_When_ContentIsCorrectSize_And_NormalizingVideo_ForHttpLiveStreaming()
         {
             var ffmpegProfile = new FFmpegProfile
             {
                 Transcode = true,
                 NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
-                VideoCodec = "testCodec"
+                VideoFormat = FFmpegProfileVideoFormat.H264
             };
 
             // not anamorphic
@@ -541,18 +541,18 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             actual.ScaledSize.IsNone.Should().BeTrue();
             actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoCodec.Should().Be("copy");
+            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.Copy);
         }
 
         [Test]
-        public void Should_SetCopyVideoCodec_When_ContentIsCorrectSize_And_CorrectCodec_ForTransportStream()
+        public void Should_NotSetCopyVideoFormat_When_ContentIsCorrectSize_And_CorrectFormat_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
                 Transcode = true,
                 NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
-                VideoCodec = "libx264"
+                VideoFormat = FFmpegProfileVideoFormat.H264
             };
 
             // not anamorphic
@@ -563,7 +563,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 StreamingMode.TransportStream,
                 ffmpegProfile,
                 version,
-                new MediaStream { Codec = "libx264" },
+                new MediaStream { Codec = "h264" },
                 new MediaStream(),
                 DateTimeOffset.Now,
                 DateTimeOffset.Now,
@@ -574,19 +574,19 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             actual.ScaledSize.IsNone.Should().BeTrue();
             actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoCodec.Should().Be("copy");
+            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.H264);
         }
 
         [Test]
         public void
-            Should_SetCopyVideoCodec_When_ContentIsCorrectSize_And_NotNormalizingVideo_ForTransportStream()
+            Should_SetCopyVideoFormat_When_ContentIsCorrectSize_And_NotNormalizingVideo_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
                 Transcode = true,
                 NormalizeVideo = false,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
-                VideoCodec = "libx264"
+                VideoFormat = FFmpegProfileVideoFormat.H264
             };
 
             // not anamorphic
@@ -608,12 +608,12 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             actual.ScaledSize.IsNone.Should().BeTrue();
             actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoCodec.Should().Be("copy");
+            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.Copy);
         }
             
         [Test]
         public void
-            Should_SetCopyVideoCodec_AndCopyAudioCodec_When_NotTranscoding_ForTransportStream()
+            Should_SetCopyVideoFormat_AndCopyAudioFormat_When_NotTranscoding_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
@@ -622,7 +622,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 NormalizeAudio = true,
                 NormalizeLoudness = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
-                VideoCodec = "libx264"
+                VideoFormat = FFmpegProfileVideoFormat.H264
             };
 
             // not anamorphic
@@ -644,9 +644,9 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
             actual.ScaledSize.IsNone.Should().BeTrue();
             actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoCodec.Should().Be("copy");
+            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.Copy);
             actual.NormalizeLoudness.Should().BeFalse();
-            actual.AudioCodec.Should().Be("copy");
+            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Copy);
         }
 
         [Test]
@@ -781,13 +781,13 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetDesiredAudioCodec_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+        public void Should_SetDesiredAudioFormat_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 Transcode = true,
                 NormalizeAudio = true,
-                AudioCodec = "aac"
+                AudioFormat = FFmpegProfileAudioFormat.Aac
             };
 
             var version = new MediaVersion();
@@ -805,16 +805,16 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioCodec.Should().Be("aac");
+            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Aac);
         }
 
         [Test]
-        public void Should_SetCopyAudioCodec_When_NotNormalizingAudio_ForTransportStream()
+        public void Should_SetCopyAudioFormat_When_NotNormalizingAudio_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 NormalizeAudio = false,
-                AudioCodec = "aac"
+                AudioFormat = FFmpegProfileAudioFormat.Aac
             };
 
             var version = new MediaVersion();
@@ -832,17 +832,17 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioCodec.Should().Be("copy");
+            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Copy);
         }
 
         [Test]
-        public void Should_SetDesiredAudioCodec_When_NormalizingAudio_ForTransportStream()
+        public void Should_SetDesiredAudioFormat_When_NormalizingAudio_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 Transcode = true,
                 NormalizeAudio = true,
-                AudioCodec = "aac"
+                AudioFormat = FFmpegProfileAudioFormat.Aac
             };
 
             var version = new MediaVersion();
@@ -860,17 +860,17 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioCodec.Should().Be("aac");
+            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Aac);
         }
 
         [Test]
-        public void Should_SetCopyAudioCodec_When_NormalizingAudio_ForHttpLiveStreaming()
+        public void Should_SetCopyAudioFormat_When_NormalizingAudio_ForHttpLiveStreaming()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 Transcode = true,
                 NormalizeAudio = true,
-                AudioCodec = "aac"
+                AudioFormat = FFmpegProfileAudioFormat.Aac
             };
 
             var version = new MediaVersion();
@@ -888,18 +888,18 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 false,
                 None);
 
-            actual.AudioCodec.Should().Be("copy");
+            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Copy);
         }
 
         [Test]
-        public void Should_SetAudioBitrate_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+        public void Should_SetAudioBitrate_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 Transcode = true,
                 NormalizeAudio = true,
                 AudioBitrate = 2424,
-                AudioCodec = "ac3"
+                AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
             var version = new MediaVersion();
@@ -921,14 +921,14 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioBufferSize_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+        public void Should_SetAudioBufferSize_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 Transcode = true,
                 NormalizeAudio = true,
                 AudioBufferSize = 2424,
-                AudioCodec = "ac3"
+                AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
             var version = new MediaVersion();
@@ -950,13 +950,13 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioChannels_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+        public void Should_SetAudioChannels_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 Transcode = true,
                 NormalizeAudio = true,
-                AudioCodec = "ac3",
+                AudioFormat = FFmpegProfileAudioFormat.Ac3,
                 AudioChannels = 6
             };
 
@@ -979,13 +979,13 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioSampleRate_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+        public void Should_SetAudioSampleRate_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 Transcode = true,
                 NormalizeAudio = true,
-                AudioCodec = "ac3",
+                AudioFormat = FFmpegProfileAudioFormat.Ac3,
                 AudioSampleRate = 48
             };
 
@@ -1064,14 +1064,14 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioDuration_When_NormalizingAudio_With_CorrectCodec_ForTransportStream()
+        public void Should_SetAudioDuration_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
                 Transcode = true,
                 NormalizeAudio = true,
                 AudioSampleRate = 48,
-                AudioCodec = "ac3"
+                AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
             var version = new MediaVersion { Duration = TimeSpan.FromMinutes(5) }; // not pulled from here

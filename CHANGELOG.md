@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.4-alpha] - 2022-03-10
+### Fixed
+- Fix `HLS Direct` streaming mode
+- Fix bug with `HLS Segmenter` (and `MPEG-TS`) on Windows that caused errors at program boundaries
+
+### Added
+- Perform additional duration analysis on files with missing duration metadata
+- Add `nouveau` VAAPI driver option
+
+### Changed
+- Change FFmpeg Profile video codec and audio codec text fields to select fields
+  - The appropriate video encoder will be determined based on the video format and hardware acceleration selections
+
 ## [0.4.3-alpha] - 2022-03-05
 ### Fixed
 - Fix song sorting with `Chronological` and `Shuffle In Order` playback orders
@@ -1008,7 +1021,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.3-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...HEAD
+[0.4.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.3-alpha...v0.4.4-alpha
 [0.4.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.2-alpha...v0.4.3-alpha
 [0.4.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.1-alpha...v0.4.2-alpha
 [0.4.1-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.0-alpha...v0.4.1-alpha

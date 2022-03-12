@@ -13,11 +13,11 @@ public record FFmpegProfile
     public string VaapiDevice { get; set; }
     public int ResolutionId { get; set; }
     public Resolution Resolution { get; set; }
-    public string VideoCodec { get; set; }
+    public FFmpegProfileVideoFormat VideoFormat { get; set; }
     public bool NormalizeVideo { get; set; }
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
-    public string AudioCodec { get; set; }
+    public FFmpegProfileAudioFormat AudioFormat { get; set; }
     public int AudioBitrate { get; set; }
     public int AudioBufferSize { get; set; }
     public bool NormalizeLoudness { get; set; }
@@ -34,8 +34,8 @@ public record FFmpegProfile
             Transcode = true,
             ResolutionId = resolution.Id,
             Resolution = resolution,
-            VideoCodec = "libx264",
-            AudioCodec = "ac3",
+            VideoFormat = FFmpegProfileVideoFormat.H264,
+            AudioFormat = FFmpegProfileAudioFormat.Ac3,
             VideoBitrate = 2000,
             VideoBufferSize = 4000,
             AudioBitrate = 192,

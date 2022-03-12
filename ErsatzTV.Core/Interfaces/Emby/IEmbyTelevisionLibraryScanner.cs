@@ -8,5 +8,6 @@ public interface IEmbyTelevisionLibraryScanner
         string address,
         string apiKey,
         EmbyLibrary library,
+        string ffmpegPath,
         string ffprobePath);
 }

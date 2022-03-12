@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20220308033129_Analyze_ZeroDurationFiles")]
+    partial class Analyze_ZeroDurationFiles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.2");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -502,9 +504,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("AudioCodec")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("AudioFormat")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("AudioSampleRate")
                         .HasColumnType("INTEGER");
 
@@ -551,9 +550,6 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<string>("VideoCodec")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("VideoFormat")
-                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 

@@ -55,6 +55,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexConnection connection,
         PlexServerAuthToken token,
         PlexLibrary library,
+        string ffmpegPath,
         string ffprobePath)
     {
         List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
@@ -82,7 +83,14 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                     await maybeShow.Match(
                         async result =>
                         {
-                            await ScanSeasons(library, pathReplacements, result.Item, connection, token, ffprobePath);
+                            await ScanSeasons(
+                                library,
+                                pathReplacements,
+                                result.Item,
+                                connection,
+                                token,
+                                ffmpegPath,
+                                ffprobePath);
 
                             if (result.IsAdded)
                             {
@@ -286,6 +294,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexShow show,
         PlexConnection connection,
         PlexServerAuthToken token,
+        string ffmpegPath,
         string ffprobePath)
     {
         Either<BaseError, List<PlexSeason>> entries = await _plexServerApiClient.GetShowSeasons(
@@ -315,6 +324,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                                 season,
                                 connection,
                                 token,
+                                ffmpegPath,
                                 ffprobePath);
 
                             season.Show = show;
@@ -384,6 +394,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexSeason season,
         PlexConnection connection,
         PlexServerAuthToken token,
+        string ffmpegPath,
         string ffprobePath)
     {
         Either<BaseError, List<PlexEpisode>> entries = await _plexServerApiClient.GetSeasonEpisodes(
@@ -431,6 +442,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                                 library,
                                 connection,
                                 token,
+                                ffmpegPath,
                                 ffprobePath))
                         .BindT(existing => UpdateArtwork(existing, incoming));
 
@@ -503,6 +515,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexLibrary library,
         PlexConnection connection,
         PlexServerAuthToken token,
+        string ffmpegPath,
         string ffprobePath)
     {
         MediaVersion existingVersion = existing.MediaVersions.Head();
@@ -535,7 +548,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                 
             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
             Either<BaseError, bool> refreshResult =
-                await _localStatisticsProvider.RefreshStatistics(ffprobePath, existing, localPath);
+                await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, existing, localPath);
                 
             await refreshResult.Match(
                 async _ =>

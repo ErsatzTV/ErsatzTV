@@ -71,7 +71,10 @@ internal class FFmpegProcessBuilder
         return this;
     }
 
-    public FFmpegProcessBuilder WithHardwareAcceleration(HardwareAccelerationKind hwAccel, Option<string> pixelFormat, string encoder)
+    public FFmpegProcessBuilder WithHardwareAcceleration(
+        HardwareAccelerationKind hwAccel,
+        Option<string> pixelFormat,
+        FFmpegProfileVideoFormat videoFormat)
     {
         _hwAccel = hwAccel;
 
@@ -84,14 +87,14 @@ internal class FFmpegProcessBuilder
                 _arguments.Add("qsv=qsv:MFX_IMPL_hw_any");
                 break;
             case HardwareAccelerationKind.Nvenc:
-                string outputFormat = (encoder, pixelFormat.IfNone("")) switch
+                string outputFormat = (videoFormat, pixelFormat.IfNone("")) switch
                 {
-                    ("hevc_nvenc", "yuv420p10le") => "p010le",
-                    ("h264_nvenc", "yuv420p10le") => "p010le",
+                    (FFmpegProfileVideoFormat.Hevc, "yuv420p10le") => "p010le",
+                    (FFmpegProfileVideoFormat.H264, "yuv420p10le") => "p010le",
                     // ("hevc_nvenc", "yuv444p10le") => "p016le",
                     _ => "cuda"
                 };
-                    
+
                 _arguments.Add("-hwaccel");
                 _arguments.Add("cuda");
                 _arguments.Add("-hwaccel_output_format");
@@ -462,14 +465,17 @@ internal class FFmpegProcessBuilder
         return this;
     }
 
-    public FFmpegProcessBuilder WithPlaybackArgs(FFmpegPlaybackSettings playbackSettings)
+    public FFmpegProcessBuilder WithPlaybackArgs(
+        FFmpegPlaybackSettings playbackSettings,
+        string videoCodec,
+        string audioCodec)
     {
         var arguments = new List<string>
         {
-            "-c:v", playbackSettings.VideoCodec,
+            "-c:v", videoCodec,
             "-flags", "cgop",
             // disable scene change detection except with mpeg2video
-            "-sc_threshold", playbackSettings.VideoCodec == "mpeg2video" ? "1000000000" : "0"
+            "-sc_threshold", playbackSettings.VideoFormat == FFmpegProfileVideoFormat.Mpeg2Video ? "1000000000" : "0"
         };
 
         if (!string.IsNullOrWhiteSpace(_outputPixelFormat))
@@ -512,7 +518,7 @@ internal class FFmpegProcessBuilder
         arguments.AddRange(
             new[]
             {
-                "-c:a", playbackSettings.AudioCodec,
+                "-c:a", audioCodec,
                 "-movflags", "+faststart",
                 "-muxdelay", "0",
                 "-muxpreload", "0"
@@ -591,9 +597,9 @@ internal class FFmpegProcessBuilder
         Option<MediaStream> maybeAudioStream,
         string videoPath,
         Option<string> audioPath,
-        string videoCodec)
+        FFmpegProfileVideoFormat videoFormat)
     {
-        _complexFilterBuilder = _complexFilterBuilder.WithVideoEncoder(videoCodec);
+        _complexFilterBuilder = _complexFilterBuilder.WithVideoFormat(videoFormat);
 
         int videoStreamIndex = videoStream.Index;
         Option<int> maybeIndex = maybeAudioStream.Map(ms => ms.Index);
@@ -681,6 +687,9 @@ internal class FFmpegProcessBuilder
                     break;
                 case VaapiDriver.RadeonSI:
                     startInfo.EnvironmentVariables["LIBVA_DRIVER_NAME"] = "radeonsi";
+                    break;
+                case VaapiDriver.Nouveau:
+                    startInfo.EnvironmentVariables["LIBVA_DRIVER_NAME"] = "nouveau";
                     break;
             }
         }

@@ -2,5 +2,5 @@
 
 public interface IHealthCheckService
 {
-    Task<List<HealthCheckResult>> PerformHealthChecks();
+    Task<List<HealthCheckResult>> PerformHealthChecks(CancellationToken cancellationToken);
 }

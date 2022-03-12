@@ -26,60 +26,67 @@ public class JellyfinService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        if (!File.Exists(FileSystemLayout.JellyfinSecretsPath))
+        try
         {
-            await File.WriteAllTextAsync(FileSystemLayout.JellyfinSecretsPath, "{}", cancellationToken);
-        }
-
-        _logger.LogInformation(
-            "Jellyfin service started; secrets are at {JellyfinSecretsPath}",
-            FileSystemLayout.JellyfinSecretsPath);
-
-        // synchronize sources on startup
-        await SynchronizeSources(new SynchronizeJellyfinMediaSources(), cancellationToken);
-
-        await foreach (IJellyfinBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
-        {
-            try
+            if (!File.Exists(FileSystemLayout.JellyfinSecretsPath))
             {
-                Task requestTask;
-                switch (request)
-                {
-                    case SynchronizeJellyfinMediaSources synchronizeJellyfinMediaSources:
-                        requestTask = SynchronizeSources(synchronizeJellyfinMediaSources, cancellationToken);
-                        break;
-                    case SynchronizeJellyfinAdminUserId synchronizeJellyfinAdminUserId:
-                        requestTask = SynchronizeAdminUserId(synchronizeJellyfinAdminUserId, cancellationToken);
-                        break;
-                    case SynchronizeJellyfinLibraries synchronizeJellyfinLibraries:
-                        requestTask = SynchronizeLibraries(synchronizeJellyfinLibraries, cancellationToken);
-                        break;
-                    case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
-                        requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
-                        break;
-                    default:
-                        throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
-                }
-
-                await requestTask;
+                await File.WriteAllTextAsync(FileSystemLayout.JellyfinSecretsPath, "{}", cancellationToken);
             }
-            catch (Exception ex)
+
+            _logger.LogInformation(
+                "Jellyfin service started; secrets are at {JellyfinSecretsPath}",
+                FileSystemLayout.JellyfinSecretsPath);
+
+            // synchronize sources on startup
+            await SynchronizeSources(new SynchronizeJellyfinMediaSources(), cancellationToken);
+
+            await foreach (IJellyfinBackgroundServiceRequest request in _channel.ReadAllAsync(cancellationToken))
             {
-                _logger.LogWarning(ex, "Failed to process Jellyfin background service request");
-                
                 try
                 {
-                    using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                    Task requestTask;
+                    switch (request)
                     {
-                        IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
-                        client.Notify(ex);
+                        case SynchronizeJellyfinMediaSources synchronizeJellyfinMediaSources:
+                            requestTask = SynchronizeSources(synchronizeJellyfinMediaSources, cancellationToken);
+                            break;
+                        case SynchronizeJellyfinAdminUserId synchronizeJellyfinAdminUserId:
+                            requestTask = SynchronizeAdminUserId(synchronizeJellyfinAdminUserId, cancellationToken);
+                            break;
+                        case SynchronizeJellyfinLibraries synchronizeJellyfinLibraries:
+                            requestTask = SynchronizeLibraries(synchronizeJellyfinLibraries, cancellationToken);
+                            break;
+                        case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
+                            requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
+                            break;
+                        default:
+                            throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
+                    }
+
+                    await requestTask;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to process Jellyfin background service request");
+
+                    try
+                    {
+                        using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+                        {
+                            IClient client = scope.ServiceProvider.GetRequiredService<IClient>();
+                            client.Notify(ex);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // do nothing
                     }
                 }
-                catch (Exception)
-                {
-                    // do nothing
-                }
             }
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            _logger.LogInformation("Jellyfin service shutting down");
         }
     }
 

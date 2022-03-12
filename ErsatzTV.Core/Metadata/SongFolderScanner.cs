@@ -66,7 +66,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         string ffprobePath,
         string ffmpegPath,
         decimal progressMin,
-        decimal progressMax)
+        decimal progressMax,
+        CancellationToken cancellationToken)
     {
         decimal progressSpread = progressMax - progressMin;
 
@@ -128,9 +129,9 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             {
                 Either<BaseError, MediaItemScanResult<Song>> maybeSong = await _songRepository
                     .GetOrAdd(libraryPath, file)
-                    .BindT(video => UpdateStatistics(video, ffprobePath))
+                    .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                     .BindT(video => UpdateMetadata(video, ffprobePath))
-                    .BindT(video => UpdateThumbnail(video, ffmpegPath))
+                    .BindT(video => UpdateThumbnail(video, ffmpegPath, cancellationToken))
                     .BindT(FlagNormal);
 
                 await maybeSong.Match(
@@ -212,7 +213,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 
     private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateThumbnail(
         MediaItemScanResult<Song> result,
-        string ffmpegPath)
+        string ffmpegPath,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -234,10 +236,16 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 async thumbnailFile =>
                 {
                     SongMetadata metadata = song.SongMetadata.Head();
-                    await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, ffmpegPath, None);
+                    await RefreshArtwork(
+                        thumbnailFile,
+                        metadata,
+                        ArtworkKind.Thumbnail,
+                        ffmpegPath,
+                        None,
+                        cancellationToken);
                 },
-                () => ExtractEmbeddedArtwork(song, ffmpegPath));
-        
+                () => ExtractEmbeddedArtwork(song, ffmpegPath, cancellationToken));
+
             return result;
         }
         catch (Exception ex)
@@ -246,7 +254,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             return BaseError.New(ex.ToString());
         }
     }
-        
+
     private Option<string> LocateThumbnail(Song song)
     {
         string path = song.MediaVersions.Head().MediaFiles.Head().Path;
@@ -263,7 +271,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
             }).Flatten();
     }
 
-    private async Task ExtractEmbeddedArtwork(Song song, string ffmpegPath)
+    private async Task ExtractEmbeddedArtwork(Song song, string ffmpegPath, CancellationToken cancellationToken)
     {
         Option<MediaStream> maybeArtworkStream = Optional(song.GetHeadVersion().Streams.Find(ms => ms.AttachedPic));
         foreach (MediaStream artworkStream in maybeArtworkStream)
@@ -273,7 +281,8 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 song.SongMetadata.Head(),
                 ArtworkKind.Thumbnail,
                 ffmpegPath,
-                artworkStream.Index);
+                artworkStream.Index,
+                cancellationToken);
         }
     }
 }
