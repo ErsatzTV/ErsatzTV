@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix streaming mode inconsistencies when `mode` parameter is unspecified
 
 ## [0.4.4-alpha] - 2022-03-10
 ### Fixed
