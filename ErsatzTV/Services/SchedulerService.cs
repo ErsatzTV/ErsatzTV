@@ -56,7 +56,7 @@ public class SchedulerService : BackgroundService
             {
                 await Task.Delay(TimeSpan.FromMinutes(toWait), cancellationToken);
             }
-            catch (TaskCanceledException)
+            catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
             {
                 // do nothing
             }
@@ -89,10 +89,14 @@ public class SchedulerService : BackgroundService
             await ScanPlexMediaSources(cancellationToken);
             await MatchTraktLists(cancellationToken);
         }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            // do nothing
+        }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Error during scheduler run");
-            
+
             try
             {
                 using (IServiceScope scope = _serviceScopeFactory.CreateScope())
