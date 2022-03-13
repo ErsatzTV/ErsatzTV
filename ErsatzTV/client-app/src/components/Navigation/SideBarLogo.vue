@@ -2,12 +2,12 @@
     <span>
         <v-img
             v-if="!isNavigationMini"
-            src="@/assets/images/ersatztv.png"
+            src="@/assets/images/ersatztv.svg"
             class="ma-3"
         ></v-img>
         <v-img
             v-if="isNavigationMini"
-            src="@/assets/images/ersatztv-500.png"
+            src="@/assets/images/ersatztv-logo.svg"
             class="ma-1"
         ></v-img>
         <v-divider inset></v-divider>
