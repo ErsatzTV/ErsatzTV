@@ -18,20 +18,17 @@ namespace ErsatzTV.Controllers;
 public class IptvController : ControllerBase
 {
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
-    private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
     private readonly ILogger<IptvController> _logger;
     private readonly IMediator _mediator;
 
     public IptvController(
         IMediator mediator,
         ILogger<IptvController> logger,
-        IFFmpegSegmenterService ffmpegSegmenterService,
-        IHlsPlaylistFilter hlsPlaylistFilter)
+        IFFmpegSegmenterService ffmpegSegmenterService)
     {
         _mediator = mediator;
         _logger = logger;
         _ffmpegSegmenterService = ffmpegSegmenterService;
-        _hlsPlaylistFilter = hlsPlaylistFilter;
     }
 
     [HttpGet("iptv/channels.m3u")]
@@ -52,6 +49,26 @@ public class IptvController : ControllerBase
         [FromQuery]
         string mode = null)
     {
+        // if mode is "unspecified" - find the configured mode and set it or redirect
+        if (string.IsNullOrWhiteSpace(mode) || mode == "mixed")
+        {
+            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
+            foreach (ChannelViewModel channel in maybeChannel)
+            {
+                switch (channel.StreamingMode)
+                {
+                    case StreamingMode.TransportStream:
+                        mode = "ts-legacy";
+                        break;
+                    case StreamingMode.TransportStreamHybrid:
+                        mode = "ts";
+                        break;
+                    default:
+                        return Redirect($"/iptv/channel/{channelNumber}.m3u8");
+                }
+            }
+        }
+
         FFmpegProcessRequest request = mode switch
         {
             "ts-legacy" => new GetConcatProcessByChannelNumber(Request.Scheme, Request.Host.ToString(), channelNumber),
@@ -97,6 +114,26 @@ public class IptvController : ControllerBase
         [FromQuery]
         string mode = "mixed")
     {
+        // if mode is "unspecified" - find the configured mode and set it or redirect
+        if (string.IsNullOrWhiteSpace(mode) || mode == "mixed")
+        {
+            Option<ChannelViewModel> maybeChannel = await _mediator.Send(new GetChannelByNumber(channelNumber));
+            foreach (ChannelViewModel channel in maybeChannel)
+            {
+                switch (channel.StreamingMode)
+                {
+                    case StreamingMode.HttpLiveStreamingDirect:
+                        mode = "hls-direct";
+                        break;
+                    case StreamingMode.HttpLiveStreamingSegmenter:
+                        mode = "segmenter";
+                        break;
+                    default:
+                        return Redirect($"/iptv/channel/{channelNumber}.ts");
+                }
+            }
+        }
+
         switch (mode)
         {
             case "segmenter":
