@@ -25,10 +25,10 @@ public class GetHlsPlaylistByChannelNumberHandler :
         GetHlsPlaylistByChannelNumber request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         DateTimeOffset now = DateTimeOffset.Now;
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request, now);
-        return await LanguageExtensions.Apply(validation, parameters => GetPlaylist(dbContext, request, parameters, now));
+        return await validation.Apply(parameters => GetPlaylist(dbContext, request, parameters, now));
     }
 
     private Task<string> GetPlaylist(
