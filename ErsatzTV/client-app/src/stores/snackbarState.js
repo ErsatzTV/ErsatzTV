@@ -1,10 +1,10 @@
-﻿import { defineStore } from "pinia";
+﻿import { defineStore } from 'pinia';
 
-export const snackbarState = defineStore("snackbarState", {
+export const snackbarState = defineStore('snackbarState', {
     state: () => {
         return {
             visible: false,
-            message: "",
+            message: ''
         };
     },
     getters: {
@@ -13,7 +13,7 @@ export const snackbarState = defineStore("snackbarState", {
         },
         currentMessage(state) {
             return state.message;
-        },
+        }
     },
     actions: {
         showSnackbar(message) {
@@ -22,6 +22,6 @@ export const snackbarState = defineStore("snackbarState", {
         },
         closeSnackbar() {
             this.visible = false;
-        },
-    },
+        }
+    }
 });

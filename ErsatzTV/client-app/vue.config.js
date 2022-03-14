@@ -1,13 +1,13 @@
-const { defineConfig } = require("@vue/cli-service");
+const { defineConfig } = require('@vue/cli-service');
 
 module.exports = defineConfig({
-    transpileDependencies: ["vuetify"],
+    transpileDependencies: ['vuetify'],
     runtimeCompiler: true,
 
     pwa: {
-        name: "ErsatzTV",
+        name: 'ErsatzTV'
     },
-    publicPath: "/v2/",
-    outputDir: "../wwwroot/v2",
-    filenameHashing: false,
+    publicPath: '/v2/',
+    outputDir: '../wwwroot/v2',
+    filenameHashing: false
 });

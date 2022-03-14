@@ -11,7 +11,7 @@
 
 <script>
 export default {
-    name: "ToolBarSearch",
+    name: 'ToolBarSearch'
 };
 </script>
 

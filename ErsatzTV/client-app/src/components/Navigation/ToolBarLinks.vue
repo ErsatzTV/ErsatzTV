@@ -64,21 +64,21 @@
 </template>
 
 <script>
-import { mapState } from "pinia";
-import { applicationState } from "@/stores/applicationState";
-import { snackbarState } from "@/stores/snackbarState";
+import { mapState } from 'pinia';
+import { applicationState } from '@/stores/applicationState';
+import { snackbarState } from '@/stores/snackbarState';
 
 export default {
-    name: "ToolBarLinks.vue",
+    name: 'ToolBarLinks.vue',
     data: () => ({
         toast: false,
-        clickToCopyText: "Click to copy to clipboard!",
-        successCopyText: "Successfully copied text to clipboard!",
-        failedCopyText: "Failed to copy text to clipboard! Error: ",
+        clickToCopyText: 'Click to copy to clipboard!',
+        successCopyText: 'Successfully copied text to clipboard!',
+        failedCopyText: 'Failed to copy text to clipboard! Error: '
     }),
     computed: {
-        ...mapState(applicationState, ["navBarURLs"]),
-        ...mapState(snackbarState, ["showSnackbar"]),
+        ...mapState(applicationState, ['navBarURLs']),
+        ...mapState(snackbarState, ['showSnackbar'])
     },
     methods: {
         copyTextToClipboard(text) {
@@ -89,8 +89,8 @@ export default {
                 console.error(e);
                 this.showSnackbar(`${this.failedCopyText}${e}`);
             }
-        },
-    },
+        }
+    }
 };
 </script>
 
