@@ -22,28 +22,28 @@
 </template>
 
 <script>
-import SideBarLogo from "./SideBarLogo.vue";
-import SideBarMenu from "./SideBarMenu.vue";
-import SideBarVersion from "./SideBarVersion";
-import ToolBarLinks from "./ToolBarLinks";
-import ToolBarSearch from "./ToolBarSearch";
-import { mapState } from "pinia";
-import { applicationState } from "@/stores/applicationState";
+import SideBarLogo from './SideBarLogo.vue';
+import SideBarMenu from './SideBarMenu.vue';
+import SideBarVersion from './SideBarVersion';
+import ToolBarLinks from './ToolBarLinks';
+import ToolBarSearch from './ToolBarSearch';
+import { mapState } from 'pinia';
+import { applicationState } from '@/stores/applicationState';
 
 export default {
-    name: "NavToolbar",
+    name: 'NavToolbar',
     components: {
         SideBarMenu,
         SideBarLogo,
         SideBarVersion,
         ToolBarLinks,
-        ToolBarSearch,
+        ToolBarSearch
     },
     computed: {
         ...mapState(applicationState, [
-            "isNavigationMini",
-            "toggleMiniNavigation",
-        ]),
-    },
+            'isNavigationMini',
+            'toggleMiniNavigation'
+        ])
+    }
 };
 </script>

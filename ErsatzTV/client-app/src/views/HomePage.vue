@@ -8,6 +8,6 @@
 export default {
     title() {
         return `Home`;
-    },
+    }
 };
 </script>

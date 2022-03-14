@@ -8,17 +8,17 @@
 </template>
 
 <script>
-import { mapState } from "pinia";
-import { applicationState } from "@/stores/applicationState";
+import { mapState } from 'pinia';
+import { applicationState } from '@/stores/applicationState';
 
 export default {
-    name: "SideBarVersion",
+    name: 'SideBarVersion',
     computed: {
         ...mapState(applicationState, [
-            "currentServerVersion",
-            "isNavigationMini",
-        ]),
-    },
+            'currentServerVersion',
+            'isNavigationMini'
+        ])
+    }
 };
 </script>
 

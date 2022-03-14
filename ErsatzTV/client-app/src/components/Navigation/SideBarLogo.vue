@@ -15,13 +15,13 @@
 </template>
 
 <script>
-import { mapState } from "pinia";
-import { applicationState } from "@/stores/applicationState";
+import { mapState } from 'pinia';
+import { applicationState } from '@/stores/applicationState';
 
 export default {
-    name: "SideBarLogo",
+    name: 'SideBarLogo',
     computed: {
-        ...mapState(applicationState, ["isNavigationMini"]),
-    },
+        ...mapState(applicationState, ['isNavigationMini'])
+    }
 };
 </script>

@@ -21,23 +21,23 @@
 </template>
 
 <script>
-import SideBarMenuItem from "./SideBarMenuItem";
-import SideBarMenuItemExpandable from "./SideBarMenuItemExpandable";
-import { mapState } from "pinia";
-import { applicationState } from "@/stores/applicationState";
+import SideBarMenuItem from './SideBarMenuItem';
+import SideBarMenuItemExpandable from './SideBarMenuItemExpandable';
+import { mapState } from 'pinia';
+import { applicationState } from '@/stores/applicationState';
 
 export default {
-    name: "NavSidebar",
+    name: 'NavSidebar',
     components: { SideBarMenuItem, SideBarMenuItemExpandable },
     data: () => ({
-        navigation: null,
+        navigation: null
     }),
     computed: {
-        ...mapState(applicationState, ["disableMiniNavigation"]),
+        ...mapState(applicationState, ['disableMiniNavigation'])
     },
     beforeMount: function () {
         //Pull in navigation from routes and load into DOM
         this.navigation = this.$router.options.routes;
-    },
+    }
 };
 </script>
