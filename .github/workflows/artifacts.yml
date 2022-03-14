@@ -51,6 +51,16 @@ jobs:
         with:
           dotnet-version: 6.0.x
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Cache NPM dependencies
+        uses: bahmutov/npm-install@v1.4.5
+        with:
+          working-directory: ErsatzTV/client-app
+
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
 
@@ -165,6 +175,16 @@ jobs:
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: 6.0.x
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Cache NPM dependencies
+        uses: bahmutov/npm-install@v1.4.5
+        with:
+          working-directory: ErsatzTV/client-app
 
       - name: Clean
         run: dotnet clean --configuration Release && dotnet nuget locals all --clear
