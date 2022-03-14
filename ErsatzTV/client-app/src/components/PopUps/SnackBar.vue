@@ -8,19 +8,19 @@
 </template>
 
 <script>
-import { mapState } from "pinia";
-import { snackbarState } from "@/stores/snackbarState";
+import { mapState } from 'pinia';
+import { snackbarState } from '@/stores/snackbarState';
 
 export default {
     data: () => ({
-        timeout: 4000,
+        timeout: 4000
     }),
     computed: {
         ...mapState(snackbarState, [
-            "currentMessage",
-            "isVisible",
-            "closeSnackbar",
-            "openSnackbar",
+            'currentMessage',
+            'isVisible',
+            'closeSnackbar',
+            'openSnackbar'
         ]),
         snackbar: {
             get() {
@@ -28,8 +28,8 @@ export default {
             },
             set() {
                 this.closeSnackbar();
-            },
-        },
-    },
+            }
+        }
+    }
 };
 </script>

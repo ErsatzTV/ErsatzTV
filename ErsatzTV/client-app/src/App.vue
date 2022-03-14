@@ -14,13 +14,13 @@
 </template>
 
 <script>
-import Vue from "vue";
-import Toolbar from "@/components/Navigation/ToolBar.vue";
-import SnackBar from "@/components/PopUps/SnackBar";
+import Vue from 'vue';
+import Toolbar from '@/components/Navigation/ToolBar.vue';
+import SnackBar from '@/components/PopUps/SnackBar';
 export default Vue.extend({
-    name: "App",
+    name: 'App',
     components: { Toolbar, SnackBar },
-    data: () => ({}),
+    data: () => ({})
 });
 </script>
 <style>

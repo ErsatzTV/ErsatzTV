@@ -33,27 +33,27 @@
 
 <script>
 export default {
-    name: "SideBarMenuItemExpandable",
+    name: 'SideBarMenuItemExpandable',
     props: {
         name: {
             type: String,
-            required: true,
+            required: true
         },
         icon: {
             type: String,
-            required: true,
+            required: true
         },
         disabled: {
             type: Boolean,
-            required: true,
+            required: true
         },
         children: {
             type: Array,
-            required: true,
-        },
+            required: true
+        }
     },
     data: () => ({
-        opened: false,
+        opened: false
     }),
     computed: {
         menuItemOpened: {
@@ -62,8 +62,8 @@ export default {
             },
             set: function () {
                 return !this.opened;
-            },
-        },
-    },
+            }
+        }
+    }
 };
 </script>

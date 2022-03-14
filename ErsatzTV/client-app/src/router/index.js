@@ -1,223 +1,223 @@
-﻿import Vue from "vue";
-import VueRouter from "vue-router";
-import HomePage from "../views/HomePage.vue";
+﻿import Vue from 'vue';
+import VueRouter from 'vue-router';
+import HomePage from '../views/HomePage.vue';
 
 Vue.use(VueRouter);
 
 const routes = [
     {
-        path: "/",
-        name: "Home",
+        path: '/',
+        name: 'Home',
         component: HomePage,
         meta: {
-            icon: "mdi-home",
-            disabled: false,
-        },
+            icon: 'mdi-home',
+            disabled: false
+        }
     },
     {
-        path: "/channels",
-        name: "Channels",
+        path: '/channels',
+        name: 'Channels',
         meta: {
-            icon: "mdi-broadcast",
-            disabled: true,
-        },
+            icon: 'mdi-broadcast',
+            disabled: true
+        }
     },
     {
-        path: "/ffmpeg-profiles",
-        name: "FFmpeg Profiles",
+        path: '/ffmpeg-profiles',
+        name: 'FFmpeg Profiles',
         meta: {
-            icon: "mdi-video-input-component",
-            disabled: true,
-        },
+            icon: 'mdi-video-input-component',
+            disabled: true
+        }
     },
     {
-        path: "/watermarks",
-        name: "Watermarks",
+        path: '/watermarks',
+        name: 'Watermarks',
         meta: {
-            icon: "mdi-watermark",
-            disabled: true,
-        },
+            icon: 'mdi-watermark',
+            disabled: true
+        }
     },
     {
-        path: "/sources",
-        name: "Media Sources",
+        path: '/sources',
+        name: 'Media Sources',
         meta: {
-            icon: "mdi-server-network",
-            disabled: false,
+            icon: 'mdi-server-network',
+            disabled: false
         },
         children: [
             {
-                path: "/sources/local",
-                name: "Local",
+                path: '/sources/local',
+                name: 'Local',
                 meta: {
-                    icon: "mdi-folder",
-                    disabled: true,
-                },
+                    icon: 'mdi-folder',
+                    disabled: true
+                }
             },
             {
-                path: "/sources/emby",
-                name: "Emby",
+                path: '/sources/emby',
+                name: 'Emby',
                 meta: {
-                    icon: "mdi-emby",
-                    disabled: true,
-                },
+                    icon: 'mdi-emby',
+                    disabled: true
+                }
             },
             {
-                path: "/sources/jellyfin",
-                name: "Jellyfin",
+                path: '/sources/jellyfin',
+                name: 'Jellyfin',
                 meta: {
-                    icon: "mdi-jellyfish",
-                    disabled: true,
-                },
+                    icon: 'mdi-jellyfish',
+                    disabled: true
+                }
             },
             {
-                path: "/sources/plex",
-                name: "Plex",
+                path: '/sources/plex',
+                name: 'Plex',
                 meta: {
-                    icon: "mdi-plex",
-                    disabled: true,
-                },
-            },
-        ],
+                    icon: 'mdi-plex',
+                    disabled: true
+                }
+            }
+        ]
     },
     {
-        path: "/media",
-        name: "Media",
+        path: '/media',
+        name: 'Media',
         meta: {
-            icon: "mdi-cog",
-            disabled: false,
+            icon: 'mdi-cog',
+            disabled: false
         },
         children: [
             {
-                path: "/media/libraries",
-                name: "Libraries",
+                path: '/media/libraries',
+                name: 'Libraries',
                 meta: {
-                    icon: "mdi-library",
-                    disabled: true,
-                },
+                    icon: 'mdi-library',
+                    disabled: true
+                }
             },
             {
-                path: "/media/trash",
-                name: "Trash",
+                path: '/media/trash',
+                name: 'Trash',
                 meta: {
-                    icon: "mdi-trash-can",
-                    disabled: true,
-                },
+                    icon: 'mdi-trash-can',
+                    disabled: true
+                }
             },
             {
-                path: "/media/tv-shows",
-                name: "TV Shows",
+                path: '/media/tv-shows',
+                name: 'TV Shows',
                 meta: {
-                    icon: "mdi-television-classic",
-                    disabled: true,
-                },
+                    icon: 'mdi-television-classic',
+                    disabled: true
+                }
             },
             {
-                path: "/media/movies",
-                name: "Movies",
+                path: '/media/movies',
+                name: 'Movies',
                 meta: {
-                    icon: "mdi-movie",
-                    disabled: true,
-                },
+                    icon: 'mdi-movie',
+                    disabled: true
+                }
             },
             {
-                path: "/media/music-videos",
-                name: "Music Videos",
+                path: '/media/music-videos',
+                name: 'Music Videos',
                 meta: {
-                    icon: "mdi-music-circle",
-                    disabled: true,
-                },
+                    icon: 'mdi-music-circle',
+                    disabled: true
+                }
             },
             {
-                path: "/media/other-videos",
-                name: "Other Videos",
+                path: '/media/other-videos',
+                name: 'Other Videos',
                 meta: {
-                    icon: "mdi-video",
-                    disabled: true,
-                },
+                    icon: 'mdi-video',
+                    disabled: true
+                }
             },
             {
-                path: "/media/songs",
-                name: "Songs",
+                path: '/media/songs',
+                name: 'Songs',
                 meta: {
-                    icon: "mdi-album",
-                    disabled: true,
-                },
-            },
-        ],
+                    icon: 'mdi-album',
+                    disabled: true
+                }
+            }
+        ]
     },
     {
-        path: "/lists",
-        name: "Lists",
+        path: '/lists',
+        name: 'Lists',
         meta: {
-            icon: "mdi-format-list-bulleted",
-            disabled: false,
+            icon: 'mdi-format-list-bulleted',
+            disabled: false
         },
         children: [
             {
-                path: "/lists/collections",
-                name: "Collections",
+                path: '/lists/collections',
+                name: 'Collections',
                 meta: {
-                    icon: "mdi-collage",
-                    disabled: true,
-                },
+                    icon: 'mdi-collage',
+                    disabled: true
+                }
             },
             {
-                path: "/lists/trakt-lists",
-                name: "Trakt Lists",
+                path: '/lists/trakt-lists',
+                name: 'Trakt Lists',
                 meta: {
-                    icon: "mdi-hammer",
-                    disabled: true,
-                },
+                    icon: 'mdi-hammer',
+                    disabled: true
+                }
             },
             {
-                path: "/lists/filler-presets",
-                name: "Filler Presets",
+                path: '/lists/filler-presets',
+                name: 'Filler Presets',
                 meta: {
-                    icon: "mdi-tune-vertical",
-                    disabled: true,
-                },
-            },
-        ],
+                    icon: 'mdi-tune-vertical',
+                    disabled: true
+                }
+            }
+        ]
     },
     {
-        path: "/schedules",
-        name: "Schedules",
+        path: '/schedules',
+        name: 'Schedules',
         meta: {
-            icon: "mdi-calendar",
-            disabled: true,
-        },
+            icon: 'mdi-calendar',
+            disabled: true
+        }
     },
     {
-        path: "/playouts",
-        name: "Playouts",
+        path: '/playouts',
+        name: 'Playouts',
         meta: {
-            icon: "mdi-clipboard-play-multiple",
-            disabled: true,
-        },
+            icon: 'mdi-clipboard-play-multiple',
+            disabled: true
+        }
     },
     {
-        path: "/settings",
-        name: "Settings",
+        path: '/settings',
+        name: 'Settings',
         meta: {
-            icon: "mdi-cog",
-            disabled: true,
-        },
+            icon: 'mdi-cog',
+            disabled: true
+        }
     },
     {
-        path: "/Logs",
-        name: "Logs",
+        path: '/Logs',
+        name: 'Logs',
         meta: {
-            icon: "mdi-card-text",
-            disabled: true,
-        },
-    },
+            icon: 'mdi-card-text',
+            disabled: true
+        }
+    }
 ];
 
 const router = new VueRouter({
-    mode: "history",
+    mode: 'history',
     base: process.env.BASE_URL,
-    routes,
+    routes
 });
 
 export default router;

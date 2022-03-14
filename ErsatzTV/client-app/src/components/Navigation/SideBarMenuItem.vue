@@ -14,24 +14,24 @@
 
 <script>
 export default {
-    name: "SideBarMenuItem",
+    name: 'SideBarMenuItem',
     props: {
         name: {
             type: String,
-            required: true,
+            required: true
         },
         path: {
             type: String,
-            required: true,
+            required: true
         },
         icon: {
             type: String,
-            required: true,
+            required: true
         },
         disabled: {
             type: Boolean,
-            required: true,
-        },
-    },
+            required: true
+        }
+    }
 };
 </script>
