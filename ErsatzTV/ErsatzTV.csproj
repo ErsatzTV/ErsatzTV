@@ -46,7 +46,7 @@
         <!-- Build Target: Restore NPM packages using npm -->
         <Message Importance="high" Text="Restoring dependencies using 'npm'. This may take several minutes..." />
 
-        <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
+        <Exec WorkingDirectory="$(SpaRoot)" Command="npm install" />
     </Target>
 
     <ItemGroup>
