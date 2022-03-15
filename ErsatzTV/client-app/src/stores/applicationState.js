@@ -1,5 +1,5 @@
 ﻿import { defineStore } from 'pinia';
-import axios from 'axios';
+import { versionApiService } from '@/services/VersionService';
 
 const originURL = `${window.location.origin}`;
 
@@ -40,8 +40,7 @@ export const applicationState = defineStore('appState', {
             this.miniMenu = false;
         },
         async getVersion() {
-            const result = await axios.get('/api/version');
-            this.currentVersion = result.data;
+            this.currentVersion = await versionApiService.version();
         }
     }
 });
