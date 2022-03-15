@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@mdi/font": "5.9.55",
+    "axios": "^0.26.1",
     "core-js": "^3.8.3",
     "pinia": "^2.0.11",
     "roboto-fontface": "*",
@@ -19,16 +20,21 @@
   "devDependencies": {
     "@babel/core": "^7.12.16",
     "@babel/eslint-parser": "^7.12.16",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
+    "@vue/cli-plugin-typescript": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
     "@vue/composition-api": "^1.4.9",
+    "@vue/eslint-config-typescript": "^9.1.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-vue": "^8.0.3",
     "sass": "~1.32.0",
     "sass-loader": "^10.0.0",
+    "typescript": "~4.5.5",
     "vue-cli-plugin-vuetify": "~2.4.7",
     "vue-template-compiler": "^2.6.14",
     "vuetify-loader": "^1.7.0"
@@ -41,14 +47,16 @@
     "extends": [
       "plugin:vue/essential",
       "plugin:prettier/recommended",
-      "eslint:recommended"
+      "eslint:recommended",
+      "@vue/typescript"
     ],
     "parserOptions": {
-      "parser": "@babel/eslint-parser"
+      "parser": "@typescript-eslint/parser"
     },
     "rules": {
       "prettier/prettier": [
-        "error", {
+        "error",
+        {
           "endOfLine": "auto",
           "tabWidth": 4
         }

@@ -13,6 +13,9 @@ import { applicationState } from '@/stores/applicationState';
 
 export default {
     name: 'SideBarVersion',
+    setup() {
+        applicationState().getVersion();
+    },
     computed: {
         ...mapState(applicationState, [
             'currentServerVersion',
