@@ -68,9 +68,15 @@ namespace ErsatzTV;
 
 public class Startup
 {
-    public Startup(IConfiguration configuration) => Configuration = configuration;
+    public Startup(IConfiguration configuration, IWebHostEnvironment env)
+    {
+        Configuration = configuration;
+        CurrentEnvironment = env;
+    }
 
     public IConfiguration Configuration { get; }
+
+    private IWebHostEnvironment CurrentEnvironment { get; }
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -131,7 +137,10 @@ public class Startup
                     options.ImplicitlyValidateChildProperties = true;
                 });
 
-        services.AddSpaStaticFiles(options => options.RootPath = "wwwroot/v2");
+        if (!CurrentEnvironment.IsDevelopment())
+        {
+            services.AddSpaStaticFiles(options => options.RootPath = "wwwroot/v2");
+        }
 
         services.AddMemoryCache();
 
