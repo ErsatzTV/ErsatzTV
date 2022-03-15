@@ -1,4 +1,5 @@
 ﻿import { defineStore } from 'pinia';
+import axios from 'axios';
 
 const originURL = `${window.location.origin}`;
 
@@ -6,7 +7,7 @@ export const applicationState = defineStore('appState', {
     state: () => {
         return {
             miniMenu: false,
-            currentVersion: '0.4.3-7cd2f9a-docker-nvidia', // Needs to be pulled from API with an action when ready
+            currentVersion: 'unknown',
             m3uURL: originURL + '/iptv/channels.m3u', // this will need to be fixed for reverse proxies
             xmlURL: originURL + '/iptv/xmltv.xml', // this will need to be fixed for reverse proxies
             documentationURL: 'https://ersatztv.org/',
@@ -37,6 +38,10 @@ export const applicationState = defineStore('appState', {
         },
         disableMiniNavigation() {
             this.miniMenu = false;
+        },
+        async getVersion() {
+            const result = await axios.get('/api/version');
+            this.currentVersion = result.data;
         }
     }
 });

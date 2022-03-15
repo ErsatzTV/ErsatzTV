@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@mdi/font": "5.9.55",
+    "axios": "^0.26.1",
     "core-js": "^3.8.3",
     "pinia": "^2.0.11",
     "roboto-fontface": "*",
@@ -48,7 +49,8 @@
     },
     "rules": {
       "prettier/prettier": [
-        "error", {
+        "error",
+        {
           "endOfLine": "auto",
           "tabWidth": 4
         }
