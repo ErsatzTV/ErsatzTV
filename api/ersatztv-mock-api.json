@@ -4,7 +4,7 @@
   "name": "ErsatzTV (copy)",
   "endpointPrefix": "",
   "latency": 0,
-  "port": 3000,
+  "port": 8409,
   "hostname": "0.0.0.0",
   "routes": [
     {
@@ -56,6 +56,31 @@
       "enabled": true,
       "randomResponse": false,
       "sequentialResponse": false
+    },
+    {
+      "uuid": "83dcafd5-74f6-4e5e-b9ae-3435a1541e8b",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/version",
+      "responses": [
+        {
+          "uuid": "73ae76ef-09db-472a-8db8-10a90d4c3664",
+          "body": "develop",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "filePath": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false
+        }
+      ],
+      "enabled": true,
+      "randomResponse": false,
+      "sequentialResponse": false
     }
   ],
   "proxyMode": false,
@@ -75,6 +100,10 @@
     {
       "key": "Content-Type",
       "value": "application/json"
+    },
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
     }
   ],
   "proxyReqHeaders": [
