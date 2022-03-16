@@ -116,8 +116,7 @@ jobs:
         run: |
           curl -o gon.zip -L -s "https://github.com/mitchellh/gon/releases/latest/download/gon_macos.zip"
           unzip -o -q gon.zip
-          mv ./gon /usr/bin/gon
-          /usr/bin/gon -log-level=debug -log-json ./gon.json
+          ./gon -log-level=debug -log-json ./gon.json
         env:
           AC_USERNAME: ${{ secrets.ac_username }}
           AC_PASSWORD: ${{ secrets.ac_password }}
