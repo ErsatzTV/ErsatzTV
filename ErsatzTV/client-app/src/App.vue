@@ -25,7 +25,6 @@ export default Vue.extend({
 </script>
 <style>
 main {
-    background-color: black;
     background-attachment: fixed;
     background-repeat: no-repeat;
     -webkit-background-size: cover;

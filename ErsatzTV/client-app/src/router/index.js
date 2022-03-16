@@ -1,6 +1,7 @@
 ﻿import Vue from 'vue';
 import VueRouter from 'vue-router';
 import HomePage from '../views/HomePage.vue';
+import ChannelsPage from '../views/ChannelsPage.vue';
 
 Vue.use(VueRouter);
 
@@ -17,9 +18,10 @@ const routes = [
     {
         path: '/channels',
         name: 'Channels',
+        component: ChannelsPage,
         meta: {
             icon: 'mdi-broadcast',
-            disabled: true
+            disabled: false
         }
     },
     {

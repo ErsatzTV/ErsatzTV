@@ -17,7 +17,8 @@ export default new Vuetify({
                 error: colors.red,
                 warning: colors.orange,
                 info: colors.lightBlue,
-                success: colors.green
+                success: colors.green,
+                background: '#121212'
             }
         },
         options: {

@@ -2,13 +2,13 @@
 
 class VersionApiService extends AbstractApiService {
     public constructor() {
-        super('/api/version');
+        super();
     }
 
     public version(): Promise<string> {
         return this.http
-            .get('')
-            .then(this.handleResponse)
+            .get('/api/version')
+            .then(this.handleResponse.bind(this))
             .catch(this.handleError.bind(this));
     }
 }
