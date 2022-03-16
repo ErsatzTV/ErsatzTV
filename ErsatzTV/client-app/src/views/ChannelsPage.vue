@@ -10,12 +10,11 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component } from 'vue-property-decorator';
+import { Vue, Component } from 'vue-property-decorator';
 import { Channel } from '@/models/Channel';
 import { channelApiService } from '@/services/ChannelService';
 
-@Component({ components: {} })
+@Component
 export default class Channels extends Vue {
     private channels: Channel[] = [];
 
