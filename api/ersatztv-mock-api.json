@@ -4,7 +4,7 @@
   "name": "ErsatzTV (copy)",
   "endpointPrefix": "",
   "latency": 0,
-  "port": 3000,
+  "port": 8409,
   "hostname": "0.0.0.0",
   "routes": [
     {
@@ -15,7 +15,7 @@
       "responses": [
         {
           "uuid": "4fc6ab6f-6a1b-4084-8bb2-94f00d62840c",
-          "body": "[\n  {{#repeat (faker 'datatype.number' min=1 max=5)}}\n  { \n    \"id\": {{@index}},\n    \"number\": {{faker 'datatype.number' min=1 max=25}},\n    \"name\": \"{{faker 'hacker.adjective'}} {{faker 'hacker.noun'}}\",\n    \"group\": \"\",\n    \"categories\": [],\n    \"ffmpegProfileId\": 1,\n    \"logo\": \"\",\n    \"language\": \"{{oneOf (array '' 'eng')}}\",\n    \"streamingMode\": \"{{oneOf (array 'HLS Segmenter' 'MPEG-TS')}}\"\n  }\n  {{/repeat}}\n]",
+          "body": "[\n  {{#repeat (faker 'datatype.number' min=1 max=5)}}\n  { \n    \"id\": {{@index}},\n    \"number\": {{faker 'datatype.number' min=1 max=25}},\n    \"name\": \"{{faker 'hacker.adjective'}} {{faker 'hacker.noun'}}\",\n    \"group\": \"\",\n    \"categories\": [],\n    \"ffmpegProfile\": \"1080 h264\",\n    \"logo\": \"\",\n    \"language\": \"{{oneOf (array '' 'eng')}}\",\n    \"streamingMode\": \"{{oneOf (array 'HLS Segmenter' 'MPEG-TS')}}\"\n  }\n  {{/repeat}}\n]",
           "latency": 0,
           "statusCode": 200,
           "label": "",
@@ -56,6 +56,31 @@
       "enabled": true,
       "randomResponse": false,
       "sequentialResponse": false
+    },
+    {
+      "uuid": "83dcafd5-74f6-4e5e-b9ae-3435a1541e8b",
+      "documentation": "",
+      "method": "get",
+      "endpoint": "api/version",
+      "responses": [
+        {
+          "uuid": "73ae76ef-09db-472a-8db8-10a90d4c3664",
+          "body": "develop",
+          "latency": 0,
+          "statusCode": 200,
+          "label": "",
+          "headers": [],
+          "filePath": "",
+          "sendFileAsBody": false,
+          "rules": [],
+          "rulesOperator": "OR",
+          "disableTemplating": false,
+          "fallbackTo404": false
+        }
+      ],
+      "enabled": true,
+      "randomResponse": false,
+      "sequentialResponse": false
     }
   ],
   "proxyMode": false,
@@ -75,6 +100,10 @@
     {
       "key": "Content-Type",
       "value": "application/json"
+    },
+    {
+      "key": "Access-Control-Allow-Origin",
+      "value": "*"
     }
   ],
   "proxyReqHeaders": [

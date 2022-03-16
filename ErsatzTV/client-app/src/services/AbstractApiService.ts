@@ -10,7 +10,8 @@ export abstract class AbstractApiService {
 
     protected constructor(
         protected readonly path?: string,
-        protected readonly baseURL: string = '/'
+        protected readonly baseURL: string = process.env.VUE_APP_ETV_BASE_URL ??
+            '/'
     ) {
         if (path) {
             this.baseURL += path;
