@@ -3,6 +3,9 @@
     if (title) {
         return typeof title === 'function' ? title.call(vm) : title;
     }
+    if (vm._data.title) {
+        return vm._data.title;
+    }
 }
 
 export default {

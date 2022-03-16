@@ -25,12 +25,10 @@ export default class Channels extends Vue {
         { text: 'Name', value: 'name' },
         { text: 'Language', value: 'language' },
         { text: 'Mode', value: 'streamingMode' },
-        { text: 'FFmpeg Profile', value: 'ffmpegProfileId' }
+        { text: 'FFmpeg Profile', value: 'ffmpegProfile' }
     ];
 
-    title(): string {
-        return `Channels`;
-    }
+    title: string = 'Channels';
 
     async mounted(): Promise<void> {
         this.channels = await channelApiService.getAll();
