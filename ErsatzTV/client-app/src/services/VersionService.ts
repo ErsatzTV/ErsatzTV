@@ -8,7 +8,7 @@ class VersionApiService extends AbstractApiService {
     public version(): Promise<string> {
         return this.http
             .get('/api/version')
-            .then(this.handleResponse)
+            .then(this.handleResponse.bind(this))
             .catch(this.handleError.bind(this));
     }
 }
