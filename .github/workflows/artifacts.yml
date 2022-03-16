@@ -114,9 +114,10 @@ jobs:
       - name: Notarize
         shell: bash
         run: |
-          brew tap mitchellh/gon
-          brew install mitchellh/gon/gon
-          gon -log-level=debug -log-json ./gon.json
+          curl -o gon.zip -L -s "https://github.com/mitchellh/gon/releases/latest/download/gon_macos.zip"
+          unzip -o -q gon.zip
+          mv ./gon /usr/bin/gon
+          /usr/bin/gon -log-level=debug -log-json ./gon.json
         env:
           AC_USERNAME: ${{ secrets.ac_username }}
           AC_PASSWORD: ${{ secrets.ac_password }}
