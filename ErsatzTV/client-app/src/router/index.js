@@ -2,6 +2,7 @@
 import VueRouter from 'vue-router';
 import HomePage from '../views/HomePage.vue';
 import ChannelsPage from '../views/ChannelsPage.vue';
+import FFmpegProfilesPage from '../views/FFmpegProfilesPage.vue';
 
 Vue.use(VueRouter);
 
@@ -27,9 +28,10 @@ const routes = [
     {
         path: '/ffmpeg-profiles',
         name: 'FFmpeg Profiles',
+        component: FFmpegProfilesPage,
         meta: {
             icon: 'mdi-video-input-component',
-            disabled: true
+            disabled: false
         }
     },
     {

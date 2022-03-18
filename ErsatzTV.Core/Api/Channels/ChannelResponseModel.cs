@@ -1,9 +1,11 @@
-﻿namespace ErsatzTV.Core.Api.Channels;
+﻿using Newtonsoft.Json;
+
+namespace ErsatzTV.Core.Api.Channels;
 
 public record ChannelResponseModel(
     int Id,
     string Number,
     string Name,
-    string FFmpegProfile,
+    [property: JsonProperty("ffmpegProfile")] string FFmpegProfile,
     string Language,
     string StreamingMode);
