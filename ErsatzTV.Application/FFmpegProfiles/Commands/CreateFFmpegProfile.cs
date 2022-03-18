@@ -23,4 +23,5 @@ public record CreateFFmpegProfile(
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeAudio,
-    bool NormalizeFramerate) : IRequest<Either<BaseError, CreateFFmpegProfileResult>>;
+    bool NormalizeFramerate,
+    bool DeinterlaceVideo) : IRequest<Either<BaseError, CreateFFmpegProfileResult>>;

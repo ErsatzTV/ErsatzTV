@@ -24,6 +24,7 @@ public class FFmpegProfileEditViewModel
         NormalizeAudio = viewModel.NormalizeAudio;
         NormalizeVideo = viewModel.NormalizeVideo;
         NormalizeFramerate = viewModel.NormalizeFramerate;
+        DeinterlaceVideo = viewModel.DeinterlaceVideo;
         Resolution = viewModel.Resolution;
         ThreadCount = viewModel.ThreadCount;
         Transcode = viewModel.Transcode;
@@ -46,6 +47,7 @@ public class FFmpegProfileEditViewModel
     public bool NormalizeAudio { get; set; }
     public bool NormalizeVideo { get; set; }
     public bool NormalizeFramerate { get; set; }
+    public bool DeinterlaceVideo { get; set; }
     public ResolutionViewModel Resolution { get; set; }
     public int ThreadCount { get; set; }
     public bool Transcode { get; set; }
@@ -76,7 +78,8 @@ public class FFmpegProfileEditViewModel
             AudioChannels,
             AudioSampleRate,
             NormalizeAudio,
-            NormalizeFramerate
+            NormalizeFramerate,
+            DeinterlaceVideo
         );
 
     public UpdateFFmpegProfile ToUpdate() =>
@@ -100,6 +103,7 @@ public class FFmpegProfileEditViewModel
             AudioChannels,
             AudioSampleRate,
             NormalizeAudio,
-            NormalizeFramerate
+            NormalizeFramerate,
+            DeinterlaceVideo
         );
 }
