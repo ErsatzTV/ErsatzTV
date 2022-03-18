@@ -7,6 +7,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix streaming mode inconsistencies when `mode` parameter is unspecified
 
+### Added
+- Add option to automatically deinterlace video when transcoding
+  - Previously, this was always enabled; the purpose of the option is to allow disabling any deinterlace filters
+  - Note that there is no performance gain to disabling the option with progressive content; filters are only ever applied to interlaced content
+
 ## [0.4.4-alpha] - 2022-03-10
 ### Fixed
 - Fix `HLS Direct` streaming mode

@@ -24,4 +24,5 @@ public record FFmpegProfileViewModel(
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeAudio,
-    bool NormalizeFramerate);
+    bool NormalizeFramerate,
+    bool DeinterlaceVideo);

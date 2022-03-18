@@ -26,7 +26,8 @@ internal static class Mapper
             profile.AudioChannels,
             profile.AudioSampleRate,
             profile.NormalizeAudio,
-            profile.NormalizeVideo && profile.NormalizeFramerate);
+            profile.NormalizeVideo && profile.NormalizeFramerate,
+            profile.DeinterlaceVideo);
 
     private static ResolutionViewModel Project(Resolution resolution) =>
         new(resolution.Id, resolution.Name, resolution.Width, resolution.Height);

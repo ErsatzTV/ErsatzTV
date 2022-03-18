@@ -47,6 +47,7 @@ public class
         p.AudioSampleRate = update.AudioSampleRate;
         p.NormalizeAudio = update.Transcode && update.NormalizeAudio;
         p.NormalizeFramerate = update.Transcode && update.NormalizeFramerate;
+        p.DeinterlaceVideo = update.Transcode && update.DeinterlaceVideo;
         await dbContext.SaveChangesAsync();
         return new UpdateFFmpegProfileResult(p.Id);
     }
