@@ -25,6 +25,7 @@ public record FFmpegProfile
     public int AudioSampleRate { get; set; }
     public bool NormalizeAudio { get; set; }
     public bool NormalizeFramerate { get; set; }
+    public bool DeinterlaceVideo { get; set; }
 
     public static FFmpegProfile New(string name, Resolution resolution) =>
         new()
@@ -45,6 +46,8 @@ public record FFmpegProfile
             AudioSampleRate = 48,
             NormalizeVideo = true,
             NormalizeAudio = true,
+            DeinterlaceVideo = true,
+            NormalizeFramerate = false,
             HardwareAcceleration = HardwareAccelerationKind.None
         };
 }

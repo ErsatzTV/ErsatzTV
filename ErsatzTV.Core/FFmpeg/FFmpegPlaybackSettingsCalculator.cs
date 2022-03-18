@@ -98,12 +98,13 @@ public class FFmpegPlaybackSettingsCalculator
                     {
                         int fixedHeight = scaledSize.Height + scaledSize.Height % 2;
                         int fixedWidth = scaledSize.Width + scaledSize.Width % 2;
-                        result.ScaledSize = Some((IDisplaySize) new DisplaySize(fixedWidth, fixedHeight));
+                        result.ScaledSize = Some((IDisplaySize)new DisplaySize(fixedWidth, fixedHeight));
                     }
                 }
 
                 IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(videoVersion);
-                if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo && !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
+                if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo &&
+                    !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
                 {
                     result.PadToDesiredResolution = true;
                 }
@@ -179,10 +180,8 @@ public class FFmpegPlaybackSettingsCalculator
                     result.AudioFormat = FFmpegProfileAudioFormat.Copy;
                 }
 
-                if (videoVersion.VideoScanKind == VideoScanKind.Interlaced)
-                {
-                    result.Deinterlace = true;
-                }
+                result.Deinterlace = ffmpegProfile.DeinterlaceVideo &&
+                                     videoVersion.VideoScanKind == VideoScanKind.Interlaced;
 
                 break;
         }
