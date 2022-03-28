@@ -10,12 +10,10 @@ internal static class Mapper
             profile.Id,
             profile.Name,
             profile.ThreadCount,
-            profile.Transcode,
             profile.HardwareAcceleration,
             profile.VaapiDriver,
             profile.VaapiDevice,
             Project(profile.Resolution),
-            profile.NormalizeVideo,
             profile.VideoFormat,
             profile.VideoBitrate,
             profile.VideoBufferSize,
@@ -25,8 +23,7 @@ internal static class Mapper
             profile.NormalizeLoudness,
             profile.AudioChannels,
             profile.AudioSampleRate,
-            profile.NormalizeAudio,
-            profile.NormalizeVideo && profile.NormalizeFramerate,
+            profile.NormalizeFramerate,
             profile.DeinterlaceVideo);
 
     private static ResolutionViewModel Project(Resolution resolution) =>

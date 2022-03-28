@@ -103,82 +103,63 @@ public class FFmpegPlaybackSettingsCalculator
                 }
 
                 IDisplaySize sizeAfterScaling = result.ScaledSize.IfNone(videoVersion);
-                if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo &&
-                    !sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
+                if (!sizeAfterScaling.IsSameSizeAs(ffmpegProfile.Resolution))
                 {
                     result.PadToDesiredResolution = true;
                 }
 
-                if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo)
+                if (ffmpegProfile.NormalizeFramerate)
                 {
-                    if (ffmpegProfile.NormalizeFramerate)
-                    {
-                        result.FrameRate = targetFramerate;
-                    }
-
-                    result.VideoTrackTimeScale = 90000;
+                    result.FrameRate = targetFramerate;
                 }
+
+                result.VideoTrackTimeScale = 90000;
 
                 foreach (MediaStream stream in videoStream.Where(s => s.AttachedPic == false))
                 {
-                    if (result.ScaledSize.IsSome || result.PadToDesiredResolution ||
-                        NeedToNormalizeVideo(ffmpegProfile))
-                    {
-                        result.VideoFormat = ffmpegProfile.VideoFormat;
-                        result.VideoBitrate = ffmpegProfile.VideoBitrate;
-                        result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
+                    result.VideoFormat = ffmpegProfile.VideoFormat;
+                    result.VideoBitrate = ffmpegProfile.VideoBitrate;
+                    result.VideoBufferSize = ffmpegProfile.VideoBufferSize;
 
-                        result.VideoDecoder =
-                            (result.HardwareAcceleration, stream.Codec, stream.PixelFormat) switch
-                            {
-                                (HardwareAccelerationKind.Nvenc, "h264", "yuv420p10le" or "yuv444p" or "yuv444p10le"
-                                    ) =>
-                                    "h264",
-                                (HardwareAccelerationKind.Nvenc, "hevc", "yuv444p" or "yuv444p10le") => "hevc",
-                                (HardwareAccelerationKind.Nvenc, "h264", _) => "h264_cuvid",
-                                (HardwareAccelerationKind.Nvenc, "hevc", _) => "hevc_cuvid",
-                                (HardwareAccelerationKind.Nvenc, "mpeg2video", _) => "mpeg2_cuvid",
-                                (HardwareAccelerationKind.Nvenc, "mpeg4", _) => "mpeg4_cuvid",
-                                (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
-                                (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
-                                (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
-
-                                // temp disable mpeg4 hardware decoding for all vaapi
-                                // TODO: check for codec support
-                                (HardwareAccelerationKind.Vaapi, "mpeg4", _) => "mpeg4",
-
-                                _ => null
-                            };
-                    }
-                    else
-                    {
-                        result.VideoFormat = FFmpegProfileVideoFormat.Copy;
-                    }
-                }
-
-                if (ffmpegProfile.Transcode && ffmpegProfile.NormalizeAudio)
-                {
-                    result.AudioFormat = ffmpegProfile.AudioFormat;
-                    result.AudioBitrate = ffmpegProfile.AudioBitrate;
-                    result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
-
-                    audioStream.IfSome(
-                        stream =>
+                    result.VideoDecoder =
+                        (result.HardwareAcceleration, stream.Codec, stream.PixelFormat) switch
                         {
-                            if (stream.Channels != ffmpegProfile.AudioChannels)
-                            {
-                                result.AudioChannels = ffmpegProfile.AudioChannels;
-                            }
-                        });
+                            (HardwareAccelerationKind.Nvenc, "h264", "yuv420p10le" or "yuv444p" or "yuv444p10le"
+                                ) =>
+                                "h264",
+                            (HardwareAccelerationKind.Nvenc, "hevc", "yuv444p" or "yuv444p10le") => "hevc",
+                            (HardwareAccelerationKind.Nvenc, "h264", _) => "h264_cuvid",
+                            (HardwareAccelerationKind.Nvenc, "hevc", _) => "hevc_cuvid",
+                            (HardwareAccelerationKind.Nvenc, "mpeg2video", _) => "mpeg2_cuvid",
+                            (HardwareAccelerationKind.Nvenc, "mpeg4", _) => "mpeg4_cuvid",
+                            (HardwareAccelerationKind.Qsv, "h264", _) => "h264_qsv",
+                            (HardwareAccelerationKind.Qsv, "hevc", _) => "hevc_qsv",
+                            (HardwareAccelerationKind.Qsv, "mpeg2video", _) => "mpeg2_qsv",
 
-                    result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
-                    result.AudioDuration = outPoint - inPoint;
-                    result.NormalizeLoudness = ffmpegProfile.NormalizeLoudness;
+                            // temp disable mpeg4 hardware decoding for all vaapi
+                            // TODO: check for codec support
+                            (HardwareAccelerationKind.Vaapi, "mpeg4", _) => "mpeg4",
+
+                            _ => null
+                        };
                 }
-                else
-                {
-                    result.AudioFormat = FFmpegProfileAudioFormat.Copy;
-                }
+
+                result.AudioFormat = ffmpegProfile.AudioFormat;
+                result.AudioBitrate = ffmpegProfile.AudioBitrate;
+                result.AudioBufferSize = ffmpegProfile.AudioBufferSize;
+
+                audioStream.IfSome(
+                    stream =>
+                    {
+                        if (stream.Channels != ffmpegProfile.AudioChannels)
+                        {
+                            result.AudioChannels = ffmpegProfile.AudioChannels;
+                        }
+                    });
+
+                result.AudioSampleRate = ffmpegProfile.AudioSampleRate;
+                result.AudioDuration = outPoint - inPoint;
+                result.NormalizeLoudness = ffmpegProfile.NormalizeLoudness;
 
                 result.Deinterlace = ffmpegProfile.DeinterlaceVideo &&
                                      videoVersion.VideoScanKind == VideoScanKind.Interlaced;
@@ -202,7 +183,6 @@ public class FFmpegPlaybackSettingsCalculator
     }
 
     private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
-        ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo &&
         IsIncorrectSize(ffmpegProfile.Resolution, version) ||
         IsTooLarge(ffmpegProfile.Resolution, version) ||
         IsOddSize(version);
@@ -218,9 +198,6 @@ public class FFmpegPlaybackSettingsCalculator
 
     private static bool IsOddSize(MediaVersion version) =>
         version.Height % 2 == 1 || version.Width % 2 == 1;
-
-    private static bool NeedToNormalizeVideo(FFmpegProfile ffmpegProfile) =>
-        ffmpegProfile.Transcode && ffmpegProfile.NormalizeVideo;
 
     private static IDisplaySize CalculateScaledSize(FFmpegProfile ffmpegProfile, MediaVersion version)
     {

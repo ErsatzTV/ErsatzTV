@@ -11,8 +11,6 @@
     <MudTable Hover="true" Items="_ffmpegProfiles">
         <ToolBarContent>
             <MudText Typo="Typo.h6">FFmpeg Profiles</MudText>
-            <MudSpacer/>
-            <MudText Color="Color.Tertiary">Colored settings will be normalized</MudText>
         </ToolBarContent>
         <ColGroup>
             <col/>
@@ -24,39 +22,25 @@
         </ColGroup>
         <HeaderContent>
             <MudTh>Name</MudTh>
-            <MudTh>Transcode</MudTh>
             <MudTh>Resolution</MudTh>
-            <MudTh>Video Codec</MudTh>
-            <MudTh>Audio Codec</MudTh>
+            <MudTh>Video Format</MudTh>
+            <MudTh>Audio Format</MudTh>
             <MudTh/>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Name">@context.Name</MudTd>
-            <MudTd DataLabel="Transcode">
-                @(context.Transcode ? "Yes" : "No")
-            </MudTd>
-            <MudTd DataLabel="Resolution">
-                <MudText Color="@(context.Transcode && context.NormalizeVideo ? Color.Tertiary : Color.Inherit)">
-                    @context.Resolution.Name
-                </MudText>
-            </MudTd>
+            <MudTd DataLabel="Resolution">@context.Resolution.Name</MudTd>
             <MudTd DataLabel="Video Format">
-                <MudText Color="@(context.Transcode && context.NormalizeVideo ? Color.Tertiary : Color.Inherit)">
-                    @if (context.HardwareAcceleration != HardwareAccelerationKind.None)
-                    {
-                        @($"{context.VideoFormat.ToString().ToLowerInvariant()} / {context.HardwareAcceleration.ToString().ToLowerInvariant()}")
-                    }
-                    else
-                    {
-                        @context.VideoFormat.ToString().ToLowerInvariant()
-                    }
-                </MudText>
+                @if (context.HardwareAcceleration != HardwareAccelerationKind.None)
+                {
+                    @($"{context.VideoFormat.ToString().ToLowerInvariant()} / {context.HardwareAcceleration.ToString().ToLowerInvariant()}")
+                }
+                else
+                {
+                    @context.VideoFormat.ToString().ToLowerInvariant()
+                }
             </MudTd>
-            <MudTd DataLabel="Audio Format">
-                <MudText Color="@(context.Transcode && context.NormalizeAudio ? Color.Tertiary : Color.Inherit)">
-                    @context.AudioFormat.ToString().ToLowerInvariant()
-                </MudText>
-            </MudTd>
+            <MudTd DataLabel="Audio Format">@context.AudioFormat.ToString().ToLowerInvariant()</MudTd>
             <MudTd>
                 <div style="align-items: center; display: flex;">
                     <MudTooltip Text="Edit Profile">
