@@ -161,7 +161,7 @@ public class FFmpegPlaybackSettingsCalculator
                 result.AudioDuration = outPoint - inPoint;
                 result.NormalizeLoudness = ffmpegProfile.NormalizeLoudness;
 
-                result.Deinterlace = ffmpegProfile.DeinterlaceVideo &&
+                result.Deinterlace = ffmpegProfile.DeinterlaceVideo == true &&
                                      videoVersion.VideoScanKind == VideoScanKind.Interlaced;
 
                 break;
