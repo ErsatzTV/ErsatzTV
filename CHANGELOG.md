@@ -15,7 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Change FFmpeg Profile video codec and audio codec text fields to select fields
-    - The appropriate video encoder will be determined based on the video format and hardware acceleration selections
+  - The appropriate video encoder will be determined based on the video format and hardware acceleration selections
+- Remove FFmpeg Profile `Transcode`, `Normalize Video` and `Normalize Audio` settings
+  - All content will be transcoded and have audio and video normalized
+  - The only exception to this rule is `HLS Direct` streaming mode, which directly copies video and audio streams
 
 ## [0.4.4-alpha] - 2022-03-10
 ### Fixed

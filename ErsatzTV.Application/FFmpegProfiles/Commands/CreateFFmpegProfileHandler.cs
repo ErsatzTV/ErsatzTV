@@ -39,12 +39,10 @@ public class CreateFFmpegProfileHandler :
             {
                 Name = name,
                 ThreadCount = threadCount,
-                Transcode = request.Transcode,
                 HardwareAcceleration = request.HardwareAcceleration,
                 VaapiDriver = request.VaapiDriver,
                 VaapiDevice = request.VaapiDevice,
                 ResolutionId = resolutionId,
-                NormalizeVideo = request.NormalizeVideo,
                 VideoFormat = request.VideoFormat,
                 VideoBitrate = request.VideoBitrate,
                 VideoBufferSize = request.VideoBufferSize,
@@ -54,7 +52,6 @@ public class CreateFFmpegProfileHandler :
                 NormalizeLoudness = request.NormalizeLoudness,
                 AudioChannels = request.AudioChannels,
                 AudioSampleRate = request.AudioSampleRate,
-                NormalizeAudio = request.NormalizeAudio,
                 NormalizeFramerate = request.NormalizeFramerate,
                 DeinterlaceVideo = request.DeinterlaceVideo
             });

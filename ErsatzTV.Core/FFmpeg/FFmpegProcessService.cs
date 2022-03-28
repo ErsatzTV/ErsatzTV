@@ -295,8 +295,7 @@ public class FFmpegProcessService : IFFmpegProcessService
         Option<ChannelWatermark> watermarkOverride,
         Option<string> watermarkPath)
     {
-        if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect && channel.FFmpegProfile.Transcode &&
-            channel.FFmpegProfile.NormalizeVideo)
+        if (channel.StreamingMode != StreamingMode.HttpLiveStreamingDirect)
         {
             if (videoVersion is CoverArtMediaVersion)
             {

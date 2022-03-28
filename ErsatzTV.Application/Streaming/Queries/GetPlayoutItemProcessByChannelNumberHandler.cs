@@ -166,85 +166,48 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         foreach (BaseError error in maybePlayoutItem.LeftToSeq())
         {
-            var offlineTranscodeMessage =
-                $"offline image is unavailable because transcoding is disabled in ffmpeg profile '{channel.FFmpegProfile.Name}'";
-
-            Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
-                .Where(transcode => transcode)
-                .Match(
-                    _ => dbContext.PlayoutItems
+            Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
                         .Filter(pi => pi.Playout.ChannelId == channel.Id)
                         .Filter(pi => pi.Start > now.UtcDateTime)
                         .OrderBy(pi => pi.Start)
-                        .FirstOrDefaultAsync()
+                        .FirstOrDefaultAsync(cancellationToken)
                         .Map(Optional)
-                        .MapT(pi => pi.StartOffset - now),
-                    () => Option<TimeSpan>.None.AsTask());
+                        .MapT(pi => pi.StartOffset - now);
 
             DateTimeOffset finish = maybeDuration.Match(d => now.Add(d), () => now);
 
             switch (error)
             {
                 case UnableToLocatePlayoutItem:
-                    if (channel.FFmpegProfile.Transcode)
-                    {
-                        Process errorProcess = await ffmpegProcessService.ForError(
-                            ffmpegPath,
-                            channel,
-                            maybeDuration,
-                            "Channel is Offline",
-                            request.HlsRealtime,
-                            request.PtsOffset);
+                    Process offlineProcess = await ffmpegProcessService.ForError(
+                        ffmpegPath,
+                        channel,
+                        maybeDuration,
+                        "Channel is Offline",
+                        request.HlsRealtime,
+                        request.PtsOffset);
 
-                        return new PlayoutItemProcessModel(errorProcess, finish);
-                    }
-                    else
-                    {
-                        var message =
-                            $"Unable to locate playout item for channel {channel.Number}; {offlineTranscodeMessage}";
-
-                        return BaseError.New(message);
-                    }
+                    return new PlayoutItemProcessModel(offlineProcess, finish);
                 case PlayoutItemDoesNotExistOnDisk:
-                    if (channel.FFmpegProfile.Transcode)
-                    {
-                        Process errorProcess = await ffmpegProcessService.ForError(
-                            ffmpegPath,
-                            channel,
-                            maybeDuration,
-                            error.Value,
-                            request.HlsRealtime,
-                            request.PtsOffset);
+                    Process doesNotExistProcess = await ffmpegProcessService.ForError(
+                        ffmpegPath,
+                        channel,
+                        maybeDuration,
+                        error.Value,
+                        request.HlsRealtime,
+                        request.PtsOffset);
 
-                        return new PlayoutItemProcessModel(errorProcess, finish);
-                    }
-                    else
-                    {
-                        var message =
-                            $"Playout item does not exist on disk for channel {channel.Number}; {offlineTranscodeMessage}";
-
-                        return BaseError.New(message);
-                    }
+                    return new PlayoutItemProcessModel(doesNotExistProcess, finish);
                 default:
-                    if (channel.FFmpegProfile.Transcode)
-                    {
-                        Process errorProcess = await ffmpegProcessService.ForError(
-                            ffmpegPath,
-                            channel,
-                            maybeDuration,
-                            "Channel is Offline",
-                            request.HlsRealtime,
-                            request.PtsOffset);
+                    Process errorProcess = await ffmpegProcessService.ForError(
+                        ffmpegPath,
+                        channel,
+                        maybeDuration,
+                        "Channel is Offline",
+                        request.HlsRealtime,
+                        request.PtsOffset);
 
-                        return new PlayoutItemProcessModel(errorProcess, finish);
-                    }
-                    else
-                    {
-                        var message =
-                            $"Unexpected error locating playout item for channel {channel.Number}; {offlineTranscodeMessage}";
-
-                        return BaseError.New(message);
-                    }
+                    return new PlayoutItemProcessModel(errorProcess, finish);
             }
         }
 
@@ -282,17 +245,13 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             // TODO: shuffle? does it really matter since we loop anyway
             MediaItem item = items[new Random().Next(items.Count)];
                 
-            Option<TimeSpan> maybeDuration = await Optional(channel.FFmpegProfile.Transcode)
-                .Where(transcode => transcode)
-                .Match(
-                    _ => dbContext.PlayoutItems
+            Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
                         .Filter(pi => pi.Playout.ChannelId == channel.Id)
                         .Filter(pi => pi.Start > now.UtcDateTime)
                         .OrderBy(pi => pi.Start)
                         .FirstOrDefaultAsync()
                         .Map(Optional)
-                        .MapT(pi => pi.StartOffset - now),
-                    () => Option<TimeSpan>.None.AsTask());
+                        .MapT(pi => pi.StartOffset - now);
 
             MediaVersion version = item.GetHeadVersion();
 
