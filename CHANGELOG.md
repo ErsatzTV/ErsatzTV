@@ -13,6 +13,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - Previously, this was always enabled; the purpose of the option is to allow disabling any deinterlace filters
   - Note that there is no performance gain to disabling the option with progressive content; filters are only ever applied to interlaced content
 
+### Changed
+- Change FFmpeg Profile video codec and audio codec text fields to select fields
+    - The appropriate video encoder will be determined based on the video format and hardware acceleration selections
+
 ## [0.4.4-alpha] - 2022-03-10
 ### Fixed
 - Fix `HLS Direct` streaming mode
@@ -21,10 +25,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Perform additional duration analysis on files with missing duration metadata
 - Add `nouveau` VAAPI driver option
-
-### Changed
-- Change FFmpeg Profile video codec and audio codec text fields to select fields
-  - The appropriate video encoder will be determined based on the video format and hardware acceleration selections
 
 ## [0.4.3-alpha] - 2022-03-05
 ### Fixed
