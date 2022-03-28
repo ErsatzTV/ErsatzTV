@@ -9,13 +9,15 @@ namespace ErsatzTV.Core.Tests.FFmpeg;
 [TestFixture]
 public class FFmpegPlaybackSettingsCalculatorTests
 {
+    private static readonly MediaVersion TestVersion = new() { SampleAspectRatio = "1:1", Width = 1920, Height = 1080 };
+
     [TestFixture]
     public class CalculateSettings
     {
         private readonly FFmpegPlaybackSettingsCalculator _calculator;
 
         public CalculateSettings() => _calculator = new FFmpegPlaybackSettingsCalculator();
-            
+
         [Test]
         public void Should_Not_GenPts_ForHlsSegmenter()
         {
@@ -24,7 +26,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingSegmenter,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 DateTimeOffset.Now,
@@ -47,7 +49,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 DateTimeOffset.Now,
@@ -68,7 +70,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingSegmenter,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 DateTimeOffset.Now,
@@ -89,7 +91,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 DateTimeOffset.Now,
@@ -112,7 +114,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 DateTimeOffset.Now,
@@ -135,7 +137,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 DateTimeOffset.Now,
@@ -156,7 +158,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 DateTimeOffset.Now,
@@ -179,7 +181,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 now,
@@ -203,7 +205,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 now,
@@ -218,32 +220,10 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void ShouldNot_SetScaledSize_When_NotNormalizingVideo_ForTransportStream()
-        {
-            FFmpegProfile ffmpegProfile = TestProfile() with { NormalizeVideo = false };
-
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                StreamingMode.TransportStream,
-                ffmpegProfile,
-                new MediaVersion(),
-                new MediaStream(),
-                new MediaStream(),
-                DateTimeOffset.Now,
-                DateTimeOffset.Now,
-                TimeSpan.Zero,
-                TimeSpan.Zero,
-                false,
-                None);
-
-            actual.ScaledSize.IsNone.Should().BeTrue();
-        }
-
-        [Test]
         public void ShouldNot_SetScaledSize_When_ContentIsCorrectSize_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 }
             };
 
@@ -271,7 +251,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 }
             };
 
@@ -299,7 +278,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 }
             };
 
@@ -328,8 +306,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 }
             };
 
@@ -358,8 +334,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1280, Height = 720 }
             };
 
@@ -389,8 +363,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 }
             };
 
@@ -414,43 +386,12 @@ public class FFmpegPlaybackSettingsCalculatorTests
             actual.PadToDesiredResolution.Should().BeFalse();
         }
 
-        [Test]
-        public void Should_NotPadToDesiredResolution_When_NotNormalizingVideo()
-        {
-            FFmpegProfile ffmpegProfile = TestProfile() with
-            {
-                Transcode = true,
-                NormalizeVideo = false,
-                Resolution = new Resolution { Width = 1920, Height = 1080 }
-            };
-
-            // not anamorphic
-            var version = new MediaVersion { Width = 1918, Height = 1080, SampleAspectRatio = "1:1" };
-
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                StreamingMode.TransportStream,
-                ffmpegProfile,
-                version,
-                new MediaStream(),
-                new MediaStream(),
-                DateTimeOffset.Now,
-                DateTimeOffset.Now,
-                TimeSpan.Zero,
-                TimeSpan.Zero,
-                false,
-                None);
-
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
-        }
 
         [Test]
         public void Should_SetDesiredVideoFormat_When_ContentIsPadded_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
                 VideoFormat = FFmpegProfileVideoFormat.H264
             };
@@ -478,12 +419,10 @@ public class FFmpegPlaybackSettingsCalculatorTests
 
         [Test]
         public void
-            Should_SetDesiredVideoFormat_When_ContentIsCorrectSize_And_NormalizingVideo_ForTransportStream()
+            Should_SetDesiredVideoFormat_When_ContentIsCorrectSize_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
                 VideoFormat = FFmpegProfileVideoFormat.H264
             };
@@ -511,13 +450,10 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void
-            Should_SetCopyVideoFormat_When_ContentIsCorrectSize_And_NormalizingVideo_ForHttpLiveStreaming()
+        public void Should_SetCopyVideoFormat_When_ContentIsCorrectSize_ForHttpLiveStreamingDirect()
         {
             var ffmpegProfile = new FFmpegProfile
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
                 VideoFormat = FFmpegProfileVideoFormat.H264
             };
@@ -549,8 +485,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             var ffmpegProfile = new FFmpegProfile
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
                 VideoFormat = FFmpegProfileVideoFormat.H264
             };
@@ -578,84 +512,10 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void
-            Should_SetCopyVideoFormat_When_ContentIsCorrectSize_And_NotNormalizingVideo_ForTransportStream()
-        {
-            var ffmpegProfile = new FFmpegProfile
-            {
-                Transcode = true,
-                NormalizeVideo = false,
-                Resolution = new Resolution { Width = 1920, Height = 1080 },
-                VideoFormat = FFmpegProfileVideoFormat.H264
-            };
-
-            // not anamorphic
-            var version = new MediaVersion
-                { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
-
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                StreamingMode.TransportStream,
-                ffmpegProfile,
-                version,
-                new MediaStream { Codec = "mpeg2video" },
-                new MediaStream(),
-                DateTimeOffset.Now,
-                DateTimeOffset.Now,
-                TimeSpan.Zero,
-                TimeSpan.Zero,
-                false,
-                None);
-
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.Copy);
-        }
-            
-        [Test]
-        public void
-            Should_SetCopyVideoFormat_AndCopyAudioFormat_When_NotTranscoding_ForTransportStream()
-        {
-            var ffmpegProfile = new FFmpegProfile
-            {
-                Transcode = false,
-                NormalizeVideo = true,
-                NormalizeAudio = true,
-                NormalizeLoudness = true,
-                Resolution = new Resolution { Width = 1920, Height = 1080 },
-                VideoFormat = FFmpegProfileVideoFormat.H264
-            };
-
-            // not anamorphic
-            var version = new MediaVersion
-                { Width = 1920, Height = 1080, SampleAspectRatio = "1:1" };
-
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                StreamingMode.TransportStream,
-                ffmpegProfile,
-                version,
-                new MediaStream { Codec = "mpeg2video" },
-                new MediaStream(),
-                DateTimeOffset.Now,
-                DateTimeOffset.Now,
-                TimeSpan.Zero,
-                TimeSpan.Zero,
-                false,
-                None);
-
-            actual.ScaledSize.IsNone.Should().BeTrue();
-            actual.PadToDesiredResolution.Should().BeFalse();
-            actual.VideoFormat.Should().Be(FFmpegProfileVideoFormat.Copy);
-            actual.NormalizeLoudness.Should().BeFalse();
-            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Copy);
-        }
-
-        [Test]
         public void Should_SetVideoBitrate_When_ContentIsPadded_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
                 VideoBitrate = 2525
             };
@@ -682,12 +542,10 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetVideoBitrate_When_ContentIsCorrectSize_And_NormalizingVideo_ForTransportStream()
+        public void Should_SetVideoBitrate_When_ContentIsCorrectSize_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
                 VideoBitrate = 2525
             };
@@ -719,8 +577,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
         {
             var ffmpegProfile = new FFmpegProfile
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
                 VideoBufferSize = 2525
             };
@@ -747,13 +603,10 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void
-            Should_SetVideoBufferSize_When_ContentIsCorrectSize_And_NormalizingVideo_ForTransportStream()
+        public void Should_SetVideoBufferSize_When_ContentIsCorrectSize_ForTransportStream()
         {
             var ffmpegProfile = new FFmpegProfile
             {
-                Transcode = true,
-                NormalizeVideo = true,
                 Resolution = new Resolution { Width = 1920, Height = 1080 },
                 VideoBufferSize = 2525
             };
@@ -781,21 +634,17 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetDesiredAudioFormat_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
+        public void Should_SetDesiredAudioFormat_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioFormat = FFmpegProfileAudioFormat.Aac
             };
-
-            var version = new MediaVersion();
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "aac" },
                 DateTimeOffset.Now,
@@ -809,48 +658,17 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetCopyAudioFormat_When_NotNormalizingAudio_ForTransportStream()
+        public void Should_SetDesiredAudioFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                NormalizeAudio = false,
                 AudioFormat = FFmpegProfileAudioFormat.Aac
             };
-
-            var version = new MediaVersion();
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
-                new MediaStream(),
-                new MediaStream { Codec = "ac3" },
-                DateTimeOffset.Now,
-                DateTimeOffset.Now,
-                TimeSpan.Zero,
-                TimeSpan.Zero,
-                false,
-                None);
-
-            actual.AudioFormat.Should().Be(FFmpegProfileAudioFormat.Copy);
-        }
-
-        [Test]
-        public void Should_SetDesiredAudioFormat_When_NormalizingAudio_ForTransportStream()
-        {
-            FFmpegProfile ffmpegProfile = TestProfile() with
-            {
-                Transcode = true,
-                NormalizeAudio = true,
-                AudioFormat = FFmpegProfileAudioFormat.Aac
-            };
-
-            var version = new MediaVersion();
-
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                StreamingMode.TransportStream,
-                ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -864,21 +682,17 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetCopyAudioFormat_When_NormalizingAudio_ForHttpLiveStreaming()
+        public void Should_SetCopyAudioFormat_ForHttpLiveStreamingDirect()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioFormat = FFmpegProfileAudioFormat.Aac
             };
-
-            var version = new MediaVersion();
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.HttpLiveStreamingDirect,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -892,22 +706,18 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioBitrate_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
+        public void Should_SetAudioBitrate_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioBitrate = 2424,
                 AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
-            var version = new MediaVersion();
-
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -921,22 +731,18 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioBufferSize_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
+        public void Should_SetAudioBufferSize_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioBufferSize = 2424,
                 AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
-            var version = new MediaVersion();
-
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -950,22 +756,18 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioChannels_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
+        public void Should_SetAudioChannels_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioFormat = FFmpegProfileAudioFormat.Ac3,
                 AudioChannels = 6
             };
 
-            var version = new MediaVersion();
-
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -979,22 +781,18 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioSampleRate_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
+        public void Should_SetAudioSampleRate_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioFormat = FFmpegProfileAudioFormat.Ac3,
                 AudioSampleRate = 48
             };
 
-            var version = new MediaVersion();
-
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -1008,21 +806,17 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioChannels_When_NormalizingAudio_ForTransportStream()
+        public void Should_SetAudioChannels_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioChannels = 6
             };
-
-            var version = new MediaVersion();
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -1036,21 +830,17 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioSampleRate_When_NormalizingAudio_ForTransportStream()
+        public void Should_SetAudioSampleRate_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioSampleRate = 48
             };
-
-            var version = new MediaVersion();
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -1064,17 +854,15 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetAudioDuration_When_NormalizingAudio_With_CorrectFormat_ForTransportStream()
+        public void Should_SetAudioDuration_With_CorrectFormat_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 AudioSampleRate = 48,
                 AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
-            var version = new MediaVersion { Duration = TimeSpan.FromMinutes(5) }; // not pulled from here
+            var version = new MediaVersion { SampleAspectRatio = "1:1", Width = 1920, Height = 1080, Duration = TimeSpan.FromMinutes(5) }; // not pulled from here
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
@@ -1093,21 +881,17 @@ public class FFmpegPlaybackSettingsCalculatorTests
         }
 
         [Test]
-        public void Should_SetNormalizeLoudness_When_NormalizingAudio_ForTransportStream()
+        public void Should_SetNormalizeLoudness_ForTransportStream()
         {
             FFmpegProfile ffmpegProfile = TestProfile() with
             {
-                Transcode = true,
-                NormalizeAudio = true,
                 NormalizeLoudness = true
             };
-
-            var version = new MediaVersion();
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                version,
+                TestVersion,
                 new MediaStream(),
                 new MediaStream { Codec = "ac3" },
                 DateTimeOffset.Now,
@@ -1118,34 +902,6 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 None);
 
             actual.NormalizeLoudness.Should().BeTrue();
-        }
-
-        [Test]
-        public void Should_NotSetNormalizeLoudness_When_NotNormalizingAudio_ForTransportStream()
-        {
-            FFmpegProfile ffmpegProfile = TestProfile() with
-            {
-                Transcode = true,
-                NormalizeAudio = false,
-                NormalizeLoudness = true
-            };
-
-            var version = new MediaVersion();
-
-            FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
-                StreamingMode.TransportStream,
-                ffmpegProfile,
-                version,
-                new MediaStream(),
-                new MediaStream { Codec = "ac3" },
-                DateTimeOffset.Now,
-                DateTimeOffset.Now,
-                TimeSpan.Zero,
-                TimeSpan.Zero,
-                false,
-                None);
-
-            actual.NormalizeLoudness.Should().BeFalse();
         }
     }
 
@@ -1165,7 +921,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 ffmpegProfile,
-                new MediaVersion(),
+                TestVersion,
                 new MediaStream(),
                 new MediaStream(),
                 DateTimeOffset.Now,

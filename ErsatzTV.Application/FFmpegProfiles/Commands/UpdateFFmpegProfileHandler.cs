@@ -30,24 +30,21 @@ public class
     {
         p.Name = update.Name;
         p.ThreadCount = update.ThreadCount;
-        p.Transcode = update.Transcode;
         p.HardwareAcceleration = update.HardwareAcceleration;
         p.VaapiDriver = update.VaapiDriver;
         p.VaapiDevice = update.VaapiDevice;
         p.ResolutionId = update.ResolutionId;
-        p.NormalizeVideo = update.Transcode && update.NormalizeVideo;
         p.VideoFormat = update.VideoFormat;
         p.VideoBitrate = update.VideoBitrate;
         p.VideoBufferSize = update.VideoBufferSize;
         p.AudioFormat = update.AudioFormat;
         p.AudioBitrate = update.AudioBitrate;
         p.AudioBufferSize = update.AudioBufferSize;
-        p.NormalizeLoudness = update.Transcode && update.NormalizeLoudness;
+        p.NormalizeLoudness = update.NormalizeLoudness;
         p.AudioChannels = update.AudioChannels;
         p.AudioSampleRate = update.AudioSampleRate;
-        p.NormalizeAudio = update.Transcode && update.NormalizeAudio;
-        p.NormalizeFramerate = update.Transcode && update.NormalizeFramerate;
-        p.DeinterlaceVideo = update.Transcode && update.DeinterlaceVideo;
+        p.NormalizeFramerate = update.NormalizeFramerate;
+        p.DeinterlaceVideo = update.DeinterlaceVideo;
         await dbContext.SaveChangesAsync();
         return new UpdateFFmpegProfileResult(p.Id);
     }
