@@ -30,7 +30,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             string.IsNullOrWhiteSpace(channel.PreferredLanguageCode))
         {
             _logger.LogDebug(
-                "Channel {Number} is HLS with no preferred language; using all audio streams",
+                "Channel {Number} is HLS Direct with no preferred language; using all audio streams",
                 channel.Number);
             return None;
         }
@@ -79,5 +79,92 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             allCodes);
 
         return audioStreams.OrderByDescending(s => s.Channels).Head();
+    }
+
+    public async Task<Option<MediaStream>> SelectSubtitleStream(
+        Channel channel,
+        MediaVersion version,
+        Option<MediaStream> audioStream)
+    {
+        if (channel.FFmpegProfile.SubtitleMode == FFmpegProfileSubtitleMode.None)
+        {
+            return None;
+        }
+
+        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
+            string.IsNullOrWhiteSpace(channel.PreferredLanguageCode))
+        {
+            _logger.LogDebug(
+                "Channel {Number} is HLS Direct with no preferred language; using all subtitle streams",
+                channel.Number);
+            return None;
+        }
+
+        if (audioStream.IsNone)
+        {
+            _logger.LogDebug("Unable to determine audio language; using no subtitles");
+            return None;
+        }
+
+        foreach (MediaStream stream in audioStream)
+        {
+            string language = (channel.PreferredLanguageCode ?? string.Empty).ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(language))
+            {
+                _logger.LogDebug("Channel {Number} has no preferred language code", channel.Number);
+                Option<string> maybeDefaultLanguage = await _configElementRepository.GetValue<string>(
+                    ConfigElementKey.FFmpegPreferredLanguageCode);
+                maybeDefaultLanguage.Match(
+                    lang => language = lang.ToLowerInvariant(),
+                    () =>
+                    {
+                        _logger.LogDebug("FFmpeg has no preferred language code; falling back to {Code}", "eng");
+                        language = "eng";
+                    });
+            }
+
+            List<string> allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
+
+            var subtitleStreams = version.Streams
+                .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+                .Filter(
+                    s => allCodes.Any(c => string.Equals(s.Language, c, StringComparison.InvariantCultureIgnoreCase)))
+                .ToList();
+
+            var forced = new List<MediaStream>();
+            var defaults = new List<MediaStream>();
+
+            if (allCodes.Any(c => string.Equals(stream.Language, c, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                // audio stream uses desired language, only check forced subtitles
+                _logger.LogDebug("Audio stream uses preferred language; checking for forced subtitles");
+                forced.AddRange(subtitleStreams.Filter(s => s.Forced));
+            }
+            else
+            {
+                _logger.LogDebug("Audio stream does NOT use preferred language; checking for any subtitles");
+                defaults.AddRange(subtitleStreams.Filter(s => s.Default));
+            }
+
+            foreach (MediaStream f in forced.HeadOrNone())
+            {
+                _logger.LogDebug("Found forced subtitle");
+                return f;
+            }
+
+            foreach (MediaStream d in defaults.HeadOrNone())
+            {
+                _logger.LogDebug("Found default subtitle");
+                return d;
+            }
+
+            foreach (MediaStream s in subtitleStreams.HeadOrNone())
+            {
+                _logger.LogDebug("Found subtitle");
+                return s;
+            }
+        }
+
+        return None;
     }
 }

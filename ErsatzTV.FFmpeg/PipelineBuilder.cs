@@ -20,6 +20,7 @@ public class PipelineBuilder
     private readonly Option<VideoInputFile> _videoInputFile;
     private readonly Option<AudioInputFile> _audioInputFile;
     private readonly Option<WatermarkInputFile> _watermarkInputFile;
+    private readonly Option<SubtitleInputFile> _subtitleInputFile;
     private readonly string _reportsFolder;
     private readonly ILogger _logger;
 
@@ -27,6 +28,7 @@ public class PipelineBuilder
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
+        Option<SubtitleInputFile> subtitleInputFile,
         string reportsFolder,
         ILogger logger)
     {
@@ -46,6 +48,7 @@ public class PipelineBuilder
         _videoInputFile = videoInputFile;
         _audioInputFile = audioInputFile;
         _watermarkInputFile = watermarkInputFile;
+        _subtitleInputFile = subtitleInputFile;
         _reportsFolder = reportsFolder;
         _logger = logger;
     }
@@ -383,7 +386,7 @@ public class PipelineBuilder
                         }
                     }
                 }
-                
+
                 // nvenc custom logic
                 if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc)
                 {
@@ -597,6 +600,7 @@ public class PipelineBuilder
                 _videoInputFile,
                 _audioInputFile,
                 _watermarkInputFile,
+                _subtitleInputFile,
                 currentState.PaddedSize);
 
             _pipelineSteps.Add(complexFilter);

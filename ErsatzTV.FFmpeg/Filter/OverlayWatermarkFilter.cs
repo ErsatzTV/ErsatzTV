@@ -2,13 +2,13 @@
 
 namespace ErsatzTV.FFmpeg.Filter;
 
-public class OverlayFilter : BaseFilter
+public class OverlayWatermarkFilter : BaseFilter
 {
     private readonly FrameState _currentState;
     private readonly WatermarkState _watermarkState;
     private readonly FrameSize _resolution;
 
-    public OverlayFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution)
+    public OverlayWatermarkFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution)
     {
         _currentState = currentState;
         _watermarkState = watermarkState;

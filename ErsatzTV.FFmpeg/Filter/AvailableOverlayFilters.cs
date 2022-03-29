@@ -13,8 +13,8 @@ public static class AvailableOverlayFilters
         FrameSize resolution) =>
         accelMode switch
         {
-            HardwareAccelerationMode.Nvenc => new OverlayCudaFilter(currentState, watermarkState, resolution),
-            HardwareAccelerationMode.Qsv => new OverlayQsvFilter(currentState, watermarkState, resolution),
-            _ => new OverlayFilter(currentState, watermarkState, resolution)
+            HardwareAccelerationMode.Nvenc => new OverlayWatermarkCudaFilter(currentState, watermarkState, resolution),
+            HardwareAccelerationMode.Qsv => new OverlayWatermarkQsvFilter(currentState, watermarkState, resolution),
+            _ => new OverlayWatermarkFilter(currentState, watermarkState, resolution)
         };
 }

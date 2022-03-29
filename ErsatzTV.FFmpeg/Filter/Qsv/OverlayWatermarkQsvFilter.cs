@@ -2,9 +2,9 @@
 
 namespace ErsatzTV.FFmpeg.Filter.Qsv;
 
-public class OverlayQsvFilter : OverlayFilter
+public class OverlayWatermarkQsvFilter : OverlayWatermarkFilter
 {
-    public OverlayQsvFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution) : base(
+    public OverlayWatermarkQsvFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution) : base(
         currentState,
         watermarkState,
         resolution)

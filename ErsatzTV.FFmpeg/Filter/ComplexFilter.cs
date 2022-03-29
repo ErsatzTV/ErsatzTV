@@ -9,6 +9,7 @@ public class ComplexFilter : IPipelineStep
     private readonly Option<VideoInputFile> _maybeVideoInputFile;
     private readonly Option<AudioInputFile> _maybeAudioInputFile;
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
+    private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
     private readonly FrameSize _resolution;
 
     public ComplexFilter(
@@ -17,6 +18,7 @@ public class ComplexFilter : IPipelineStep
         Option<VideoInputFile> maybeVideoInputFile,
         Option<AudioInputFile> maybeAudioInputFile,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
+        Option<SubtitleInputFile> maybeSubtitleInputFile,
         FrameSize resolution)
     {
         _currentState = currentState;
@@ -24,6 +26,7 @@ public class ComplexFilter : IPipelineStep
         _maybeVideoInputFile = maybeVideoInputFile;
         _maybeAudioInputFile = maybeAudioInputFile;
         _maybeWatermarkInputFile = maybeWatermarkInputFile;
+        _maybeSubtitleInputFile = maybeSubtitleInputFile;
         _resolution = resolution;
     }
 
@@ -32,6 +35,7 @@ public class ComplexFilter : IPipelineStep
         var audioLabel = "0:a";
         var videoLabel = "0:v";
         string watermarkLabel;
+        string subtitleLabel;
 
         var result = new List<string>();
 
@@ -39,6 +43,7 @@ public class ComplexFilter : IPipelineStep
         string videoFilterComplex = string.Empty;
         string watermarkFilterComplex = string.Empty;
         string overlayFilterComplex = string.Empty;
+        string subtitleOverlayFilterComplex = string.Empty;
         
         var distinctPaths = new List<string>();
         foreach ((string path, _) in _maybeVideoInputFile)
@@ -148,12 +153,39 @@ public class ComplexFilter : IPipelineStep
                 }
             }
         }
+        
+        foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile)
+        {
+            int inputIndex = distinctPaths.IndexOf(subtitleInputFile.Path);
+            foreach ((int index, _, _) in subtitleInputFile.Streams)
+            {
+                subtitleLabel = $"[{inputIndex}:{index}]";
+
+                IPipelineFilterStep overlayFilter = new OverlaySubtitlesFilter();
+                if (overlayFilter.Filter != string.Empty)
+                {
+                    string tempVideoLabel = string.IsNullOrWhiteSpace(videoFilterComplex) &&
+                                            string.IsNullOrWhiteSpace(watermarkFilterComplex)
+                        ? $"[{videoLabel}]"
+                        : videoLabel;
+
+                    subtitleOverlayFilterComplex = $"{tempVideoLabel}{subtitleLabel}{overlayFilter.Filter}[vst]";
+                    
+                    // change the mapped label
+                    videoLabel = "[vst]";
+                }
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(audioFilterComplex) || !string.IsNullOrWhiteSpace(videoFilterComplex))
         {
             var filterComplex = string.Join(
                 ";",
-                new[] { audioFilterComplex, videoFilterComplex, watermarkFilterComplex, overlayFilterComplex }.Where(
+                new[]
+                {
+                    audioFilterComplex, videoFilterComplex, watermarkFilterComplex, overlayFilterComplex,
+                    subtitleOverlayFilterComplex
+                }.Where(
                     s => !string.IsNullOrWhiteSpace(s)));
 
             result.AddRange(new[] { "-filter_complex", filterComplex });
