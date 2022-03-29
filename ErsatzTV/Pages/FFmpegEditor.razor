@@ -77,6 +77,12 @@
                                     </MudSelect>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">
+                                    <MudSelect Label="Subtitle Mode" @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
+                                        <MudSelectItem Value="@(FFmpegProfileSubtitleMode.None)">None</MudSelectItem>
+                                        <MudSelectItem Value="@(FFmpegProfileSubtitleMode.Automatic)">Automatic</MudSelectItem>
+                                    </MudSelect>
+                                </MudElement>
+                                <MudElement HtmlTag="div" Class="mt-3">
                                     <MudCheckBox Label="Normalize Frame Rate" @bind-Checked="@_model.NormalizeFramerate" For="@(() => _model.NormalizeFramerate)"/>
                                 </MudElement>
                                 <MudElement HtmlTag="div" Class="mt-3">

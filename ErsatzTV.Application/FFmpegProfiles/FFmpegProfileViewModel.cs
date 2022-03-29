@@ -22,4 +22,5 @@ public record FFmpegProfileViewModel(
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,
-    bool DeinterlaceVideo);
+    bool DeinterlaceVideo,
+    FFmpegProfileSubtitleMode SubtitleMode);

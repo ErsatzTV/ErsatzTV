@@ -53,7 +53,8 @@ public class CreateFFmpegProfileHandler :
                 AudioChannels = request.AudioChannels,
                 AudioSampleRate = request.AudioSampleRate,
                 NormalizeFramerate = request.NormalizeFramerate,
-                DeinterlaceVideo = request.DeinterlaceVideo
+                DeinterlaceVideo = request.DeinterlaceVideo,
+                SubtitleMode = request.SubtitleMode
             });
 
     private static Validation<BaseError, string> ValidateName(CreateFFmpegProfile createFFmpegProfile) =>
