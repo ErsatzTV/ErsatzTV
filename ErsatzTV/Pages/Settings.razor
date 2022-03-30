@@ -34,7 +34,7 @@
                             }
                         </MudSelect>
                     </MudElement>
-                    <MudSelect Class="mt-3" Label="Preferred Language" @bind-Value="_ffmpegSettings.PreferredLanguageCode" For="@(() => _ffmpegSettings.PreferredLanguageCode)" Required="true" RequiredError="Preferred Language Code is required!">
+                    <MudSelect Class="mt-3" Label="Preferred Audio Language" @bind-Value="_ffmpegSettings.PreferredAudioLanguageCode" For="@(() => _ffmpegSettings.PreferredAudioLanguageCode)" Required="true" RequiredError="Preferred Language Code is required!">
                         @foreach (CultureInfo culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>

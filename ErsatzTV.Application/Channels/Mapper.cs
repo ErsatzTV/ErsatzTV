@@ -14,11 +14,13 @@ internal static class Mapper
             channel.Categories,
             channel.FFmpegProfileId,
             GetLogo(channel),
-            channel.PreferredLanguageCode,
+            channel.PreferredAudioLanguageCode,
             channel.StreamingMode,
             channel.WatermarkId,
             channel.FallbackFillerId,
-            channel.Playouts?.Count ?? 0);
+            channel.Playouts?.Count ?? 0,
+            channel.PreferredSubtitleLanguageCode,
+            channel.SubtitleMode);
 
     internal static ChannelResponseModel ProjectToResponseModel(Channel channel) =>
         new(
@@ -26,7 +28,7 @@ internal static class Mapper
             channel.Number,
             channel.Name,
             channel.FFmpegProfile.Name,
-            channel.PreferredLanguageCode,
+            channel.PreferredAudioLanguageCode,
             GetStreamingMode(channel));
 
     private static string GetLogo(Channel channel) =>

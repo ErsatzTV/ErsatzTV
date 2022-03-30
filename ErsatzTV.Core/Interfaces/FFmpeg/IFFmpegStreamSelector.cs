@@ -7,8 +7,5 @@ public interface IFFmpegStreamSelector
     Task<MediaStream> SelectVideoStream(Channel channel, MediaVersion version);
     Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version);
 
-    Task<Option<MediaStream>> SelectSubtitleStream(
-        Channel channel,
-        MediaVersion version,
-        Option<MediaStream> audioStream);
+    Task<Option<MediaStream>> SelectSubtitleStream(Channel channel, MediaVersion version);
 }

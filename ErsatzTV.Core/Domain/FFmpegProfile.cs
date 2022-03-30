@@ -23,7 +23,6 @@ public record FFmpegProfile
     public int AudioSampleRate { get; set; }
     public bool NormalizeFramerate { get; set; }
     public bool? DeinterlaceVideo { get; set; }
-    public FFmpegProfileSubtitleMode SubtitleMode { get; set; }
 
     public static FFmpegProfile New(string name, Resolution resolution) =>
         new()
@@ -42,7 +41,6 @@ public record FFmpegProfile
             AudioChannels = 2,
             AudioSampleRate = 48,
             DeinterlaceVideo = true,
-            SubtitleMode = FFmpegProfileSubtitleMode.None,
             NormalizeFramerate = false,
             HardwareAcceleration = HardwareAccelerationKind.None
         };

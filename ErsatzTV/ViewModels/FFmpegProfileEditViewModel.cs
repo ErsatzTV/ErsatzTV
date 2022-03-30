@@ -23,7 +23,6 @@ public class FFmpegProfileEditViewModel
         Name = viewModel.Name;
         NormalizeFramerate = viewModel.NormalizeFramerate;
         DeinterlaceVideo = viewModel.DeinterlaceVideo;
-        SubtitleMode = viewModel.SubtitleMode;
         Resolution = viewModel.Resolution;
         ThreadCount = viewModel.ThreadCount;
         HardwareAcceleration = viewModel.HardwareAcceleration;
@@ -52,7 +51,6 @@ public class FFmpegProfileEditViewModel
     public int VideoBitrate { get; set; }
     public int VideoBufferSize { get; set; }
     public FFmpegProfileVideoFormat VideoFormat { get; set; }
-    public FFmpegProfileSubtitleMode SubtitleMode { get; set; }
 
     public CreateFFmpegProfile ToCreate() =>
         new(
@@ -72,8 +70,7 @@ public class FFmpegProfileEditViewModel
             AudioChannels,
             AudioSampleRate,
             NormalizeFramerate,
-            DeinterlaceVideo,
-            SubtitleMode
+            DeinterlaceVideo
         );
 
     public UpdateFFmpegProfile ToUpdate() =>
@@ -95,7 +92,6 @@ public class FFmpegProfileEditViewModel
             AudioChannels,
             AudioSampleRate,
             NormalizeFramerate,
-            DeinterlaceVideo,
-            SubtitleMode
+            DeinterlaceVideo
         );
 }

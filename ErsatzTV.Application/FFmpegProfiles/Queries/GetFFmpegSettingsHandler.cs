@@ -20,7 +20,7 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegDefaultProfileId);
         Option<bool> saveReports =
             await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegSaveReports);
-        Option<string> preferredLanguageCode =
+        Option<string> preferredAudioLanguageCode =
             await _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPreferredLanguageCode);
         Option<int> watermark =
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegGlobalWatermarkId);
@@ -41,7 +41,7 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             FFprobePath = await ffprobePath.IfNoneAsync(string.Empty),
             DefaultFFmpegProfileId = await defaultFFmpegProfileId.IfNoneAsync(0),
             SaveReports = await saveReports.IfNoneAsync(false),
-            PreferredLanguageCode = await preferredLanguageCode.IfNoneAsync("eng"),
+            PreferredAudioLanguageCode = await preferredAudioLanguageCode.IfNoneAsync("eng"),
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
             InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1),

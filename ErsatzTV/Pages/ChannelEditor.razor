@@ -44,15 +44,32 @@
                         }
                     </MudSelect>
                     <MudSelect Class="mt-3"
-                               Label="Preferred Language"
-                               @bind-Value="_model.PreferredLanguageCode"
-                               For="@(() => _model.PreferredLanguageCode)"
+                               Label="Preferred Audio Language"
+                               @bind-Value="_model.PreferredAudioLanguageCode"
+                               For="@(() => _model.PreferredAudioLanguageCode)"
                                Clearable="true">
                         <MudSelectItem Value="@((string) null)">(none)</MudSelectItem>
                         @foreach (CultureInfo culture in _availableCultures)
                         {
                             <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
                         }
+                    </MudSelect>
+                    <MudSelect Class="mt-3"
+                               Label="Preferred Subtitle Language"
+                               @bind-Value="_model.PreferredSubtitleLanguageCode"
+                               For="@(() => _model.PreferredSubtitleLanguageCode)"
+                               Clearable="true">
+                        <MudSelectItem Value="@((string) null)">(none)</MudSelectItem>
+                        @foreach (CultureInfo culture in _availableCultures)
+                        {
+                            <MudSelectItem Value="@culture.ThreeLetterISOLanguageName">@culture.EnglishName</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="mt-3" Label="Subtitle Mode" @bind-Value="_model.SubtitleMode" For="@(() => _model.SubtitleMode)">
+                        <MudSelectItem Value="@(ChannelSubtitleMode.None)">None</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Forced)">Forced</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Default)">Default</MudSelectItem>
+                        <MudSelectItem Value="@(ChannelSubtitleMode.Any)">Any</MudSelectItem>
                     </MudSelect>
                     <MudGrid Class="mt-3" Style="align-items: center" Justify="Justify.Center">
                         <MudItem xs="6">
@@ -145,9 +162,11 @@
                     _model.FFmpegProfileId = channelViewModel.FFmpegProfileId;
                     _model.Logo = channelViewModel.Logo;
                     _model.StreamingMode = channelViewModel.StreamingMode;
-                    _model.PreferredLanguageCode = channelViewModel.PreferredLanguageCode;
+                    _model.PreferredAudioLanguageCode = channelViewModel.PreferredAudioLanguageCode;
                     _model.WatermarkId = channelViewModel.WatermarkId;
                     _model.FallbackFillerId = channelViewModel.FallbackFillerId;
+                    _model.PreferredSubtitleLanguageCode = channelViewModel.PreferredSubtitleLanguageCode;
+                    _model.SubtitleMode = channelViewModel.SubtitleMode;
                 },
                 () => _navigationManager.NavigateTo("404"));
         }

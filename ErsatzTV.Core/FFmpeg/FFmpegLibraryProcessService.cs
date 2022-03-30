@@ -56,7 +56,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
         Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
         Option<MediaStream> maybeSubtitleStream =
-            await _ffmpegStreamSelector.SelectSubtitleStream(channel, videoVersion, maybeAudioStream);  
+            await _ffmpegStreamSelector.SelectSubtitleStream(channel, videoVersion);  
 
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,

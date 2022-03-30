@@ -21,5 +21,4 @@ public record CreateFFmpegProfile(
     int AudioChannels,
     int AudioSampleRate,
     bool NormalizeFramerate,
-    bool DeinterlaceVideo,
-    FFmpegProfileSubtitleMode SubtitleMode) : IRequest<Either<BaseError, CreateFFmpegProfileResult>>;
+    bool DeinterlaceVideo) : IRequest<Either<BaseError, CreateFFmpegProfileResult>>;

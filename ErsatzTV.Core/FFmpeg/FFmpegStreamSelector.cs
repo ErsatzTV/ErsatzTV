@@ -27,27 +27,27 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
     public async Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version)
     {
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
-            string.IsNullOrWhiteSpace(channel.PreferredLanguageCode))
+            string.IsNullOrWhiteSpace(channel.PreferredAudioLanguageCode))
         {
             _logger.LogDebug(
-                "Channel {Number} is HLS Direct with no preferred language; using all audio streams",
+                "Channel {Number} is HLS Direct with no preferred audio language; using all audio streams",
                 channel.Number);
             return None;
         }
 
         var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
 
-        string language = (channel.PreferredLanguageCode ?? string.Empty).ToLowerInvariant();
+        string language = (channel.PreferredAudioLanguageCode ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
         {
-            _logger.LogDebug("Channel {Number} has no preferred language code", channel.Number);
+            _logger.LogDebug("Channel {Number} has no preferred audio language code", channel.Number);
             Option<string> maybeDefaultLanguage = await _configElementRepository.GetValue<string>(
                 ConfigElementKey.FFmpegPreferredLanguageCode);
             maybeDefaultLanguage.Match(
                 lang => language = lang.ToLowerInvariant(),
                 () =>
                 {
-                    _logger.LogDebug("FFmpeg has no preferred language code; falling back to {Code}", "eng");
+                    _logger.LogDebug("FFmpeg has no preferred audio language code; falling back to {Code}", "eng");
                     language = "eng";
                 });
         }
@@ -55,7 +55,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         List<string> allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
         if (allCodes.Count > 1)
         {
-            _logger.LogDebug("Preferred language has multiple codes {Codes}", allCodes);
+            _logger.LogDebug("Preferred audio language has multiple codes {Codes}", allCodes);
         }
 
         var correctLanguage = audioStreams.Filter(
@@ -67,7 +67,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         if (correctLanguage.Any())
         {
             _logger.LogDebug(
-                "Found {Count} audio streams with preferred language code(s) {Code}; selecting stream with most channels",
+                "Found {Count} audio streams with preferred audio language code(s) {Code}; selecting stream with most channels",
                 correctLanguage.Count,
                 allCodes);
 
@@ -75,94 +75,67 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         }
 
         _logger.LogDebug(
-            "Unable to find audio stream with preferred language code(s) {Code}; selecting stream with most channels",
+            "Unable to find audio stream with preferred audio language code(s) {Code}; selecting stream with most channels",
             allCodes);
 
         return audioStreams.OrderByDescending(s => s.Channels).Head();
     }
 
-    public async Task<Option<MediaStream>> SelectSubtitleStream(
-        Channel channel,
-        MediaVersion version,
-        Option<MediaStream> audioStream)
+    public async Task<Option<MediaStream>> SelectSubtitleStream(Channel channel, MediaVersion version)
     {
-        if (channel.FFmpegProfile.SubtitleMode == FFmpegProfileSubtitleMode.None)
+        if (channel.SubtitleMode == ChannelSubtitleMode.None)
         {
             return None;
         }
-
+        
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
-            string.IsNullOrWhiteSpace(channel.PreferredLanguageCode))
+            string.IsNullOrWhiteSpace(channel.PreferredSubtitleLanguageCode))
         {
             _logger.LogDebug(
-                "Channel {Number} is HLS Direct with no preferred language; using all subtitle streams",
+                "Channel {Number} is HLS Direct with no preferred subtitle language; using all subtitle streams",
                 channel.Number);
             return None;
         }
 
-        if (audioStream.IsNone)
+        var subtitleStreams = version.Streams
+            .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+            .ToList();
+
+        string language = (channel.PreferredSubtitleLanguageCode ?? string.Empty).ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(language))
         {
-            _logger.LogDebug("Unable to determine audio language; using no subtitles");
-            return None;
+            _logger.LogDebug("Channel {Number} has no preferred subtitle language code", channel.Number);
         }
-
-        foreach (MediaStream stream in audioStream)
+        else
         {
-            string language = (channel.PreferredLanguageCode ?? string.Empty).ToLowerInvariant();
-            if (string.IsNullOrWhiteSpace(language))
-            {
-                _logger.LogDebug("Channel {Number} has no preferred language code", channel.Number);
-                Option<string> maybeDefaultLanguage = await _configElementRepository.GetValue<string>(
-                    ConfigElementKey.FFmpegPreferredLanguageCode);
-                maybeDefaultLanguage.Match(
-                    lang => language = lang.ToLowerInvariant(),
-                    () =>
-                    {
-                        _logger.LogDebug("FFmpeg has no preferred language code; falling back to {Code}", "eng");
-                        language = "eng";
-                    });
-            }
-
+            // filter to preferred language
             List<string> allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
-
-            var subtitleStreams = version.Streams
-                .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+            subtitleStreams = version.Streams
                 .Filter(
                     s => allCodes.Any(c => string.Equals(s.Language, c, StringComparison.InvariantCultureIgnoreCase)))
                 .ToList();
+        }
 
-            var forced = new List<MediaStream>();
-            var defaults = new List<MediaStream>();
-
-            if (allCodes.Any(c => string.Equals(stream.Language, c, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                // audio stream uses desired language, only check forced subtitles
-                _logger.LogDebug("Audio stream uses preferred language; checking for forced subtitles");
-                forced.AddRange(subtitleStreams.Filter(s => s.Forced));
-            }
-            else
-            {
-                _logger.LogDebug("Audio stream does NOT use preferred language; checking for any subtitles");
-                defaults.AddRange(subtitleStreams.Filter(s => s.Default));
-            }
-
-            foreach (MediaStream f in forced.HeadOrNone())
-            {
-                _logger.LogDebug("Found forced subtitle");
-                return f;
-            }
-
-            foreach (MediaStream d in defaults.HeadOrNone())
-            {
-                _logger.LogDebug("Found default subtitle");
-                return d;
-            }
-
-            foreach (MediaStream s in subtitleStreams.HeadOrNone())
-            {
-                _logger.LogDebug("Found subtitle");
-                return s;
-            }
+        switch (channel.SubtitleMode)
+        {
+            case ChannelSubtitleMode.Forced:
+                foreach (MediaStream stream in Optional(subtitleStreams.OrderBy(s => s.Index).Find(s => s.Forced)))
+                {
+                    return stream;
+                }
+                break;
+            case ChannelSubtitleMode.Default:
+                foreach (MediaStream stream in Optional(subtitleStreams.OrderBy(s => s.Index).Find(s => s.Default)))
+                {
+                    return stream;
+                }
+                break;
+            case ChannelSubtitleMode.Any:
+                foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Index).HeadOrNone())
+                {
+                    return stream;
+                }
+                break;
         }
 
         return None;

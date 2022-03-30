@@ -22,8 +22,8 @@ public class MediaItemRepository : IMediaItemRepository
                 @"SELECT LanguageCode FROM
                     (SELECT Language AS LanguageCode
                     FROM MediaStream WHERE Language IS NOT NULL
-                    UNION ALL SELECT PreferredLanguageCode AS LanguageCode
-                    FROM Channel WHERE PreferredLanguageCode IS NOT NULL)
+                    UNION ALL SELECT PreferredAudioLanguageCode AS LanguageCode
+                    FROM Channel WHERE PreferredAudioLanguageCode IS NOT NULL)
                     GROUP BY LanguageCode
                     ORDER BY COUNT(LanguageCode) DESC")
             .Map(result => result.ToList());

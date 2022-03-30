@@ -87,7 +87,7 @@ public class UpdateFFmpegSettingsHandler : MediatR.IRequestHandler<UpdateFFmpegS
 
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegPreferredLanguageCode,
-            request.Settings.PreferredLanguageCode);
+            request.Settings.PreferredAudioLanguageCode);
 
         if (request.Settings.GlobalWatermarkId is not null)
         {

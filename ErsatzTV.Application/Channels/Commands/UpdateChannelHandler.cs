@@ -32,7 +32,9 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
         c.Group = update.Group;
         c.Categories = update.Categories;
         c.FFmpegProfileId = update.FFmpegProfileId;
-        c.PreferredLanguageCode = update.PreferredLanguageCode;
+        c.PreferredAudioLanguageCode = update.PreferredAudioLanguageCode;
+        c.PreferredSubtitleLanguageCode = update.PreferredSubtitleLanguageCode;
+        c.SubtitleMode = update.SubtitleMode;
         c.Artwork ??= new List<Artwork>();
 
         if (!string.IsNullOrWhiteSpace(update.Logo))
@@ -69,7 +71,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
     private async Task<Validation<BaseError, Channel>> Validate(TvContext dbContext, UpdateChannel request) =>
         (await ChannelMustExist(dbContext, request), ValidateName(request),
             await ValidateNumber(dbContext, request),
-            ValidatePreferredLanguage(request))
+            ValidatePreferredAudioLanguage(request))
         .Apply((channelToUpdate, _, _, _) => channelToUpdate);
 
     private static Task<Validation<BaseError, Channel>> ChannelMustExist(
@@ -106,10 +108,10 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
         return BaseError.New("Channel number must be unique");
     }
 
-    private static Validation<BaseError, string> ValidatePreferredLanguage(UpdateChannel updateChannel) =>
-        Optional(updateChannel.PreferredLanguageCode ?? string.Empty)
+    private static Validation<BaseError, string> ValidatePreferredAudioLanguage(UpdateChannel updateChannel) =>
+        Optional(updateChannel.PreferredAudioLanguageCode ?? string.Empty)
             .Filter(
                 lc => string.IsNullOrWhiteSpace(lc) || CultureInfo.GetCultures(CultureTypes.NeutralCultures).Any(
                     ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
-            .ToValidation<BaseError>("Preferred language code is invalid");
+            .ToValidation<BaseError>("Preferred audio language code is invalid");
 }

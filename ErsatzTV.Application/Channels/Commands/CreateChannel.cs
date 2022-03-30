@@ -11,7 +11,9 @@ public record CreateChannel
     string Categories,
     int FFmpegProfileId,
     string Logo,
-    string PreferredLanguageCode,
+    string PreferredAudioLanguageCode,
     StreamingMode StreamingMode,
     int? WatermarkId,
-    int? FallbackFillerId) : IRequest<Either<BaseError, CreateChannelResult>>;
+    int? FallbackFillerId,
+    string PreferredSubtitleLanguageCode,
+    ChannelSubtitleMode SubtitleMode) : IRequest<Either<BaseError, CreateChannelResult>>;
