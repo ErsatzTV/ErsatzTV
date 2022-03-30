@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.4.5-alpha] - 2022-03-29
 ### Fixed
 - Fix streaming mode inconsistencies when `mode` parameter is unspecified
 - Fix startup on Windows 7
@@ -1034,7 +1036,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.5-alpha...HEAD
+[0.4.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...v0.4.5-alpha
 [0.4.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.3-alpha...v0.4.4-alpha
 [0.4.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.2-alpha...v0.4.3-alpha
 [0.4.2-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.1-alpha...v0.4.2-alpha
