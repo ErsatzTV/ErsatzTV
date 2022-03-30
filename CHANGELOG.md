@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove FFmpeg Profile `Transcode`, `Normalize Video` and `Normalize Audio` settings
   - All content will be transcoded and have audio and video normalized
   - The only exception to this rule is `HLS Direct` streaming mode, which directly copies video and audio streams
+- Always try to connect to Plex at `http://localhost:32400` even if that address isn't advertised by the Plex API
+  - If Plex isn't on the localhost, all other addresses will be checked as with previous releases
 
 ## [0.4.4-alpha] - 2022-03-10
 ### Fixed
