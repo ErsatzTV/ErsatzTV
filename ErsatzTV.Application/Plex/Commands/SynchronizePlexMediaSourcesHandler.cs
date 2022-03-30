@@ -9,10 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Plex;
 
-public class
-    SynchronizePlexMediaSourcesHandler : IRequestHandler<SynchronizePlexMediaSources,
-        Either<BaseError, List<PlexMediaSource>>>
+public class SynchronizePlexMediaSourcesHandler : IRequestHandler<SynchronizePlexMediaSources,
+    Either<BaseError, List<PlexMediaSource>>>
 {
+    private const string LocalhostUri = "http://localhost:32400";
+
     private readonly ChannelWriter<IPlexBackgroundServiceRequest> _channel;
     private readonly IEntityLocker _entityLocker;
     private readonly ILogger<SynchronizePlexMediaSourcesHandler> _logger;
@@ -72,6 +73,18 @@ public class
 
     private async Task SynchronizeServer(List<PlexMediaSource> allExisting, PlexMediaSource server)
     {
+        if (server.Connections.All(c => c.Uri != LocalhostUri))
+        {
+            var localhost = new PlexConnection
+            {
+                PlexMediaSource = server,
+                PlexMediaSourceId = server.Id,
+                Uri = LocalhostUri
+            };
+
+            server.Connections.Add(localhost);
+        }
+
         Option<PlexMediaSource> maybeExisting =
             allExisting.Find(s => s.ClientIdentifier == server.ClientIdentifier);
 
@@ -98,7 +111,11 @@ public class
 
     private async Task FindConnectionToActivate(PlexMediaSource server)
     {
-        var prioritized = server.Connections.OrderBy(pc => pc.IsActive ? 0 : 1).ToList();
+        var prioritized = server.Connections
+            .OrderByDescending(pc => pc.Uri == LocalhostUri)
+            .ThenByDescending(pc => pc.IsActive)
+            .ToList();
+
         foreach (PlexConnection connection in server.Connections)
         {
             connection.IsActive = false;
