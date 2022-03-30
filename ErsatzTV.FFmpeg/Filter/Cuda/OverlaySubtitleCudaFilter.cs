@@ -1,6 +1,6 @@
-﻿namespace ErsatzTV.FFmpeg.Filter;
+﻿namespace ErsatzTV.FFmpeg.Filter.Cuda;
 
-public class OverlaySubtitlesFilter : BaseFilter
+public class OverlaySubtitleCudaFilter : BaseFilter
 {
     public override FrameState NextState(FrameState currentState) => currentState;
 

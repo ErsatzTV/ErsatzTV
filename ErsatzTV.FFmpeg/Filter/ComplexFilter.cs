@@ -42,7 +42,8 @@ public class ComplexFilter : IPipelineStep
         string audioFilterComplex = string.Empty;
         string videoFilterComplex = string.Empty;
         string watermarkFilterComplex = string.Empty;
-        string overlayFilterComplex = string.Empty;
+        string watermarkOverlayFilterComplex = string.Empty;
+        string subtitleFilterComplex = string.Empty;
         string subtitleOverlayFilterComplex = string.Empty;
         
         var distinctPaths = new List<string>();
@@ -63,6 +64,14 @@ public class ComplexFilter : IPipelineStep
         }
 
         foreach ((string path, _) in _maybeWatermarkInputFile)
+        {
+            if (!distinctPaths.Contains(path))
+            {
+                distinctPaths.Add(path);
+            }
+        }
+
+        foreach ((string path, _) in _maybeSubtitleInputFile)
         {
             if (!distinctPaths.Contains(path))
             {
@@ -122,7 +131,7 @@ public class ComplexFilter : IPipelineStep
                     watermarkFilterComplex += watermarkLabel;
                 }
 
-                IPipelineFilterStep overlayFilter = AvailableOverlayFilters.ForAcceleration(
+                IPipelineFilterStep overlayFilter = AvailableWatermarkOverlayFilters.ForAcceleration(
                     _ffmpegState.HardwareAccelerationMode,
                     _currentState,
                     watermarkInputFile.DesiredState,
@@ -146,7 +155,7 @@ public class ComplexFilter : IPipelineStep
                         uploadFilter = "," + uploadFilter;
                     }
                     
-                    overlayFilterComplex = $"{tempVideoLabel}{watermarkLabel}{overlayFilter.Filter}{uploadFilter}[vf]";
+                    watermarkOverlayFilterComplex = $"{tempVideoLabel}{watermarkLabel}{overlayFilter.Filter}{uploadFilter}[vf]";
                     
                     // change the mapped label
                     videoLabel = "[vf]";
@@ -159,9 +168,20 @@ public class ComplexFilter : IPipelineStep
             int inputIndex = distinctPaths.IndexOf(subtitleInputFile.Path);
             foreach ((int index, _, _) in subtitleInputFile.Streams)
             {
-                subtitleLabel = $"[{inputIndex}:{index}]";
+                subtitleLabel = $"{inputIndex}:{index}";
+                if (subtitleInputFile.FilterSteps.Any(f => !string.IsNullOrWhiteSpace(f.Filter)))
+                {
+                    subtitleFilterComplex += $"[{inputIndex}:{index}]";
+                    subtitleFilterComplex += string.Join(
+                        ",",
+                        subtitleInputFile.FilterSteps.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
+                    subtitleLabel = "[st]";
+                    subtitleFilterComplex += subtitleLabel;
+                }
 
-                IPipelineFilterStep overlayFilter = new OverlaySubtitlesFilter();
+                IPipelineFilterStep overlayFilter =
+                    AvailableSubtitleOverlayFilters.ForAcceleration(_ffmpegState.HardwareAccelerationMode);
+
                 if (overlayFilter.Filter != string.Empty)
                 {
                     string tempVideoLabel = string.IsNullOrWhiteSpace(videoFilterComplex) &&
@@ -169,8 +189,21 @@ public class ComplexFilter : IPipelineStep
                         ? $"[{videoLabel}]"
                         : videoLabel;
 
-                    subtitleOverlayFilterComplex = $"{tempVideoLabel}{subtitleLabel}{overlayFilter.Filter}[vst]";
-                    
+                    // vaapi uses software overlay and needs to upload
+                    string uploadFilter = string.Empty;
+                    if (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                    {
+                        uploadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(uploadFilter))
+                    {
+                        uploadFilter = "," + uploadFilter;
+                    }
+
+                    subtitleOverlayFilterComplex =
+                        $"{tempVideoLabel}{subtitleLabel}{overlayFilter.Filter}{uploadFilter}[vst]";
+
                     // change the mapped label
                     videoLabel = "[vst]";
                 }
@@ -183,7 +216,11 @@ public class ComplexFilter : IPipelineStep
                 ";",
                 new[]
                 {
-                    audioFilterComplex, videoFilterComplex, watermarkFilterComplex, overlayFilterComplex,
+                    audioFilterComplex,
+                    videoFilterComplex,
+                    watermarkFilterComplex,
+                    subtitleFilterComplex,
+                    watermarkOverlayFilterComplex,
                     subtitleOverlayFilterComplex
                 }.Where(
                     s => !string.IsNullOrWhiteSpace(s)));

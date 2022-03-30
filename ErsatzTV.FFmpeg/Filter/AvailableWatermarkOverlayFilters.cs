@@ -4,7 +4,7 @@ using ErsatzTV.FFmpeg.State;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
-public static class AvailableOverlayFilters
+public static class AvailableWatermarkOverlayFilters
 {
     public static IPipelineFilterStep ForAcceleration(
         HardwareAccelerationMode accelMode,
