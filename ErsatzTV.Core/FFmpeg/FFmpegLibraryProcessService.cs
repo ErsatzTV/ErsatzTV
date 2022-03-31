@@ -55,6 +55,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
         Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
+        Option<MediaStream> maybeSubtitleStream =
+            await _ffmpegStreamSelector.SelectSubtitleStream(channel, videoVersion);  
 
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
@@ -120,7 +122,24 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
-        var watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
+        Option<SubtitleInputFile> subtitleInputFile = maybeSubtitleStream.Map(
+            subtitleStream =>
+            {
+                var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(
+                    subtitleStream.Index,
+                    subtitleStream.Codec,
+                    StreamKind.Video);
+
+                return new SubtitleInputFile(
+                    videoPath,
+                    new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
+                    false);
+                
+                // TODO: figure out HLS direct
+                // channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);
+            });
+
+        Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
         
         string videoFormat = playbackSettings.VideoFormat switch
         {
@@ -192,6 +211,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             videoInputFile,
             audioInputFile,
             watermarkInputFile,
+            subtitleInputFile,
             FileSystemLayout.FFmpegReportsFolder,
             _logger);
 
@@ -278,7 +298,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             $"http://localhost:{Settings.ListenPort}/ffmpeg/concat/{channel.Number}",
             resolution);
 
-        var pipelineBuilder = new PipelineBuilder(None, None, None, FileSystemLayout.FFmpegReportsFolder, _logger);
+        var pipelineBuilder = new PipelineBuilder(
+            None,
+            None,
+            None,
+            None,
+            FileSystemLayout.FFmpegReportsFolder,
+            _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Concat(
             concatInputFile,

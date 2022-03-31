@@ -16,7 +16,7 @@ public class GetFFmpegProfileByIdHandler : IRequestHandler<GetFFmpegProfileById,
         GetFFmpegProfileById request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         return await dbContext.FFmpegProfiles
             .Include(p => p.Resolution)
             .SelectOneAsync(p => p.Id, p => p.Id == request.Id)

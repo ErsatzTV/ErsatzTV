@@ -419,6 +419,9 @@ public class TranscodingTests
 
         public Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version) =>
             Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
+
+        public Task<Option<MediaStream>> SelectSubtitleStream(Channel channel, MediaVersion version) =>
+            Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Subtitle)).AsTask();
     }
 
     private static string ExecutableName(string baseName) =>

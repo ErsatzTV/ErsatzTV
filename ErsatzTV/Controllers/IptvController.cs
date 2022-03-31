@@ -83,9 +83,9 @@ public class IptvController : ControllerBase
                         Process process = processModel.Process;
 
                         _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
-                        // _logger.LogDebug(
-                        //     "ffmpeg concat arguments {FFmpegArguments}",
-                        //     string.Join(" ", process.StartInfo.ArgumentList));
+                        _logger.LogDebug(
+                            "ffmpeg ts arguments {FFmpegArguments}",
+                            string.Join(" ", process.StartInfo.ArgumentList));
                         process.Start();
                         return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
                     },

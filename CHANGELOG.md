@@ -4,8 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+### Added
+- Add `Preferred Subtitle Language` and `Subtitle Mode` to channel settings
+  - `Preferred Subtitle Language` will filter all subtitle streams based on language
+  - `Subtitle Mode` will further filter subtitle streams based on attributes (forced, default)
+  - If picture-based subtitles are found after filtering, they will be burned into the video stream
+
 ### Changed
 - Remove legacy transcoder logic option; all channels will use the new transcoder logic
+- Renamed channel setting `Preferred Language` to `Preferred Audio Language`
 
 ## [0.4.5-alpha] - 2022-03-29
 ### Fixed
