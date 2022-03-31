@@ -6,7 +6,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public class UpdateFFmpegSettingsHandler : MediatR.IRequestHandler<UpdateFFmpegSettings, Either<BaseError, Unit>>
+public class UpdateFFmpegSettingsHandler : IRequestHandler<UpdateFFmpegSettings, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;
@@ -80,10 +80,6 @@ public class UpdateFFmpegSettingsHandler : MediatR.IRequestHandler<UpdateFFmpegS
         {
             Directory.CreateDirectory(FileSystemLayout.FFmpegReportsFolder);
         }
-
-        await _configElementRepository.Upsert(
-            ConfigElementKey.FFmpegUseLegacyTranscoder,
-            request.Settings.UseLegacyTranscoder.ToString());
 
         await _configElementRepository.Upsert(
             ConfigElementKey.FFmpegPreferredLanguageCode,

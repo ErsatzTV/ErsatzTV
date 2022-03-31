@@ -1,6 +1,5 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -35,7 +34,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         IOtherVideoRepository otherVideoRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
+        IFFmpegProcessService ffmpegProcessService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<OtherVideoFolderScanner> logger) : base(
@@ -44,7 +43,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
         metadataRepository,
         mediaItemRepository,
         imageCache,
-        ffmpegProcessServiceFactory,
+        ffmpegProcessService,
         tempFilePool,
         client,
         logger)

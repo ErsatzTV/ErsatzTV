@@ -1,6 +1,5 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -36,7 +35,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
         IMediator mediator,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
+        IFFmpegProcessService ffmpegProcessService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<MovieFolderScanner> logger)
@@ -46,7 +45,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
             metadataRepository,
             mediaItemRepository,
             imageCache,
-            ffmpegProcessServiceFactory,
+            ffmpegProcessService,
             tempFilePool,
             client,
             logger)

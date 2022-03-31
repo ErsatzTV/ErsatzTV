@@ -1,7 +1,6 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -36,7 +35,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         ISongRepository songRepository,
         ILibraryRepository libraryRepository,
         IMediaItemRepository mediaItemRepository,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
+        IFFmpegProcessService ffmpegProcessService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger<SongFolderScanner> logger) : base(
@@ -45,7 +44,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         metadataRepository,
         mediaItemRepository,
         imageCache,
-        ffmpegProcessServiceFactory,
+        ffmpegProcessService,
         tempFilePool,
         client,
         logger)

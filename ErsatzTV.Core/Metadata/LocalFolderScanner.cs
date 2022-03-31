@@ -46,7 +46,7 @@ public abstract class LocalFolderScanner
         .ToList();
 
     private readonly IImageCache _imageCache;
-    private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly ITempFilePool _tempFilePool;
     private readonly IClient _client;
 
@@ -62,7 +62,7 @@ public abstract class LocalFolderScanner
         IMetadataRepository metadataRepository,
         IMediaItemRepository mediaItemRepository,
         IImageCache imageCache,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory, 
+        IFFmpegProcessService ffmpegProcessService, 
         ITempFilePool tempFilePool,
         IClient client,
         ILogger logger)
@@ -72,7 +72,7 @@ public abstract class LocalFolderScanner
         _metadataRepository = metadataRepository;
         _mediaItemRepository = mediaItemRepository;
         _imageCache = imageCache;
-        _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
+        _ffmpegProcessService = ffmpegProcessService;
         _tempFilePool = tempFilePool;
         _client = client;
         _logger = logger;
@@ -158,14 +158,12 @@ public abstract class LocalFolderScanner
                 // if ffmpeg path is passed, we need pre-processing
                 foreach (string path in ffmpegPath)
                 {
-                    IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
-                        
                     artworkFile = await attachedPicIndex.Match(
                         async picIndex =>
                         {
                             // extract attached pic (and convert to png)
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                            using Process process = ffmpegProcessService.ExtractAttachedPicAsPng(
+                            using Process process = _ffmpegProcessService.ExtractAttachedPicAsPng(
                                 path,
                                 artworkFile,
                                 picIndex,
@@ -182,7 +180,7 @@ public abstract class LocalFolderScanner
                         {
                             // no attached pic index means convert to png
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                            using Process process = ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
+                            using Process process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
 
                             await Cli.Wrap(process.StartInfo.FileName)
                                 .WithArguments(process.StartInfo.ArgumentList)

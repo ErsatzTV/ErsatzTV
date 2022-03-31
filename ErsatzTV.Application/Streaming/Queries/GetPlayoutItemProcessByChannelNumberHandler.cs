@@ -4,7 +4,6 @@ using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Extensions;
-using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Jellyfin;
@@ -25,14 +24,14 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
     private readonly ITelevisionRepository _televisionRepository;
     private readonly IArtistRepository _artistRepository;
     private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
-    private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
 
     public GetPlayoutItemProcessByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory,
+        IFFmpegProcessService ffmpegProcessService,
         ILocalFileSystem localFileSystem,
         IPlexPathReplacementService plexPathReplacementService,
         IJellyfinPathReplacementService jellyfinPathReplacementService,
@@ -43,7 +42,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         ISongVideoGenerator songVideoGenerator)
         : base(dbContextFactory)
     {
-        _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
+        _ffmpegProcessService = ffmpegProcessService;
         _localFileSystem = localFileSystem;
         _plexPathReplacementService = plexPathReplacementService;
         _jellyfinPathReplacementService = jellyfinPathReplacementService;
@@ -106,8 +105,6 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             maybePlayoutItem = await CheckForFallbackFiller(dbContext, channel, now);
         }
 
-        IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
-
         foreach (PlayoutItemWithPath playoutItemWithPath in maybePlayoutItem.RightToSeq())
         {
             MediaVersion version = playoutItemWithPath.PlayoutItem.MediaItem.GetHeadVersion();
@@ -138,7 +135,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
-            Process process = await ffmpegProcessService.ForPlayoutItem(
+            Process process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
                 saveReports,
                 channel,
@@ -179,7 +176,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             switch (error)
             {
                 case UnableToLocatePlayoutItem:
-                    Process offlineProcess = await ffmpegProcessService.ForError(
+                    Process offlineProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
                         maybeDuration,
@@ -189,7 +186,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
                     return new PlayoutItemProcessModel(offlineProcess, finish);
                 case PlayoutItemDoesNotExistOnDisk:
-                    Process doesNotExistProcess = await ffmpegProcessService.ForError(
+                    Process doesNotExistProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
                         maybeDuration,
@@ -199,7 +196,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
                     return new PlayoutItemProcessModel(doesNotExistProcess, finish);
                 default:
-                    Process errorProcess = await ffmpegProcessService.ForError(
+                    Process errorProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
                         maybeDuration,
