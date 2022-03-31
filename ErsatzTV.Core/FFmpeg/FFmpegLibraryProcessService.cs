@@ -133,7 +133,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new SubtitleInputFile(
                     videoPath,
                     new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-                    true);//channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect); // copy with HLS Direct
+                    false);
+                
+                // TODO: figure out HLS direct
+                // channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);
             });
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);

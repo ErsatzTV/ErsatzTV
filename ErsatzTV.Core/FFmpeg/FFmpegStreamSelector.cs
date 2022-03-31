@@ -91,9 +91,9 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
             string.IsNullOrWhiteSpace(channel.PreferredSubtitleLanguageCode))
         {
-            _logger.LogDebug(
-                "Channel {Number} is HLS Direct with no preferred subtitle language; using all subtitle streams",
-                channel.Number);
+            // _logger.LogDebug(
+            //     "Channel {Number} is HLS Direct with no preferred subtitle language; using all subtitle streams",
+            //     channel.Number);
             return None;
         }
 
