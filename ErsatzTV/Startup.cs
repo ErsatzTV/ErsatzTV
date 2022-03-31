@@ -381,9 +381,7 @@ public class Startup
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
             
-        // services.AddScoped<IFFmpegProcessService, FFmpegProcessService>();
-        services.AddScoped<IFFmpegProcessServiceFactory, FFmpegProcessServiceFactory>();
-        services.AddScoped<FFmpegLibraryProcessService>();
+        services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<FFmpegProcessService>();
             
         services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();
