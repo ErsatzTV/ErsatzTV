@@ -61,7 +61,7 @@ public record VideoInputFile(string Path, IList<VideoStream> VideoStreams) : Inp
 public record WatermarkInputFile
     (string Path, IList<VideoStream> VideoStreams, WatermarkState DesiredState) : VideoInputFile(Path, VideoStreams);
 
-public record SubtitleInputFile(string Path, IList<MediaStream> SubtitleStreams) : InputFile(Path, SubtitleStreams)
+public record SubtitleInputFile(string Path, IList<MediaStream> SubtitleStreams, bool Copy) : InputFile(Path, SubtitleStreams)
 {
     public bool IsImageBased = SubtitleStreams.All(s => s.Codec is "hdmv_pgs_subtitle" or "dvd_subtitle");
 }

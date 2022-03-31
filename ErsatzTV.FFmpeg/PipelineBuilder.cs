@@ -117,7 +117,8 @@ public class PipelineBuilder
 
         foreach (VideoStream videoStream in allVideoStreams)
         {
-            bool hasOverlay = _watermarkInputFile.IsSome || _subtitleInputFile.Map(s => s.IsImageBased).IfNone(false);
+            bool hasOverlay = _watermarkInputFile.IsSome ||
+                              _subtitleInputFile.Map(s => s.IsImageBased && !s.Copy).IfNone(false);
             
             Option<int> initialFrameRate = Option<int>.None;
             foreach (string frameRateString in videoStream.FrameRate)
@@ -203,6 +204,11 @@ public class PipelineBuilder
                         currentState = decoder.NextState(currentState);
                     }
                 }
+            }
+
+            if (_subtitleInputFile.Map(s => s.Copy) == Some(true))
+            {
+                _pipelineSteps.Add(new EncoderCopySubtitle());
             }
 
             if (videoStream.StillImage)
@@ -442,7 +448,7 @@ public class PipelineBuilder
                 }
 
                 // after everything else is done, apply the encoder
-                if (!_pipelineSteps.OfType<IEncoder>().Any())
+                if (_pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
                 {
                     foreach (IEncoder e in AvailableEncoders.ForVideoFormat(
                                  ffmpegState,
