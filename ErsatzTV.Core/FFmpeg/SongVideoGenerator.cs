@@ -14,16 +14,16 @@ public class SongVideoGenerator : ISongVideoGenerator
         
     private readonly ITempFilePool _tempFilePool;
     private readonly IImageCache _imageCache;
-    private readonly IFFmpegProcessServiceFactory _ffmpegProcessServiceFactory;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
 
     public SongVideoGenerator(
         ITempFilePool tempFilePool,
         IImageCache imageCache,
-        IFFmpegProcessServiceFactory ffmpegProcessServiceFactory)
+        IFFmpegProcessService ffmpegProcessService)
     {
         _tempFilePool = tempFilePool;
         _imageCache = imageCache;
-        _ffmpegProcessServiceFactory = ffmpegProcessServiceFactory;
+        _ffmpegProcessService = ffmpegProcessService;
     }
 
     public async Task<Tuple<string, MediaVersion>> GenerateSongVideo(
@@ -212,8 +212,7 @@ public class SongVideoGenerator : ISongVideoGenerator
             new() { Path = videoPath }
         };
 
-        IFFmpegProcessService ffmpegProcessService = await _ffmpegProcessServiceFactory.GetService();
-        Either<BaseError, string> maybeSongImage = await ffmpegProcessService.GenerateSongImage(
+        Either<BaseError, string> maybeSongImage = await _ffmpegProcessService.GenerateSongImage(
             ffmpegPath,
             subtitleFile,
             channel,
