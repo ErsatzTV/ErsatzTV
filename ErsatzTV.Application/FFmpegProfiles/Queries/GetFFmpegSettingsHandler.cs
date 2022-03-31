@@ -32,8 +32,6 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegWorkAheadSegmenters);
         Option<int> initialSegmentCount =
             await _configElementRepository.GetValue<int>(ConfigElementKey.FFmpegInitialSegmentCount);
-        Option<bool> useLegacyTranscoder =
-            await _configElementRepository.GetValue<bool>(ConfigElementKey.FFmpegUseLegacyTranscoder);
 
         var result = new FFmpegSettingsViewModel
         {
@@ -45,7 +43,6 @@ public class GetFFmpegSettingsHandler : IRequestHandler<GetFFmpegSettings, FFmpe
             HlsSegmenterIdleTimeout = await hlsSegmenterIdleTimeout.IfNoneAsync(60),
             WorkAheadSegmenterLimit = await workAheadSegmenterLimit.IfNoneAsync(1),
             InitialSegmentCount = await initialSegmentCount.IfNoneAsync(1),
-            UseLegacyTranscoder = await useLegacyTranscoder.IfNoneAsync(false)
         };
 
         foreach (int watermarkId in watermark)
