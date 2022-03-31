@@ -2,9 +2,9 @@
 
 namespace ErsatzTV.FFmpeg.Filter.Cuda;
 
-public class OverlayCudaFilter : OverlayFilter
+public class OverlayWatermarkCudaFilter : OverlayWatermarkFilter
 {
-    public OverlayCudaFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution) : base(
+    public OverlayWatermarkCudaFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution) : base(
         currentState,
         watermarkState,
         resolution)

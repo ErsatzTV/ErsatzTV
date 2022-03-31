@@ -4,5 +4,6 @@ public enum StreamKind
 {
     Audio,
     Video,
+    Subtitle,
     All
 }
