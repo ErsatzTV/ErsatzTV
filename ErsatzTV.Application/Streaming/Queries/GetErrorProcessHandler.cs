@@ -3,16 +3,15 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Infrastructure.Data;
-using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Streaming;
 
-public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetConcatProcessByChannelNumber>
+public class GetErrorProcessHandler : FFmpegProcessHandler<GetErrorProcess>
 {
     private readonly IFFmpegProcessService _ffmpegProcessService;
 
-    public GetConcatProcessByChannelNumberHandler(
+    public GetErrorProcessHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IFFmpegProcessService ffmpegProcessService)
         : base(dbContextFactory)
@@ -22,22 +21,19 @@ public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetCo
 
     protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
         TvContext dbContext,
-        GetConcatProcessByChannelNumber request,
+        GetErrorProcess request,
         Channel channel,
         string ffmpegPath,
         CancellationToken cancellationToken)
     {
-        bool saveReports = await dbContext.ConfigElements
-            .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
-            .Map(result => result.IfNone(false));
-
-        Process process = _ffmpegProcessService.ConcatChannel(
+        Process process = await _ffmpegProcessService.ForError(
             ffmpegPath,
-            saveReports,
             channel,
-            request.Scheme,
-            request.Host);
+            request.MaybeDuration,
+            request.ErrorMessage,
+            request.HlsRealtime,
+            request.PtsOffset);
 
-        return new PlayoutItemProcessModel(process, Option<TimeSpan>.None, DateTimeOffset.MaxValue);
+        return new PlayoutItemProcessModel(process, request.MaybeDuration, request.Until);
     }
 }

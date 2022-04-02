@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Streaming;
 
-public record PlayoutItemProcessModel(Process Process, DateTimeOffset Until);
+public record PlayoutItemProcessModel(Process Process, Option<TimeSpan> MaybeDuration, DateTimeOffset Until);

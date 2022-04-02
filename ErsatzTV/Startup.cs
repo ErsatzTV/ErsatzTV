@@ -296,15 +296,15 @@ public class Startup
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
 
-                if (env.IsDevelopment())
-                {
-                    endpoints.MapToVueCliProxy(
-                        "/v2/{*path}",
-                        new SpaOptions { SourcePath = "client-app" },
-                        "serve",
-                        regex: "Compiled successfully",
-                        forceKill: true);
-                }
+                // if (env.IsDevelopment())
+                // {
+                //     endpoints.MapToVueCliProxy(
+                //         "/v2/{*path}",
+                //         new SpaOptions { SourcePath = "client-app" },
+                //         "serve",
+                //         regex: "Compiled successfully",
+                //         forceKill: true);
+                // }
             });
     }
 
