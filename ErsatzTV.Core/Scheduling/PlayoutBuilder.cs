@@ -409,7 +409,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             ScheduleItemsEnumeratorState = playoutBuilderState.ScheduleItemsEnumerator.State,
             NextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>
-                .GetStartTimeAfter(playoutBuilderState, anchorScheduleItem)
+                .GetStartTimeAfter(playoutBuilderState, anchorScheduleItem, Some<ILogger>(_logger))
                 .UtcDateTime,
             InFlood = playoutBuilderState.InFlood,
             InDurationFiller = playoutBuilderState.InDurationFiller,
