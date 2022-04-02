@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Preferred Subtitle Language` will filter all subtitle streams based on language
   - `Subtitle Mode` will further filter subtitle streams based on attributes (forced, default)
   - If picture-based subtitles are found after filtering, they will be burned into the video stream
+- Detect non-zero ffmpeg exit code from `HLS Segmenter` and `MPEG-TS`, log error output and display error output on stream
 
 ### Changed
 - Remove legacy transcoder logic option; all channels will use the new transcoder logic

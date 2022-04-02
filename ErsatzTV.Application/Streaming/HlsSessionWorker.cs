@@ -4,7 +4,6 @@ using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Application.Channels;
-using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
@@ -212,19 +211,68 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                 try
                 {
-                    await Cli.Wrap(process.StartInfo.FileName)
+                    BufferedCommandResult commandResult = await Cli.Wrap(process.StartInfo.FileName)
                         .WithArguments(process.StartInfo.ArgumentList)
                         .WithValidation(CommandResultValidation.None)
-                        .ExecuteAsync(cancellationToken);
+                        .ExecuteBufferedAsync(cancellationToken);
+
+                    if (commandResult.ExitCode == 0)
+                    {
+                        _logger.LogInformation("HLS process has completed for channel {Channel}", _channelNumber);
+                        _transcodedUntil = processModel.Until;
+                        return true;
+                    }
+                    else
+                    {
+                        // detect the non-zero exit code and transcode the ffmpeg error message instead
+
+                        string errorMessage = commandResult.StandardError;
+                        if (string.IsNullOrWhiteSpace(errorMessage))
+                        {
+                            errorMessage = $"Unknown FFMPEG error; exit code {commandResult.ExitCode}";
+                        }
+
+                        _logger.LogError(
+                            "HLS process for channel {Channel} has terminated unsuccessfully with exit code {ExitCode}: {StandardError}",
+                            _channelNumber,
+                            commandResult.ExitCode,
+                            commandResult.StandardError);
+                        
+                        Either<BaseError, PlayoutItemProcessModel> maybeOfflineProcess = await mediator.Send(
+                            new GetErrorProcess(
+                                _channelNumber,
+                                "segmenter",
+                                realtime,
+                                ptsOffset,
+                                processModel.MaybeDuration,
+                                processModel.Until,
+                                errorMessage),
+                            cancellationToken);
+
+                        foreach (PlayoutItemProcessModel errorProcessModel in maybeOfflineProcess.RightAsEnumerable())
+                        {
+                            Process errorProcess = errorProcessModel.Process;
+                            
+                            _logger.LogInformation(
+                                "ffmpeg hls error arguments {FFmpegArguments}",
+                                string.Join(" ", errorProcess.StartInfo.ArgumentList));
+
+                            commandResult = await Cli.Wrap(errorProcess.StartInfo.FileName)
+                                .WithArguments(errorProcess.StartInfo.ArgumentList)
+                                .WithValidation(CommandResultValidation.None)
+                                .ExecuteBufferedAsync(cancellationToken);
+                            
+                            return commandResult.ExitCode == 0;
+                        }
+
+                        return false;
+                    }
                 }
                 catch (TaskCanceledException)
                 {
                     _logger.LogInformation("Terminating HLS process for channel {Channel}", _channelNumber);
                     return false;
                 }
-
-                _logger.LogInformation("HLS process has completed for channel {Channel}", _channelNumber);
-                _transcodedUntil = processModel.Until;
             }
         }
         catch (Exception ex)
@@ -248,7 +296,7 @@ public class HlsSessionWorker : IHlsSessionWorker
             Interlocked.Decrement(ref _workAheadCount);
         }
 
-        return true;
+        return false;
     }
 
     private async Task TrimAndDelete(CancellationToken cancellationToken)
