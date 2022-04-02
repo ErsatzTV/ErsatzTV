@@ -3,13 +3,13 @@ using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Configuration;
 
-public class
-    UpdatePlayoutDaysToBuildHandler : MediatR.IRequestHandler<UpdatePlayoutDaysToBuild, Either<BaseError, Unit>>
+public class UpdatePlayoutDaysToBuildHandler : IRequestHandler<UpdatePlayoutDaysToBuild, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -37,16 +37,16 @@ public class
     private async Task<Unit> ApplyUpdate(TvContext dbContext, int daysToBuild)
     {
         await _configElementRepository.Upsert(ConfigElementKey.PlayoutDaysToBuild, daysToBuild);
-            
-        // build all playouts to proper number of days
+
+        // continue all playouts to proper number of days
         List<Playout> playouts = await dbContext.Playouts
             .Include(p => p.Channel)
             .ToListAsync();
         foreach (int playoutId in playouts.OrderBy(p => decimal.Parse(p.Channel.Number)).Map(p => p.Id))
         {
-            await _workerChannel.WriteAsync(new BuildPlayout(playoutId));
+            await _workerChannel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Continue));
         }
-            
+
         return Unit.Default;
     }
 

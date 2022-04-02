@@ -3,13 +3,14 @@ using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public class UpdateMultiCollectionHandler : MediatR.IRequestHandler<UpdateMultiCollection, Either<BaseError, Unit>>
+public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -29,15 +30,15 @@ public class UpdateMultiCollectionHandler : MediatR.IRequestHandler<UpdateMultiC
         UpdateMultiCollection request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, MultiCollection> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, c => ApplyUpdateRequest(dbContext, c, request));
+        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, MultiCollection c, UpdateMultiCollection request)
     {
         c.Name = request.Name;
-            
+
         // save name first so playouts don't get rebuilt for a name change
         await dbContext.SaveChangesAsync();
 
@@ -45,22 +46,23 @@ public class UpdateMultiCollectionHandler : MediatR.IRequestHandler<UpdateMultiC
             .Filter(i => i.CollectionId.HasValue)
             // ReSharper disable once PossibleInvalidOperationException
             .Filter(i => c.MultiCollectionItems.All(i2 => i2.CollectionId != i.CollectionId.Value))
-            .Map(i => new MultiCollectionItem
-            {
-                // ReSharper disable once PossibleInvalidOperationException
-                CollectionId = i.CollectionId.Value,
-                MultiCollectionId = c.Id,
-                ScheduleAsGroup = i.ScheduleAsGroup,
-                PlaybackOrder = i.PlaybackOrder
-            })
+            .Map(
+                i => new MultiCollectionItem
+                {
+                    // ReSharper disable once PossibleInvalidOperationException
+                    CollectionId = i.CollectionId.Value,
+                    MultiCollectionId = c.Id,
+                    ScheduleAsGroup = i.ScheduleAsGroup,
+                    PlaybackOrder = i.PlaybackOrder
+                })
             .ToList();
         var toRemove = c.MultiCollectionItems
             .Filter(i => request.Items.All(i2 => i2.CollectionId != i.CollectionId))
             .ToList();
-            
+
         // remove items that are no longer present
         c.MultiCollectionItems.RemoveAll(toRemove.Contains);
-            
+
         // update existing items
         foreach (MultiCollectionItem item in c.MultiCollectionItems)
         {
@@ -79,22 +81,23 @@ public class UpdateMultiCollectionHandler : MediatR.IRequestHandler<UpdateMultiC
             .Filter(i => i.SmartCollectionId.HasValue)
             // ReSharper disable once PossibleInvalidOperationException
             .Filter(i => c.MultiCollectionSmartItems.All(i2 => i2.SmartCollectionId != i.SmartCollectionId.Value))
-            .Map(i => new MultiCollectionSmartItem
-            {
-                // ReSharper disable once PossibleInvalidOperationException
-                SmartCollectionId = i.SmartCollectionId.Value,
-                MultiCollectionId = c.Id,
-                ScheduleAsGroup = i.ScheduleAsGroup,
-                PlaybackOrder = i.PlaybackOrder
-            })
+            .Map(
+                i => new MultiCollectionSmartItem
+                {
+                    // ReSharper disable once PossibleInvalidOperationException
+                    SmartCollectionId = i.SmartCollectionId.Value,
+                    MultiCollectionId = c.Id,
+                    ScheduleAsGroup = i.ScheduleAsGroup,
+                    PlaybackOrder = i.PlaybackOrder
+                })
             .ToList();
         var toRemoveSmart = c.MultiCollectionSmartItems
             .Filter(i => request.Items.All(i2 => i2.SmartCollectionId != i.SmartCollectionId))
             .ToList();
-            
+
         // remove items that are no longer present
         c.MultiCollectionSmartItems.RemoveAll(toRemoveSmart.Contains);
-            
+
         // update existing items
         foreach (MultiCollectionSmartItem item in c.MultiCollectionSmartItems)
         {
@@ -112,11 +115,11 @@ public class UpdateMultiCollectionHandler : MediatR.IRequestHandler<UpdateMultiC
         // rebuild playouts
         if (await dbContext.SaveChangesAsync() > 0)
         {
-            // rebuild all playouts that use this collection
+            // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository.PlayoutIdsUsingMultiCollection(
                          request.MultiCollectionId))
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }
         }
 
@@ -138,7 +141,9 @@ public class UpdateMultiCollectionHandler : MediatR.IRequestHandler<UpdateMultiC
             .SelectOneAsync(c => c.Id, c => c.Id == updateCollection.MultiCollectionId)
             .Map(o => o.ToValidation<BaseError>("MultiCollection does not exist."));
 
-    private static async Task<Validation<BaseError, string>> ValidateName(TvContext dbContext, UpdateMultiCollection updateMultiCollection)
+    private static async Task<Validation<BaseError, string>> ValidateName(
+        TvContext dbContext,
+        UpdateMultiCollection updateMultiCollection)
     {
         List<string> allNames = await dbContext.MultiCollections
             .Filter(mc => mc.Id != updateMultiCollection.MultiCollectionId)

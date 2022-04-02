@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix `HLS Segmenter` bug where it would drift off of the schedule if a playout was changed while the segmenter was running
 
 ### Added
 - Add `Preferred Subtitle Language` and `Subtitle Mode` to channel settings

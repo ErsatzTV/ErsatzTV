@@ -57,11 +57,6 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 playoutItem,
                 itemChapters);
 
-            // only play one item from collection, so always advance to the next item
-            // _logger.LogDebug(
-            //     "Advancing to next schedule item after playout mode {PlayoutMode}",
-            //     "One");
-
             PlayoutBuilderState nextState = playoutBuilderState with
             {
                 CurrentTime = itemEndTimeWithFiller
@@ -70,7 +65,12 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
             nextState.ScheduleItemsEnumerator.MoveNext();
             contentEnumerator.MoveNext();
 
-            // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+            LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+
+            // only play one item from collection, so always advance to the next item
+            _logger.LogDebug(
+                "Advancing to next schedule item after playout mode {PlayoutMode}",
+                "One");
 
             DateTimeOffset nextItemStart = GetStartTimeAfter(nextState, nextScheduleItem);
 
@@ -98,7 +98,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
 
             return Tuple(nextState, playoutItems);
         }
-            
+
         return Tuple(playoutBuilderState, new List<PlayoutItem>());
     }
 }

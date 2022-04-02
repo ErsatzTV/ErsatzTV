@@ -1,4 +1,4 @@
-﻿namespace ErsatzTV.Core.Domain;
+namespace ErsatzTV.Core.Domain;
 
 public class PlayoutProgramScheduleAnchor
 {
@@ -7,6 +7,12 @@ public class PlayoutProgramScheduleAnchor
     public Playout Playout { get; set; }
     public int ProgramScheduleId { get; set; }
     public ProgramSchedule ProgramSchedule { get; set; }
+    public DateTime? AnchorDate { get; set; }
+
+    public DateTimeOffset? AnchorDateOffset => AnchorDate.HasValue
+        ? new DateTimeOffset(AnchorDate.Value, TimeSpan.Zero).ToLocalTime()
+        : null;
+
     public ProgramScheduleItemCollectionType CollectionType { get; set; }
     public int? CollectionId { get; set; }
     public Collection Collection { get; set; }
