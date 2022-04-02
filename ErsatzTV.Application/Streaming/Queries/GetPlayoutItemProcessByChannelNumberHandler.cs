@@ -156,7 +156,10 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 request.PtsOffset,
                 request.TargetFramerate);
 
-            var result = new PlayoutItemProcessModel(process, playoutItemWithPath.PlayoutItem.FinishOffset);
+            var result = new PlayoutItemProcessModel(
+                process,
+                playoutItemWithPath.PlayoutItem.FinishOffset - (request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now),
+                playoutItemWithPath.PlayoutItem.FinishOffset);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
         }
@@ -184,7 +187,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         request.HlsRealtime,
                         request.PtsOffset);
 
-                    return new PlayoutItemProcessModel(offlineProcess, finish);
+                    return new PlayoutItemProcessModel(offlineProcess, maybeDuration, finish);
                 case PlayoutItemDoesNotExistOnDisk:
                     Process doesNotExistProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -194,7 +197,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         request.HlsRealtime,
                         request.PtsOffset);
 
-                    return new PlayoutItemProcessModel(doesNotExistProcess, finish);
+                    return new PlayoutItemProcessModel(doesNotExistProcess, maybeDuration, finish);
                 default:
                     Process errorProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
@@ -204,7 +207,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                         request.HlsRealtime,
                         request.PtsOffset);
 
-                    return new PlayoutItemProcessModel(errorProcess, finish);
+                    return new PlayoutItemProcessModel(errorProcess, maybeDuration, finish);
             }
         }
 
