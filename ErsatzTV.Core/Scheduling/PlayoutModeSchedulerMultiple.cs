@@ -64,7 +64,7 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                     : FillerKind.None
             };
 
-            LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+            // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
             DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
                 collectionEnumerators,
                 scheduleItem,

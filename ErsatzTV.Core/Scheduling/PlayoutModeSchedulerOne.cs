@@ -65,7 +65,7 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
             nextState.ScheduleItemsEnumerator.MoveNext();
             contentEnumerator.MoveNext();
 
-            LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+            // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
             // only play one item from collection, so always advance to the next item
             _logger.LogDebug(

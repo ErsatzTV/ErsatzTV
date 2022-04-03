@@ -88,7 +88,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                                itemEndTimeWithFiller <= durationFinish;
             if (willFinishInTime)
             {
-                LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+                // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
                 playoutItems.AddRange(
                     AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
 
