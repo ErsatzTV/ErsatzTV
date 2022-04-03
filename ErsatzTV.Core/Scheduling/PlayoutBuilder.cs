@@ -36,11 +36,6 @@ public class PlayoutBuilder : IPlayoutBuilder
     {
         foreach (PlayoutParameters parameters in await Validate(playout))
         {
-            if (mode == PlayoutBuildMode.Reset)
-            {
-                return await Build(playout, mode, parameters with { Start = parameters.Start.AddHours(-8) });
-            }
-
             return await Build(playout, mode, parameters);
         }
 
@@ -102,21 +97,65 @@ public class PlayoutBuilder : IPlayoutBuilder
         playout.ProgramScheduleAnchors.RemoveAll(
             a => a.AnchorDateOffset.IfNone(SystemTime.MinValueUtc).Date > parameters.Start.Date);
 
-        // TODO: maybe we need to filter down to one for each collection?
+        // _logger.LogDebug("Remaining anchors: {@Anchors}", playout.ProgramScheduleAnchors);
+
+        var allAnchors = playout.ProgramScheduleAnchors.ToList();
+
         var collectionIds = playout.ProgramScheduleAnchors
             .Map(a => Optional(a.CollectionId))
             .Sequence()
             .Flatten()
             .ToHashSet();
+        
+        var multiCollectionIds = playout.ProgramScheduleAnchors
+            .Map(a => Optional(a.MultiCollectionId))
+            .Sequence()
+            .Flatten()
+            .ToList();
 
-        var allAnchors = playout.ProgramScheduleAnchors.ToList();
+        var smartCollectionIds = playout.ProgramScheduleAnchors
+            .Map(a => Optional(a.SmartCollectionId))
+            .Sequence()
+            .Flatten()
+            .ToList();
+
+        var mediaItemIds = playout.ProgramScheduleAnchors
+            .Map(a => Optional(a.MediaItemId))
+            .Sequence()
+            .Flatten()
+            .ToList();
+
         playout.ProgramScheduleAnchors.Clear();
+
         foreach (int collectionId in collectionIds)
         {
             PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.CollectionId == collectionId)
-                .MinBy(a => a.AnchorDateOffset.Value.Ticks);
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
             playout.ProgramScheduleAnchors.Add(minAnchor);
         }
+        
+        foreach (int multiCollectionId in multiCollectionIds)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.MultiCollectionId == multiCollectionId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+        
+        foreach (int smartCollectionId in smartCollectionIds)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.SmartCollectionId == smartCollectionId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+        
+        foreach (int mediaItemId in mediaItemIds)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.MediaItemId == mediaItemId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+
+        // _logger.LogDebug("Oldest anchors for each collection: {@Anchors}", playout.ProgramScheduleAnchors);
 
         // convert checkpoints to non-checkpoints
         // foreach (PlayoutProgramScheduleAnchor anchor in playout.ProgramScheduleAnchors)
@@ -228,7 +267,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         Option<int> daysToBuild = await _configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild);
 
         DateTimeOffset now = DateTimeOffset.Now;
-
+        
         return new PlayoutParameters(
             now,
             now.AddDays(await daysToBuild.IfNoneAsync(2)),
@@ -409,7 +448,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         {
             ScheduleItemsEnumeratorState = playoutBuilderState.ScheduleItemsEnumerator.State,
             NextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>
-                .GetStartTimeAfter(playoutBuilderState, anchorScheduleItem, Some<ILogger>(_logger))
+                .GetStartTimeAfter(playoutBuilderState, anchorScheduleItem)
                 .UtcDateTime,
             InFlood = playoutBuilderState.InFlood,
             InDurationFiller = playoutBuilderState.InDurationFiller,

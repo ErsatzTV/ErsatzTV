@@ -18,8 +18,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
 
     public static DateTimeOffset GetStartTimeAfter(
         PlayoutBuilderState state,
-        ProgramScheduleItem scheduleItem,
-        Option<ILogger> logger = new())
+        ProgramScheduleItem scheduleItem)
     {
         DateTimeOffset startTime = state.CurrentTime;
 
@@ -28,15 +27,6 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             scheduleItem is ProgramScheduleItemFlood && state.InFlood ||
                             scheduleItem is ProgramScheduleItemDuration && state.InDurationFiller;
             
-        foreach (ILogger log in logger)
-        {
-            log.LogDebug(
-                "GetStartTimeAfter({State},{StartType},{IsIncomplete})",
-                state,
-                scheduleItem.StartType,
-                isIncomplete);
-        }
-
         if (scheduleItem.StartType == StartType.Fixed && !isIncomplete)
         {
             TimeSpan itemStartTime = scheduleItem.StartTime.GetValueOrDefault();

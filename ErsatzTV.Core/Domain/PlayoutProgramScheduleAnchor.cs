@@ -1,12 +1,20 @@
+﻿using Destructurama.Attributed;
+
 namespace ErsatzTV.Core.Domain;
 
 public class PlayoutProgramScheduleAnchor
 {
     public int Id { get; set; }
     public int PlayoutId { get; set; }
+
+    [NotLogged]
     public Playout Playout { get; set; }
+
     public int ProgramScheduleId { get; set; }
+    
+    [NotLogged]
     public ProgramSchedule ProgramSchedule { get; set; }
+
     public DateTime? AnchorDate { get; set; }
 
     public DateTimeOffset? AnchorDateOffset => AnchorDate.HasValue
