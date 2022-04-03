@@ -1,19 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ErsatzTV.Core.Domain;
+﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Core.Tests.Fakes;
 using FluentAssertions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using Serilog;
-using static LanguageExt.Prelude;
 
 namespace ErsatzTV.Core.Tests.Scheduling
 {
@@ -24,19 +18,14 @@ namespace ErsatzTV.Core.Tests.Scheduling
 
         public PlayoutBuilderTests()
         {
-            if (Log.Logger.GetType().FullName == "Serilog.Core.Pipeline.SilentLogger")
-            {
-                Log.Logger = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console().CreateLogger();
-                Log.Logger.Debug(
-                    "Logger is not configured. Either this is a unit test or you have to configure the logger");
-            }
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Debug()
+                .WriteTo.Console()
+                .CreateLogger();
 
-            ServiceProvider serviceProvider = new ServiceCollection()
-                .AddLogging(builder => builder.AddSerilog(dispose: true))
-                .BuildServiceProvider();
+            ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
 
-            ILoggerFactory factory = serviceProvider.GetService<ILoggerFactory>();
-            _logger = factory?.CreateLogger<PlayoutBuilder>();
+            _logger = loggerFactory?.CreateLogger<PlayoutBuilder>();
         }
 
         [TestFixture]
@@ -1559,7 +1548,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 playout.ProgramScheduleAnchors.Add(
                     new PlayoutProgramScheduleAnchor
                     {
-                        AnchorDate = DateTime.UtcNow.Date.AddHours(30),
+                        AnchorDate = HoursAfterMidnight(24).UtcDateTime,
                         Collection = collectionOne,
                         CollectionId = collectionOne.Id,
                         CollectionType = ProgramScheduleItemCollectionType.Collection,
