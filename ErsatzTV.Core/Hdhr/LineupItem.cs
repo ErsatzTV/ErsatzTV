@@ -22,7 +22,7 @@ public class LineupItem
 
     public string URL => _channel.StreamingMode switch
     {
-        StreamingMode.TransportStream => $"{_scheme}://{_host}/iptv/channel/{_channel.Number}.ts?mode=ts-legacy",
-        _ => $"{_scheme}://{_host}/iptv/channel/{_channel.Number}.ts"
+        StreamingMode.TransportStream => $"{_scheme}://{_host}/iptv/hdhr/channel/{_channel.Number}.ts?mode=ts-legacy",
+        _ => $"{_scheme}://{_host}/iptv/hdhr/channel/{_channel.Number}.ts"
     };
 }

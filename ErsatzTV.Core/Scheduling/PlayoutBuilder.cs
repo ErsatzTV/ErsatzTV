@@ -277,17 +277,17 @@ public class PlayoutBuilder : IPlayoutBuilder
         DateTimeOffset start = playoutStart;
         DateTimeOffset finish = playoutStart.Date.AddDays(1);
 
-        _logger.LogDebug(
-            "Trim before: {TrimBefore}, Start: {Start}, Finish: {Finish}, PlayoutFinish: {PlayoutFinish}",
-            trimBefore,
-            start,
-            finish,
-            playoutFinish);
+        // _logger.LogDebug(
+        //     "Trim before: {TrimBefore}, Start: {Start}, Finish: {Finish}, PlayoutFinish: {PlayoutFinish}",
+        //     trimBefore,
+        //     start,
+        //     finish,
+        //     playoutFinish);
 
         // build each day with "continue" anchors
         while (finish < playoutFinish)
         {
-            _logger.LogDebug("Building playout from {Start} to {Finish}", start, finish);
+            // _logger.LogDebug("Building playout from {Start} to {Finish}", start, finish);
             playout = await BuildPlayoutItems(playout, start, finish, collectionMediaItems, true);
 
             start = playout.Anchor.NextStartOffset;
@@ -297,7 +297,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         if (start < playoutFinish)
         {
             // build one final time without continue anchors
-            _logger.LogDebug("Building final playout from {Start} to {Finish}", start, playoutFinish);
+            // _logger.LogDebug("Building final playout from {Start} to {Finish}", start, playoutFinish);
             playout = await BuildPlayoutItems(
                 playout,
                 start,
