@@ -36,6 +36,12 @@ public class PlayoutBuilder : IPlayoutBuilder
     {
         foreach (PlayoutParameters parameters in await Validate(playout))
         {
+            // for testing purposes
+            // if (mode == PlayoutBuildMode.Reset)
+            // {
+            //     return await Build(playout, mode, parameters with { Start = parameters.Start.AddDays(-2) });
+            // }
+
             return await Build(playout, mode, parameters);
         }
 
@@ -101,29 +107,15 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         var allAnchors = playout.ProgramScheduleAnchors.ToList();
 
-        var collectionIds = playout.ProgramScheduleAnchors
-            .Map(a => Optional(a.CollectionId))
-            .Sequence()
-            .Flatten()
-            .ToHashSet();
-        
-        var multiCollectionIds = playout.ProgramScheduleAnchors
-            .Map(a => Optional(a.MultiCollectionId))
-            .Sequence()
-            .Flatten()
-            .ToList();
+        var collectionIds = playout.ProgramScheduleAnchors.Map(a => Optional(a.CollectionId)).Somes().ToHashSet();
 
-        var smartCollectionIds = playout.ProgramScheduleAnchors
-            .Map(a => Optional(a.SmartCollectionId))
-            .Sequence()
-            .Flatten()
-            .ToList();
+        var multiCollectionIds =
+            playout.ProgramScheduleAnchors.Map(a => Optional(a.MultiCollectionId)).Somes().ToHashSet();
 
-        var mediaItemIds = playout.ProgramScheduleAnchors
-            .Map(a => Optional(a.MediaItemId))
-            .Sequence()
-            .Flatten()
-            .ToList();
+        var smartCollectionIds =
+            playout.ProgramScheduleAnchors.Map(a => Optional(a.SmartCollectionId)).Somes().ToHashSet();
+
+        var mediaItemIds = playout.ProgramScheduleAnchors.Map(a => Optional(a.MediaItemId)).Somes().ToHashSet();
 
         playout.ProgramScheduleAnchors.Clear();
 
@@ -133,21 +125,21 @@ public class PlayoutBuilder : IPlayoutBuilder
                 .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
             playout.ProgramScheduleAnchors.Add(minAnchor);
         }
-        
+
         foreach (int multiCollectionId in multiCollectionIds)
         {
             PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.MultiCollectionId == multiCollectionId)
                 .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
             playout.ProgramScheduleAnchors.Add(minAnchor);
         }
-        
+
         foreach (int smartCollectionId in smartCollectionIds)
         {
             PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.SmartCollectionId == smartCollectionId)
                 .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
             playout.ProgramScheduleAnchors.Add(minAnchor);
         }
-        
+
         foreach (int mediaItemId in mediaItemIds)
         {
             PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.MediaItemId == mediaItemId)
@@ -167,8 +159,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         Option<DateTime> maybeAnchorDate = playout.ProgramScheduleAnchors
             .Map(a => Optional(a.AnchorDate))
-            .Sequence()
-            .Flatten()
+            .Somes()
             .HeadOrNone();
 
         foreach (DateTime anchorDate in maybeAnchorDate)
