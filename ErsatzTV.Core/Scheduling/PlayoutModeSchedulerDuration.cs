@@ -74,9 +74,9 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                     : FillerKind.None,
                 CustomTitle = scheduleItem.CustomTitle
             };
-                
-            durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime); 
-                
+
+            durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime);
+
             DateTimeOffset durationFinish = nextState.DurationFinish.IfNone(SystemTime.MaxValueUtc);
             DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
                 collectionEnumerators,
@@ -192,7 +192,7 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
         }
 
         nextState = nextState with { NextGuideGroup = nextState.IncrementGuideGroup };
-            
+
         return Tuple(nextState, playoutItems);
     }
 }

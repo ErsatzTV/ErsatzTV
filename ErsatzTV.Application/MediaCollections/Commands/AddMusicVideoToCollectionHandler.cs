@@ -3,6 +3,7 @@ using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -30,9 +31,9 @@ public class AddMusicVideoToCollectionHandler :
         AddMusicVideoToCollection request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => ApplyAddMusicVideoRequest(dbContext, parameters));
+        return await validation.Apply(parameters => ApplyAddMusicVideoRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddMusicVideoRequest(TvContext dbContext, Parameters parameters)
@@ -40,11 +41,11 @@ public class AddMusicVideoToCollectionHandler :
         parameters.Collection.MediaItems.Add(parameters.MusicVideo);
         if (await dbContext.SaveChangesAsync() > 0)
         {
-            // rebuild all playouts that use this collection
+            // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository
-                         .PlayoutIdsUsingCollection(parameters.Collection.Id))
+                .PlayoutIdsUsingCollection(parameters.Collection.Id))
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }
         }
 

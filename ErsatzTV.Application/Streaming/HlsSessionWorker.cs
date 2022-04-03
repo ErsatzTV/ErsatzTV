@@ -30,6 +30,7 @@ public class HlsSessionWorker : IHlsSessionWorker
     private DateTimeOffset _playlistStart;
     private Option<int> _targetFramerate;
     private string _channelNumber;
+    private bool _firstProcess;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -70,6 +71,8 @@ public class HlsSessionWorker : IHlsSessionWorker
         }
     }
 
+    public void PlayoutUpdated() => _firstProcess = true;
+
     public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
     {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
@@ -105,8 +108,10 @@ public class HlsSessionWorker : IHlsSessionWorker
             _transcodedUntil = DateTimeOffset.Now;
             _playlistStart = _transcodedUntil;
 
+            _firstProcess = true;
+
             bool initialWorkAhead = Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
-            if (!await Transcode(true, !initialWorkAhead, cancellationToken))
+            if (!await Transcode(!initialWorkAhead, cancellationToken))
             {
                 return;
             }
@@ -127,7 +132,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     bool realtime = transcodedBuffer >= TimeSpan.FromSeconds(30);
                     bool subsequentWorkAhead =
                         !realtime && Volatile.Read(ref _workAheadCount) < await GetWorkAheadLimit();
-                    if (!await Transcode(false, !subsequentWorkAhead, cancellationToken))
+                    if (!await Transcode(!subsequentWorkAhead, cancellationToken))
                     {
                         return;
                     }
@@ -149,7 +154,6 @@ public class HlsSessionWorker : IHlsSessionWorker
     }
 
     private async Task<bool> Transcode(
-        bool firstProcess,
         bool realtime,
         CancellationToken cancellationToken)
     {
@@ -177,8 +181,8 @@ public class HlsSessionWorker : IHlsSessionWorker
             var request = new GetPlayoutItemProcessByChannelNumber(
                 _channelNumber,
                 "segmenter",
-                firstProcess ? DateTimeOffset.Now : _transcodedUntil.AddSeconds(1),
-                !firstProcess,
+                _firstProcess ? DateTimeOffset.Now : _transcodedUntil.AddSeconds(1),
+                !_firstProcess,
                 realtime,
                 ptsOffset,
                 _targetFramerate);
@@ -220,6 +224,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     {
                         _logger.LogInformation("HLS process has completed for channel {Channel}", _channelNumber);
                         _transcodedUntil = processModel.Until;
+                        _firstProcess = false;
                         return true;
                     }
                     else
@@ -237,7 +242,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                             _channelNumber,
                             commandResult.ExitCode,
                             commandResult.StandardError);
-                        
+
                         Either<BaseError, PlayoutItemProcessModel> maybeOfflineProcess = await mediator.Send(
                             new GetErrorProcess(
                                 _channelNumber,
@@ -252,7 +257,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                         foreach (PlayoutItemProcessModel errorProcessModel in maybeOfflineProcess.RightAsEnumerable())
                         {
                             Process errorProcess = errorProcessModel.Process;
-                            
+
                             _logger.LogInformation(
                                 "ffmpeg hls error arguments {FFmpegArguments}",
                                 string.Join(" ", errorProcess.StartInfo.ArgumentList));
@@ -261,8 +266,12 @@ public class HlsSessionWorker : IHlsSessionWorker
                                 .WithArguments(errorProcess.StartInfo.ArgumentList)
                                 .WithValidation(CommandResultValidation.None)
                                 .ExecuteBufferedAsync(cancellationToken);
-                            
-                            return commandResult.ExitCode == 0;
+
+                            if (commandResult.ExitCode == 0)
+                            {
+                                _firstProcess = false;
+                                return true;
+                            }
                         }
 
                         return false;

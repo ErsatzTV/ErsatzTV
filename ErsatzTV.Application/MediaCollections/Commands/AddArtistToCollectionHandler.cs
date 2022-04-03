@@ -3,6 +3,7 @@ using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.MediaCollections;
 
 public class AddArtistToCollectionHandler :
-    MediatR.IRequestHandler<AddArtistToCollection, Either<BaseError, Unit>>
+    IRequestHandler<AddArtistToCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -30,9 +31,9 @@ public class AddArtistToCollectionHandler :
         AddArtistToCollection request,
         CancellationToken cancellationToken)
     {
-        await using TvContext dbContext = _dbContextFactory.CreateDbContext();
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, parameters => ApplyAddArtistRequest(dbContext, parameters));
+        return await validation.Apply(parameters => ApplyAddArtistRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddArtistRequest(TvContext dbContext, Parameters parameters)
@@ -40,11 +41,11 @@ public class AddArtistToCollectionHandler :
         parameters.Collection.MediaItems.Add(parameters.Artist);
         if (await dbContext.SaveChangesAsync() > 0)
         {
-            // rebuild all playouts that use this collection
+            // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository
-                         .PlayoutIdsUsingCollection(parameters.Collection.Id))
+                .PlayoutIdsUsingCollection(parameters.Collection.Id))
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }
         }
 

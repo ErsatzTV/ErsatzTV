@@ -2,6 +2,7 @@
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Configuration
 @implements IDisposable
+@using ErsatzTV.Core.Scheduling
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
@@ -44,14 +45,14 @@
             @* <MudTd DataLabel="Playout Type">@context.ProgramSchedulePlayoutType</MudTd> *@
             <MudTd>
                 <div style="align-items: center; display: flex;">
-                    <MudTooltip Text="Rebuild Playout">
+                    <MudTooltip Text="Reset Playout">
                         <MudIconButton Icon="@Icons.Material.Filled.Refresh"
-                                       OnClick="@(_ => RebuildPlayout(context))">
+                                       OnClick="@(_ => ResetPlayout(context))">
                         </MudIconButton>
                     </MudTooltip>
-                    <MudTooltip Text="Schedule Rebuild">
+                    <MudTooltip Text="Schedule Reset">
                         <MudIconButton Icon="@Icons.Material.Filled.Update"
-                                       OnClick="@(_ => ScheduleRebuild(context))">
+                                       OnClick="@(_ => ScheduleReset(context))">
                         </MudIconButton>
                     </MudTooltip>
                     <MudTooltip Text="Delete Playout">
@@ -114,11 +115,14 @@
             if (_showFiller != value)
             {
                 _showFiller = value;
-                _detailTable.ReloadServerData();
+                if (_selectedPlayoutId != null)
+                {
+                    _detailTable.ReloadServerData();
+                }
             }
         }
     }
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -141,14 +145,6 @@
         await _detailTable.ReloadServerData();
     }
 
-    private async Task ShowFillerChanged()
-    {
-        if (_selectedPlayoutId != null)
-        {
-            await _detailTable.ReloadServerData();
-        }
-    }
-
     private async Task DeletePlayout(PlayoutNameViewModel playout)
     {
         var parameters = new DialogParameters { { "EntityType", "playout" }, { "EntityName", $"{playout.ScheduleName} on {playout.ChannelNumber} - {playout.ChannelName}" } };
@@ -167,9 +163,9 @@
         }
     }
 
-    private async Task RebuildPlayout(PlayoutNameViewModel playout)
+    private async Task ResetPlayout(PlayoutNameViewModel playout)
     {
-        await _mediator.Send(new BuildPlayout(playout.PlayoutId, true), _cts.Token);
+        await _mediator.Send(new BuildPlayout(playout.PlayoutId, PlayoutBuildMode.Reset), _cts.Token);
         await _table.ReloadServerData();
         if (_selectedPlayoutId == playout.PlayoutId)
         {
@@ -177,19 +173,21 @@
         }
     }
 
-    private async Task ScheduleRebuild(PlayoutNameViewModel playout)
+    private async Task ScheduleReset(PlayoutNameViewModel playout)
     {
         var parameters = new DialogParameters
         {
             { "PlayoutId", playout.PlayoutId },
             { "ChannelName", playout.ChannelName },
             { "ScheduleName", playout.ScheduleName },
-            { "DailyRebuildTime", playout.DailyRebuildTime }
+            { "DailyResetTime", playout.DailyRebuildTime }
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        IDialogReference dialog = _dialog.Show<SchedulePlayoutRebuild>("Schedule Playout Rebuild", parameters, options);
+        IDialogReference dialog = _dialog.Show<SchedulePlayoutReset>("Schedule Playout Reset", parameters, options);
         await dialog.Result;
+
+        await _table.ReloadServerData();
     }
 
     private async Task<TableData<PlayoutNameViewModel>> ServerReload(TableState state)

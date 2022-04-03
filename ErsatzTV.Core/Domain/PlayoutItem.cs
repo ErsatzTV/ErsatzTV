@@ -3,7 +3,7 @@ using ErsatzTV.Core.Domain.Filler;
 
 namespace ErsatzTV.Core.Domain;
 
-[DebuggerDisplay("{MediaItemId} - {Start} - {Finish}")]
+[DebuggerDisplay("{MediaItemId} - {StartOffset} - {FinishOffset}")]
 public class PlayoutItem
 {
     public int Id { get; set; }
@@ -23,6 +23,7 @@ public class PlayoutItem
 
     public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
     public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();
+
     public DateTimeOffset? GuideFinishOffset => GuideFinish.HasValue
         ? new DateTimeOffset(GuideFinish.Value, TimeSpan.Zero).ToLocalTime()
         : null;

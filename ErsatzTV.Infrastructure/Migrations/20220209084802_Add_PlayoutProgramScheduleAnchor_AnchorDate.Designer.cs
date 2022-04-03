@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,13 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20220209084802_Add_PlayoutProgramScheduleAnchor_AnchorDate")]
+    partial class Add_PlayoutProgramScheduleAnchor_AnchorDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "6.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "6.0.1");
 
             modelBuilder.Entity("ErsatzTV.Core.Domain.Actor", b =>
                 {
@@ -218,20 +220,11 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Categories")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("FFmpegProfileId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("FallbackFillerId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Group")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValue("ErsatzTV");
 
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
@@ -239,16 +232,10 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("Number")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PreferredAudioLanguageCode")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PreferredSubtitleLanguageCode")
+                    b.Property<string>("PreferredLanguageCode")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("StreamingMode")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("SubtitleMode")
                         .HasColumnType("INTEGER");
 
                     b.Property<Guid>("UniqueId")
@@ -505,16 +492,11 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("AudioChannels")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("AudioFormat")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("AudioCodec")
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("AudioSampleRate")
                         .HasColumnType("INTEGER");
-
-                    b.Property<bool?>("DeinterlaceVideo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(true);
 
                     b.Property<int>("HardwareAcceleration")
                         .HasColumnType("INTEGER");
@@ -522,18 +504,25 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("NormalizeAudio")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("NormalizeFramerate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
+                        .HasColumnType("INTEGER");
 
                     b.Property<bool>("NormalizeLoudness")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("NormalizeVideo")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ResolutionId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ThreadCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Transcode")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("VaapiDevice")
@@ -548,8 +537,8 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int>("VideoBufferSize")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("VideoFormat")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("VideoCodec")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -1443,9 +1432,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<string>("Name")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("ShuffleScheduleItems")
-                        .HasColumnType("INTEGER");
-
                     b.Property<bool>("TreatCollectionsAsShows")
                         .HasColumnType("INTEGER");
 
@@ -1675,9 +1661,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Album")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AlbumArtist")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Artist")
@@ -2888,36 +2871,28 @@ namespace ErsatzTV.Infrastructure.Migrations
                             b1.Property<int>("NextGuideGroup")
                                 .HasColumnType("INTEGER");
 
+                            b1.Property<int>("NextScheduleItemId")
+                                .HasColumnType("INTEGER");
+
                             b1.Property<DateTime>("NextStart")
                                 .HasColumnType("TEXT");
 
                             b1.HasKey("PlayoutId");
 
+                            b1.HasIndex("NextScheduleItemId");
+
                             b1.ToTable("PlayoutAnchor", (string)null);
+
+                            b1.HasOne("ErsatzTV.Core.Domain.ProgramScheduleItem", "NextScheduleItem")
+                                .WithMany()
+                                .HasForeignKey("NextScheduleItemId")
+                                .OnDelete(DeleteBehavior.Cascade)
+                                .IsRequired();
 
                             b1.WithOwner()
                                 .HasForeignKey("PlayoutId");
 
-                            b1.OwnsOne("ErsatzTV.Core.Domain.CollectionEnumeratorState", "ScheduleItemsEnumeratorState", b2 =>
-                                {
-                                    b2.Property<int>("PlayoutAnchorPlayoutId")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.Property<int>("Index")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.Property<int>("Seed")
-                                        .HasColumnType("INTEGER");
-
-                                    b2.HasKey("PlayoutAnchorPlayoutId");
-
-                                    b2.ToTable("ScheduleItemsEnumeratorState", (string)null);
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("PlayoutAnchorPlayoutId");
-                                });
-
-                            b1.Navigation("ScheduleItemsEnumeratorState");
+                            b1.Navigation("NextScheduleItem");
                         });
 
                     b.Navigation("Anchor");

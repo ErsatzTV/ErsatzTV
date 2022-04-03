@@ -1,6 +1,7 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
@@ -13,12 +14,18 @@ public class BuildPlayoutHandler : MediatR.IRequestHandler<BuildPlayout, Either<
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IPlayoutBuilder _playoutBuilder;
+    private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
 
-    public BuildPlayoutHandler(IClient client, IDbContextFactory<TvContext> dbContextFactory, IPlayoutBuilder playoutBuilder)
+    public BuildPlayoutHandler(
+        IClient client,
+        IDbContextFactory<TvContext> dbContextFactory,
+        IPlayoutBuilder playoutBuilder,
+        IFFmpegSegmenterService ffmpegSegmenterService)
     {
         _client = client;
         _dbContextFactory = dbContextFactory;
         _playoutBuilder = playoutBuilder;
+        _ffmpegSegmenterService = ffmpegSegmenterService;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(BuildPlayout request, CancellationToken cancellationToken)
@@ -32,8 +39,11 @@ public class BuildPlayoutHandler : MediatR.IRequestHandler<BuildPlayout, Either<
     {
         try
         {
-            await _playoutBuilder.BuildPlayoutItems(playout, request.Rebuild);
-            await dbContext.SaveChangesAsync();
+            await _playoutBuilder.Build(playout, request.Mode);
+            if (await dbContext.SaveChangesAsync() > 0)
+            {
+                _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
+            }
         }
         catch (Exception ex)
         {
@@ -42,7 +52,6 @@ public class BuildPlayoutHandler : MediatR.IRequestHandler<BuildPlayout, Either<
 
         return Unit.Default;
     }
-
     private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, BuildPlayout request) =>
         PlayoutMustExist(dbContext, request);
 
