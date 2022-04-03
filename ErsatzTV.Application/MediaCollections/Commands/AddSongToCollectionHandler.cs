@@ -3,6 +3,7 @@ using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -40,11 +41,11 @@ public class AddSongToCollectionHandler :
         parameters.Collection.MediaItems.Add(parameters.Song);
         if (await dbContext.SaveChangesAsync() > 0)
         {
-            // rebuild all playouts that use this collection
+            // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository
-                         .PlayoutIdsUsingCollection(parameters.Collection.Id))
+                .PlayoutIdsUsingCollection(parameters.Collection.Id))
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }
         }
 

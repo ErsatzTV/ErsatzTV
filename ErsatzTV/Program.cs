@@ -1,3 +1,4 @@
+using Destructurama;
 using ErsatzTV.Core;
 using Serilog;
 
@@ -35,6 +36,7 @@ public class Program
     {
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(Configuration)
+            .Destructure.UsingAttributes()
             .Enrich.FromLogContext()
             .WriteTo.SQLite(FileSystemLayout.LogDatabasePath, retentionPeriod: TimeSpan.FromDays(1))
             .WriteTo.File(FileSystemLayout.LogFilePath, rollingInterval: RollingInterval.Day)

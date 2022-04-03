@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix `HLS Segmenter` bug where it would drift off of the schedule if a playout was changed while the segmenter was running
 
 ### Added
 - Add `Preferred Subtitle Language` and `Subtitle Mode` to channel settings
@@ -15,6 +17,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Remove legacy transcoder logic option; all channels will use the new transcoder logic
 - Renamed channel setting `Preferred Language` to `Preferred Audio Language`
+- Reworked playout build logic to maintain collection progress in some scenarios. There are now three build modes:
+  - `Continue` - add new items to the end of an existing playout
+    - This mode is used when playouts are automatically extended in the background
+  - `Refresh` - this mode will try to maintain collection progress while rebuilding the entire playout
+    - This mode is used when a schedule is updated, or when collection modifications trigger a playout rebuild
+  - `Reset` - this mode will rebuild the entire playout and will NOT maintain progress
+    - This mode is only used when the `Reset Playout` button is clicked on the Playouts page
 
 ## [0.4.5-alpha] - 2022-03-29
 ### Fixed

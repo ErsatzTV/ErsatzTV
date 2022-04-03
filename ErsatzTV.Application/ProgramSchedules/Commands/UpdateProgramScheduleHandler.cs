@@ -2,6 +2,7 @@
 using ErsatzTV.Application.Playouts;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Scheduling;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -27,9 +28,8 @@ public class UpdateProgramScheduleHandler :
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await LanguageExtensions.Apply(validation, ps => ApplyUpdateRequest(dbContext, ps, request));
+        return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
     }
 
     private async Task<UpdateProgramScheduleResult> ApplyUpdateRequest(
@@ -37,8 +37,8 @@ public class UpdateProgramScheduleHandler :
         ProgramSchedule programSchedule,
         UpdateProgramSchedule request)
     {
-        // we need to rebuild playouts if the playback order or keep multi-episodes has been modified
-        bool needToRebuildPlayout =
+        // we need to refresh playouts if the playback order or keep multi-episodes has been modified
+        bool needToRefreshPlayout =
             programSchedule.KeepMultiPartEpisodesTogether != request.KeepMultiPartEpisodesTogether ||
             programSchedule.TreatCollectionsAsShows != request.TreatCollectionsAsShows ||
             programSchedule.ShuffleScheduleItems != request.ShuffleScheduleItems;
@@ -51,7 +51,7 @@ public class UpdateProgramScheduleHandler :
 
         await dbContext.SaveChangesAsync();
 
-        if (needToRebuildPlayout)
+        if (needToRefreshPlayout)
         {
             List<int> playoutIds = await dbContext.Playouts
                 .Filter(p => p.ProgramScheduleId == programSchedule.Id)
@@ -60,7 +60,7 @@ public class UpdateProgramScheduleHandler :
 
             foreach (int playoutId in playoutIds)
             {
-                await _channel.WriteAsync(new BuildPlayout(playoutId, true));
+                await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }
         }
 

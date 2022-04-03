@@ -73,7 +73,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             {
                 playoutItems.AddRange(
                     AddFiller(nextState, collectionEnumerators, scheduleItem, playoutItem, itemChapters));
-                LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
+                // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);
 
                 DateTimeOffset actualEndTime = playoutItems.Max(p => p.FinishOffset);
                 if (Math.Abs((itemEndTimeWithFiller - actualEndTime).TotalSeconds) > 1)
@@ -97,9 +97,9 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             }
         }
 
-        _logger.LogDebug(
-            "Advancing to next schedule item after playout mode {PlayoutMode}",
-            "Flood");
+        // _logger.LogDebug(
+        //     "Advancing to next schedule item after playout mode {PlayoutMode}",
+        //     "Flood");
 
         nextState = nextState with
         {

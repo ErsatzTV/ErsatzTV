@@ -32,18 +32,190 @@ public class PlayoutBuilder : IPlayoutBuilder
         _logger = logger;
     }
 
-    public async Task<Playout> BuildPlayoutItems(Playout playout, bool rebuild = false)
+    public async Task<Playout> Build(Playout playout, PlayoutBuildMode mode)
     {
-        DateTimeOffset now = DateTimeOffset.Now;
-        Option<int> daysToBuild = await _configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild);
-        return await BuildPlayoutItems(playout, now, now.AddDays(await daysToBuild.IfNoneAsync(2)), rebuild);
+        foreach (PlayoutParameters parameters in await Validate(playout))
+        {
+            // for testing purposes
+            // if (mode == PlayoutBuildMode.Reset)
+            // {
+            //     return await Build(playout, mode, parameters with { Start = parameters.Start.AddDays(-2) });
+            // }
+
+            return await Build(playout, mode, parameters);
+        }
+
+        return playout;
     }
 
-    public async Task<Playout> BuildPlayoutItems(
+    private Task<Playout> Build(Playout playout, PlayoutBuildMode mode, PlayoutParameters parameters) =>
+        mode switch
+        {
+            PlayoutBuildMode.Refresh => RefreshPlayout(playout, parameters),
+            PlayoutBuildMode.Reset => ResetPlayout(playout, parameters),
+            _ => ContinuePlayout(playout, parameters)
+        };
+
+    internal async Task<Playout> Build(
         Playout playout,
-        DateTimeOffset playoutStart,
-        DateTimeOffset playoutFinish,
-        bool rebuild = false)
+        PlayoutBuildMode mode,
+        DateTimeOffset start,
+        DateTimeOffset finish)
+    {
+        foreach (PlayoutParameters parameters in await Validate(playout))
+        {
+            return await Build(playout, mode, parameters with { Start = start, Finish = finish });
+        }
+
+        return playout;
+    }
+
+    private async Task<Playout> RefreshPlayout(Playout playout, PlayoutParameters parameters)
+    {
+        _logger.LogDebug(
+            "Refreshing playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
+            playout.Id,
+            playout.Channel.Number,
+            playout.Channel.Name);
+
+        playout.Items.Clear();
+        playout.Anchor = null;
+
+        // foreach (PlayoutProgramScheduleAnchor anchor in playout.ProgramScheduleAnchors)
+        // {
+        //     anchor.Playout = null;
+        //     anchor.Collection = null;
+        //     anchor.ProgramSchedule = null;
+        // }
+
+        // _logger.LogDebug("All anchors: {@Anchors}", playout.ProgramScheduleAnchors);
+
+        // remove null anchor date ("continue" anchors)
+        playout.ProgramScheduleAnchors.RemoveAll(a => a.AnchorDate is null);
+
+        // _logger.LogDebug("Checkpoint anchors: {@Anchors}", playout.ProgramScheduleAnchors);
+
+        // remove old checkpoints
+        playout.ProgramScheduleAnchors.RemoveAll(
+            a => a.AnchorDateOffset.IfNone(SystemTime.MaxValueUtc) < parameters.Start.Date);
+
+        // remove new checkpoints
+        playout.ProgramScheduleAnchors.RemoveAll(
+            a => a.AnchorDateOffset.IfNone(SystemTime.MinValueUtc).Date > parameters.Start.Date);
+
+        // _logger.LogDebug("Remaining anchors: {@Anchors}", playout.ProgramScheduleAnchors);
+
+        var allAnchors = playout.ProgramScheduleAnchors.ToList();
+
+        var collectionIds = playout.ProgramScheduleAnchors.Map(a => Optional(a.CollectionId)).Somes().ToHashSet();
+
+        var multiCollectionIds =
+            playout.ProgramScheduleAnchors.Map(a => Optional(a.MultiCollectionId)).Somes().ToHashSet();
+
+        var smartCollectionIds =
+            playout.ProgramScheduleAnchors.Map(a => Optional(a.SmartCollectionId)).Somes().ToHashSet();
+
+        var mediaItemIds = playout.ProgramScheduleAnchors.Map(a => Optional(a.MediaItemId)).Somes().ToHashSet();
+
+        playout.ProgramScheduleAnchors.Clear();
+
+        foreach (int collectionId in collectionIds)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.CollectionId == collectionId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+
+        foreach (int multiCollectionId in multiCollectionIds)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.MultiCollectionId == multiCollectionId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+
+        foreach (int smartCollectionId in smartCollectionIds)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.SmartCollectionId == smartCollectionId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+
+        foreach (int mediaItemId in mediaItemIds)
+        {
+            PlayoutProgramScheduleAnchor minAnchor = allAnchors.Filter(a => a.MediaItemId == mediaItemId)
+                .MinBy(a => a.AnchorDateOffset.IfNone(DateTimeOffset.MaxValue).Ticks);
+            playout.ProgramScheduleAnchors.Add(minAnchor);
+        }
+
+        // _logger.LogDebug("Oldest anchors for each collection: {@Anchors}", playout.ProgramScheduleAnchors);
+
+        // convert checkpoints to non-checkpoints
+        // foreach (PlayoutProgramScheduleAnchor anchor in playout.ProgramScheduleAnchors)
+        // {
+        //     anchor.AnchorDate = null;
+        // }
+
+        // _logger.LogDebug("Final anchors: {@Anchors}", playout.ProgramScheduleAnchors);
+
+        Option<DateTime> maybeAnchorDate = playout.ProgramScheduleAnchors
+            .Map(a => Optional(a.AnchorDate))
+            .Somes()
+            .HeadOrNone();
+
+        foreach (DateTime anchorDate in maybeAnchorDate)
+        {
+            playout.Anchor = new PlayoutAnchor
+            {
+                NextStart = anchorDate
+            };
+        }
+
+        return await BuildPlayoutItems(
+            playout,
+            parameters.Start,
+            parameters.Finish,
+            parameters.CollectionMediaItems);
+    }
+
+    private async Task<Playout> ResetPlayout(Playout playout, PlayoutParameters parameters)
+    {
+        _logger.LogDebug(
+            "Resetting playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
+            playout.Id,
+            playout.Channel.Number,
+            playout.Channel.Name);
+
+        playout.Items.Clear();
+        playout.Anchor = null;
+        playout.ProgramScheduleAnchors.Clear();
+
+        await BuildPlayoutItems(
+            playout,
+            parameters.Start,
+            parameters.Finish,
+            parameters.CollectionMediaItems);
+
+        return playout;
+    }
+
+    private async Task<Playout> ContinuePlayout(Playout playout, PlayoutParameters parameters)
+    {
+        _logger.LogDebug(
+            "Building playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
+            playout.Id,
+            playout.Channel.Number,
+            playout.Channel.Name);
+
+        await BuildPlayoutItems(
+            playout,
+            parameters.Start,
+            parameters.Finish,
+            parameters.CollectionMediaItems);
+
+        return playout;
+    }
+
+    private async Task<Option<PlayoutParameters>> Validate(Playout playout)
     {
         Map<CollectionKey, List<MediaItem>> collectionMediaItems = await GetCollectionMediaItems(playout);
         if (!collectionMediaItems.Any())
@@ -53,15 +225,8 @@ public class PlayoutBuilder : IPlayoutBuilder
                 playout.Channel.Name,
                 playout.ProgramSchedule.Name);
 
-            return playout;
+            return None;
         }
-
-        _logger.LogDebug(
-            "{Action} playout {PlayoutId} for channel {ChannelNumber} - {ChannelName}",
-            rebuild ? "Rebuilding" : "Building",
-            playout.Id,
-            playout.Channel.Number,
-            playout.Channel.Name);
 
         Option<CollectionKey> maybeEmptyCollection = await CheckForEmptyCollections(collectionMediaItems);
         foreach (CollectionKey emptyCollection in maybeEmptyCollection)
@@ -84,19 +249,76 @@ public class PlayoutBuilder : IPlayoutBuilder
                     emptyCollection);
             }
 
-            return playout;
+            return None;
         }
 
         playout.Items ??= new List<PlayoutItem>();
         playout.ProgramScheduleAnchors ??= new List<PlayoutProgramScheduleAnchor>();
 
-        if (rebuild)
+        Option<int> daysToBuild = await _configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild);
+
+        DateTimeOffset now = DateTimeOffset.Now;
+        
+        return new PlayoutParameters(
+            now,
+            now.AddDays(await daysToBuild.IfNoneAsync(2)),
+            collectionMediaItems);
+    }
+
+    private async Task<Playout> BuildPlayoutItems(
+        Playout playout,
+        DateTimeOffset playoutStart,
+        DateTimeOffset playoutFinish,
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems)
+    {
+        DateTimeOffset trimBefore = playoutStart.AddHours(-4);
+        DateTimeOffset trimAfter = playoutFinish;
+
+        DateTimeOffset start = playoutStart;
+        DateTimeOffset finish = playoutStart.Date.AddDays(1);
+
+        _logger.LogDebug(
+            "Trim before: {TrimBefore}, Start: {Start}, Finish: {Finish}, PlayoutFinish: {PlayoutFinish}",
+            trimBefore,
+            start,
+            finish,
+            playoutFinish);
+
+        // build each day with "continue" anchors
+        while (finish < playoutFinish)
         {
-            playout.Items.Clear();
-            playout.Anchor = null;
-            playout.ProgramScheduleAnchors.Clear();
+            _logger.LogDebug("Building playout from {Start} to {Finish}", start, finish);
+            playout = await BuildPlayoutItems(playout, start, finish, collectionMediaItems, true);
+
+            start = playout.Anchor.NextStartOffset;
+            finish = finish.AddDays(1);
         }
 
+        if (start < playoutFinish)
+        {
+            // build one final time without continue anchors
+            _logger.LogDebug("Building final playout from {Start} to {Finish}", start, playoutFinish);
+            playout = await BuildPlayoutItems(
+                playout,
+                start,
+                playoutFinish,
+                collectionMediaItems,
+                false);
+        }
+
+        // remove any items outside the desired range
+        playout.Items.RemoveAll(old => old.FinishOffset < trimBefore || old.StartOffset > trimAfter);
+
+        return playout;
+    }
+
+    private async Task<Playout> BuildPlayoutItems(
+        Playout playout,
+        DateTimeOffset playoutStart,
+        DateTimeOffset playoutFinish,
+        Map<CollectionKey, List<MediaItem>> collectionMediaItems,
+        bool saveAnchorDate)
+    {
         var sortedScheduleItems = playout.ProgramSchedule.Items.OrderBy(i => i.Index).ToList();
         CollectionEnumeratorState scheduleItemsEnumeratorState =
             playout.Anchor?.ScheduleItemsEnumeratorState ?? new CollectionEnumeratorState
@@ -122,13 +344,13 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         // start at the previously-decided time
         DateTimeOffset currentTime = startAnchor.NextStartOffset.ToLocalTime();
-        _logger.LogDebug(
-            "Starting playout {PlayoutId} for channel {ChannelNumber} - {ChannelName} at {StartTime}",
-            playout.Id,
-            playout.Channel.Number,
-            playout.Channel.Name,
-            currentTime);
-            
+        // _logger.LogDebug(
+        //     "Starting playout ({PlayoutId}) for channel {ChannelNumber} - {ChannelName} at {StartTime}",
+        //     playout.Id,
+        //     playout.Channel.Number,
+        //     playout.Channel.Name,
+        //     currentTime);
+
         // removing any items scheduled past the start anchor
         // this could happen if the app was closed after scheduling items
         // but before saving the anchor
@@ -204,13 +426,6 @@ public class PlayoutBuilder : IPlayoutBuilder
         // once more to get playout anchor
         ProgramScheduleItem anchorScheduleItem = playoutBuilderState.ScheduleItemsEnumerator.Current;
 
-        // build program schedule anchors
-        playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators);
-
-        // remove any items outside the desired range
-        playout.Items.RemoveAll(
-            old => old.FinishOffset < playoutStart.AddHours(-4) || old.StartOffset > playoutFinish);
-
         if (playout.Items.Any())
         {
             DateTimeOffset maxStartTime = playout.Items.Max(i => i.FinishOffset);
@@ -223,18 +438,26 @@ public class PlayoutBuilder : IPlayoutBuilder
         playout.Anchor = new PlayoutAnchor
         {
             ScheduleItemsEnumeratorState = playoutBuilderState.ScheduleItemsEnumerator.State,
-            NextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(playoutBuilderState, anchorScheduleItem)
+            NextStart = PlayoutModeSchedulerBase<ProgramScheduleItem>
+                .GetStartTimeAfter(playoutBuilderState, anchorScheduleItem)
                 .UtcDateTime,
-            MultipleRemaining = playoutBuilderState.MultipleRemaining.IsSome
-                ? playoutBuilderState.MultipleRemaining.ValueUnsafe()
-                : null,
-            DurationFinish = playoutBuilderState.DurationFinish.IsSome
-                ? playoutBuilderState.DurationFinish.ValueUnsafe().UtcDateTime
-                : null,
             InFlood = playoutBuilderState.InFlood,
             InDurationFiller = playoutBuilderState.InDurationFiller,
             NextGuideGroup = playoutBuilderState.NextGuideGroup
         };
+
+        foreach (int multipleRemaining in playoutBuilderState.MultipleRemaining)
+        {
+            playout.Anchor.MultipleRemaining = multipleRemaining;
+        }
+
+        foreach (DateTimeOffset durationFinish in playoutBuilderState.DurationFinish)
+        {
+            playout.Anchor.DurationFinish = durationFinish.UtcDateTime;
+        }
+
+        // build program schedule anchors
+        playout.ProgramScheduleAnchors = BuildProgramScheduleAnchors(playout, collectionEnumerators, saveAnchorDate);
 
         return playout;
     }
@@ -311,7 +534,7 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         return collectionMediaItems.Find(c => !c.Value.Any()).Map(c => c.Key);
     }
-        
+
     private static PlayoutAnchor FindStartAnchor(
         Playout playout,
         DateTimeOffset start,
@@ -341,7 +564,8 @@ public class PlayoutBuilder : IPlayoutBuilder
 
     private static List<PlayoutProgramScheduleAnchor> BuildProgramScheduleAnchors(
         Playout playout,
-        Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators)
+        Dictionary<CollectionKey, IMediaCollectionEnumerator> collectionEnumerators,
+        bool saveAnchorDate)
     {
         var result = new List<PlayoutProgramScheduleAnchor>();
 
@@ -350,7 +574,8 @@ public class PlayoutBuilder : IPlayoutBuilder
             Option<PlayoutProgramScheduleAnchor> maybeExisting = playout.ProgramScheduleAnchors.FirstOrDefault(
                 a => a.CollectionType == collectionKey.CollectionType
                      && a.CollectionId == collectionKey.CollectionId
-                     && a.MediaItemId == collectionKey.MediaItemId);
+                     && a.MediaItemId == collectionKey.MediaItemId
+                     && a.AnchorDate is null);
 
             var maybeEnumeratorState = collectionEnumerators.GroupBy(e => e.Key, e => e.Value.State).ToDictionary(
                 mcs => mcs.Key,
@@ -376,7 +601,18 @@ public class PlayoutBuilder : IPlayoutBuilder
                     EnumeratorState = maybeEnumeratorState[collectionKey]
                 });
 
+            if (saveAnchorDate)
+            {
+                scheduleAnchor.AnchorDate = playout.Anchor?.NextStart;
+            }
+
             result.Add(scheduleAnchor);
+        }
+
+        foreach (PlayoutProgramScheduleAnchor continueAnchor in playout.ProgramScheduleAnchors.Where(
+                     a => a.AnchorDate is not null))
+        {
+            result.Add(continueAnchor);
         }
 
         return result;
@@ -416,7 +652,7 @@ public class PlayoutBuilder : IPlayoutBuilder
                     state);
             }
         }
-            
+
         switch (playbackOrder)
         {
             case PlaybackOrder.Chronological:
