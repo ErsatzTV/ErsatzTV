@@ -43,6 +43,18 @@ public class IptvController : ControllerBase
         _mediator.Send(new GetChannelGuide(Request.Scheme, Request.Host.ToString()))
             .Map<ChannelGuide, IActionResult>(Ok);
 
+    [HttpGet("iptv/hdhr/channel/{channelNumber}.ts")]
+    public Task<IActionResult> GetHDHRVideo(string channelNumber, [FromQuery] string mode = "ts")
+    {
+        // don't redirect to the correct channel mode for HDHR clients; always use TS
+        if (mode != "ts" && mode != "ts-legacy")
+        {
+            mode = "ts";
+        }
+
+        return GetTransportStreamVideo(channelNumber, mode);
+    }
+
     [HttpGet("iptv/channel/{channelNumber}.ts")]
     public async Task<IActionResult> GetTransportStreamVideo(
         string channelNumber,
