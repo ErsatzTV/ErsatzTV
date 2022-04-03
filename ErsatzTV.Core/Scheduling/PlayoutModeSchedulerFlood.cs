@@ -97,9 +97,9 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             }
         }
 
-        _logger.LogDebug(
-            "Advancing to next schedule item after playout mode {PlayoutMode}",
-            "Flood");
+        // _logger.LogDebug(
+        //     "Advancing to next schedule item after playout mode {PlayoutMode}",
+        //     "Flood");
 
         nextState = nextState with
         {

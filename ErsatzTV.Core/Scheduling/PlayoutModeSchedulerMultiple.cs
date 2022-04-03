@@ -87,9 +87,9 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
 
         if (nextState.MultipleRemaining.IfNone(-1) == 0)
         {
-            _logger.LogDebug(
-                "Advancing to next schedule item after playout mode {PlayoutMode}",
-                "Multiple");
+            // _logger.LogDebug(
+            //     "Advancing to next schedule item after playout mode {PlayoutMode}",
+            //     "Multiple");
 
             nextState = nextState with
             {
