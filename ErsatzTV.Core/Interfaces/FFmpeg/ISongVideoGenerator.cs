@@ -9,5 +9,6 @@ public interface ISongVideoGenerator
         Channel channel,
         Option<ChannelWatermark> maybeGlobalWatermark,
         string ffmpegPath,
+        string ffprobePath,
         CancellationToken cancellationToken);
 }
