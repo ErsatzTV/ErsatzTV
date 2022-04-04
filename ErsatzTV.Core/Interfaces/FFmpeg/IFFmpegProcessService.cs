@@ -10,6 +10,7 @@ public interface IFFmpegProcessService
 {
     Task<Process> ForPlayoutItem(
         string ffmpegPath,
+        string ffprobePath,
         bool saveReports,
         Channel channel,
         MediaVersion videoVersion,
@@ -41,12 +42,15 @@ public interface IFFmpegProcessService
 
     Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
+    Process ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
+
     Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
 
     Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);
 
     Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
+        string ffprobePath,
         Option<string> subtitleFile,
         Channel channel,
         Option<ChannelWatermark> globalWatermark,

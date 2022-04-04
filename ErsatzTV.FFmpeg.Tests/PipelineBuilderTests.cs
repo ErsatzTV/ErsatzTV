@@ -155,6 +155,33 @@ public class PipelineGeneratorTests
             "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -i /tmp/whatever.mkv -map 0:1 -map 0:0 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c:v copy -c:a copy -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
 
+    [Test]
+    public void Resize_Image_Test()
+    {
+        var height = 200;
+
+        var videoInputFile = new VideoInputFile(
+            "/test/input/file.png",
+            new List<VideoStream>
+            {
+                new(0, string.Empty, Option<IPixelFormat>.None, FrameSize.Unknown, Option<string>.None, true)
+            });
+
+        var pipelineBuilder = new PipelineBuilder(
+            videoInputFile,
+            Option<AudioInputFile>.None,
+            Option<WatermarkInputFile>.None,
+            Option<SubtitleInputFile>.None,
+            "",
+            _logger);
+
+        FFmpegPipeline result = pipelineBuilder.Resize("/test/output/file.jpg", new FrameSize(-1, height));
+        
+        string command = PrintCommand(videoInputFile, None, None, None, result);
+
+        command.Should().Be("-nostdin -hide_banner -nostats -loglevel error -i /test/input/file.png -vf scale=-1:200 /test/output/file.jpg");
+    }
+
     private static string PrintCommand(
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,

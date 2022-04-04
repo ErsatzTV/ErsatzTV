@@ -1,4 +1,5 @@
-﻿using ErsatzTV.FFmpeg.Decoder;
+﻿using System.Numerics;
+using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
@@ -53,6 +54,24 @@ public class PipelineBuilder
         _logger = logger;
     }
 
+    public FFmpegPipeline Resize(string outputFile, FrameSize scaledSize)
+    {
+        _pipelineSteps.Clear();
+        _pipelineSteps.Add(new NoStandardInputOption());
+        _pipelineSteps.Add(new HideBannerOption());
+        _pipelineSteps.Add(new NoStatsOption());
+        _pipelineSteps.Add(new LoglevelErrorOption());
+
+        IPipelineFilterStep scaleStep = new ScaleImageFilter(scaledSize);
+        _videoInputFile.Iter(f => f.FilterSteps.Add(scaleStep));
+
+        _pipelineSteps.Add(new VideoFilter(new[] { scaleStep }));
+        _pipelineSteps.Add(scaleStep);
+        _pipelineSteps.Add(new FileNameOutputOption(outputFile));
+
+        return new FFmpegPipeline(_pipelineSteps);
+    }
+
     public FFmpegPipeline Concat(ConcatInputFile concatInputFile, FFmpegState ffmpegState)
     {
         concatInputFile.AddOption(new ConcatInputFormat());
@@ -87,7 +106,7 @@ public class PipelineBuilder
         
         return new FFmpegPipeline(_pipelineSteps);
     }
-
+    
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
         var allVideoStreams = _videoInputFile.SelectMany(f => f.VideoStreams).ToList();

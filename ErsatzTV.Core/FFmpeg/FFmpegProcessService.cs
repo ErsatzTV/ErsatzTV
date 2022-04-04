@@ -1,21 +1,23 @@
 ﻿using System.Diagnostics;
 using Bugsnag;
 using CliWrap;
+using CliWrap.Buffered;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.FFmpeg.State;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class FFmpegProcessService : IFFmpegProcessService
+public class FFmpegProcessService
 {
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly IImageCache _imageCache;
     private readonly ITempFilePool _tempFilePool;
     private readonly IClient _client;
+    private readonly IMemoryCache _memoryCache;
     private readonly ILogger<FFmpegProcessService> _logger;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
@@ -25,6 +27,7 @@ public class FFmpegProcessService : IFFmpegProcessService
         IImageCache imageCache,
         ITempFilePool tempFilePool,
         IClient client,
+        IMemoryCache memoryCache,
         ILogger<FFmpegProcessService> logger)
     {
         _playbackSettingsCalculator = ffmpegPlaybackSettingsService;
@@ -32,31 +35,8 @@ public class FFmpegProcessService : IFFmpegProcessService
         _imageCache = imageCache;
         _tempFilePool = tempFilePool;
         _client = client;
+        _memoryCache = memoryCache;
         _logger = logger;
-    }
-
-    public Task<Process> ForPlayoutItem(
-        string ffmpegPath,
-        bool saveReports,
-        Channel channel,
-        MediaVersion videoVersion,
-        MediaVersion audioVersion,
-        string videoPath,
-        string audioPath,
-        DateTimeOffset start,
-        DateTimeOffset finish,
-        DateTimeOffset now,
-        Option<ChannelWatermark> globalWatermark,
-        VaapiDriver vaapiDriver,
-        string vaapiDevice,
-        bool hlsRealtime,
-        FillerKind fillerKind,
-        TimeSpan inPoint,
-        TimeSpan outPoint,
-        long ptsOffset,
-        Option<int> targetFramerate)
-    {
-        throw new NotSupportedException();
     }
 
     public async Task<Process> ForError(
@@ -140,11 +120,6 @@ public class FFmpegProcessService : IFFmpegProcessService
         }
     }
 
-    public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
-    {
-        throw new NotSupportedException();
-    }
-
     public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
     {
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
@@ -186,6 +161,7 @@ public class FFmpegProcessService : IFFmpegProcessService
 
     public async Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
+        string ffprobePath,
         Option<string> subtitleFile,
         Channel channel,
         Option<ChannelWatermark> globalWatermark,
@@ -220,7 +196,13 @@ public class FFmpegProcessService : IFFmpegProcessService
                     : None;
 
             Option<WatermarkOptions> watermarkOptions =
-                await GetWatermarkOptions(channel, globalWatermark, videoVersion, watermarkOverride, watermarkPath);
+                await GetWatermarkOptions(
+                    ffprobePath,
+                    channel,
+                    globalWatermark,
+                    videoVersion,
+                    watermarkOverride,
+                    watermarkPath);
 
             FFmpegPlaybackSettings playbackSettings =
                 _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
@@ -289,6 +271,7 @@ public class FFmpegProcessService : IFFmpegProcessService
         displaySize.Width != target.Width || displaySize.Height != target.Height;
 
     internal async Task<WatermarkOptions> GetWatermarkOptions(
+        string ffprobePath,
         Channel channel,
         Option<ChannelWatermark> globalWatermark,
         MediaVersion videoVersion,
@@ -320,7 +303,7 @@ public class FFmpegProcessService : IFFmpegProcessService
                             await watermarkOverride.IfNoneAsync(channel.Watermark),
                             customPath,
                             None,
-                            await _imageCache.IsAnimated(customPath));
+                            await IsAnimated(ffprobePath, customPath));
                     case ChannelWatermarkImageSource.ChannelLogo:
                         Option<string> maybeChannelPath = channel.Artwork
                             .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
@@ -331,7 +314,7 @@ public class FFmpegProcessService : IFFmpegProcessService
                             maybeChannelPath,
                             None,
                             await maybeChannelPath.Match(
-                                p => _imageCache.IsAnimated(p),
+                                p => IsAnimated(ffprobePath, p),
                                 () => Task.FromResult(false)));
                     default:
                         throw new NotSupportedException("Unsupported watermark image source");
@@ -352,7 +335,7 @@ public class FFmpegProcessService : IFFmpegProcessService
                             await watermarkOverride.IfNoneAsync(watermark),
                             customPath,
                             None,
-                            await _imageCache.IsAnimated(customPath));
+                            await IsAnimated(ffprobePath, customPath));
                     case ChannelWatermarkImageSource.ChannelLogo:
                         Option<string> maybeChannelPath = channel.Artwork
                             .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
@@ -363,7 +346,7 @@ public class FFmpegProcessService : IFFmpegProcessService
                             maybeChannelPath,
                             None,
                             await maybeChannelPath.Match(
-                                p => _imageCache.IsAnimated(p),
+                                p => IsAnimated(ffprobePath, p),
                                 () => Task.FromResult(false)));
                     default:
                         throw new NotSupportedException("Unsupported watermark image source");
@@ -372,5 +355,56 @@ public class FFmpegProcessService : IFFmpegProcessService
         }
 
         return new WatermarkOptions(None, None, None, false);
+    }
+
+    private async Task<bool> IsAnimated(string ffprobePath, string path)
+    {
+        try
+        {
+            var cacheKey = $"image.animated.{Path.GetFileName(path)}";
+            if (_memoryCache.TryGetValue(cacheKey, out bool animated))
+            {
+                return animated;
+            }
+
+            BufferedCommandResult result = await Cli.Wrap(ffprobePath)
+                .WithArguments(
+                    new[]
+                    {
+                        "-loglevel", "error",
+                        "-select_streams", "v:0",
+                        "-count_frames",
+                        "-show_entries", "stream=nb_read_frames",
+                        "-print_format", "csv",
+                        path
+                    })
+                .WithValidation(CommandResultValidation.None)
+                .ExecuteBufferedAsync();
+
+            if (result.ExitCode == 0)
+            {
+                string output = result.StandardOutput;
+                output = output.Replace("stream,", string.Empty);
+                if (int.TryParse(output, out int frameCount))
+                {
+                    bool isAnimated = frameCount > 1;
+                    _memoryCache.Set(cacheKey, isAnimated, TimeSpan.FromDays(1));
+                    return isAnimated;
+                }
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Error checking frame count for file {File}l exit code {ExitCode}",
+                    path,
+                    result.ExitCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error checking frame count for file {File}", path);
+        }
+
+        return false;
     }
 }

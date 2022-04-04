@@ -11,6 +11,7 @@ using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using FluentAssertions;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -220,6 +221,7 @@ public class TranscodingTests
             imageCache.Object,
             new Mock<ITempFilePool>().Object,
             new Mock<IClient>().Object,
+            new Mock<IMemoryCache>().Object,
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -318,6 +320,7 @@ public class TranscodingTests
 
         using Process process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
+            ExecutableName("ffprobe"),
             false,
             new Channel(Guid.NewGuid())
             {

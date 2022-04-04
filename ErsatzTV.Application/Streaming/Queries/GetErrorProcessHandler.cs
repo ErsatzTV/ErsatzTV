@@ -24,6 +24,7 @@ public class GetErrorProcessHandler : FFmpegProcessHandler<GetErrorProcess>
         GetErrorProcess request,
         Channel channel,
         string ffmpegPath,
+        string ffprobePath,
         CancellationToken cancellationToken)
     {
         Process process = await _ffmpegProcessService.ForError(
