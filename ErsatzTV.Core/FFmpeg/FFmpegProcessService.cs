@@ -2,7 +2,6 @@
 using Bugsnag;
 using CliWrap;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.FFmpeg.State;
@@ -10,7 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.FFmpeg;
 
-public class FFmpegProcessService : IFFmpegProcessService
+public class FFmpegProcessService
 {
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly IImageCache _imageCache;
@@ -33,30 +32,6 @@ public class FFmpegProcessService : IFFmpegProcessService
         _tempFilePool = tempFilePool;
         _client = client;
         _logger = logger;
-    }
-
-    public Task<Process> ForPlayoutItem(
-        string ffmpegPath,
-        bool saveReports,
-        Channel channel,
-        MediaVersion videoVersion,
-        MediaVersion audioVersion,
-        string videoPath,
-        string audioPath,
-        DateTimeOffset start,
-        DateTimeOffset finish,
-        DateTimeOffset now,
-        Option<ChannelWatermark> globalWatermark,
-        VaapiDriver vaapiDriver,
-        string vaapiDevice,
-        bool hlsRealtime,
-        FillerKind fillerKind,
-        TimeSpan inPoint,
-        TimeSpan outPoint,
-        long ptsOffset,
-        Option<int> targetFramerate)
-    {
-        throw new NotSupportedException();
     }
 
     public async Task<Process> ForError(
@@ -138,11 +113,6 @@ public class FFmpegProcessService : IFFmpegProcessService
                     .WithPipe()
                     .Build();
         }
-    }
-
-    public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
-    {
-        throw new NotSupportedException();
     }
 
     public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)

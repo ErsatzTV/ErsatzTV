@@ -9,9 +9,7 @@ using ErsatzTV.Core.Interfaces.Metadata;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace ErsatzTV.Infrastructure.Images;
 
@@ -35,27 +33,6 @@ public class ImageCache : IImageCache
         _memoryCache = memoryCache;
         _tempFilePool = tempFilePool;
         _logger = logger;
-    }
-
-    public async Task<Either<BaseError, byte[]>> ResizeImage(byte[] imageBuffer, int height)
-    {
-        await using var inStream = new MemoryStream(imageBuffer);
-        using Image image = await Image.LoadAsync(inStream);
-
-        var size = new Size { Height = height };
-
-        image.Mutate(
-            i => i.Resize(
-                new ResizeOptions
-                {
-                    Mode = ResizeMode.Max,
-                    Size = size
-                }));
-
-        await using var outStream = new MemoryStream();
-        await image.SaveAsync(outStream, new JpegEncoder { Quality = 90 });
-
-        return outStream.ToArray();
     }
 
     public async Task<Either<BaseError, string>> SaveArtworkToCache(Stream stream, ArtworkKind artworkKind)

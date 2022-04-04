@@ -316,6 +316,25 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
         _ffmpegProcessService.WrapSegmenter(ffmpegPath, saveReports, channel, scheme, host);
 
+    public Process ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
+    {
+        var videoInputFile = new VideoInputFile(
+            inputFile,
+            new List<VideoStream> { new(0, string.Empty, None, FrameSize.Unknown, None, true) });
+
+        var pipelineBuilder = new PipelineBuilder(
+            videoInputFile,
+            None,
+            None,
+            None,
+            FileSystemLayout.FFmpegReportsFolder,
+            _logger);
+
+        FFmpegPipeline pipeline = pipelineBuilder.Resize(outputFile, new FrameSize(-1, height));
+
+        return GetProcess(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
+    }
+
     public Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile) =>
         _ffmpegProcessService.ConvertToPng(ffmpegPath, inputFile, outputFile);
 
@@ -357,7 +376,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         Option<AudioInputFile> audioInputFile,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<ConcatInputFile> concatInputFile,
-        FFmpegPipeline pipeline)
+        FFmpegPipeline pipeline,
+        bool log = true)
     {
         IEnumerable<string> loggedSteps = pipeline.PipelineSteps.Map(ps => ps.GetType().Name);
         IEnumerable<string> loggedVideoFilters =
@@ -365,12 +385,15 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         IEnumerable<string> loggedAudioFilters =
             audioInputFile.Map(f => f.FilterSteps.Map(af => af.GetType().Name)).Flatten();
 
-        _logger.LogDebug(
-            "FFmpeg pipeline {PipelineSteps}, {AudioFilters}, {VideoFilters}",
-            loggedSteps,
-            loggedAudioFilters,
-            loggedVideoFilters
-        );
+        if (log)
+        {
+            _logger.LogDebug(
+                "FFmpeg pipeline {PipelineSteps}, {AudioFilters}, {VideoFilters}",
+                loggedSteps,
+                loggedAudioFilters,
+                loggedVideoFilters
+            );
+        }
 
         IList<EnvironmentVariable> environmentVariables =
             CommandGenerator.GenerateEnvironmentVariables(pipeline.PipelineSteps);

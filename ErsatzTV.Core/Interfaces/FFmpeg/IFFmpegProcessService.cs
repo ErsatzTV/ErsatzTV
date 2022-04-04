@@ -41,6 +41,8 @@ public interface IFFmpegProcessService
 
     Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
+    Process ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
+
     Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
 
     Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);

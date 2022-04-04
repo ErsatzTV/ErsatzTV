@@ -25,6 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This mode is used when a schedule is updated, or when collection modifications trigger a playout rebuild
   - `Reset` - this mode will rebuild the entire playout and will NOT maintain progress
     - This mode is only used when the `Reset Playout` button is clicked on the Playouts page
+- Use ffmpeg to resize images; this should help reduce ErsatzTV's memory use
 
 ## [0.4.5-alpha] - 2022-03-29
 ### Fixed
