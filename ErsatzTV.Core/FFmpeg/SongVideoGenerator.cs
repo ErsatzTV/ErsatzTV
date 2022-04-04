@@ -31,6 +31,7 @@ public class SongVideoGenerator : ISongVideoGenerator
         Channel channel,
         Option<ChannelWatermark> maybeGlobalWatermark,
         string ffmpegPath,
+        string ffprobePath,
         CancellationToken cancellationToken)
     {
         Option<string> subtitleFile = None;
@@ -214,6 +215,7 @@ public class SongVideoGenerator : ISongVideoGenerator
 
         Either<BaseError, string> maybeSongImage = await _ffmpegProcessService.GenerateSongImage(
             ffmpegPath,
+            ffprobePath,
             subtitleFile,
             channel,
             maybeGlobalWatermark,

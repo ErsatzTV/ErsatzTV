@@ -10,6 +10,7 @@ public interface IFFmpegProcessService
 {
     Task<Process> ForPlayoutItem(
         string ffmpegPath,
+        string ffprobePath,
         bool saveReports,
         Channel channel,
         MediaVersion videoVersion,
@@ -49,6 +50,7 @@ public interface IFFmpegProcessService
 
     Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
+        string ffprobePath,
         Option<string> subtitleFile,
         Channel channel,
         Option<ChannelWatermark> globalWatermark,

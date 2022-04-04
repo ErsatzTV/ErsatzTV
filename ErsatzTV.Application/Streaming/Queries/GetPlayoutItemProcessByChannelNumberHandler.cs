@@ -58,6 +58,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         GetPlayoutItemProcessByChannelNumber request,
         Channel channel,
         string ffmpegPath,
+        string ffprobePath,
         CancellationToken cancellationToken)
     {
         DateTimeOffset now = request.Now;
@@ -128,6 +129,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                     channel,
                     maybeGlobalWatermark,
                     ffmpegPath,
+                    ffprobePath,
                     cancellationToken);
             }
 
@@ -137,6 +139,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             Process process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
+                ffprobePath,
                 saveReports,
                 channel,
                 videoVersion,

@@ -34,6 +34,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
     public async Task<Process> ForPlayoutItem(
         string ffmpegPath,
+        string ffprobePath,
         bool saveReports,
         Channel channel,
         MediaVersion videoVersion,
@@ -72,7 +73,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             targetFramerate);
 
         Option<WatermarkOptions> watermarkOptions =
-            await _ffmpegProcessService.GetWatermarkOptions(channel, globalWatermark, videoVersion, None, None);
+            await _ffmpegProcessService.GetWatermarkOptions(
+                ffprobePath,
+                channel,
+                globalWatermark,
+                videoVersion,
+                None,
+                None);
 
         Option<List<FadePoint>> maybeFadePoints = watermarkOptions
             .Map(o => o.Watermark)
@@ -343,6 +350,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
     public Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,
+        string ffprobePath,
         Option<string> subtitleFile,
         Channel channel,
         Option<ChannelWatermark> globalWatermark,
@@ -357,6 +365,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         CancellationToken cancellationToken) =>
         _ffmpegProcessService.GenerateSongImage(
             ffmpegPath,
+            ffprobePath,
             subtitleFile,
             channel,
             globalWatermark,

@@ -6,8 +6,6 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -17,22 +15,16 @@ public class ImageCache : IImageCache
 {
     private static readonly SHA1 Crypto;
     private readonly ILocalFileSystem _localFileSystem;
-    private readonly ILogger<ImageCache> _logger;
-    private readonly IMemoryCache _memoryCache;
     private readonly ITempFilePool _tempFilePool;
 
     static ImageCache() => Crypto = SHA1.Create();
 
     public ImageCache(
         ILocalFileSystem localFileSystem,
-        IMemoryCache memoryCache,
-        ITempFilePool tempFilePool,
-        ILogger<ImageCache> logger)
+        ITempFilePool tempFilePool)
     {
         _localFileSystem = localFileSystem;
-        _memoryCache = memoryCache;
         _tempFilePool = tempFilePool;
-        _logger = logger;
     }
 
     public async Task<Either<BaseError, string>> SaveArtworkToCache(Stream stream, ArtworkKind artworkKind)
@@ -131,29 +123,6 @@ public class ImageCache : IImageCache
         };
 
         return Path.Combine(baseFolder, fileName);
-    }
-
-    public async Task<bool> IsAnimated(string fileName)
-    {
-        try
-        {
-            var cacheKey = $"image.animated.{Path.GetFileName(fileName)}";
-            if (_memoryCache.TryGetValue(cacheKey, out bool animated))
-            {
-                return animated;
-            }
-
-            using Image image = await Image.LoadAsync(fileName);
-            animated = image.Frames.Count > 1;
-            _memoryCache.Set(cacheKey, animated, TimeSpan.FromDays(1));
-
-            return animated;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unable to check image for animation");
-            return false;
-        }
     }
 
     public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
