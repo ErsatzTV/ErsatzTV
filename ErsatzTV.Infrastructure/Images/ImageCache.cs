@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography;
+﻿using System.Drawing.Imaging;
+using System.Security.Cryptography;
 using System.Text;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
@@ -6,8 +7,8 @@ using ErsatzTV.Core.FFmpeg;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
+using Decoder = System.Drawing.Common.Blurhash.Decoder;
+using Encoder = System.Drawing.Common.Blurhash.Encoder;
 
 namespace ErsatzTV.Infrastructure.Images;
 
@@ -125,16 +126,18 @@ public class ImageCache : IImageCache
         return Path.Combine(baseFolder, fileName);
     }
 
-    public async Task<string> CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
+    public string CalculateBlurHash(string fileName, ArtworkKind artworkKind, int x, int y)
     {
-        var encoder = new Blurhash.ImageSharp.Encoder();
+        var encoder = new Encoder();
         string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
-        await using var fs = new FileStream(targetFile, FileMode.Open, FileAccess.Read);
-        using var image = await Image.LoadAsync<Rgb24>(fs);
-        return encoder.Encode(image, x, y);
+        // ReSharper disable once ConvertToUsingDeclaration
+        using (var image = System.Drawing.Image.FromFile(targetFile))
+        {
+            return encoder.Encode(image, x, y);
+        }
     }
 
-    public async Task<string> WriteBlurHash(string blurHash, IDisplaySize targetSize)
+    public string WriteBlurHash(string blurHash, IDisplaySize targetSize)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(blurHash);
         string base64 = Convert.ToBase64String(bytes).Replace("+", "_").Replace("/", "-").Replace("=", "");
@@ -143,10 +146,13 @@ public class ImageCache : IImageCache
         {
             string folder = Path.GetDirectoryName(targetFile);
             _localFileSystem.EnsureFolderExists(folder);
-                
-            var decoder = new Blurhash.ImageSharp.Decoder();
-            using Image<Rgb24> image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height);
-            await image.SaveAsPngAsync(targetFile);
+
+            var decoder = new Decoder();
+            // ReSharper disable once ConvertToUsingDeclaration
+            using (System.Drawing.Image image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height))
+            {
+                image.Save(targetFile, ImageFormat.Png);
+            }
         }
 
         return targetFile;
