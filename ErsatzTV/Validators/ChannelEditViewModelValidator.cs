@@ -10,7 +10,7 @@ public class ChannelEditViewModelValidator : AbstractValidator<ChannelEditViewMo
     public ChannelEditViewModelValidator()
     {
         RuleFor(x => x.Number).Matches(Channel.NumberValidator)
-            .WithMessage("Invalid channel number; one decimal is allowed for subchannels");
+            .WithMessage("Invalid channel number; two decimals are allowed for subchannels");
 
         RuleFor(x => x.Name).NotEmpty();
         RuleFor(x => x.Group).NotEmpty();
