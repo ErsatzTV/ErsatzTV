@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
     - This mode is only used when the `Reset Playout` button is clicked on the Playouts page
 - Use ffmpeg to resize images; this should help reduce ErsatzTV's memory use
 - Use ffprobe to check for animated logos and watermarks; this should help reduce ErsatzTV's memory use
+- Allow two decimals in channel numbers (e.g. `5.73`)
 
 ## [0.4.5-alpha] - 2022-03-29
 ### Fixed

@@ -119,7 +119,7 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
                     return createChannel.Number;
                 }
 
-                return BaseError.New("Invalid channel number; one decimal is allowed for subchannels");
+                return BaseError.New("Invalid channel number; two decimals are allowed for subchannels");
             });
     }
 

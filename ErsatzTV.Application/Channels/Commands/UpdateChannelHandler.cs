@@ -102,7 +102,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
                 return updateChannel.Number;
             }
 
-            return BaseError.New("Invalid channel number; one decimal is allowed for subchannels");
+            return BaseError.New("Invalid channel number; two decimals are allowed for subchannels");
         }
 
         return BaseError.New("Channel number must be unique");
