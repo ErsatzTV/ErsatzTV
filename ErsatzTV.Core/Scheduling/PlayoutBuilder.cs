@@ -285,9 +285,9 @@ public class PlayoutBuilder : IPlayoutBuilder
         //     playoutFinish);
 
         // build each day with "continue" anchors
-        while (finish < playoutFinish)
+        while (finish <= playoutFinish)
         {
-            // _logger.LogDebug("Building playout from {Start} to {Finish}", start, finish);
+            _logger.LogDebug("Building playout from {Start} to {Finish}", start, finish);
             playout = await BuildPlayoutItems(playout, start, finish, collectionMediaItems, true);
 
             start = playout.Anchor.NextStartOffset;
@@ -297,7 +297,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         if (start < playoutFinish)
         {
             // build one final time without continue anchors
-            // _logger.LogDebug("Building final playout from {Start} to {Finish}", start, playoutFinish);
+            _logger.LogDebug("Building final playout from {Start} to {Finish}", start, playoutFinish);
             playout = await BuildPlayoutItems(
                 playout,
                 start,
@@ -341,9 +341,17 @@ public class PlayoutBuilder : IPlayoutBuilder
 
         // find start anchor
         PlayoutAnchor startAnchor = FindStartAnchor(playout, playoutStart, scheduleItemsEnumerator);
+        // _logger.LogDebug("Start anchor: {@StartAnchor}", startAnchor);
 
         // start at the previously-decided time
         DateTimeOffset currentTime = startAnchor.NextStartOffset.ToLocalTime();
+
+        if (currentTime >= playoutFinish)
+        {
+            // nothing to do, no need to add more anchors
+            return playout;
+        }
+
         // _logger.LogDebug(
         //     "Starting playout ({PlayoutId}) for channel {ChannelNumber} - {ChannelName} at {StartTime}",
         //     playout.Id,
