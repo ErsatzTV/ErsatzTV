@@ -1432,11 +1432,11 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 result.Items[7].FinishOffset.TimeOfDay.Should().Be(TimeSpan.Zero);
 
                 result.ProgramScheduleAnchors.Count.Should().Be(2);
-                PlayoutProgramScheduleAnchor mid = result.ProgramScheduleAnchors.First(a => a.AnchorDate is not null);
-                PlayoutProgramScheduleAnchor end = result.ProgramScheduleAnchors.First(a => a.AnchorDate is null);
-                mid.EnumeratorState.Index.Should().Be(4 % 3);
-                end.EnumeratorState.Index.Should().Be(8 % 3);
-                mid.EnumeratorState.Seed.Should().Be(end.EnumeratorState.Seed);
+                result.ProgramScheduleAnchors.Count(a => a.EnumeratorState.Index == 4 % 3).Should().Be(1);
+                result.ProgramScheduleAnchors.Count(a => a.EnumeratorState.Index == 8 % 3).Should().Be(1);
+
+                int seed = result.ProgramScheduleAnchors[0].EnumeratorState.Seed;
+                result.ProgramScheduleAnchors.All(a => a.EnumeratorState.Seed == seed).Should().BeTrue();
             }
         }
 
@@ -1671,6 +1671,76 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 result2.ProgramScheduleAnchors.Count.Should().Be(1);
                 result2.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(1);
             }
+            
+            [Test]
+            public async Task ChronologicalFlood_Should_AnchorAndReturnNewPlayoutItems_MultiDay()
+            {
+                var mediaItems = new List<MediaItem>
+                {
+                    TestMovie(1, TimeSpan.FromHours(6), DateTime.Today),
+                    TestMovie(2, TimeSpan.FromHours(6), DateTime.Today.AddHours(1))
+                };
+
+                (PlayoutBuilder builder, Playout playout) =
+                    TestDataFloodForItems(mediaItems, PlaybackOrder.Chronological);
+                DateTimeOffset start = HoursAfterMidnight(0);
+                DateTimeOffset finish = start + TimeSpan.FromDays(1);
+
+                await builder.Build(playout, PlayoutBuildMode.Reset, start, finish);
+
+                playout.Items.Count.Should().Be(4);
+                playout.Items.Map(i => i.MediaItemId).ToList().Should().Equal(1, 2, 1, 2);
+
+                playout.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddDays(1));
+                playout.ProgramScheduleAnchors.Count.Should().Be(1);
+                playout.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
+                
+                // continue 1h later
+                DateTimeOffset start2 = HoursAfterMidnight(1);
+                DateTimeOffset finish2 = start2 + TimeSpan.FromDays(1);
+
+                await builder.Build(playout, PlayoutBuildMode.Continue, start2, finish2);
+
+                playout.Items.Count.Should().Be(5);
+                playout.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(0));
+                playout.Items[0].MediaItemId.Should().Be(1);
+                playout.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+                playout.Items[1].MediaItemId.Should().Be(2);
+                playout.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
+                playout.Items[2].MediaItemId.Should().Be(1);
+                playout.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(18));
+                playout.Items[3].MediaItemId.Should().Be(2);
+                playout.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(0));
+                playout.Items[4].MediaItemId.Should().Be(1);
+
+                playout.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(30));
+                
+                playout.ProgramScheduleAnchors.Count.Should().Be(2);
+                playout.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(1);
+                
+                // continue 1h later
+                DateTimeOffset start3 = HoursAfterMidnight(2);
+                DateTimeOffset finish3 = start3 + TimeSpan.FromDays(1);
+
+                await builder.Build(playout, PlayoutBuildMode.Continue, start3, finish3);
+
+                playout.Items.Count.Should().Be(5);
+                playout.Items[0].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(0));
+                playout.Items[0].MediaItemId.Should().Be(1);
+                playout.Items[1].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(6));
+                playout.Items[1].MediaItemId.Should().Be(2);
+                playout.Items[2].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(12));
+                playout.Items[2].MediaItemId.Should().Be(1);
+                playout.Items[3].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(18));
+                playout.Items[3].MediaItemId.Should().Be(2);
+                playout.Items[4].StartOffset.TimeOfDay.Should().Be(TimeSpan.FromHours(0));
+                playout.Items[4].MediaItemId.Should().Be(1);
+
+                playout.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddHours(30));
+                
+                playout.ProgramScheduleAnchors.Count.Should().Be(2);
+                playout.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(1);
+            }
 
             [Test]
             public async Task ShuffleFlood_Should_MaintainRandomSeed()
@@ -1691,6 +1761,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 result.Items.Count.Should().Be(6);
                 result.ProgramScheduleAnchors.Count.Should().Be(1);
                 result.ProgramScheduleAnchors.Head().EnumeratorState.Seed.Should().BeGreaterThan(0);
+                result.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
 
                 int firstSeedValue = result.ProgramScheduleAnchors.Head().EnumeratorState.Seed;
 
@@ -1702,6 +1773,8 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 int secondSeedValue = result2.ProgramScheduleAnchors.Head().EnumeratorState.Seed;
 
                 firstSeedValue.Should().Be(secondSeedValue);
+
+                result2.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
             }
 
             [Test]
