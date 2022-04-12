@@ -205,6 +205,12 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout.Id,
             playout.Channel.Number,
             playout.Channel.Name);
+        
+        // remove old checkpoints
+        playout.ProgramScheduleAnchors.RemoveAll(
+            a => a.AnchorDateOffset.IfNone(SystemTime.MaxValueUtc) < parameters.Start.Date);
+
+        // _logger.LogDebug("Remaining anchors: {@Anchors}", playout.ProgramScheduleAnchors);
 
         await BuildPlayoutItems(
             playout,
@@ -285,7 +291,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         //     playoutFinish);
 
         // build each day with "continue" anchors
-        while (finish <= playoutFinish)
+        while (finish < playoutFinish)
         {
             _logger.LogDebug("Building playout from {Start} to {Finish}", start, finish);
             playout = await BuildPlayoutItems(playout, start, finish, collectionMediaItems, true);
@@ -632,13 +638,20 @@ public class PlayoutBuilder : IPlayoutBuilder
         List<MediaItem> mediaItems,
         PlaybackOrder playbackOrder)
     {
-        Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors.FirstOrDefault(
-            a => a.ProgramScheduleId == playout.ProgramScheduleId
-                 && a.CollectionType == collectionKey.CollectionType
-                 && a.CollectionId == collectionKey.CollectionId
-                 && a.MultiCollectionId == collectionKey.MultiCollectionId
-                 && a.SmartCollectionId == collectionKey.SmartCollectionId
-                 && a.MediaItemId == collectionKey.MediaItemId);
+        Option<PlayoutProgramScheduleAnchor> maybeAnchor = playout.ProgramScheduleAnchors
+            .OrderByDescending(a => a.AnchorDate is null)
+            .FirstOrDefault(
+                a => a.ProgramScheduleId == playout.ProgramScheduleId
+                     && a.CollectionType == collectionKey.CollectionType
+                     && a.CollectionId == collectionKey.CollectionId
+                     && a.MultiCollectionId == collectionKey.MultiCollectionId
+                     && a.SmartCollectionId == collectionKey.SmartCollectionId
+                     && a.MediaItemId == collectionKey.MediaItemId);
+
+        foreach (PlayoutProgramScheduleAnchor anchor in maybeAnchor)
+        {
+            _logger.LogDebug("Selecting anchor {@Anchor}", anchor);
+        }
 
         CollectionEnumeratorState state = maybeAnchor.Match(
             anchor => anchor.EnumeratorState ??

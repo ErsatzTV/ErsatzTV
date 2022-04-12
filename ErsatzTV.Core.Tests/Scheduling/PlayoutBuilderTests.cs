@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core.Domain;
+﻿using Destructurama;
+using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Scheduling;
@@ -21,6 +22,7 @@ namespace ErsatzTV.Core.Tests.Scheduling
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Debug()
                 .WriteTo.Console()
+                .Destructure.UsingAttributes()
                 .CreateLogger();
 
             ILoggerFactory loggerFactory = new LoggerFactory().AddSerilog(Log.Logger);
@@ -1694,6 +1696,32 @@ namespace ErsatzTV.Core.Tests.Scheduling
                 playout.Anchor.NextStartOffset.Should().Be(DateTime.Today.AddDays(1));
                 playout.ProgramScheduleAnchors.Count.Should().Be(1);
                 playout.ProgramScheduleAnchors.Head().EnumeratorState.Index.Should().Be(0);
+
+                PlayoutProgramScheduleAnchor headAnchor = playout.ProgramScheduleAnchors.Head();
+                
+                // throw in a detractor anchor - playout builder should prioritize the "continue" anchor
+                playout.ProgramScheduleAnchors.Insert(
+                    0,
+                    new PlayoutProgramScheduleAnchor
+                    {
+                        Id = headAnchor.Id + 1,
+                        Collection = headAnchor.Collection,
+                        CollectionId = headAnchor.CollectionId,
+                        Playout = playout,
+                        PlayoutId = playout.Id,
+                        AnchorDate = DateTime.Today.ToUniversalTime(),
+                        CollectionType = headAnchor.CollectionType,
+                        EnumeratorState = new CollectionEnumeratorState
+                            { Index = headAnchor.EnumeratorState.Index + 1, Seed = headAnchor.EnumeratorState.Seed },
+                        MediaItem = headAnchor.MediaItem,
+                        MediaItemId = headAnchor.MediaItemId,
+                        MultiCollection = headAnchor.MultiCollection,
+                        MultiCollectionId = headAnchor.MultiCollectionId,
+                        ProgramSchedule = headAnchor.ProgramSchedule,
+                        ProgramScheduleId = headAnchor.ProgramScheduleId,
+                        SmartCollection = headAnchor.SmartCollection,
+                        SmartCollectionId = headAnchor.SmartCollectionId
+                    });
                 
                 // continue 1h later
                 DateTimeOffset start2 = HoursAfterMidnight(1);
