@@ -20,7 +20,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         PlayoutBuilderState state,
         ProgramScheduleItem scheduleItem)
     {
-        DateTimeOffset startTime = state.CurrentTime;
+        DateTimeOffset startTime = state.CurrentTime.ToLocalTime();
 
         bool isIncomplete = scheduleItem is ProgramScheduleItemMultiple && state.MultipleRemaining.IsSome ||
                             scheduleItem is ProgramScheduleItemDuration && state.DurationFinish.IsSome ||

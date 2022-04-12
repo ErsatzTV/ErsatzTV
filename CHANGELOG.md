@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Fix `HLS Segmenter` bug where it would drift off of the schedule if a playout was changed while the segmenter was running
 - Ensure clients that use HDHomeRun emulation (like Plex) always get an `MPEG-TS` stream, regardless of the configured streaming mode
+- Fix scheduling bug that caused some days to be skipped when fixed start times were used
 
 ### Added
 - Add `Preferred Subtitle Language` and `Subtitle Mode` to channel settings

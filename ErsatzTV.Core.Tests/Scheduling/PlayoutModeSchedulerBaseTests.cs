@@ -3,7 +3,6 @@ using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.Scheduling;
 using ErsatzTV.Core.Scheduling;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 
@@ -283,6 +282,35 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                     new List<MediaChapter> { new() });
 
             playoutItems.Count.Should().Be(1);
+        }
+    }
+
+    [TestFixture]
+    public class GetStartTimeAfter
+    {
+        [Test]
+        public void Should_Compare_Time_As_Local_Time()
+        {
+            var enumerator = new Mock<IScheduleItemsEnumerator>();
+
+            var state = new PlayoutBuilderState(
+                enumerator.Object,
+                None,
+                None,
+                false,
+                false,
+                0,
+                DateTime.Today.AddHours(6).ToUniversalTime());
+
+            var scheduleItem = new ProgramScheduleItemOne
+            {
+                StartTime = TimeSpan.FromHours(6)
+            };
+
+            DateTimeOffset result =
+                PlayoutModeSchedulerBase<ProgramScheduleItem>.GetStartTimeAfter(state, scheduleItem);
+
+            result.Should().Be(DateTime.Today.AddHours(6));
         }
     }
 
