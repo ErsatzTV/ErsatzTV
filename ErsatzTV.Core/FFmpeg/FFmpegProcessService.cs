@@ -164,6 +164,7 @@ public class FFmpegProcessService
         string ffprobePath,
         Option<string> subtitleFile,
         Channel channel,
+        Option<ChannelWatermark> playoutItemWatermark,
         Option<ChannelWatermark> globalWatermark,
         MediaVersion videoVersion,
         string videoPath,
@@ -199,6 +200,7 @@ public class FFmpegProcessService
                 await GetWatermarkOptions(
                     ffprobePath,
                     channel,
+                    playoutItemWatermark,
                     globalWatermark,
                     videoVersion,
                     watermarkOverride,
@@ -273,6 +275,7 @@ public class FFmpegProcessService
     internal async Task<WatermarkOptions> GetWatermarkOptions(
         string ffprobePath,
         Channel channel,
+        Option<ChannelWatermark> playoutItemWatermark,
         Option<ChannelWatermark> globalWatermark,
         MediaVersion videoVersion,
         Option<ChannelWatermark> watermarkOverride,
@@ -287,6 +290,38 @@ public class FFmpegProcessService
                     await watermarkPath.IfNoneAsync(videoVersion.MediaFiles.Head().Path),
                     0,
                     false);
+            }
+            
+            // check for playout item watermark
+            foreach (ChannelWatermark watermark in playoutItemWatermark)
+            {
+                switch (watermark.ImageSource)
+                {
+                    case ChannelWatermarkImageSource.Custom:
+                        string customPath = _imageCache.GetPathForImage(
+                            watermark.Image,
+                            ArtworkKind.Watermark,
+                            Option<int>.None);
+                        return new WatermarkOptions(
+                            await watermarkOverride.IfNoneAsync(watermark),
+                            customPath,
+                            None,
+                            await IsAnimated(ffprobePath, customPath));
+                    case ChannelWatermarkImageSource.ChannelLogo:
+                        Option<string> maybeChannelPath = channel.Artwork
+                            .Filter(a => a.ArtworkKind == ArtworkKind.Logo)
+                            .HeadOrNone()
+                            .Map(a => _imageCache.GetPathForImage(a.Path, ArtworkKind.Logo, Option<int>.None));
+                        return new WatermarkOptions(
+                            await watermarkOverride.IfNoneAsync(watermark),
+                            maybeChannelPath,
+                            None,
+                            await maybeChannelPath.Match(
+                                p => IsAnimated(ffprobePath, p),
+                                () => Task.FromResult(false)));
+                    default:
+                        throw new NotSupportedException("Unsupported watermark image source");
+                }
             }
 
             // check for channel watermark

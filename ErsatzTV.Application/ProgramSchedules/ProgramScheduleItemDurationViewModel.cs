@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Application.Filler;
 using ErsatzTV.Application.MediaCollections;
 using ErsatzTV.Application.MediaItems;
+using ErsatzTV.Application.Watermarks;
 using ErsatzTV.Core.Domain;
 
 namespace ErsatzTV.Application.ProgramSchedules;
@@ -26,7 +27,8 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
         FillerPresetViewModel midRollFiller,
         FillerPresetViewModel postRollFiller,
         FillerPresetViewModel tailFiller,
-        FillerPresetViewModel fallbackFiller) : base(
+        FillerPresetViewModel fallbackFiller,
+        WatermarkViewModel watermark) : base(
         id,
         index,
         startType,
@@ -44,7 +46,8 @@ public record ProgramScheduleItemDurationViewModel : ProgramScheduleItemViewMode
         midRollFiller,
         postRollFiller,
         tailFiller,
-        fallbackFiller)
+        fallbackFiller,
+        watermark)
     {
         PlayoutDuration = playoutDuration;
         TailMode = tailMode;

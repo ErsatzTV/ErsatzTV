@@ -40,7 +40,8 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 GuideGroup = playoutBuilderState.NextGuideGroup,
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
-                    : FillerKind.None
+                    : FillerKind.None,
+                WatermarkId = scheduleItem.WatermarkId
             };
 
             DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(

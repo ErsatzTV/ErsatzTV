@@ -72,7 +72,8 @@ public class PlayoutModeSchedulerDuration : PlayoutModeSchedulerBase<ProgramSche
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
                     : FillerKind.None,
-                CustomTitle = scheduleItem.CustomTitle
+                CustomTitle = scheduleItem.CustomTitle,
+                WatermarkId = scheduleItem.WatermarkId
             };
 
             durationUntil.Do(du => playoutItem.GuideFinish = du.UtcDateTime);

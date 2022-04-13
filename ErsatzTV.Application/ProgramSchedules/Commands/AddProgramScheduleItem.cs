@@ -23,4 +23,5 @@ public record AddProgramScheduleItem(
     int? MidRollFillerId,
     int? PostRollFillerId,
     int? TailFillerId,
-    int? FallbackFillerId) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;
+    int? FallbackFillerId,
+    int? WatermarkId) : IRequest<Either<BaseError, ProgramScheduleItemViewModel>>, IProgramScheduleItemRequest;

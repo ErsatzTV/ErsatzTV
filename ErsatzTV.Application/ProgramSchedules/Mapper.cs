@@ -57,6 +57,9 @@ internal static class Mapper
                         : null,
                     duration.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(duration.FallbackFiller)
+                        : null,
+                    duration.Watermark != null
+                        ? Watermarks.Mapper.ProjectToViewModel(duration.Watermark)
                         : null),
             ProgramScheduleItemFlood flood =>
                 new ProgramScheduleItemFloodViewModel(
@@ -98,6 +101,9 @@ internal static class Mapper
                         : null,
                     flood.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(flood.FallbackFiller)
+                        : null,
+                    flood.Watermark != null
+                        ? Watermarks.Mapper.ProjectToViewModel(flood.Watermark)
                         : null),
             ProgramScheduleItemMultiple multiple =>
                 new ProgramScheduleItemMultipleViewModel(
@@ -140,6 +146,9 @@ internal static class Mapper
                         : null,
                     multiple.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(multiple.FallbackFiller)
+                        : null,
+                    multiple.Watermark != null
+                        ? Watermarks.Mapper.ProjectToViewModel(multiple.Watermark)
                         : null),
             ProgramScheduleItemOne one =>
                 new ProgramScheduleItemOneViewModel(
@@ -181,6 +190,9 @@ internal static class Mapper
                         : null,
                     one.FallbackFiller != null
                         ? Filler.Mapper.ProjectToViewModel(one.FallbackFiller)
+                        : null,
+                    one.Watermark != null
+                        ? Watermarks.Mapper.ProjectToViewModel(one.Watermark)
                         : null),
             _ => throw new NotSupportedException(
                 $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")

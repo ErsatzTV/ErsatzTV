@@ -97,6 +97,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Song).SongMetadata)
             .ThenInclude(sm => sm.Artwork)
+            .Include(i => i.Watermark)
             .ForChannelAndTime(channel.Id, now)
             .Map(o => o.ToEither<BaseError>(new UnableToLocatePlayoutItem()))
             .BindT(ValidatePlayoutItemPath);
@@ -127,6 +128,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 (videoPath, videoVersion) = await _songVideoGenerator.GenerateSongVideo(
                     song,
                     channel,
+                    Optional(playoutItemWithPath.PlayoutItem.Watermark),
                     maybeGlobalWatermark,
                     ffmpegPath,
                     ffprobePath,
@@ -149,6 +151,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 playoutItemWithPath.PlayoutItem.StartOffset,
                 playoutItemWithPath.PlayoutItem.FinishOffset,
                 request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
+                Optional(playoutItemWithPath.PlayoutItem.Watermark),
                 maybeGlobalWatermark,
                 channel.FFmpegProfile.VaapiDriver,
                 channel.FFmpegProfile.VaapiDevice,
