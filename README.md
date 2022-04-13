@@ -1,6 +1,6 @@
 # ErsatzTV
 
-**ErsatzTV** is alpha software for configuring and streaming custom live channels using your media library. The software is currently unstable and under active development.
+**ErsatzTV** is beta software for configuring and streaming custom live channels using your media library. The software may be unstable and is under active development.
 
 Documentation is available at [ersatztv.org](https://ersatztv.org/).
 
@@ -19,6 +19,7 @@ Want to join the community or have a question? Join us on [Discord](https://disc
 - [Emby](https://emby.media/) media and metadata
 - Song and music video libraries
 - Pre-roll, mid-roll, post-roll filler options
+- Picture-based subtitle burn-in
 
 ## License
 
