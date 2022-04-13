@@ -61,7 +61,8 @@ public class PlayoutModeSchedulerMultiple : PlayoutModeSchedulerBase<ProgramSche
                 GuideGroup = nextState.NextGuideGroup,
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
-                    : FillerKind.None
+                    : FillerKind.None,
+                WatermarkId = scheduleItem.WatermarkId
             };
 
             // LogScheduledItem(scheduleItem, mediaItem, itemStartTime);

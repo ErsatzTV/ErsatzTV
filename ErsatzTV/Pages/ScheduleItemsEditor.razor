@@ -6,6 +6,7 @@
 @using ErsatzTV.Application.Filler
 @using ErsatzTV.Core.Domain.Filler
 @using ErsatzTV.Application.Artists
+@using ErsatzTV.Application.Watermarks
 @implements IDisposable
 @inject NavigationManager _navigationManager
 @inject ILogger<ScheduleItemsEditor> _logger
@@ -221,6 +222,12 @@
                                 <MudSelectItem Value="@GuideMode.Normal">Normal</MudSelectItem>
                                 <MudSelectItem Value="@GuideMode.Filler">Filler</MudSelectItem>
                             </MudSelect>
+                            <MudSelect Class="mt-3" Label="Watermark" @bind-Value="@_selectedItem.Watermark" For="@(() => _selectedItem.Watermark)" Clearable="true">
+                                @foreach (WatermarkViewModel watermark in _watermarks)
+                                {
+                                    <MudSelectItem Value="@watermark">@watermark.Name</MudSelectItem>
+                                }
+                            </MudSelect>
                         </MudCardContent>
                     </MudCard>
                 </div>
@@ -299,6 +306,7 @@
     private List<NamedMediaItemViewModel> _televisionSeasons;
     private List<NamedMediaItemViewModel> _artists;
     private List<FillerPresetViewModel> _fillerPresets;
+    private List<WatermarkViewModel> _watermarks;
 
     private ProgramScheduleItemEditViewModel _selectedItem;
     
@@ -308,7 +316,10 @@
         _cts.Dispose();
     }
 
-    protected override Task OnParametersSetAsync() => LoadScheduleItems();
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadScheduleItems();
+    }
 
     private async Task LoadScheduleItems()
     {
@@ -326,6 +337,8 @@
         _artists = await _mediator.Send(new GetAllArtists(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
         _fillerPresets = await _mediator.Send(new GetAllFillerPresets(), _cts.Token)
+            .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
+        _watermarks = await _mediator.Send(new GetAllWatermarks(), _cts.Token)
             .Map(list => list.OrderBy(vm => vm.Name, StringComparer.CurrentCultureIgnoreCase).ToList());
 
         string name = string.Empty;
@@ -353,7 +366,7 @@
             }
         }
     }
-
+    
     private ProgramScheduleItemEditViewModel ProjectToEditViewModel(ProgramScheduleItemViewModel item)
     {
         var result = new ProgramScheduleItemEditViewModel
@@ -375,7 +388,8 @@
             MidRollFiller = item.MidRollFiller,
             PostRollFiller = item.PostRollFiller,
             TailFiller = item.TailFiller,
-            FallbackFiller = item.FallbackFiller
+            FallbackFiller = item.FallbackFiller,
+            Watermark = item.Watermark
         };
 
         switch (item)
@@ -427,9 +441,6 @@
         (toSwap.Index, item.Index) = (item.Index, toSwap.Index);
     }
 
-    private Task<IEnumerable<FillerPresetViewModel>> SearchFillerPresets(FillerKind fillerKind, string value) =>
-        _fillerPresets.Filter(p => p.FillerKind == fillerKind && p.Name.Contains(value ?? string.Empty, StringComparison.OrdinalIgnoreCase)).AsTask();
-
     private async Task SaveChanges()
     {
         var items = _schedule.Items.Map(item => new ReplaceProgramScheduleItem(
@@ -452,7 +463,8 @@
             item.MidRollFiller?.Id,
             item.PostRollFiller?.Id,
             item.TailFiller?.Id,
-            item.FallbackFiller?.Id)).ToList();
+            item.FallbackFiller?.Id,
+            item.Watermark?.Id)).ToList();
 
         Seq<BaseError> errorMessages = await _mediator.Send(new ReplaceProgramScheduleItems(Id, items), _cts.Token).Map(e => e.LeftToSeq());
 

@@ -29,6 +29,7 @@ public class SongVideoGenerator : ISongVideoGenerator
     public async Task<Tuple<string, MediaVersion>> GenerateSongVideo(
         Song song,
         Channel channel,
+        Option<ChannelWatermark> maybePlayoutItemWatermark,
         Option<ChannelWatermark> maybeGlobalWatermark,
         string ffmpegPath,
         string ffprobePath,
@@ -216,6 +217,7 @@ public class SongVideoGenerator : ISongVideoGenerator
             ffprobePath,
             subtitleFile,
             channel,
+            maybePlayoutItemWatermark,
             maybeGlobalWatermark,
             videoVersion,
             videoPath,

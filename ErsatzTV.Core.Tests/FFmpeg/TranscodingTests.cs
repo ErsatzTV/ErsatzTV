@@ -340,6 +340,7 @@ public class TranscodingTests
             now,
             now + TimeSpan.FromSeconds(5),
             now,
+            Option<ChannelWatermark>.None,
             channelWatermark,
             VaapiDriver.Default,
             "/dev/dri/renderD128",

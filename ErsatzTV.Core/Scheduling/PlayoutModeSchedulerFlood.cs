@@ -49,7 +49,8 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 GuideGroup = nextState.NextGuideGroup,
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
-                    : FillerKind.None
+                    : FillerKind.None,
+                WatermarkId = scheduleItem.WatermarkId
             };
                 
             DateTimeOffset peekScheduleItemStart =

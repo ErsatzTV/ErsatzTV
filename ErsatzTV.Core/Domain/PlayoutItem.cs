@@ -20,6 +20,8 @@ public class PlayoutItem
     public TimeSpan InPoint { get; set; }
     public TimeSpan OutPoint { get; set; }
     public string ChapterTitle { get; set; }
+    public ChannelWatermark Watermark { get; set; }
+    public int? WatermarkId { get; set; }
 
     public DateTimeOffset StartOffset => new DateTimeOffset(Start, TimeSpan.Zero).ToLocalTime();
     public DateTimeOffset FinishOffset => new DateTimeOffset(Finish, TimeSpan.Zero).ToLocalTime();

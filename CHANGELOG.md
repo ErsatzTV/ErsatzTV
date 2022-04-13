@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `Subtitle Mode` will further filter subtitle streams based on attributes (forced, default)
   - If picture-based subtitles are found after filtering, they will be burned into the video stream
 - Detect non-zero ffmpeg exit code from `HLS Segmenter` and `MPEG-TS`, log error output and display error output on stream
+- Add `Watermark` setting to schedule items; this allows override the channel watermark. Watermark priority is:
+  - Schedule Item
+  - Channel
+  - Global
 
 ### Changed
 - Remove legacy transcoder logic option; all channels will use the new transcoder logic

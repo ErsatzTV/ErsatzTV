@@ -176,7 +176,8 @@ public abstract class ProgramScheduleItemCommandBase
                 MidRollFillerId = item.MidRollFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
-                FallbackFillerId = item.FallbackFillerId
+                FallbackFillerId = item.FallbackFillerId,
+                WatermarkId = item.WatermarkId
             },
             PlayoutMode.One => new ProgramScheduleItemOne
             {
@@ -195,7 +196,8 @@ public abstract class ProgramScheduleItemCommandBase
                 MidRollFillerId = item.MidRollFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
-                FallbackFillerId = item.FallbackFillerId
+                FallbackFillerId = item.FallbackFillerId,
+                WatermarkId = item.WatermarkId
             },
             PlayoutMode.Multiple => new ProgramScheduleItemMultiple
             {
@@ -215,7 +217,8 @@ public abstract class ProgramScheduleItemCommandBase
                 MidRollFillerId = item.MidRollFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
-                FallbackFillerId = item.FallbackFillerId
+                FallbackFillerId = item.FallbackFillerId,
+                WatermarkId = item.WatermarkId
             },
             PlayoutMode.Duration => new ProgramScheduleItemDuration
             {
@@ -236,7 +239,8 @@ public abstract class ProgramScheduleItemCommandBase
                 MidRollFillerId = item.MidRollFillerId,
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
-                FallbackFillerId = item.FallbackFillerId
+                FallbackFillerId = item.FallbackFillerId,
+                WatermarkId = item.WatermarkId
             },
             _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
         };
