@@ -4,10 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.5.0-beta] - 2022-04-13
 ### Fixed
 - Fix `HLS Segmenter` bug where it would drift off of the schedule if a playout was changed while the segmenter was running
 - Ensure clients that use HDHomeRun emulation (like Plex) always get an `MPEG-TS` stream, regardless of the configured streaming mode
-- Fix scheduling bug that caused some days to be skipped when fixed start times were used
+- Fix scheduling bug that caused some days to be skipped when fixed start times were used with fallback filler
 
 ### Added
 - Add `Preferred Subtitle Language` and `Subtitle Mode` to channel settings
@@ -1066,7 +1068,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.5-alpha...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.0-beta...HEAD
+[0.5.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.5-alpha...v0.5.0-beta
 [0.4.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...v0.4.5-alpha
 [0.4.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.3-alpha...v0.4.4-alpha
 [0.4.3-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.2-alpha...v0.4.3-alpha
