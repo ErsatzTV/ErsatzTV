@@ -65,6 +65,12 @@ public class TranscodingTests
         // TODO: animated vs static
     }
 
+    public enum Subtitle
+    {
+        None,
+        Picture
+    }
+
     private class TestData
     {
         public static Watermark[] Watermarks =
@@ -72,6 +78,12 @@ public class TranscodingTests
             Watermark.None,
             Watermark.PermanentOpaque,
             Watermark.PermanentTransparent
+        };
+
+        public static Subtitle[] Subtitles =
+        {
+            Subtitle.None,
+            Subtitle.Picture
         };
             
         public static Padding[] Paddings =
@@ -158,6 +170,7 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.Paddings))] Padding padding,
         [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))] VideoScanKind videoScanKind,
         [ValueSource(typeof(TestData), nameof(TestData.Watermarks))] Watermark watermark,
+        [ValueSource(typeof(TestData), nameof(TestData.Subtitles))] Subtitle subtitle,
         [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))] FFmpegProfileVideoFormat profileVideoFormat,
         // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
         [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
@@ -175,7 +188,7 @@ public class TranscodingTests
         }
 
         string name = GetStringSha256Hash(
-            $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{profileResolution}_{profileVideoFormat}_{profileAcceleration}");
+            $"{inputFormat.Encoder}_{inputFormat.PixelFormat}_{videoScanKind}_{padding}_{watermark}_{subtitle}_{profileResolution}_{profileVideoFormat}_{profileAcceleration}");
 
         string file = Path.Combine(TestContext.CurrentContext.TestDirectory, $"{name}.mkv");
         if (!File.Exists(file))
@@ -203,6 +216,46 @@ public class TranscodingTests
             // ReSharper disable once MethodHasAsyncOverload
             p1.WaitForExit();
             p1.ExitCode.Should().Be(0);
+
+            switch (subtitle)
+            {
+                case Subtitle.Picture:
+                    string sourceFile = Path.GetTempFileName() + ".mkv";
+                    File.Move(file, sourceFile, true);
+                    
+                    string tempFileName = Path.GetTempFileName() + ".mkv";
+                    string subPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "test.sup");
+                    var p2 = new Process
+                    {
+                        StartInfo = new ProcessStartInfo
+                        {
+                            FileName = ExecutableName("mkvmerge"),
+                            Arguments = $"-o {tempFileName} {sourceFile} {subPath}"
+                        }
+                    };
+
+                    p2.Start();
+                    await p2.WaitForExitAsync();
+                    // ReSharper disable once MethodHasAsyncOverload
+                    p2.WaitForExit();
+                    if (p2.ExitCode != 0)
+                    {
+                        if (File.Exists(sourceFile))
+                        {
+                            File.Delete(sourceFile);
+                        }
+
+                        if (File.Exists(file))
+                        {
+                            File.Delete(file);
+                        }
+                    }
+
+                    p2.ExitCode.Should().Be(0);
+
+                    File.Move(tempFileName, file, true);
+                    break;
+            }
         }
 
         var imageCache = new Mock<IImageCache>();
@@ -221,7 +274,7 @@ public class TranscodingTests
             imageCache.Object,
             new Mock<ITempFilePool>().Object,
             new Mock<IClient>().Object,
-            new Mock<IMemoryCache>().Object,
+            new MemoryCache(new MemoryCacheOptions()),
             LoggerFactory.CreateLogger<FFmpegProcessService>());
 
         var service = new FFmpegLibraryProcessService(
@@ -318,6 +371,12 @@ public class TranscodingTests
                 break;
         }
 
+        ChannelSubtitleMode subtitleMode = subtitle switch
+        {
+            Subtitle.Picture => ChannelSubtitleMode.Any,
+            _ => ChannelSubtitleMode.None 
+        };
+
         using Process process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
@@ -329,9 +388,11 @@ public class TranscodingTests
                 {
                     HardwareAcceleration = profileAcceleration,
                     VideoFormat = profileVideoFormat,
-                    AudioFormat = FFmpegProfileAudioFormat.Aac
+                    AudioFormat = FFmpegProfileAudioFormat.Aac,
+                    DeinterlaceVideo = true
                 },
-                StreamingMode = StreamingMode.TransportStream
+                StreamingMode = StreamingMode.TransportStream,
+                SubtitleMode = subtitleMode
             },
             v,
             v,
@@ -368,6 +429,7 @@ public class TranscodingTests
             result = await Cli.Wrap(process.StartInfo.FileName)
                 .WithArguments(process.StartInfo.ArgumentList)
                 .WithValidation(CommandResultValidation.None)
+                .WithStandardOutputPipe(PipeTarget.Null)
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
                 .ExecuteAsync(timeoutSignal.Token);
         }
@@ -425,7 +487,7 @@ public class TranscodingTests
             Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
 
         public Task<Option<MediaStream>> SelectSubtitleStream(Channel channel, MediaVersion version) =>
-            Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Subtitle)).AsTask();
+            Optional(version.Streams.Find(s => s.MediaStreamKind == MediaStreamKind.Subtitle)).AsTask();
     }
 
     private static string ExecutableName(string baseName) =>

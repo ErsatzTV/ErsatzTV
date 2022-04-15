@@ -474,6 +474,7 @@ public class PipelineBuilder
                                  currentState,
                                  desiredState,
                                  _watermarkInputFile,
+                                 _subtitleInputFile,
                                  _logger))
                     {
                         encoder = e;
