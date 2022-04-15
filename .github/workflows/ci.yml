@@ -19,14 +19,14 @@ jobs:
           tag=$(git describe --tags --abbrev=0)
           tag2="${tag:1}"
           short=$(git rev-parse --short HEAD)
-          final="${tag2/alpha/$short}"
+          final="${tag2/beta/$short}"
           echo "GIT_TAG=${final}" >> $GITHUB_ENV
       - name: Extract Artifacts Version
         shell: bash
         run: |
           tag=$(git describe --tags --abbrev=0)
           short=$(git rev-parse --short HEAD)
-          final="${tag/alpha/$short}"
+          final="${tag/beta/$short}"
           echo "ARTIFACTS_VERSION=${final}" >> $GITHUB_ENV
           echo "INFO_VERSION=${tag:1}" >> $GITHUB_ENV
     outputs:
