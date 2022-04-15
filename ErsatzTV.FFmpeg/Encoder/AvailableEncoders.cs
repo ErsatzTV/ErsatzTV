@@ -15,15 +15,18 @@ public static class AvailableEncoders
         FrameState currentState,
         FrameState desiredState,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
+        Option<SubtitleInputFile> maybeSubtitleInputFile,
         ILogger logger) =>
         (ffmpegState.HardwareAccelerationMode, desiredState.VideoFormat) switch
         {
             (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc) => new EncoderHevcNvenc(
                 currentState,
-                maybeWatermarkInputFile),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
             (HardwareAccelerationMode.Nvenc, VideoFormat.H264) => new EncoderH264Nvenc(
                 currentState,
-                maybeWatermarkInputFile),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
 
             (HardwareAccelerationMode.Qsv, VideoFormat.Hevc) => new EncoderHevcQsv(
                 currentState,

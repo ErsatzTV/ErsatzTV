@@ -6,11 +6,16 @@ public class EncoderHevcNvenc : EncoderBase
 {
     private readonly FrameState _currentState;
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
+    private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
 
-    public EncoderHevcNvenc(FrameState currentState, Option<WatermarkInputFile> maybeWatermarkInputFile)
+    public EncoderHevcNvenc(
+        FrameState currentState,
+        Option<WatermarkInputFile> maybeWatermarkInputFile,
+        Option<SubtitleInputFile> maybeSubtitleInputFile)
     {
         _currentState = currentState;
         _maybeWatermarkInputFile = maybeWatermarkInputFile;
+        _maybeSubtitleInputFile = maybeSubtitleInputFile;
     }
 
     public override FrameState NextState(FrameState currentState) => currentState with
@@ -27,10 +32,15 @@ public class EncoderHevcNvenc : EncoderBase
     {
         get
         {
-            // only upload to hw if we need to overlay a watermark
-            if (_maybeWatermarkInputFile.IsSome && _currentState.FrameDataLocation == FrameDataLocation.Software)
+            // only upload to hw if we need to overlay (watermark or subtitle)
+            if (_currentState.FrameDataLocation == FrameDataLocation.Software)
             {
-                return "hwupload_cuda";
+                bool isPictureSubtitle = _maybeSubtitleInputFile.Map(s => s.IsImageBased).IfNone(false);
+                
+                if (isPictureSubtitle || _maybeWatermarkInputFile.IsSome)
+                {
+                    return "hwupload_cuda";
+                }
             }
 
             return string.Empty;
