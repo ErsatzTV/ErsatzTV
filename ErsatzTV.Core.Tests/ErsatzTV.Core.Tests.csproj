@@ -8,9 +8,10 @@
 
     <ItemGroup>
       <PackageReference Include="Bugsnag" Version="3.0.1" />
-      <PackageReference Include="CliWrap" Version="3.4.2" />
+      <PackageReference Include="CliWrap" Version="3.4.1" />
       <PackageReference Include="FluentAssertions" Version="6.6.0" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.4" />
+      <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.1" />
       <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.1" />
@@ -34,6 +35,9 @@
 
     <ItemGroup>
       <Content Include="Resources\ErsatzTV.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
+      <Content Include="Resources\test.sup">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </Content>
     </ItemGroup>
