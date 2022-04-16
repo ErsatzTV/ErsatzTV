@@ -178,6 +178,10 @@ public class ComplexFilter : IPipelineStep
                     subtitleLabel = "[st]";
                     subtitleFilterComplex += subtitleLabel;
                 }
+                else
+                {
+                    subtitleLabel = $"[{subtitleLabel}]";
+                }
 
                 IPipelineFilterStep overlayFilter =
                     AvailableSubtitleOverlayFilters.ForAcceleration(_ffmpegState.HardwareAccelerationMode);
