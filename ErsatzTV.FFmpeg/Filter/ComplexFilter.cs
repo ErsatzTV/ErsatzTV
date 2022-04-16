@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.FFmpeg.Environment;
+using ErsatzTV.FFmpeg.Format;
 
 namespace ErsatzTV.FFmpeg.Filter;
 
@@ -144,8 +145,13 @@ public class ComplexFilter : IPipelineStep
                         : videoLabel;
 
                     // vaapi uses software overlay and needs to upload
+                    // videotoolbox seems to require a hwupload for hevc
+                    // also wait to upload videotoolbox if a subtitle overlay is coming
                     string uploadFilter = string.Empty;
-                    if (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                    if (_maybeSubtitleInputFile.Map(s => s.IsImageBased).IfNone(false) == false &&
+                        (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi ||
+                         _ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
+                         _currentState.VideoFormat == VideoFormat.Hevc))
                     {
                         uploadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
                     }
@@ -178,6 +184,10 @@ public class ComplexFilter : IPipelineStep
                     subtitleLabel = "[st]";
                     subtitleFilterComplex += subtitleLabel;
                 }
+                else
+                {
+                    subtitleLabel = $"[{subtitleLabel}]";
+                }
 
                 IPipelineFilterStep overlayFilter =
                     AvailableSubtitleOverlayFilters.ForAcceleration(_ffmpegState.HardwareAccelerationMode);
@@ -190,8 +200,11 @@ public class ComplexFilter : IPipelineStep
                         : videoLabel;
 
                     // vaapi uses software overlay and needs to upload
+                    // videotoolbox seems to require a hwupload for hevc
                     string uploadFilter = string.Empty;
-                    if (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                    if (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi
+                        || _ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
+                        _currentState.VideoFormat == VideoFormat.Hevc)
                     {
                         uploadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
                     }

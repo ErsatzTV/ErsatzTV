@@ -172,8 +172,8 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.Watermarks))] Watermark watermark,
         [ValueSource(typeof(TestData), nameof(TestData.Subtitles))] Subtitle subtitle,
         [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))] FFmpegProfileVideoFormat profileVideoFormat,
-        // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-        [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+        [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
+        // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
@@ -429,7 +429,7 @@ public class TranscodingTests
             result = await Cli.Wrap(process.StartInfo.FileName)
                 .WithArguments(process.StartInfo.ArgumentList)
                 .WithValidation(CommandResultValidation.None)
-                .WithStandardOutputPipe(PipeTarget.Null)
+                .WithStandardOutputPipe(PipeTarget.ToStream(Stream.Null))
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
                 .ExecuteAsync(timeoutSignal.Token);
         }
