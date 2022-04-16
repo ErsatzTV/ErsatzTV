@@ -99,7 +99,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         var subtitleStreams = version.Streams
             .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-            // .Filter(s => s.Codec is "hdmv_pgs_subtitle" or "dvd_subtitle")
+            .Filter(s => s.Codec is "hdmv_pgs_subtitle" or "dvd_subtitle")
             .ToList();
 
         string language = (channel.PreferredSubtitleLanguageCode ?? string.Empty).ToLowerInvariant();
