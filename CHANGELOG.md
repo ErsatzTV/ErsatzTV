@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix subtitles edge case with NVENC
+- Only select picture subtitles (text subtitles are not yet supported)
+  - Supported picture subtitles are `hdmv_pgs_subtitle` and `dvd_subtitle`
 
 ## [0.5.0-beta] - 2022-04-13
 ### Fixed
