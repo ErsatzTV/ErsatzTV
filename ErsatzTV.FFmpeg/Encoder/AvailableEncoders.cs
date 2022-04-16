@@ -35,10 +35,12 @@ public static class AvailableEncoders
 
             (HardwareAccelerationMode.Vaapi, VideoFormat.Hevc) => new EncoderHevcVaapi(
                 currentState,
-                maybeWatermarkInputFile),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
             (HardwareAccelerationMode.Vaapi, VideoFormat.H264) => new EncoderH264Vaapi(
                 currentState,
-                maybeWatermarkInputFile),
+                maybeWatermarkInputFile,
+                maybeSubtitleInputFile),
 
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.Hevc) => new EncoderHevcVideoToolbox(),
             (HardwareAccelerationMode.VideoToolbox, VideoFormat.H264) => new EncoderH264VideoToolbox(),
