@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -27,7 +27,7 @@ public class GetErrorProcessHandler : FFmpegProcessHandler<GetErrorProcess>
         string ffprobePath,
         CancellationToken cancellationToken)
     {
-        Process process = await _ffmpegProcessService.ForError(
+        Command process = await _ffmpegProcessService.ForError(
             ffmpegPath,
             channel,
             request.MaybeDuration,

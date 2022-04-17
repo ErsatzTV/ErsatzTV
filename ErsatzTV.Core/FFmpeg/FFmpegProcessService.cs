@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Text;
 using Bugsnag;
 using CliWrap;
 using CliWrap.Buffered;
@@ -39,7 +40,7 @@ public class FFmpegProcessService
         _logger = logger;
     }
 
-    public async Task<Process> ForError(
+    public async Task<Command> ForError(
         string ffmpegPath,
         Channel channel,
         Option<TimeSpan> duration,
@@ -102,29 +103,34 @@ public class FFmpegProcessService
 
         await duration.IfSomeAsync(d => builder = builder.WithDuration(d));
 
-        switch (channel.StreamingMode)
+        Process process = channel.StreamingMode switch
         {
             // HLS needs to segment and generate playlist
-            case StreamingMode.HttpLiveStreamingSegmenter:
-                return builder.WithHls(
+            StreamingMode.HttpLiveStreamingSegmenter =>
+                builder.WithHls(
                         channel.Number,
                         None,
                         ptsOffset,
                         playbackSettings.VideoTrackTimeScale,
                         playbackSettings.FrameRate)
-                    .Build();
-            default:
-                return builder.WithFormat("mpegts")
-                    .WithPipe()
-                    .Build();
-        }
+                    .Build(),
+            _ => builder.WithFormat("mpegts")
+                .WithPipe()
+                .Build()
+        };
+        
+        return Cli.Wrap(process.StartInfo.FileName)
+            .WithArguments(process.StartInfo.ArgumentList)
+            .WithValidation(CommandResultValidation.None)
+            .WithEnvironmentVariables(process.StartInfo.Environment.ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
+            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null));
     }
 
-    public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
+    public Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
     {
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.ConcatSettings;
 
-        return new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
+        Process process = new FFmpegProcessBuilder(ffmpegPath, saveReports, _logger)
             .WithThreads(1)
             .WithQuiet()
             .WithFormatFlags(playbackSettings.FormatFlags)
@@ -136,27 +142,45 @@ public class FFmpegProcessService
             .WithFormat("mpegts")
             .WithPipe()
             .Build();
+
+        return Cli.Wrap(process.StartInfo.FileName)
+            .WithArguments(process.StartInfo.ArgumentList)
+            .WithValidation(CommandResultValidation.None)
+            .WithEnvironmentVariables(process.StartInfo.Environment.ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
+            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null));
     }
 
-    public Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile)
+    public Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile)
     {
-        return new FFmpegProcessBuilder(ffmpegPath, false, _logger)
+        Process process = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
             .WithThreads(1)
             .WithQuiet()
             .WithInput(inputFile)
             .WithOutputFormat("apng", outputFile)
             .Build();
+        
+        return Cli.Wrap(process.StartInfo.FileName)
+            .WithArguments(process.StartInfo.ArgumentList)
+            .WithValidation(CommandResultValidation.None)
+            .WithEnvironmentVariables(process.StartInfo.Environment.ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
+            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null));
     }
 
-    public Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile)
+    public Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile)
     {
-        return new FFmpegProcessBuilder(ffmpegPath, false, _logger)
+        Process process = new FFmpegProcessBuilder(ffmpegPath, false, _logger)
             .WithThreads(1)
             .WithQuiet()
             .WithInput(inputFile)
             .WithMap($"0:{streamIndex}")
             .WithOutputFormat("apng", outputFile)
             .Build();
+        
+        return Cli.Wrap(process.StartInfo.FileName)
+            .WithArguments(process.StartInfo.ArgumentList)
+            .WithValidation(CommandResultValidation.None)
+            .WithEnvironmentVariables(process.StartInfo.Environment.ToDictionary(kvp => kvp.Key, kvp => kvp.Value))
+            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null));
     }
 
     public async Task<Either<BaseError, string>> GenerateSongImage(
@@ -414,7 +438,7 @@ public class FFmpegProcessService
                         path
                     })
                 .WithValidation(CommandResultValidation.None)
-                .ExecuteBufferedAsync();
+                .ExecuteBufferedAsync(Encoding.UTF8);
 
             if (result.ExitCode == 0)
             {

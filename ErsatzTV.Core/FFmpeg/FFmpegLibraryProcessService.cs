@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -32,7 +31,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         _logger = logger;
     }
 
-    public async Task<Process> ForPlayoutItem(
+    public async Task<Command> ForPlayoutItem(
         string ffmpegPath,
         string ffprobePath,
         bool saveReports,
@@ -226,7 +225,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
-        return GetProcess(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
+        return GetCommand(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
     }
 
     private Option<WatermarkInputFile> GetWatermarkInputFile(
@@ -290,7 +289,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         return None;
     }
 
-    public Task<Process> ForError(
+    public Task<Command> ForError(
         string ffmpegPath,
         Channel channel,
         Option<TimeSpan> duration,
@@ -299,7 +298,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         long ptsOffset) =>
         _ffmpegProcessService.ForError(ffmpegPath, channel, duration, errorMessage, hlsRealtime, ptsOffset);
 
-    public Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
+    public Command ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host)
     {
         var resolution = new FrameSize(channel.FFmpegProfile.Resolution.Width, channel.FFmpegProfile.Resolution.Height);
 
@@ -319,13 +318,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             concatInputFile,
             FFmpegState.Concat(saveReports, channel.Name));
 
-        return GetProcess(ffmpegPath, None, None, None, concatInputFile, pipeline);
+        return GetCommand(ffmpegPath, None, None, None, concatInputFile, pipeline);
     }
 
-    public Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
+    public Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host) =>
         _ffmpegProcessService.WrapSegmenter(ffmpegPath, saveReports, channel, scheme, host);
 
-    public Process ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
+    public Command ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height)
     {
         var videoInputFile = new VideoInputFile(
             inputFile,
@@ -341,13 +340,13 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
 
         FFmpegPipeline pipeline = pipelineBuilder.Resize(outputFile, new FrameSize(-1, height));
 
-        return GetProcess(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
+        return GetCommand(ffmpegPath, videoInputFile, None, None, None, pipeline, false);
     }
 
-    public Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile) =>
+    public Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile) =>
         _ffmpegProcessService.ConvertToPng(ffmpegPath, inputFile, outputFile);
 
-    public Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile) =>
+    public Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile) =>
         _ffmpegProcessService.ExtractAttachedPicAsPng(ffmpegPath, inputFile, streamIndex, outputFile);
 
     public Task<Either<BaseError, string>> GenerateSongImage(
@@ -383,7 +382,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkWidthPercent,
             cancellationToken);
 
-    private Process GetProcess(
+    private Command GetCommand(
         string ffmpegPath,
         Option<VideoInputFile> videoInputFile,
         Option<AudioInputFile> audioInputFile,
@@ -417,35 +416,16 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             concatInputFile,
             pipeline.PipelineSteps);
 
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = ffmpegPath,
-            RedirectStandardOutput = true,
-            RedirectStandardError = false,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8
-        };
-
         if (environmentVariables.Any())
         {
             _logger.LogDebug("FFmpeg environment variables {EnvVars}", environmentVariables);
         }
 
-        foreach ((string key, string value) in environmentVariables)
-        {
-            startInfo.EnvironmentVariables[key] = value;
-        }
-
-        foreach (string argument in arguments)
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
-
-        return new Process
-        {
-            StartInfo = startInfo
-        };
+        return Cli.Wrap(ffmpegPath)
+            .WithArguments(arguments)
+            .WithValidation(CommandResultValidation.None)
+            .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null))
+            .WithEnvironmentVariables(environmentVariables.ToDictionary(e => e.Key, e => e.Value));
     }
 
     private static Option<string> VaapiDriverName(HardwareAccelerationMode accelerationMode, VaapiDriver driver)
