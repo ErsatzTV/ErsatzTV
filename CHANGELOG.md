@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug where filler would behave as if it were configured to pad even though a different mode was selected
 - Fix bug where mid-roll count filler would skip scheduling the final chapter in an episode 
 
+### Added
+- Add `Empty Trash` button to `Trash` page
+
 ## [0.5.0-beta] - 2022-04-13
 ### Fixed
 - Fix `HLS Segmenter` bug where it would drift off of the schedule if a playout was changed while the segmenter was running

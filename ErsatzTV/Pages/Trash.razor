@@ -74,6 +74,17 @@
             {
                 <MudText>Nothing to see here...</MudText>
             }
+            else
+            {
+                <div style="margin-left: auto">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Error"
+                               StartIcon="@Icons.Material.Filled.DeleteForever"
+                               OnClick="@(_ => EmptyTrash())">
+                        Empty Trash
+                    </MudButton>
+                </div>
+            }
         }
     </div>
 </MudPaper>
@@ -556,6 +567,23 @@
         if (!result.Cancelled)
         {
             await Mediator.Send(request, CancellationToken);
+            await RefreshData();
+        }
+    }
+
+    private async Task EmptyTrash()
+    {
+        int count = _movies.Count + _shows.Count + _seasons.Count + _episodes.Count + _artists.Count +
+                    _musicVideos.Count + _otherVideos.Count + _songs.Count;
+        
+        var parameters = new DialogParameters { { "EntityType", count.ToString() }, { "EntityName", "missing items" } };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        IDialogReference dialog = Dialog.Show<DeleteFromDatabaseDialog>("Delete From Database", parameters, options);
+        DialogResult result = await dialog.Result;
+        if (!result.Cancelled)
+        {
+            await Mediator.Send(new EmptyTrash(), CancellationToken);
             await RefreshData();
         }
     }
