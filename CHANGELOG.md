@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.5.1-beta] - 2022-04-17
 ### Fixed
 - Fix subtitles edge case with NVENC
 - Only select picture subtitles (text subtitles are not yet supported)
@@ -1080,7 +1082,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.0-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.1-beta...HEAD
+[0.5.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.0-beta...v0.5.1-beta
 [0.5.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.5-alpha...v0.5.0-beta
 [0.4.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...v0.4.5-alpha
 [0.4.4-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.3-alpha...v0.4.4-alpha
