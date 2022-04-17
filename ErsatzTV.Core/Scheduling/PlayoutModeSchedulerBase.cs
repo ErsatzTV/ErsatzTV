@@ -191,11 +191,9 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             .Append(Optional(scheduleItem.PostRollFiller))
             .ToList();
 
-        if (allFiller.Count(f => f.PadToNearestMinute.HasValue) > 1)
-            // if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
+        // multiple pad-to-nearest-minute values are invalid; use no filler
+        if (allFiller.Count(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue) > 1)
         {
-            // multiple pad-to-nearest-minute values are invalid; use no filler
-            // TODO: log error?
             return itemStartTime + itemDuration;
         }
 
@@ -287,16 +285,17 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             }
         }
 
-        foreach (FillerPreset padFiller in Optional(allFiller.FirstOrDefault(f => f.PadToNearestMinute.HasValue)))
+        foreach (FillerPreset padFiller in Optional(
+                     allFiller.FirstOrDefault(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue)))
         {
             int currentMinute = (itemStartTime + totalDuration).Minute;
             // ReSharper disable once PossibleInvalidOperationException
             int targetMinute = (currentMinute + padFiller.PadToNearestMinute.Value - 1) /
                 padFiller.PadToNearestMinute.Value * padFiller.PadToNearestMinute.Value;
-                
+
             DateTimeOffset targetTime = itemStartTime + totalDuration - TimeSpan.FromMinutes(currentMinute) +
                                         TimeSpan.FromMinutes(targetMinute);
-                
+
             return new DateTimeOffset(
                 targetTime.Year,
                 targetTime.Month,
@@ -310,7 +309,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         return itemStartTime + totalDuration;
     }
 
-    internal static List<PlayoutItem> AddFiller(
+    internal List<PlayoutItem> AddFiller(
         PlayoutBuilderState playoutBuilderState,
         Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators,
         ProgramScheduleItem scheduleItem,
@@ -324,11 +323,10 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
             .Append(Optional(scheduleItem.PostRollFiller))
             .ToList();
 
-        if (allFiller.Count(f => f.PadToNearestMinute.HasValue) > 1)
-            // if (allFiller.Map(f => Optional(f.PadToNearestMinute)).Sequence().Flatten().Distinct().Count() > 1)
+        // multiple pad-to-nearest-minute values are invalid; use no filler
+        if (allFiller.Count(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue) > 1)
         {
-            // multiple pad-to-nearest-minute values are invalid; use no filler
-            // TODO: log error?
+            _logger.LogError("Multiple pad-to-nearest-minute values are invalid; no filler will be used");
             return new List<PlayoutItem> { playoutItem };
         }
 
@@ -386,15 +384,18 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                         break;
                     case FillerMode.Count when filler.Count.HasValue:
                         IMediaCollectionEnumerator e2 = enumerators[CollectionKey.ForFillerPreset(filler)];
-                        for (var i = 0; i < effectiveChapters.Count - 1; i++)
+                        for (var i = 0; i < effectiveChapters.Count; i++)
                         {
                             result.Add(playoutItem.ForChapter(effectiveChapters[i]));
-                            result.AddRange(
-                                AddCountFiller(
-                                    playoutBuilderState,
-                                    e2,
-                                    filler.Count.Value,
-                                    FillerKind.MidRoll));
+                            if (i < effectiveChapters.Count - 1)
+                            {
+                                result.AddRange(
+                                    AddCountFiller(
+                                        playoutBuilderState,
+                                        e2,
+                                        filler.Count.Value,
+                                        FillerKind.MidRoll));
+                            }
                         }
 
                         break;
@@ -421,13 +422,14 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
         }
             
         // after all non-padded filler has been added, figure out padding
-        foreach (FillerPreset padFiller in Optional(allFiller.FirstOrDefault(f => f.PadToNearestMinute.HasValue)))
+        foreach (FillerPreset padFiller in Optional(
+                     allFiller.FirstOrDefault(f => f.FillerMode == FillerMode.Pad && f.PadToNearestMinute.HasValue)))
         {
             var totalDuration =
                 TimeSpan.FromMilliseconds(
                     result.Sum(pi => (pi.Finish - pi.Start).TotalMilliseconds) +
                     effectiveChapters.Sum(c => (c.EndTime - c.StartTime).TotalMilliseconds));
-                
+
             int currentMinute = (playoutItem.StartOffset + totalDuration).Minute;
             // ReSharper disable once PossibleInvalidOperationException
             int targetMinute = (currentMinute + padFiller.PadToNearestMinute.Value - 1) /
@@ -437,7 +439,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                                               TimeSpan.FromMinutes(currentMinute) +
                                               TimeSpan.FromMinutes(targetMinute);
 
-                
+
             var targetTime = new DateTimeOffset(
                 almostTargetTime.Year,
                 almostTargetTime.Month,
@@ -532,7 +534,7 @@ public abstract class PlayoutModeSchedulerBase<T> : IPlayoutModeScheduler<T> whe
                             }
                         }
                     }
-                        
+
                     break;
                 case FillerKind.PostRoll:
                     IMediaCollectionEnumerator post1 = enumerators[CollectionKey.ForFillerPreset(padFiller)];
