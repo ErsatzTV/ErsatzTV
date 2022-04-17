@@ -1,4 +1,6 @@
-﻿using Bugsnag;
+﻿using System.Threading.Channels;
+using Bugsnag;
+using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -9,23 +11,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Playouts;
 
-public class BuildPlayoutHandler : MediatR.IRequestHandler<BuildPlayout, Either<BaseError, Unit>>
+public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseError, Unit>>
 {
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IPlayoutBuilder _playoutBuilder;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+    private readonly ChannelWriter<ISubtitleWorkerRequest> _ffmpegWorkerChannel;
 
     public BuildPlayoutHandler(
         IClient client,
         IDbContextFactory<TvContext> dbContextFactory,
         IPlayoutBuilder playoutBuilder,
-        IFFmpegSegmenterService ffmpegSegmenterService)
+        IFFmpegSegmenterService ffmpegSegmenterService,
+        ChannelWriter<ISubtitleWorkerRequest> ffmpegWorkerChannel)
     {
         _client = client;
         _dbContextFactory = dbContextFactory;
         _playoutBuilder = playoutBuilder;
         _ffmpegSegmenterService = ffmpegSegmenterService;
+        _ffmpegWorkerChannel = ffmpegWorkerChannel;
     }
 
     public async Task<Either<BaseError, Unit>> Handle(BuildPlayout request, CancellationToken cancellationToken)
@@ -43,6 +48,7 @@ public class BuildPlayoutHandler : MediatR.IRequestHandler<BuildPlayout, Either<
             if (await dbContext.SaveChangesAsync() > 0)
             {
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
+                await _ffmpegWorkerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
             }
         }
         catch (Exception ex)

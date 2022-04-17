@@ -165,6 +165,8 @@ public class MetadataRepository : IMetadataRepository
                     existingStream.AttachedPic = incomingStream.AttachedPic;
                     existingStream.PixelFormat = incomingStream.PixelFormat;
                     existingStream.BitsPerRawSample = incomingStream.BitsPerRawSample;
+                    existingStream.FileName = incomingStream.FileName;
+                    existingStream.MimeType = incomingStream.MimeType;
                 }
 
                 var chaptersToAdd = incoming.Chapters
@@ -479,6 +481,51 @@ public class MetadataRepository : IMetadataRepository
             .Map(result => result > 0);
     }
 
+    public async Task<bool> UpdateSubtitles(EpisodeMetadata metadata, List<Subtitle> subtitles)
+    {
+        int metadataId = metadata.Id;
+
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        Option<EpisodeMetadata> maybeMetadata = await dbContext.EpisodeMetadata
+            .Include(v => v.Subtitles)
+            .OrderBy(v => v.Id)
+            .SingleOrDefaultAsync(v => v.Id == metadataId)
+            .Map(Optional);
+
+        foreach (EpisodeMetadata existing in maybeMetadata)
+        {
+            var toAdd = subtitles.Filter(s => existing.Subtitles.All(es => es.StreamIndex != s.StreamIndex)).ToList();
+            var toRemove = existing.Subtitles.Filter(es => subtitles.All(s => s.StreamIndex != es.StreamIndex))
+                .ToList();
+            var toUpdate = subtitles.Except(toAdd).ToList();
+
+            // add
+            existing.Subtitles.AddRange(toAdd);
+
+            // remove
+            existing.Subtitles.RemoveAll(s => toRemove.Contains(s));
+
+            // update
+            foreach (Subtitle incomingSubtitle in toUpdate)
+            {
+                Subtitle existingSubtitle =
+                    existing.Subtitles.First(s => s.StreamIndex == incomingSubtitle.StreamIndex);
+
+                existingSubtitle.Codec = incomingSubtitle.Codec;
+                existingSubtitle.Default = incomingSubtitle.Default;
+                existingSubtitle.Forced = incomingSubtitle.Forced;
+                existingSubtitle.Language = incomingSubtitle.Language;
+                existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
+                existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
+            }
+
+            return await dbContext.SaveChangesAsync() > 0;
+        }
+
+        return false;
+    }
+    
     public async Task<bool> RemoveGenre(Genre genre)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

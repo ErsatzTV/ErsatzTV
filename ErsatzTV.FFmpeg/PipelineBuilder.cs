@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using ErsatzTV.FFmpeg.Decoder;
+﻿using ErsatzTV.FFmpeg.Decoder;
 using ErsatzTV.FFmpeg.Encoder;
 using ErsatzTV.FFmpeg.Environment;
 using ErsatzTV.FFmpeg.Filter;
@@ -23,6 +22,7 @@ public class PipelineBuilder
     private readonly Option<WatermarkInputFile> _watermarkInputFile;
     private readonly Option<SubtitleInputFile> _subtitleInputFile;
     private readonly string _reportsFolder;
+    private readonly string _fontsFolder;
     private readonly ILogger _logger;
 
     public PipelineBuilder(
@@ -31,6 +31,7 @@ public class PipelineBuilder
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
         string reportsFolder,
+        string fontsFolder,
         ILogger logger)
     {
         _pipelineSteps = new List<IPipelineStep>
@@ -51,6 +52,7 @@ public class PipelineBuilder
         _watermarkInputFile = watermarkInputFile;
         _subtitleInputFile = subtitleInputFile;
         _reportsFolder = reportsFolder;
+        _fontsFolder = fontsFolder;
         _logger = logger;
     }
 
@@ -127,6 +129,12 @@ public class PipelineBuilder
             var option = new StreamSeekInputOption(desiredStart);
             _audioInputFile.Iter(f => f.AddOption(option));
             _videoInputFile.Iter(f => f.AddOption(option));
+            
+            // need to seek text subtitle files
+            if (_subtitleInputFile.Map(s => !s.IsImageBased).IfNone(false))
+            {
+                _pipelineSteps.Add(new StreamSeekFilterOption(desiredStart));
+            }
         }
 
         foreach (TimeSpan desiredFinish in ffmpegState.Finish)
@@ -465,24 +473,6 @@ public class PipelineBuilder
                         }
                     }
                 }
-
-                // after everything else is done, apply the encoder
-                if (_pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
-                {
-                    foreach (IEncoder e in AvailableEncoders.ForVideoFormat(
-                                 ffmpegState,
-                                 currentState,
-                                 desiredState,
-                                 _watermarkInputFile,
-                                 _subtitleInputFile,
-                                 _logger))
-                    {
-                        encoder = e;
-                        _pipelineSteps.Add(encoder);
-                        _videoInputFile.Iter(f => f.FilterSteps.Add(encoder));
-                        currentState = encoder.NextState(currentState);
-                    }
-                }
             }
             
             // TODO: if all video filters are software, use software pixel format for hwaccel output
@@ -530,18 +520,44 @@ public class PipelineBuilder
 
             foreach (SubtitleInputFile subtitleInputFile in _subtitleInputFile)
             {
-                // vaapi and videotoolbox use a software overlay, so we need to ensure the background is already in software
-                // though videotoolbox uses software decoders, so no need to download for that
-                if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                if (subtitleInputFile.IsImageBased)
                 {
+                    // vaapi and videotoolbox use a software overlay, so we need to ensure the background is already in software
+                    // though videotoolbox uses software decoders, so no need to download for that
+                    if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi)
+                    {
+                        var downloadFilter = new HardwareDownloadFilter(currentState);
+                        currentState = downloadFilter.NextState(currentState);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(downloadFilter));
+                    }
+
+                    subtitleInputFile.FilterSteps.Add(new SubtitlePixelFormatFilter(ffmpegState));
+
+                    subtitleInputFile.FilterSteps.Add(new SubtitleHardwareUploadFilter(currentState, ffmpegState));
+                }
+                else
+                {
+                    _videoInputFile.Iter(f => f.AddOption(new CopyTimestampInputOption()));
+                    
+                    // text-based subtitles are always added in software, so always try to download the background
+                    
+                    // nvidia needs some extra format help if the only filter will be the download filter
+                    if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc &&
+                        _videoInputFile.Map(f => f.FilterSteps.Count).IfNone(1) == 0)
+                    {
+                        IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
+                            ffmpegState.HardwareAccelerationMode,
+                            currentState,
+                            desiredState.ScaledSize,
+                            desiredState.PaddedSize);
+                        currentState = scaleFilter.NextState(currentState);
+                        _videoInputFile.Iter(f => f.FilterSteps.Add(scaleFilter));
+                    }
+
                     var downloadFilter = new HardwareDownloadFilter(currentState);
                     currentState = downloadFilter.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(downloadFilter));
                 }
-
-                subtitleInputFile.FilterSteps.Add(new SubtitlePixelFormatFilter(ffmpegState));
-
-                subtitleInputFile.FilterSteps.Add(new SubtitleHardwareUploadFilter(currentState, ffmpegState));
             }
 
             foreach (WatermarkInputFile watermarkInputFile in _watermarkInputFile)
@@ -588,6 +604,24 @@ public class PipelineBuilder
                 }
 
                 watermarkInputFile.FilterSteps.Add(new WatermarkHardwareUploadFilter(currentState, ffmpegState));
+            }
+            
+            // after everything else is done, apply the encoder
+            if (_pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
+            {
+                foreach (IEncoder e in AvailableEncoders.ForVideoFormat(
+                             ffmpegState,
+                             currentState,
+                             desiredState,
+                             _watermarkInputFile,
+                             _subtitleInputFile,
+                             _logger))
+                {
+                    encoder = e;
+                    _pipelineSteps.Add(encoder);
+                    _videoInputFile.Iter(f => f.FilterSteps.Add(encoder));
+                    currentState = encoder.NextState(currentState);
+                }
             }
 
             if (ffmpegState.DoNotMapMetadata)
@@ -642,7 +676,8 @@ public class PipelineBuilder
                 _audioInputFile,
                 _watermarkInputFile,
                 _subtitleInputFile,
-                currentState.PaddedSize);
+                currentState.PaddedSize,
+                _fontsFolder);
 
             _pipelineSteps.Add(complexFilter);
         }

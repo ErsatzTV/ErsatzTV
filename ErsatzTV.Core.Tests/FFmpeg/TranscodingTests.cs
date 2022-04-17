@@ -68,7 +68,8 @@ public class TranscodingTests
     public enum Subtitle
     {
         None,
-        Picture
+        Picture,
+        Text
     }
 
     private class TestData
@@ -83,7 +84,8 @@ public class TranscodingTests
         public static Subtitle[] Subtitles =
         {
             Subtitle.None,
-            Subtitle.Picture
+            Subtitle.Picture,
+            Subtitle.Text
         };
             
         public static Padding[] Paddings =
@@ -104,24 +106,24 @@ public class TranscodingTests
             new("libx264", "yuvj420p"),
             new("libx264", "yuv420p10le"),
             // new("libx264", "yuv444p10le"),
-
+            
             new("mpeg1video", "yuv420p"),
-
+            
             new("mpeg2video", "yuv420p"),
-
+            
             new("libx265", "yuv420p"),
             new("libx265", "yuv420p10le"),
-
+            
             new("mpeg4", "yuv420p"),
-
+            
             new("libvpx-vp9", "yuv420p"),
-
+            
             // new("libaom-av1", "yuv420p")
             // av1    yuv420p10le    51
-
+            
             new("msmpeg4v2", "yuv420p"),
             new("msmpeg4v3", "yuv420p")
-
+            
             // wmv3    yuv420p    1
         };
             
@@ -219,12 +221,15 @@ public class TranscodingTests
 
             switch (subtitle)
             {
-                case Subtitle.Picture:
+                case Subtitle.Text or Subtitle.Picture:
                     string sourceFile = Path.GetTempFileName() + ".mkv";
                     File.Move(file, sourceFile, true);
                     
                     string tempFileName = Path.GetTempFileName() + ".mkv";
-                    string subPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "test.sup");
+                    string subPath = Path.Combine(
+                        TestContext.CurrentContext.TestDirectory,
+                        "Resources",
+                        subtitle == Subtitle.Picture ? "test.sup" : "test.srt");
                     var p2 = new Process
                     {
                         StartInfo = new ProcessStartInfo
@@ -288,7 +293,8 @@ public class TranscodingTests
             MediaFiles = new List<MediaFile>
             {
                 new() { Path = file }
-            }
+            },
+            Streams = new List<MediaStream>()
         };
 
         var metadataRepository = new Mock<IMetadataRepository>();
@@ -323,6 +329,31 @@ public class TranscodingTests
                     }
                 }
             });
+
+        var subtitleStreams = v.Streams
+            .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+            .ToList();
+
+        var subtitles = new List<Core.Domain.Subtitle>();
+                
+        foreach (MediaStream stream in subtitleStreams)
+        {
+            var s = new Core.Domain.Subtitle
+            {
+                Codec = stream.Codec,
+                Default = stream.Default,
+                Forced = stream.Forced,
+                Language = stream.Language,
+                StreamIndex = stream.Index,
+                SubtitleKind = SubtitleKind.Embedded,
+                DateAdded = DateTime.UtcNow,
+                DateUpdated = DateTime.UtcNow,
+                Path = "test.srt",
+                IsExtracted = true
+            };
+
+            subtitles.Add(s);
+        }
 
         DateTimeOffset now = DateTimeOffset.Now;
 
@@ -373,9 +404,16 @@ public class TranscodingTests
 
         ChannelSubtitleMode subtitleMode = subtitle switch
         {
-            Subtitle.Picture => ChannelSubtitleMode.Any,
+            Subtitle.Picture or Subtitle.Text => ChannelSubtitleMode.Any,
             _ => ChannelSubtitleMode.None 
         };
+
+        string srtFile = Path.Combine(FileSystemLayout.SubtitleCacheFolder, "test.srt");
+        if (subtitle == Subtitle.Text && !File.Exists(srtFile))
+        {
+            string sourceFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "test.srt");
+            File.Copy(sourceFile, srtFile, true);
+        }
 
         Command process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
@@ -398,6 +436,7 @@ public class TranscodingTests
             v,
             file,
             file,
+            subtitles,
             now,
             now + TimeSpan.FromSeconds(5),
             now,

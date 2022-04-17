@@ -25,5 +25,9 @@ public class MusicVideoMetadataConfiguration : IEntityTypeConfiguration<MusicVid
         builder.HasMany(mm => mm.Studios)
             .WithOne()
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.HasMany(mvm => mvm.Subtitles)
+            .WithOne()
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

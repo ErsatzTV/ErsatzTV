@@ -183,6 +183,11 @@ public class Startup
             Directory.CreateDirectory(FileSystemLayout.TempFilePoolFolder);
         }
 
+        if (!Directory.Exists(FileSystemLayout.FontsCacheFolder))
+        {
+            Directory.CreateDirectory(FileSystemLayout.FontsCacheFolder);
+        }
+
         Log.Logger.Information("Database is at {DatabasePath}", FileSystemLayout.DatabasePath);
 
         // until we add a setting for a file-specific scheme://host:port to access
@@ -324,6 +329,7 @@ public class Startup
         AddChannel<IJellyfinBackgroundServiceRequest>(services);
         AddChannel<IEmbyBackgroundServiceRequest>(services);
         AddChannel<IFFmpegWorkerRequest>(services);
+        AddChannel<ISubtitleWorkerRequest>(services);
             
         services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
         services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
@@ -412,6 +418,7 @@ public class Startup
         services.AddHostedService<WorkerService>();
         services.AddHostedService<SchedulerService>();
         services.AddHostedService<FFmpegWorkerService>();
+        services.AddHostedService<SubtitleWorkerService>();
     }
 
     private void AddChannel<TMessageType>(IServiceCollection services)

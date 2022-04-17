@@ -648,10 +648,10 @@ public class PlayoutBuilder : IPlayoutBuilder
                      && a.SmartCollectionId == collectionKey.SmartCollectionId
                      && a.MediaItemId == collectionKey.MediaItemId);
 
-        foreach (PlayoutProgramScheduleAnchor anchor in maybeAnchor)
-        {
-            _logger.LogDebug("Selecting anchor {@Anchor}", anchor);
-        }
+        // foreach (PlayoutProgramScheduleAnchor anchor in maybeAnchor)
+        // {
+        //     _logger.LogDebug("Selecting anchor {@Anchor}", anchor);
+        // }
 
         CollectionEnumeratorState state = maybeAnchor.Match(
             anchor => anchor.EnumeratorState ??

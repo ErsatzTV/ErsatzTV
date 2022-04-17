@@ -374,6 +374,25 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         version.Streams.Add(stream);
                     }
 
+                    foreach (FFprobeStream attachmentStream in json.streams.Filter(s => s.codec_type == "attachment"))
+                    {
+                        var stream = new MediaStream
+                        {
+                            MediaVersionId = version.Id,
+                            MediaStreamKind = MediaStreamKind.Attachment,
+                            Index = attachmentStream.index,
+                            Codec = attachmentStream.codec_name
+                        };
+
+                        if (attachmentStream.tags is not null)
+                        {
+                            stream.FileName = attachmentStream.tags.filename;
+                            stream.MimeType = attachmentStream.tags.mimetype;
+                        }
+
+                        version.Streams.Add(stream);
+                    }
+
                     foreach (FFprobeChapter probedChapter in json.chapters)
                     {
                         if (double.TryParse(
@@ -440,7 +459,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
 
     public record FFprobeDisposition(int @default, int forced, int attached_pic);
 
-    public record FFprobeTags(string language, string title);
+    public record FFprobeTags(string language, string title, string filename, string mimetype);
 
     public record FFprobeFormatTags(
         string title,

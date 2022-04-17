@@ -65,11 +65,17 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         Either<BaseError, PlayoutItemWithPath> maybePlayoutItem = await dbContext.PlayoutItems
             .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as Episode).EpisodeMetadata)
+            .ThenInclude(em => em.Subtitles)
+            .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Episode).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Episode).MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as Movie).MovieMetadata)
+            .ThenInclude(mm => mm.Subtitles)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Movie).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
@@ -77,11 +83,17 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             .ThenInclude(mi => (mi as Movie).MediaVersions)
             .ThenInclude(mv => mv.Streams)
             .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as MusicVideo).MusicVideoMetadata)
+            .ThenInclude(mvm => mvm.Subtitles)
+            .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as MusicVideo).MediaVersions)
             .ThenInclude(mv => mv.Streams)
+            .Include(i => i.MediaItem)
+            .ThenInclude(mi => (mi as OtherVideo).OtherVideoMetadata)
+            .ThenInclude(ovm => ovm.Subtitles)
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as OtherVideo).MediaVersions)
             .ThenInclude(ov => ov.MediaFiles)
@@ -139,6 +151,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
+            List<Subtitle> subtitles = GetSubtitles(playoutItemWithPath.PlayoutItem.MediaItem);
+
             Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
                 ffprobePath,
@@ -148,6 +162,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 audioVersion,
                 videoPath,
                 audioPath,
+                subtitles,
                 playoutItemWithPath.PlayoutItem.StartOffset,
                 playoutItemWithPath.PlayoutItem.FinishOffset,
                 request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now,
@@ -219,6 +234,16 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
         return BaseError.New($"Unexpected error locating playout item for channel {channel.Number}");
     }
+
+    private static List<Subtitle> GetSubtitles(MediaItem mediaItem) =>
+        mediaItem switch
+        {
+            Episode episode => episode.EpisodeMetadata.HeadOrNone()
+                .Map(mm => mm.Subtitles)
+                .IfNone(new List<Subtitle>()),
+            // TODO: support other media types
+            _ => new List<Subtitle>()
+        };
 
     private async Task<Either<BaseError, PlayoutItemWithPath>> CheckForFallbackFiller(
         TvContext dbContext,

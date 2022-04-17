@@ -17,6 +17,7 @@ public interface IFFmpegProcessService
         MediaVersion audioVersion,
         string videoPath,
         string audioPath,
+        List<Subtitle> subtitles,
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,

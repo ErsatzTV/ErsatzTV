@@ -67,7 +67,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             0);
 
-        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, None, "", _logger);
+        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, None, "", "", _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
@@ -82,7 +82,7 @@ public class PipelineGeneratorTests
         var resolution = new FrameSize(1920, 1080);
         var concatInputFile = new ConcatInputFile("http://localhost:8080/ffmpeg/concat/1", resolution);
 
-        var builder = new PipelineBuilder(None, None, None, None, "", _logger);
+        var builder = new PipelineBuilder(None, None, None, None, "", "", _logger);
         FFmpegPipeline result = builder.Concat(concatInputFile, FFmpegState.Concat(false, "Some Channel"));
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
@@ -142,7 +142,7 @@ public class PipelineGeneratorTests
             Option<string>.None,
             0);
 
-        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, None, "", _logger);
+        var builder = new PipelineBuilder(videoInputFile, audioInputFile, None, None, "", "", _logger);
         FFmpegPipeline result = builder.Build(ffmpegState, desiredState);
 
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
@@ -172,6 +172,7 @@ public class PipelineGeneratorTests
             Option<AudioInputFile>.None,
             Option<WatermarkInputFile>.None,
             Option<SubtitleInputFile>.None,
+            "",
             "",
             _logger);
 

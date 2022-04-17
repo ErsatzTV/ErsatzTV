@@ -3,6 +3,7 @@ using System;
 using ErsatzTV.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ErsatzTV.Infrastructure.Migrations
 {
     [DbContext(typeof(TvContext))]
-    partial class TvContextModelSnapshot : ModelSnapshot
+    [Migration("20220417230100_Add_MetadataSubtitles")]
+    partial class Add_MetadataSubtitles
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.4");
@@ -901,9 +903,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<bool>("Default")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("FileName")
-                        .HasColumnType("TEXT");
-
                     b.Property<bool>("Forced")
                         .HasColumnType("INTEGER");
 
@@ -918,9 +917,6 @@ namespace ErsatzTV.Infrastructure.Migrations
 
                     b.Property<int>("MediaVersionId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("MimeType")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("PixelFormat")
                         .HasColumnType("TEXT");
@@ -1821,31 +1817,14 @@ namespace ErsatzTV.Infrastructure.Migrations
                     b.Property<int?>("ArtistMetadataId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Codec")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("DateAdded")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("Default")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("EpisodeMetadataId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<bool>("Forced")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsExtracted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Language")
-                        .HasColumnType("TEXT");
 
                     b.Property<int?>("MovieMetadataId")
                         .HasColumnType("INTEGER");
@@ -1866,9 +1845,6 @@ namespace ErsatzTV.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("SongMetadataId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("StreamIndex")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("SubtitleKind")

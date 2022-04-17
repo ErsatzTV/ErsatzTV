@@ -87,7 +87,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         {
             return None;
         }
-        
+
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
             string.IsNullOrWhiteSpace(channel.PreferredSubtitleLanguageCode))
         {
@@ -99,7 +99,6 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         var subtitleStreams = version.Streams
             .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-            .Filter(s => s.Codec is "hdmv_pgs_subtitle" or "dvd_subtitle")
             .ToList();
 
         string language = (channel.PreferredSubtitleLanguageCode ?? string.Empty).ToLowerInvariant();
@@ -125,13 +124,13 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         switch (channel.SubtitleMode)
         {
             case ChannelSubtitleMode.Forced:
-                foreach (MediaStream stream in Optional(subtitleStreams.OrderBy(s => s.Index).Find(s => s.Forced)))
+                foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Index).Find(s => s.Forced))
                 {
                     return stream;
                 }
                 break;
             case ChannelSubtitleMode.Default:
-                foreach (MediaStream stream in Optional(subtitleStreams.OrderBy(s => s.Index).Find(s => s.Default)))
+                foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Default ? 0 : 1).ThenBy(s => s.Index))
                 {
                     return stream;
                 }
