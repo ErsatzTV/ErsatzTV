@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using CliWrap;
+﻿using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -70,16 +69,13 @@ public class
 
                     string originalPath = _imageCache.GetPathForImage(request.FileName, request.ArtworkKind, None);
 
-                    Process process = _ffmpegProcessService.ResizeImage(
+                    Command process = _ffmpegProcessService.ResizeImage(
                         ffmpegPath,
                         originalPath,
                         withExtension,
                         request.MaxHeight.Value);
 
-                    CommandResult resize = await Cli.Wrap(process.StartInfo.FileName)
-                        .WithArguments(process.StartInfo.ArgumentList)
-                        .WithValidation(CommandResultValidation.None)
-                        .ExecuteAsync();
+                    CommandResult resize = await process.ExecuteAsync();
 
                     if (resize.ExitCode != 0)
                     {

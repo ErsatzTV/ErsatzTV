@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -32,7 +32,7 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
             .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
             .Map(result => result.IfNone(false));
 
-        Process process = _ffmpegProcessService.WrapSegmenter(
+        Command process = _ffmpegProcessService.WrapSegmenter(
             ffmpegPath,
             saveReports,
             channel,

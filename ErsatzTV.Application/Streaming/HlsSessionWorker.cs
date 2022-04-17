@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using System.Text;
 using System.Timers;
 using Bugsnag;
 using CliWrap;
@@ -207,18 +207,15 @@ public class HlsSessionWorker : IHlsSessionWorker
             {
                 await TrimAndDelete(cancellationToken);
 
-                using Process process = processModel.Process;
+                Command process = processModel.Process;
 
-                _logger.LogInformation(
-                    "ffmpeg hls arguments {FFmpegArguments}",
-                    string.Join(" ", process.StartInfo.ArgumentList));
+                _logger.LogInformation("ffmpeg hls arguments {FFmpegArguments}", process.Arguments);
 
                 try
                 {
-                    BufferedCommandResult commandResult = await Cli.Wrap(process.StartInfo.FileName)
-                        .WithArguments(process.StartInfo.ArgumentList)
+                    BufferedCommandResult commandResult = await process
                         .WithValidation(CommandResultValidation.None)
-                        .ExecuteBufferedAsync(cancellationToken);
+                        .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
 
                     if (commandResult.ExitCode == 0)
                     {
@@ -256,16 +253,15 @@ public class HlsSessionWorker : IHlsSessionWorker
 
                         foreach (PlayoutItemProcessModel errorProcessModel in maybeOfflineProcess.RightAsEnumerable())
                         {
-                            Process errorProcess = errorProcessModel.Process;
+                            Command errorProcess = errorProcessModel.Process;
 
                             _logger.LogInformation(
                                 "ffmpeg hls error arguments {FFmpegArguments}",
-                                string.Join(" ", errorProcess.StartInfo.ArgumentList));
+                                errorProcess.Arguments);
 
-                            commandResult = await Cli.Wrap(errorProcess.StartInfo.FileName)
-                                .WithArguments(errorProcess.StartInfo.ArgumentList)
+                            commandResult = await errorProcess
                                 .WithValidation(CommandResultValidation.None)
-                                .ExecuteBufferedAsync(cancellationToken);
+                                .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
 
                             if (commandResult.ExitCode == 0)
                             {

@@ -1,5 +1,8 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
 
 namespace ErsatzTV.Application.Streaming;
 
-public record PlayoutItemProcessModel(Process Process, Option<TimeSpan> MaybeDuration, DateTimeOffset Until);
+public record PlayoutItemProcessModel(
+    Command Process,
+    Option<TimeSpan> MaybeDuration,
+    DateTimeOffset Until);

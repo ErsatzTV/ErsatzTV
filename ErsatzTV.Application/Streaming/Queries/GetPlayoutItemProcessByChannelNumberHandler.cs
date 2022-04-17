@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
@@ -139,7 +139,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
-            Process process = await _ffmpegProcessService.ForPlayoutItem(
+            Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
                 ffprobePath,
                 saveReports,
@@ -185,7 +185,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
             switch (error)
             {
                 case UnableToLocatePlayoutItem:
-                    Process offlineProcess = await _ffmpegProcessService.ForError(
+                    Command offlineProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
                         maybeDuration,
@@ -195,7 +195,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
                     return new PlayoutItemProcessModel(offlineProcess, maybeDuration, finish);
                 case PlayoutItemDoesNotExistOnDisk:
-                    Process doesNotExistProcess = await _ffmpegProcessService.ForError(
+                    Command doesNotExistProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
                         maybeDuration,
@@ -205,7 +205,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
                     return new PlayoutItemProcessModel(doesNotExistProcess, maybeDuration, finish);
                 default:
-                    Process errorProcess = await _ffmpegProcessService.ForError(
+                    Command errorProcess = await _ffmpegProcessService.ForError(
                         ffmpegPath,
                         channel,
                         maybeDuration,

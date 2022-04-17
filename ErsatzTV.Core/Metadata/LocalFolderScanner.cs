@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Bugsnag;
+﻿using Bugsnag;
 using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
@@ -163,16 +162,13 @@ public abstract class LocalFolderScanner
                         {
                             // extract attached pic (and convert to png)
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                            using Process process = _ffmpegProcessService.ExtractAttachedPicAsPng(
+                            Command process = _ffmpegProcessService.ExtractAttachedPicAsPng(
                                 path,
                                 artworkFile,
                                 picIndex,
                                 tempName);
 
-                            await Cli.Wrap(process.StartInfo.FileName)
-                                .WithArguments(process.StartInfo.ArgumentList)
-                                .WithValidation(CommandResultValidation.None)
-                                .ExecuteAsync(cancellationToken);
+                            await process.ExecuteAsync(cancellationToken);
 
                             return tempName;
                         },
@@ -180,12 +176,9 @@ public abstract class LocalFolderScanner
                         {
                             // no attached pic index means convert to png
                             string tempName = _tempFilePool.GetNextTempFile(TempFileCategory.CoverArt);
-                            using Process process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
+                            Command process = _ffmpegProcessService.ConvertToPng(path, artworkFile, tempName);
 
-                            await Cli.Wrap(process.StartInfo.FileName)
-                                .WithArguments(process.StartInfo.ArgumentList)
-                                .WithValidation(CommandResultValidation.None)
-                                .ExecuteAsync(cancellationToken);
+                            await process.ExecuteAsync(cancellationToken);
 
                             return tempName;
                         });
