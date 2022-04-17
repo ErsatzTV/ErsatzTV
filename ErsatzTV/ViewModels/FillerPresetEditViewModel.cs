@@ -15,6 +15,7 @@ public class FillerPresetEditViewModel
     private FillerMode _fillerMode;
     private int? _count;
     private ProgramScheduleItemCollectionType _collectionType;
+    private int? _padToNearestMinute;
 
     public int Id { get; set; }
     public string Name { get; set; }
@@ -50,7 +51,11 @@ public class FillerPresetEditViewModel
         set => _count = value;
     }
 
-    public int? PadToNearestMinute { get; set; }
+    public int? PadToNearestMinute
+    {
+        get => FillerMode == FillerMode.Pad ? _padToNearestMinute : null;
+        set => _padToNearestMinute = value;
+    }
 
     public ProgramScheduleItemCollectionType CollectionType
     {

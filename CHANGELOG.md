@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix subtitles using software encoders, videotoolbox, VAAPI
 - Fix setting VAAPI driver name
 - Fix ffmpeg troubleshooting reports
+- Fix bug where filler would behave as if it were configured to pad even though a different mode was selected
+- Fix bug where mid-roll count filler would skip scheduling the final chapter in an episode 
 
 ## [0.5.0-beta] - 2022-04-13
 ### Fixed
