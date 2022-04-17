@@ -9,6 +9,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Only select picture subtitles (text subtitles are not yet supported)
   - Supported picture subtitles are `hdmv_pgs_subtitle` and `dvd_subtitle`
 - Fix subtitles using software encoders, videotoolbox, VAAPI
+- Fix setting VAAPI driver name
+- Fix ffmpeg troubleshooting reports
 
 ## [0.5.0-beta] - 2022-04-13
 ### Fixed

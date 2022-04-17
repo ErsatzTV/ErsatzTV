@@ -1,4 +1,5 @@
-﻿using CliWrap;
+﻿using System.Text;
+using CliWrap;
 using CliWrap.Buffered;
 using ErsatzTV.Core.Health;
 
@@ -37,7 +38,7 @@ public abstract class BaseHealthCheck
         BufferedCommandResult result = await Cli.Wrap(path)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.None)
-            .ExecuteBufferedAsync(cancellationToken);
+            .ExecuteBufferedAsync(Encoding.UTF8, cancellationToken);
 
         return result.StandardOutput;
     }

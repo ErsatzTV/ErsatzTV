@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using CliWrap;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Domain.Filler;
 using ErsatzTV.Core.FFmpeg;
@@ -8,7 +8,7 @@ namespace ErsatzTV.Core.Interfaces.FFmpeg;
 
 public interface IFFmpegProcessService
 {
-    Task<Process> ForPlayoutItem(
+    Task<Command> ForPlayoutItem(
         string ffmpegPath,
         string ffprobePath,
         bool saveReports,
@@ -31,7 +31,7 @@ public interface IFFmpegProcessService
         long ptsOffset,
         Option<int> targetFramerate);
 
-    Task<Process> ForError(
+    Task<Command> ForError(
         string ffmpegPath,
         Channel channel,
         Option<TimeSpan> duration,
@@ -39,15 +39,15 @@ public interface IFFmpegProcessService
         bool hlsRealtime,
         long ptsOffset);
 
-    Process ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
+    Command ConcatChannel(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
-    Process WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
+    Command WrapSegmenter(string ffmpegPath, bool saveReports, Channel channel, string scheme, string host);
 
-    Process ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
+    Command ResizeImage(string ffmpegPath, string inputFile, string outputFile, int height);
 
-    Process ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
+    Command ConvertToPng(string ffmpegPath, string inputFile, string outputFile);
 
-    Process ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);
+    Command ExtractAttachedPicAsPng(string ffmpegPath, string inputFile, int streamIndex, string outputFile);
 
     Task<Either<BaseError, string>> GenerateSongImage(
         string ffmpegPath,

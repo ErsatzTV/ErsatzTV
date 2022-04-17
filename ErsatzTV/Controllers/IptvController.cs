@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using CliWrap;
 using ErsatzTV.Application.Channels;
 using ErsatzTV.Application.Images;
 using ErsatzTV.Application.Streaming;
@@ -92,15 +93,30 @@ public class IptvController : ControllerBase
                 result => result.Match<IActionResult>(
                     processModel =>
                     {
-                        Process process = processModel.Process;
+                        Command command = processModel.Process;
 
                         _logger.LogInformation("Starting ts stream for channel {ChannelNumber}", channelNumber);
-                        _logger.LogDebug(
-                            "ffmpeg ts arguments {FFmpegArguments}",
-                            string.Join(" ", process.StartInfo.ArgumentList));
+                        _logger.LogInformation("ffmpeg arguments {FFmpegArguments}", command.Arguments);
+                        var process = new Process
+                        {
+                            StartInfo = new ProcessStartInfo
+                            {
+                                FileName = command.TargetFilePath,
+                                Arguments = command.Arguments,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = false,
+                                UseShellExecute = false,
+                                CreateNoWindow = true
+                            }
+                        };
+
+                        foreach ((string key, string value) in command.EnvironmentVariables)
+                        {
+                            process.StartInfo.Environment[key] = value;
+                        }
+
                         process.Start();
-                        return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
-                    },
+                        return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");                    },
                     error => BadRequest(error.Value)));
     }
 

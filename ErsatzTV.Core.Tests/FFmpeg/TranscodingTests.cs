@@ -172,8 +172,8 @@ public class TranscodingTests
         [ValueSource(typeof(TestData), nameof(TestData.Watermarks))] Watermark watermark,
         [ValueSource(typeof(TestData), nameof(TestData.Subtitles))] Subtitle subtitle,
         [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))] FFmpegProfileVideoFormat profileVideoFormat,
-        [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-        // [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+        // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
+        [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
@@ -377,7 +377,7 @@ public class TranscodingTests
             _ => ChannelSubtitleMode.None 
         };
 
-        using Process process = await service.ForPlayoutItem(
+        Command process = await service.ForPlayoutItem(
             ExecutableName("ffmpeg"),
             ExecutableName("ffprobe"),
             false,
@@ -426,17 +426,14 @@ public class TranscodingTests
         var timeoutSignal = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         try
         {
-            result = await Cli.Wrap(process.StartInfo.FileName)
-                .WithArguments(process.StartInfo.ArgumentList)
-                .WithValidation(CommandResultValidation.None)
+            result = await process
                 .WithStandardOutputPipe(PipeTarget.ToStream(Stream.Null))
                 .WithStandardErrorPipe(PipeTarget.ToStringBuilder(sb))
                 .ExecuteAsync(timeoutSignal.Token);
         }
         catch (OperationCanceledException)
         {
-            IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
-            Assert.Fail($"Transcode failure (timeout): ffmpeg {string.Join(" ", quotedArgs)}");
+            Assert.Fail($"Transcode failure (timeout): ffmpeg {process.Arguments}");
             return;
         }
 
@@ -445,22 +442,19 @@ public class TranscodingTests
 
         if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)
         {
-            var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
-            result.ExitCode.Should().Be(1, $"Error message with successful exit code? {string.Join(" ", quotedArgs)}");
-            Assert.Warn($"Unsupported on this hardware: ffmpeg {string.Join(" ", quotedArgs)}");
+            result.ExitCode.Should().Be(1, $"Error message with successful exit code? {process.Arguments}");
+            Assert.Warn($"Unsupported on this hardware: ffmpeg {process.Arguments}");
         }
         else if (error.Contains("Impossible to convert between"))
         {
-            IEnumerable<string> quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'");
-            Assert.Fail($"Transcode failure: ffmpeg {string.Join(" ", quotedArgs)}");
+            Assert.Fail($"Transcode failure: ffmpeg {process.Arguments}");
         }
         else
         {
-            var quotedArgs = process.StartInfo.ArgumentList.Map(a => $"\'{a}\'").ToList();
-            result.ExitCode.Should().Be(0, error + Environment.NewLine + string.Join(" ", quotedArgs));
+            result.ExitCode.Should().Be(0, error + Environment.NewLine + process.Arguments);
             if (result.ExitCode == 0)
             {
-                Console.WriteLine(string.Join(" ", quotedArgs));
+                Console.WriteLine(process.Arguments);
             }
         }
     }
