@@ -9,10 +9,7 @@ public class MediaSourceRepository : IMediaSourceRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public MediaSourceRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<PlexMediaSource> Add(PlexMediaSource plexMediaSource)
     {

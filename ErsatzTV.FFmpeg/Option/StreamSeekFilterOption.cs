@@ -6,10 +6,7 @@ public class StreamSeekFilterOption : IPipelineStep
 {
     private readonly TimeSpan _start;
 
-    public StreamSeekFilterOption(TimeSpan start)
-    {
-        _start = start;
-    }
+    public StreamSeekFilterOption(TimeSpan start) => _start = start;
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();

@@ -15,9 +15,9 @@ namespace ErsatzTV.Core.FFmpeg;
 public class FFmpegLibraryProcessService : IFFmpegProcessService
 {
     private readonly FFmpegProcessService _ffmpegProcessService;
-    private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly ILogger<FFmpegLibraryProcessService> _logger;
+    private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
 
     public FFmpegLibraryProcessService(
         FFmpegProcessService ffmpegProcessService,
@@ -58,7 +58,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
         Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
         Option<MediaStream> maybeSubtitleStream =
-            await _ffmpegStreamSelector.SelectSubtitleStream(channel, videoVersion);  
+            await _ffmpegStreamSelector.SelectSubtitleStream(channel, videoVersion);
 
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
@@ -104,7 +104,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             FFmpegProfileAudioFormat.Copy => AudioFormat.Copy,
             _ => throw new ArgumentOutOfRangeException($"unexpected audio format {playbackSettings.VideoFormat}")
         };
-        
+
         var audioState = new AudioState(
             audioFormat,
             playbackSettings.AudioChannels,
@@ -164,7 +164,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             }).Flatten();
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
-        
+
         string videoFormat = playbackSettings.VideoFormat switch
         {
             FFmpegProfileVideoFormat.Hevc => VideoFormat.Hevc,
@@ -243,67 +243,6 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
 
         return GetCommand(ffmpegPath, videoInputFile, audioInputFile, watermarkInputFile, None, pipeline);
-    }
-
-    private Option<WatermarkInputFile> GetWatermarkInputFile(
-        Option<WatermarkOptions> watermarkOptions,
-        Option<List<FadePoint>> maybeFadePoints)
-    {
-        foreach (WatermarkOptions options in watermarkOptions)
-        {
-            foreach (ChannelWatermark watermark in options.Watermark)
-            {
-                // skip watermark if intermittent and no fade points
-                if (watermark.Mode != ChannelWatermarkMode.None &&
-                    (watermark.Mode != ChannelWatermarkMode.Intermittent ||
-                     maybeFadePoints.Map(fp => fp.Count > 0).IfNone(false)))
-                {
-                    foreach (string path in options.ImagePath)
-                    {
-                        var watermarkInputFile = new WatermarkInputFile(
-                            path,
-                            new List<VideoStream>
-                            {
-                                new(
-                                    options.ImageStreamIndex.IfNone(0),
-                                    "unknown",
-                                    new PixelFormatUnknown(),
-                                    new FrameSize(1, 1),
-                                    Option<string>.None,
-                                    !options.IsAnimated)
-                            },
-                            new WatermarkState(
-                                maybeFadePoints.Map(
-                                    lst => lst.Map(
-                                        fp =>
-                                        {
-                                            return fp switch
-                                            {
-                                                FadeInPoint fip => (WatermarkFadePoint)new WatermarkFadeIn(
-                                                    fip.Time,
-                                                    fip.EnableStart,
-                                                    fip.EnableFinish),
-                                                FadeOutPoint fop => new WatermarkFadeOut(
-                                                    fop.Time,
-                                                    fop.EnableStart,
-                                                    fop.EnableFinish),
-                                                _ => throw new NotSupportedException() // this will never happen
-                                            };
-                                        }).ToList()),
-                                watermark.Location,
-                                watermark.Size,
-                                watermark.WidthPercent,
-                                watermark.HorizontalMarginPercent,
-                                watermark.VerticalMarginPercent,
-                                watermark.Opacity));
-
-                        return watermarkInputFile;
-                    }
-                }
-            }
-        }
-
-        return None;
     }
 
     public Task<Command> ForError(
@@ -401,6 +340,67 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             watermarkWidthPercent,
             cancellationToken);
 
+    private Option<WatermarkInputFile> GetWatermarkInputFile(
+        Option<WatermarkOptions> watermarkOptions,
+        Option<List<FadePoint>> maybeFadePoints)
+    {
+        foreach (WatermarkOptions options in watermarkOptions)
+        {
+            foreach (ChannelWatermark watermark in options.Watermark)
+            {
+                // skip watermark if intermittent and no fade points
+                if (watermark.Mode != ChannelWatermarkMode.None &&
+                    (watermark.Mode != ChannelWatermarkMode.Intermittent ||
+                     maybeFadePoints.Map(fp => fp.Count > 0).IfNone(false)))
+                {
+                    foreach (string path in options.ImagePath)
+                    {
+                        var watermarkInputFile = new WatermarkInputFile(
+                            path,
+                            new List<VideoStream>
+                            {
+                                new(
+                                    options.ImageStreamIndex.IfNone(0),
+                                    "unknown",
+                                    new PixelFormatUnknown(),
+                                    new FrameSize(1, 1),
+                                    Option<string>.None,
+                                    !options.IsAnimated)
+                            },
+                            new WatermarkState(
+                                maybeFadePoints.Map(
+                                    lst => lst.Map(
+                                        fp =>
+                                        {
+                                            return fp switch
+                                            {
+                                                FadeInPoint fip => (WatermarkFadePoint)new WatermarkFadeIn(
+                                                    fip.Time,
+                                                    fip.EnableStart,
+                                                    fip.EnableFinish),
+                                                FadeOutPoint fop => new WatermarkFadeOut(
+                                                    fop.Time,
+                                                    fop.EnableStart,
+                                                    fop.EnableFinish),
+                                                _ => throw new NotSupportedException() // this will never happen
+                                            };
+                                        }).ToList()),
+                                watermark.Location,
+                                watermark.Size,
+                                watermark.WidthPercent,
+                                watermark.HorizontalMarginPercent,
+                                watermark.VerticalMarginPercent,
+                                watermark.Opacity));
+
+                        return watermarkInputFile;
+                    }
+                }
+            }
+        }
+
+        return None;
+    }
+
     private Command GetCommand(
         string ffmpegPath,
         Option<VideoInputFile> videoInputFile,
@@ -463,12 +463,10 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                     return "nouveau";
             }
         }
-        
+
         return Option<string>.None;
     }
 
-    private static Option<string> VaapiDeviceName(HardwareAccelerationMode accelerationMode, string vaapiDevice)
-    {
-        return accelerationMode == HardwareAccelerationMode.Vaapi ? vaapiDevice : Option<string>.None;
-    }
+    private static Option<string> VaapiDeviceName(HardwareAccelerationMode accelerationMode, string vaapiDevice) =>
+        accelerationMode == HardwareAccelerationMode.Vaapi ? vaapiDevice : Option<string>.None;
 }

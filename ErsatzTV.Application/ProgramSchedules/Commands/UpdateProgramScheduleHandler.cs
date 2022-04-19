@@ -29,7 +29,7 @@ public class UpdateProgramScheduleHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => ApplyUpdateRequest(dbContext, ps, request));
+        return await LanguageExtensions.Apply(validation, ps => ApplyUpdateRequest(dbContext, ps, request));
     }
 
     private async Task<UpdateProgramScheduleResult> ApplyUpdateRequest(

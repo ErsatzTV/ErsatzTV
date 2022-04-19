@@ -8,8 +8,8 @@ namespace ErsatzTV.Core.FFmpeg;
 public class FFmpegStreamSelector : IFFmpegStreamSelector
 {
     private readonly IConfigElementRepository _configElementRepository;
-    private readonly ISearchRepository _searchRepository;
     private readonly ILogger<FFmpegStreamSelector> _logger;
+    private readonly ISearchRepository _searchRepository;
 
     public FFmpegStreamSelector(
         ISearchRepository searchRepository,

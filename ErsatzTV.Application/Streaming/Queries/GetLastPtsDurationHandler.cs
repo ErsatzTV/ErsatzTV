@@ -1,7 +1,6 @@
 ﻿using System.Text;
 using Bugsnag;
 using CliWrap;
-using CliWrap.Buffered;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.FFmpeg;
@@ -16,10 +15,10 @@ namespace ErsatzTV.Application.Streaming;
 public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Either<BaseError, PtsAndDuration>>
 {
     private readonly IClient _client;
-    private readonly ILocalFileSystem _localFileSystem;
-    private readonly ITempFilePool _tempFilePool;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<GetLastPtsDurationHandler> _logger;
+    private readonly ITempFilePool _tempFilePool;
 
     public GetLastPtsDurationHandler(
         IClient client,
@@ -104,7 +103,7 @@ public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Eit
         var directory = new DirectoryInfo(Path.Combine(FileSystemLayout.TranscodeFolder, channelNumber));
         return Optional(directory.GetFiles("*.ts").OrderByDescending(f => f.Name).FirstOrDefault());
     }
-    
+
     private Task<Validation<BaseError, string>> ValidateFFprobePath() =>
         _configElementRepository.GetValue<string>(ConfigElementKey.FFprobePath)
             .FilterT(File.Exists)
@@ -142,9 +141,6 @@ public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Eit
 
     private record TroubleshootingData(IEnumerable<FileInfo> Files, string Playlist, string ProbeOutput)
     {
-        private record FileData(string FileName, long Bytes, DateTime LastWriteTimeUtc);
-        private record InternalData(List<FileData> Files, string EncodedPlaylist, string EncodedProbeOutput);
-
         public string Serialize()
         {
             var data = new InternalData(
@@ -154,5 +150,9 @@ public class GetLastPtsDurationHandler : IRequestHandler<GetLastPtsDuration, Eit
 
             return JsonConvert.SerializeObject(data);
         }
+
+        private record FileData(string FileName, long Bytes, DateTime LastWriteTimeUtc);
+
+        private record InternalData(List<FileData> Files, string EncodedPlaylist, string EncodedProbeOutput);
     }
 }

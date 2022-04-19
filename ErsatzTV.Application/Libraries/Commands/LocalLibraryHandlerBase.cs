@@ -30,7 +30,7 @@ public abstract class LocalLibraryHandlerBase
             .Map(_ => localLibrary)
             .ToValidation<BaseError>("Path must not belong to another library path");
     }
-        
+
     private static bool AreSubPaths(string path1, string path2)
     {
         string one = path1 + Path.DirectorySeparatorChar;

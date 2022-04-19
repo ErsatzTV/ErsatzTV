@@ -12,4 +12,4 @@ public record AddItemsToCollection
     List<int> ArtistIds,
     List<int> MusicVideoIds,
     List<int> OtherVideoIds,
-    List<int> SongIds) : MediatR.IRequest<Either<BaseError, Unit>>;
+    List<int> SongIds) : IRequest<Either<BaseError, Unit>>;

@@ -5,7 +5,7 @@ using ErsatzTV.Core.Interfaces.Search;
 namespace ErsatzTV.Application.Emby;
 
 public class
-    UpdateEmbyLibraryPreferencesHandler : MediatR.IRequestHandler<UpdateEmbyLibraryPreferences,
+    UpdateEmbyLibraryPreferencesHandler : IRequestHandler<UpdateEmbyLibraryPreferences,
         Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;

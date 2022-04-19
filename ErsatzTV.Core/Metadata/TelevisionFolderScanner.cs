@@ -13,12 +13,12 @@ namespace ErsatzTV.Core.Metadata;
 
 public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScanner
 {
+    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IClient _client;
     private readonly IMetadataRepository _metadataRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -79,7 +79,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
         foreach (string showFolder in allShowFolders)
         {
-            decimal percentCompletion = (decimal) allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
+            decimal percentCompletion = (decimal)allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
             await _mediator.Publish(
                 new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
 
@@ -134,7 +134,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 await _televisionRepository.DeleteByPath(libraryPath, path);
             }
         }
-            
+
         await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
         await _televisionRepository.DeleteEmptySeasons(libraryPath);
@@ -190,7 +190,13 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     await maybeSeason.Match(
                         async season =>
                         {
-                            await ScanEpisodes(libraryPath, ffmpegPath, ffprobePath, season, seasonFolder, cancellationToken);
+                            await ScanEpisodes(
+                                libraryPath,
+                                ffmpegPath,
+                                ffprobePath,
+                                season,
+                                seasonFolder,
+                                cancellationToken);
                             await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
 
                             season.Show = show;
@@ -390,7 +396,10 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
     }
 
-    private async Task<Either<BaseError, Season>> UpdatePoster(Season season, string seasonFolder, CancellationToken cancellationToken)
+    private async Task<Either<BaseError, Season>> UpdatePoster(
+        Season season,
+        string seasonFolder,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -437,7 +446,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
             return BaseError.New(ex.ToString());
         }
     }
-    
+
     private async Task<Either<BaseError, Episode>> UpdateSubtitles(Episode episode, CancellationToken _)
     {
         try
@@ -450,7 +459,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     .ToList();
 
                 var subtitles = new List<Subtitle>();
-                
+
                 foreach (MediaStream stream in subtitleStreams)
                 {
                     var subtitle = new Subtitle

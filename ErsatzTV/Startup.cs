@@ -53,7 +53,6 @@ using FluentValidation.AspNetCore;
 using Ganss.XSS;
 using MediatR;
 using MediatR.Courier.DependencyInjection;
-using Microsoft.AspNetCore.SpaServices;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -62,7 +61,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Refit;
 using Serilog;
-using VueCliMiddleware;
 
 namespace ErsatzTV;
 
@@ -92,9 +90,9 @@ public class Startup
                     ?.GetCustomAttribute<AssemblyInformationalVersionAttribute>()
                     ?.InformationalVersion ?? "unknown";
                 configuration.AutoNotify = false;
-                    
+
                 configuration.NotifyReleaseStages = new[] { "public", "develop" };
-                    
+
 #if DEBUG
                 configuration.ReleaseStage = "develop";
 #else
@@ -102,7 +100,7 @@ public class Startup
                     configuration.ReleaseStage = bugsnagConfig.Enable ? "public" : "private";
 #endif
             });
-            
+
         services.AddCors(
             o => o.AddPolicy(
                 "AllowAll",
@@ -217,13 +215,13 @@ public class Startup
                     o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
                     o.MigrationsAssembly("ErsatzTV.Infrastructure");
                 }));
-            
+
         SqlMapper.AddTypeHandler(new DateTimeOffsetHandler());
         SqlMapper.AddTypeHandler(new GuidHandler());
         SqlMapper.AddTypeHandler(new TimeSpanHandler());
 
         var logConnectionString = $"Data Source={FileSystemLayout.LogDatabasePath}";
-            
+
         services.AddDbContext<LogContext>(
             options => options.UseSqlite(logConnectionString),
             ServiceLifetime.Scoped,
@@ -330,7 +328,7 @@ public class Startup
         AddChannel<IEmbyBackgroundServiceRequest>(services);
         AddChannel<IFFmpegWorkerRequest>(services);
         AddChannel<ISubtitleWorkerRequest>(services);
-            
+
         services.AddScoped<IFFmpegVersionHealthCheck, FFmpegVersionHealthCheck>();
         services.AddScoped<IFFmpegReportsHealthCheck, FFmpegReportsHealthCheck>();
         services.AddScoped<IHardwareAccelerationHealthCheck, HardwareAccelerationHealthCheck>();
@@ -386,10 +384,10 @@ public class Startup
         services.AddScoped<IRuntimeInfo, RuntimeInfo>();
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
-            
+
         services.AddScoped<IFFmpegProcessService, FFmpegLibraryProcessService>();
         services.AddScoped<FFmpegProcessService>();
-            
+
         services.AddScoped<ISongVideoGenerator, SongVideoGenerator>();
         services.AddScoped<HlsSessionWorker>();
         services.AddScoped<IGitHubApiClient, GitHubApiClient>();

@@ -6,10 +6,7 @@ public class FrameRateOutputOption : IPipelineStep
 {
     private readonly int _frameRate;
 
-    public FrameRateOutputOption(int frameRate)
-    {
-        _frameRate = frameRate;
-    }
+    public FrameRateOutputOption(int frameRate) => _frameRate = frameRate;
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();

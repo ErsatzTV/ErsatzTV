@@ -6,10 +6,7 @@ public class DeinterlaceQsvFilter : BaseFilter
 {
     private readonly FrameState _currentState;
 
-    public DeinterlaceQsvFilter(FrameState currentState)
-    {
-        _currentState = currentState;
-    }
+    public DeinterlaceQsvFilter(FrameState currentState) => _currentState = currentState;
 
     // deinterlace_qsv seems to only support nv12, not p010le
     public override string Filter => _currentState.FrameDataLocation == FrameDataLocation.Software

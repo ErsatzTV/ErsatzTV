@@ -2,5 +2,5 @@
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public record DeleteTraktList(int TraktListId) : IRequest<Either<BaseError, LanguageExt.Unit>>,
+public record DeleteTraktList(int TraktListId) : IRequest<Either<BaseError, Unit>>,
     IBackgroundServiceRequest;

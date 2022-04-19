@@ -32,7 +32,7 @@ public class RemoveItemsFromCollectionHandler : IRequestHandler<RemoveItemsFromC
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Collection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyRemoveItemsRequest(dbContext, request, c));
+        return await LanguageExtensions.Apply(validation, c => ApplyRemoveItemsRequest(dbContext, request, c));
     }
 
     private async Task<Unit> ApplyRemoveItemsRequest(

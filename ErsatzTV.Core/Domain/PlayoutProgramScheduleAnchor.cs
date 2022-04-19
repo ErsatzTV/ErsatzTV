@@ -11,7 +11,7 @@ public class PlayoutProgramScheduleAnchor
     public Playout Playout { get; set; }
 
     public int ProgramScheduleId { get; set; }
-    
+
     [NotLogged]
     public ProgramSchedule ProgramSchedule { get; set; }
 

@@ -14,7 +14,7 @@ public abstract class BaseHealthCheck
 
     protected HealthCheckResult NotApplicableResult() =>
         new(Title, HealthCheckStatus.NotApplicable, string.Empty, None);
-        
+
     protected HealthCheckResult OkResult() =>
         new(Title, HealthCheckStatus.Pass, string.Empty, None);
 

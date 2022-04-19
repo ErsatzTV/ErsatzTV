@@ -43,7 +43,7 @@ public class FFmpegPlaybackSettingsCalculatorTests
         public void Should_Not_UseSpecifiedThreadCount_ForTransportStream()
         {
             // MPEG-TS requires realtime output which is hardcoded to a single thread
-                
+
             FFmpegProfile ffmpegProfile = TestProfile() with { ThreadCount = 7 };
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
@@ -862,7 +862,10 @@ public class FFmpegPlaybackSettingsCalculatorTests
                 AudioFormat = FFmpegProfileAudioFormat.Ac3
             };
 
-            var version = new MediaVersion { SampleAspectRatio = "1:1", Width = 1920, Height = 1080, Duration = TimeSpan.FromMinutes(5) }; // not pulled from here
+            var version = new MediaVersion
+            {
+                SampleAspectRatio = "1:1", Width = 1920, Height = 1080, Duration = TimeSpan.FromMinutes(5)
+            }; // not pulled from here
 
             FFmpegPlaybackSettings actual = _calculator.CalculateSettings(
                 StreamingMode.TransportStream,

@@ -5,9 +5,7 @@ namespace ErsatzTV.Infrastructure.Health;
 
 public class HealthCheckService : IHealthCheckService
 {
-    private readonly List<IHealthCheck> _checks;
-
-    // ReSharper disable SuggestBaseTypeForParameterInConstructor
+    private readonly List<IHealthCheck> _checks; // ReSharper disable SuggestBaseTypeForParameterInConstructor
     public HealthCheckService(
         IFFmpegVersionHealthCheck ffmpegVersionHealthCheck,
         IFFmpegReportsHealthCheck ffmpegReportsHealthCheck,
@@ -17,8 +15,7 @@ public class HealthCheckService : IHealthCheckService
         IZeroDurationHealthCheck zeroDurationHealthCheck,
         IFileNotFoundHealthCheck fileNotFoundHealthCheck,
         IVaapiDriverHealthCheck vaapiDriverHealthCheck,
-        IErrorReportsHealthCheck errorReportsHealthCheck)
-    {
+        IErrorReportsHealthCheck errorReportsHealthCheck) =>
         _checks = new List<IHealthCheck>
         {
             ffmpegVersionHealthCheck,
@@ -31,7 +28,6 @@ public class HealthCheckService : IHealthCheckService
             vaapiDriverHealthCheck,
             errorReportsHealthCheck
         };
-    }
 
     public Task<List<HealthCheckResult>> PerformHealthChecks(CancellationToken cancellationToken) =>
         _checks.Map(c => c.Check(cancellationToken)).SequenceParallel().Map(results => results.ToList());

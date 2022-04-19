@@ -12,11 +12,11 @@ namespace ErsatzTV.Application.Streaming;
 
 public class StartFFmpegSessionHandler : IRequestHandler<StartFFmpegSession, Either<BaseError, Unit>>
 {
+    private readonly IConfigElementRepository _configElementRepository;
+    private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+    private readonly ILocalFileSystem _localFileSystem;
     private readonly ILogger<StartFFmpegSessionHandler> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
-    private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
-    private readonly IConfigElementRepository _configElementRepository;
-    private readonly ILocalFileSystem _localFileSystem;
 
     public StartFFmpegSessionHandler(
         ILocalFileSystem localFileSystem,

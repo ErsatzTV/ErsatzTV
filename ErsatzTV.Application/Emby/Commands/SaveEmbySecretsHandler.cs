@@ -6,7 +6,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.Emby;
 
-public class SaveEmbySecretsHandler : MediatR.IRequestHandler<SaveEmbySecrets, Either<BaseError, Unit>>
+public class SaveEmbySecretsHandler : IRequestHandler<SaveEmbySecrets, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IEmbyBackgroundServiceRequest> _channel;
     private readonly IEmbyApiClient _embyApiClient;

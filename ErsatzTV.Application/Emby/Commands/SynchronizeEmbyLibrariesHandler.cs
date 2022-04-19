@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace ErsatzTV.Application.Emby;
 
 public class
-    SynchronizeEmbyLibrariesHandler : MediatR.IRequestHandler<SynchronizeEmbyLibraries, Either<BaseError, Unit>>
+    SynchronizeEmbyLibrariesHandler : IRequestHandler<SynchronizeEmbyLibraries, Either<BaseError, Unit>>
 {
     private readonly IEmbyApiClient _embyApiClient;
     private readonly IEmbySecretStore _embySecretStore;

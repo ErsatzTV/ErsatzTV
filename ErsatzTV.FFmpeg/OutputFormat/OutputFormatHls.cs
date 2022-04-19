@@ -6,8 +6,8 @@ public class OutputFormatHls : IPipelineStep
 {
     private readonly FrameState _desiredState;
     private readonly Option<string> _mediaFrameRate;
-    private readonly string _segmentTemplate;
     private readonly string _playlistPath;
+    private readonly string _segmentTemplate;
 
     public OutputFormatHls(
         FrameState desiredState,

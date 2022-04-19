@@ -16,14 +16,14 @@ namespace ErsatzTV.FFmpeg;
 
 public class PipelineBuilder
 {
-    private readonly List<IPipelineStep> _pipelineSteps;
-    private readonly Option<VideoInputFile> _videoInputFile;
     private readonly Option<AudioInputFile> _audioInputFile;
-    private readonly Option<WatermarkInputFile> _watermarkInputFile;
-    private readonly Option<SubtitleInputFile> _subtitleInputFile;
-    private readonly string _reportsFolder;
     private readonly string _fontsFolder;
     private readonly ILogger _logger;
+    private readonly List<IPipelineStep> _pipelineSteps;
+    private readonly string _reportsFolder;
+    private readonly Option<SubtitleInputFile> _subtitleInputFile;
+    private readonly Option<VideoInputFile> _videoInputFile;
+    private readonly Option<WatermarkInputFile> _watermarkInputFile;
 
     public PipelineBuilder(
         Option<VideoInputFile> videoInputFile,
@@ -44,7 +44,7 @@ public class PipelineBuilder
             new StandardFormatFlags(),
             new NoDemuxDecodeDelayOutputOption(),
             new FastStartOutputOption(),
-            new ClosedGopOutputOption(),
+            new ClosedGopOutputOption()
         };
 
         _videoInputFile = videoInputFile;
@@ -100,22 +100,23 @@ public class PipelineBuilder
 
         _pipelineSteps.Add(new OutputFormatMpegTs());
         _pipelineSteps.Add(new PipeProtocol());
-        
+
         if (ffmpegState.SaveReport)
         {
             _pipelineSteps.Add(new FFReportVariable(_reportsFolder, concatInputFile));
         }
-        
+
         return new FFmpegPipeline(_pipelineSteps);
     }
-    
+
     public FFmpegPipeline Build(FFmpegState ffmpegState, FrameState desiredState)
     {
         var allVideoStreams = _videoInputFile.SelectMany(f => f.VideoStreams).ToList();
 
         // -sc_threshold 0 is unsupported with mpeg2video
         _pipelineSteps.Add(
-            allVideoStreams.All(s => s.Codec != VideoFormat.Mpeg2Video) && desiredState.VideoFormat != VideoFormat.Mpeg2Video
+            allVideoStreams.All(s => s.Codec != VideoFormat.Mpeg2Video) &&
+            desiredState.VideoFormat != VideoFormat.Mpeg2Video
                 ? new NoSceneDetectOutputOption(0)
                 : new NoSceneDetectOutputOption(1_000_000_000));
 
@@ -129,7 +130,7 @@ public class PipelineBuilder
             var option = new StreamSeekInputOption(desiredStart);
             _audioInputFile.Iter(f => f.AddOption(option));
             _videoInputFile.Iter(f => f.AddOption(option));
-            
+
             // need to seek text subtitle files
             if (_subtitleInputFile.Map(s => !s.IsImageBased).IfNone(false))
             {
@@ -146,7 +147,7 @@ public class PipelineBuilder
         {
             bool hasOverlay = _watermarkInputFile.IsSome ||
                               _subtitleInputFile.Map(s => s.IsImageBased && !s.Copy).IfNone(false);
-            
+
             Option<int> initialFrameRate = Option<int>.None;
             foreach (string frameRateString in videoStream.FrameRate)
             {
@@ -168,7 +169,7 @@ public class PipelineBuilder
                 Option<int>.None,
                 Option<int>.None,
                 false); // deinterlace
-            
+
             IEncoder encoder;
 
             if (IsDesiredVideoState(currentState, desiredState))
@@ -300,7 +301,7 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
-                
+
                 if (desiredState.Deinterlaced && !currentState.Deinterlaced)
                 {
                     IPipelineFilterStep step = AvailableDeinterlaceFilters.ForAcceleration(
@@ -353,7 +354,7 @@ public class PipelineBuilder
                         currentState = padStep.NextState(currentState);
                         _videoInputFile.Iter(f => f.FilterSteps.Add(padStep));
                     }
-                    
+
                     IPipelineFilterStep sarStep = new SetSarFilter();
                     currentState = sarStep.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(sarStep));
@@ -433,12 +434,12 @@ public class PipelineBuilder
 
                         // if we have no filters and an overlay, we need to set pixel format
                         bool unfilteredWithOverlay = videoInputFile.FilterSteps.Count == 0 && hasOverlay;
-                        
+
                         if (onlyYadif || unfilteredWithOverlay)
                         {
                             // the filter re-applies the current pixel format, so we have to set it first
                             currentState = currentState with { PixelFormat = desiredState.PixelFormat };
-                
+
                             IPipelineFilterStep scaleFilter = AvailableScaleFilters.ForAcceleration(
                                 ffmpegState.HardwareAccelerationMode,
                                 currentState,
@@ -461,7 +462,7 @@ public class PipelineBuilder
                         _pipelineSteps.Add(step);
                     }
                 }
-                
+
                 foreach (IPixelFormat desiredPixelFormat in desiredState.PixelFormat)
                 {
                     if (currentState.PixelFormat.Map(pf => pf.FFmpegName) != desiredPixelFormat.FFmpegName)
@@ -476,7 +477,7 @@ public class PipelineBuilder
                     }
                 }
             }
-            
+
             // TODO: if all video filters are software, use software pixel format for hwaccel output
             // might be able to skip scale_cuda=format=whatever,hwdownload,format=whatever
 
@@ -540,9 +541,9 @@ public class PipelineBuilder
                 else
                 {
                     _videoInputFile.Iter(f => f.AddOption(new CopyTimestampInputOption()));
-                    
+
                     // text-based subtitles are always added in software, so always try to download the background
-                    
+
                     // nvidia needs some extra format help if the only filter will be the download filter
                     if (ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Nvenc &&
                         _videoInputFile.Map(f => f.FilterSteps.Count).IfNone(1) == 0)
@@ -599,7 +600,7 @@ public class PipelineBuilder
                 {
                     watermarkInputFile.FilterSteps.Add(new WatermarkOpacityFilter(watermarkInputFile.DesiredState));
                 }
-                
+
                 foreach (List<WatermarkFadePoint> fadePoints in watermarkInputFile.DesiredState.MaybeFadePoints)
                 {
                     watermarkInputFile.FilterSteps.AddRange(fadePoints.Map(fp => new WatermarkFadeFilter(fp)));
@@ -607,7 +608,7 @@ public class PipelineBuilder
 
                 watermarkInputFile.FilterSteps.Add(new WatermarkHardwareUploadFilter(currentState, ffmpegState));
             }
-            
+
             // after everything else is done, apply the encoder
             if (_pipelineSteps.OfType<IEncoder>().All(e => e.Kind != StreamKind.Video))
             {

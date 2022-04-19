@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.MediaCollections;
 
 public class AddMovieToCollectionHandler :
-    MediatR.IRequestHandler<AddMovieToCollection, Either<BaseError, Unit>>
+    IRequestHandler<AddMovieToCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -33,7 +33,7 @@ public class AddMovieToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => ApplyAddMovieRequest(dbContext, parameters));
+        return await LanguageExtensions.Apply(validation, parameters => ApplyAddMovieRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddMovieRequest(TvContext dbContext, Parameters parameters)
@@ -43,7 +43,7 @@ public class AddMovieToCollectionHandler :
         {
             // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository
-                .PlayoutIdsUsingCollection(parameters.Collection.Id))
+                         .PlayoutIdsUsingCollection(parameters.Collection.Id))
             {
                 await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }

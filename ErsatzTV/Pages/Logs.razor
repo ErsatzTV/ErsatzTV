@@ -39,7 +39,7 @@
 
     private MudTable<LogEntryViewModel> _table;
     private int _rowsPerPage;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -48,7 +48,7 @@
 
     protected override async Task OnParametersSetAsync() => _rowsPerPage =
         await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.LogsPageSize), _cts.Token)
-        .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
+            .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
 
     private async Task<TableData<LogEntryViewModel>> ServerReload(TableState state)
     {

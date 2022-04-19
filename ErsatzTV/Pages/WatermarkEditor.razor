@@ -40,7 +40,7 @@
                             {
                                 <MudElement HtmlTag="img" src="@($"artwork/watermarks/{_model.Image}")" Style="max-height: 50px"/>
                             }
-                            <ValidationMessage For="@(() => _model.Image)" style="color: #f44336!important;"/>
+                            <ValidationMessage For="@(() => _model.Image)" style="color: #f44336 !important;"/>
                         </MudItem>
                         <MudItem xs="6">
                             <MudButton Class="ml-auto" HtmlTag="label"
@@ -132,7 +132,7 @@
                                           Disabled="@(_model.Mode == ChannelWatermarkMode.None)"
                                           Immediate="true"/>
                         </MudItem>
-                        <MudItem xs="6" />
+                        <MudItem xs="6"/>
                     </MudGrid>
                 </MudCardContent>
                 <MudCardActions>
@@ -147,7 +147,7 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    
+
     [Parameter]
     public int Id { get; set; }
 
@@ -184,7 +184,7 @@
                 VerticalMargin = 5,
                 FrequencyMinutes = 15,
                 DurationSeconds = 15,
-                Opacity = 100,
+                Opacity = 100
             };
         }
 
@@ -212,13 +212,13 @@
                 () => _navigationManager.NavigateTo("/watermarks"));
         }
     }
-    
+
     private async Task UploadWatermark(InputFileChangeEventArgs e)
     {
         try
         {
             Either<BaseError, string> maybeCacheFileName = await _mediator.Send(
-                new SaveArtworkToDisk(e.File.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024), ArtworkKind.Watermark),
+                new SaveArtworkToDisk(e.File.OpenReadStream(10 * 1024 * 1024), ArtworkKind.Watermark),
                 _cts.Token);
             maybeCacheFileName.Match(
                 relativeFileName =>

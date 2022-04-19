@@ -13,15 +13,15 @@ namespace ErsatzTV.Core.Metadata;
 
 public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
 {
+    private readonly IClient _client;
+    private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly ILogger<SongFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
     private readonly ISongRepository _songRepository;
-    private readonly ILibraryRepository _libraryRepository;
-    private readonly IClient _client;
-    private readonly ILogger<SongFolderScanner> _logger;
 
     public SongFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -73,7 +73,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
         var foldersCompleted = 0;
 
         var folderQueue = new Queue<string>();
-            
+
         if (ShouldIncludeFolder(libraryPath.Path))
         {
             folderQueue.Enqueue(libraryPath.Path);
@@ -170,7 +170,7 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
                 await _searchIndex.RemoveItems(songIds);
             }
         }
-            
+
         await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
         _searchIndex.Commit();
@@ -178,13 +178,14 @@ public class SongFolderScanner : LocalFolderScanner, ISongFolderScanner
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<Song>>> UpdateMetadata(
-        MediaItemScanResult<Song> result, string ffprobePath)
+        MediaItemScanResult<Song> result,
+        string ffprobePath)
     {
         try
         {
             Song song = result.Item;
             string path = song.GetHeadVersion().MediaFiles.Head().Path;
-                
+
             bool shouldUpdate = Optional(song.SongMetadata).Flatten().HeadOrNone().Match(
                 m => m.MetadataKind == MetadataKind.Fallback ||
                      m.DateUpdated != _localFileSystem.GetLastWriteTime(path),

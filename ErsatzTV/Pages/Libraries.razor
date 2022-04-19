@@ -127,7 +127,7 @@
         {
             if (_progressByLibrary != null && _progressByLibrary.ContainsKey(libraryScanProgress.LibraryId))
             {
-                _progressByLibrary[libraryScanProgress.LibraryId] = (int) (libraryScanProgress.Progress * 100);
+                _progressByLibrary[libraryScanProgress.LibraryId] = (int)(libraryScanProgress.Progress * 100);
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -141,7 +141,7 @@
     {
         _locker.OnLibraryChanged -= LockChanged;
         _courier.UnSubscribe<LibraryScanProgress>(HandleScanProgress);
-        
+
         _cts.Cancel();
         _cts.Dispose();
     }

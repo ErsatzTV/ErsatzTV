@@ -9,10 +9,8 @@ public class ErrorReportsHealthCheck : BaseHealthCheck, IErrorReportsHealthCheck
 {
     private readonly IOptions<BugsnagConfiguration> _bugsnagConfiguration;
 
-    public ErrorReportsHealthCheck(IOptions<BugsnagConfiguration> bugsnagConfiguration)
-    {
+    public ErrorReportsHealthCheck(IOptions<BugsnagConfiguration> bugsnagConfiguration) =>
         _bugsnagConfiguration = bugsnagConfiguration;
-    }
 
     protected override string Title => "Error Reports";
 

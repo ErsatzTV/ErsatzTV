@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Filter.Vaapi;
 public class ScaleVaapiFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly FrameSize _scaledSize;
     private readonly FrameSize _paddedSize;
+    private readonly FrameSize _scaledSize;
 
     public ScaleVaapiFilter(FrameState currentState, FrameSize scaledSize, FrameSize paddedSize)
     {

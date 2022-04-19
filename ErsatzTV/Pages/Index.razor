@@ -21,54 +21,54 @@
               Dense="true"
               ServerData="@(new Func<TableState, Task<TableData<HealthCheckResult>>>(ServerReload))"
               @ref="_table">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Health Checks</MudText>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh>Check</MudTh>
-                <MudTh>Message</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Check">
-                    <div style="display: flex; flex-direction: row; align-items: center">
-                        @if (context.Status == HealthCheckStatus.Fail)
-                        {
-                            <MudIcon Color="@Color.Error" Icon="@Icons.Material.Filled.Error"/>
-                        }
-                        else if (context.Status == HealthCheckStatus.Warning)
-                        {
-                            <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning"/>
-                        }
-                        else if (context.Status == HealthCheckStatus.Info)
-                        {
-                            <MudIcon Color="@Color.Info" Icon="@Icons.Material.Filled.Info"/>
-                        }
-                        else
-                        {
-                            <MudIcon Color="@Color.Success" Icon="@Icons.Material.Filled.Check"/>
-                        }
-                        <div class="ml-2">@context.Title</div>
-                    </div>
-                </MudTd>
-                <MudTd DataLabel="Message">
-                    @if (context.Link.IsSome)
+        <ToolBarContent>
+            <MudText Typo="Typo.h6">Health Checks</MudText>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh>Check</MudTh>
+            <MudTh>Message</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Check">
+                <div style="align-items: center; display: flex; flex-direction: row;">
+                    @if (context.Status == HealthCheckStatus.Fail)
                     {
-                        foreach (string link in context.Link)
-                        {
-                            <MudLink Href="@link">
-                                @context.Message
-                            </MudLink>
-                        }
+                        <MudIcon Color="@Color.Error" Icon="@Icons.Material.Filled.Error"/>
+                    }
+                    else if (context.Status == HealthCheckStatus.Warning)
+                    {
+                        <MudIcon Color="@Color.Warning" Icon="@Icons.Material.Filled.Warning"/>
+                    }
+                    else if (context.Status == HealthCheckStatus.Info)
+                    {
+                        <MudIcon Color="@Color.Info" Icon="@Icons.Material.Filled.Info"/>
                     }
                     else
                     {
-                        <MudText>
-                            @context.Message
-                        </MudText>
+                        <MudIcon Color="@Color.Success" Icon="@Icons.Material.Filled.Check"/>
                     }
-                </MudTd>
-            </RowTemplate>
-        </MudTable>
+                    <div class="ml-2">@context.Title</div>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Message">
+                @if (context.Link.IsSome)
+                {
+                    foreach (string link in context.Link)
+                    {
+                        <MudLink Href="@link">
+                            @context.Message
+                        </MudLink>
+                    }
+                }
+                else
+                {
+                    <MudText>
+                        @context.Message
+                    </MudText>
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
 </MudContainer>
 
 @code {
@@ -76,7 +76,7 @@
 
     private string _releaseNotes;
     private MudTable<HealthCheckResult> _table;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -131,7 +131,7 @@
     // ignore
         }
     }
-    
+
     private async Task<TableData<HealthCheckResult>> ServerReload(TableState state)
     {
         List<HealthCheckResult> healthCheckResults = await _mediator.Send(new GetAllHealthCheckResults(), _cts.Token);

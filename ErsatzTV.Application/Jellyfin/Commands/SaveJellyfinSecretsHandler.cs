@@ -6,7 +6,7 @@ using ErsatzTV.Core.Jellyfin;
 
 namespace ErsatzTV.Application.Jellyfin;
 
-public class SaveJellyfinSecretsHandler : MediatR.IRequestHandler<SaveJellyfinSecrets, Either<BaseError, Unit>>
+public class SaveJellyfinSecretsHandler : IRequestHandler<SaveJellyfinSecrets, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IJellyfinBackgroundServiceRequest> _channel;
     private readonly IJellyfinApiClient _jellyfinApiClient;

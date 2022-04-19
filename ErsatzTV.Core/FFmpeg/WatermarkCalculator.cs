@@ -11,7 +11,7 @@ public static class WatermarkCalculator
         int durationSeconds)
     {
         var result = new List<FadePoint>();
-        
+
         TimeSpan duration = outPoint - inPoint;
         DateTimeOffset itemFinishTime = itemStartTime + duration;
 
@@ -46,7 +46,7 @@ public static class WatermarkCalculator
                 result.Add(new FadeOutPoint(fadeInTime.Add(TimeSpan.FromSeconds(durationSeconds))));
             }
         }
-        
+
         // if we're seeking, subtract the seek from each item and return that
         foreach (TimeSpan ss in streamSeek)
         {
@@ -55,7 +55,7 @@ public static class WatermarkCalculator
 
         // trim points that have already passed
         result.RemoveAll(fp => fp.Time < TimeSpan.Zero);
-        
+
         // trim points that are past the end
         result.RemoveAll(fp => fp.Time >= outPoint);
 

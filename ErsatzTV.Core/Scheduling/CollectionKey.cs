@@ -5,6 +5,12 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class CollectionKey : Record<CollectionKey>
 {
+    public ProgramScheduleItemCollectionType CollectionType { get; set; }
+    public int? CollectionId { get; set; }
+    public int? MultiCollectionId { get; set; }
+    public int? SmartCollectionId { get; set; }
+    public int? MediaItemId { get; set; }
+
     public static CollectionKey ForScheduleItem(ProgramScheduleItem item) =>
         item.CollectionType switch
         {
@@ -40,7 +46,7 @@ public class CollectionKey : Record<CollectionKey>
             },
             _ => throw new ArgumentOutOfRangeException(nameof(item))
         };
-        
+
     public static CollectionKey ForFillerPreset(FillerPreset filler) =>
         filler.CollectionType switch
         {
@@ -76,10 +82,4 @@ public class CollectionKey : Record<CollectionKey>
             },
             _ => throw new ArgumentOutOfRangeException(nameof(filler))
         };
-        
-    public ProgramScheduleItemCollectionType CollectionType { get; set; }
-    public int? CollectionId { get; set; }
-    public int? MultiCollectionId { get; set; }
-    public int? SmartCollectionId { get; set; }
-    public int? MediaItemId { get; set; }
 }

@@ -8,8 +8,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class LibraryRepository : ILibraryRepository
 {
-    private readonly ILocalFileSystem _localFileSystem;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ILocalFileSystem _localFileSystem;
 
     public LibraryRepository(ILocalFileSystem localFileSystem, IDbContextFactory<TvContext> dbContextFactory)
     {
@@ -123,9 +123,8 @@ public class LibraryRepository : ILibraryRepository
         LibraryPath libraryPath,
         Option<LibraryFolder> knownFolder,
         string path,
-        string etag)
-    {
-        return await knownFolder.Match(
+        string etag) =>
+        await knownFolder.Match(
             async folder =>
             {
                 await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -145,7 +144,6 @@ public class LibraryRepository : ILibraryRepository
                     });
                 await dbContext.SaveChangesAsync();
             }).ToUnit();
-    }
 
     public async Task<Unit> CleanEtagsForLibraryPath(LibraryPath libraryPath)
     {

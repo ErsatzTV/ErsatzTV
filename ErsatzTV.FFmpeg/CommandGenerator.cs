@@ -5,10 +5,8 @@ namespace ErsatzTV.FFmpeg;
 
 public static class CommandGenerator
 {
-    public static IList<EnvironmentVariable> GenerateEnvironmentVariables(IEnumerable<IPipelineStep> pipelineSteps)
-    {
-        return pipelineSteps.SelectMany(ps => ps.EnvironmentVariables).ToList();
-    }
+    public static IList<EnvironmentVariable> GenerateEnvironmentVariables(IEnumerable<IPipelineStep> pipelineSteps) =>
+        pipelineSteps.SelectMany(ps => ps.EnvironmentVariables).ToList();
 
     public static IList<string> GenerateArguments(
         Option<VideoInputFile> maybeVideoInputFile,
@@ -28,7 +26,7 @@ public static class CommandGenerator
         foreach (VideoInputFile videoInputFile in maybeVideoInputFile)
         {
             includedPaths.Add(videoInputFile.Path);
-            
+
             foreach (IInputOption step in videoInputFile.InputOptions)
             {
                 arguments.AddRange(step.InputOptions(videoInputFile));
@@ -36,13 +34,13 @@ public static class CommandGenerator
 
             arguments.AddRange(new[] { "-i", videoInputFile.Path });
         }
-        
+
         foreach (AudioInputFile audioInputFile in maybeAudioInputFile)
         {
             if (!includedPaths.Contains(audioInputFile.Path))
             {
                 includedPaths.Add(audioInputFile.Path);
-                
+
                 foreach (IInputOption step in audioInputFile.InputOptions)
                 {
                     arguments.AddRange(step.InputOptions(audioInputFile));

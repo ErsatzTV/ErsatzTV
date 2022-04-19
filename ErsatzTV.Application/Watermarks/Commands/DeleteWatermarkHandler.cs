@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Application.Watermarks;
 
-public class DeleteWatermarkHandler : MediatR.IRequestHandler<DeleteWatermark, Either<BaseError, Unit>>
+public class DeleteWatermarkHandler : IRequestHandler<DeleteWatermark, Either<BaseError, Unit>>
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 

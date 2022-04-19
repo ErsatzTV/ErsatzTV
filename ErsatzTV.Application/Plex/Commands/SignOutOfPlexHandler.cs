@@ -6,7 +6,7 @@ using ErsatzTV.Core.Interfaces.Search;
 
 namespace ErsatzTV.Application.Plex;
 
-public class SignOutOfPlexHandler : MediatR.IRequestHandler<SignOutOfPlex, Either<BaseError, Unit>>
+public class SignOutOfPlexHandler : IRequestHandler<SignOutOfPlex, Either<BaseError, Unit>>
 {
     private readonly IEntityLocker _entityLocker;
     private readonly IMediaSourceRepository _mediaSourceRepository;

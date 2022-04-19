@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Encoder.Vaapi;
 public class EncoderHevcVaapi : EncoderBase
 {
     private readonly FrameState _currentState;
-    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
     private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
+    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
 
     public EncoderHevcVaapi(
         FrameState currentState,
@@ -17,12 +17,6 @@ public class EncoderHevcVaapi : EncoderBase
         _maybeWatermarkInputFile = maybeWatermarkInputFile;
         _maybeSubtitleInputFile = maybeSubtitleInputFile;
     }
-
-    public override FrameState NextState(FrameState currentState) => currentState with
-    {
-        VideoFormat = VideoFormat.Hevc
-        // don't change the frame data location
-    };
 
     public override string Name => "hevc_vaapi";
     public override StreamKind Kind => StreamKind.Video;
@@ -43,4 +37,10 @@ public class EncoderHevcVaapi : EncoderBase
             return string.Empty;
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState with
+    {
+        VideoFormat = VideoFormat.Hevc
+        // don't change the frame data location
+    };
 }

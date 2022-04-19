@@ -62,7 +62,7 @@ public static class JellyfinUrl
             .AppendPathSegment(pathSegment)
             .SetQueryParams(query);
     }
-        
+
     public static Url RelativeProxyForArtwork(string artwork)
     {
         string[] split = artwork.Replace("jellyfin://", string.Empty).Split('?');
@@ -78,5 +78,4 @@ public static class JellyfinUrl
             .AppendPathSegment(pathSegment)
             .SetQueryParams(query);
     }
-
 }

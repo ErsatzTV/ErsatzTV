@@ -11,10 +11,7 @@ public class SongRepository : ISongRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public SongRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public SongRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<Either<BaseError, MediaItemScanResult<Song>>> GetOrAdd(
         LibraryPath libraryPath,

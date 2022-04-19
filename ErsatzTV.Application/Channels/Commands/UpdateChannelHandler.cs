@@ -14,8 +14,8 @@ namespace ErsatzTV.Application.Channels;
 
 public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseError, ChannelViewModel>>
 {
-    private readonly ChannelWriter<ISubtitleWorkerRequest> _ffmpegWorkerChannel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ChannelWriter<ISubtitleWorkerRequest> _ffmpegWorkerChannel;
 
     public UpdateChannelHandler(
         ChannelWriter<ISubtitleWorkerRequest> ffmpegWorkerChannel,
@@ -69,7 +69,7 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
                     c.Artwork.Add(artwork);
                 });
         }
-            
+
         c.StreamingMode = update.StreamingMode;
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;

@@ -4,10 +4,7 @@ public class LibvaDriverNameVariable : IPipelineStep
 {
     private readonly string _driverName;
 
-    public LibvaDriverNameVariable(string driverName)
-    {
-        _driverName = driverName;
-    }
+    public LibvaDriverNameVariable(string driverName) => _driverName = driverName;
 
     public IList<EnvironmentVariable> EnvironmentVariables => new List<EnvironmentVariable>
     {

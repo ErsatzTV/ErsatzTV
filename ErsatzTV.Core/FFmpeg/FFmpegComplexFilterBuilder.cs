@@ -10,21 +10,21 @@ namespace ErsatzTV.Core.FFmpeg;
 public class FFmpegComplexFilterBuilder
 {
     private Option<TimeSpan> _audioDuration = None;
+    private bool _boxBlur;
     private bool _deinterlace;
     private Option<HardwareAccelerationKind> _hardwareAccelerationKind = None;
     private string _inputCodec;
+    private Option<List<FadePoint>> _maybeFadePoints = None;
     private bool _normalizeLoudness;
     private Option<IDisplaySize> _padToSize = None;
+    private string _pixelFormat;
     private IDisplaySize _resolution;
     private Option<IDisplaySize> _scaleToSize = None;
-    private Option<ChannelWatermark> _watermark;
-    private Option<List<FadePoint>> _maybeFadePoints = None;
-    private Option<int> _watermarkIndex;
-    private string _pixelFormat;
+    private Option<string> _subtitle;
     private string _videoDecoder;
     private FFmpegProfileVideoFormat _videoFormat;
-    private Option<string> _subtitle;
-    private bool _boxBlur;
+    private Option<ChannelWatermark> _watermark;
+    private Option<int> _watermarkIndex;
 
     public FFmpegComplexFilterBuilder WithHardwareAcceleration(HardwareAccelerationKind hardwareAccelerationKind)
     {
@@ -113,13 +113,13 @@ public class FFmpegComplexFilterBuilder
         {
             string effectiveFile = file;
             string fontsDir = FileSystemLayout.ResourcesCacheFolder;
-                
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 fontsDir = fontsDir
                     .Replace(@"\", @"/\")
                     .Replace(@":/", @"\\:/");
-                    
+
                 effectiveFile = effectiveFile
                     .Replace(@"\", @"/\")
                     .Replace(@":/", @"\\:/");
@@ -137,11 +137,17 @@ public class FFmpegComplexFilterBuilder
         return this;
     }
 
-    public Option<FFmpegComplexFilter> Build(bool videoOnly, int videoInput, int videoStreamIndex, int audioInput, Option<int> audioStreamIndex, bool isSong)
+    public Option<FFmpegComplexFilter> Build(
+        bool videoOnly,
+        int videoInput,
+        int videoStreamIndex,
+        int audioInput,
+        Option<int> audioStreamIndex,
+        bool isSong)
     {
         // since .Contains is used on pixel format, we need it to be not null
         _pixelFormat ??= string.Empty;
-            
+
         var complexFilter = new StringBuilder();
 
         string videoLabel = $"{videoInput}:{(isSong ? "v" : videoStreamIndex.ToString())}";
@@ -167,7 +173,7 @@ public class FFmpegComplexFilterBuilder
         };
 
         bool nvencDeinterlace = acceleration == HardwareAccelerationKind.Nvenc && _videoDecoder == "mpeg2_cuvid" &&
-                                _deinterlace; 
+                                _deinterlace;
         // mpeg2_cuvid will handle deinterlace and is "not" a hardware decode
         if (nvencDeinterlace)
         {
@@ -179,7 +185,7 @@ public class FFmpegComplexFilterBuilder
         var videoFilterQueue = new List<string>();
         var watermarkPreprocess = new List<string>();
         string watermarkOverlay = string.Empty;
-            
+
         if (_normalizeLoudness)
         {
             audioFilterQueue.Add("loudnorm=I=-16:TP=-1.5:LRA=11");
@@ -256,7 +262,8 @@ public class FFmpegComplexFilterBuilder
             videoFilterQueue.Add("format=p010le,format=nv12|vaapi,hwupload");
         }
 
-        if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat == "yuv444p" && h264hevc.Contains(_inputCodec))
+        if (acceleration == HardwareAccelerationKind.Vaapi && _pixelFormat == "yuv444p" &&
+            h264hevc.Contains(_inputCodec))
         {
             videoFilterQueue.Add("format=nv12|vaapi,hwupload");
         }
@@ -375,7 +382,7 @@ public class FFmpegComplexFilterBuilder
                 }
             }
         }
-            
+
         string outputPixelFormat = null;
         if (!usesSoftwareFilters && string.IsNullOrWhiteSpace(watermarkOverlay))
         {
@@ -413,7 +420,8 @@ public class FFmpegComplexFilterBuilder
                         $"hwupload_cuda,scale_cuda={size.Width}:{size.Height}",
                     HardwareAccelerationKind.Nvenc => $"scale_cuda={size.Width}:{size.Height}",
                     HardwareAccelerationKind.Vaapi => $"scale_vaapi=format=nv12:w={size.Width}:h={size.Height}",
-                    _ when videoOnly => $"scale={size.Width}:{size.Height}:force_original_aspect_ratio=increase,crop={size.Width}:{size.Height}",
+                    _ when videoOnly =>
+                        $"scale={size.Width}:{size.Height}:force_original_aspect_ratio=increase,crop={size.Width}:{size.Height}",
                     _ => $"scale={size.Width}:{size.Height}:flags=fast_bilinear"
                 };
 
@@ -439,7 +447,7 @@ public class FFmpegComplexFilterBuilder
         videoFilterQueue.AddRange(softwareFilterQueue);
 
         _padToSize.IfSome(size => videoFilterQueue.Add($"pad={size.Width}:{size.Height}:(ow-iw)/2:(oh-ih)/2"));
-            
+
         if (acceleration == HardwareAccelerationKind.Nvenc && _watermark.IsSome)
         {
             if (_scaleToSize.IsSome)
@@ -462,7 +470,7 @@ public class FFmpegComplexFilterBuilder
         {
             videoFilterQueue.Add(subtitle);
         }
-            
+
         if (usesSoftwareFilters && acceleration != HardwareAccelerationKind.None &&
             string.IsNullOrWhiteSpace(watermarkOverlay))
         {
@@ -511,10 +519,10 @@ public class FFmpegComplexFilterBuilder
                     complexFilter.Append("[vt];");
                 }
 
-                var watermarkLabel = $"[{audioInput+1}:v]";
+                string watermarkLabel = $"[{audioInput + 1}:v]";
                 foreach (int index in _watermarkIndex)
                 {
-                    watermarkLabel = $"[{audioInput+1}:{index}]";
+                    watermarkLabel = $"[{audioInput + 1}:{index}]";
                 }
 
                 if (watermarkPreprocess.Count > 0)
@@ -548,7 +556,7 @@ public class FFmpegComplexFilterBuilder
                     }
                 }
             }
-                
+
             videoLabel = "[v]";
             complexFilter.Append(videoLabel);
         }

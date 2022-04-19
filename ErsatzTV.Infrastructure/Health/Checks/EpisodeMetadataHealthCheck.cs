@@ -29,7 +29,7 @@ public class EpisodeMetadataHealthCheck : BaseHealthCheck, IEpisodeMetadataHealt
         {
             var paths = episodes.SelectMany(e => e.MediaVersions.Map(mv => mv.MediaFiles))
                 .Flatten()
-                .Bind(f => Optional<string>(Path.GetDirectoryName(f.Path)))
+                .Bind(f => Optional(Path.GetDirectoryName(f.Path)))
                 .Distinct()
                 .Take(5)
                 .ToList();

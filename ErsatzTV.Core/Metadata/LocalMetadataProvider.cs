@@ -17,11 +17,11 @@ public class LocalMetadataProvider : ILocalMetadataProvider
     private static readonly XmlSerializer ArtistSerializer = new(typeof(ArtistNfo));
     private static readonly XmlSerializer MusicVideoSerializer = new(typeof(MusicVideoNfo));
     private readonly IArtistRepository _artistRepository;
-    private readonly IEpisodeNfoReader _episodeNfoReader;
-    private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly IClient _client;
+    private readonly IEpisodeNfoReader _episodeNfoReader;
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<LocalMetadataProvider> _logger;
 
     private readonly IMetadataRepository _metadataRepository;
@@ -1143,14 +1143,14 @@ public class LocalMetadataProvider : ILocalMetadataProvider
 
         return result;
     }
-        
+
     private static IEnumerable<string> SplitGenres(string genre)
     {
         char[] delimiters = new[] { '/', '|', ';', '\\' }
             .Filter(d => genre.IndexOf(d, StringComparison.OrdinalIgnoreCase) != -1)
             .DefaultIfEmpty(',')
             .ToArray();
-            
+
         return genre.Split(delimiters, StringSplitOptions.RemoveEmptyEntries)
             .Where(i => !string.IsNullOrWhiteSpace(i))
             .Select(i => i.Trim());

@@ -19,7 +19,7 @@ internal static class Mapper
             showMetadata.SortTitle,
             GetPoster(showMetadata, maybeJellyfin, maybeEmby),
             showMetadata.Show.State);
-        
+
     internal static TelevisionSeasonCardViewModel ProjectToViewModel(
         Season season,
         Option<JellyfinMediaSource> maybeJellyfin,

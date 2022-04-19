@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Destructurama;
 using ErsatzTV.Core;
 using Serilog;
@@ -10,7 +11,7 @@ public class Program
 
     static Program()
     {
-        string executablePath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+        string executablePath = Process.GetCurrentProcess().MainModule.FileName;
         string executable = Path.GetFileNameWithoutExtension(executablePath);
 
         IConfigurationBuilder builder = new ConfigurationBuilder();

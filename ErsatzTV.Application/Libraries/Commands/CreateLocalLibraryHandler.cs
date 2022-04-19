@@ -12,9 +12,9 @@ namespace ErsatzTV.Application.Libraries;
 public class CreateLocalLibraryHandler : LocalLibraryHandlerBase,
     IRequestHandler<CreateLocalLibrary, Either<BaseError, LocalLibraryViewModel>>
 {
-    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
-    private readonly IEntityLocker _entityLocker;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IEntityLocker _entityLocker;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public CreateLocalLibraryHandler(
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
@@ -41,7 +41,7 @@ public class CreateLocalLibraryHandler : LocalLibraryHandlerBase,
     {
         await dbContext.LocalLibraries.AddAsync(localLibrary);
         await dbContext.SaveChangesAsync();
-            
+
         if (_entityLocker.LockLibrary(localLibrary.Id))
         {
             await _workerChannel.WriteAsync(new ForceScanLocalLibrary(localLibrary.Id));

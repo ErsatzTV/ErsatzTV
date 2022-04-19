@@ -22,8 +22,11 @@ public class GetFuturePlayoutItemsByIdHandler : IRequestHandler<GetFuturePlayout
         DateTime now = DateTimeOffset.Now.UtcDateTime;
 
         int totalCount = await dbContext.PlayoutItems
-            .CountAsync(i => i.Finish >= now && i.PlayoutId == request.PlayoutId && (request.ShowFiller || i.FillerKind == FillerKind.None), cancellationToken);
-            
+            .CountAsync(
+                i => i.Finish >= now && i.PlayoutId == request.PlayoutId &&
+                     (request.ShowFiller || i.FillerKind == FillerKind.None),
+                cancellationToken);
+
         List<PlayoutItemViewModel> page = await dbContext.PlayoutItems
             .Include(i => i.MediaItem)
             .ThenInclude(mi => (mi as Movie).MovieMetadata)

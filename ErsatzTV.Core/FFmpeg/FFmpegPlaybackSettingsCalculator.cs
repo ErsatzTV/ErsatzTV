@@ -62,7 +62,7 @@ public class FFmpegPlaybackSettingsCalculator
             FormatFlags = streamingMode switch
             {
                 StreamingMode.HttpLiveStreamingSegmenter => SegmenterFormatFlags,
-                _ => CommonFormatFlags,
+                _ => CommonFormatFlags
             },
             RealtimeOutput = streamingMode switch
             {
@@ -170,9 +170,8 @@ public class FFmpegPlaybackSettingsCalculator
         return result;
     }
 
-    public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile)
-    {
-        return new FFmpegPlaybackSettings
+    public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile) =>
+        new FFmpegPlaybackSettings
         {
             HardwareAcceleration = HardwareAccelerationKind.None,
             ThreadCount = ffmpegProfile.ThreadCount,
@@ -180,7 +179,6 @@ public class FFmpegPlaybackSettingsCalculator
             VideoFormat = ffmpegProfile.VideoFormat,
             AudioFormat = ffmpegProfile.AudioFormat
         };
-    }
 
     private static bool NeedToScale(FFmpegProfile ffmpegProfile, MediaVersion version) =>
         IsIncorrectSize(ffmpegProfile.Resolution, version) ||

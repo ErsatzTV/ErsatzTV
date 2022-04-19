@@ -1,8 +1,8 @@
 ﻿@page "/playouts"
 @using ErsatzTV.Application.Playouts
 @using ErsatzTV.Application.Configuration
-@implements IDisposable
 @using ErsatzTV.Core.Scheduling
+@implements IDisposable
 @inject IDialogService _dialog
 @inject IMediator _mediator
 
@@ -197,7 +197,7 @@
         List<PlayoutNameViewModel> playouts = await _mediator.Send(new GetAllPlayouts(), _cts.Token);
         IOrderedEnumerable<PlayoutNameViewModel> sorted = playouts.OrderBy(p => decimal.Parse(p.ChannelNumber));
 
-        // TODO: properly page this data
+    // TODO: properly page this data
         return new TableData<PlayoutNameViewModel>
         {
             TotalItems = playouts.Count,

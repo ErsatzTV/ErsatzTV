@@ -101,7 +101,7 @@ public class EntityLocker : IEntityLocker
 
         return false;
     }
-        
+
     public bool LockTrakt()
     {
         if (!_trakt)

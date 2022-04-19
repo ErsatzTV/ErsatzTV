@@ -9,7 +9,7 @@ public class MultiCollectionConfiguration : IEntityTypeConfiguration<MultiCollec
     public void Configure(EntityTypeBuilder<MultiCollection> builder)
     {
         builder.ToTable("MultiCollection");
-            
+
         builder.HasMany(m => m.Collections)
             .WithMany(m => m.MultiCollections)
             .UsingEntity<MultiCollectionItem>(

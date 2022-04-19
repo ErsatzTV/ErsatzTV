@@ -11,10 +11,7 @@ public class MetadataRepository : IMetadataRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public MetadataRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<bool> RemoveActor(Actor actor)
     {
@@ -541,7 +538,7 @@ public class MetadataRepository : IMetadataRepository
 
         return false;
     }
-    
+
     public async Task<bool> RemoveGenre(Genre genre)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

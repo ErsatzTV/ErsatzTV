@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public record AddSeasonToCollection(int CollectionId, int SeasonId) : MediatR.IRequest<Either<BaseError, Unit>>;
+public record AddSeasonToCollection(int CollectionId, int SeasonId) : IRequest<Either<BaseError, Unit>>;

@@ -15,7 +15,7 @@ public class ShuffledMediaCollectionEnumeratorTests
         new GroupedMediaItem(new MediaItem { Id = 2 }, new List<MediaItem>()),
         new GroupedMediaItem(new MediaItem { Id = 3 }, new List<MediaItem>())
     };
-        
+
     [Test]
     public void Peek_Zero_Should_Match_Current()
     {
@@ -30,7 +30,7 @@ public class ShuffledMediaCollectionEnumeratorTests
         peek.ValueUnsafe().Id.Should().Be(1);
         current.ValueUnsafe().Id.Should().Be(1);
     }
-        
+
     [Test]
     public void Peek_One_Should_Match_Next()
     {
@@ -47,7 +47,7 @@ public class ShuffledMediaCollectionEnumeratorTests
         peek.ValueUnsafe().Id.Should().Be(2);
         next.ValueUnsafe().Id.Should().Be(2);
     }
-        
+
     [Test]
     public void Peek_Two_Should_Match_NextNext()
     {
@@ -65,7 +65,7 @@ public class ShuffledMediaCollectionEnumeratorTests
         peek.ValueUnsafe().Id.Should().Be(3);
         next.ValueUnsafe().Id.Should().Be(3);
     }
-        
+
     [Test]
     public void Peek_Three_Should_Match_NextNextNext()
     {

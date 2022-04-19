@@ -42,7 +42,7 @@ public static class StringExtensions
     public static EncodedQueryResult EncodeQuery(this string query)
     {
         string normalizedQuery = Normalize(query);
-            
+
         string encoded = Uri.EscapeDataString(normalizedQuery);
 
         // TODO: remove this on dotnet 6
@@ -53,13 +53,11 @@ public static class StringExtensions
             : new EncodedQueryResult("b64query", WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(query)));
     }
 
-    public record EncodedQueryResult(string Key, string Value);
-
-    private static string Normalize(string s)
-    {
+    private static string Normalize(string s) =>
         // normalize single and double quotes
-        return !string.IsNullOrEmpty(s)
+        !string.IsNullOrEmpty(s)
             ? s.Replace('\u2018', '\'').Replace('\u2019', '\'').Replace('\u201c', '\"').Replace('\u201d', '\"')
             : s;
-    }
+
+    public record EncodedQueryResult(string Key, string Value);
 }

@@ -50,7 +50,7 @@ public class ConfigElementRepository : IConfigElementRepository
     }
 
     public Task<Option<T>> GetValue<T>(ConfigElementKey key) =>
-        Get(key).MapT(ce => (T) Convert.ChangeType(ce.Value, typeof(T)));
+        Get(key).MapT(ce => (T)Convert.ChangeType(ce.Value, typeof(T)));
 
     public async Task Delete(ConfigElement configElement)
     {

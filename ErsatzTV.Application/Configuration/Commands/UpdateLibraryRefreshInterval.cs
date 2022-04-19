@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Configuration;
 
-public record UpdateLibraryRefreshInterval(int LibraryRefreshInterval) : MediatR.IRequest<Either<BaseError, Unit>>;
+public record UpdateLibraryRefreshInterval(int LibraryRefreshInterval) : IRequest<Either<BaseError, Unit>>;

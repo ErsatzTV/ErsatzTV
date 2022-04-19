@@ -14,10 +14,7 @@ public class MovieRepository : IMovieRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MovieRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public MovieRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<bool> AllMoviesExist(List<int> movieIds)
     {

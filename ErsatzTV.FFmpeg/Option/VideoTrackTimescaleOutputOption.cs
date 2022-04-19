@@ -4,10 +4,7 @@ public class VideoTrackTimescaleOutputOption : OutputOption
 {
     private readonly int _timeScale;
 
-    public VideoTrackTimescaleOutputOption(int timeScale)
-    {
-        _timeScale = timeScale;
-    }
+    public VideoTrackTimescaleOutputOption(int timeScale) => _timeScale = timeScale;
 
     public override IList<string> OutputOptions => new List<string> { "-video_track_timescale", _timeScale.ToString() };
 

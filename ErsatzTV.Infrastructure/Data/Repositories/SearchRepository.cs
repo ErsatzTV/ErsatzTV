@@ -10,10 +10,7 @@ public class SearchRepository : ISearchRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public SearchRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public SearchRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<List<int>> GetItemIdsToIndex()
     {

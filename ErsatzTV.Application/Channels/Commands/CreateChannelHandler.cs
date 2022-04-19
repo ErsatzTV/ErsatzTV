@@ -21,7 +21,7 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Channel> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => PersistChannel(dbContext, c));
+        return await LanguageExtensions.Apply(validation, c => PersistChannel(dbContext, c));
     }
 
     private static async Task<CreateChannelResult> PersistChannel(TvContext dbContext, Channel channel)
@@ -106,7 +106,9 @@ public class CreateChannelHandler : IRequestHandler<CreateChannel, Either<BaseEr
                     ci => string.Equals(ci.ThreeLetterISOLanguageName, lc, StringComparison.OrdinalIgnoreCase)))
             .ToValidation<BaseError>("Preferred subtitle language code is invalid");
 
-    private static async Task<Validation<BaseError, string>> ValidateNumber(TvContext dbContext, CreateChannel createChannel)
+    private static async Task<Validation<BaseError, string>> ValidateNumber(
+        TvContext dbContext,
+        CreateChannel createChannel)
     {
         Option<Channel> maybeExistingChannel = await dbContext.Channels
             .SelectOneAsync(c => c.Number, c => c.Number == createChannel.Number);

@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Plex;
 
-public record SignOutOfPlex : MediatR.IRequest<Either<BaseError, Unit>>;
+public record SignOutOfPlex : IRequest<Either<BaseError, Unit>>;

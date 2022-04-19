@@ -11,10 +11,7 @@ public class OtherVideoRepository : IOtherVideoRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public OtherVideoRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public OtherVideoRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> GetOrAdd(
         LibraryPath libraryPath,

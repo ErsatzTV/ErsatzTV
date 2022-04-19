@@ -19,15 +19,15 @@ namespace ErsatzTV.Application.Streaming;
 
 public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<GetPlayoutItemProcessByChannelNumber>
 {
-    private readonly IEmbyPathReplacementService _embyPathReplacementService;
-    private readonly IMediaCollectionRepository _mediaCollectionRepository;
-    private readonly ITelevisionRepository _televisionRepository;
     private readonly IArtistRepository _artistRepository;
-    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
+    private readonly IEmbyPathReplacementService _embyPathReplacementService;
     private readonly IFFmpegProcessService _ffmpegProcessService;
+    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly ILocalFileSystem _localFileSystem;
+    private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISongVideoGenerator _songVideoGenerator;
+    private readonly ITelevisionRepository _televisionRepository;
 
     public GetPlayoutItemProcessByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -179,7 +179,8 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             var result = new PlayoutItemProcessModel(
                 process,
-                playoutItemWithPath.PlayoutItem.FinishOffset - (request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now),
+                playoutItemWithPath.PlayoutItem.FinishOffset -
+                (request.StartAtZero ? playoutItemWithPath.PlayoutItem.StartOffset : now),
                 playoutItemWithPath.PlayoutItem.FinishOffset);
 
             return Right<BaseError, PlayoutItemProcessModel>(result);
@@ -188,12 +189,12 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         foreach (BaseError error in maybePlayoutItem.LeftToSeq())
         {
             Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
-                        .Filter(pi => pi.Playout.ChannelId == channel.Id)
-                        .Filter(pi => pi.Start > now.UtcDateTime)
-                        .OrderBy(pi => pi.Start)
-                        .FirstOrDefaultAsync(cancellationToken)
-                        .Map(Optional)
-                        .MapT(pi => pi.StartOffset - now);
+                .Filter(pi => pi.Playout.ChannelId == channel.Id)
+                .Filter(pi => pi.Start > now.UtcDateTime)
+                .OrderBy(pi => pi.Start)
+                .FirstOrDefaultAsync(cancellationToken)
+                .Map(Optional)
+                .MapT(pi => pi.StartOffset - now);
 
             DateTimeOffset finish = maybeDuration.Match(d => now.Add(d), () => now);
 
@@ -283,14 +284,14 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
 
             // TODO: shuffle? does it really matter since we loop anyway
             MediaItem item = items[new Random().Next(items.Count)];
-                
+
             Option<TimeSpan> maybeDuration = await dbContext.PlayoutItems
-                        .Filter(pi => pi.Playout.ChannelId == channel.Id)
-                        .Filter(pi => pi.Start > now.UtcDateTime)
-                        .OrderBy(pi => pi.Start)
-                        .FirstOrDefaultAsync()
-                        .Map(Optional)
-                        .MapT(pi => pi.StartOffset - now);
+                .Filter(pi => pi.Playout.ChannelId == channel.Id)
+                .Filter(pi => pi.Start > now.UtcDateTime)
+                .OrderBy(pi => pi.Start)
+                .FirstOrDefaultAsync()
+                .Map(Optional)
+                .MapT(pi => pi.StartOffset - now);
 
             MediaVersion version = item.GetHeadVersion();
 
@@ -324,7 +325,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 InPoint = TimeSpan.Zero,
                 OutPoint = version.Duration
             };
-                
+
             return await ValidatePlayoutItemPath(playoutItem);
         }
 
