@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
@@ -481,19 +482,34 @@ public class MetadataRepository : IMetadataRepository
             .Map(result => result > 0);
     }
 
-    public async Task<bool> UpdateSubtitles(EpisodeMetadata metadata, List<Subtitle> subtitles)
+    public async Task<bool> UpdateSubtitles(Metadata metadata, List<Subtitle> subtitles)
     {
         int metadataId = metadata.Id;
 
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-        Option<EpisodeMetadata> maybeMetadata = await dbContext.EpisodeMetadata
-            .Include(v => v.Subtitles)
-            .OrderBy(v => v.Id)
-            .SingleOrDefaultAsync(v => v.Id == metadataId)
-            .Map(Optional);
+        Option<Metadata> maybeMetadata = metadata switch
+        {
+            EpisodeMetadata => await dbContext.EpisodeMetadata
+                .Include(em => em.Subtitles)
+                .SelectOneAsync(em => em.Id, em => em.Id == metadataId)
+                .MapT(em => (Metadata)em),
+            MovieMetadata => await dbContext.MovieMetadata
+                .Include(mm => mm.Subtitles)
+                .SelectOneAsync(mm => mm.Id, mm => mm.Id == metadataId)
+                .MapT(mm => (Metadata)mm),
+            MusicVideoMetadata => await dbContext.MusicVideoMetadata
+                .Include(mvm => mvm.Subtitles)
+                .SelectOneAsync(mvm => mvm.Id, mm => mm.Id == metadataId)
+                .MapT(mvm => (Metadata)mvm),
+            OtherVideoMetadata => await dbContext.OtherVideoMetadata
+                .Include(ovm => ovm.Subtitles)
+                .SelectOneAsync(ovm => ovm.Id, mm => mm.Id == metadataId)
+                .MapT(ovm => (Metadata)ovm),
+            _ => None
+        };
 
-        foreach (EpisodeMetadata existing in maybeMetadata)
+        foreach (Metadata existing in maybeMetadata)
         {
             var toAdd = subtitles.Filter(s => existing.Subtitles.All(es => es.StreamIndex != s.StreamIndex)).ToList();
             var toRemove = existing.Subtitles.Filter(es => subtitles.All(s => s.StreamIndex != es.StreamIndex))

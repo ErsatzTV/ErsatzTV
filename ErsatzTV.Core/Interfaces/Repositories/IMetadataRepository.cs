@@ -35,5 +35,5 @@ public interface IMetadataRepository
     Task<bool> AddGuid(Domain.Metadata metadata, MetadataGuid guid);
     Task<bool> RemoveDirector(Director director);
     Task<bool> RemoveWriter(Writer writer);
-    Task<bool> UpdateSubtitles(EpisodeMetadata metadata, List<Subtitle> subtitles);
+    Task<bool> UpdateSubtitles(Domain.Metadata metadata, List<Subtitle> subtitles);
 }
