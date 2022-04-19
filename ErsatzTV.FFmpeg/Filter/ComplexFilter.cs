@@ -12,6 +12,7 @@ public class ComplexFilter : IPipelineStep
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
     private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
     private readonly FrameSize _resolution;
+    private readonly string _fontsDir;
 
     public ComplexFilter(
         FrameState currentState,
@@ -20,7 +21,8 @@ public class ComplexFilter : IPipelineStep
         Option<AudioInputFile> maybeAudioInputFile,
         Option<WatermarkInputFile> maybeWatermarkInputFile,
         Option<SubtitleInputFile> maybeSubtitleInputFile,
-        FrameSize resolution)
+        FrameSize resolution,
+        string fontsDir)
     {
         _currentState = currentState;
         _ffmpegState = ffmpegState;
@@ -29,6 +31,7 @@ public class ComplexFilter : IPipelineStep
         _maybeWatermarkInputFile = maybeWatermarkInputFile;
         _maybeSubtitleInputFile = maybeSubtitleInputFile;
         _resolution = resolution;
+        _fontsDir = fontsDir;
     }
 
     private IList<string> Arguments()
@@ -146,22 +149,30 @@ public class ComplexFilter : IPipelineStep
 
                     // vaapi uses software overlay and needs to upload
                     // videotoolbox seems to require a hwupload for hevc
-                    // also wait to upload videotoolbox if a subtitle overlay is coming
-                    string uploadFilter = string.Empty;
-                    if (_maybeSubtitleInputFile.Map(s => s.IsImageBased).IfNone(false) == false &&
+                    // also wait to upload if a subtitle overlay is coming
+                    string uploadDownloadFilter = string.Empty;
+                    if (_maybeSubtitleInputFile.IsNone &&
                         (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi ||
                          _ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
                          _currentState.VideoFormat == VideoFormat.Hevc))
                     {
-                        uploadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
+                        uploadDownloadFilter = new HardwareUploadFilter(_ffmpegState).Filter;
                     }
 
-                    if (!string.IsNullOrWhiteSpace(uploadFilter))
+                    if (_maybeSubtitleInputFile.Map(s => !s.IsImageBased).IfNone(false) &&
+                        _ffmpegState.HardwareAccelerationMode != HardwareAccelerationMode.Vaapi &&
+                        _ffmpegState.HardwareAccelerationMode != HardwareAccelerationMode.VideoToolbox)
                     {
-                        uploadFilter = "," + uploadFilter;
+                        uploadDownloadFilter = new HardwareDownloadFilter(_currentState).Filter;
                     }
-                    
-                    watermarkOverlayFilterComplex = $"{tempVideoLabel}{watermarkLabel}{overlayFilter.Filter}{uploadFilter}[vf]";
+
+                    if (!string.IsNullOrWhiteSpace(uploadDownloadFilter))
+                    {
+                        uploadDownloadFilter = "," + uploadDownloadFilter;
+                    }
+
+                    watermarkOverlayFilterComplex =
+                        $"{tempVideoLabel}{watermarkLabel}{overlayFilter.Filter}{uploadDownloadFilter}[vf]";
                     
                     // change the mapped label
                     videoLabel = "[vf]";
@@ -189,10 +200,23 @@ public class ComplexFilter : IPipelineStep
                     subtitleLabel = $"[{subtitleLabel}]";
                 }
 
-                IPipelineFilterStep overlayFilter =
-                    AvailableSubtitleOverlayFilters.ForAcceleration(_ffmpegState.HardwareAccelerationMode);
+                string filter;
+                if (subtitleInputFile.IsImageBased)
+                {
+                    IPipelineFilterStep overlayFilter =
+                        AvailableSubtitleOverlayFilters.ForAcceleration(
+                            _ffmpegState.HardwareAccelerationMode,
+                            _currentState);
+                    filter = overlayFilter.Filter;
+                }
+                else
+                {
+                    subtitleLabel = string.Empty;
+                    var subtitlesFilter = new SubtitlesFilter(_fontsDir, subtitleInputFile);
+                    filter = subtitlesFilter.Filter;
+                }
 
-                if (overlayFilter.Filter != string.Empty)
+                if (filter != string.Empty)
                 {
                     string tempVideoLabel = string.IsNullOrWhiteSpace(videoFilterComplex) &&
                                             string.IsNullOrWhiteSpace(watermarkFilterComplex)
@@ -214,8 +238,7 @@ public class ComplexFilter : IPipelineStep
                         uploadFilter = "," + uploadFilter;
                     }
 
-                    subtitleOverlayFilterComplex =
-                        $"{tempVideoLabel}{subtitleLabel}{overlayFilter.Filter}{uploadFilter}[vst]";
+                    subtitleOverlayFilterComplex = $"{tempVideoLabel}{subtitleLabel}{filter}{uploadFilter}[vst]";
 
                     // change the mapped label
                     videoLabel = "[vst]";

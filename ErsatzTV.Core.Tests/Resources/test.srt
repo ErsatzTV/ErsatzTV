@@ -1,0 +1,4 @@
+﻿1
+00:01:00,400 --> 00:03:00,300
+This is an example of
+a subtitle.

@@ -15,6 +15,8 @@ public class MediaStream
     public bool AttachedPic { get; set; }
     public string PixelFormat { get; set; }
     public int BitsPerRawSample { get; set; }
+    public string FileName { get; set; }
+    public string MimeType { get; set; }
     public int MediaVersionId { get; set; }
     public MediaVersion MediaVersion { get; set; }
 }

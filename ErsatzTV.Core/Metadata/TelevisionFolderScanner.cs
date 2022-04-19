@@ -1,5 +1,6 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -236,6 +237,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         .MapT(_ => episode))
                 .BindT(UpdateMetadata)
                 .BindT(e => UpdateThumbnail(e, cancellationToken))
+                .BindT(e => UpdateSubtitles(e, cancellationToken))
                 .BindT(e => FlagNormal(new MediaItemScanResult<Episode>(e)))
                 .MapT(r => r.Item);
 
@@ -426,6 +428,48 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                             cancellationToken);
                     }
                 });
+
+            return episode;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+    
+    private async Task<Either<BaseError, Episode>> UpdateSubtitles(Episode episode, CancellationToken _)
+    {
+        try
+        {
+            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
+            {
+                MediaVersion version = episode.GetHeadVersion();
+                var subtitleStreams = version.Streams
+                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+                    .ToList();
+
+                var subtitles = new List<Subtitle>();
+                
+                foreach (MediaStream stream in subtitleStreams)
+                {
+                    var subtitle = new Subtitle
+                    {
+                        Codec = stream.Codec,
+                        Default = stream.Default,
+                        Forced = stream.Forced,
+                        Language = stream.Language,
+                        StreamIndex = stream.Index,
+                        SubtitleKind = SubtitleKind.Embedded,
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = DateTime.UtcNow
+                    };
+
+                    subtitles.Add(subtitle);
+                }
+
+                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+            }
 
             return episode;
         }

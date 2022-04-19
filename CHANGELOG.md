@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Add support for burning in embedded text subtitles
 
 ## [0.5.1-beta] - 2022-04-17
 ### Fixed

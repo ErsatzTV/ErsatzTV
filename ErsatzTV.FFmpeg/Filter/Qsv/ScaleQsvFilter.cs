@@ -49,10 +49,10 @@ public class ScaleQsvFilter : BaseFilter
             string initialPixelFormat = _currentState.PixelFormat.Match(pf => pf.FFmpegName, FFmpegFormat.NV12);
             if (!string.IsNullOrWhiteSpace(scale))
             {
-                return $"format={initialPixelFormat},hwupload=extra_hw_frames=64,{scale}";
+                return $"format={initialPixelFormat},hwupload=extra_hw_frames=128,{scale}";
             }
 
-            return $"format={initialPixelFormat},hwupload=extra_hw_frames=64";
+            return $"format={initialPixelFormat},hwupload=extra_hw_frames=128";
         }
     }
 

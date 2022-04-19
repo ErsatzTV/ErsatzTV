@@ -1,5 +1,6 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -16,6 +17,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly ILogger<MusicVideoFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly IClient _client;
@@ -52,6 +54,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     {
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
+        _metadataRepository = metadataRepository;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _artistRepository = artistRepository;
@@ -88,8 +91,14 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             Either<BaseError, MediaItemScanResult<Artist>> maybeArtist =
                 await FindOrCreateArtist(libraryPath.Id, artistFolder)
                     .BindT(artist => UpdateMetadataForArtist(artist, artistFolder))
-                    .BindT(artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.Thumbnail, cancellationToken))
-                    .BindT(artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.FanArt, cancellationToken));
+                    .BindT(
+                        artist => UpdateArtworkForArtist(
+                            artist,
+                            artistFolder,
+                            ArtworkKind.Thumbnail,
+                            cancellationToken))
+                    .BindT(
+                        artist => UpdateArtworkForArtist(artist, artistFolder, ArtworkKind.FanArt, cancellationToken));
 
             await maybeArtist.Match(
                 async result =>
@@ -281,6 +290,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     .BindT(musicVideo => UpdateStatistics(musicVideo, ffmpegPath, ffprobePath))
                     .BindT(UpdateMetadata)
                     .BindT(result => UpdateThumbnail(result, cancellationToken))
+                    .BindT(result => UpdateSubtitles(result, cancellationToken))
                     .BindT(FlagNormal);
 
                 await maybeMusicVideo.Match(
@@ -394,6 +404,52 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     MusicVideoMetadata metadata = musicVideo.MusicVideoMetadata.Head();
                     await RefreshArtwork(thumbnailFile, metadata, ArtworkKind.Thumbnail, None, None, cancellationToken);
                 });
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+    
+    private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateSubtitles(
+        MediaItemScanResult<MusicVideo> result,
+        CancellationToken _)
+    {
+        try
+        {
+            MusicVideo musicVideo = result.Item;
+
+            foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata)
+            {
+                MediaVersion version = musicVideo.GetHeadVersion();
+                var subtitleStreams = version.Streams
+                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+                    .ToList();
+
+                var subtitles = new List<Subtitle>();
+
+                foreach (MediaStream stream in subtitleStreams)
+                {
+                    var subtitle = new Subtitle
+                    {
+                        Codec = stream.Codec,
+                        Default = stream.Default,
+                        Forced = stream.Forced,
+                        Language = stream.Language,
+                        StreamIndex = stream.Index,
+                        SubtitleKind = SubtitleKind.Embedded,
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = DateTime.UtcNow
+                    };
+
+                    subtitles.Add(subtitle);
+                }
+
+                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+            }
 
             return result;
         }

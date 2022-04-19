@@ -12,6 +12,7 @@ public static class AvailableDecoders
         FrameState currentState,
         FrameState desiredState,
         Option<WatermarkInputFile> watermarkInputFile,
+        Option<SubtitleInputFile> subtitleInputFile,
         ILogger logger)
     {
         return (ffmpegState.HardwareAccelerationMode, currentState.VideoFormat,
@@ -52,9 +53,9 @@ public static class AvailableDecoders
                 (HardwareAccelerationMode.Qsv, VideoFormat.Vc1, _) => new DecoderVc1Qsv(),
                 (HardwareAccelerationMode.Qsv, VideoFormat.Vp9, _) => new DecoderVp9Qsv(),
 
-                // vaapi should use implicit decoders when scaling or no watermark
+                // vaapi should use implicit decoders when scaling or no watermark/subtitles
                 // otherwise, fall back to software decoders
-                (HardwareAccelerationMode.Vaapi, _, _) when watermarkInputFile.IsNone ||
+                (HardwareAccelerationMode.Vaapi, _, _) when (watermarkInputFile.IsNone && subtitleInputFile.IsNone) ||
                                                             (currentState.ScaledSize != desiredState.ScaledSize) =>
                     new DecoderVaapi(),
 
