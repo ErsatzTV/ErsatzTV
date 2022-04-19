@@ -149,9 +149,9 @@ public class ComplexFilter : IPipelineStep
 
                     // vaapi uses software overlay and needs to upload
                     // videotoolbox seems to require a hwupload for hevc
-                    // also wait to upload videotoolbox if a subtitle overlay is coming
+                    // also wait to upload if a subtitle overlay is coming
                     string uploadDownloadFilter = string.Empty;
-                    if (_maybeSubtitleInputFile.Map(s => s.IsImageBased).IfNone(false) == false &&
+                    if (_maybeSubtitleInputFile.IsNone &&
                         (_ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.Vaapi ||
                          _ffmpegState.HardwareAccelerationMode == HardwareAccelerationMode.VideoToolbox &&
                          _currentState.VideoFormat == VideoFormat.Hevc))

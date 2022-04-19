@@ -223,6 +223,7 @@ public class PipelineBuilder
                              currentState,
                              desiredState,
                              _watermarkInputFile,
+                             _subtitleInputFile,
                              _logger))
                 {
                     foreach (VideoInputFile videoInputFile in _videoInputFile)
@@ -306,7 +307,8 @@ public class PipelineBuilder
                         ffmpegState.HardwareAccelerationMode,
                         currentState,
                         desiredState,
-                        _watermarkInputFile);
+                        _watermarkInputFile,
+                        _subtitleInputFile);
                     currentState = step.NextState(currentState);
                     _videoInputFile.Iter(f => f.FilterSteps.Add(step));
                 }
