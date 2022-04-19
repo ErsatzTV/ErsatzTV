@@ -58,7 +58,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             Option<Playout> requestedPlayout = await dbContext.Playouts
                 .Filter(p => p.Channel.SubtitleMode != ChannelSubtitleMode.None)
                 .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId.IfNone(-1));
-            
+
             playoutIdsToCheck.AddRange(requestedPlayout.Map(p => p.Id));
 
             // check all playouts (that have subtitles enabled) if none were passed
@@ -151,7 +151,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
         CancellationToken cancellationToken)
     {
         var result = new List<int>();
-        
+
         try
         {
             List<int> episodeIds = await dbContext.EpisodeMetadata
@@ -183,7 +183,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                 .Map(mm => mm.MusicVideoId)
                 .ToListAsync(cancellationToken);
             result.AddRange(musicVideoIds);
-        
+
             List<int> otherVideoIds = await dbContext.OtherVideoMetadata
                 .Filter(ovm => mediaItemIds.Contains(ovm.OtherVideoId))
                 .Filter(
@@ -256,7 +256,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                         subtitlesToExtract.Add(new SubtitleToExtract(subtitle, path));
                     }
                 }
-                
+
                 string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
 
                 ArgumentsBuilder args = new ArgumentsBuilder()
@@ -272,10 +272,11 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
                     {
                         File.Delete(fullOutputPath);
                     }
+
                     args.Add("-map").Add($"0:{subtitle.Subtitle.StreamIndex}").Add("-c").Add("copy")
                         .Add(fullOutputPath);
                 }
-                
+
                 BufferedCommandResult result = await Cli.Wrap(ffmpegPath)
                     .WithArguments(args.Build())
                     .WithValidation(CommandResultValidation.None)
@@ -370,7 +371,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             "webvtt" => $"{name}.vtt",
             _ => string.Empty
         };
-        
+
         if (string.IsNullOrWhiteSpace(nameWithExtension))
         {
             return None;
@@ -378,7 +379,7 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
 
         return Path.Combine(subfolder, subfolder2, nameWithExtension);
     }
-    
+
     private static string GetStringHash(string text)
     {
         if (string.IsNullOrEmpty(text))

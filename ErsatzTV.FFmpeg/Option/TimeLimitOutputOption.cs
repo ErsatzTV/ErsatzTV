@@ -6,10 +6,7 @@ public class TimeLimitOutputOption : IPipelineStep
 {
     private readonly TimeSpan _finish;
 
-    public TimeLimitOutputOption(TimeSpan finish)
-    {
-        _finish = finish;
-    }
+    public TimeLimitOutputOption(TimeSpan finish) => _finish = finish;
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();

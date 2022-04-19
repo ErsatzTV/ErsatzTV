@@ -10,10 +10,8 @@ public class UpdateFillerPresetHandler : IRequestHandler<UpdateFillerPreset, Eit
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public UpdateFillerPresetHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public UpdateFillerPresetHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<Either<BaseError, Unit>> Handle(UpdateFillerPreset request, CancellationToken cancellationToken)
     {

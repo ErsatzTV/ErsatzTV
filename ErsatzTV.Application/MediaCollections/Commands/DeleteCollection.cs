@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.MediaCollections;
 
-public record DeleteCollection(int CollectionId) : IRequest<Either<BaseError, LanguageExt.Unit>>;
+public record DeleteCollection(int CollectionId) : IRequest<Either<BaseError, Unit>>;

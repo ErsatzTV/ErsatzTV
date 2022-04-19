@@ -92,7 +92,7 @@ public class ProgramScheduleItemEditViewModel : INotifyPropertyChanged
     }
 
     public TailMode TailMode { get; set; }
-        
+
     public string CustomTitle { get; set; }
 
     public GuideMode GuideMode { get; set; }

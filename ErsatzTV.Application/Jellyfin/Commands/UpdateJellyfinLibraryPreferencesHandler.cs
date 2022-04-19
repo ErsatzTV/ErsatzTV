@@ -5,7 +5,7 @@ using ErsatzTV.Core.Interfaces.Search;
 namespace ErsatzTV.Application.Jellyfin;
 
 public class
-    UpdateJellyfinLibraryPreferencesHandler : MediatR.IRequestHandler<UpdateJellyfinLibraryPreferences,
+    UpdateJellyfinLibraryPreferencesHandler : IRequestHandler<UpdateJellyfinLibraryPreferences,
         Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;

@@ -11,10 +11,7 @@ public class MusicVideoRepository : IMusicVideoRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MusicVideoRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public MusicVideoRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> GetOrAdd(
         Artist artist,
@@ -102,7 +99,7 @@ public class MusicVideoRepository : IMusicVideoRepository
 
         return ids;
     }
-        
+
     public async Task<bool> AddGenre(MusicVideoMetadata metadata, Genre genre)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();

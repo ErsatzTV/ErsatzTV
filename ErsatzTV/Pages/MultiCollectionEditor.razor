@@ -117,7 +117,7 @@
     private SmartCollectionViewModel _selectedSmartCollection;
     private MudSelect<MediaCollectionViewModel> _collectionSelect;
     private MudSelect<SmartCollectionViewModel> _smartCollectionSelect;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -145,7 +145,7 @@
                         {
                             Collection = item.Collection,
                             ScheduleAsGroup = item.ScheduleAsGroup,
-                            PlaybackOrder = item.PlaybackOrder,
+                            PlaybackOrder = item.PlaybackOrder
                         })
                     .Append(collection.SmartItems.Map(item =>
                         new MultiCollectionSmartItemEditViewModel
@@ -190,7 +190,7 @@
         }
     }
 
-    private List<UpdateMultiCollectionItem> GetUpdateItems() => 
+    private List<UpdateMultiCollectionItem> GetUpdateItems() =>
         _model.Items.Map(i =>
             i switch
             {
@@ -201,9 +201,9 @@
                         smartVm.ScheduleAsGroup,
                         smartVm.PlaybackOrder),
                 _ => new UpdateMultiCollectionItem(i.Collection.Id, null, i.ScheduleAsGroup, i.PlaybackOrder)
-            }).ToList();
-    
-    private List<CreateMultiCollectionItem> GetCreateItems() => 
+                }).ToList();
+
+    private List<CreateMultiCollectionItem> GetCreateItems() =>
         _model.Items.Map(i =>
             i switch
             {
@@ -214,12 +214,9 @@
                         smartVm.ScheduleAsGroup,
                         smartVm.PlaybackOrder),
                 _ => new CreateMultiCollectionItem(i.Collection.Id, null, i.ScheduleAsGroup, i.PlaybackOrder)
-            }).ToList();
+                }).ToList();
 
-    private void RemoveCollection(MultiCollectionItemEditViewModel item)
-    {
-        _model.Items.Remove(item);
-    }
+    private void RemoveCollection(MultiCollectionItemEditViewModel item) => _model.Items.Remove(item);
 
     private void AddCollection()
     {
@@ -250,4 +247,5 @@
             _smartCollectionSelect.Reset();
         }
     }
+
 }

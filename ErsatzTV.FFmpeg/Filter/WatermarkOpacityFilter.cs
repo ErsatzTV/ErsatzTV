@@ -6,12 +6,7 @@ public class WatermarkOpacityFilter : BaseFilter
 {
     private readonly WatermarkState _desiredState;
 
-    public WatermarkOpacityFilter(WatermarkState desiredState)
-    {
-        _desiredState = desiredState;
-    }
-
-    public override FrameState NextState(FrameState currentState) => currentState;
+    public WatermarkOpacityFilter(WatermarkState desiredState) => _desiredState = desiredState;
 
     public override string Filter
     {
@@ -21,4 +16,6 @@ public class WatermarkOpacityFilter : BaseFilter
             return $"colorchannelmixer=aa={opacity:F2}";
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

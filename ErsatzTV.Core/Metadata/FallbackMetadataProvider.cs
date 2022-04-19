@@ -9,10 +9,7 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 {
     private readonly IClient _client;
 
-    public FallbackMetadataProvider(IClient client)
-    {
-        _client = client;
-    }
+    public FallbackMetadataProvider(IClient client) => _client = client;
 
     public ShowMetadata GetFallbackMetadataForShow(string showFolder)
     {
@@ -91,7 +88,7 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
 
         return GetMusicVideoMetadata(fileName, metadata);
     }
-        
+
     public Option<OtherVideoMetadata> GetFallbackMetadata(OtherVideo otherVideo)
     {
         string path = otherVideo.MediaVersions.Head().MediaFiles.Head().Path;
@@ -246,7 +243,7 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
             return None;
         }
     }
-        
+
     private Option<OtherVideoMetadata> GetOtherVideoMetadata(string path, OtherVideoMetadata metadata)
     {
         try
@@ -261,13 +258,13 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
             string parent = Optional(Directory.GetParent(libraryPath)).Match(
                 di => di.FullName,
                 () => libraryPath);
-                
+
             string diff = Path.GetRelativePath(parent, folder);
-                
+
             var tags = diff.Split(Path.DirectorySeparatorChar)
                 .Map(t => new Tag { Name = t })
                 .ToList();
-                
+
             metadata.Artwork = new List<Artwork>();
             metadata.Actors = new List<Actor>();
             metadata.Genres = new List<Genre>();
@@ -284,7 +281,7 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
             return None;
         }
     }
-        
+
     private Option<SongMetadata> GetSongMetadata(string path, SongMetadata metadata)
     {
         try
@@ -299,13 +296,13 @@ public class FallbackMetadataProvider : IFallbackMetadataProvider
             string parent = Optional(Directory.GetParent(libraryPath)).Match(
                 di => di.FullName,
                 () => libraryPath);
-                
+
             string diff = Path.GetRelativePath(parent, folder);
-                
+
             var tags = diff.Split(Path.DirectorySeparatorChar)
                 .Map(t => new Tag { Name = t })
                 .ToList();
-                
+
             metadata.Artwork = new List<Artwork>();
             metadata.Actors = new List<Actor>();
             metadata.Genres = new List<Genre>();

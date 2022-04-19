@@ -58,7 +58,7 @@ public static class AvailableEncoders
 
             var (accel, videoFormat) => LogUnknownEncoder(accel, videoFormat, logger)
         };
-    
+
     private static Option<IEncoder> LogUnknownEncoder(
         HardwareAccelerationMode hardwareAccelerationMode,
         string videoFormat,
@@ -71,9 +71,8 @@ public static class AvailableEncoders
         return Option<IEncoder>.None;
     }
 
-    public static Option<IEncoder> ForAudioFormat(AudioState desiredState, ILogger logger)
-    {
-        return desiredState.AudioFormat.Match(
+    public static Option<IEncoder> ForAudioFormat(AudioState desiredState, ILogger logger) =>
+        desiredState.AudioFormat.Match(
             audioFormat =>
                 audioFormat switch
                 {
@@ -83,8 +82,7 @@ public static class AvailableEncoders
                     _ => LogUnknownEncoder(audioFormat, logger)
                 },
             () => LogUnknownEncoder(string.Empty, logger));
-    }
-    
+
     private static Option<IEncoder> LogUnknownEncoder(
         string audioFormat,
         ILogger logger)

@@ -14,10 +14,8 @@ public class GetErrorProcessHandler : FFmpegProcessHandler<GetErrorProcess>
     public GetErrorProcessHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IFFmpegProcessService ffmpegProcessService)
-        : base(dbContextFactory)
-    {
+        : base(dbContextFactory) =>
         _ffmpegProcessService = ffmpegProcessService;
-    }
 
     protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
         TvContext dbContext,

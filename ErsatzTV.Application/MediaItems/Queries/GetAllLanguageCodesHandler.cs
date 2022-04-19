@@ -22,7 +22,7 @@ public class GetAllLanguageCodesHandler : IRequestHandler<GetAllLanguageCodes, L
     public async Task<List<CultureInfo>> Handle(GetAllLanguageCodes request, CancellationToken cancellationToken)
     {
         await using TvContext dbContext = _dbContextFactory.CreateDbContext();
-            
+
         var result = new System.Collections.Generic.HashSet<CultureInfo>();
 
         CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);

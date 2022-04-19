@@ -74,8 +74,8 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
         {
             LibraryPath libraryPath = localLibrary.Paths[i];
 
-            decimal progressMin = (decimal) i / localLibrary.Paths.Count;
-            decimal progressMax = (decimal) (i + 1) / localLibrary.Paths.Count;
+            decimal progressMin = (decimal)i / localLibrary.Paths.Count;
+            decimal progressMax = (decimal)(i + 1) / localLibrary.Paths.Count;
 
             var lastScan = new DateTimeOffset(libraryPath.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
             DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(libraryRefreshInterval);

@@ -46,7 +46,7 @@
         _cts.Cancel();
         _cts.Dispose();
     }
-    
+
     private bool CanSubmit() => !string.IsNullOrWhiteSpace(_newFFmpegProfileName);
 
     private async Task Submit()

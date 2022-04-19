@@ -44,16 +44,17 @@ public abstract class LocalFolderScanner
         .Map(s => $"{Path.DirectorySeparatorChar}{s}{Path.DirectorySeparatorChar}")
         .ToList();
 
-    private readonly IImageCache _imageCache;
-    private readonly IFFmpegProcessService _ffmpegProcessService;
-    private readonly ITempFilePool _tempFilePool;
     private readonly IClient _client;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
+
+    private readonly IImageCache _imageCache;
 
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger _logger;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly IMediaItemRepository _mediaItemRepository;
+    private readonly IMetadataRepository _metadataRepository;
+    private readonly ITempFilePool _tempFilePool;
 
     protected LocalFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -61,7 +62,7 @@ public abstract class LocalFolderScanner
         IMetadataRepository metadataRepository,
         IMediaItemRepository mediaItemRepository,
         IImageCache imageCache,
-        IFFmpegProcessService ffmpegProcessService, 
+        IFFmpegProcessService ffmpegProcessService,
         ITempFilePool tempFilePool,
         IClient client,
         ILogger logger)

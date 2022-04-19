@@ -13,9 +13,8 @@ public static class AvailableDecoders
         FrameState desiredState,
         Option<WatermarkInputFile> watermarkInputFile,
         Option<SubtitleInputFile> subtitleInputFile,
-        ILogger logger)
-    {
-        return (ffmpegState.HardwareAccelerationMode, currentState.VideoFormat,
+        ILogger logger) =>
+        (ffmpegState.HardwareAccelerationMode, currentState.VideoFormat,
                 currentState.PixelFormat.Match(pf => pf.Name, () => string.Empty)) switch
             {
                 (HardwareAccelerationMode.Nvenc, VideoFormat.Hevc, _) => new DecoderHevcCuvid(),
@@ -55,8 +54,8 @@ public static class AvailableDecoders
 
                 // vaapi should use implicit decoders when scaling or no watermark/subtitles
                 // otherwise, fall back to software decoders
-                (HardwareAccelerationMode.Vaapi, _, _) when (watermarkInputFile.IsNone && subtitleInputFile.IsNone) ||
-                                                            (currentState.ScaledSize != desiredState.ScaledSize) =>
+                (HardwareAccelerationMode.Vaapi, _, _) when watermarkInputFile.IsNone && subtitleInputFile.IsNone ||
+                                                            currentState.ScaledSize != desiredState.ScaledSize =>
                     new DecoderVaapi(),
 
                 // videotoolbox should use implicit decoders
@@ -78,7 +77,6 @@ public static class AvailableDecoders
 
                 var (accel, videoFormat, pixelFormat) => LogUnknownDecoder(accel, videoFormat, pixelFormat, logger)
             };
-    }
 
     private static Option<IDecoder> LogUnknownDecoder(
         HardwareAccelerationMode hardwareAccelerationMode,

@@ -11,10 +11,8 @@ public class VaapiDriverHealthCheck : BaseHealthCheck, IVaapiDriverHealthCheck
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public VaapiDriverHealthCheck(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public VaapiDriverHealthCheck(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     protected override string Title => "VAAPI Driver";
 

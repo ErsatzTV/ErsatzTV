@@ -6,10 +6,8 @@ public class InfiniteLoopInputOption : IInputOption
 {
     private readonly HardwareAccelerationMode _hardwareAccelerationMode;
 
-    public InfiniteLoopInputOption(HardwareAccelerationMode hardwareAccelerationMode)
-    {
+    public InfiniteLoopInputOption(HardwareAccelerationMode hardwareAccelerationMode) =>
         _hardwareAccelerationMode = hardwareAccelerationMode;
-    }
 
     public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
     public IList<string> GlobalOptions => Array.Empty<string>();

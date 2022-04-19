@@ -11,10 +11,10 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
     private const string BundledVersion = "N-105324-g0f5fd44dc9";
     private readonly IConfigElementRepository _configElementRepository;
 
-    public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository)
-    {
+    public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
-    }
+
+    protected override string Title => "FFmpeg Version";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
@@ -99,6 +99,4 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
 
         return None;
     }
-
-    protected override string Title => "FFmpeg Version";
 }

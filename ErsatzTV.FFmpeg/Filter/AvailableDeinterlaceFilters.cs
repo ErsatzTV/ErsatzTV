@@ -19,8 +19,8 @@ public static class AvailableDeinterlaceFilters
             // HardwareAccelerationMode.Qsv => new DeinterlaceQsvFilter(currentState),
 
             // fall back to software deinterlace with watermark and no scaling
-            HardwareAccelerationMode.Vaapi when (watermarkInputFile.IsNone && subtitleInputFile.IsNone) ||
-                                                (currentState.ScaledSize != desiredState.ScaledSize) =>
+            HardwareAccelerationMode.Vaapi when watermarkInputFile.IsNone && subtitleInputFile.IsNone ||
+                                                currentState.ScaledSize != desiredState.ScaledSize =>
                 new DeinterlaceVaapiFilter(currentState),
 
             _ => new YadifFilter(currentState)

@@ -11,10 +11,7 @@ public class TelevisionRepository : ITelevisionRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public TelevisionRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public TelevisionRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<bool> AllShowsExist(List<int> showIds)
     {
@@ -678,7 +675,7 @@ public class TelevisionRepository : ITelevisionRepository
                       SELECT last_insert_rowid()",
                 new
                 {
-                    ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                    ArtworkKind = (int)actor.Artwork.ArtworkKind,
                     actor.Artwork.DateAdded,
                     actor.Artwork.DateUpdated,
                     actor.Artwork.Path
@@ -705,7 +702,7 @@ public class TelevisionRepository : ITelevisionRepository
                       SELECT last_insert_rowid()",
                 new
                 {
-                    ArtworkKind = (int) actor.Artwork.ArtworkKind,
+                    ArtworkKind = (int)actor.Artwork.ArtworkKind,
                     actor.Artwork.DateAdded,
                     actor.Artwork.DateUpdated,
                     actor.Artwork.Path
@@ -765,7 +762,7 @@ public class TelevisionRepository : ITelevisionRepository
 
             await dbContext.Entry(season).Reference(s => s.LibraryPath).LoadAsync();
             await dbContext.Entry(season.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-                
+
             return season;
         }
         catch (Exception ex)

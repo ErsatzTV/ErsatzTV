@@ -5,8 +5,8 @@ namespace ErsatzTV.Core.Scheduling;
 
 public class ShuffledScheduleItemsEnumerator : IScheduleItemsEnumerator
 {
-    private readonly int _scheduleItemsCount;
     private readonly IList<ProgramScheduleItem> _scheduleItems;
+    private readonly int _scheduleItemsCount;
     private CloneableRandom _random;
     private IList<ProgramScheduleItem> _shuffled;
 

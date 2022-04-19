@@ -4,10 +4,7 @@ public class VaapiHardwareAccelerationOption : GlobalOption
 {
     private readonly string _vaapiDevice;
 
-    public VaapiHardwareAccelerationOption(string vaapiDevice)
-    {
-        _vaapiDevice = vaapiDevice;
-    }
+    public VaapiHardwareAccelerationOption(string vaapiDevice) => _vaapiDevice = vaapiDevice;
 
     public override IList<string> GlobalOptions => new List<string>
         { "-hwaccel", "vaapi", "-vaapi_device", _vaapiDevice };

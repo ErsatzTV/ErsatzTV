@@ -32,7 +32,7 @@ public class UpdateCollectionHandler : IRequestHandler<UpdateCollection, Either<
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Collection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        return await LanguageExtensions.Apply(validation, c => ApplyUpdateRequest(dbContext, c, request));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, Collection c, UpdateCollection request)

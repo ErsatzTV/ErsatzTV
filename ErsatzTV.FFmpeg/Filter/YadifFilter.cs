@@ -6,10 +6,7 @@ public class YadifFilter : BaseFilter
 {
     private readonly FrameState _currentState;
 
-    public YadifFilter(FrameState currentState)
-    {
-        _currentState = currentState;
-    }
+    public YadifFilter(FrameState currentState) => _currentState = currentState;
 
     public override string Filter
     {

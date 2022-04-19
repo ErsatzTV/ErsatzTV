@@ -14,13 +14,13 @@ namespace ErsatzTV.Core.Metadata;
 public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScanner
 {
     private readonly IArtistRepository _artistRepository;
+    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly ILogger<MusicVideoFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IClient _client;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -84,7 +84,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         {
             // _logger.LogDebug("Scanning artist folder {Folder}", artistFolder);
 
-            decimal percentCompletion = (decimal) allArtistFolders.IndexOf(artistFolder) / allArtistFolders.Count;
+            decimal percentCompletion = (decimal)allArtistFolders.IndexOf(artistFolder) / allArtistFolders.Count;
             await _mediator.Publish(
                 new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
 
@@ -152,7 +152,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                 await _searchIndex.RemoveItems(musicVideoIds);
             }
         }
-            
+
         await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
         List<int> artistIds = await _artistRepository.DeleteEmptyArtists(libraryPath);
@@ -413,7 +413,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
             return BaseError.New(ex.ToString());
         }
     }
-    
+
     private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateSubtitles(
         MediaItemScanResult<MusicVideo> result,
         CancellationToken _)

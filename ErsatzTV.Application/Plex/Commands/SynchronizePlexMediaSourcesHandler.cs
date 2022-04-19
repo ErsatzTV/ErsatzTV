@@ -18,9 +18,9 @@ public class SynchronizePlexMediaSourcesHandler : IRequestHandler<SynchronizePle
     private readonly IEntityLocker _entityLocker;
     private readonly ILogger<SynchronizePlexMediaSourcesHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IPlexTvApiClient _plexTvApiClient;
-    private readonly IPlexServerApiClient _plexServerApiClient;
     private readonly IPlexSecretStore _plexSecretStore;
+    private readonly IPlexServerApiClient _plexServerApiClient;
+    private readonly IPlexTvApiClient _plexTvApiClient;
 
     public SynchronizePlexMediaSourcesHandler(
         IMediaSourceRepository mediaSourceRepository,

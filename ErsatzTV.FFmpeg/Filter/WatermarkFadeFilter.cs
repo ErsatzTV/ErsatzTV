@@ -7,12 +7,7 @@ public class WatermarkFadeFilter : BaseFilter
 {
     private readonly WatermarkFadePoint _fadePoint;
 
-    public WatermarkFadeFilter(WatermarkFadePoint fadePoint)
-    {
-        _fadePoint = fadePoint;
-    }
-
-    public override FrameState NextState(FrameState currentState) => currentState;
+    public WatermarkFadeFilter(WatermarkFadePoint fadePoint) => _fadePoint = fadePoint;
 
     public override string Filter
     {
@@ -31,4 +26,6 @@ public class WatermarkFadeFilter : BaseFilter
             return $"fade={inOut}:st={startTime}:d=1:alpha=1:enable='between(t,{enableStart},{enableFinish})'";
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

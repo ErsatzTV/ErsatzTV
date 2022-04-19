@@ -149,7 +149,7 @@ public class
         _configElementRepository.GetValue<int>(ConfigElementKey.LibraryRefreshInterval)
             .FilterT(lri => lri > 0)
             .Map(lri => lri.ToValidation<BaseError>("Library refresh interval is invalid"));
-        
+
     private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
         _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
             .FilterT(File.Exists)

@@ -12,9 +12,9 @@ public class
     GetCachedImagePathHandler : IRequestHandler<GetCachedImagePath, Either<BaseError, CachedImagePathViewModel>>
 {
     private static readonly MimeTypes MimeTypes = new();
-    private readonly IImageCache _imageCache;
-    private readonly IFFmpegProcessService _ffmpegProcessService;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly IFFmpegProcessService _ffmpegProcessService;
+    private readonly IImageCache _imageCache;
 
     public GetCachedImagePathHandler(
         IImageCache imageCache,
@@ -106,7 +106,7 @@ public class
 
     private async Task<Validation<BaseError, string>> Validate() =>
         await ValidateFFmpegPath();
-    
+
     private Task<Validation<BaseError, string>> ValidateFFmpegPath() =>
         _configElementRepository.GetValue<string>(ConfigElementKey.FFmpegPath)
             .FilterT(File.Exists)

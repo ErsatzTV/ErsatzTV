@@ -98,7 +98,7 @@
 
     private void PrevPage()
     {
-        var uri = $"/media/tv/seasons/page/{PageNumber - 1}";
+        string uri = $"/media/tv/seasons/page/{PageNumber - 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();
@@ -109,7 +109,7 @@
 
     private void NextPage()
     {
-        var uri = $"/media/tv/seasons/page/{PageNumber + 1}";
+        string uri = $"/media/tv/seasons/page/{PageNumber + 1}";
         if (!string.IsNullOrWhiteSpace(_query))
         {
             (string key, string value) = _query.EncodeQuery();

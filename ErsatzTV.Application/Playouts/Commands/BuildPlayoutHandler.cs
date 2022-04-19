@@ -15,9 +15,9 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 {
     private readonly IClient _client;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
-    private readonly IPlayoutBuilder _playoutBuilder;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
     private readonly ChannelWriter<ISubtitleWorkerRequest> _ffmpegWorkerChannel;
+    private readonly IPlayoutBuilder _playoutBuilder;
 
     public BuildPlayoutHandler(
         IClient client,
@@ -37,7 +37,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Playout> validation = await Validate(dbContext, request);
-        return await validation.Apply(playout => ApplyUpdateRequest(dbContext, request, playout));
+        return await LanguageExtensions.Apply(validation, playout => ApplyUpdateRequest(dbContext, request, playout));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, BuildPlayout request, Playout playout)
@@ -49,6 +49,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             {
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
             }
+
             await _ffmpegWorkerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
         }
         catch (Exception ex)
@@ -58,6 +59,7 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
 
         return Unit.Default;
     }
+
     private static Task<Validation<BaseError, Playout>> Validate(TvContext dbContext, BuildPlayout request) =>
         PlayoutMustExist(dbContext, request);
 

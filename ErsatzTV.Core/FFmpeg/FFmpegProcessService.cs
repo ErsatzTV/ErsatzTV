@@ -14,13 +14,13 @@ namespace ErsatzTV.Core.FFmpeg;
 
 public class FFmpegProcessService
 {
+    private readonly IClient _client;
     private readonly IFFmpegStreamSelector _ffmpegStreamSelector;
     private readonly IImageCache _imageCache;
-    private readonly ITempFilePool _tempFilePool;
-    private readonly IClient _client;
-    private readonly IMemoryCache _memoryCache;
     private readonly ILogger<FFmpegProcessService> _logger;
+    private readonly IMemoryCache _memoryCache;
     private readonly FFmpegPlaybackSettingsCalculator _playbackSettingsCalculator;
+    private readonly ITempFilePool _tempFilePool;
 
     public FFmpegProcessService(
         FFmpegPlaybackSettingsCalculator ffmpegPlaybackSettingsService,
@@ -55,7 +55,7 @@ public class FFmpegProcessService
 
         var fontSize = (int)Math.Round(channel.FFmpegProfile.Resolution.Height / 20.0);
         var margin = (int)Math.Round(channel.FFmpegProfile.Resolution.Height * 0.05);
-            
+
         string subtitleFile = await new SubtitleBuilder(_tempFilePool)
             .WithResolution(desiredResolution)
             .WithFontName("Roboto")
@@ -118,7 +118,7 @@ public class FFmpegProcessService
                 .WithPipe()
                 .Build()
         };
-        
+
         return Cli.Wrap(process.StartInfo.FileName)
             .WithArguments(process.StartInfo.ArgumentList)
             .WithValidation(CommandResultValidation.None)
@@ -158,7 +158,7 @@ public class FFmpegProcessService
             .WithInput(inputFile)
             .WithOutputFormat("apng", outputFile)
             .Build();
-        
+
         return Cli.Wrap(process.StartInfo.FileName)
             .WithArguments(process.StartInfo.ArgumentList)
             .WithValidation(CommandResultValidation.None)
@@ -175,7 +175,7 @@ public class FFmpegProcessService
             .WithMap($"0:{streamIndex}")
             .WithOutputFormat("apng", outputFile)
             .Build();
-        
+
         return Cli.Wrap(process.StartInfo.FileName)
             .WithArguments(process.StartInfo.ArgumentList)
             .WithValidation(CommandResultValidation.None)
@@ -232,7 +232,7 @@ public class FFmpegProcessService
 
             FFmpegPlaybackSettings playbackSettings =
                 _playbackSettingsCalculator.CalculateErrorSettings(channel.FFmpegProfile);
-                
+
             FFmpegPlaybackSettings scalePlaybackSettings = _playbackSettingsCalculator.CalculateSettings(
                 StreamingMode.TransportStream,
                 channel.FFmpegProfile,
@@ -257,7 +257,7 @@ public class FFmpegProcessService
             foreach (IDisplaySize scaledSize in scalePlaybackSettings.ScaledSize)
             {
                 builder = builder.WithScaling(scaledSize);
-                    
+
                 if (NeedToPad(channel.FFmpegProfile.Resolution, scaledSize))
                 {
                     builder = builder.WithBlackBars(channel.FFmpegProfile.Resolution);
@@ -315,7 +315,7 @@ public class FFmpegProcessService
                     0,
                     false);
             }
-            
+
             // check for playout item watermark
             foreach (ChannelWatermark watermark in playoutItemWatermark)
             {

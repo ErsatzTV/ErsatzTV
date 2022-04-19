@@ -4,10 +4,7 @@ public class DeinterlaceVaapiFilter : BaseFilter
 {
     private readonly FrameState _currentState;
 
-    public DeinterlaceVaapiFilter(FrameState currentState)
-    {
-        _currentState = currentState;
-    }
+    public DeinterlaceVaapiFilter(FrameState currentState) => _currentState = currentState;
 
     public override string Filter =>
         _currentState.FrameDataLocation == FrameDataLocation.Hardware

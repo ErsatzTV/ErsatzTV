@@ -4,9 +4,8 @@ namespace ErsatzTV.FFmpeg.Format;
 
 public static class AvailablePixelFormats
 {
-    public static Option<IPixelFormat> ForPixelFormat(string pixelFormat, ILogger logger)
-    {
-        return pixelFormat switch
+    public static Option<IPixelFormat> ForPixelFormat(string pixelFormat, ILogger logger) =>
+        pixelFormat switch
         {
             PixelFormat.YUV420P => new PixelFormatYuv420P(),
             PixelFormat.YUV420P10LE => new PixelFormatYuv420P10Le(),
@@ -14,7 +13,6 @@ public static class AvailablePixelFormats
             PixelFormat.YUV444P => new PixelFormatYuv444P(),
             _ => LogUnknownPixelFormat(pixelFormat, logger)
         };
-    }
 
     private static Option<IPixelFormat> LogUnknownPixelFormat(string pixelFormat, ILogger logger)
     {

@@ -4,10 +4,7 @@ public class ScaleImageFilter : BaseFilter
 {
     private readonly FrameSize _scaledSize;
 
-    public ScaleImageFilter(FrameSize scaledSize)
-    {
-        _scaledSize = scaledSize;
-    }
+    public ScaleImageFilter(FrameSize scaledSize) => _scaledSize = scaledSize;
 
     public override string Filter => $"scale={_scaledSize.Width}:{_scaledSize.Height}";
 

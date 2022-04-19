@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Jellyfin;
 
-public record DisconnectJellyfin : MediatR.IRequest<Either<BaseError, Unit>>;
+public record DisconnectJellyfin : IRequest<Either<BaseError, Unit>>;

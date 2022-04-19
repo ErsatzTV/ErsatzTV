@@ -7,7 +7,7 @@ using ErsatzTV.Core.Interfaces.Search;
 
 namespace ErsatzTV.Application.Emby;
 
-public class DisconnectEmbyHandler : MediatR.IRequestHandler<DisconnectEmby, Either<BaseError, Unit>>
+public class DisconnectEmbyHandler : IRequestHandler<DisconnectEmby, Either<BaseError, Unit>>
 {
     private readonly IEmbySecretStore _embySecretStore;
     private readonly IEntityLocker _entityLocker;

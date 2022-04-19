@@ -88,7 +88,7 @@ public class PipelineGeneratorTests
         result.PipelineSteps.Should().HaveCountGreaterThan(0);
 
         string command = PrintCommand(None, None, None, concatInputFile, result);
-        
+
         command.Should().Be(
             "-threads 1 -nostdin -hide_banner -nostats -loglevel error -fflags +genpts+discardcorrupt+igndts -f concat -safe 0 -protocol_whitelist file,http,tcp,https,tcp,tls -probesize 32 -re -stream_loop -1 -i http://localhost:8080/ffmpeg/concat/1 -muxdelay 0 -muxpreload 0 -movflags +faststart -flags cgop -sc_threshold 0 -c copy -map_metadata -1 -metadata service_provider=\"ErsatzTV\" -metadata service_name=\"Some Channel\" -f mpegts -mpegts_flags +initial_discontinuity pipe:1");
     }
@@ -177,10 +177,11 @@ public class PipelineGeneratorTests
             _logger);
 
         FFmpegPipeline result = pipelineBuilder.Resize("/test/output/file.jpg", new FrameSize(-1, height));
-        
+
         string command = PrintCommand(videoInputFile, None, None, None, result);
 
-        command.Should().Be("-nostdin -hide_banner -nostats -loglevel error -i /test/input/file.png -vf scale=-1:200 /test/output/file.jpg");
+        command.Should().Be(
+            "-nostdin -hide_banner -nostats -loglevel error -i /test/input/file.png -vf scale=-1:200 /test/output/file.jpg");
     }
 
     private static string PrintCommand(

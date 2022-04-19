@@ -13,8 +13,6 @@ public class SubtitlesFilter : BaseFilter
         _subtitleInputFile = subtitleInputFile;
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState;
-
     public override string Filter
     {
         get
@@ -36,4 +34,6 @@ public class SubtitlesFilter : BaseFilter
             return $"subtitles={effectiveFile}:fontsdir={fontsDir}";
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

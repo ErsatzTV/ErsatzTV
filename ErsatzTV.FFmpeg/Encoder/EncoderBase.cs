@@ -20,6 +20,7 @@ public abstract class EncoderBase : IEncoder
         },
         Name
     };
+
     public virtual FrameState NextState(FrameState currentState) => currentState;
 
     public abstract string Name { get; }

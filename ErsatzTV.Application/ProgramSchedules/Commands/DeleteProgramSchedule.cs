@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.ProgramSchedules;
 
-public record DeleteProgramSchedule(int ProgramScheduleId) : IRequest<Either<BaseError, LanguageExt.Unit>>;
+public record DeleteProgramSchedule(int ProgramScheduleId) : IRequest<Either<BaseError, Unit>>;

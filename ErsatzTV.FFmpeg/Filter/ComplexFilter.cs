@@ -7,12 +7,12 @@ public class ComplexFilter : IPipelineStep
 {
     private readonly FrameState _currentState;
     private readonly FFmpegState _ffmpegState;
-    private readonly Option<VideoInputFile> _maybeVideoInputFile;
-    private readonly Option<AudioInputFile> _maybeAudioInputFile;
-    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
-    private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
-    private readonly FrameSize _resolution;
     private readonly string _fontsDir;
+    private readonly Option<AudioInputFile> _maybeAudioInputFile;
+    private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
+    private readonly Option<VideoInputFile> _maybeVideoInputFile;
+    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
+    private readonly FrameSize _resolution;
 
     public ComplexFilter(
         FrameState currentState,
@@ -34,6 +34,13 @@ public class ComplexFilter : IPipelineStep
         _fontsDir = fontsDir;
     }
 
+    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
+    public IList<string> GlobalOptions => Array.Empty<string>();
+    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
+    public IList<string> FilterOptions => Arguments();
+    public IList<string> OutputOptions => Array.Empty<string>();
+    public FrameState NextState(FrameState currentState) => currentState;
+
     private IList<string> Arguments()
     {
         var audioLabel = "0:a";
@@ -49,7 +56,7 @@ public class ComplexFilter : IPipelineStep
         string watermarkOverlayFilterComplex = string.Empty;
         string subtitleFilterComplex = string.Empty;
         string subtitleOverlayFilterComplex = string.Empty;
-        
+
         var distinctPaths = new List<string>();
         foreach ((string path, _) in _maybeVideoInputFile)
         {
@@ -130,7 +137,8 @@ public class ComplexFilter : IPipelineStep
                     watermarkFilterComplex += $"[{inputIndex}:{index}]";
                     watermarkFilterComplex += string.Join(
                         ",",
-                        watermarkInputFile.FilterSteps.Select(f => f.Filter).Filter(s => !string.IsNullOrWhiteSpace(s)));
+                        watermarkInputFile.FilterSteps.Select(f => f.Filter)
+                            .Filter(s => !string.IsNullOrWhiteSpace(s)));
                     watermarkLabel = "[wm]";
                     watermarkFilterComplex += watermarkLabel;
                 }
@@ -173,13 +181,13 @@ public class ComplexFilter : IPipelineStep
 
                     watermarkOverlayFilterComplex =
                         $"{tempVideoLabel}{watermarkLabel}{overlayFilter.Filter}{uploadDownloadFilter}[vf]";
-                    
+
                     // change the mapped label
                     videoLabel = "[vf]";
                 }
             }
         }
-        
+
         foreach (SubtitleInputFile subtitleInputFile in _maybeSubtitleInputFile.Filter(s => !s.Copy))
         {
             int inputIndex = distinctPaths.IndexOf(subtitleInputFile.Path);
@@ -278,11 +286,4 @@ public class ComplexFilter : IPipelineStep
 
         return result;
     }
-
-    public IList<EnvironmentVariable> EnvironmentVariables => Array.Empty<EnvironmentVariable>();
-    public IList<string> GlobalOptions => Array.Empty<string>();
-    public IList<string> InputOptions(InputFile inputFile) => Array.Empty<string>();
-    public IList<string> FilterOptions => Arguments();
-    public IList<string> OutputOptions => Array.Empty<string>();
-    public FrameState NextState(FrameState currentState) => currentState;
 }

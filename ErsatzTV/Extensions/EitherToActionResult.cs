@@ -23,5 +23,5 @@ public static class EitherToActionResult
                 await t;
                 return new OkResult();
             },
-            e => Task.FromResult((IActionResult) new BadRequestObjectResult(e)));
+            e => Task.FromResult((IActionResult)new BadRequestObjectResult(e)));
 }

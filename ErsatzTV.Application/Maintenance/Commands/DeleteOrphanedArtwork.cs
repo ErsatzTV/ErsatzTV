@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Maintenance;
 
-public record DeleteOrphanedArtwork : MediatR.IRequest<Either<BaseError, Unit>>, IBackgroundServiceRequest;
+public record DeleteOrphanedArtwork : IRequest<Either<BaseError, Unit>>, IBackgroundServiceRequest;

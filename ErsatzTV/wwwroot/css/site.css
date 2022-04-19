@@ -132,7 +132,11 @@
 
 .release-notes h3 { margin-top: 20px; }
 
-.mud-table-container { overflow-x: unset; overflow-y: unset; }
+.mud-table-container {
+    overflow-x: unset;
+    overflow-y: unset;
+}
 
 #blazor-error-ui { color: black; }
+
 #blazor-error-ui a { color: unset; }

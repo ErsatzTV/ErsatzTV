@@ -72,7 +72,8 @@ public class ChannelGuide
         foreach ((Channel channel, List<PlayoutItem> sorted) in sortedChannelItems.OrderBy(kvp => kvp.Key.Number))
         {
             var i = 0;
-            while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None && sorted[i].FillerKind != FillerKind.PreRoll)
+            while (i < sorted.Count && sorted[i].FillerKind != FillerKind.None &&
+                   sorted[i].FillerKind != FillerKind.PreRoll)
             {
                 i++;
             }
@@ -85,6 +86,7 @@ public class ChannelGuide
                 {
                     j++;
                 }
+
                 PlayoutItem displayItem = sorted[j];
                 bool hasCustomTitle = !string.IsNullOrWhiteSpace(startItem.CustomTitle);
 
@@ -124,7 +126,7 @@ public class ChannelGuide
                 xml.WriteAttributeString("start", start);
                 xml.WriteAttributeString("stop", stop);
                 xml.WriteAttributeString("channel", $"{channel.Number}.etv");
-                    
+
                 xml.WriteStartElement("title");
                 xml.WriteAttributeString("lang", "en");
                 xml.WriteString(title);
@@ -137,7 +139,7 @@ public class ChannelGuide
                     xml.WriteString(subtitle);
                     xml.WriteEndElement(); // subtitle
                 }
-                    
+
                 if (!isSameCustomShow)
                 {
                     if (!string.IsNullOrWhiteSpace(description))
@@ -273,7 +275,7 @@ public class ChannelGuide
                         xml.WriteAttributeString("lang", "en");
                         xml.WriteString("Series");
                         xml.WriteEndElement(); // category
-                            
+
                         foreach (Genre genre in Optional(metadata.Genres).Flatten())
                         {
                             xml.WriteStartElement("category");
@@ -323,7 +325,7 @@ public class ChannelGuide
                         }
                     }
                 }
-                    
+
                 xml.WriteStartElement("previously-shown");
                 xml.WriteEndElement(); // previously-shown
 

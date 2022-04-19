@@ -122,7 +122,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         var sortedShows = shows.OrderBy(s => s.ShowMetadata.Head().Title).ToList();
         foreach (JellyfinShow incoming in sortedShows)
         {
-            decimal percentCompletion = (decimal) sortedShows.IndexOf(incoming) / shows.Count;
+            decimal percentCompletion = (decimal)sortedShows.IndexOf(incoming) / shows.Count;
             await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
             Option<JellyfinItemEtag> maybeExisting = existingShows.Find(ie => ie.ItemId == incoming.ItemId);
@@ -342,7 +342,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         foreach (JellyfinEpisode incoming in episodes)
         {
             JellyfinEpisode incomingEpisode = incoming;
-                
+
             var updateStatistics = false;
 
             Option<JellyfinItemEtag> maybeExisting = existingEpisodes.Find(ie => ie.ItemId == incoming.ItemId);
@@ -422,7 +422,11 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                 Either<BaseError, bool> refreshResult =
-                    await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, incomingEpisode, localPath);
+                    await _localStatisticsProvider.RefreshStatistics(
+                        ffmpegPath,
+                        ffprobePath,
+                        incomingEpisode,
+                        localPath);
 
                 refreshResult.Match(
                     _ => { },

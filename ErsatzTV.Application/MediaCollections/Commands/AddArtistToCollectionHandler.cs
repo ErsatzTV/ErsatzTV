@@ -33,7 +33,7 @@ public class AddArtistToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => ApplyAddArtistRequest(dbContext, parameters));
+        return await LanguageExtensions.Apply(validation, parameters => ApplyAddArtistRequest(dbContext, parameters));
     }
 
     private async Task<Unit> ApplyAddArtistRequest(TvContext dbContext, Parameters parameters)
@@ -43,7 +43,7 @@ public class AddArtistToCollectionHandler :
         {
             // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository
-                .PlayoutIdsUsingCollection(parameters.Collection.Id))
+                         .PlayoutIdsUsingCollection(parameters.Collection.Id))
             {
                 await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }

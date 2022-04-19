@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ErsatzTV.Application.MediaCollections;
 
 public class AddItemsToCollectionHandler :
-    MediatR.IRequestHandler<AddItemsToCollection, Either<BaseError, Unit>>
+    IRequestHandler<AddItemsToCollection, Either<BaseError, Unit>>
 {
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
@@ -39,10 +39,13 @@ public class AddItemsToCollectionHandler :
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Collection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyAddItemsRequest(dbContext, c, request));
+        return await LanguageExtensions.Apply(validation, c => ApplyAddItemsRequest(dbContext, c, request));
     }
 
-    private async Task<Unit> ApplyAddItemsRequest(TvContext dbContext, Collection collection, AddItemsToCollection request)
+    private async Task<Unit> ApplyAddItemsRequest(
+        TvContext dbContext,
+        Collection collection,
+        AddItemsToCollection request)
     {
         var allItems = request.MovieIds
             .Append(request.ShowIds)
@@ -65,7 +68,7 @@ public class AddItemsToCollectionHandler :
         {
             // refresh all playouts that use this collection
             foreach (int playoutId in await _mediaCollectionRepository
-                .PlayoutIdsUsingCollection(request.CollectionId))
+                         .PlayoutIdsUsingCollection(request.CollectionId))
             {
                 await _channel.WriteAsync(new BuildPlayout(playoutId, PlayoutBuildMode.Refresh));
             }

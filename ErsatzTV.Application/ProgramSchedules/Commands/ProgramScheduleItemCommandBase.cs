@@ -31,7 +31,7 @@ public abstract class ProgramScheduleItemCommandBase
         List<FillerPreset> allFiller = await dbContext.FillerPresets
             .Filter(fp => allFillerIds.Contains(fp.Id))
             .ToListAsync();
-            
+
         if (allFiller.Count(f => f.PadToNearestMinute.HasValue) > 1)
         {
             return BaseError.New("Schedule may only contain one filler preset that is configured to pad");
@@ -70,7 +70,8 @@ public abstract class ProgramScheduleItemCommandBase
             case PlayoutMode.Multiple:
                 if (item.MultipleCount.GetValueOrDefault() < 0)
                 {
-                    return BaseError.New("[MultipleCount] must be greater than or equal to 0 for playout mode 'multiple'");
+                    return BaseError.New(
+                        "[MultipleCount] must be greater than or equal to 0 for playout mode 'multiple'");
                 }
 
                 break;

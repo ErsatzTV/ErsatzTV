@@ -4,7 +4,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.Jellyfin;
 
-public class UpdateJellyfinPathReplacementsHandler : MediatR.IRequestHandler<UpdateJellyfinPathReplacements,
+public class UpdateJellyfinPathReplacementsHandler : IRequestHandler<UpdateJellyfinPathReplacements,
     Either<BaseError, Unit>>
 {
     private readonly IMediaSourceRepository _mediaSourceRepository;

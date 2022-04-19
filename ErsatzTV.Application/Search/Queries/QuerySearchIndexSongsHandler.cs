@@ -10,8 +10,8 @@ public class
     QuerySearchIndexSongsHandler : IRequestHandler<QuerySearchIndexSongs,
         SongCardResultsViewModel>
 {
-    private readonly ISongRepository _songRepository;
     private readonly ISearchIndex _searchIndex;
+    private readonly ISongRepository _songRepository;
 
     public QuerySearchIndexSongsHandler(ISearchIndex searchIndex, ISongRepository songRepository)
     {

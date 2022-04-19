@@ -11,7 +11,7 @@ public class FillerPresetEditViewModelValidator : AbstractValidator<FillerPreset
     {
         RuleFor(fp => fp.Name).NotEmpty();
         RuleFor(fp => fp.FillerKind).NotEqual(FillerKind.None);
-        
+
         When(
             fp => fp.FillerKind != FillerKind.Fallback && fp.FillerKind != FillerKind.Tail,
             () => RuleFor(fp => fp.FillerMode).NotEqual(FillerMode.None));

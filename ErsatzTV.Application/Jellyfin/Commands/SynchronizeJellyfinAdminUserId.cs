@@ -2,5 +2,5 @@
 
 namespace ErsatzTV.Application.Jellyfin;
 
-public record SynchronizeJellyfinAdminUserId(int JellyfinMediaSourceId) : MediatR.IRequest<Either<BaseError, Unit>>,
+public record SynchronizeJellyfinAdminUserId(int JellyfinMediaSourceId) : IRequest<Either<BaseError, Unit>>,
     IJellyfinBackgroundServiceRequest;

@@ -85,7 +85,7 @@
                         }
                         @if (episode.State == MediaItemState.FileNotFound)
                         {
-                            <div style="position: absolute; top: 8px; right: 10px">
+                            <div style="position: absolute; right: 10px; top: 8px;">
                                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
                             </div>
                         }
@@ -163,7 +163,7 @@
     private readonly int _pageNumber = 1;
 
     private TelevisionEpisodeCardResultsViewModel _data;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -180,7 +180,7 @@
             }
             catch (Exception)
             {
-                // ignored
+    // ignored
             }
         }
     }

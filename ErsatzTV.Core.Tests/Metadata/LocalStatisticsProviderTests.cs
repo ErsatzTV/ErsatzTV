@@ -15,7 +15,7 @@ public class LocalStatisticsProviderTests
 {
     [Test]
     // this needs to be a culture where '.' is a group separator
-    [SetCulture("it-IT")] 
+    [SetCulture("it-IT")]
     public void Test()
     {
         var provider = new LocalStatisticsProvider(

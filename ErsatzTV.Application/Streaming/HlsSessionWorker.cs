@@ -21,16 +21,15 @@ public class HlsSessionWorker : IHlsSessionWorker
     private static readonly SemaphoreSlim Slim = new(1, 1);
     private static int _workAheadCount;
     private readonly IHlsPlaylistFilter _hlsPlaylistFilter;
-    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly ILogger<HlsSessionWorker> _logger;
-    private DateTimeOffset _lastAccess;
-    private DateTimeOffset _transcodedUntil;
-    private Timer _timer;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly object _sync = new();
-    private DateTimeOffset _playlistStart;
-    private Option<int> _targetFramerate;
     private string _channelNumber;
     private bool _firstProcess;
+    private DateTimeOffset _lastAccess;
+    private Option<int> _targetFramerate;
+    private Timer _timer;
+    private DateTimeOffset _transcodedUntil;
 
     public HlsSessionWorker(
         IHlsPlaylistFilter hlsPlaylistFilter,
@@ -42,7 +41,7 @@ public class HlsSessionWorker : IHlsSessionWorker
         _logger = logger;
     }
 
-    public DateTimeOffset PlaylistStart => _playlistStart;
+    public DateTimeOffset PlaylistStart { get; private set; }
 
     public void Touch()
     {
@@ -76,7 +75,11 @@ public class HlsSessionWorker : IHlsSessionWorker
     public async Task Run(string channelNumber, TimeSpan idleTimeout, CancellationToken incomingCancellationToken)
     {
         var cts = CancellationTokenSource.CreateLinkedTokenSource(incomingCancellationToken);
-        void Cancel(object o, ElapsedEventArgs e) => cts.Cancel();
+
+        void Cancel(object o, ElapsedEventArgs e)
+        {
+            cts.Cancel();
+        }
 
         try
         {
@@ -106,7 +109,7 @@ public class HlsSessionWorker : IHlsSessionWorker
 
             Touch();
             _transcodedUntil = DateTimeOffset.Now;
-            _playlistStart = _transcodedUntil;
+            PlaylistStart = _transcodedUntil;
 
             _firstProcess = true;
 
@@ -309,13 +312,12 @@ public class HlsSessionWorker : IHlsSessionWorker
         await Slim.WaitAsync(cancellationToken);
         try
         {
-
             Option<string[]> maybeLines = await ReadPlaylistLines(cancellationToken);
             foreach (string[] lines in maybeLines)
             {
                 // trim playlist and insert discontinuity before appending with new ffmpeg process
                 TrimPlaylistResult trimResult = _hlsPlaylistFilter.TrimPlaylistWithDiscontinuity(
-                    _playlistStart,
+                    PlaylistStart,
                     DateTimeOffset.Now.AddMinutes(-1),
                     lines);
                 await WritePlaylist(trimResult.Playlist, cancellationToken);
@@ -348,7 +350,7 @@ public class HlsSessionWorker : IHlsSessionWorker
                     File.Delete(segment.File);
                 }
 
-                _playlistStart = trimResult.PlaylistStart;
+                PlaylistStart = trimResult.PlaylistStart;
             }
         }
         finally
