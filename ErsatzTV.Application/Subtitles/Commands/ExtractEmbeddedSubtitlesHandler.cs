@@ -52,19 +52,44 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             DateTime now = DateTime.UtcNow;
             DateTime until = now.AddHours(1);
 
-            // check the requested playout if one was passed
             var playoutIdsToCheck = new List<int>();
-            playoutIdsToCheck.AddRange(request.PlayoutId);
 
-            // check all playouts if none were passed
+            // only check the requested playout if subtitles are enabled
+            Option<Playout> requestedPlayout = await dbContext.Playouts
+                .Filter(p => p.Channel.SubtitleMode != ChannelSubtitleMode.None)
+                .SelectOneAsync(p => p.Id, p => p.Id == request.PlayoutId.IfNone(-1));
+            
+            playoutIdsToCheck.AddRange(requestedPlayout.Map(p => p.Id));
+
+            // check all playouts (that have subtitles enabled) if none were passed
+            if (request.PlayoutId.IsNone)
+            {
+                playoutIdsToCheck = dbContext.Playouts
+                    .Filter(p => p.Channel.SubtitleMode != ChannelSubtitleMode.None)
+                    .Map(p => p.Id)
+                    .ToList();
+            }
+
             if (playoutIdsToCheck.Count == 0)
             {
-                playoutIdsToCheck = dbContext.Playouts.Map(p => p.Id).ToList();
+                foreach (int playoutId in request.PlayoutId)
+                {
+                    _logger.LogDebug(
+                        "Playout {PlayoutId} does not have subtitles enabled; nothing to extract",
+                        playoutId);
+                    return Unit.Default;
+                }
+
+                _logger.LogDebug("No playouts have subtitles enabled; nothing to extract");
+                return Unit.Default;
             }
+
+            _logger.LogDebug("Checking playouts {PlayoutIds} for text subtitles to extract", playoutIdsToCheck);
 
             // find all playout items in the next hour
             List<PlayoutItem> playoutItems = await dbContext.PlayoutItems
                 .Filter(pi => playoutIdsToCheck.Contains(pi.PlayoutId))
+                .Filter(pi => pi.Finish >= DateTime.UtcNow)
                 .Filter(pi => pi.Start <= until)
                 .ToListAsync(cancellationToken);
 
@@ -76,10 +101,21 @@ public class ExtractEmbeddedSubtitlesHandler : IRequestHandler<ExtractEmbeddedSu
             List<int> unextractedMediaItemIds =
                 await GetUnextractedMediaItemIds(dbContext, mediaItemIds, cancellationToken);
 
-            _logger.LogDebug("Media item ids to extract {EpisodeIds}", unextractedMediaItemIds);
+            if (unextractedMediaItemIds.Any())
+            {
+                _logger.LogDebug(
+                    "Found media items {MediaItemIds} with text subtitles to extract for playouts {PlayoutIds}",
+                    unextractedMediaItemIds,
+                    playoutIdsToCheck);
+            }
+            else
+            {
+                _logger.LogDebug("Found no text subtitles to extract for playouts {PlayoutIds}", playoutIdsToCheck);
+            }
 
             // sort by start time
             var toUpdate = playoutItems
+                .Filter(pi => pi.Finish >= DateTime.UtcNow)
                 .DistinctBy(pi => pi.MediaItemId)
                 .Filter(pi => unextractedMediaItemIds.Contains(pi.MediaItemId))
                 .OrderBy(pi => pi.StartOffset)

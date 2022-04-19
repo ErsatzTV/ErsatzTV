@@ -48,8 +48,8 @@ public class BuildPlayoutHandler : IRequestHandler<BuildPlayout, Either<BaseErro
             if (await dbContext.SaveChangesAsync() > 0)
             {
                 _ffmpegSegmenterService.PlayoutUpdated(playout.Channel.Number);
-                await _ffmpegWorkerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
             }
+            await _ffmpegWorkerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
         }
         catch (Exception ex)
         {

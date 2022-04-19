@@ -1,20 +1,29 @@
 ﻿using System.Globalization;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
+using ErsatzTV.Application.Subtitles;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Infrastructure.Data;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using static ErsatzTV.Application.Channels.Mapper;
+using Channel = ErsatzTV.Core.Domain.Channel;
 
 namespace ErsatzTV.Application.Channels;
 
 public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseError, ChannelViewModel>>
 {
+    private readonly ChannelWriter<ISubtitleWorkerRequest> _ffmpegWorkerChannel;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public UpdateChannelHandler(IDbContextFactory<TvContext> dbContextFactory) =>
+    public UpdateChannelHandler(
+        ChannelWriter<ISubtitleWorkerRequest> ffmpegWorkerChannel,
+        IDbContextFactory<TvContext> dbContextFactory)
+    {
+        _ffmpegWorkerChannel = ffmpegWorkerChannel;
         _dbContextFactory = dbContextFactory;
+    }
 
     public async Task<Either<BaseError, ChannelViewModel>> Handle(
         UpdateChannel request,
@@ -65,6 +74,18 @@ public class UpdateChannelHandler : IRequestHandler<UpdateChannel, Either<BaseEr
         c.WatermarkId = update.WatermarkId;
         c.FallbackFillerId = update.FallbackFillerId;
         await dbContext.SaveChangesAsync();
+
+        if (c.SubtitleMode != ChannelSubtitleMode.None)
+        {
+            Option<Playout> maybePlayout = await dbContext.Playouts
+                .SelectOneAsync(p => p.ChannelId, p => p.ChannelId == c.Id);
+
+            foreach (Playout playout in maybePlayout)
+            {
+                await _ffmpegWorkerChannel.WriteAsync(new ExtractEmbeddedSubtitles(playout.Id));
+            }
+        }
+
         return ProjectToViewModel(c);
     }
 
