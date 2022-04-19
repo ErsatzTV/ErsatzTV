@@ -9,10 +9,8 @@ public class GetPagedFillerPresetsHandler : IRequestHandler<GetPagedFillerPreset
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetPagedFillerPresetsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetPagedFillerPresetsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<PagedFillerPresetsViewModel> Handle(
         GetPagedFillerPresets request,

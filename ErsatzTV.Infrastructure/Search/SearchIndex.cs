@@ -315,10 +315,11 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, movie.MediaVersions);
-                    
+
                 foreach (MediaVersion version in movie.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
                 }
 
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
@@ -493,7 +494,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(ActorField, actor.Name, Field.Store.NO));
                 }
-                    
+
                 foreach (TraktListItem item in show.TraktListItems)
                 {
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
@@ -508,7 +509,7 @@ public sealed class SearchIndex : ISearchIndex
             }
         }
     }
-        
+
     private async Task UpdateSeason(ISearchRepository searchRepository, Season season)
     {
         Option<SeasonMetadata> maybeMetadata = season.SeasonMetadata.HeadOrNone();
@@ -520,7 +521,7 @@ public sealed class SearchIndex : ISearchIndex
 
             try
             {
-                var seasonTitle = $"{showMetadata.Title} - S{season.SeasonNumber}";
+                string seasonTitle = $"{showMetadata.Title} - S{season.SeasonNumber}";
                 string sortTitle = $"{showMetadata.SortTitle}_{season.SeasonNumber:0000}"
                     .ToLowerInvariant();
                 string titleAndYear = $"{showMetadata.Title}_{showMetadata.Year}_{season.SeasonNumber}"
@@ -558,7 +559,7 @@ public sealed class SearchIndex : ISearchIndex
                             metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                             Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 foreach (TraktListItem item in season.TraktListItems)
@@ -599,7 +600,7 @@ public sealed class SearchIndex : ISearchIndex
 
                 List<string> languages = await searchRepository.GetLanguagesForArtist(artist);
                 await AddLanguages(searchRepository, doc, languages);
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 foreach (Genre genre in metadata.Genres)
@@ -650,10 +651,11 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, musicVideo.MediaVersions);
-                    
+
                 foreach (MediaVersion version in musicVideo.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
                 }
 
                 if (metadata.ReleaseDate.HasValue)
@@ -664,7 +666,7 @@ public sealed class SearchIndex : ISearchIndex
                             metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                             Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
@@ -691,7 +693,7 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(new TextField(StudioField, studio.Name, Field.Store.NO));
                 }
-                    
+
                 if (musicVideo.Artist != null)
                 {
                     foreach (ArtistMetadata artistMetadata in musicVideo.Artist.ArtistMetadata)
@@ -741,10 +743,11 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, episode.MediaVersions);
-                    
+
                 foreach (MediaVersion version in episode.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
                 }
 
                 if (metadata.ReleaseDate.HasValue)
@@ -755,7 +758,7 @@ public sealed class SearchIndex : ISearchIndex
                             metadata.ReleaseDate.Value.ToString("yyyyMMdd"),
                             Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Plot))
@@ -807,7 +810,7 @@ public sealed class SearchIndex : ISearchIndex
             }
         }
     }
-        
+
     private async Task UpdateOtherVideo(ISearchRepository searchRepository, OtherVideo otherVideo)
     {
         Option<OtherVideoMetadata> maybeMetadata = otherVideo.OtherVideoMetadata.HeadOrNone();
@@ -831,12 +834,13 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, otherVideo.MediaVersions);
-                    
+
                 foreach (MediaVersion version in otherVideo.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 foreach (Tag tag in metadata.Tags)
@@ -853,7 +857,7 @@ public sealed class SearchIndex : ISearchIndex
             }
         }
     }
-        
+
     private async Task UpdateSong(ISearchRepository searchRepository, Song song)
     {
         Option<SongMetadata> maybeMetadata = song.SongMetadata.HeadOrNone();
@@ -877,19 +881,20 @@ public sealed class SearchIndex : ISearchIndex
                 };
 
                 await AddLanguages(searchRepository, doc, song.MediaVersions);
-                    
+
                 foreach (MediaVersion version in song.MediaVersions.HeadOrNone())
                 {
-                    doc.Add(new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+                    doc.Add(
+                        new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
                 }
-                    
+
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
 
                 if (!string.IsNullOrWhiteSpace(metadata.Album))
                 {
                     doc.Add(new TextField(AlbumField, metadata.Album, Field.Store.NO));
                 }
-                    
+
                 if (!string.IsNullOrWhiteSpace(metadata.Artist))
                 {
                     doc.Add(new TextField(ArtistField, metadata.Artist, Field.Store.NO));
@@ -949,7 +954,7 @@ public sealed class SearchIndex : ISearchIndex
             SongMetadata sm => $"{sm.OriginalTitle}".ToLowerInvariant(),
             _ => $"{metadata.Title}_{metadata.Year}".ToLowerInvariant()
         };
-        
+
     private static string GetJumpLetter(Metadata metadata)
     {
         char c = metadata.SortTitle.ToLowerInvariant().Head();

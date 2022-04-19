@@ -5,7 +5,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 namespace ErsatzTV.Application.Configuration;
 
 public class UpdateLibraryRefreshIntervalHandler :
-    MediatR.IRequestHandler<UpdateLibraryRefreshInterval, Either<BaseError, Unit>>
+    IRequestHandler<UpdateLibraryRefreshInterval, Either<BaseError, Unit>>
 {
     private readonly IConfigElementRepository _configElementRepository;
 
@@ -16,7 +16,10 @@ public class UpdateLibraryRefreshIntervalHandler :
         UpdateLibraryRefreshInterval request,
         CancellationToken cancellationToken) =>
         Validate(request)
-            .MapT(_ => _configElementRepository.Upsert(ConfigElementKey.LibraryRefreshInterval, request.LibraryRefreshInterval))
+            .MapT(
+                _ => _configElementRepository.Upsert(
+                    ConfigElementKey.LibraryRefreshInterval,
+                    request.LibraryRefreshInterval))
             .Bind(v => v.ToEitherAsync());
 
     private static Task<Validation<BaseError, Unit>> Validate(UpdateLibraryRefreshInterval request) =>

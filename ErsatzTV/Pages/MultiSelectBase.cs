@@ -12,13 +12,12 @@ namespace ErsatzTV.Pages;
 
 public class MultiSelectBase<T> : FragmentNavigationBase
 {
-    private readonly System.Collections.Generic.HashSet<MediaCardViewModel> _selectedItems;
     private Option<MediaCardViewModel> _recentlySelected;
 
     public MultiSelectBase()
     {
         _recentlySelected = None;
-        _selectedItems = new System.Collections.Generic.HashSet<MediaCardViewModel>();
+        SelectedItems = new System.Collections.Generic.HashSet<MediaCardViewModel>();
     }
 
     [Inject]
@@ -33,20 +32,20 @@ public class MultiSelectBase<T> : FragmentNavigationBase
     [Inject]
     protected IMediator Mediator { get; set; }
 
-    protected System.Collections.Generic.HashSet<MediaCardViewModel> SelectedItems => _selectedItems;
+    protected System.Collections.Generic.HashSet<MediaCardViewModel> SelectedItems { get; }
 
     protected bool IsSelected(MediaCardViewModel card) =>
-        _selectedItems.Contains(card);
+        SelectedItems.Contains(card);
 
     protected bool IsSelectMode() =>
-        _selectedItems.Any();
+        SelectedItems.Any();
 
     protected string SelectionLabel() =>
-        $"{_selectedItems.Count} {(_selectedItems.Count == 1 ? "Item" : "Items")} Selected";
+        $"{SelectedItems.Count} {(SelectedItems.Count == 1 ? "Item" : "Items")} Selected";
 
     protected void ClearSelection()
     {
-        _selectedItems.Clear();
+        SelectedItems.Clear();
         _recentlySelected = None;
     }
 
@@ -57,9 +56,9 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         MediaCardViewModel card,
         MouseEventArgs e)
     {
-        if (_selectedItems.Contains(card))
+        if (SelectedItems.Contains(card))
         {
-            _selectedItems.Remove(card);
+            SelectedItems.Remove(card);
         }
         else
         {
@@ -76,24 +75,24 @@ public class MultiSelectBase<T> : FragmentNavigationBase
 
                 for (int i = start; i < finish; i++)
                 {
-                    _selectedItems.Add(sorted[i]);
+                    SelectedItems.Add(sorted[i]);
                 }
             }
 
             _recentlySelected = card;
-            _selectedItems.Add(card);
+            SelectedItems.Add(card);
         }
     }
 
     protected Task AddSelectionToCollection() => AddItemsToCollection(
-        _selectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
-        _selectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
-        _selectedItems.OfType<TelevisionSeasonCardViewModel>().Map(s => s.TelevisionSeasonId).ToList(),
-        _selectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId).ToList(),
-        _selectedItems.OfType<ArtistCardViewModel>().Map(a => a.ArtistId).ToList(),
-        _selectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList(),
-        _selectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
-        _selectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList());
+        SelectedItems.OfType<MovieCardViewModel>().Map(m => m.MovieId).ToList(),
+        SelectedItems.OfType<TelevisionShowCardViewModel>().Map(s => s.TelevisionShowId).ToList(),
+        SelectedItems.OfType<TelevisionSeasonCardViewModel>().Map(s => s.TelevisionSeasonId).ToList(),
+        SelectedItems.OfType<TelevisionEpisodeCardViewModel>().Map(e => e.EpisodeId).ToList(),
+        SelectedItems.OfType<ArtistCardViewModel>().Map(a => a.ArtistId).ToList(),
+        SelectedItems.OfType<MusicVideoCardViewModel>().Map(mv => mv.MusicVideoId).ToList(),
+        SelectedItems.OfType<OtherVideoCardViewModel>().Map(ov => ov.OtherVideoId).ToList(),
+        SelectedItems.OfType<SongCardViewModel>().Map(s => s.SongId).ToList());
 
     protected async Task AddItemsToCollection(
         List<int> movieIds,
@@ -148,7 +147,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
     protected async Task RemoveSelectionFromCollection(int collectionId)
     {
         var parameters = new DialogParameters
-            { { "EntityType", _selectedItems.Count.ToString() }, { "EntityName", "selected items" } };
+            { { "EntityType", SelectedItems.Count.ToString() }, { "EntityName", "selected items" } };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         IDialogReference dialog = Dialog.Show<RemoveFromCollectionDialog>(
@@ -158,7 +157,7 @@ public class MultiSelectBase<T> : FragmentNavigationBase
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
         {
-            var itemIds = _selectedItems.Map(vm => vm.MediaItemId).ToList();
+            var itemIds = SelectedItems.Map(vm => vm.MediaItemId).ToList();
 
             await Mediator.Send(
                 new RemoveItemsFromCollection(collectionId)

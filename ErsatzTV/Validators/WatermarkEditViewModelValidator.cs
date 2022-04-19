@@ -15,7 +15,7 @@ public class WatermarkEditViewModelValidator : AbstractValidator<WatermarkEditVi
             .NotEmpty()
             .WithMessage("Watermark image is required!")
             .When(vm => vm.ImageSource == ChannelWatermarkImageSource.Custom);
-            
+
         RuleFor(x => x.Width)
             .GreaterThan(0)
             .LessThanOrEqualTo(100)

@@ -34,8 +34,8 @@ public class QsvHardwareAccelerationOption : GlobalOption
     // qsv encoders want nv12
     public override FrameState NextState(FrameState currentState)
     {
-        FrameState result = currentState; 
-        
+        FrameState result = currentState;
+
         foreach (IPixelFormat pixelFormat in currentState.PixelFormat)
         {
             if (_supportedFFmpegFormats.Contains(pixelFormat.FFmpegName))

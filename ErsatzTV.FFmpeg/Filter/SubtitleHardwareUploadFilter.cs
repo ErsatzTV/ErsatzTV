@@ -11,8 +11,6 @@ public class SubtitleHardwareUploadFilter : BaseFilter
         _ffmpegState = ffmpegState;
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState;
-
     public override string Filter =>
         _ffmpegState.HardwareAccelerationMode switch
         {
@@ -29,4 +27,6 @@ public class SubtitleHardwareUploadFilter : BaseFilter
 
             _ => "hwupload"
         };
+
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace ErsatzTV.Application.Jellyfin;
 
 public class
-    SynchronizeJellyfinLibrariesHandler : MediatR.IRequestHandler<SynchronizeJellyfinLibraries,
+    SynchronizeJellyfinLibrariesHandler : IRequestHandler<SynchronizeJellyfinLibraries,
         Either<BaseError, Unit>>
 
 {

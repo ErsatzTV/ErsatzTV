@@ -128,7 +128,7 @@
                         <MudCardMedia Image="@($"/artwork/thumbnails/{musicVideo.Poster}")" Style="flex-grow: 1; height: 220px; width: 293px;"/>
                         @if (musicVideo.State == MediaItemState.FileNotFound)
                         {
-                            <div style="position: absolute; top: 8px; right: 10px">
+                            <div style="position: absolute; right: 10px; top: 8px;">
                                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
                             </div>
                         }
@@ -136,11 +136,11 @@
                 }
                 else
                 {
-                    <div style="height: 220px; width: 293px; display: flex; position: relative">
+                    <div style="display: flex; height: 220px; position: relative; width: 293px;">
                         <MudSkeleton SkeletonType="SkeletonType.Rectangle" Animation="Animation.False"/>
                         @if (musicVideo.State == MediaItemState.FileNotFound)
                         {
-                            <div style="position: absolute; top: 8px; right: 10px">
+                            <div style="position: absolute; right: 10px; top: 8px;">
                                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
                             </div>
                         }
@@ -192,7 +192,7 @@
     private List<string> _sortedStyles = new();
     private List<string> _sortedMoods = new();
     private MusicVideoCardResultsViewModel _musicVideos;
-    
+
     public void Dispose()
     {
         _cts.Cancel();

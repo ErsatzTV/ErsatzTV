@@ -55,17 +55,11 @@
 
     private IList<LocalLibraryViewModel> _libraries;
 
-    protected override void OnInitialized()
-    {
-        _locker.OnLibraryChanged += LockChanged;
-    }
+    protected override void OnInitialized() => _locker.OnLibraryChanged += LockChanged;
 
     protected override async Task OnParametersSetAsync() => await LoadLibraries(_cts.Token);
 
-    private async Task LoadLibraries(CancellationToken cancellationToken)
-    {
-        _libraries = await _mediator.Send(new GetAllLocalLibraries(), cancellationToken);
-    }
+    private async Task LoadLibraries(CancellationToken cancellationToken) => _libraries = await _mediator.Send(new GetAllLocalLibraries(), cancellationToken);
 
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
@@ -81,7 +75,7 @@
             { "DetailHighlight", count.ToString() }
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        
+
         IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Library", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
@@ -94,7 +88,7 @@
     void IDisposable.Dispose()
     {
         _locker.OnLibraryChanged -= LockChanged;
-        
+
         _cts.Cancel();
         _cts.Dispose();
     }

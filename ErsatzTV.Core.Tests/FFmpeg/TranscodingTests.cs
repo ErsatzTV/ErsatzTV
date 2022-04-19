@@ -24,7 +24,7 @@ namespace ErsatzTV.Core.Tests.FFmpeg;
 public class TranscodingTests
 {
     private static readonly ILoggerFactory LoggerFactory;
-        
+
     static TranscodingTests()
     {
         Log.Logger = new LoggerConfiguration()
@@ -61,6 +61,7 @@ public class TranscodingTests
         PermanentOpaque,
         PermanentTransparent,
         IntermittentOpaque,
+
         IntermittentTransparent
         // TODO: animated vs static
     }
@@ -87,7 +88,7 @@ public class TranscodingTests
             Subtitle.Picture,
             Subtitle.Text
         };
-            
+
         public static Padding[] Paddings =
         {
             Padding.NoPadding,
@@ -106,27 +107,27 @@ public class TranscodingTests
             new("libx264", "yuvj420p"),
             new("libx264", "yuv420p10le"),
             // new("libx264", "yuv444p10le"),
-            
+
             new("mpeg1video", "yuv420p"),
-            
+
             new("mpeg2video", "yuv420p"),
-            
+
             new("libx265", "yuv420p"),
             new("libx265", "yuv420p10le"),
-            
+
             new("mpeg4", "yuv420p"),
-            
+
             new("libvpx-vp9", "yuv420p"),
-            
+
             // new("libaom-av1", "yuv420p")
             // av1    yuv420p10le    51
-            
+
             new("msmpeg4v2", "yuv420p"),
             new("msmpeg4v3", "yuv420p")
-            
+
             // wmv3    yuv420p    1
         };
-            
+
         public static Resolution[] Resolutions =
         {
             new() { Width = 1920, Height = 1080 },
@@ -165,17 +166,26 @@ public class TranscodingTests
         };
     }
 
-    [Test, Combinatorial]
+    [Test]
+    [Combinatorial]
     public async Task Transcode(
-        [ValueSource(typeof(TestData), nameof(TestData.InputFormats))] InputFormat inputFormat,
-        [ValueSource(typeof(TestData), nameof(TestData.Resolutions))] Resolution profileResolution,
-        [ValueSource(typeof(TestData), nameof(TestData.Paddings))] Padding padding,
-        [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))] VideoScanKind videoScanKind,
-        [ValueSource(typeof(TestData), nameof(TestData.Watermarks))] Watermark watermark,
-        [ValueSource(typeof(TestData), nameof(TestData.Subtitles))] Subtitle subtitle,
-        [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))] FFmpegProfileVideoFormat profileVideoFormat,
-        // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-        [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.InputFormats))]
+            InputFormat inputFormat,
+            [ValueSource(typeof(TestData), nameof(TestData.Resolutions))]
+            Resolution profileResolution,
+            [ValueSource(typeof(TestData), nameof(TestData.Paddings))]
+            Padding padding,
+            [ValueSource(typeof(TestData), nameof(TestData.VideoScanKinds))]
+            VideoScanKind videoScanKind,
+            [ValueSource(typeof(TestData), nameof(TestData.Watermarks))]
+            Watermark watermark,
+            [ValueSource(typeof(TestData), nameof(TestData.Subtitles))]
+            Subtitle subtitle,
+            [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
+            FFmpegProfileVideoFormat profileVideoFormat,
+            // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))]
+            HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
@@ -224,7 +234,7 @@ public class TranscodingTests
                 case Subtitle.Text or Subtitle.Picture:
                     string sourceFile = Path.GetTempFileName() + ".mkv";
                     File.Move(file, sourceFile, true);
-                    
+
                     string tempFileName = Path.GetTempFileName() + ".mkv";
                     string subPath = Path.Combine(
                         TestContext.CurrentContext.TestDirectory,
@@ -334,11 +344,11 @@ public class TranscodingTests
             .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
             .ToList();
 
-        var subtitles = new List<Core.Domain.Subtitle>();
-                
+        var subtitles = new List<Domain.Subtitle>();
+
         foreach (MediaStream stream in subtitleStreams)
         {
-            var s = new Core.Domain.Subtitle
+            var s = new Domain.Subtitle
             {
                 Codec = stream.Codec,
                 Default = stream.Default,
@@ -405,7 +415,7 @@ public class TranscodingTests
         ChannelSubtitleMode subtitleMode = subtitle switch
         {
             Subtitle.Picture or Subtitle.Text => ChannelSubtitleMode.Any,
-            _ => ChannelSubtitleMode.None 
+            _ => ChannelSubtitleMode.None
         };
 
         string srtFile = Path.Combine(FileSystemLayout.SubtitleCacheFolder, "test.srt");
@@ -478,7 +488,7 @@ public class TranscodingTests
             return;
         }
 
-        string error = sb.ToString();
+        var error = sb.ToString();
         bool isUnsupported = unsupportedMessages.Any(error.Contains);
 
         if (profileAcceleration != HardwareAccelerationKind.None && isUnsupported)

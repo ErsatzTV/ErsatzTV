@@ -32,16 +32,16 @@ internal class FFmpegProcessBuilder
 {
     private readonly List<string> _arguments = new();
     private readonly string _ffmpegPath;
-    private readonly bool _saveReports;
     private readonly ILogger _logger;
+    private readonly bool _saveReports;
     private FFmpegComplexFilterBuilder _complexFilterBuilder = new();
-    private bool _isConcat;
-    private VaapiDriver _vaapiDriver;
-    private string _vaapiDevice;
     private HardwareAccelerationKind _hwAccel;
-    private string _outputPixelFormat;
+    private bool _isConcat;
     private bool _noAutoScale;
     private Option<int> _outputFramerate;
+    private string _outputPixelFormat;
+    private string _vaapiDevice;
+    private VaapiDriver _vaapiDriver;
 
     public FFmpegProcessBuilder(string ffmpegPath, bool saveReports, ILogger logger)
     {
@@ -154,7 +154,7 @@ internal class FFmpegProcessBuilder
         {
             _arguments.Add("-stream_loop");
             _arguments.Add("-1");
-                
+
             if (_hwAccel is HardwareAccelerationKind.Qsv or HardwareAccelerationKind.Vaapi)
             {
                 _noAutoScale = true;
@@ -219,7 +219,7 @@ internal class FFmpegProcessBuilder
         {
             _arguments.Add("-r");
             _arguments.Add($"{fr}");
-            
+
             _arguments.Add("-vsync");
             _arguments.Add("cfr");
         }
@@ -232,7 +232,8 @@ internal class FFmpegProcessBuilder
         Option<List<FadePoint>> maybeFadePoints,
         IDisplaySize resolution)
     {
-        ChannelWatermarkMode maybeWatermarkMode = watermarkOptions.Map(wmo => wmo.Watermark.Map(wm => wm.Mode)).Flatten()
+        ChannelWatermarkMode maybeWatermarkMode = watermarkOptions.Map(wmo => wmo.Watermark.Map(wm => wm.Mode))
+            .Flatten()
             .IfNone(ChannelWatermarkMode.None);
 
         // skip watermark if intermittent and no fade points
@@ -297,7 +298,7 @@ internal class FFmpegProcessBuilder
         {
             _noAutoScale = true;
             _outputFramerate = 30;
-                
+
             _arguments.Add("-loop");
             _arguments.Add("1");
         }
@@ -334,7 +335,7 @@ internal class FFmpegProcessBuilder
 
         return this;
     }
-        
+
     public FFmpegProcessBuilder WithSongInput(
         string videoPath,
         Option<string> codec,
@@ -580,12 +581,12 @@ internal class FFmpegProcessBuilder
         _complexFilterBuilder = _complexFilterBuilder.WithDeinterlace(deinterlace);
         return this;
     }
-        
+
     public FFmpegProcessBuilder WithOutputFormat(string format, string output)
     {
         _arguments.Add("-f");
         _arguments.Add(format);
-            
+
         _arguments.Add("-y");
         _arguments.Add(output);
 
@@ -620,8 +621,8 @@ internal class FFmpegProcessBuilder
             }
         }
 
-        var videoLabel = $"{videoIndex}:{videoStreamIndex}";
-        var audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
+        string videoLabel = $"{videoIndex}:{videoStreamIndex}";
+        string audioLabel = $"{audioIndex}:{maybeIndex.Match(i => i.ToString(), () => "a")}";
 
         Option<FFmpegComplexFilter> maybeFilter = _complexFilterBuilder.Build(
             audioPath.IsNone,
@@ -650,7 +651,7 @@ internal class FFmpegProcessBuilder
             _arguments.Add("-map");
             _arguments.Add(audioLabel);
         }
-            
+
         _arguments.Add("-map");
         _arguments.Add(videoLabel);
 
@@ -705,7 +706,7 @@ internal class FFmpegProcessBuilder
             {
                 // \ is escape, so use / for directory separators
                 fileName = fileName.Replace(@"\", @"/");
-                    
+
                 // colon after drive letter needs to be escaped
                 fileName = fileName.Replace(@":/", @"\:/");
             }

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Search;
 
-public class RebuildSearchIndexHandler : MediatR.IRequestHandler<RebuildSearchIndex, Unit>
+public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Unit>
 {
     private readonly IConfigElementRepository _configElementRepository;
     private readonly ILocalFileSystem _localFileSystem;

@@ -271,7 +271,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators = CollectionEnumerators(
                 scheduleItem,
                 enumerator);
-            
+
             // too lazy to make another enumerator for the filler that we don't want
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), enumerator);
 
@@ -328,7 +328,7 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
             Dictionary<CollectionKey, IMediaCollectionEnumerator> enumerators = CollectionEnumerators(
                 scheduleItem,
                 enumerator);
-            
+
             enumerators.Add(CollectionKey.ForFillerPreset(scheduleItem.MidRollFiller), fillerEnumerator);
 
             List<PlayoutItem> playoutItems = Scheduler()
@@ -343,10 +343,10 @@ public class PlayoutModeSchedulerBaseTests : SchedulerTestBase
                         Finish = startState.CurrentTime.AddHours(1).UtcDateTime
                     },
                     new List<MediaChapter>
-                        {
-                            new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
-                            new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(60) }
-                        });
+                    {
+                        new() { StartTime = TimeSpan.Zero, EndTime = TimeSpan.FromMinutes(6) },
+                        new() { StartTime = TimeSpan.FromMinutes(6), EndTime = TimeSpan.FromMinutes(60) }
+                    });
 
             playoutItems.Count.Should().Be(3);
             playoutItems[0].MediaItemId.Should().Be(1);

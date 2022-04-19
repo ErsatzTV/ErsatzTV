@@ -141,7 +141,7 @@
     private int _collectionsRowsPerPage;
     private int _multiCollectionsRowsPerPage;
     private int _smartCollectionsRowsPerPage;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -159,7 +159,7 @@
         _smartCollectionsRowsPerPage = await _mediator.Send(new GetConfigElementByKey(ConfigElementKey.SmartCollectionsPageSize), _cts.Token)
             .Map(maybeRows => maybeRows.Match(ce => int.TryParse(ce.Value, out int rows) ? rows : 10, () => 10));
     }
-    
+
     private async Task DeleteMediaCollection(MediaCollectionViewModel collection)
     {
         var parameters = new DialogParameters { { "EntityType", "collection" }, { "EntityName", collection.Name } };
@@ -187,7 +187,7 @@
             await _multiCollectionsTable.ReloadServerData();
         }
     }
-    
+
     private async Task DeleteSmartCollection(SmartCollectionViewModel collection)
     {
         var parameters = new DialogParameters { { "EntityType", "smart collection" }, { "EntityName", collection.Name } };

@@ -11,10 +11,8 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public JellyfinTelevisionRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public JellyfinTelevisionRepository(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<List<JellyfinItemEtag>> GetExistingShows(JellyfinLibrary library)
     {

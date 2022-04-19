@@ -12,8 +12,8 @@ namespace ErsatzTV.Application.ProgramSchedules;
 public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase,
     IRequestHandler<ReplaceProgramScheduleItems, Either<BaseError, IEnumerable<ProgramScheduleItemViewModel>>>
 {
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ChannelWriter<IBackgroundServiceRequest> _channel;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
     public ReplaceProgramScheduleItemsHandler(
         IDbContextFactory<TvContext> dbContextFactory,
@@ -29,7 +29,7 @@ public class ReplaceProgramScheduleItemsHandler : ProgramScheduleItemCommandBase
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, ProgramSchedule> validation = await Validate(dbContext, request);
-        return await validation.Apply(ps => PersistItems(dbContext, request, ps));
+        return await LanguageExtensions.Apply(validation, ps => PersistItems(dbContext, request, ps));
     }
 
     private async Task<IEnumerable<ProgramScheduleItemViewModel>> PersistItems(

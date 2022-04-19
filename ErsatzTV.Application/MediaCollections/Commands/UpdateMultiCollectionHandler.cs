@@ -32,7 +32,7 @@ public class UpdateMultiCollectionHandler : IRequestHandler<UpdateMultiCollectio
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, MultiCollection> validation = await Validate(dbContext, request);
-        return await validation.Apply(c => ApplyUpdateRequest(dbContext, c, request));
+        return await LanguageExtensions.Apply(validation, c => ApplyUpdateRequest(dbContext, c, request));
     }
 
     private async Task<Unit> ApplyUpdateRequest(TvContext dbContext, MultiCollection c, UpdateMultiCollection request)

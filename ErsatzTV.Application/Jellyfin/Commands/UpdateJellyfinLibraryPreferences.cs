@@ -3,6 +3,6 @@
 namespace ErsatzTV.Application.Jellyfin;
 
 public record UpdateJellyfinLibraryPreferences
-    (List<JellyfinLibraryPreference> Preferences) : MediatR.IRequest<Either<BaseError, Unit>>;
+    (List<JellyfinLibraryPreference> Preferences) : IRequest<Either<BaseError, Unit>>;
 
 public record JellyfinLibraryPreference(int Id, bool ShouldSyncItems);

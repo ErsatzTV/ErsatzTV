@@ -11,10 +11,7 @@ public class ArtistRepository : IArtistRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public ArtistRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public ArtistRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<Option<Artist>> GetArtistByMetadata(int libraryPathId, ArtistMetadata metadata)
     {

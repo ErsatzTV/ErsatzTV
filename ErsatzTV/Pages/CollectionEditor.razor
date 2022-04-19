@@ -32,11 +32,11 @@
 
     [Parameter]
     public int Id { get; set; }
-    
+
     private readonly CollectionEditViewModel _model = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -65,7 +65,7 @@
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
     }
-    
+
     private bool IsEdit => Id != 0;
 
     private async Task HandleSubmitAsync()

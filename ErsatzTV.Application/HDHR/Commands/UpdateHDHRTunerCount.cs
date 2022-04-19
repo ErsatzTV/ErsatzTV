@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.HDHR;
 
-public record UpdateHDHRTunerCount(int TunerCount) : MediatR.IRequest<Either<BaseError, Unit>>;
+public record UpdateHDHRTunerCount(int TunerCount) : IRequest<Either<BaseError, Unit>>;

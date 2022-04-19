@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Filter;
 public class OverlayWatermarkFilter : BaseFilter
 {
     private readonly FrameState _currentState;
-    private readonly WatermarkState _watermarkState;
     private readonly FrameSize _resolution;
+    private readonly WatermarkState _watermarkState;
 
     public OverlayWatermarkFilter(FrameState currentState, WatermarkState watermarkState, FrameSize resolution)
     {
@@ -14,8 +14,6 @@ public class OverlayWatermarkFilter : BaseFilter
         _watermarkState = watermarkState;
         _resolution = resolution;
     }
-
-    public override FrameState NextState(FrameState currentState) => currentState;
 
     public override string Filter => $"overlay={Position}";
 
@@ -39,4 +37,6 @@ public class OverlayWatermarkFilter : BaseFilter
             };
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

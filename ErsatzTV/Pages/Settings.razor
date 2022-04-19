@@ -51,7 +51,7 @@
                                @bind-Value="_ffmpegSettings.GlobalWatermarkId"
                                For="@(() => _ffmpegSettings.GlobalWatermarkId)"
                                Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (WatermarkViewModel watermark in _watermarks)
                         {
                             <MudSelectItem T="int?" Value="@watermark.Id">@watermark.Name</MudSelectItem>
@@ -62,7 +62,7 @@
                                @bind-Value="_ffmpegSettings.GlobalFallbackFillerId"
                                For="@(() => _ffmpegSettings.GlobalFallbackFillerId)"
                                Clearable="true">
-                        <MudSelectItem T="int?" Value="@((int?) null)">(none)</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)null)">(none)</MudSelectItem>
                         @foreach (FillerPresetViewModel fillerPreset in _fillerPresets)
                         {
                             <MudSelectItem T="int?" Value="@fillerPreset.Id">@fillerPreset.Name</MudSelectItem>
@@ -177,7 +177,7 @@
     private int _tunerCount;
     private int _libraryRefreshInterval;
     private int _playoutDaysToBuild;
-    
+
     public void Dispose()
     {
         _cts.Cancel();
@@ -207,7 +207,7 @@
     private static string ValidateTunerCount(int tunerCount) => tunerCount <= 0 ? "Tuner count must be greater than zero" : null;
 
     private static string ValidateLibraryRefreshInterval(int libraryRefreshInterval) => libraryRefreshInterval <= 0 ? "Library refresh interval must be greater than zero" : null;
-    
+
     private static string ValidatePlayoutDaysToBuild(int daysToBuild) => daysToBuild <= 0 ? "Days to build must be greater than zero" : null;
 
     private static string ValidateHlsSegmenterIdleTimeout(int idleTimeout) => idleTimeout < 30 ? "HLS Segmenter idle timeout must be greater than or equal to 30" : null;

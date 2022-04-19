@@ -10,10 +10,7 @@ public class MediaItemRepository : IMediaItemRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public MediaItemRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    public MediaItemRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
     public async Task<List<string>> GetAllLanguageCodes()
     {
@@ -54,7 +51,7 @@ public class MediaItemRepository : IMediaItemRepository
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         mediaItem.State = MediaItemState.Normal;
-            
+
         return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MediaItem SET State = 0 WHERE Id = @Id",
             new { mediaItem.Id }).ToUnit();

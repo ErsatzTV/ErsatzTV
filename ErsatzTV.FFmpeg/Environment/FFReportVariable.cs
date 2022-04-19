@@ -4,8 +4,8 @@ namespace ErsatzTV.FFmpeg.Environment;
 
 public class FFReportVariable : IPipelineStep
 {
-    private readonly string _reportsFolder;
     private readonly Option<ConcatInputFile> _maybeConcatInputFile;
+    private readonly string _reportsFolder;
 
     public FFReportVariable(string reportsFolder, Option<ConcatInputFile> maybeConcatInputFile)
     {
@@ -26,7 +26,7 @@ public class FFReportVariable : IPipelineStep
             {
                 // \ is escape, so use / for directory separators
                 fileName = fileName.Replace(@"\", @"/");
-                    
+
                 // colon after drive letter needs to be escaped
                 fileName = fileName.Replace(@":/", @"\:/");
             }

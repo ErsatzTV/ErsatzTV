@@ -3,6 +3,9 @@
 public class DecoderVp9Cuvid : DecoderBase
 {
     public override string Name => "vp9_cuvid";
+
+    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
+
     public override IList<string> InputOptions(InputFile inputFile)
     {
         IList<string> result = base.InputOptions(inputFile);
@@ -12,6 +15,4 @@ public class DecoderVp9Cuvid : DecoderBase
 
         return result;
     }
-
-    protected override FrameDataLocation OutputFrameDataLocation => FrameDataLocation.Hardware;
 }

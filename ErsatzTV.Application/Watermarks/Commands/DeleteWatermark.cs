@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.Watermarks;
 
-public record DeleteWatermark(int WatermarkId) : MediatR.IRequest<Either<BaseError, Unit>>;
+public record DeleteWatermark(int WatermarkId) : IRequest<Either<BaseError, Unit>>;

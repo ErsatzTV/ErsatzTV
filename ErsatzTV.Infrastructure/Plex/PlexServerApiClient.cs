@@ -414,7 +414,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
-            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            string path = $"plex/{mediaSourceId}{response.Thumb}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.Poster,
@@ -429,7 +429,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Art))
         {
-            var path = $"plex/{mediaSourceId}{response.Art}";
+            string path = $"plex/{mediaSourceId}{response.Art}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.FanArt,
@@ -585,7 +585,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
-            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            string path = $"plex/{mediaSourceId}{response.Thumb}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.Poster,
@@ -600,7 +600,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Art))
         {
-            var path = $"plex/{mediaSourceId}{response.Art}";
+            string path = $"plex/{mediaSourceId}{response.Art}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.FanArt,
@@ -646,7 +646,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
-            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            string path = $"plex/{mediaSourceId}{response.Thumb}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.Poster,
@@ -661,7 +661,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Art))
         {
-            var path = $"plex/{mediaSourceId}{response.Art}";
+            string path = $"plex/{mediaSourceId}{response.Art}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.FanArt,
@@ -774,7 +774,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
-            var path = $"plex/{mediaSourceId}{response.Thumb}";
+            string path = $"plex/{mediaSourceId}{response.Thumb}";
             var artwork = new Artwork
             {
                 ArtworkKind = ArtworkKind.Thumbnail,
@@ -816,7 +816,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             return guid;
         }
-            
+
         if (guid.StartsWith("com.plexapp.agents.imdb"))
         {
             string strip1 = guid.Replace("com.plexapp.agents.imdb://", string.Empty);

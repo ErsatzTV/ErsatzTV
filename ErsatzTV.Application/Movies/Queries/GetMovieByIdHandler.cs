@@ -9,8 +9,8 @@ namespace ErsatzTV.Application.Movies;
 
 public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieViewModel>>
 {
-    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMovieRepository _movieRepository;
 
     public GetMovieByIdHandler(
@@ -28,7 +28,7 @@ public class GetMovieByIdHandler : IRequestHandler<GetMovieById, Option<MovieVie
         CancellationToken cancellationToken)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            
+
         Option<JellyfinMediaSource> maybeJellyfin = await _mediaSourceRepository.GetAllJellyfin()
             .Map(list => list.HeadOrNone());
 

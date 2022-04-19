@@ -7,34 +7,38 @@ namespace ErsatzTV.Core.Tests.Scheduling;
 
 public abstract class SchedulerTestBase
 {
-    protected static PlayoutBuilderState StartState(IScheduleItemsEnumerator scheduleItemsEnumerator) => new(
-        scheduleItemsEnumerator,
-        Prelude.None,
-        Prelude.None,
-        false,
-        false,
-        1,
-        new DateTimeOffset(new DateTime(2020, 10, 18, 0, 0, 0, DateTimeKind.Local)));
-
     protected virtual ProgramScheduleItem NextScheduleItem => new ProgramScheduleItemOne
     {
         StartTime = null
     };
 
+    protected static PlayoutBuilderState StartState(IScheduleItemsEnumerator scheduleItemsEnumerator) => new(
+        scheduleItemsEnumerator,
+        None,
+        None,
+        false,
+        false,
+        1,
+        new DateTimeOffset(new DateTime(2020, 10, 18, 0, 0, 0, DateTimeKind.Local)));
+
     protected static DateTimeOffset HardStop(IScheduleItemsEnumerator scheduleItemsEnumerator) =>
         StartState(scheduleItemsEnumerator).CurrentTime.AddHours(6);
 
     protected static Dictionary<CollectionKey, IMediaCollectionEnumerator> CollectionEnumerators(
-        ProgramScheduleItem scheduleItem, IMediaCollectionEnumerator enumerator) =>
+        ProgramScheduleItem scheduleItem,
+        IMediaCollectionEnumerator enumerator) =>
         new()
         {
             { CollectionKey.ForScheduleItem(scheduleItem), enumerator }
         };
 
     protected static Dictionary<CollectionKey, IMediaCollectionEnumerator> CollectionEnumerators(
-        ProgramScheduleItem scheduleItem, IMediaCollectionEnumerator enumerator1,
-        FillerPreset fillerPreset, IMediaCollectionEnumerator enumerator2,
-        FillerPreset fillerPreset2, IMediaCollectionEnumerator enumerator3) =>
+        ProgramScheduleItem scheduleItem,
+        IMediaCollectionEnumerator enumerator1,
+        FillerPreset fillerPreset,
+        IMediaCollectionEnumerator enumerator2,
+        FillerPreset fillerPreset2,
+        IMediaCollectionEnumerator enumerator3) =>
         new()
         {
             { CollectionKey.ForScheduleItem(scheduleItem), enumerator1 },
@@ -44,7 +48,7 @@ public abstract class SchedulerTestBase
 
     private static Movie TestMovie(int id, TimeSpan duration, DateTime aired, int chapterCount = 0)
     {
-        var result = new Movie()
+        var result = new Movie
         {
             Id = id,
             MovieMetadata = new List<MovieMetadata> { new() { ReleaseDate = aired } },
@@ -79,8 +83,10 @@ public abstract class SchedulerTestBase
     };
 
     protected static Dictionary<CollectionKey, IMediaCollectionEnumerator> CollectionEnumerators(
-        ProgramScheduleItem scheduleItem, IMediaCollectionEnumerator enumerator1,
-        FillerPreset fillerPreset, IMediaCollectionEnumerator enumerator2) =>
+        ProgramScheduleItem scheduleItem,
+        IMediaCollectionEnumerator enumerator1,
+        FillerPreset fillerPreset,
+        IMediaCollectionEnumerator enumerator2) =>
         new()
         {
             { CollectionKey.ForScheduleItem(scheduleItem), enumerator1 },

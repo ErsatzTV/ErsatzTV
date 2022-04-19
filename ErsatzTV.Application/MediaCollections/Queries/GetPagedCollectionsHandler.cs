@@ -9,10 +9,8 @@ public class GetPagedCollectionsHandler : IRequestHandler<GetPagedCollections, P
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public GetPagedCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public GetPagedCollectionsHandler(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<PagedMediaCollectionsViewModel> Handle(
         GetPagedCollections request,

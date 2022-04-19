@@ -1,4 +1,5 @@
-﻿using System.Drawing.Imaging;
+﻿using System.Drawing;
+using System.Drawing.Imaging;
 using System.Security.Cryptography;
 using System.Text;
 using ErsatzTV.Core;
@@ -38,6 +39,7 @@ public class ImageCache : IImageCache
             {
                 await stream.CopyToAsync(fs);
             }
+
             byte[] hash = await ComputeFileHash(tempFileName);
             string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
             string subfolder = hex[..2];
@@ -67,23 +69,11 @@ public class ImageCache : IImageCache
         }
     }
 
-    private static async Task<byte[]> ComputeFileHash(string fileName)
-    {
-        using var md5 = MD5.Create();
-        // ReSharper disable once UseAwaitUsing
-        // ReSharper disable once ConvertToUsingDeclaration
-        using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
-        {
-            fs.Position = 0;
-            return await md5.ComputeHashAsync(fs);
-        }
-    }
-
     public async Task<Either<BaseError, string>> CopyArtworkToCache(string path, ArtworkKind artworkKind)
     {
         try
         {
-            var filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
+            string filenameKey = $"{path}:{_localFileSystem.GetLastWriteTime(path).ToFileTimeUtc()}";
             byte[] hash = Crypto.ComputeHash(Encoding.UTF8.GetBytes(filenameKey));
             string hex = BitConverter.ToString(hash).Replace("-", string.Empty);
             string subfolder = hex[..2];
@@ -131,7 +121,7 @@ public class ImageCache : IImageCache
         var encoder = new Encoder();
         string targetFile = GetPathForImage(fileName, artworkKind, Option<int>.None);
         // ReSharper disable once ConvertToUsingDeclaration
-        using (var image = System.Drawing.Image.FromFile(targetFile))
+        using (var image = Image.FromFile(targetFile))
         {
             return encoder.Encode(image, x, y);
         }
@@ -149,12 +139,24 @@ public class ImageCache : IImageCache
 
             var decoder = new Decoder();
             // ReSharper disable once ConvertToUsingDeclaration
-            using (System.Drawing.Image image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height))
+            using (Image image = decoder.Decode(blurHash, targetSize.Width, targetSize.Height))
             {
                 image.Save(targetFile, ImageFormat.Png);
             }
         }
 
         return targetFile;
+    }
+
+    private static async Task<byte[]> ComputeFileHash(string fileName)
+    {
+        using var md5 = MD5.Create();
+        // ReSharper disable once UseAwaitUsing
+        // ReSharper disable once ConvertToUsingDeclaration
+        using (var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read))
+        {
+            fs.Position = 0;
+            return await md5.ComputeHashAsync(fs);
+        }
     }
 }

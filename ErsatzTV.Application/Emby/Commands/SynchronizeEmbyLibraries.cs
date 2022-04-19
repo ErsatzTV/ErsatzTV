@@ -2,5 +2,5 @@
 
 namespace ErsatzTV.Application.Emby;
 
-public record SynchronizeEmbyLibraries(int EmbyMediaSourceId) : MediatR.IRequest<Either<BaseError, Unit>>,
+public record SynchronizeEmbyLibraries(int EmbyMediaSourceId) : IRequest<Either<BaseError, Unit>>,
     IEmbyBackgroundServiceRequest;

@@ -15,10 +15,8 @@ public class GetWrappedProcessByChannelNumberHandler : FFmpegProcessHandler<GetW
     public GetWrappedProcessByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IFFmpegProcessService ffmpegProcessService)
-        : base(dbContextFactory)
-    {
+        : base(dbContextFactory) =>
         _ffmpegProcessService = ffmpegProcessService;
-    }
 
     protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
         TvContext dbContext,

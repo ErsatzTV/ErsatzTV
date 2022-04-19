@@ -3,7 +3,7 @@ using ErsatzTV.Core.Interfaces.Repositories;
 
 namespace ErsatzTV.Application.Maintenance;
 
-public class DeleteOrphanedArtworkHandler : MediatR.IRequestHandler<DeleteOrphanedArtwork, Either<BaseError, Unit>>
+public class DeleteOrphanedArtworkHandler : IRequestHandler<DeleteOrphanedArtwork, Either<BaseError, Unit>>
 {
     private readonly IArtworkRepository _artworkRepository;
 

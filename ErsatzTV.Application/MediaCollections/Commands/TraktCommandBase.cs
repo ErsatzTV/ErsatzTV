@@ -13,9 +13,9 @@ namespace ErsatzTV.Application.MediaCollections;
 
 public abstract class TraktCommandBase
 {
-    private readonly ISearchRepository _searchRepository;
-    private readonly ISearchIndex _searchIndex;
     private readonly ILogger _logger;
+    private readonly ISearchIndex _searchIndex;
+    private readonly ISearchRepository _searchRepository;
 
     protected TraktCommandBase(
         ITraktApiClient traktApiClient,
@@ -77,7 +77,7 @@ public abstract class TraktCommandBase
                 var toAdd = items.Filter(i => list.Items.All(i2 => i2.TraktId != i.TraktId)).ToList();
                 var toRemove = list.Items.Filter(i => items.All(i2 => i2.TraktId != i.TraktId)).ToList();
                 var toUpdate = list.Items.Filter(i => !toRemove.Contains(i)).ToList();
-                    
+
                 list.Items.RemoveAll(toRemove.Contains);
                 list.Items.AddRange(toAdd.Map(a => ProjectItem(list, a)));
 
@@ -189,18 +189,18 @@ public abstract class TraktCommandBase
             Title = item.Title,
             Year = item.Year,
             Season = item.Season,
-            Episode = item.Episode,
+            Episode = item.Episode
         };
 
         result.Guids = item.Guids.Map(g => new TraktListItemGuid { Guid = g, TraktListItem = result }).ToList();
 
         return result;
     }
-        
+
     private async Task<Option<int>> IdentifyMovie(TvContext dbContext, TraktListItem item)
     {
         var guids = item.Guids.Map(g => g.Guid).ToList();
-            
+
         Option<int> maybeMovieByGuid = await dbContext.MovieMetadata
             .AsNoTracking()
             .Filter(mm => mm.Guids.Any(g => guids.Contains(g.Guid)))
@@ -266,7 +266,7 @@ public abstract class TraktCommandBase
 
         return None;
     }
-        
+
     private async Task<Option<int>> IdentifySeason(TvContext dbContext, TraktListItem item)
     {
         var guids = item.Guids.Map(g => g.Guid).ToList();
@@ -302,7 +302,7 @@ public abstract class TraktCommandBase
 
         return None;
     }
-        
+
     private async Task<Option<int>> IdentifyEpisode(TvContext dbContext, TraktListItem item)
     {
         var guids = item.Guids.Map(g => g.Guid).ToList();

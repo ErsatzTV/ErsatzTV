@@ -97,7 +97,7 @@
 
     private async Task LoadMediaSources()
     {
-        _isAuthorized = await _plexSecretStore.GetUserAuthTokens().Map(list => Prelude.Optional(list).Flatten().Any());
+        _isAuthorized = await _plexSecretStore.GetUserAuthTokens().Map(list => Optional(list).Flatten().Any());
         _mediaSources = await _mediator.Send(new GetAllPlexMediaSources());
     }
 
@@ -130,7 +130,7 @@
                     }
                     catch (Exception)
                     {
-                        // ignored
+    // ignored
                     }
                 },
                 error =>

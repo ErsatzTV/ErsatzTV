@@ -122,7 +122,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         var sortedShows = shows.OrderBy(s => s.ShowMetadata.Head().Title).ToList();
         foreach (EmbyShow incoming in sortedShows)
         {
-            decimal percentCompletion = (decimal) sortedShows.IndexOf(incoming) / shows.Count;
+            decimal percentCompletion = (decimal)sortedShows.IndexOf(incoming) / shows.Count;
             await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
             Option<EmbyItemEtag> maybeExisting = existingShows.Find(ie => ie.ItemId == incoming.ItemId);
@@ -236,7 +236,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                     foreach (EmbySeason updated in await _televisionRepository.Update(incoming))
                     {
                         incoming.Show = show;
-                            
+
                         foreach (MediaItem toIndex in await _searchRepository.GetItemToIndex(updated.Id))
                         {
                             await _searchIndex.UpdateItems(
@@ -420,7 +420,11 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
 
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                 Either<BaseError, bool> refreshResult =
-                    await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, incomingEpisode, localPath);
+                    await _localStatisticsProvider.RefreshStatistics(
+                        ffmpegPath,
+                        ffprobePath,
+                        incomingEpisode,
+                        localPath);
 
                 refreshResult.Match(
                     _ => { },

@@ -11,10 +11,8 @@ public class EmbyTelevisionRepository : IEmbyTelevisionRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public EmbyTelevisionRepository(IDbContextFactory<TvContext> dbContextFactory)
-    {
+    public EmbyTelevisionRepository(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<List<EmbyItemEtag>> GetExistingShows(EmbyLibrary library)
     {

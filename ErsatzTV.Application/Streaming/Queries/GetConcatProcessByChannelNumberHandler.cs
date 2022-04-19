@@ -15,10 +15,8 @@ public class GetConcatProcessByChannelNumberHandler : FFmpegProcessHandler<GetCo
     public GetConcatProcessByChannelNumberHandler(
         IDbContextFactory<TvContext> dbContextFactory,
         IFFmpegProcessService ffmpegProcessService)
-        : base(dbContextFactory)
-    {
+        : base(dbContextFactory) =>
         _ffmpegProcessService = ffmpegProcessService;
-    }
 
     protected override async Task<Either<BaseError, PlayoutItemProcessModel>> GetProcess(
         TvContext dbContext,

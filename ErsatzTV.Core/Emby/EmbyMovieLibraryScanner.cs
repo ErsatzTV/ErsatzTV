@@ -92,8 +92,8 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
                 foreach (EmbyMovie incoming in validMovies)
                 {
                     EmbyMovie incomingMovie = incoming;
-                        
-                    decimal percentCompletion = (decimal) validMovies.IndexOf(incoming) / validMovies.Count;
+
+                    decimal percentCompletion = (decimal)validMovies.IndexOf(incoming) / validMovies.Count;
                     await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
                     Option<EmbyItemEtag> maybeExisting =

@@ -21,7 +21,7 @@ public class CustomQueryParser : QueryParser
     protected CustomQueryParser(QueryParserTokenManager tm) : base(tm)
     {
     }
-        
+
     protected override Query GetFieldQuery(string field, string queryText, bool quoted)
     {
         if (field == "released_onthisday")
@@ -29,7 +29,7 @@ public class CustomQueryParser : QueryParser
             var todayString = DateTime.Today.ToString("*MMdd");
             return base.GetWildcardQuery("release_date", todayString);
         }
-            
+
         if (field == "minutes" && int.TryParse(queryText, out int val))
         {
             var bytesRef = new BytesRef();
@@ -49,7 +49,7 @@ public class CustomQueryParser : QueryParser
 
             return base.GetRangeQuery("release_date", dateString, todayString, true, true);
         }
-            
+
         if (field == "released_notinthelast" && ParseStart(queryText, out DateTime finish))
         {
             var dateString = finish.ToString("yyyyMMdd");
@@ -64,7 +64,7 @@ public class CustomQueryParser : QueryParser
 
             return base.GetRangeQuery("added_date", dateString, todayString, true, true);
         }
-            
+
         if (field == "added_notinthelast" && ParseStart(queryText, out DateTime addedFinish))
         {
             var dateString = addedFinish.ToString("yyyyMMdd");
@@ -74,8 +74,13 @@ public class CustomQueryParser : QueryParser
 
         return base.GetFieldQuery(field, queryText, slop);
     }
-        
-    protected override Query GetRangeQuery(string field, string part1, string part2, bool startInclusive, bool endInclusive)
+
+    protected override Query GetRangeQuery(
+        string field,
+        string part1,
+        string part2,
+        bool startInclusive,
+        bool endInclusive)
     {
         if (field == "minutes" && int.TryParse(part1, out int min) && int.TryParse(part2, out int max))
         {
@@ -84,7 +89,7 @@ public class CustomQueryParser : QueryParser
 
         return base.GetRangeQuery(field, part1, part2, startInclusive, endInclusive);
     }
-        
+
     internal static bool ParseStart(string text, out DateTime start)
     {
         start = SystemTime.MinValueUtc;

@@ -38,7 +38,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
             DateTimeOffset itemStartTime = GetStartTimeAfter(nextState, scheduleItem);
             TimeSpan itemDuration = DurationForMediaItem(mediaItem);
             List<MediaChapter> itemChapters = ChaptersForMediaItem(mediaItem);
-                
+
             var playoutItem = new PlayoutItem
             {
                 MediaItemId = mediaItem.Id,
@@ -52,7 +52,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                     : FillerKind.None,
                 WatermarkId = scheduleItem.WatermarkId
             };
-                
+
             DateTimeOffset peekScheduleItemStart =
                 peekScheduleItem.StartType == StartType.Fixed
                     ? GetStartTimeAfter(nextState with { InFlood = false }, peekScheduleItem)
@@ -64,7 +64,7 @@ public class PlayoutModeSchedulerFlood : PlayoutModeSchedulerBase<ProgramSchedul
                 itemStartTime,
                 itemDuration,
                 itemChapters);
-                
+
             // if the next schedule item is supposed to start during this item,
             // don't schedule this item and just move on
             willFinishInTime = peekScheduleItemStart < itemStartTime ||

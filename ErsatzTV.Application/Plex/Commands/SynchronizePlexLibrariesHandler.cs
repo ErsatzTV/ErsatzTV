@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace ErsatzTV.Application.Plex;
 
 public class
-    SynchronizePlexLibrariesHandler : MediatR.IRequestHandler<SynchronizePlexLibraries, Either<BaseError, Unit>>
+    SynchronizePlexLibrariesHandler : IRequestHandler<SynchronizePlexLibraries, Either<BaseError, Unit>>
 {
     private readonly ILogger<SynchronizePlexLibrariesHandler> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;

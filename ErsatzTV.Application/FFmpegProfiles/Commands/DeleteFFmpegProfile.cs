@@ -2,4 +2,4 @@
 
 namespace ErsatzTV.Application.FFmpegProfiles;
 
-public record DeleteFFmpegProfile(int FFmpegProfileId) : MediatR.IRequest<Either<BaseError, Unit>>;
+public record DeleteFFmpegProfile(int FFmpegProfileId) : IRequest<Either<BaseError, Unit>>;

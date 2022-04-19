@@ -4,16 +4,14 @@ namespace ErsatzTV.FFmpeg.Filter;
 
 public class WatermarkScaleFilter : BaseFilter
 {
-    private readonly WatermarkState _watermarkState;
     private readonly FrameSize _resolution;
+    private readonly WatermarkState _watermarkState;
 
     public WatermarkScaleFilter(WatermarkState watermarkState, FrameSize resolution)
     {
         _watermarkState = watermarkState;
         _resolution = resolution;
     }
-
-    public override FrameState NextState(FrameState currentState) => currentState;
 
     public override string Filter
     {
@@ -23,4 +21,6 @@ public class WatermarkScaleFilter : BaseFilter
             return $"scale={width}:-1";
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

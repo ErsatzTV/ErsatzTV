@@ -29,7 +29,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             FallbackFiller = null,
             Count = 3
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -42,7 +42,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         {
             { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems }
         }.ToMap();
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
@@ -100,7 +100,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             FallbackFiller = null,
             Count = 3
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -113,7 +113,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         {
             { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems }
         }.ToMap();
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
@@ -177,7 +177,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             FallbackFiller = null,
             Count = 3
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -195,7 +195,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems },
             { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems }
         }.ToMap();
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
@@ -275,7 +275,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             },
             Count = 3
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -293,7 +293,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems },
             { CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), collectionTwo.MediaItems }
         }.ToMap();
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
@@ -339,7 +339,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         playoutItems[3].GuideGroup.Should().Be(3);
         playoutItems[3].FillerKind.Should().Be(FillerKind.Fallback);
     }
-        
+
     [Test]
     public void Should_Have_Gap_With_Tail_No_Fallback()
     {
@@ -363,7 +363,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             FallbackFiller = null,
             Count = 3
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -381,7 +381,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             { CollectionKey.ForScheduleItem(scheduleItem), collectionOne.MediaItems },
             { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems }
         }.ToMap();
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
@@ -416,7 +416,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(55));
         playoutItems[1].GuideGroup.Should().Be(2);
         playoutItems[1].FillerKind.Should().Be(FillerKind.None);
-            
+
         playoutItems[2].MediaItemId.Should().Be(1);
         playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(1, 50, 0)));
         playoutItems[2].GuideGroup.Should().Be(3);
@@ -431,7 +431,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         playoutItems[4].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 49, 0)));
         playoutItems[4].GuideGroup.Should().Be(3);
         playoutItems[4].FillerKind.Should().Be(FillerKind.Tail);
-        
+
         playoutItems[5].MediaItemId.Should().Be(3);
         playoutItems[5].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 53, 0)));
         playoutItems[5].GuideGroup.Should().Be(3);
@@ -467,7 +467,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             },
             Count = 3
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -532,12 +532,12 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.AddMinutes(55));
         playoutItems[1].GuideGroup.Should().Be(2);
         playoutItems[1].FillerKind.Should().Be(FillerKind.None);
-        
+
         playoutItems[2].MediaItemId.Should().Be(1);
         playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(1, 50, 0)));
         playoutItems[2].GuideGroup.Should().Be(3);
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
-            
+
         playoutItems[3].MediaItemId.Should().Be(3);
         playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
         playoutItems[3].GuideGroup.Should().Be(3);
@@ -547,7 +547,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         playoutItems[4].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 49, 0)));
         playoutItems[4].GuideGroup.Should().Be(3);
         playoutItems[4].FillerKind.Should().Be(FillerKind.Tail);
-        
+
         playoutItems[5].MediaItemId.Should().Be(3);
         playoutItems[5].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 53, 0)));
         playoutItems[5].GuideGroup.Should().Be(3);
@@ -588,7 +588,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             },
             Count = 3
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -611,7 +611,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
             { CollectionKey.ForFillerPreset(scheduleItem.TailFiller), collectionTwo.MediaItems },
             { CollectionKey.ForFillerPreset(scheduleItem.FallbackFiller), collectionThree.MediaItems }
         }.ToMap();
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerMultiple(collectionMediaItems, new Mock<ILogger>().Object);
@@ -653,7 +653,7 @@ public class PlayoutModeSchedulerMultipleTests : SchedulerTestBase
         playoutItems[1].StartOffset.Should().Be(startState.CurrentTime.AddHours(1));
         playoutItems[1].GuideGroup.Should().Be(2);
         playoutItems[1].FillerKind.Should().Be(FillerKind.None);
-        
+
         playoutItems[2].MediaItemId.Should().Be(1);
         playoutItems[2].StartOffset.Should().Be(startState.CurrentTime.AddHours(2));
         playoutItems[2].GuideGroup.Should().Be(3);

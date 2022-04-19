@@ -12,8 +12,8 @@ namespace ErsatzTV.Infrastructure.Data.Repositories;
 
 public class MediaCollectionRepository : IMediaCollectionRepository
 {
-    private readonly ISearchIndex _searchIndex;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ISearchIndex _searchIndex;
 
     public MediaCollectionRepository(
         ISearchIndex searchIndex,
@@ -249,6 +249,78 @@ public class MediaCollectionRepository : IMediaCollectionRepository
         return GroupIntoFakeCollections(items);
     }
 
+    public async Task<List<int>> PlayoutIdsUsingCollection(int collectionId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<int>(
+                @"SELECT DISTINCT p.PlayoutId
+                    FROM PlayoutProgramScheduleAnchor p
+                    WHERE p.CollectionId = @CollectionId",
+                new { CollectionId = collectionId })
+            .Map(result => result.ToList());
+    }
+
+    public async Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<int>(
+                @"SELECT DISTINCT p.PlayoutId
+                    FROM PlayoutProgramScheduleAnchor p
+                    WHERE p.MultiCollectionId = @MultiCollectionId",
+                new { MultiCollectionId = multiCollectionId })
+            .Map(result => result.ToList());
+    }
+
+    public async Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<int>(
+                @"SELECT DISTINCT p.PlayoutId
+                    FROM PlayoutProgramScheduleAnchor p
+                    WHERE p.SmartCollectionId = @SmartCollectionId",
+                new { SmartCollectionId = smartCollectionId })
+            .Map(result => result.ToList());
+    }
+
+    public async Task<bool> IsCustomPlaybackOrder(int collectionId)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QuerySingleAsync<bool>(
+            @"SELECT IFNULL(MIN(UseCustomPlaybackOrder), 0) FROM Collection WHERE Id = @CollectionId",
+            new { CollectionId = collectionId });
+    }
+
+    public async Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        return emptyCollection.CollectionType switch
+        {
+            ProgramScheduleItemCollectionType.Artist => await dbContext.Artists.Include(a => a.ArtistMetadata)
+                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                .MapT(a => a.ArtistMetadata.Head().Title),
+            ProgramScheduleItemCollectionType.Collection => await dbContext.Collections
+                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.CollectionId.Value)
+                .MapT(c => c.Name),
+            ProgramScheduleItemCollectionType.MultiCollection => await dbContext.MultiCollections
+                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.MultiCollectionId.Value)
+                .MapT(c => c.Name),
+            ProgramScheduleItemCollectionType.SmartCollection => await dbContext.SmartCollections
+                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.SmartCollectionId.Value)
+                .MapT(c => c.Name),
+            ProgramScheduleItemCollectionType.TelevisionSeason => await dbContext.Seasons
+                .Include(s => s.SeasonMetadata)
+                .Include(s => s.Show)
+                .ThenInclude(s => s.ShowMetadata)
+                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                .MapT(s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}"),
+            ProgramScheduleItemCollectionType.TelevisionShow => await dbContext.Shows.Include(s => s.ShowMetadata)
+                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
+                .MapT(s => s.ShowMetadata.Head().Title),
+            _ => None
+        };
+    }
+
     private static List<CollectionWithItems> GroupIntoFakeCollections(List<MediaItem> items)
     {
         int id = -1;
@@ -354,78 +426,6 @@ public class MediaCollectionRepository : IMediaCollectionRepository
                 false));
 
         return result;
-    }
-
-    public async Task<List<int>> PlayoutIdsUsingCollection(int collectionId)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<int>(
-                @"SELECT DISTINCT p.PlayoutId
-                    FROM PlayoutProgramScheduleAnchor p
-                    WHERE p.CollectionId = @CollectionId",
-                new { CollectionId = collectionId })
-            .Map(result => result.ToList());
-    }
-
-    public async Task<List<int>> PlayoutIdsUsingMultiCollection(int multiCollectionId)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<int>(
-                @"SELECT DISTINCT p.PlayoutId
-                    FROM PlayoutProgramScheduleAnchor p
-                    WHERE p.MultiCollectionId = @MultiCollectionId",
-                new { MultiCollectionId = multiCollectionId })
-            .Map(result => result.ToList());
-    }
-
-    public async Task<List<int>> PlayoutIdsUsingSmartCollection(int smartCollectionId)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<int>(
-                @"SELECT DISTINCT p.PlayoutId
-                    FROM PlayoutProgramScheduleAnchor p
-                    WHERE p.SmartCollectionId = @SmartCollectionId",
-                new { SmartCollectionId = smartCollectionId })
-            .Map(result => result.ToList());
-    }
-
-    public async Task<bool> IsCustomPlaybackOrder(int collectionId)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QuerySingleAsync<bool>(
-            @"SELECT IFNULL(MIN(UseCustomPlaybackOrder), 0) FROM Collection WHERE Id = @CollectionId",
-            new { CollectionId = collectionId });
-    }
-
-    public async Task<Option<string>> GetNameFromKey(CollectionKey emptyCollection)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-
-        return emptyCollection.CollectionType switch
-        {
-            ProgramScheduleItemCollectionType.Artist => await dbContext.Artists.Include(a => a.ArtistMetadata)
-                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
-                .MapT(a => a.ArtistMetadata.Head().Title),
-            ProgramScheduleItemCollectionType.Collection => await dbContext.Collections
-                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.CollectionId.Value)
-                .MapT(c => c.Name),
-            ProgramScheduleItemCollectionType.MultiCollection => await dbContext.MultiCollections
-                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.MultiCollectionId.Value)
-                .MapT(c => c.Name),
-            ProgramScheduleItemCollectionType.SmartCollection => await dbContext.SmartCollections
-                .SelectOneAsync(c => c.Id, c => c.Id == emptyCollection.SmartCollectionId.Value)
-                .MapT(c => c.Name),
-            ProgramScheduleItemCollectionType.TelevisionSeason => await dbContext.Seasons
-                .Include(s => s.SeasonMetadata)
-                .Include(s => s.Show)
-                .ThenInclude(s => s.ShowMetadata)
-                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
-                .MapT(s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}"),
-            ProgramScheduleItemCollectionType.TelevisionShow => await dbContext.Shows.Include(s => s.ShowMetadata)
-                .SelectOneAsync(a => a.Id, a => a.Id == emptyCollection.MediaItemId.Value)
-                .MapT(s => s.ShowMetadata.Head().Title),
-            _ => None
-        };
     }
 
     private async Task<List<Movie>> GetMovieItems(TvContext dbContext, int collectionId)

@@ -40,10 +40,10 @@ public class FFmpegComplexFilterBuilderTests
                     filter.VideoLabel.Should().Be("0:0");
                 });
         }
-            
+
         [Test]
         // this needs to be a culture where '.' is a group separator
-        [SetCulture("it-IT")] 
+        [SetCulture("it-IT")]
         public void Should_Return_Audio_Filter_With_AudioDuration_Decimal()
         {
             var duration = TimeSpan.FromMilliseconds(1000.1);
@@ -280,7 +280,7 @@ public class FFmpegComplexFilterBuilderTests
                         watermark.FrequencyMinutes,
                         watermark.DurationSeconds))
                 : None;
-                
+
             FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
                 .WithWatermark(
                     Some(watermark),
@@ -301,7 +301,7 @@ public class FFmpegComplexFilterBuilderTests
                     filter.VideoLabel.Should().Be(expectedVideoLabel);
                 });
         }
-            
+
         [Test]
         [TestCase(
             false,
@@ -390,7 +390,7 @@ public class FFmpegComplexFilterBuilderTests
             "[0:0]scale_cuda=1920:1080,setsar=1,hwdownload,format=nv12,format=yuv420p,hwupload_cuda[vt];[1:v]format=yuva420p,colorchannelmixer=aa=0.90,hwupload_cuda[wmp];[vt][wmp]overlay_cuda=x=134:y=54,hwupload[v]",
             "0:1",
             "[v]",
-            true)]            
+            true)]
         // TODO: do we need these anymore? interlaced content that isn't handled by mpeg2_cuvid?
         // [TestCase(
         //     false,
@@ -481,7 +481,7 @@ public class FFmpegComplexFilterBuilderTests
                         watermark.FrequencyMinutes,
                         watermark.DurationSeconds))
                 : None;
-                
+
             FFmpegComplexFilterBuilder builder = new FFmpegComplexFilterBuilder()
                 .WithHardwareAcceleration(HardwareAccelerationKind.Nvenc)
                 .WithWatermark(

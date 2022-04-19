@@ -71,7 +71,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
             {
                 foreach (PlexShow incoming in showEntries)
                 {
-                    decimal percentCompletion = (decimal) showEntries.IndexOf(incoming) / showEntries.Count;
+                    decimal percentCompletion = (decimal)showEntries.IndexOf(incoming) / showEntries.Count;
                     await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
                     // TODO: figure out how to rebuild playlists
@@ -520,7 +520,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
     {
         MediaVersion existingVersion = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();
-            
+
         foreach (MediaFile incomingFile in incomingVersion.MediaFiles.HeadOrNone())
         {
             foreach (MediaFile existingFile in existingVersion.MediaFiles.HeadOrNone())
@@ -545,11 +545,11 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                 pathReplacements,
                 incoming.MediaVersions.Head().MediaFiles.Head().Path,
                 false);
-                
+
             _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
             Either<BaseError, bool> refreshResult =
                 await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, existing, localPath);
-                
+
             await refreshResult.Match(
                 async _ =>
                 {

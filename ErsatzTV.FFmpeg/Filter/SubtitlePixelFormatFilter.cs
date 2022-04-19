@@ -4,12 +4,7 @@ public class SubtitlePixelFormatFilter : BaseFilter
 {
     private readonly FFmpegState _ffmpegState;
 
-    public SubtitlePixelFormatFilter(FFmpegState ffmpegState)
-    {
-        _ffmpegState = ffmpegState;
-    }
-
-    public override FrameState NextState(FrameState currentState) => currentState;
+    public SubtitlePixelFormatFilter(FFmpegState ffmpegState) => _ffmpegState = ffmpegState;
 
     public override string Filter
     {
@@ -25,4 +20,6 @@ public class SubtitlePixelFormatFilter : BaseFilter
             return maybeFormat.Match(f => $"format={f}", () => string.Empty);
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState;
 }

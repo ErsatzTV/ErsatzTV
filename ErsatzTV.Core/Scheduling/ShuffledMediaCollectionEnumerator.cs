@@ -73,7 +73,7 @@ public class ShuffledMediaCollectionEnumerator : IMediaCollectionEnumerator
 
             // clone the random
             CloneableRandom randomCopy = _random.Clone();
-                
+
             do
             {
                 int newSeed = randomCopy.Next();

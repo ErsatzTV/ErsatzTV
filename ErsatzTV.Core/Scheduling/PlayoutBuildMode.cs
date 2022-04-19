@@ -7,7 +7,7 @@ public enum PlayoutBuildMode
 
     // this rebuilds a playout but will maintain collection progress
     Refresh = 2,
-    
+
     // this rebuilds a playout and clears all state
     Reset = 3
 }

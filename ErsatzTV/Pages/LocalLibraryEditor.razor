@@ -79,7 +79,7 @@
     public int Id { get; set; }
 
     private readonly LocalLibraryEditViewModel _model = new();
-    private LocalLibraryPathEditViewModel _newPath = new();
+    private readonly LocalLibraryPathEditViewModel _newPath = new();
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
 
@@ -121,7 +121,7 @@
         _editContext = new EditContext(_model);
         _messageStore = new ValidationMessageStore(_editContext);
     }
-    
+
     private void LockChanged(object sender, EventArgs e) =>
         InvokeAsync(StateHasChanged);
 
@@ -164,7 +164,7 @@
             _model.HasChanges = true;
             _model.Paths.Remove(libraryPath);
         }
-        
+
         int count = await _mediator.Send(new CountMediaItemsByLibraryPath(libraryPath.Id), _cts.Token);
         var parameters = new DialogParameters
         {
@@ -174,7 +174,7 @@
             { "DetailHighlight", count.ToString() }
         };
         var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
-        
+
         IDialogReference dialog = _dialog.Show<DeleteDialog>("Delete Library Path", parameters, options);
         DialogResult result = await dialog.Result;
         if (!result.Cancelled)
@@ -197,7 +197,7 @@
 
         _newPath.Path = null;
     }
-    
+
     private async Task SaveChangesAsync()
     {
         _messageStore.Clear();
@@ -223,17 +223,14 @@
         }
     }
 
-    private string NormalizePath(string path)
-    {
-        return Path.GetFullPath(new Uri(path).LocalPath)
-            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .ToUpperInvariant();
-    }
+    private string NormalizePath(string path) => Path.GetFullPath(new Uri(path).LocalPath)
+        .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+        .ToUpperInvariant();
 
     void IDisposable.Dispose()
     {
         _locker.OnLibraryChanged -= LockChanged;
-        
+
         _cts.Cancel();
         _cts.Dispose();
     }

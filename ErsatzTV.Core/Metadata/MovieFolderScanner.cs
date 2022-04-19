@@ -14,13 +14,13 @@ namespace ErsatzTV.Core.Metadata;
 
 public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 {
+    private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IClient _client;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -86,7 +86,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
         while (folderQueue.Count > 0)
         {
-            decimal percentCompletion = (decimal) foldersCompleted / (foldersCompleted + folderQueue.Count);
+            decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
             await _mediator.Publish(
                 new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
 

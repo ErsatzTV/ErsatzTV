@@ -63,10 +63,7 @@
         _cts.Dispose();
     }
 
-    protected override void OnParametersSet()
-    {
-        _resetTime = DailyResetTime;
-    }
+    protected override void OnParametersSet() => _resetTime = DailyResetTime;
 
     private async Task Submit()
     {

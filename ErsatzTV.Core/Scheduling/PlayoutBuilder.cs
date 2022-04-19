@@ -13,8 +13,8 @@ public class PlayoutBuilder : IPlayoutBuilder
 {
     private static readonly Random Random = new();
     private readonly IArtistRepository _artistRepository;
-    private readonly ILogger<PlayoutBuilder> _logger;
     private readonly IConfigElementRepository _configElementRepository;
+    private readonly ILogger<PlayoutBuilder> _logger;
     private readonly IMediaCollectionRepository _mediaCollectionRepository;
     private readonly ITelevisionRepository _televisionRepository;
 
@@ -205,7 +205,7 @@ public class PlayoutBuilder : IPlayoutBuilder
             playout.Id,
             playout.Channel.Number,
             playout.Channel.Name);
-        
+
         // remove old checkpoints
         playout.ProgramScheduleAnchors.RemoveAll(
             a => a.AnchorDateOffset.IfNone(SystemTime.MaxValueUtc) < parameters.Start.Date);
@@ -264,7 +264,7 @@ public class PlayoutBuilder : IPlayoutBuilder
         Option<int> daysToBuild = await _configElementRepository.GetValue<int>(ConfigElementKey.PlayoutDaysToBuild);
 
         DateTimeOffset now = DateTimeOffset.Now;
-        
+
         return new PlayoutParameters(
             now,
             now.AddDays(await daysToBuild.IfNoneAsync(2)),

@@ -12,10 +12,10 @@ namespace ErsatzTV.Application.Libraries;
 
 public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath, Either<BaseError, Unit>>
 {
-    private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly ILogger<MoveLocalLibraryPathHandler> _logger;
+    private readonly ISearchIndex _searchIndex;
+    private readonly ISearchRepository _searchRepository;
 
     public MoveLocalLibraryPathHandler(
         ISearchIndex searchIndex,
@@ -35,7 +35,7 @@ public class MoveLocalLibraryPathHandler : IRequestHandler<MoveLocalLibraryPath,
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         Validation<BaseError, Parameters> validation = await Validate(dbContext, request);
-        return await validation.Apply(parameters => MovePath(dbContext, parameters));
+        return await LanguageExtensions.Apply(validation, parameters => MovePath(dbContext, parameters));
     }
 
     private async Task<Unit> MovePath(TvContext dbContext, Parameters parameters)

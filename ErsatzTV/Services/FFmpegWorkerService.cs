@@ -9,8 +9,8 @@ namespace ErsatzTV.Services;
 public class FFmpegWorkerService : BackgroundService
 {
     private readonly ChannelReader<IFFmpegWorkerRequest> _channel;
-    private readonly ILogger<FFmpegWorkerService> _logger;
     private readonly IFFmpegSegmenterService _ffmpegSegmenterService;
+    private readonly ILogger<FFmpegWorkerService> _logger;
     private readonly IServiceScopeFactory _serviceScopeFactory;
 
     public FFmpegWorkerService(
@@ -37,7 +37,6 @@ public class FFmpegWorkerService : BackgroundService
 
                 try
                 {
-
                     switch (request)
                     {
                         case TouchFFmpegSession touchFFmpegSession:

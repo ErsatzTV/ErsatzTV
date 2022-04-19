@@ -7,13 +7,11 @@ namespace ErsatzTV.Controllers.Api;
 public class VersionController
 {
     private static readonly string Version;
-    
-    static VersionController()
-    {
+
+    static VersionController() =>
         Version = Assembly.GetEntryAssembly()?
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
             .InformationalVersion ?? "unknown";
-    }
 
     [HttpGet("/api/version")]
     public string GetVersion() => Version;

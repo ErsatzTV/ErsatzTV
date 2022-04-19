@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Encoder.Vaapi;
 public class EncoderH264Vaapi : EncoderBase
 {
     private readonly FrameState _currentState;
-    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
     private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
+    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
 
     public EncoderH264Vaapi(
         FrameState currentState,
@@ -17,12 +17,6 @@ public class EncoderH264Vaapi : EncoderBase
         _maybeWatermarkInputFile = maybeWatermarkInputFile;
         _maybeSubtitleInputFile = maybeSubtitleInputFile;
     }
-
-    public override FrameState NextState(FrameState currentState) => currentState with
-    {
-        VideoFormat = VideoFormat.H264,
-        // don't change the frame data location
-    };
 
     public override string Name => "h264_vaapi";
     public override StreamKind Kind => StreamKind.Video;
@@ -43,4 +37,10 @@ public class EncoderH264Vaapi : EncoderBase
             return string.Empty;
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState with
+    {
+        VideoFormat = VideoFormat.H264
+        // don't change the frame data location
+    };
 }

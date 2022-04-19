@@ -9,5 +9,5 @@ public static class ConfigElementQueryableExtensions
         ConfigElementKey key) =>
         configElements
             .SelectOneAsync(ce => ce.Key, ce => ce.Key == key.Key)
-            .MapT(ce => (T) Convert.ChangeType(ce.Value, typeof(T)));
+            .MapT(ce => (T)Convert.ChangeType(ce.Value, typeof(T)));
 }

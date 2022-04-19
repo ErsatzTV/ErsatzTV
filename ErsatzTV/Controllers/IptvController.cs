@@ -116,7 +116,8 @@ public class IptvController : ControllerBase
                         }
 
                         process.Start();
-                        return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");                    },
+                        return new FileStreamResult(process.StandardOutput.BaseStream, "video/mp2t");
+                    },
                     error => BadRequest(error.Value)));
     }
 

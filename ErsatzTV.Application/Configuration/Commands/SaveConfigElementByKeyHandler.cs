@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Application.Configuration;
 
-public class SaveConfigElementByKeyHandler : MediatR.IRequestHandler<SaveConfigElementByKey, Unit>
+public class SaveConfigElementByKeyHandler : IRequestHandler<SaveConfigElementByKey, Unit>
 {
     private readonly IConfigElementRepository _configElementRepository;
 

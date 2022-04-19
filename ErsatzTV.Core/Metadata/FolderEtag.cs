@@ -28,7 +28,7 @@ public static class FolderEtag
 
         return hash.ToString();
     }
-        
+
     public static string CalculateWithSubfolders(string folder, ILocalFileSystem localFileSystem)
     {
         IEnumerable<string> allFiles = localFileSystem.ListFiles(folder);

@@ -5,7 +5,7 @@ using ErsatzTV.Core.Interfaces.Search;
 namespace ErsatzTV.Application.Maintenance;
 
 public class
-    DeleteItemsFromDatabaseHandler : MediatR.IRequestHandler<DeleteItemsFromDatabase, Either<BaseError, Unit>>
+    DeleteItemsFromDatabaseHandler : IRequestHandler<DeleteItemsFromDatabase, Either<BaseError, Unit>>
 {
     private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ISearchIndex _searchIndex;

@@ -7,8 +7,8 @@ namespace ErsatzTV.Core.FFmpeg;
 
 public class HlsPlaylistFilter : IHlsPlaylistFilter
 {
-    private readonly ITempFilePool _tempFilePool;
     private readonly ILogger<HlsPlaylistFilter> _logger;
+    private readonly ITempFilePool _tempFilePool;
 
     public HlsPlaylistFilter(ITempFilePool tempFilePool, ILogger<HlsPlaylistFilter> logger)
     {
@@ -128,7 +128,7 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                 File.WriteAllLines(file, lines);
 
                 _logger.LogError(ex, "Error filtering playlist. Bad playlist saved to {BadPlaylistFile}", file);
-                    
+
                 // TODO: better error result?
                 return new TrimPlaylistResult(playlistStart, 0, string.Empty, 0);
             }
@@ -144,10 +144,8 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
     public TrimPlaylistResult TrimPlaylistWithDiscontinuity(
         DateTimeOffset playlistStart,
         DateTimeOffset filterBefore,
-        string[] lines)
-    {
-        return TrimPlaylist(playlistStart, filterBefore, lines, int.MaxValue, true);
-    }
+        string[] lines) =>
+        TrimPlaylist(playlistStart, filterBefore, lines, int.MaxValue, true);
 }
 
 public record TrimPlaylistResult(DateTimeOffset PlaylistStart, int Sequence, string Playlist, int SegmentCount);

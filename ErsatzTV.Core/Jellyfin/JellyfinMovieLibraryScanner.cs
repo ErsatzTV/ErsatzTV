@@ -93,7 +93,7 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
                 {
                     JellyfinMovie incomingMovie = incoming;
 
-                    decimal percentCompletion = (decimal) validMovies.IndexOf(incoming) / validMovies.Count;
+                    decimal percentCompletion = (decimal)validMovies.IndexOf(incoming) / validMovies.Count;
                     await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
 
                     Option<JellyfinItemEtag> maybeExisting =

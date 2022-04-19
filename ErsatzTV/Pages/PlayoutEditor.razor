@@ -27,13 +27,13 @@
                         }
                     </MudSelect>
                     <MudSelect Class="mt-3"
-                                     T="ProgramScheduleViewModel"
-                                     Label="Schedule"
-                                     @bind-value="_model.ProgramSchedule">
-                         @foreach (ProgramScheduleViewModel schedule in _programSchedules)
-                         {
-                             <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
-                         }
+                               T="ProgramScheduleViewModel"
+                               Label="Schedule"
+                               @bind-value="_model.ProgramSchedule">
+                        @foreach (ProgramScheduleViewModel schedule in _programSchedules)
+                        {
+                            <MudSelectItem Value="@schedule">@schedule.Name</MudSelectItem>
+                        }
                     </MudSelect>
                 </MudCardContent>
                 <MudCardActions>
@@ -55,7 +55,7 @@
 
     private EditContext _editContext;
     private ValidationMessageStore _messageStore;
-    
+
     public void Dispose()
     {
         _cts.Cancel();

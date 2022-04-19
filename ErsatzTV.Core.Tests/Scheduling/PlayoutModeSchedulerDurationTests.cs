@@ -37,7 +37,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             new CollectionEnumeratorState());
 
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
-            
+
         var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
         (PlayoutBuilderState playoutBuilderState, List<PlayoutItem> playoutItems) = scheduler.Schedule(
             startState,
@@ -78,7 +78,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         playoutItems[2].GuideFinish.HasValue.Should().BeTrue();
     }
-        
+
     [Test]
     public void Should_Fill_Exact_Duration_CustomTitle()
     {
@@ -96,7 +96,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             PlaybackOrder = PlaybackOrder.Chronological,
             CustomTitle = "Custom Title"
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -104,7 +104,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         var enumerator = new ChronologicalMediaCollectionEnumerator(
             collectionOne.MediaItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
@@ -150,7 +150,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[2].GuideFinish.HasValue.Should().BeTrue();
         playoutItems[2].CustomTitle.Should().Be("Custom Title");
     }
-        
+
     [Test]
     public void Should_Not_Have_Gap_Duration_Tail_Mode_None()
     {
@@ -167,7 +167,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             TailMode = TailMode.None,
             PlaybackOrder = PlaybackOrder.Chronological
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -175,7 +175,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         var enumerator = new ChronologicalMediaCollectionEnumerator(
             collectionOne.MediaItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
@@ -195,7 +195,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
         playoutBuilderState.InDurationFiller.Should().BeFalse();
         playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
-            
+
         enumerator.State.Index.Should().Be(1);
 
         playoutItems.Count.Should().Be(3);
@@ -218,7 +218,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         playoutItems[2].GuideFinish.HasValue.Should().BeTrue();
     }
-        
+
     [Test]
     public void Should_Have_Gap_Duration_Tail_Mode_Offline_No_Fallback()
     {
@@ -235,7 +235,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
             TailMode = TailMode.Offline,
             PlaybackOrder = PlaybackOrder.Chronological
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -243,7 +243,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         var enumerator = new ChronologicalMediaCollectionEnumerator(
             collectionOne.MediaItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
@@ -264,7 +264,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
         playoutBuilderState.InDurationFiller.Should().BeFalse();
         playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
-            
+
         enumerator.State.Index.Should().Be(1);
 
         playoutItems.Count.Should().Be(3);
@@ -287,7 +287,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         playoutItems[2].GuideFinish.HasValue.Should().BeTrue();
     }
-        
+
     [Test]
     public void Should_Not_Have_Gap_Duration_Tail_Mode_Offline_With_Fallback()
     {
@@ -311,7 +311,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
                 CollectionId = collectionTwo.Id
             }
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -319,11 +319,11 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         var enumerator1 = new ChronologicalMediaCollectionEnumerator(
             collectionOne.MediaItems,
             new CollectionEnumeratorState());
-            
+
         var enumerator2 = new ChronologicalMediaCollectionEnumerator(
             collectionTwo.MediaItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
@@ -343,7 +343,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
         playoutBuilderState.InDurationFiller.Should().BeFalse();
         playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
-            
+
         enumerator1.State.Index.Should().Be(1);
         enumerator2.State.Index.Should().Be(1);
 
@@ -366,7 +366,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[2].GuideGroup.Should().Be(3);
         playoutItems[2].FillerKind.Should().Be(FillerKind.None);
         playoutItems[2].GuideFinish.HasValue.Should().BeTrue();
-            
+
         playoutItems[3].MediaItemId.Should().Be(3);
         playoutItems[3].StartOffset.Should().Be(startState.CurrentTime.Add(new TimeSpan(2, 45, 0)));
         playoutItems[3].GuideGroup.Should().Be(3);
@@ -397,7 +397,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
                 CollectionId = collectionTwo.Id
             }
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -409,7 +409,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         var enumerator2 = new ChronologicalMediaCollectionEnumerator(
             collectionTwo.MediaItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
@@ -429,7 +429,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
         playoutBuilderState.InDurationFiller.Should().BeFalse();
         playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
-            
+
         enumerator1.State.Index.Should().Be(1);
         enumerator2.State.Index.Should().Be(1);
 
@@ -471,7 +471,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutItems[5].FillerKind.Should().Be(FillerKind.Tail);
         playoutItems[3].GuideFinish.HasValue.Should().BeFalse();
     }
-        
+
     [Test]
     public void Should_Have_Gap_Duration_Tail_Mode_Filler_No_Fallback()
     {
@@ -495,7 +495,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
                 CollectionId = collectionTwo.Id
             }
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -507,7 +507,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         var enumerator2 = new ChronologicalMediaCollectionEnumerator(
             collectionTwo.MediaItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
@@ -527,7 +527,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
         playoutBuilderState.InDurationFiller.Should().BeFalse();
         playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
-            
+
         enumerator1.State.Index.Should().Be(1);
         enumerator2.State.Index.Should().Be(1);
 
@@ -600,7 +600,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
                 CollectionId = collectionThree.Id
             }
         };
-            
+
         var scheduleItemsEnumerator = new OrderedScheduleItemsEnumerator(
             new List<ProgramScheduleItem> { scheduleItem },
             new CollectionEnumeratorState());
@@ -616,7 +616,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         var enumerator3 = new ChronologicalMediaCollectionEnumerator(
             collectionThree.MediaItems,
             new CollectionEnumeratorState());
-            
+
         PlayoutBuilderState startState = StartState(scheduleItemsEnumerator);
 
         var scheduler = new PlayoutModeSchedulerDuration(new Mock<ILogger>().Object);
@@ -642,7 +642,7 @@ public class PlayoutModeSchedulerDurationTests : SchedulerTestBase
         playoutBuilderState.MultipleRemaining.IsNone.Should().BeTrue();
         playoutBuilderState.InDurationFiller.Should().BeFalse();
         playoutBuilderState.ScheduleItemsEnumerator.State.Index.Should().Be(0);
-            
+
         enumerator1.State.Index.Should().Be(1);
         enumerator2.State.Index.Should().Be(1);
         enumerator3.State.Index.Should().Be(1);

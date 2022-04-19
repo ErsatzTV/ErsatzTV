@@ -22,10 +22,10 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
             state.Index = 0;
             state.Seed = new Random(state.Seed).Next();
         }
-            
+
         _random = new Random(state.Seed);
         _shuffled = Shuffle(_collections, _random);
-            
+
         State = new CollectionEnumeratorState { Seed = state.Seed };
         while (State.Index < state.Index)
         {
@@ -34,7 +34,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
     }
 
     public CollectionEnumeratorState State { get; }
-        
+
     public Option<MediaItem> Current => _shuffled.Any() ? _shuffled[State.Index % _mediaItemCount] : None;
 
     public void MoveNext()
@@ -64,7 +64,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
     private IList<MediaItem> Shuffle(IList<CollectionWithItems> collections, Random random)
     {
         // based on https://keyj.emphy.de/balanced-shuffle/
-            
+
         var orderedCollections = collections
             .Filter(c => c.ScheduleAsGroup)
             .Map(c => new OrderedCollection { Index = 0, Items = OrderItems(c) })
@@ -116,12 +116,12 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
                 : items;
 
             var ordered = new List<Option<MediaItem>>();
-                
+
             int k = smaller.Count;
             while (k > 0)
             {
                 int n = maxLength - ordered.Count;
-                    
+
                 // compute optimal length +/- 10%
                 double optimalLength = n / (double)k + (random.NextDouble() - 0.5) / 5.0;
                 int r = Math.Clamp((int)optimalLength, 1, maxLength - k + 1);
@@ -162,7 +162,7 @@ public class ShuffleInOrderCollectionEnumerator : IMediaCollectionEnumerator
             .Map(Some)
             .ToList();
     }
-        
+
     private static IList<Option<MediaItem>> Shuffle(IEnumerable<Option<MediaItem>> list, Random random)
     {
         Option<MediaItem>[] copy = list.ToArray();

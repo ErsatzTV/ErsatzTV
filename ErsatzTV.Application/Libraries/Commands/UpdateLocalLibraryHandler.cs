@@ -14,10 +14,10 @@ namespace ErsatzTV.Application.Libraries;
 public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
     IRequestHandler<UpdateLocalLibrary, Either<BaseError, LocalLibraryViewModel>>
 {
-    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
+    private readonly IDbContextFactory<TvContext> _dbContextFactory;
     private readonly IEntityLocker _entityLocker;
     private readonly ISearchIndex _searchIndex;
-    private readonly IDbContextFactory<TvContext> _dbContextFactory;
+    private readonly ChannelWriter<IBackgroundServiceRequest> _workerChannel;
 
     public UpdateLocalLibraryHandler(
         ChannelWriter<IBackgroundServiceRequest> workerChannel,
@@ -44,7 +44,7 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
     {
         (LocalLibrary existing, LocalLibrary incoming) = parameters;
         existing.Name = incoming.Name;
-            
+
         var toAdd = incoming.Paths
             .Filter(p => existing.Paths.All(ep => NormalizePath(ep.Path) != NormalizePath(p.Path)))
             .ToList();
@@ -58,7 +58,7 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
             .Filter(mi => toRemoveIds.Contains(mi.LibraryPathId))
             .Map(mi => mi.Id)
             .ToListAsync();
-            
+
         existing.Paths.RemoveAll(toRemove.Contains);
         existing.Paths.AddRange(toAdd);
 
@@ -105,12 +105,10 @@ public class UpdateLocalLibraryHandler : LocalLibraryHandlerBase,
                 })
             .Map(o => o.ToValidation<BaseError>("LocalLibrary does not exist."));
 
-    private record Parameters(LocalLibrary Existing, LocalLibrary Incoming);
-        
-    private static string NormalizePath(string path)
-    {
-        return Path.GetFullPath(new Uri(path).LocalPath)
+    private static string NormalizePath(string path) =>
+        Path.GetFullPath(new Uri(path).LocalPath)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             .ToUpperInvariant();
-    }
+
+    private record Parameters(LocalLibrary Existing, LocalLibrary Incoming);
 }

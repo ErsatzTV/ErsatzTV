@@ -5,8 +5,8 @@ namespace ErsatzTV.Core.FFmpeg;
 public class TempFilePool : ITempFilePool
 {
     private const int ItemLimit = 10;
-    private readonly Dictionary<TempFileCategory, int> _state = new();
     private readonly object _lock = new();
+    private readonly Dictionary<TempFileCategory, int> _state = new();
 
     public string GetNextTempFile(TempFileCategory category)
     {
@@ -25,8 +25,7 @@ public class TempFilePool : ITempFilePool
         }
     }
 
-    private static string GetFileName(TempFileCategory category, int index)
-    {
-        return Path.Combine(FileSystemLayout.TempFilePoolFolder, $"{category}_{index}".ToLowerInvariant());
-    }
+    private static string GetFileName(TempFileCategory category, int index) => Path.Combine(
+        FileSystemLayout.TempFilePoolFolder,
+        $"{category}_{index}".ToLowerInvariant());
 }

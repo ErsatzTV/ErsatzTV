@@ -5,8 +5,8 @@ namespace ErsatzTV.FFmpeg.Encoder.Qsv;
 public class EncoderHevcQsv : EncoderBase
 {
     private readonly FrameState _currentState;
-    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
     private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
+    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
 
     public EncoderHevcQsv(
         FrameState currentState,
@@ -18,15 +18,9 @@ public class EncoderHevcQsv : EncoderBase
         _maybeSubtitleInputFile = maybeSubtitleInputFile;
     }
 
-    public override FrameState NextState(FrameState currentState) => currentState with
-    {
-        VideoFormat = VideoFormat.Hevc,
-        FrameDataLocation = FrameDataLocation.Hardware
-    };
-
     public override string Name => "hevc_qsv";
     public override StreamKind Kind => StreamKind.Video;
-    
+
     // need to upload if we're still in software and a watermark is used
     public override string Filter
     {
@@ -36,7 +30,7 @@ public class EncoderHevcQsv : EncoderBase
             if (_currentState.FrameDataLocation == FrameDataLocation.Software)
             {
                 bool isPictureSubtitle = _maybeSubtitleInputFile.Map(s => s.IsImageBased).IfNone(false);
-                
+
                 if (isPictureSubtitle || _maybeWatermarkInputFile.IsSome)
                 {
                     // pixel format should already be converted to a supported format by QsvHardwareAccelerationOption
@@ -53,4 +47,10 @@ public class EncoderHevcQsv : EncoderBase
             return string.Empty;
         }
     }
+
+    public override FrameState NextState(FrameState currentState) => currentState with
+    {
+        VideoFormat = VideoFormat.Hevc,
+        FrameDataLocation = FrameDataLocation.Hardware
+    };
 }

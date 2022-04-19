@@ -13,16 +13,16 @@ namespace ErsatzTV.Core.Metadata;
 
 public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScanner
 {
+    private readonly IClient _client;
+    private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
-    private readonly IMetadataRepository _metadataRepository;
+    private readonly ILogger<OtherVideoFolderScanner> _logger;
     private readonly IMediator _mediator;
+    private readonly IMetadataRepository _metadataRepository;
+    private readonly IOtherVideoRepository _otherVideoRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
-    private readonly IOtherVideoRepository _otherVideoRepository;
-    private readonly ILibraryRepository _libraryRepository;
-    private readonly IClient _client;
-    private readonly ILogger<OtherVideoFolderScanner> _logger;
 
     public OtherVideoFolderScanner(
         ILocalFileSystem localFileSystem,
@@ -171,7 +171,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 await _searchIndex.RemoveItems(otherVideoIds);
             }
         }
-            
+
         await _libraryRepository.CleanEtagsForLibraryPath(libraryPath);
 
         _searchIndex.Commit();

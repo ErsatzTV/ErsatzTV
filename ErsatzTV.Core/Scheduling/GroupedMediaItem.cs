@@ -18,7 +18,7 @@ public class GroupedMediaItem
 
     public MediaItem First { get; set; }
     public List<MediaItem> Additional { get; set; }
-        
+
     public static IList<MediaItem> FlattenGroups(GroupedMediaItem[] copy, int mediaItemCount)
     {
         var result = new MediaItem[mediaItemCount];
