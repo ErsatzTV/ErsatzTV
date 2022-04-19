@@ -19,7 +19,7 @@ public class HardwareUploadFilter : BaseFilter
     {
         HardwareAccelerationMode.None => string.Empty,
         HardwareAccelerationMode.Nvenc => "hwupload_cuda",
-        HardwareAccelerationMode.Qsv => "hwupload=extra_hw_frames=64",
+        HardwareAccelerationMode.Qsv => "hwupload=extra_hw_frames=128",
         HardwareAccelerationMode.Vaapi => "format=nv12|vaapi,hwupload",
         _ => "hwupload"
     };

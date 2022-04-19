@@ -5,10 +5,17 @@ namespace ErsatzTV.FFmpeg.Encoder.Qsv;
 public class EncoderH264Qsv : EncoderBase
 {
     private readonly FrameState _currentState;
+    private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
+    private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
 
-    public EncoderH264Qsv(FrameState currentState)
+    public EncoderH264Qsv(
+        FrameState currentState,
+        Option<WatermarkInputFile> maybeWatermarkInputFile,
+        Option<SubtitleInputFile> maybeSubtitleInputFile)
     {
         _currentState = currentState;
+        _maybeWatermarkInputFile = maybeWatermarkInputFile;
+        _maybeSubtitleInputFile = maybeSubtitleInputFile;
     }
 
     public override FrameState NextState(FrameState currentState) => currentState with
@@ -20,21 +27,27 @@ public class EncoderH264Qsv : EncoderBase
     public override string Name => "h264_qsv";
     public override StreamKind Kind => StreamKind.Video;
 
-    // need to convert to nv12 if we're still in software
+    // need to upload if we're still in software and a watermark is used
     public override string Filter
     {
         get
         {
+            // only upload to hw if we need to overlay (watermark or subtitle)
             if (_currentState.FrameDataLocation == FrameDataLocation.Software)
             {
-                // pixel format should already be converted to a supported format by QsvHardwareAccelerationOption
-                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
-                {
-                    return $"format={pixelFormat.FFmpegName},hwupload=extra_hw_frames=64";
-                }
+                bool isPictureSubtitle = _maybeSubtitleInputFile.Map(s => s.IsImageBased).IfNone(false);
                 
-                // default to nv12
-                return "format=nv12,hwupload=extra_hw_frames=64";
+                if (isPictureSubtitle || _maybeWatermarkInputFile.IsSome)
+                {
+                    // pixel format should already be converted to a supported format by QsvHardwareAccelerationOption
+                    foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+                    {
+                        return $"format={pixelFormat.FFmpegName},hwupload=extra_hw_frames=128";
+                    }
+
+                    // default to nv12
+                    return "format=nv12,hwupload=extra_hw_frames=128";
+                }
             }
 
             return string.Empty;

@@ -412,6 +412,7 @@ public class TranscodingTests
         if (subtitle == Subtitle.Text && !File.Exists(srtFile))
         {
             string sourceFile = Path.Combine(TestContext.CurrentContext.TestDirectory, "Resources", "test.srt");
+            Directory.CreateDirectory(FileSystemLayout.SubtitleCacheFolder);
             File.Copy(sourceFile, srtFile, true);
         }
 
@@ -457,7 +458,8 @@ public class TranscodingTests
         {
             "No support for codec",
             "No usable",
-            "Provided device doesn't support"
+            "Provided device doesn't support",
+            "Current pixel format is unsupported"
         };
 
         var sb = new StringBuilder();

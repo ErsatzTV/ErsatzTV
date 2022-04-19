@@ -6,11 +6,16 @@ public class EncoderHevcQsv : EncoderBase
 {
     private readonly FrameState _currentState;
     private readonly Option<WatermarkInputFile> _maybeWatermarkInputFile;
+    private readonly Option<SubtitleInputFile> _maybeSubtitleInputFile;
 
-    public EncoderHevcQsv(FrameState currentState, Option<WatermarkInputFile> maybeWatermarkInputFile)
+    public EncoderHevcQsv(
+        FrameState currentState,
+        Option<WatermarkInputFile> maybeWatermarkInputFile,
+        Option<SubtitleInputFile> maybeSubtitleInputFile)
     {
         _currentState = currentState;
         _maybeWatermarkInputFile = maybeWatermarkInputFile;
+        _maybeSubtitleInputFile = maybeSubtitleInputFile;
     }
 
     public override FrameState NextState(FrameState currentState) => currentState with
@@ -27,17 +32,22 @@ public class EncoderHevcQsv : EncoderBase
     {
         get
         {
-            // only upload to hw if we need to overlay a watermark
-            if (_maybeWatermarkInputFile.IsSome && _currentState.FrameDataLocation == FrameDataLocation.Software)
+            // only upload to hw if we need to overlay (watermark or subtitle)
+            if (_currentState.FrameDataLocation == FrameDataLocation.Software)
             {
-                // pixel format should already be converted to a supported format by QsvHardwareAccelerationOption
-                foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+                bool isPictureSubtitle = _maybeSubtitleInputFile.Map(s => s.IsImageBased).IfNone(false);
+                
+                if (isPictureSubtitle || _maybeWatermarkInputFile.IsSome)
                 {
-                    return $"format={pixelFormat.FFmpegName},hwupload=extra_hw_frames=64";
-                }
+                    // pixel format should already be converted to a supported format by QsvHardwareAccelerationOption
+                    foreach (IPixelFormat pixelFormat in _currentState.PixelFormat)
+                    {
+                        return $"format={pixelFormat.FFmpegName},hwupload=extra_hw_frames=128";
+                    }
 
-                // default to nv12
-                return "format=nv12,hwupload=extra_hw_frames=64";
+                    // default to nv12
+                    return "format=nv12,hwupload=extra_hw_frames=128";
+                }
             }
 
             return string.Empty;
