@@ -82,7 +82,7 @@ public static class CommandGenerator
             arguments.AddRange(step.FilterOptions);
         }
 
-        foreach (IPipelineStep step in pipelineSteps)
+        foreach (IPipelineStep step in pipelineSteps.Filter(s => s is not StreamSeekFilterOption))
         {
             arguments.AddRange(step.OutputOptions);
         }

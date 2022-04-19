@@ -87,7 +87,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         {
             return None;
         }
-        
+
         if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
             string.IsNullOrWhiteSpace(channel.PreferredSubtitleLanguageCode))
         {
@@ -99,7 +99,6 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         var subtitleStreams = version.Streams
             .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-            .Filter(s => s.Codec is "hdmv_pgs_subtitle" or "dvd_subtitle")
             .ToList();
 
         string language = (channel.PreferredSubtitleLanguageCode ?? string.Empty).ToLowerInvariant();
@@ -117,32 +116,39 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
                 .ToList();
         }
 
-        if (subtitleStreams.Count == 0)
+        if (subtitleStreams.Count > 0)
         {
-            return None;
+            switch (channel.SubtitleMode)
+            {
+                case ChannelSubtitleMode.Forced:
+                    foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Index).Find(s => s.Forced))
+                    {
+                        return stream;
+                    }
+
+                    break;
+                case ChannelSubtitleMode.Default:
+                    foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Default ? 0 : 1).ThenBy(s => s.Index))
+                    {
+                        return stream;
+                    }
+
+                    break;
+                case ChannelSubtitleMode.Any:
+                    foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Index).HeadOrNone())
+                    {
+                        return stream;
+                    }
+
+                    break;
+            }
         }
 
-        switch (channel.SubtitleMode)
-        {
-            case ChannelSubtitleMode.Forced:
-                foreach (MediaStream stream in Optional(subtitleStreams.OrderBy(s => s.Index).Find(s => s.Forced)))
-                {
-                    return stream;
-                }
-                break;
-            case ChannelSubtitleMode.Default:
-                foreach (MediaStream stream in Optional(subtitleStreams.OrderBy(s => s.Index).Find(s => s.Default)))
-                {
-                    return stream;
-                }
-                break;
-            case ChannelSubtitleMode.Any:
-                foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Index).HeadOrNone())
-                {
-                    return stream;
-                }
-                break;
-        }
+        _logger.LogDebug(
+            "Found no subtitles for channel {ChannelNumber} with mode {Mode} matching language {Language}",
+            channel.Number,
+            channel.SubtitleMode,
+            channel.PreferredSubtitleLanguageCode);
 
         return None;
     }

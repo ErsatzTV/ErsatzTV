@@ -1,5 +1,6 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -14,6 +15,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
 {
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly IMediator _mediator;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -50,6 +52,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     {
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
+        _metadataRepository = metadataRepository;
         _mediator = mediator;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
@@ -128,6 +131,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                     .GetOrAdd(libraryPath, file)
                     .BindT(video => UpdateStatistics(video, ffmpegPath, ffprobePath))
                     .BindT(UpdateMetadata)
+                    .BindT(UpdateSubtitles)
                     .BindT(FlagNormal);
 
                 await maybeVideo.Match(
@@ -190,6 +194,51 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
                 {
                     result.IsUpdated = true;
                 }
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _client.Notify(ex);
+            return BaseError.New(ex.ToString());
+        }
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<OtherVideo>>> UpdateSubtitles(
+        MediaItemScanResult<OtherVideo> result)
+    {
+        try
+        {
+            OtherVideo otherVideo = result.Item;
+
+            foreach (OtherVideoMetadata metadata in otherVideo.OtherVideoMetadata)
+            {
+                MediaVersion version = otherVideo.GetHeadVersion();
+                var subtitleStreams = version.Streams
+                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+                    .ToList();
+
+                var subtitles = new List<Subtitle>();
+
+                foreach (MediaStream stream in subtitleStreams)
+                {
+                    var subtitle = new Subtitle
+                    {
+                        Codec = stream.Codec,
+                        Default = stream.Default,
+                        Forced = stream.Forced,
+                        Language = stream.Language,
+                        StreamIndex = stream.Index,
+                        SubtitleKind = SubtitleKind.Embedded,
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = DateTime.UtcNow
+                    };
+
+                    subtitles.Add(subtitle);
+                }
+
+                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
             }
 
             return result;

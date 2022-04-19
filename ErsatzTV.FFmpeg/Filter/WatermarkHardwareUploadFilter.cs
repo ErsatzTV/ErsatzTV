@@ -17,7 +17,7 @@ public class WatermarkHardwareUploadFilter : BaseFilter
     {
         HardwareAccelerationMode.None => string.Empty,
         HardwareAccelerationMode.Nvenc => "hwupload_cuda",
-        HardwareAccelerationMode.Qsv => "hwupload=extra_hw_frames=64",
+        HardwareAccelerationMode.Qsv => "hwupload=extra_hw_frames=128",
         
         // leave vaapi in software since we don't (yet) use overlay_vaapi
         HardwareAccelerationMode.Vaapi when _currentState.FrameDataLocation == FrameDataLocation.Software =>

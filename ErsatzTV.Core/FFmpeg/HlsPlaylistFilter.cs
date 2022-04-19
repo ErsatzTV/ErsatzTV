@@ -113,6 +113,11 @@ public class HlsPlaylistFilter : IHlsPlaylistFilter
                 playlist += "#EXT-X-DISCONTINUITY" + Environment.NewLine;
             }
 
+            if (playlist.Trim().Split(Environment.NewLine).All(l => l.StartsWith('#')))
+            {
+                throw new Exception("Trimming playlist to nothing");
+            }
+
             return new TrimPlaylistResult(nextPlaylistStart, startSequence, playlist, segments);
         }
         catch (Exception ex)

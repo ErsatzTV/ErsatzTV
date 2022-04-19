@@ -40,6 +40,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         MediaVersion audioVersion,
         string videoPath,
         string audioPath,
+        List<Subtitle> subtitles,
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
@@ -130,22 +131,37 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
-        Option<SubtitleInputFile> subtitleInputFile = maybeSubtitleStream.Map(
+        Option<SubtitleInputFile> subtitleInputFile = maybeSubtitleStream.Map<Option<SubtitleInputFile>>(
             subtitleStream =>
             {
-                var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(
-                    subtitleStream.Index,
-                    subtitleStream.Codec,
-                    StreamKind.Video);
+                foreach (Subtitle subtitle in Optional(subtitles.Find(s => s.StreamIndex == subtitleStream.Index)))
+                {
+                    if (!subtitle.IsImage && !subtitle.IsExtracted)
+                    {
+                        _logger.LogWarning("Subtitles are not yet available for this item");
+                        return None;
+                    }
 
-                return new SubtitleInputFile(
-                    videoPath,
-                    new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-                    false);
-                
+                    var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(
+                        subtitle.IsImage ? subtitleStream.Index : 0,
+                        subtitleStream.Codec,
+                        StreamKind.Video);
+
+                    string path = subtitle.IsImage
+                        ? videoPath
+                        : Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
+
+                    return new SubtitleInputFile(
+                        path,
+                        new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
+                        false);
+                }
+
+                return None;
+
                 // TODO: figure out HLS direct
                 // channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);
-            });
+            }).Flatten();
 
         Option<WatermarkInputFile> watermarkInputFile = GetWatermarkInputFile(watermarkOptions, maybeFadePoints);
         
@@ -214,13 +230,14 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             ptsOffset);
 
         _logger.LogDebug("FFmpeg desired state {FrameState}", desiredState);
-        
+
         var pipelineBuilder = new PipelineBuilder(
             videoInputFile,
             audioInputFile,
             watermarkInputFile,
             subtitleInputFile,
             FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
             _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Build(ffmpegState, desiredState);
@@ -312,6 +329,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
             _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Concat(
@@ -336,6 +354,7 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
             None,
             None,
             FileSystemLayout.FFmpegReportsFolder,
+            FileSystemLayout.FontsCacheFolder,
             _logger);
 
         FFmpegPipeline pipeline = pipelineBuilder.Resize(outputFile, new FrameSize(-1, height));

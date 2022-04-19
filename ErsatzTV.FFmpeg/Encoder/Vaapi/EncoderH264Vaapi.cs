@@ -27,16 +27,14 @@ public class EncoderH264Vaapi : EncoderBase
     public override string Name => "h264_vaapi";
     public override StreamKind Kind => StreamKind.Video;
 
-    // need to upload if we're still in software unless a watermark or picture subtitle is used
+    // need to upload if we're still in software unless a watermark or subtitle is used
     public override string Filter
     {
         get
         {
             if (_currentState.FrameDataLocation == FrameDataLocation.Software)
             {
-                bool isNotImageSubtitle = _maybeSubtitleInputFile.Map(s => s.IsImageBased).IfNone(false) == false; 
-                
-                if (_maybeWatermarkInputFile.IsNone && isNotImageSubtitle)
+                if (_maybeWatermarkInputFile.IsNone && _maybeSubtitleInputFile.IsNone)
                 {
                     return "format=nv12|vaapi,hwupload";
                 }
