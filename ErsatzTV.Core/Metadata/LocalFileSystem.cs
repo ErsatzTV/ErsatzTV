@@ -75,6 +75,24 @@ public class LocalFileSystem : ILocalFileSystem
         return new List<string>();
     }
 
+    public IEnumerable<string> ListFiles(string folder, string searchPattern)
+    {
+        if (Directory.Exists(folder))
+        {
+            try
+            {
+                return Directory.EnumerateFiles(folder, searchPattern, SearchOption.TopDirectoryOnly);
+            }
+            catch (Exception ex)
+            {
+                // do nothing
+                _client.Notify(ex);
+            }
+        }
+
+        return new List<string>();
+    }
+
     public bool FileExists(string path) => File.Exists(path);
 
     public bool FolderExists(string folder) => Directory.Exists(folder);

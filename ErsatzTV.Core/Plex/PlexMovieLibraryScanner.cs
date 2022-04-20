@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -14,6 +13,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
 {
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<PlexMovieLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMediator _mediator;
@@ -35,6 +35,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         IPlexPathReplacementService plexPathReplacementService,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<PlexMovieLibraryScanner> logger)
         : base(metadataRepository, logger)
     {
@@ -48,6 +49,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         _plexPathReplacementService = plexPathReplacementService;
         _localFileSystem = localFileSystem;
         _localStatisticsProvider = localStatisticsProvider;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _logger = logger;
     }
 
@@ -98,7 +100,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                         .BindT(
                             existing => UpdateStatistics(pathReplacements, existing, incoming, ffmpegPath, ffprobePath))
                         .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
-                        .BindT(UpdateSubtitles)
+                        .BindT(existing => UpdateSubtitles(pathReplacements, existing, incoming))
                         .BindT(existing => UpdateArtwork(existing, incoming));
 
                     await maybeMovie.Match(
@@ -409,39 +411,24 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateSubtitles(
-        MediaItemScanResult<PlexMovie> result)
+        List<PlexPathReplacement> pathReplacements,
+        MediaItemScanResult<PlexMovie> result,
+        PlexMovie incoming)
     {
         try
         {
-            Movie movie = result.Item;
+            PlexMovie existing = result.Item;
+            MediaVersion existingVersion = existing.MediaVersions.Head();
+            MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
-            foreach (MovieMetadata metadata in movie.MovieMetadata)
+            if (result.IsAdded || incomingVersion.DateUpdated > existingVersion.DateUpdated)
             {
-                MediaVersion version = movie.GetHeadVersion();
-                var subtitleStreams = version.Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
+                string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                    pathReplacements,
+                    incoming.MediaVersions.Head().MediaFiles.Head().Path,
+                    false);
 
-                var subtitles = new List<Subtitle>();
-
-                foreach (MediaStream stream in subtitleStreams)
-                {
-                    var subtitle = new Subtitle
-                    {
-                        Codec = stream.Codec,
-                        Default = stream.Default,
-                        Forced = stream.Forced,
-                        Language = stream.Language,
-                        StreamIndex = stream.Index,
-                        SubtitleKind = SubtitleKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow
-                    };
-
-                    subtitles.Add(subtitle);
-                }
-
-                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+                await _localSubtitlesProvider.UpdateSubtitles(result.Item, localPath, false);
             }
 
             return result;

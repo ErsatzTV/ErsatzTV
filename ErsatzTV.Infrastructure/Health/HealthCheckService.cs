@@ -6,6 +6,7 @@ namespace ErsatzTV.Infrastructure.Health;
 public class HealthCheckService : IHealthCheckService
 {
     private readonly List<IHealthCheck> _checks; // ReSharper disable SuggestBaseTypeForParameterInConstructor
+
     public HealthCheckService(
         IFFmpegVersionHealthCheck ffmpegVersionHealthCheck,
         IFFmpegReportsHealthCheck ffmpegReportsHealthCheck,

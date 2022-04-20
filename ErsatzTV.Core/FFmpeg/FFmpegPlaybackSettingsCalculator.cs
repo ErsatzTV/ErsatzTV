@@ -171,7 +171,7 @@ public class FFmpegPlaybackSettingsCalculator
     }
 
     public FFmpegPlaybackSettings CalculateErrorSettings(FFmpegProfile ffmpegProfile) =>
-        new FFmpegPlaybackSettings
+        new()
         {
             HardwareAcceleration = HardwareAccelerationKind.None,
             ThreadCount = ffmpegProfile.ThreadCount,

@@ -57,8 +57,8 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
     {
         MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
         Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
-        Option<MediaStream> maybeSubtitleStream =
-            await _ffmpegStreamSelector.SelectSubtitleStream(channel, videoVersion);
+        Option<Subtitle> maybeSubtitle =
+            await _ffmpegStreamSelector.SelectSubtitleStream(channel, videoVersion, subtitles);
 
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,
@@ -131,33 +131,28 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
                 return new AudioInputFile(audioPath, new List<AudioStream> { ffmpegAudioStream }, audioState);
             });
 
-        Option<SubtitleInputFile> subtitleInputFile = maybeSubtitleStream.Map<Option<SubtitleInputFile>>(
-            subtitleStream =>
+        Option<SubtitleInputFile> subtitleInputFile = maybeSubtitle.Map<Option<SubtitleInputFile>>(
+            subtitle =>
             {
-                foreach (Subtitle subtitle in Optional(subtitles.Find(s => s.StreamIndex == subtitleStream.Index)))
+                if (!subtitle.IsImage && subtitle.SubtitleKind == SubtitleKind.Embedded && !subtitle.IsExtracted)
                 {
-                    if (!subtitle.IsImage && !subtitle.IsExtracted)
-                    {
-                        _logger.LogWarning("Subtitles are not yet available for this item");
-                        return None;
-                    }
-
-                    var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(
-                        subtitle.IsImage ? subtitleStream.Index : 0,
-                        subtitleStream.Codec,
-                        StreamKind.Video);
-
-                    string path = subtitle.IsImage
-                        ? videoPath
-                        : Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
-
-                    return new SubtitleInputFile(
-                        path,
-                        new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
-                        false);
+                    _logger.LogWarning("Subtitles are not yet available for this item");
+                    return None;
                 }
 
-                return None;
+                var ffmpegSubtitleStream = new ErsatzTV.FFmpeg.MediaStream(
+                    subtitle.IsImage ? subtitle.StreamIndex : 0,
+                    subtitle.Codec,
+                    StreamKind.Video);
+
+                string path = subtitle.IsImage
+                    ? videoPath
+                    : Path.Combine(FileSystemLayout.SubtitleCacheFolder, subtitle.Path);
+
+                return new SubtitleInputFile(
+                    path,
+                    new List<ErsatzTV.FFmpeg.MediaStream> { ffmpegSubtitleStream },
+                    false);
 
                 // TODO: figure out HLS direct
                 // channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect);

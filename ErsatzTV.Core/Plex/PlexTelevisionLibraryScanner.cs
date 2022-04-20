@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -15,6 +14,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
 {
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMediator _mediator;
@@ -36,6 +36,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         IPlexPathReplacementService plexPathReplacementService,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<PlexTelevisionLibraryScanner> logger)
         : base(metadataRepository, logger)
     {
@@ -49,6 +50,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         _plexPathReplacementService = plexPathReplacementService;
         _localFileSystem = localFileSystem;
         _localStatisticsProvider = localStatisticsProvider;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _logger = logger;
     }
 
@@ -432,7 +434,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                     incoming.SeasonId = season.Id;
 
                     // TODO: figure out how to rebuild playlists
-                    Either<BaseError, PlexEpisode> maybeEpisode = await _televisionRepository
+                    Either<BaseError, MediaItemScanResult<PlexEpisode>> maybeEpisode = await _televisionRepository
                         .GetOrAddPlexEpisode(library, incoming)
                         .BindT(existing => UpdateMetadata(existing, incoming))
                         .BindT(
@@ -445,13 +447,20 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                                 token,
                                 ffmpegPath,
                                 ffprobePath))
-                        .BindT(UpdateSubtitles)
+                        .BindT(existing => UpdateSubtitles(pathReplacements, existing, incoming))
                         .BindT(existing => UpdateArtwork(existing, incoming));
 
                     await maybeEpisode.Match(
-                        async episode =>
+                        async result =>
                         {
-                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
+                            if (result.IsAdded)
+                            {
+                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
+                            }
+                            else
+                            {
+                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                            }
                         },
                         error =>
                         {
@@ -481,8 +490,12 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
             });
     }
 
-    private async Task<Either<BaseError, PlexEpisode>> UpdateMetadata(PlexEpisode existing, PlexEpisode incoming)
+    private async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> UpdateMetadata(
+        MediaItemScanResult<PlexEpisode> result,
+        PlexEpisode incoming)
     {
+        PlexEpisode existing = result.Item;
+
         var toUpdate = existing.EpisodeMetadata
             .Where(em => incoming.EpisodeMetadata.Any(em2 => em2.EpisodeNumber == em.EpisodeNumber))
             .ToList();
@@ -507,12 +520,12 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
 
         // TODO: update existing metadata
 
-        return existing;
+        return result;
     }
 
-    private async Task<Either<BaseError, PlexEpisode>> UpdateStatistics(
+    private async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> UpdateStatistics(
         List<PlexPathReplacement> pathReplacements,
-        PlexEpisode existing,
+        MediaItemScanResult<PlexEpisode> result,
         PlexEpisode incoming,
         PlexLibrary library,
         PlexConnection connection,
@@ -520,6 +533,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         string ffmpegPath,
         string ffprobePath)
     {
+        PlexEpisode existing = result.Item;
         MediaVersion existingVersion = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
@@ -615,43 +629,31 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                 });
         }
 
-        return Right<BaseError, PlexEpisode>(existing);
+        return result;
     }
-    
-    private async Task<Either<BaseError, PlexEpisode>> UpdateSubtitles(PlexEpisode episode)
+
+    private async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> UpdateSubtitles(
+        List<PlexPathReplacement> pathReplacements,
+        MediaItemScanResult<PlexEpisode> result,
+        PlexEpisode incoming)
     {
         try
         {
-            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
+            PlexEpisode existing = result.Item;
+            MediaVersion existingVersion = existing.MediaVersions.Head();
+            MediaVersion incomingVersion = incoming.MediaVersions.Head();
+
+            if (result.IsAdded || incomingVersion.DateUpdated > existingVersion.DateUpdated)
             {
-                MediaVersion version = episode.GetHeadVersion();
-                var subtitleStreams = version.Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
+                string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                    pathReplacements,
+                    incoming.MediaVersions.Head().MediaFiles.Head().Path,
+                    false);
 
-                var subtitles = new List<Subtitle>();
-
-                foreach (MediaStream stream in subtitleStreams)
-                {
-                    var subtitle = new Subtitle
-                    {
-                        Codec = stream.Codec,
-                        Default = stream.Default,
-                        Forced = stream.Forced,
-                        Language = stream.Language,
-                        StreamIndex = stream.Index,
-                        SubtitleKind = SubtitleKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow
-                    };
-
-                    subtitles.Add(subtitle);
-                }
-
-                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+                await _localSubtitlesProvider.UpdateSubtitles(existing, localPath, false);
             }
 
-            return episode;
+            return result;
         }
         catch (Exception ex)
         {
@@ -659,8 +661,11 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         }
     }
 
-    private async Task<Either<BaseError, PlexEpisode>> UpdateArtwork(PlexEpisode existing, PlexEpisode incoming)
+    private async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> UpdateArtwork(
+        MediaItemScanResult<PlexEpisode> result,
+        PlexEpisode incoming)
     {
+        PlexEpisode existing = result.Item;
         foreach (EpisodeMetadata incomingMetadata in incoming.EpisodeMetadata)
         {
             Option<EpisodeMetadata> maybeExistingMetadata = existing.EpisodeMetadata
@@ -676,6 +681,6 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
             }
         }
 
-        return existing;
+        return result;
     }
 }
