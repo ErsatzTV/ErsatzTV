@@ -447,7 +447,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                                 token,
                                 ffmpegPath,
                                 ffprobePath))
-                        .BindT(UpdateSubtitles)
+                        .BindT(existing => UpdateSubtitles(existing, incoming))
                         .BindT(existing => UpdateArtwork(existing, incoming));
 
                     await maybeEpisode.Match(
@@ -620,12 +620,19 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         return Right<BaseError, PlexEpisode>(existing);
     }
 
-    private async Task<Either<BaseError, PlexEpisode>> UpdateSubtitles(PlexEpisode episode)
+    private async Task<Either<BaseError, PlexEpisode>> UpdateSubtitles(PlexEpisode existing, PlexEpisode incoming)
     {
         try
         {
-            await _localSubtitlesProvider.UpdateSubtitles(episode);
-            return episode;
+            MediaVersion existingVersion = existing.MediaVersions.Head();
+            MediaVersion incomingVersion = incoming.MediaVersions.Head();
+
+            if (incomingVersion.DateUpdated > existingVersion.DateUpdated)
+            {
+                await _localSubtitlesProvider.UpdateSubtitleStreams(existing);
+            }
+
+            return existing;
         }
         catch (Exception ex)
         {

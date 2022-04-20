@@ -451,7 +451,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
     {
         try
         {
-            return await _localSubtitlesProvider.UpdateSubtitles(episode);
+            return await _localSubtitlesProvider.UpdateSubtitleStreams(episode);
         }
         catch (Exception ex)
         {

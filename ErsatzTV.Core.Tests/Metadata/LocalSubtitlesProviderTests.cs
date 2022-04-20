@@ -50,21 +50,7 @@ public class LocalSubtitlesProviderTests
             new FakeLocalFileSystem(fakeFiles),
             new Mock<ILogger<LocalSubtitlesProvider>>().Object);
 
-        List<Subtitle> result = provider.LocateExternalSubtitles(
-            cultures,
-            new Movie
-            {
-                MediaVersions = new List<MediaVersion>
-                {
-                    new()
-                    {
-                        MediaFiles = new List<MediaFile>
-                        {
-                            new() { Path = @"/Movies/Avatar (2009)/Avatar (2009).mkv" }
-                        }
-                    }
-                }
-            });
+        List<Subtitle> result = provider.LocateExternalSubtitles(cultures, @"/Movies/Avatar (2009)/Avatar (2009).mkv");
 
         result.Count.Should().Be(5);
         result.Count(s => s.Language == "eng").Should().Be(3);

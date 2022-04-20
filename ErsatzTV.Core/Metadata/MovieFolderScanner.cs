@@ -139,7 +139,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     .BindT(UpdateMetadata)
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
-                    .BindT(movie => UpdateSubtitles(movie))
+                    .BindT(UpdateSubtitles)
                     .BindT(FlagNormal);
 
                 await maybeMovie.Match(

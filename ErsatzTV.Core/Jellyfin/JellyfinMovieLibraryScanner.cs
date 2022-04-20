@@ -242,7 +242,7 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
     {
         try
         {
-            return await _localSubtitlesProvider.UpdateSubtitles(movie);
+            return await _localSubtitlesProvider.UpdateSubtitleStreams(movie);
         }
         catch (Exception ex)
         {

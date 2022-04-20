@@ -449,7 +449,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
     {
         try
         {
-            return await _localSubtitlesProvider.UpdateSubtitles(episode);
+            return await _localSubtitlesProvider.UpdateSubtitleStreams(episode);
         }
         catch (Exception ex)
         {

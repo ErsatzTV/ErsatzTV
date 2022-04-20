@@ -100,7 +100,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                         .BindT(
                             existing => UpdateStatistics(pathReplacements, existing, incoming, ffmpegPath, ffprobePath))
                         .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
-                        .BindT(UpdateSubtitles)
+                        .BindT(existing => UpdateSubtitles(existing, incoming))
                         .BindT(existing => UpdateArtwork(existing, incoming));
 
                     await maybeMovie.Match(
@@ -411,11 +411,20 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateSubtitles(
-        MediaItemScanResult<PlexMovie> result)
+        MediaItemScanResult<PlexMovie> result,
+        PlexMovie incoming)
     {
         try
         {
-            await _localSubtitlesProvider.UpdateSubtitles(result.Item);
+            PlexMovie existing = result.Item;
+            MediaVersion existingVersion = existing.MediaVersions.Head();
+            MediaVersion incomingVersion = incoming.MediaVersions.Head();
+
+            if (incomingVersion.DateUpdated > existingVersion.DateUpdated)
+            {
+                await _localSubtitlesProvider.UpdateSubtitleStreams(result.Item);
+            }
+
             return result;
         }
         catch (Exception ex)

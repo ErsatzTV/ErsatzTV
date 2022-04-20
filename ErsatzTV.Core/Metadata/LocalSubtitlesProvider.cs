@@ -67,18 +67,43 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
                 .ToList();
 
             var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
-            subtitles.AddRange(LocateExternalSubtitles(_languageCodes, mediaItem));
+            string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
+            subtitles.AddRange(LocateExternalSubtitles(_languageCodes, mediaItemPath));
             await _metadataRepository.UpdateSubtitles(metadata, subtitles);
         }
 
         return false;
     }
 
-    public List<Subtitle> LocateExternalSubtitles(List<CultureInfo> languageCodes, MediaItem mediaItem)
+    public async Task<bool> UpdateSubtitleStreams(MediaItem mediaItem)
+    {
+        Option<Domain.Metadata> maybeMetadata = mediaItem switch
+        {
+            Episode e => e.EpisodeMetadata.OfType<Domain.Metadata>().HeadOrNone(),
+            Movie m => m.MovieMetadata.OfType<Domain.Metadata>().HeadOrNone(),
+            MusicVideo mv => mv.MusicVideoMetadata.OfType<Domain.Metadata>().HeadOrNone(),
+            OtherVideo ov => ov.OtherVideoMetadata.OfType<Domain.Metadata>().HeadOrNone(),
+            _ => None
+        };
+
+        foreach (Domain.Metadata metadata in maybeMetadata)
+        {
+            MediaVersion version = mediaItem.GetHeadVersion();
+            var subtitleStreams = version.Streams
+                .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+                .ToList();
+
+            var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
+            return await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+        }
+
+        return false;
+    }
+
+    public List<Subtitle> LocateExternalSubtitles(List<CultureInfo> languageCodes, string mediaItemPath)
     {
         var result = new List<Subtitle>();
 
-        string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
         string folder = Path.GetDirectoryName(mediaItemPath);
         string withoutExtension = Path.GetFileNameWithoutExtension(mediaItemPath);
         foreach (string file in _localFileSystem.ListFiles(folder))
@@ -115,6 +140,8 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
 
             foreach (CultureInfo culture in maybeCulture)
             {
+                _logger.LogDebug("Located {Attribute} at {Path}", "External Subtitles", file);
+
                 result.Add(
                     new Subtitle
                     {
