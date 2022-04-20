@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -17,6 +18,7 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<EmbyMovieLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly IMediator _mediator;
     private readonly IMovieRepository _movieRepository;
     private readonly IEmbyPathReplacementService _pathReplacementService;
@@ -31,6 +33,7 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
         ISearchRepository searchRepository,
         IEmbyPathReplacementService pathReplacementService,
         IMediaSourceRepository mediaSourceRepository,
+        IMetadataRepository metadataRepository,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILogger<EmbyMovieLibraryScanner> logger)
@@ -42,6 +45,7 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
         _searchRepository = searchRepository;
         _pathReplacementService = pathReplacementService;
         _mediaSourceRepository = mediaSourceRepository;
+        _metadataRepository = metadataRepository;
         _localFileSystem = localFileSystem;
         _localStatisticsProvider = localStatisticsProvider;
         _logger = logger;
@@ -179,6 +183,11 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
                                 incomingMovie,
                                 localPath);
 
+                        if (refreshResult.Map(t => t).IfLeft(false))
+                        {
+                            refreshResult = await UpdateSubtitles(incomingMovie);
+                        }
+
                         await refreshResult.Match(
                             async _ =>
                             {
@@ -228,5 +237,46 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
 
         _searchIndex.Commit();
         return Unit.Default;
+    }
+    
+    private async Task<Either<BaseError, bool>> UpdateSubtitles(EmbyMovie movie)
+    {
+        try
+        {
+            foreach (MovieMetadata metadata in movie.MovieMetadata)
+            {
+                MediaVersion version = movie.GetHeadVersion();
+                var subtitleStreams = version.Streams
+                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+                    .ToList();
+
+                var subtitles = new List<Subtitle>();
+
+                foreach (MediaStream stream in subtitleStreams)
+                {
+                    var subtitle = new Subtitle
+                    {
+                        Codec = stream.Codec,
+                        Default = stream.Default,
+                        Forced = stream.Forced,
+                        Language = stream.Language,
+                        StreamIndex = stream.Index,
+                        SubtitleKind = SubtitleKind.Embedded,
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = DateTime.UtcNow
+                    };
+
+                    subtitles.Add(subtitle);
+                }
+
+                return await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+            }
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
+
+        return false;
     }
 }
