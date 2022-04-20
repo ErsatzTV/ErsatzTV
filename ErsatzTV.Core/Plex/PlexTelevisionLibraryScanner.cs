@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -15,6 +14,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
 {
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<PlexTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMediator _mediator;
@@ -36,6 +36,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         IPlexPathReplacementService plexPathReplacementService,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<PlexTelevisionLibraryScanner> logger)
         : base(metadataRepository, logger)
     {
@@ -49,6 +50,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         _plexPathReplacementService = plexPathReplacementService;
         _localFileSystem = localFileSystem;
         _localStatisticsProvider = localStatisticsProvider;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _logger = logger;
     }
 
@@ -622,35 +624,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
     {
         try
         {
-            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
-            {
-                MediaVersion version = episode.GetHeadVersion();
-                var subtitleStreams = version.Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
-
-                var subtitles = new List<Subtitle>();
-
-                foreach (MediaStream stream in subtitleStreams)
-                {
-                    var subtitle = new Subtitle
-                    {
-                        Codec = stream.Codec,
-                        Default = stream.Default,
-                        Forced = stream.Forced,
-                        Language = stream.Language,
-                        StreamIndex = stream.Index,
-                        SubtitleKind = SubtitleKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow
-                    };
-
-                    subtitles.Add(subtitle);
-                }
-
-                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
-            }
-
+            await _localSubtitlesProvider.UpdateSubtitles(episode);
             return episode;
         }
         catch (Exception ex)

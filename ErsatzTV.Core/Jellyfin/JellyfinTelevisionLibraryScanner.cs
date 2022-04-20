@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -16,10 +15,10 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
     private readonly IJellyfinApiClient _jellyfinApiClient;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<JellyfinTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMediator _mediator;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly IJellyfinPathReplacementService _pathReplacementService;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -32,9 +31,9 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         ISearchIndex searchIndex,
         ISearchRepository searchRepository,
         IJellyfinPathReplacementService pathReplacementService,
-        IMetadataRepository metadataRepository,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         IMediator mediator,
         ILogger<JellyfinTelevisionLibraryScanner> logger)
     {
@@ -44,9 +43,9 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _pathReplacementService = pathReplacementService;
-        _metadataRepository = metadataRepository;
         _localFileSystem = localFileSystem;
         _localStatisticsProvider = localStatisticsProvider;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _mediator = mediator;
         _logger = logger;
     }
@@ -452,40 +451,11 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
     {
         try
         {
-            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
-            {
-                MediaVersion version = episode.GetHeadVersion();
-                var subtitleStreams = version.Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
-
-                var subtitles = new List<Subtitle>();
-
-                foreach (MediaStream stream in subtitleStreams)
-                {
-                    var subtitle = new Subtitle
-                    {
-                        Codec = stream.Codec,
-                        Default = stream.Default,
-                        Forced = stream.Forced,
-                        Language = stream.Language,
-                        StreamIndex = stream.Index,
-                        SubtitleKind = SubtitleKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow
-                    };
-
-                    subtitles.Add(subtitle);
-                }
-
-                return await _metadataRepository.UpdateSubtitles(metadata, subtitles);
-            }
+            return await _localSubtitlesProvider.UpdateSubtitles(episode);
         }
         catch (Exception ex)
         {
             return BaseError.New(ex.ToString());
         }
-
-        return false;
     }
 }

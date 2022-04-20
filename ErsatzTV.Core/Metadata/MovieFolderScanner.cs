@@ -1,7 +1,5 @@
-﻿using System.Globalization;
-using Bugsnag;
+﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -21,9 +19,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
-    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -60,11 +56,9 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         _movieRepository = movieRepository;
         _localSubtitlesProvider = localSubtitlesProvider;
         _localMetadataProvider = localMetadataProvider;
-        _metadataRepository = metadataRepository;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _libraryRepository = libraryRepository;
-        _mediaItemRepository = mediaItemRepository;
         _mediator = mediator;
         _client = client;
         _logger = logger;
@@ -78,8 +72,6 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         decimal progressMax,
         CancellationToken cancellationToken)
     {
-        List<CultureInfo> languageCodes = await _mediaItemRepository.GetAllLanguageCodeCultures();
-
         decimal progressSpread = progressMax - progressMin;
 
         var foldersCompleted = 0;
@@ -147,7 +139,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     .BindT(UpdateMetadata)
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
-                    .BindT(movie => UpdateSubtitles(languageCodes, movie, cancellationToken))
+                    .BindT(movie => UpdateSubtitles(movie))
                     .BindT(FlagNormal);
 
                 await maybeMovie.Match(
@@ -263,46 +255,11 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateSubtitles(
-        List<CultureInfo> languageCodes,
-        MediaItemScanResult<Movie> result,
-        CancellationToken _)
+    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateSubtitles(MediaItemScanResult<Movie> result)
     {
         try
         {
-            Movie movie = result.Item;
-
-            foreach (MovieMetadata metadata in movie.MovieMetadata)
-            {
-                MediaVersion version = movie.GetHeadVersion();
-                var subtitleStreams = version.Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
-
-                var subtitles = new List<Subtitle>();
-
-                foreach (MediaStream stream in subtitleStreams)
-                {
-                    var subtitle = new Subtitle
-                    {
-                        Codec = stream.Codec,
-                        Default = stream.Default,
-                        Forced = stream.Forced,
-                        Language = stream.Language,
-                        StreamIndex = stream.Index,
-                        SubtitleKind = SubtitleKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow
-                    };
-
-                    subtitles.Add(subtitle);
-                }
-
-                subtitles.AddRange(_localSubtitlesProvider.LocateExternalSubtitles(languageCodes, movie));
-
-                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
-            }
-
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item);
             return result;
         }
         catch (Exception ex)
