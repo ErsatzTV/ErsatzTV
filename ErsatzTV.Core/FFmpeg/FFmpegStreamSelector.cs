@@ -81,7 +81,10 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         return audioStreams.OrderByDescending(s => s.Channels).Head();
     }
 
-    public async Task<Option<MediaStream>> SelectSubtitleStream(Channel channel, MediaVersion version)
+    public async Task<Option<Subtitle>> SelectSubtitleStream(
+        Channel channel,
+        MediaVersion version,
+        List<Subtitle> subtitles)
     {
         if (channel.SubtitleMode == ChannelSubtitleMode.None)
         {
@@ -97,10 +100,6 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             return None;
         }
 
-        var subtitleStreams = version.Streams
-            .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-            .ToList();
-
         string language = (channel.PreferredSubtitleLanguageCode ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
         {
@@ -110,34 +109,34 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         {
             // filter to preferred language
             List<string> allCodes = await _searchRepository.GetAllLanguageCodes(new List<string> { language });
-            subtitleStreams = subtitleStreams
+            subtitles = subtitles
                 .Filter(
                     s => allCodes.Any(c => string.Equals(s.Language, c, StringComparison.InvariantCultureIgnoreCase)))
                 .ToList();
         }
 
-        if (subtitleStreams.Count > 0)
+        if (subtitles.Count > 0)
         {
             switch (channel.SubtitleMode)
             {
                 case ChannelSubtitleMode.Forced:
-                    foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Index).Find(s => s.Forced))
+                    foreach (Subtitle subtitle in subtitles.OrderBy(s => s.StreamIndex).Find(s => s.Forced))
                     {
-                        return stream;
+                        return subtitle;
                     }
 
                     break;
                 case ChannelSubtitleMode.Default:
-                    foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Default ? 0 : 1).ThenBy(s => s.Index))
+                    foreach (Subtitle subtitle in subtitles.OrderBy(s => s.Default ? 0 : 1).ThenBy(s => s.StreamIndex))
                     {
-                        return stream;
+                        return subtitle;
                     }
 
                     break;
                 case ChannelSubtitleMode.Any:
-                    foreach (MediaStream stream in subtitleStreams.OrderBy(s => s.Index).HeadOrNone())
+                    foreach (Subtitle subtitle in subtitles.OrderBy(s => s.StreamIndex).HeadOrNone())
                     {
-                        return stream;
+                        return subtitle;
                     }
 
                     break;

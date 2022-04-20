@@ -1,6 +1,5 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -18,9 +17,9 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -29,6 +28,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         ILocalFileSystem localFileSystem,
         IMovieRepository movieRepository,
         ILocalStatisticsProvider localStatisticsProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
@@ -54,8 +54,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     {
         _localFileSystem = localFileSystem;
         _movieRepository = movieRepository;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _localMetadataProvider = localMetadataProvider;
-        _metadataRepository = metadataRepository;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _libraryRepository = libraryRepository;
@@ -139,7 +139,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     .BindT(UpdateMetadata)
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
-                    .BindT(movie => UpdateSubtitles(movie, cancellationToken))
+                    .BindT(UpdateSubtitles)
                     .BindT(FlagNormal);
 
                 await maybeMovie.Match(
@@ -255,43 +255,11 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         }
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateSubtitles(
-        MediaItemScanResult<Movie> result,
-        CancellationToken _)
+    private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateSubtitles(MediaItemScanResult<Movie> result)
     {
         try
         {
-            Movie movie = result.Item;
-
-            foreach (MovieMetadata metadata in movie.MovieMetadata)
-            {
-                MediaVersion version = movie.GetHeadVersion();
-                var subtitleStreams = version.Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
-
-                var subtitles = new List<Subtitle>();
-
-                foreach (MediaStream stream in subtitleStreams)
-                {
-                    var subtitle = new Subtitle
-                    {
-                        Codec = stream.Codec,
-                        Default = stream.Default,
-                        Forced = stream.Forced,
-                        Language = stream.Language,
-                        StreamIndex = stream.Index,
-                        SubtitleKind = SubtitleKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow
-                    };
-
-                    subtitles.Add(subtitle);
-                }
-
-                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
-            }
-
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
             return result;
         }
         catch (Exception ex)

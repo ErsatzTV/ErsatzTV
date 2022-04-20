@@ -1,6 +1,5 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -17,6 +16,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<TelevisionFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
@@ -29,6 +29,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         ITelevisionRepository televisionRepository,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         ISearchIndex searchIndex,
@@ -53,6 +54,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         _localFileSystem = localFileSystem;
         _televisionRepository = televisionRepository;
         _localMetadataProvider = localMetadataProvider;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _metadataRepository = metadataRepository;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
@@ -243,7 +245,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         .MapT(_ => episode))
                 .BindT(UpdateMetadata)
                 .BindT(e => UpdateThumbnail(e, cancellationToken))
-                .BindT(e => UpdateSubtitles(e, cancellationToken))
+                .BindT(UpdateSubtitles)
                 .BindT(e => FlagNormal(new MediaItemScanResult<Episode>(e)))
                 .MapT(r => r.Item);
 
@@ -447,39 +449,11 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         }
     }
 
-    private async Task<Either<BaseError, Episode>> UpdateSubtitles(Episode episode, CancellationToken _)
+    private async Task<Either<BaseError, Episode>> UpdateSubtitles(Episode episode)
     {
         try
         {
-            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
-            {
-                MediaVersion version = episode.GetHeadVersion();
-                var subtitleStreams = version.Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
-
-                var subtitles = new List<Subtitle>();
-
-                foreach (MediaStream stream in subtitleStreams)
-                {
-                    var subtitle = new Subtitle
-                    {
-                        Codec = stream.Codec,
-                        Default = stream.Default,
-                        Forced = stream.Forced,
-                        Language = stream.Language,
-                        StreamIndex = stream.Index,
-                        SubtitleKind = SubtitleKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow
-                    };
-
-                    subtitles.Add(subtitle);
-                }
-
-                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
-            }
-
+            await _localSubtitlesProvider.UpdateSubtitles(episode, None, true);
             return episode;
         }
         catch (Exception ex)

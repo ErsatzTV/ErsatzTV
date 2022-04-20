@@ -39,4 +39,10 @@ public class PlexStreamResponse
 
     [XmlAttribute("scanType")]
     public string ScanType { get; set; }
+
+    [XmlAttribute("displayTitle")]
+    public string DisplayTitle { get; set; }
+
+    [XmlAttribute("extendedDisplayTitle")]
+    public string ExtendedDisplayTitle { get; set; }
 }

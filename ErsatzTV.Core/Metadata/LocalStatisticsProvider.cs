@@ -372,6 +372,7 @@ public class LocalStatisticsProvider : ILocalStatisticsProvider
                         if (subtitleStream.tags is not null)
                         {
                             stream.Language = subtitleStream.tags.language;
+                            stream.Title = subtitleStream.tags.title;
                         }
 
                         version.Streams.Add(stream);

@@ -490,7 +490,9 @@ public class TelevisionRepository : ITelevisionRepository
             async () => await AddPlexSeason(dbContext, library, item));
     }
 
-    public async Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item)
+    public async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> GetOrAddPlexEpisode(
+        PlexLibrary library,
+        PlexEpisode item)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         Option<PlexEpisode> maybeExisting = await dbContext.PlexEpisodes
@@ -525,7 +527,8 @@ public class TelevisionRepository : ITelevisionRepository
             .SingleOrDefaultAsync(i => i.Key == item.Key);
 
         return await maybeExisting.Match(
-            plexEpisode => Right<BaseError, PlexEpisode>(plexEpisode).AsTask(),
+            plexEpisode => Right<BaseError, MediaItemScanResult<PlexEpisode>>(
+                new MediaItemScanResult<PlexEpisode>(plexEpisode) { IsAdded = false }).AsTask(),
             async () => await AddPlexEpisode(dbContext, library, item));
     }
 
@@ -872,7 +875,7 @@ public class TelevisionRepository : ITelevisionRepository
         }
     }
 
-    private static async Task<Either<BaseError, PlexEpisode>> AddPlexEpisode(
+    private static async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> AddPlexEpisode(
         TvContext dbContext,
         PlexLibrary library,
         PlexEpisode item)
@@ -900,7 +903,7 @@ public class TelevisionRepository : ITelevisionRepository
             await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             await dbContext.Entry(item).Reference(e => e.Season).LoadAsync();
-            return item;
+            return new MediaItemScanResult<PlexEpisode>(item) { IsAdded = true };
         }
         catch (Exception ex)
         {

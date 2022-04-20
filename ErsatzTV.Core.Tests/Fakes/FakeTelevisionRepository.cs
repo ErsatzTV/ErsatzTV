@@ -67,7 +67,9 @@ public class FakeTelevisionRepository : ITelevisionRepository
     public Task<Either<BaseError, PlexSeason>> GetOrAddPlexSeason(PlexLibrary library, PlexSeason item) =>
         throw new NotSupportedException();
 
-    public Task<Either<BaseError, PlexEpisode>> GetOrAddPlexEpisode(PlexLibrary library, PlexEpisode item) =>
+    public Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> GetOrAddPlexEpisode(
+        PlexLibrary library,
+        PlexEpisode item) =>
         throw new NotSupportedException();
 
     public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();

@@ -1,6 +1,5 @@
 ﻿using Bugsnag;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Metadata;
@@ -18,9 +17,9 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<MusicVideoFolderScanner> _logger;
     private readonly IMediator _mediator;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly IMusicVideoRepository _musicVideoRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
@@ -29,6 +28,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalMetadataProvider localMetadataProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
         ISearchIndex searchIndex,
@@ -54,7 +54,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     {
         _localFileSystem = localFileSystem;
         _localMetadataProvider = localMetadataProvider;
-        _metadataRepository = metadataRepository;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _artistRepository = artistRepository;
@@ -290,7 +290,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
                     .BindT(musicVideo => UpdateStatistics(musicVideo, ffmpegPath, ffprobePath))
                     .BindT(UpdateMetadata)
                     .BindT(result => UpdateThumbnail(result, cancellationToken))
-                    .BindT(result => UpdateSubtitles(result, cancellationToken))
+                    .BindT(UpdateSubtitles)
                     .BindT(FlagNormal);
 
                 await maybeMusicVideo.Match(
@@ -415,42 +415,11 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<MusicVideo>>> UpdateSubtitles(
-        MediaItemScanResult<MusicVideo> result,
-        CancellationToken _)
+        MediaItemScanResult<MusicVideo> result)
     {
         try
         {
-            MusicVideo musicVideo = result.Item;
-
-            foreach (MusicVideoMetadata metadata in musicVideo.MusicVideoMetadata)
-            {
-                MediaVersion version = musicVideo.GetHeadVersion();
-                var subtitleStreams = version.Streams
-                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                    .ToList();
-
-                var subtitles = new List<Subtitle>();
-
-                foreach (MediaStream stream in subtitleStreams)
-                {
-                    var subtitle = new Subtitle
-                    {
-                        Codec = stream.Codec,
-                        Default = stream.Default,
-                        Forced = stream.Forced,
-                        Language = stream.Language,
-                        StreamIndex = stream.Index,
-                        SubtitleKind = SubtitleKind.Embedded,
-                        DateAdded = DateTime.UtcNow,
-                        DateUpdated = DateTime.UtcNow
-                    };
-
-                    subtitles.Add(subtitle);
-                }
-
-                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
-            }
-
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
             return result;
         }
         catch (Exception ex)

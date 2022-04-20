@@ -360,6 +360,7 @@ public class Startup
         services.AddScoped<ILocalMetadataProvider, LocalMetadataProvider>();
         services.AddScoped<IFallbackMetadataProvider, FallbackMetadataProvider>();
         services.AddScoped<ILocalStatisticsProvider, LocalStatisticsProvider>();
+        services.AddScoped<ILocalSubtitlesProvider, LocalSubtitlesProvider>();
         services.AddScoped<IPlayoutBuilder, PlayoutBuilder>();
         services.AddScoped<IImageCache, ImageCache>();
         services.AddScoped<ILocalFileSystem, LocalFileSystem>();
