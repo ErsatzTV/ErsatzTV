@@ -1,7 +1,9 @@
-﻿using Dapper;
+﻿using System.Globalization;
+using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
@@ -24,6 +26,30 @@ public class MediaItemRepository : IMediaItemRepository
                     GROUP BY LanguageCode
                     ORDER BY COUNT(LanguageCode) DESC")
             .Map(result => result.ToList());
+    }
+
+    public async Task<List<CultureInfo>> GetAllLanguageCodeCultures()
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+        var result = new System.Collections.Generic.HashSet<CultureInfo>();
+
+        CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
+        List<string> mediaCodes = await GetAllLanguageCodes();
+        foreach (string mediaCode in mediaCodes)
+        {
+            foreach (string code in await dbContext.LanguageCodes.GetAllLanguageCodes(mediaCode))
+            {
+                Option<CultureInfo> maybeCulture = allCultures.Find(
+                    c => string.Equals(code, c.ThreeLetterISOLanguageName, StringComparison.OrdinalIgnoreCase));
+                foreach (CultureInfo culture in maybeCulture)
+                {
+                    result.Add(culture);
+                }
+            }
+        }
+
+        return result.ToList();
     }
 
     public async Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path)

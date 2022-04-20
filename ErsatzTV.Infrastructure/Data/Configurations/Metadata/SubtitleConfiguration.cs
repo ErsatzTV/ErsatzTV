@@ -12,5 +12,8 @@ public class SubtitleConfiguration : IEntityTypeConfiguration<Subtitle>
 
         builder.Property(s => s.IsExtracted)
             .HasDefaultValue(false);
+
+        builder.Property(s => s.SDH)
+            .HasDefaultValue(false);
     }
 }

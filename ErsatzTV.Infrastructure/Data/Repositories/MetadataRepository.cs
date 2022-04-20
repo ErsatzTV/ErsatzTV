@@ -528,6 +528,7 @@ public class MetadataRepository : IMetadataRepository
                 existingSubtitle.Codec = incomingSubtitle.Codec;
                 existingSubtitle.Default = incomingSubtitle.Default;
                 existingSubtitle.Forced = incomingSubtitle.Forced;
+                existingSubtitle.SDH = incomingSubtitle.SDH;
                 existingSubtitle.Language = incomingSubtitle.Language;
                 existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
                 existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;

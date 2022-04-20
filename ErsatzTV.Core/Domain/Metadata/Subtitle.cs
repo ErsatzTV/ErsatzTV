@@ -8,6 +8,7 @@ public class Subtitle
     public string Codec { get; set; }
     public bool Default { get; set; }
     public bool Forced { get; set; }
+    public bool SDH { get; set; }
     public string Language { get; set; }
     public bool IsExtracted { get; set; }
     public string Path { get; set; }

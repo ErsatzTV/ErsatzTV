@@ -1,4 +1,5 @@
-﻿using Bugsnag;
+﻿using System.Globalization;
+using Bugsnag;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.FFmpeg;
@@ -16,12 +17,14 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieRepository _movieRepository;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
 
@@ -29,6 +32,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         ILocalFileSystem localFileSystem,
         IMovieRepository movieRepository,
         ILocalStatisticsProvider localStatisticsProvider,
+        ILocalSubtitlesProvider localSubtitlesProvider,
         ILocalMetadataProvider localMetadataProvider,
         IMetadataRepository metadataRepository,
         IImageCache imageCache,
@@ -54,11 +58,13 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     {
         _localFileSystem = localFileSystem;
         _movieRepository = movieRepository;
+        _localSubtitlesProvider = localSubtitlesProvider;
         _localMetadataProvider = localMetadataProvider;
         _metadataRepository = metadataRepository;
         _searchIndex = searchIndex;
         _searchRepository = searchRepository;
         _libraryRepository = libraryRepository;
+        _mediaItemRepository = mediaItemRepository;
         _mediator = mediator;
         _client = client;
         _logger = logger;
@@ -72,6 +78,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         decimal progressMax,
         CancellationToken cancellationToken)
     {
+        List<CultureInfo> languageCodes = await _mediaItemRepository.GetAllLanguageCodeCultures();
+        
         decimal progressSpread = progressMax - progressMin;
 
         var foldersCompleted = 0;
@@ -139,7 +147,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     .BindT(UpdateMetadata)
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.Poster, cancellationToken))
                     .BindT(movie => UpdateArtwork(movie, ArtworkKind.FanArt, cancellationToken))
-                    .BindT(movie => UpdateSubtitles(movie, cancellationToken))
+                    .BindT(movie => UpdateSubtitles(languageCodes, movie, cancellationToken))
                     .BindT(FlagNormal);
 
                 await maybeMovie.Match(
@@ -256,6 +264,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<Movie>>> UpdateSubtitles(
+        List<CultureInfo> languageCodes,
         MediaItemScanResult<Movie> result,
         CancellationToken _)
     {
@@ -288,6 +297,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 
                     subtitles.Add(subtitle);
                 }
+
+                subtitles.AddRange(_localSubtitlesProvider.LocateExternalSubtitles(languageCodes, movie));
 
                 await _metadataRepository.UpdateSubtitles(metadata, subtitles);
             }
