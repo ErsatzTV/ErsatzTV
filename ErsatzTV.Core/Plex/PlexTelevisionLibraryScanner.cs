@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -444,6 +445,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                                 token,
                                 ffmpegPath,
                                 ffprobePath))
+                        .BindT(UpdateSubtitles)
                         .BindT(existing => UpdateArtwork(existing, incoming));
 
                     await maybeEpisode.Match(
@@ -614,6 +616,47 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         }
 
         return Right<BaseError, PlexEpisode>(existing);
+    }
+    
+    private async Task<Either<BaseError, PlexEpisode>> UpdateSubtitles(PlexEpisode episode)
+    {
+        try
+        {
+            foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
+            {
+                MediaVersion version = episode.GetHeadVersion();
+                var subtitleStreams = version.Streams
+                    .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
+                    .ToList();
+
+                var subtitles = new List<Subtitle>();
+
+                foreach (MediaStream stream in subtitleStreams)
+                {
+                    var subtitle = new Subtitle
+                    {
+                        Codec = stream.Codec,
+                        Default = stream.Default,
+                        Forced = stream.Forced,
+                        Language = stream.Language,
+                        StreamIndex = stream.Index,
+                        SubtitleKind = SubtitleKind.Embedded,
+                        DateAdded = DateTime.UtcNow,
+                        DateUpdated = DateTime.UtcNow
+                    };
+
+                    subtitles.Add(subtitle);
+                }
+
+                await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+            }
+
+            return episode;
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
     }
 
     private async Task<Either<BaseError, PlexEpisode>> UpdateArtwork(PlexEpisode existing, PlexEpisode incoming)
