@@ -18,8 +18,8 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<JellyfinMovieLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly IMediator _mediator;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IJellyfinPathReplacementService _pathReplacementService;
     private readonly ISearchIndex _searchIndex;
@@ -182,7 +182,7 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
                                 ffprobePath,
                                 incomingMovie,
                                 localPath);
-                        
+
                         if (refreshResult.Map(t => t).IfLeft(false))
                         {
                             refreshResult = await UpdateSubtitles(incomingMovie);
@@ -238,6 +238,7 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
         _searchIndex.Commit();
         return Unit.Default;
     }
+
     private async Task<Either<BaseError, bool>> UpdateSubtitles(JellyfinMovie movie)
     {
         try
@@ -278,5 +279,4 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
 
         return false;
     }
-    
 }

@@ -81,7 +81,10 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         return audioStreams.OrderByDescending(s => s.Channels).Head();
     }
 
-    public async Task<Option<Subtitle>> SelectSubtitleStream(Channel channel, MediaVersion version, List<Subtitle> subtitles)
+    public async Task<Option<Subtitle>> SelectSubtitleStream(
+        Channel channel,
+        MediaVersion version,
+        List<Subtitle> subtitles)
     {
         if (channel.SubtitleMode == ChannelSubtitleMode.None)
         {

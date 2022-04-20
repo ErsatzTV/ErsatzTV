@@ -617,7 +617,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
 
         return Right<BaseError, PlexEpisode>(existing);
     }
-    
+
     private async Task<Either<BaseError, PlexEpisode>> UpdateSubtitles(PlexEpisode episode)
     {
         try

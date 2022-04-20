@@ -18,8 +18,8 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
     private readonly ILocalStatisticsProvider _localStatisticsProvider;
     private readonly ILogger<EmbyMovieLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IMetadataRepository _metadataRepository;
     private readonly IMediator _mediator;
+    private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieRepository _movieRepository;
     private readonly IEmbyPathReplacementService _pathReplacementService;
     private readonly ISearchIndex _searchIndex;
@@ -238,7 +238,7 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
         _searchIndex.Commit();
         return Unit.Default;
     }
-    
+
     private async Task<Either<BaseError, bool>> UpdateSubtitles(EmbyMovie movie)
     {
         try

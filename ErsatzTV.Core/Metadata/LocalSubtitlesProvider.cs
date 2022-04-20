@@ -9,15 +9,12 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
 {
     private readonly ILocalFileSystem _localFileSystem;
 
-    public LocalSubtitlesProvider(ILocalFileSystem localFileSystem)
-    {
-        _localFileSystem = localFileSystem;
-    }
+    public LocalSubtitlesProvider(ILocalFileSystem localFileSystem) => _localFileSystem = localFileSystem;
 
     public List<Subtitle> LocateExternalSubtitles(List<CultureInfo> languageCodes, MediaItem mediaItem)
     {
         var result = new List<Subtitle>();
-        
+
         string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
         string folder = Path.GetDirectoryName(mediaItemPath);
         string withoutExtension = Path.GetFileNameWithoutExtension(mediaItemPath);

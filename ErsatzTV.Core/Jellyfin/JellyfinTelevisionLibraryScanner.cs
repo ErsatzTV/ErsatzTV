@@ -19,8 +19,8 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
     private readonly ILogger<JellyfinTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMediator _mediator;
-    private readonly IJellyfinPathReplacementService _pathReplacementService;
     private readonly IMetadataRepository _metadataRepository;
+    private readonly IJellyfinPathReplacementService _pathReplacementService;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
     private readonly IJellyfinTelevisionRepository _televisionRepository;
@@ -431,7 +431,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
                         ffprobePath,
                         incomingEpisode,
                         localPath);
-                
+
                 if (refreshResult.Map(t => t).IfLeft(false))
                 {
                     refreshResult = await UpdateSubtitles(incomingEpisode);
@@ -447,7 +447,7 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
             }
         }
     }
-    
+
     private async Task<Either<BaseError, bool>> UpdateSubtitles(JellyfinEpisode episode)
     {
         try

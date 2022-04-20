@@ -23,7 +23,7 @@ public class LocalSubtitlesProviderTests
             new("/some/movie/path.en.srt"),
             new("/some/movie/path.eng.ass")
         };
-        
+
         var provider = new LocalSubtitlesProvider(new FakeLocalFileSystem(fakeFiles));
         List<Subtitle> result = provider.LocateExternalSubtitles(
             cultures,

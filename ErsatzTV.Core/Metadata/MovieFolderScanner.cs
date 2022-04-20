@@ -17,14 +17,14 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
 {
     private readonly IClient _client;
     private readonly ILibraryRepository _libraryRepository;
-    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly ILocalFileSystem _localFileSystem;
     private readonly ILocalMetadataProvider _localMetadataProvider;
+    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ILogger<MovieFolderScanner> _logger;
+    private readonly IMediaItemRepository _mediaItemRepository;
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieRepository _movieRepository;
-    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
 
@@ -79,7 +79,7 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         CancellationToken cancellationToken)
     {
         List<CultureInfo> languageCodes = await _mediaItemRepository.GetAllLanguageCodeCultures();
-        
+
         decimal progressSpread = progressMax - progressMin;
 
         var foldersCompleted = 0;

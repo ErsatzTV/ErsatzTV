@@ -16,7 +16,7 @@ public class DeliminatorSeparatedPropertyNamesContractResolver : DefaultContract
         var parts = new List<string>();
         var currentWord = new StringBuilder();
 
-        foreach (char c in propertyName.ToCharArray())
+        foreach (char c in propertyName)
         {
             if (char.IsUpper(c) && currentWord.Length > 0)
             {

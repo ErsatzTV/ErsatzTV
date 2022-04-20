@@ -19,8 +19,8 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
     private readonly ILogger<EmbyTelevisionLibraryScanner> _logger;
     private readonly IMediaSourceRepository _mediaSourceRepository;
     private readonly IMediator _mediator;
-    private readonly IEmbyPathReplacementService _pathReplacementService;
     private readonly IMetadataRepository _metadataRepository;
+    private readonly IEmbyPathReplacementService _pathReplacementService;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
     private readonly IEmbyTelevisionRepository _televisionRepository;
@@ -429,7 +429,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                         ffprobePath,
                         incomingEpisode,
                         localPath);
-                
+
                 if (refreshResult.Map(t => t).IfLeft(false))
                 {
                     refreshResult = await UpdateSubtitles(incomingEpisode);
@@ -445,7 +445,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
             }
         }
     }
-    
+
     private async Task<Either<BaseError, bool>> UpdateSubtitles(EmbyEpisode episode)
     {
         try
