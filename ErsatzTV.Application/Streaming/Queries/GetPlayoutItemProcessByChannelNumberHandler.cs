@@ -151,7 +151,7 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .GetValue<bool>(ConfigElementKey.FFmpegSaveReports)
                 .Map(result => result.IfNone(false));
 
-            List<Subtitle> subtitles = GetSubtitles(playoutItemWithPath.PlayoutItem.MediaItem);
+            List<Subtitle> subtitles = GetSubtitles(playoutItemWithPath);
 
             Command process = await _ffmpegProcessService.ForPlayoutItem(
                 ffmpegPath,
@@ -236,8 +236,9 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
         return BaseError.New($"Unexpected error locating playout item for channel {channel.Number}");
     }
 
-    private static List<Subtitle> GetSubtitles(MediaItem mediaItem) =>
-        mediaItem switch
+    private static List<Subtitle> GetSubtitles(PlayoutItemWithPath playoutItemWithPath)
+    {
+        List<Subtitle> allSubtitles = playoutItemWithPath.PlayoutItem.MediaItem switch
         {
             Episode episode => episode.EpisodeMetadata.HeadOrNone()
                 .Map(mm => mm.Subtitles)
@@ -253,6 +254,40 @@ public class GetPlayoutItemProcessByChannelNumberHandler : FFmpegProcessHandler<
                 .IfNone(new List<Subtitle>()),
             _ => new List<Subtitle>()
         };
+
+        bool isMediaServer = playoutItemWithPath.PlayoutItem.MediaItem is PlexMovie or PlexEpisode or
+            JellyfinMovie or JellyfinEpisode or EmbyMovie or EmbyEpisode;
+
+        if (isMediaServer)
+        {
+            string mediaItemFolder = Path.GetDirectoryName(playoutItemWithPath.Path);
+
+            allSubtitles = allSubtitles.Map<Subtitle, Option<Subtitle>>(
+                    subtitle =>
+                    {
+                        if (subtitle.SubtitleKind == SubtitleKind.Sidecar)
+                        {
+                            // need to prepend path with movie/episode folder
+                            if (!string.IsNullOrWhiteSpace(mediaItemFolder))
+                            {
+                                subtitle.Path = Path.Combine(mediaItemFolder, subtitle.Path);
+
+                                // skip subtitles that don't exist
+                                if (!File.Exists(subtitle.Path))
+                                {
+                                    return None;
+                                }
+                            }
+                        }
+
+                        return subtitle;
+                    })
+                .Somes()
+                .ToList();
+        }
+
+        return allSubtitles;
+    }
 
     private async Task<Either<BaseError, PlayoutItemWithPath>> CheckForFallbackFiller(
         TvContext dbContext,

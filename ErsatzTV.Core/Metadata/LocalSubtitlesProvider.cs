@@ -29,7 +29,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
         _logger = logger;
     }
 
-    public async Task<bool> UpdateSubtitles(MediaItem mediaItem)
+    public async Task<bool> UpdateSubtitles(MediaItem mediaItem, Option<string> localPath, bool saveFullPath)
     {
         if (_languageCodes.Count == 0)
         {
@@ -67,46 +67,24 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
                 .ToList();
 
             var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
-            string mediaItemPath = mediaItem.GetHeadVersion().MediaFiles.Head().Path;
-            subtitles.AddRange(LocateExternalSubtitles(_languageCodes, mediaItemPath));
+            string mediaItemPath = await localPath.IfNoneAsync(() => mediaItem.GetHeadVersion().MediaFiles.Head().Path);
+            subtitles.AddRange(LocateExternalSubtitles(_languageCodes, mediaItemPath, saveFullPath));
             await _metadataRepository.UpdateSubtitles(metadata, subtitles);
         }
 
         return false;
     }
 
-    public async Task<bool> UpdateSubtitleStreams(MediaItem mediaItem)
-    {
-        Option<Domain.Metadata> maybeMetadata = mediaItem switch
-        {
-            Episode e => e.EpisodeMetadata.OfType<Domain.Metadata>().HeadOrNone(),
-            Movie m => m.MovieMetadata.OfType<Domain.Metadata>().HeadOrNone(),
-            MusicVideo mv => mv.MusicVideoMetadata.OfType<Domain.Metadata>().HeadOrNone(),
-            OtherVideo ov => ov.OtherVideoMetadata.OfType<Domain.Metadata>().HeadOrNone(),
-            _ => None
-        };
-
-        foreach (Domain.Metadata metadata in maybeMetadata)
-        {
-            MediaVersion version = mediaItem.GetHeadVersion();
-            var subtitleStreams = version.Streams
-                .Filter(s => s.MediaStreamKind == MediaStreamKind.Subtitle)
-                .ToList();
-
-            var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
-            return await _metadataRepository.UpdateSubtitles(metadata, subtitles);
-        }
-
-        return false;
-    }
-
-    public List<Subtitle> LocateExternalSubtitles(List<CultureInfo> languageCodes, string mediaItemPath)
+    public List<Subtitle> LocateExternalSubtitles(
+        List<CultureInfo> languageCodes,
+        string mediaItemPath,
+        bool saveFullPath)
     {
         var result = new List<Subtitle>();
 
         string folder = Path.GetDirectoryName(mediaItemPath);
         string withoutExtension = Path.GetFileNameWithoutExtension(mediaItemPath);
-        foreach (string file in _localFileSystem.ListFiles(folder))
+        foreach (string file in _localFileSystem.ListFiles(folder, $"{withoutExtension}*"))
         {
             string fileName = Path.GetFileName(file);
             if (!fileName.StartsWith(withoutExtension))
@@ -151,7 +129,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
                         Forced = forced,
                         SDH = sdh,
                         Language = culture.ThreeLetterISOLanguageName,
-                        Path = file,
+                        Path = saveFullPath ? file : Path.GetFileName(file),
                         DateAdded = DateTime.UtcNow,
                         DateUpdated = _localFileSystem.GetLastWriteTime(file)
                     });

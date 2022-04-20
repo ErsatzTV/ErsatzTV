@@ -100,7 +100,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                         .BindT(
                             existing => UpdateStatistics(pathReplacements, existing, incoming, ffmpegPath, ffprobePath))
                         .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
-                        .BindT(existing => UpdateSubtitles(existing, incoming))
+                        .BindT(existing => UpdateSubtitles(pathReplacements, existing, incoming))
                         .BindT(existing => UpdateArtwork(existing, incoming));
 
                     await maybeMovie.Match(
@@ -411,6 +411,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateSubtitles(
+        List<PlexPathReplacement> pathReplacements,
         MediaItemScanResult<PlexMovie> result,
         PlexMovie incoming)
     {
@@ -420,9 +421,14 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
             MediaVersion existingVersion = existing.MediaVersions.Head();
             MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
-            if (incomingVersion.DateUpdated > existingVersion.DateUpdated)
+            if (result.IsAdded || incomingVersion.DateUpdated > existingVersion.DateUpdated)
             {
-                await _localSubtitlesProvider.UpdateSubtitleStreams(result.Item);
+                string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                    pathReplacements,
+                    incoming.MediaVersions.Head().MediaFiles.Head().Path,
+                    false);
+
+                await _localSubtitlesProvider.UpdateSubtitles(result.Item, localPath, false);
             }
 
             return result;

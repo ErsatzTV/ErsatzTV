@@ -4,6 +4,5 @@ namespace ErsatzTV.Core.Interfaces.Metadata;
 
 public interface ILocalSubtitlesProvider
 {
-    Task<bool> UpdateSubtitles(MediaItem mediaItem);
-    Task<bool> UpdateSubtitleStreams(MediaItem mediaItem);
+    Task<bool> UpdateSubtitles(MediaItem mediaItem, Option<string> localPath, bool saveFullPath);
 }

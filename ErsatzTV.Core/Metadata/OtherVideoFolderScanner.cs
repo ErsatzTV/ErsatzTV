@@ -210,7 +210,7 @@ public class OtherVideoFolderScanner : LocalFolderScanner, IOtherVideoFolderScan
     {
         try
         {
-            await _localSubtitlesProvider.UpdateSubtitles(result.Item);
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
             return result;
         }
         catch (Exception ex)

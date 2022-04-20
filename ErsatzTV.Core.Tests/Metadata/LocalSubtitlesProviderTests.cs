@@ -23,9 +23,9 @@ public class LocalSubtitlesProviderTests
     //       Avatar (2009).en.sdh.srt
     //       Avatar (2009).de.srt
     //       Avatar (2009).de.sdh.forced.srt
-    
+
     [Test]
-    public void Should_Find_All_Languages_Codecs_And_Flags()
+    public void Should_Find_All_Languages_Codecs_And_Flags_With_Full_Paths()
     {
         // normally this will have a full list from the database, but we just need these two for testing
         var cultures = new List<CultureInfo>
@@ -50,7 +50,10 @@ public class LocalSubtitlesProviderTests
             new FakeLocalFileSystem(fakeFiles),
             new Mock<ILogger<LocalSubtitlesProvider>>().Object);
 
-        List<Subtitle> result = provider.LocateExternalSubtitles(cultures, @"/Movies/Avatar (2009)/Avatar (2009).mkv");
+        List<Subtitle> result = provider.LocateExternalSubtitles(
+            cultures,
+            @"/Movies/Avatar (2009)/Avatar (2009).mkv",
+            true);
 
         result.Count.Should().Be(5);
         result.Count(s => s.Language == "eng").Should().Be(3);
@@ -59,5 +62,47 @@ public class LocalSubtitlesProviderTests
         result.Count(s => s.SDH).Should().Be(2);
         result.Count(s => s.Codec == "subrip").Should().Be(4);
         result.Count(s => s.Codec == "ass").Should().Be(1);
+        result.All(s => s.Path.Contains(@"/Movies/Avatar (2009)/")).Should().BeTrue();
+    }
+
+    [Test]
+    public void Should_Find_All_Languages_Codecs_And_Flags_With_File_Names()
+    {
+        // normally this will have a full list from the database, but we just need these two for testing
+        var cultures = new List<CultureInfo>
+        {
+            CultureInfo.GetCultureInfo("en-US"),
+            CultureInfo.GetCultureInfo("de-DE")
+        };
+
+        var fakeFiles = new List<FakeFileEntry>
+        {
+            new(@"/Movies/Avatar (2009)/Avatar (2009).mkv"),
+            new(@"/Movies/Avatar (2009)/Avatar (2009).eng.srt"),
+            new(@"/Movies/Avatar (2009)/Avatar (2009).en.forced.ass"),
+            new(@"/Movies/Avatar (2009)/Avatar (2009).en.sdh.srt"),
+            new(@"/Movies/Avatar (2009)/Avatar (2009).de.srt"),
+            new(@"/Movies/Avatar (2009)/Avatar (2009).de.sdh.forced.srt")
+        };
+
+        var provider = new LocalSubtitlesProvider(
+            new Mock<IMediaItemRepository>().Object,
+            new Mock<IMetadataRepository>().Object,
+            new FakeLocalFileSystem(fakeFiles),
+            new Mock<ILogger<LocalSubtitlesProvider>>().Object);
+
+        List<Subtitle> result = provider.LocateExternalSubtitles(
+            cultures,
+            @"/Movies/Avatar (2009)/Avatar (2009).mkv",
+            false);
+
+        result.Count.Should().Be(5);
+        result.Count(s => s.Language == "eng").Should().Be(3);
+        result.Count(s => s.Language == "deu").Should().Be(2);
+        result.Count(s => s.Forced).Should().Be(2);
+        result.Count(s => s.SDH).Should().Be(2);
+        result.Count(s => s.Codec == "subrip").Should().Be(4);
+        result.Count(s => s.Codec == "ass").Should().Be(1);
+        result.Count(s => s.Path.Contains(@"/Movies/Avatar (2009)/")).Should().Be(0);
     }
 }

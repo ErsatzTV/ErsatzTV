@@ -453,7 +453,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         try
         {
-            await _localSubtitlesProvider.UpdateSubtitles(episode);
+            await _localSubtitlesProvider.UpdateSubtitles(episode, None, true);
             return episode;
         }
         catch (Exception ex)

@@ -7,8 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Add support for burning in embedded text subtitles
 - Add support for burning in external text subtitles
-  - This requires a one-time full library scan, which may take a long time with large libraries.
-  - **External subtitles are only supported in local libraries**
+  - **This requires a one-time full library scan, which may take a long time with large libraries.**
 
 ## [0.5.1-beta] - 2022-04-17
 ### Fixed

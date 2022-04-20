@@ -419,7 +419,7 @@ public class MusicVideoFolderScanner : LocalFolderScanner, IMusicVideoFolderScan
     {
         try
         {
-            await _localSubtitlesProvider.UpdateSubtitles(result.Item);
+            await _localSubtitlesProvider.UpdateSubtitles(result.Item, None, true);
             return result;
         }
         catch (Exception ex)

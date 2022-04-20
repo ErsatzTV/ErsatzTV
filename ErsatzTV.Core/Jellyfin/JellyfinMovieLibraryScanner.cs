@@ -184,7 +184,7 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
 
                         if (refreshResult.Map(t => t).IfLeft(false))
                         {
-                            refreshResult = await UpdateSubtitles(incomingMovie);
+                            refreshResult = await UpdateSubtitles(incomingMovie, localPath);
                         }
 
                         await refreshResult.Match(
@@ -238,11 +238,11 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
         return Unit.Default;
     }
 
-    private async Task<Either<BaseError, bool>> UpdateSubtitles(JellyfinMovie movie)
+    private async Task<Either<BaseError, bool>> UpdateSubtitles(JellyfinMovie movie, string localPath)
     {
         try
         {
-            return await _localSubtitlesProvider.UpdateSubtitleStreams(movie);
+            return await _localSubtitlesProvider.UpdateSubtitles(movie, localPath, false);
         }
         catch (Exception ex)
         {
