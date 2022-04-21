@@ -31,6 +31,11 @@ public class SubtitlesFilter : BaseFilter
                     .Replace(@":/", @"\\:/");
             }
 
+            // escape brackets after escaping for windows
+            effectiveFile = effectiveFile
+                .Replace(@"[", @"\[")
+                .Replace(@"]", @"\]");
+
             return $"subtitles={effectiveFile}:fontsdir={fontsDir}";
         }
     }
