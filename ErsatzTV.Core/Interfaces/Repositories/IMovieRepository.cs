@@ -2,6 +2,7 @@
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.Plex;
 
 namespace ErsatzTV.Core.Interfaces.Repositories;
 
@@ -18,6 +19,7 @@ public interface IMovieRepository
     Task<bool> AddTag(MovieMetadata metadata, Tag tag);
     Task<bool> AddStudio(MovieMetadata metadata, Studio studio);
     Task<bool> AddActor(MovieMetadata metadata, Actor actor);
+    Task<List<PlexItemEtag>> GetExistingPlexMovies(PlexLibrary library);
     Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys);
     Task<bool> UpdateSortTitle(MovieMetadata movieMetadata);
     Task<List<JellyfinItemEtag>> GetExistingJellyfinMovies(JellyfinLibrary library);
@@ -31,4 +33,5 @@ public interface IMovieRepository
     Task<bool> AddDirector(MovieMetadata metadata, Director director);
     Task<bool> AddWriter(MovieMetadata metadata, Writer writer);
     Task<Unit> UpdatePath(int mediaFileId, string path);
+    Task<Unit> SetPlexEtag(PlexMovie movie, string etag);
 }

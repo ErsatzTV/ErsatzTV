@@ -69,4 +69,7 @@ public class PlexMetadataResponse
 
     [XmlElement("Writer")]
     public List<PlexWriterResponse> Writer { get; set; }
+
+    [XmlElement("Collection")]
+    public List<PlexCollectionResponse> Collection { get; set; }
 }

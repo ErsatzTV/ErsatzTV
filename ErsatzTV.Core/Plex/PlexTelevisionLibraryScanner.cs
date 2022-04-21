@@ -95,6 +95,8 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                                 ffmpegPath,
                                 ffprobePath);
 
+                            await _televisionRepository.SetPlexEtag(result.Item, incoming.Etag);
+
                             if (result.IsAdded)
                             {
                                 await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
@@ -147,7 +149,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexShow existing = result.Item;
         ShowMetadata existingMetadata = existing.ShowMetadata.Head();
 
-        if (result.IsAdded || incoming.ShowMetadata.Head().DateUpdated > existingMetadata.DateUpdated)
+        if (existing.Etag != incoming.Etag)
         {
             Either<BaseError, ShowMetadata> maybeMetadata =
                 await _plexServerApiClient.GetShowMetadata(
@@ -262,6 +264,28 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                         }
                     }
 
+                    foreach (Tag tag in existingMetadata.Tags
+                                 .Filter(g => fullMetadata.Tags.All(g2 => g2.Name != g.Name))
+                                 .ToList())
+                    {
+                        existingMetadata.Tags.Remove(tag);
+                        if (await _metadataRepository.RemoveTag(tag))
+                        {
+                            result.IsUpdated = true;
+                        }
+                    }
+
+                    foreach (Tag tag in fullMetadata.Tags
+                                 .Filter(g => existingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                                 .ToList())
+                    {
+                        existingMetadata.Tags.Add(tag);
+                        if (await _televisionRepository.AddTag(existingMetadata, tag))
+                        {
+                            result.IsUpdated = true;
+                        }
+                    }
+
                     if (result.IsUpdated)
                     {
                         await _metadataRepository.MarkAsUpdated(existingMetadata, fullMetadata.DateUpdated);
@@ -281,7 +305,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         ShowMetadata existingMetadata = existing.ShowMetadata.Head();
         ShowMetadata incomingMetadata = incoming.ShowMetadata.Head();
 
-        if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
+        if (existing.Etag != incoming.Etag)
         {
             await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
             await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
@@ -330,7 +354,10 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                                 ffmpegPath,
                                 ffprobePath);
 
+                            await _televisionRepository.SetPlexEtag(season, incoming.Etag);
+
                             season.Show = show;
+
                             await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { season });
                         },
                         error =>
@@ -366,7 +393,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         SeasonMetadata existingMetadata = existing.SeasonMetadata.Head();
         SeasonMetadata incomingMetadata = incoming.SeasonMetadata.Head();
 
-        if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
+        if (existing.Etag != incoming.Etag)
         {
             foreach (MetadataGuid guid in existingMetadata.Guids
                          .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
@@ -382,6 +409,22 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
             {
                 existingMetadata.Guids.Add(guid);
                 await _metadataRepository.AddGuid(existingMetadata, guid);
+            }
+
+            foreach (Tag tag in existingMetadata.Tags
+                         .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Tags.Remove(tag);
+                await _metadataRepository.RemoveTag(tag);
+            }
+
+            foreach (Tag tag in incomingMetadata.Tags
+                         .Filter(g => existingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Tags.Add(tag);
+                await _televisionRepository.AddTag(existingMetadata, tag);
             }
 
             await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
@@ -400,6 +443,8 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         string ffmpegPath,
         string ffprobePath)
     {
+        List<PlexItemEtag> existingEpisodes = await _televisionRepository.GetExistingPlexEpisodes(library, season);
+
         Either<BaseError, List<PlexEpisode>> entries = await _plexServerApiClient.GetSeasonEpisodes(
             library,
             season,
@@ -431,6 +476,17 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
 
                 foreach (PlexEpisode incoming in validEpisodes)
                 {
+                    Option<PlexItemEtag> maybeExisting = existingEpisodes.Find(ie => ie.Key == incoming.Key);
+                    if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) == incoming.Etag)
+                    {
+                        // _logger.LogDebug("NOOP: etag has not changed for plex episode with key {Key}", incoming.Key);
+                        continue;
+                    }
+
+                    // _logger.LogDebug(
+                    //     "UPDATE: Etag has changed for episode {Episode}",
+                    //     $"s{season.SeasonNumber}e{incoming.EpisodeMetadata.Head().EpisodeNumber}");
+
                     incoming.SeasonId = season.Id;
 
                     // TODO: figure out how to rebuild playlists
@@ -453,6 +509,8 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                     await maybeEpisode.Match(
                         async result =>
                         {
+                            await _televisionRepository.SetPlexEtag(result.Item, incoming.Etag);
+
                             if (result.IsAdded)
                             {
                                 await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
@@ -555,7 +613,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
             }
         }
 
-        if (incomingVersion.DateUpdated > existingVersion.DateUpdated || !existingVersion.Streams.Any())
+        if (existing.Etag != incoming.Etag)
         {
             string localPath = _plexPathReplacementService.GetReplacementPlexPath(
                 pathReplacements,
@@ -607,6 +665,22 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                                     existingMetadata.Guids.Add(guid);
                                     await _metadataRepository.AddGuid(existingMetadata, guid);
                                 }
+
+                                foreach (Tag tag in existingMetadata.Tags
+                                             .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                                             .ToList())
+                                {
+                                    existingMetadata.Tags.Remove(tag);
+                                    await _metadataRepository.RemoveTag(tag);
+                                }
+
+                                foreach (Tag tag in incomingMetadata.Tags
+                                             .Filter(g => existingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                                             .ToList())
+                                {
+                                    existingMetadata.Tags.Add(tag);
+                                    await _televisionRepository.AddTag(existingMetadata, tag);
+                                }
                             }
 
                             existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
@@ -640,10 +714,8 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         try
         {
             PlexEpisode existing = result.Item;
-            MediaVersion existingVersion = existing.MediaVersions.Head();
-            MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
-            if (result.IsAdded || incomingVersion.DateUpdated > existingVersion.DateUpdated)
+            if (existing.Etag != incoming.Etag)
             {
                 string localPath = _plexPathReplacementService.GetReplacementPlexPath(
                     pathReplacements,
@@ -673,7 +745,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
             if (maybeExistingMetadata.IsSome)
             {
                 EpisodeMetadata existingMetadata = maybeExistingMetadata.ValueUnsafe();
-                if (incomingMetadata.DateUpdated > existingMetadata.DateUpdated)
+                if (existing.Etag != incoming.Etag)
                 {
                     await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Thumbnail);
                     await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
