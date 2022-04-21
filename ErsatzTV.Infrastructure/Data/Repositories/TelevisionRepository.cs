@@ -3,6 +3,7 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.Plex;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
@@ -478,6 +479,8 @@ public class TelevisionRepository : ITelevisionRepository
             .ThenInclude(sm => sm.Artwork)
             .Include(i => i.SeasonMetadata)
             .ThenInclude(sm => sm.Guids)
+            .Include(i => i.SeasonMetadata)
+            .ThenInclude(sm => sm.Tags)
             .Include(s => s.LibraryPath)
             .ThenInclude(l => l.Library)
             .Include(s => s.TraktListItems)
@@ -598,6 +601,45 @@ public class TelevisionRepository : ITelevisionRepository
             new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
     }
 
+    public async Task<Unit> SetPlexEtag(PlexShow show, string etag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE PlexShow SET Etag = @Etag WHERE Id = @Id",
+            new { Etag = etag, show.Id }).Map(_ => Unit.Default);
+    }
+
+    public async Task<Unit> SetPlexEtag(PlexSeason season, string etag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE PlexSeason SET Etag = @Etag WHERE Id = @Id",
+            new { Etag = etag, season.Id }).Map(_ => Unit.Default);
+    }
+
+    public async Task<Unit> SetPlexEtag(PlexEpisode episode, string etag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE PlexEpisode SET Etag = @Etag WHERE Id = @Id",
+            new { Etag = etag, episode.Id }).Map(_ => Unit.Default);
+    }
+
+    public async Task<List<PlexItemEtag>> GetExistingPlexEpisodes(PlexLibrary library, PlexSeason season)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<PlexItemEtag>(
+                @"SELECT PlexEpisode.Key, PlexEpisode.Etag FROM PlexEpisode
+                      INNER JOIN Episode E on PlexEpisode.Id = E.Id
+                      INNER JOIN MediaItem MI on E.Id = MI.Id
+                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                      INNER JOIN Season S2 on E.SeasonId = S2.Id
+                      INNER JOIN PlexSeason PS on S2.Id = PS.Id
+                      WHERE LP.LibraryId = @LibraryId AND PS.Key = @Key",
+                new { LibraryId = library.Id, season.Key })
+            .Map(result => result.ToList());
+    }
+
     public async Task<List<Episode>> GetShowItems(int showId)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -648,12 +690,27 @@ public class TelevisionRepository : ITelevisionRepository
             new { genre.Name, MetadataId = metadata.Id }).Map(result => result > 0);
     }
 
-    public async Task<bool> AddTag(ShowMetadata metadata, Tag tag)
+    public async Task<bool> AddTag(Metadata metadata, Tag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            "INSERT INTO Tag (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
-            new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+
+        switch (metadata)
+        {
+            case ShowMetadata:
+                return await dbContext.Connection.ExecuteAsync(
+                    "INSERT INTO Tag (Name, ShowMetadataId) VALUES (@Name, @MetadataId)",
+                    new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+            case SeasonMetadata:
+                return await dbContext.Connection.ExecuteAsync(
+                    "INSERT INTO Tag (Name, SeasonMetadataId) VALUES (@Name, @MetadataId)",
+                    new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+            case EpisodeMetadata:
+                return await dbContext.Connection.ExecuteAsync(
+                    "INSERT INTO Tag (Name, EpisodeMetadataId) VALUES (@Name, @MetadataId)",
+                    new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+            default:
+                return false;
+        }
     }
 
     public async Task<bool> AddStudio(ShowMetadata metadata, Studio studio)
@@ -840,10 +897,18 @@ public class TelevisionRepository : ITelevisionRepository
     {
         try
         {
+            // blank out etag for initial save in case stats/metadata/etc updates fail
+            string etag = item.Etag;
+            item.Etag = string.Empty;
+
             item.LibraryPathId = library.Paths.Head().Id;
 
             await dbContext.PlexShows.AddAsync(item);
             await dbContext.SaveChangesAsync();
+
+            // restore etag
+            item.Etag = etag;
+
             await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             return new MediaItemScanResult<PlexShow>(item) { IsAdded = true };
@@ -861,10 +926,18 @@ public class TelevisionRepository : ITelevisionRepository
     {
         try
         {
+            // blank out etag for initial save in case stats/metadata/etc updates fail
+            string etag = item.Etag;
+            item.Etag = string.Empty;
+
             item.LibraryPathId = library.Paths.Head().Id;
 
             await dbContext.PlexSeasons.AddAsync(item);
             await dbContext.SaveChangesAsync();
+
+            // restore etag
+            item.Etag = etag;
+
             await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             return item;
@@ -887,6 +960,10 @@ public class TelevisionRepository : ITelevisionRepository
                 return BaseError.New("Multi-episode files are not yet supported");
             }
 
+            // blank out etag for initial save in case stats/metadata/etc updates fail
+            string etag = item.Etag;
+            item.Etag = string.Empty;
+
             item.LibraryPathId = library.Paths.Head().Id;
             foreach (EpisodeMetadata metadata in item.EpisodeMetadata)
             {
@@ -900,6 +977,10 @@ public class TelevisionRepository : ITelevisionRepository
 
             await dbContext.PlexEpisodes.AddAsync(item);
             await dbContext.SaveChangesAsync();
+
+            // restore etag
+            item.Etag = etag;
+
             await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             await dbContext.Entry(item).Reference(e => e.Season).LoadAsync();

@@ -5,6 +5,7 @@ using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.Plex;
 using LanguageExt.UnsafeValueAccess;
 using Microsoft.EntityFrameworkCore;
 
@@ -238,6 +239,19 @@ public class MovieRepository : IMovieRepository
                 "INSERT INTO Actor (Name, Role, \"Order\", MovieMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
+    }
+
+    public async Task<List<PlexItemEtag>> GetExistingPlexMovies(PlexLibrary library)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<PlexItemEtag>(
+                @"SELECT Key, Etag FROM PlexMovie
+                      INNER JOIN Movie M on PlexMovie.Id = M.Id
+                      INNER JOIN MediaItem MI on M.Id = MI.Id
+                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                      WHERE LP.LibraryId = @LibraryId",
+                new { LibraryId = library.Id })
+            .Map(result => result.ToList());
     }
 
     public async Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys)
@@ -812,6 +826,14 @@ public class MovieRepository : IMovieRepository
             new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
     }
 
+    public async Task<Unit> SetPlexEtag(PlexMovie movie, string etag)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.ExecuteAsync(
+            "UPDATE PlexMovie SET Etag = @Etag WHERE Id = @Id",
+            new { Etag = etag, movie.Id }).Map(_ => Unit.Default);
+    }
+
     private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
         TvContext dbContext,
         int libraryPathId,
@@ -854,10 +876,18 @@ public class MovieRepository : IMovieRepository
     {
         try
         {
+            // blank out etag for initial save in case stats/metadata/etc updates fail
+            string etag = item.Etag;
+            item.Etag = string.Empty;
+
             item.LibraryPathId = library.Paths.Head().Id;
 
             await context.PlexMovies.AddAsync(item);
             await context.SaveChangesAsync();
+
+            // restore etag
+            item.Etag = etag;
+
             await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await context.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
             return new MediaItemScanResult<PlexMovie>(item) { IsAdded = true };

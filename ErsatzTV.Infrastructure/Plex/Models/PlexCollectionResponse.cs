@@ -2,7 +2,7 @@
 
 namespace ErsatzTV.Infrastructure.Plex.Models;
 
-public class PlexDirectorResponse
+public class PlexCollectionResponse
 {
     [XmlAttribute("id")]
     public int Id { get; set; }

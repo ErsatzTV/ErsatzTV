@@ -1,6 +1,7 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.Plex;
 
 namespace ErsatzTV.Core.Tests.Fakes;
 
@@ -73,7 +74,7 @@ public class FakeTelevisionRepository : ITelevisionRepository
         throw new NotSupportedException();
 
     public Task<bool> AddGenre(ShowMetadata metadata, Genre genre) => throw new NotSupportedException();
-    public Task<bool> AddTag(ShowMetadata metadata, Tag tag) => throw new NotSupportedException();
+    public Task<bool> AddTag(Domain.Metadata metadata, Tag tag) => throw new NotSupportedException();
 
     public Task<bool> AddStudio(ShowMetadata metadata, Studio studio) => throw new NotSupportedException();
     public Task<bool> AddActor(ShowMetadata metadata, Actor actor) => throw new NotSupportedException();
@@ -96,4 +97,12 @@ public class FakeTelevisionRepository : ITelevisionRepository
 
     public Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer) => throw new NotSupportedException();
     public Task<Unit> UpdatePath(int mediaFileId, string path) => throw new NotSupportedException();
+    public Task<Unit> SetPlexEtag(PlexShow show, string etag) => throw new NotSupportedException();
+
+    public Task<Unit> SetPlexEtag(PlexSeason season, string etag) => throw new NotSupportedException();
+
+    public Task<Unit> SetPlexEtag(PlexEpisode episode, string etag) => throw new NotSupportedException();
+
+    public Task<List<PlexItemEtag>> GetExistingPlexEpisodes(PlexLibrary library, PlexSeason season) =>
+        throw new NotSupportedException();
 }
