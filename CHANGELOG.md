@@ -4,12 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fix unlocking libraries when scanning fails for any reason
+
 ### Added
 - Add support for burning in embedded text subtitles
 - Add support for burning in external text subtitles
   - **This requires a one-time full library scan, which may take a long time with large libraries.**
 - Sync Plex collections as tags on movies, shows, seasons and episodes
   - This allows smart collections that use queries like `tag:"Plex Collection Name"`
+- Sync Plex labels as tags on movies and shows
+  - This allows smart collections that use queries like `tag:"Plex Label Name"`
+- Add `Deep Scan` button for Plex libraries
+  - This scanning mode is *slow* but is required to detect some changes like labels
 
 ### Changed
 - Improve the speed and change detection of the Plex library scanners
