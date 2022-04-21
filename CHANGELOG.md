@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add support for burning in external text subtitles
   - **This requires a one-time full library scan, which may take a long time with large libraries.**
 
+### Changed
+- Improve the speed and change detection of the Plex movie scanner 
+
 ## [0.5.1-beta] - 2022-04-17
 ### Fixed
 - Fix subtitles edge case with NVENC

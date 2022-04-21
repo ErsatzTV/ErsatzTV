@@ -342,6 +342,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         var movie = new PlexMovie
         {
+            Etag = PlexEtag.ForMovie(response),
             Key = response.Key,
             MovieMetadata = new List<MovieMetadata> { metadata },
             MediaVersions = new List<MediaVersion> { version },
