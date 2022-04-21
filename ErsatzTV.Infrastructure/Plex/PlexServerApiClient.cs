@@ -397,7 +397,6 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Guids = new List<MetadataGuid>();
         }
 
-        metadata.Tags = new List<Tag>();
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
             metadata.Tags.Add(new Tag { Name = collection.Tag });
@@ -524,6 +523,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var show = new PlexShow
         {
             Key = response.Key,
+            Etag = PlexEtag.ForShow(response),
             ShowMetadata = new List<ShowMetadata> { metadata },
             TraktListItems = new List<TraktListItem>()
         };
@@ -579,6 +579,11 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Studios.Add(new Studio { Name = response.Studio });
         }
 
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = collection.Tag });
+        }
+
         if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
         {
             metadata.ReleaseDate = releaseDate;
@@ -629,7 +634,8 @@ public class PlexServerApiClient : IPlexServerApiClient
             SortTitle = _fallbackMetadataProvider.GetSortTitle(response.Title),
             Year = response.Year,
             DateAdded = dateAdded,
-            DateUpdated = lastWriteTime
+            DateUpdated = lastWriteTime,
+            Tags = new List<Tag>()
         };
 
         metadata.Guids = Optional(response.Guid).Flatten().Map(g => new MetadataGuid { Guid = g.Id }).ToList();
@@ -678,6 +684,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var season = new PlexSeason
         {
             Key = response.Key,
+            Etag = PlexEtag.ForSeason(response),
             SeasonNumber = response.Index,
             SeasonMetadata = new List<SeasonMetadata> { metadata },
             TraktListItems = new List<TraktListItem>()
@@ -718,6 +725,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         var episode = new PlexEpisode
         {
             Key = response.Key,
+            Etag = PlexEtag.ForEpisode(response),
             EpisodeMetadata = new List<EpisodeMetadata> { metadata },
             MediaVersions = new List<MediaVersion> { version },
             TraktListItems = new List<TraktListItem>()
@@ -745,7 +753,8 @@ public class PlexServerApiClient : IPlexServerApiClient
             Actors = Optional(response.Role).Flatten().Map(r => ProjectToModel(r, dateAdded, lastWriteTime))
                 .ToList(),
             Directors = Optional(response.Director).Flatten().Map(d => new Director { Name = d.Tag }).ToList(),
-            Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList()
+            Writers = Optional(response.Writer).Flatten().Map(w => new Writer { Name = w.Tag }).ToList(),
+            Tags = new List<Tag>()
         };
 
         if (response is PlexXmlMetadataResponse xml)

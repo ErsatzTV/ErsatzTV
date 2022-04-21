@@ -885,6 +885,7 @@ public class MovieRepository : IMovieRepository
             await context.PlexMovies.AddAsync(item);
             await context.SaveChangesAsync();
 
+            // restore etag
             item.Etag = etag;
 
             await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();

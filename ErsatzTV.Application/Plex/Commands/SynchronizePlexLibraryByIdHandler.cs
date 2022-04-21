@@ -57,42 +57,48 @@ public class
 
     private async Task<Unit> Synchronize(RequestParameters parameters)
     {
-        var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
-        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-        if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
+        try
         {
-            switch (parameters.Library.MediaKind)
+            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
+            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+            if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
-                case LibraryMediaKind.Movies:
-                    await _plexMovieLibraryScanner.ScanLibrary(
-                        parameters.ConnectionParameters.ActiveConnection,
-                        parameters.ConnectionParameters.PlexServerAuthToken,
-                        parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath);
-                    break;
-                case LibraryMediaKind.Shows:
-                    await _plexTelevisionLibraryScanner.ScanLibrary(
-                        parameters.ConnectionParameters.ActiveConnection,
-                        parameters.ConnectionParameters.PlexServerAuthToken,
-                        parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath);
-                    break;
+                switch (parameters.Library.MediaKind)
+                {
+                    case LibraryMediaKind.Movies:
+                        await _plexMovieLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection,
+                            parameters.ConnectionParameters.PlexServerAuthToken,
+                            parameters.Library,
+                            parameters.FFmpegPath,
+                            parameters.FFprobePath);
+                        break;
+                    case LibraryMediaKind.Shows:
+                        await _plexTelevisionLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection,
+                            parameters.ConnectionParameters.PlexServerAuthToken,
+                            parameters.Library,
+                            parameters.FFmpegPath,
+                            parameters.FFprobePath);
+                        break;
+                }
+
+                parameters.Library.LastScan = DateTime.UtcNow;
+                await _libraryRepository.UpdateLastScan(parameters.Library);
+            }
+            else
+            {
+                _logger.LogDebug(
+                    "Skipping unforced scan of plex media library {Name}",
+                    parameters.Library.Name);
             }
 
-            parameters.Library.LastScan = DateTime.UtcNow;
-            await _libraryRepository.UpdateLastScan(parameters.Library);
+            return Unit.Default;
         }
-        else
+        finally
         {
-            _logger.LogDebug(
-                "Skipping unforced scan of plex media library {Name}",
-                parameters.Library.Name);
+            _entityLocker.UnlockLibrary(parameters.Library.Id);
         }
-
-        _entityLocker.UnlockLibrary(parameters.Library.Id);
-        return Unit.Default;
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(ISynchronizePlexLibraryById request) =>

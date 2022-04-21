@@ -59,42 +59,48 @@ public class SynchronizeEmbyLibraryByIdHandler :
 
     private async Task<Unit> Synchronize(RequestParameters parameters)
     {
-        var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
-        DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
-        if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
+        try
         {
-            switch (parameters.Library.MediaKind)
+            var lastScan = new DateTimeOffset(parameters.Library.LastScan ?? SystemTime.MinValueUtc, TimeSpan.Zero);
+            DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
+            if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
-                case LibraryMediaKind.Movies:
-                    await _embyMovieLibraryScanner.ScanLibrary(
-                        parameters.ConnectionParameters.ActiveConnection.Address,
-                        parameters.ConnectionParameters.ApiKey,
-                        parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath);
-                    break;
-                case LibraryMediaKind.Shows:
-                    await _embyTelevisionLibraryScanner.ScanLibrary(
-                        parameters.ConnectionParameters.ActiveConnection.Address,
-                        parameters.ConnectionParameters.ApiKey,
-                        parameters.Library,
-                        parameters.FFmpegPath,
-                        parameters.FFprobePath);
-                    break;
+                switch (parameters.Library.MediaKind)
+                {
+                    case LibraryMediaKind.Movies:
+                        await _embyMovieLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection.Address,
+                            parameters.ConnectionParameters.ApiKey,
+                            parameters.Library,
+                            parameters.FFmpegPath,
+                            parameters.FFprobePath);
+                        break;
+                    case LibraryMediaKind.Shows:
+                        await _embyTelevisionLibraryScanner.ScanLibrary(
+                            parameters.ConnectionParameters.ActiveConnection.Address,
+                            parameters.ConnectionParameters.ApiKey,
+                            parameters.Library,
+                            parameters.FFmpegPath,
+                            parameters.FFprobePath);
+                        break;
+                }
+
+                parameters.Library.LastScan = DateTime.UtcNow;
+                await _libraryRepository.UpdateLastScan(parameters.Library);
+            }
+            else
+            {
+                _logger.LogDebug(
+                    "Skipping unforced scan of emby media library {Name}",
+                    parameters.Library.Name);
             }
 
-            parameters.Library.LastScan = DateTime.UtcNow;
-            await _libraryRepository.UpdateLastScan(parameters.Library);
+            return Unit.Default;
         }
-        else
+        finally
         {
-            _logger.LogDebug(
-                "Skipping unforced scan of emby media library {Name}",
-                parameters.Library.Name);
+            _entityLocker.UnlockLibrary(parameters.Library.Id);
         }
-
-        _entityLocker.UnlockLibrary(parameters.Library.Id);
-        return Unit.Default;
     }
 
     private async Task<Validation<BaseError, RequestParameters>> Validate(

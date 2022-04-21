@@ -8,11 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add support for burning in embedded text subtitles
 - Add support for burning in external text subtitles
   - **This requires a one-time full library scan, which may take a long time with large libraries.**
-- Sync Plex collections as tags
+- Sync Plex collections as tags on movies and shows
   - This allows smart collections that use queries like `tag:"Plex Collection Name"`
 
 ### Changed
-- Improve the speed and change detection of the Plex movie scanner 
+- Improve the speed and change detection of the Plex library scanners
 
 ## [0.5.1-beta] - 2022-04-17
 ### Fixed
