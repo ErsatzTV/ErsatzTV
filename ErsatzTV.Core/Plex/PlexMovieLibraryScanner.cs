@@ -396,6 +396,28 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                     }
                 }
 
+                foreach (Tag tag in existingMetadata.Tags
+                             .Filter(g => fullMetadata.Tags.All(g2 => g2.Name != g.Name))
+                             .ToList())
+                {
+                    existingMetadata.Tags.Remove(tag);
+                    if (await _metadataRepository.RemoveTag(tag))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+
+                foreach (Tag tag in fullMetadata.Tags
+                             .Filter(g => existingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                             .ToList())
+                {
+                    existingMetadata.Tags.Add(tag);
+                    if (await _movieRepository.AddTag(existingMetadata, tag))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+
                 if (fullMetadata.SortTitle != existingMetadata.SortTitle)
                 {
                     existingMetadata.SortTitle = fullMetadata.SortTitle;

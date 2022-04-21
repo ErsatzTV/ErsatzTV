@@ -397,6 +397,12 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Guids = new List<MetadataGuid>();
         }
 
+        metadata.Tags = new List<Tag>();
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = collection.Tag });
+        }
+
         if (!string.IsNullOrWhiteSpace(response.Studio))
         {
             metadata.Studios.Add(new Studio { Name = response.Studio });
