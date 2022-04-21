@@ -40,6 +40,13 @@ public static class PlexEtag
             bw.Write(genre.Tag);
         }
 
+        // label ids
+        foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
+        {
+            bw.Write((byte)FieldKey.LabelTag);
+            bw.Write(label.Tag);
+        }
+
         // director ids
         foreach (PlexDirectorResponse director in Optional(response.Director).Flatten())
         {
@@ -106,6 +113,13 @@ public static class PlexEtag
         {
             bw.Write((byte)FieldKey.RoleTag);
             bw.Write(role.Tag);
+        }
+
+        // label ids
+        foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
+        {
+            bw.Write((byte)FieldKey.LabelTag);
+            bw.Write(label.Tag);
         }
 
         ms.Position = 0;
@@ -237,6 +251,7 @@ public static class PlexEtag
         WriterTag = 12,
         CollectionTag = 13,
         RoleTag = 14,
+        LabelTag = 15,
 
         Thumb = 20,
         Art = 21
