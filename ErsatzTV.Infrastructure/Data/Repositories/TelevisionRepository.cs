@@ -303,6 +303,8 @@ public class TelevisionRepository : ITelevisionRepository
             .ThenInclude(sm => sm.Artwork)
             .Include(s => s.SeasonMetadata)
             .ThenInclude(sm => sm.Guids)
+            .Include(s => s.SeasonMetadata)
+            .ThenInclude(sm => sm.Tags)
             .Include(s => s.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(s => s.TraktListItems)
@@ -812,7 +814,8 @@ public class TelevisionRepository : ITelevisionRepository
                     new()
                     {
                         DateAdded = DateTime.UtcNow,
-                        Guids = new List<MetadataGuid>()
+                        Guids = new List<MetadataGuid>(),
+                        Tags = new List<Tag>()
                     }
                 },
                 TraktListItems = new List<TraktListItem>()

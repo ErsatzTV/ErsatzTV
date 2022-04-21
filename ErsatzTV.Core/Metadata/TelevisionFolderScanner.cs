@@ -322,7 +322,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 SeasonId = season.Id,
                 Season = season,
                 DateAdded = DateTime.UtcNow,
-                Guids = new List<MetadataGuid>()
+                Guids = new List<MetadataGuid>(),
+                Tags = new List<Tag>()
             };
 
             season.SeasonMetadata.Add(metadata);
