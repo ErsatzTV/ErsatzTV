@@ -158,9 +158,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             IPlexServerApi service = XmlServiceFor(connection.Uri);
             return await service.GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
-                        .HeadOrNone())
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0))
                 .MapT(response => ProjectToMovieMetadata(response.Metadata, library.MediaSourceId))
                 .Map(o => o.ToEither<BaseError>("Unable to locate metadata"));
         }
@@ -202,9 +200,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
-                        .HeadOrNone());
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0));
             return maybeResponse.Match(
                 response =>
                 {
@@ -233,9 +229,7 @@ public class PlexServerApiClient : IPlexServerApiClient
             Option<PlexXmlVideoMetadataResponseContainer> maybeResponse = await service
                 .GetVideoMetadata(key, token.AuthToken)
                 .Map(Optional)
-                .Map(
-                    r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0)
-                        .HeadOrNone());
+                .Map(r => r.Filter(m => m.Metadata.Media.Count > 0 && m.Metadata.Media[0].Part.Count > 0));
             return maybeResponse.Match(
                 response =>
                 {
