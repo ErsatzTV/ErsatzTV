@@ -567,6 +567,11 @@ public sealed class SearchIndex : ISearchIndex
                     doc.Add(new StringField(TraktListField, item.TraktList.TraktId.ToString(), Field.Store.NO));
                 }
 
+                foreach (Tag tag in metadata.Tags)
+                {
+                    doc.Add(new TextField(TagField, tag.Name, Field.Store.NO));
+                }
+
                 _writer.UpdateDocument(new Term(IdField, season.Id.ToString()), doc);
             }
             catch (Exception ex)

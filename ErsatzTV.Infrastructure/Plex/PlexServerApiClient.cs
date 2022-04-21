@@ -651,6 +651,11 @@ public class PlexServerApiClient : IPlexServerApiClient
             }
         }
 
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = collection.Tag });
+        }
+
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
             string path = $"plex/{mediaSourceId}{response.Thumb}";
@@ -780,6 +785,11 @@ public class PlexServerApiClient : IPlexServerApiClient
         if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
         {
             metadata.ReleaseDate = releaseDate;
+        }
+
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = collection.Tag });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))

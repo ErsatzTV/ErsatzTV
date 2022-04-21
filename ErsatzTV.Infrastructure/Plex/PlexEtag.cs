@@ -127,6 +127,13 @@ public static class PlexEtag
         // video updated at
         bw.Write(response.UpdatedAt);
 
+        // collection ids
+        foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
+        {
+            bw.Write((byte)FieldKey.CollectionTag);
+            bw.Write(collection.Tag);
+        }
+
         // thumb
         if (!string.IsNullOrWhiteSpace(response.Thumb))
         {
