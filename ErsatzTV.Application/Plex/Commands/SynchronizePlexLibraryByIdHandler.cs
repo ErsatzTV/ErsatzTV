@@ -71,7 +71,8 @@ public class
                             parameters.ConnectionParameters.PlexServerAuthToken,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath);
+                            parameters.FFprobePath,
+                            parameters.DeepScan);
                         break;
                     case LibraryMediaKind.Shows:
                         await _plexTelevisionLibraryScanner.ScanLibrary(
@@ -79,7 +80,8 @@ public class
                             parameters.ConnectionParameters.PlexServerAuthToken,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath);
+                            parameters.FFprobePath,
+                            parameters.DeepScan);
                         break;
                 }
 
@@ -112,7 +114,8 @@ public class
                     request.ForceScan,
                     libraryRefreshInterval,
                     ffmpegPath,
-                    ffprobePath
+                    ffprobePath,
+                    request.DeepScan
                 ));
 
     private Task<Validation<BaseError, ConnectionParameters>> ValidateConnection(
@@ -176,7 +179,8 @@ public class
         bool ForceScan,
         int LibraryRefreshInterval,
         string FFmpegPath,
-        string FFprobePath);
+        string FFprobePath,
+        bool DeepScan);
 
     private record ConnectionParameters(PlexMediaSource PlexMediaSource, PlexConnection ActiveConnection)
     {

@@ -55,7 +55,19 @@
                     }
                     else
                     {
-                        <div style="width: 48px"></div>
+                        if (context is PlexLibraryViewModel)
+                        {
+                            <MudTooltip Text="Deep Scan Library">
+                                <MudIconButton Icon="@Icons.Material.Filled.FindReplace"
+                                               Disabled="@_locker.IsLibraryLocked(context.Id)"
+                                               OnClick="@(_ => ScanLibrary(context, true))">
+                                </MudIconButton>
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <div style="width: 48px"></div>
+                        }
                         <MudTooltip Text="Scan Library">
                             <MudIconButton Icon="@Icons.Material.Filled.Refresh"
                                            Disabled="@_locker.IsLibraryLocked(context.Id)"
@@ -94,7 +106,7 @@
         _progressByLibrary = _libraries.ToDictionary(vm => vm.Id, _ => 0);
     }
 
-    private async Task ScanLibrary(LibraryViewModel library)
+    private async Task ScanLibrary(LibraryViewModel library, bool deepScan = false)
     {
         if (_locker.LockLibrary(library.Id))
         {
@@ -104,7 +116,7 @@
                     await _workerChannel.WriteAsync(new ForceScanLocalLibrary(library.Id), _cts.Token);
                     break;
                 case PlexLibraryViewModel:
-                    await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id), _cts.Token);
+                    await _plexWorkerChannel.WriteAsync(new ForceSynchronizePlexLibraryById(library.Id, deepScan), _cts.Token);
                     break;
                 case JellyfinLibraryViewModel:
                     await _jellyfinWorkerChannel.WriteAsync(new ForceSynchronizeJellyfinLibraryById(library.Id), _cts.Token);

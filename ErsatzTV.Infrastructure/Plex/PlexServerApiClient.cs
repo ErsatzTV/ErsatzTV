@@ -402,6 +402,11 @@ public class PlexServerApiClient : IPlexServerApiClient
             metadata.Tags.Add(new Tag { Name = collection.Tag });
         }
 
+        foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = label.Tag });
+        }
+
         if (!string.IsNullOrWhiteSpace(response.Studio))
         {
             metadata.Studios.Add(new Studio { Name = response.Studio });
@@ -582,6 +587,11 @@ public class PlexServerApiClient : IPlexServerApiClient
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
             metadata.Tags.Add(new Tag { Name = collection.Tag });
+        }
+
+        foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
+        {
+            metadata.Tags.Add(new Tag { Name = label.Tag });
         }
 
         if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
