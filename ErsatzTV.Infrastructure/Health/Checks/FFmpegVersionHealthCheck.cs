@@ -8,7 +8,7 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthCheck
 {
-    private const string BundledVersion = "N-105324-g0f5fd44dc9";
+    private const string BundledVersion = "N-106635-g83e1a1de88";
     private readonly IConfigElementRepository _configElementRepository;
 
     public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>

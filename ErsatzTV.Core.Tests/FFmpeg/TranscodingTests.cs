@@ -10,6 +10,7 @@ using ErsatzTV.Core.Interfaces.FFmpeg;
 using ErsatzTV.Core.Interfaces.Images;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
+using ErsatzTV.FFmpeg.State;
 using FluentAssertions;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -58,11 +59,13 @@ public class TranscodingTests
     public enum Watermark
     {
         None,
-        PermanentOpaque,
-        PermanentTransparent,
+        PermanentOpaqueScaled,
+        PermanentOpaqueActualSize,
+        PermanentTransparentScaled,
+        PermanentTransparentActualSize,
         IntermittentOpaque,
-
         IntermittentTransparent
+
         // TODO: animated vs static
     }
 
@@ -78,8 +81,10 @@ public class TranscodingTests
         public static Watermark[] Watermarks =
         {
             Watermark.None,
-            Watermark.PermanentOpaque,
-            Watermark.PermanentTransparent
+            Watermark.PermanentOpaqueScaled,
+            Watermark.PermanentOpaqueActualSize,
+            Watermark.PermanentTransparentScaled,
+            Watermark.PermanentTransparentActualSize
         };
 
         public static Subtitle[] Subtitles =
@@ -184,8 +189,7 @@ public class TranscodingTests
             [ValueSource(typeof(TestData), nameof(TestData.VideoFormats))]
             FFmpegProfileVideoFormat profileVideoFormat,
             // [ValueSource(typeof(TestData), nameof(TestData.NoAcceleration))] HardwareAccelerationKind profileAcceleration)
-            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))]
-            HardwareAccelerationKind profileAcceleration)
+            [ValueSource(typeof(TestData), nameof(TestData.NvidiaAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VaapiAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.QsvAcceleration))] HardwareAccelerationKind profileAcceleration)
         // [ValueSource(typeof(TestData), nameof(TestData.VideoToolboxAcceleration))] HardwareAccelerationKind profileAcceleration)
@@ -394,20 +398,40 @@ public class TranscodingTests
                     Opacity = 80
                 };
                 break;
-            case Watermark.PermanentOpaque:
+            case Watermark.PermanentOpaqueScaled:
                 channelWatermark = new ChannelWatermark
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
-                    Opacity = 100
+                    Opacity = 100,
+                    Size = WatermarkSize.Scaled
                 };
                 break;
-            case Watermark.PermanentTransparent:
+            case Watermark.PermanentOpaqueActualSize:
                 channelWatermark = new ChannelWatermark
                 {
                     ImageSource = ChannelWatermarkImageSource.Custom,
                     Mode = ChannelWatermarkMode.Permanent,
-                    Opacity = 80
+                    Opacity = 100,
+                    Size = WatermarkSize.ActualSize
+                };
+                break;
+            case Watermark.PermanentTransparentScaled:
+                channelWatermark = new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Opacity = 80,
+                    Size = WatermarkSize.Scaled
+                };
+                break;
+            case Watermark.PermanentTransparentActualSize:
+                channelWatermark = new ChannelWatermark
+                {
+                    ImageSource = ChannelWatermarkImageSource.Custom,
+                    Mode = ChannelWatermarkMode.Permanent,
+                    Opacity = 80,
+                    Size = WatermarkSize.ActualSize
                 };
                 break;
         }

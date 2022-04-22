@@ -142,6 +142,10 @@ public class ComplexFilter : IPipelineStep
                     watermarkLabel = "[wm]";
                     watermarkFilterComplex += watermarkLabel;
                 }
+                else
+                {
+                    watermarkLabel = $"[{watermarkLabel}]";
+                }
 
                 IPipelineFilterStep overlayFilter = AvailableWatermarkOverlayFilters.ForAcceleration(
                     _ffmpegState.HardwareAccelerationMode,
