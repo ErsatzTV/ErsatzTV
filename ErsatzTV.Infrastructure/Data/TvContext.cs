@@ -63,10 +63,12 @@ public class TvContext : DbContext
     public DbSet<JellyfinShow> JellyfinShows { get; set; }
     public DbSet<JellyfinSeason> JellyfinSeasons { get; set; }
     public DbSet<JellyfinEpisode> JellyfinEpisodes { get; set; }
+    public DbSet<JellyfinCollection> JellyfinCollections { get; set; }
     public DbSet<EmbyMovie> EmbyMovies { get; set; }
     public DbSet<EmbyShow> EmbyShows { get; set; }
     public DbSet<EmbySeason> EmbySeasons { get; set; }
     public DbSet<EmbyEpisode> EmbyEpisodes { get; set; }
+    public DbSet<EmbyCollection> EmbyCollections { get; set; }
     public DbSet<Collection> Collections { get; set; }
     public DbSet<CollectionItem> CollectionItems { get; set; }
     public DbSet<MultiCollection> MultiCollections { get; set; }

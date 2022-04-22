@@ -552,7 +552,9 @@ public class MetadataRepository : IMetadataRepository
     public async Task<bool> RemoveTag(Tag tag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync("DELETE FROM Tag WHERE Id = @TagId", new { TagId = tag.Id })
+        return await dbContext.Connection.ExecuteAsync(
+                "DELETE FROM Tag WHERE Id = @TagId AND ExternalCollectionId = @ExternalCollectionId",
+                new { TagId = tag.Id, tag.ExternalCollectionId })
             .Map(result => result > 0);
     }
 

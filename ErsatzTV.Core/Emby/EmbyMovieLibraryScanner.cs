@@ -68,7 +68,6 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
         Either<BaseError, List<EmbyMovie>> maybeMovies = await _embyApiClient.GetMovieLibraryItems(
             address,
             apiKey,
-            library.MediaSourceId,
             library.ItemId);
 
         await maybeMovies.Match(

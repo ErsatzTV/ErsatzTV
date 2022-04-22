@@ -202,8 +202,8 @@ public class MovieRepository : IMovieRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
-            "INSERT INTO Tag (Name, MovieMetadataId) VALUES (@Name, @MetadataId)",
-            new { tag.Name, MetadataId = metadata.Id }).Map(result => result > 0);
+            "INSERT INTO Tag (Name, MovieMetadataId, ExternalCollectionId) VALUES (@Name, @MetadataId, @ExternalCollectionId)",
+            new { tag.Name, MetadataId = metadata.Id, tag.ExternalCollectionId }).Map(result => result > 0);
     }
 
     public async Task<bool> AddStudio(MovieMetadata metadata, Studio studio)
@@ -399,6 +399,7 @@ public class MovieRepository : IMovieRepository
             // tags
             foreach (Tag tag in metadata.Tags
                          .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                         .Filter(g => g.ExternalCollectionId is null)
                          .ToList())
             {
                 metadata.Tags.Remove(tag);
@@ -660,6 +661,7 @@ public class MovieRepository : IMovieRepository
             // tags
             foreach (Tag tag in metadata.Tags
                          .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                         .Filter(g => g.ExternalCollectionId is null)
                          .ToList())
             {
                 metadata.Tags.Remove(tag);

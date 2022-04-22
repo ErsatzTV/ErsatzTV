@@ -136,6 +136,7 @@ public class JellyfinTelevisionRepository : IJellyfinTelevisionRepository
             // tags
             foreach (Tag tag in metadata.Tags
                          .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                         .Filter(g => g.ExternalCollectionId is null)
                          .ToList())
             {
                 metadata.Tags.Remove(tag);

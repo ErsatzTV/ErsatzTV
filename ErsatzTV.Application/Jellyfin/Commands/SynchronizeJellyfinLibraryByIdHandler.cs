@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.Threading.Channels;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Locking;
@@ -18,6 +19,7 @@ public class SynchronizeJellyfinLibraryByIdHandler :
 
     private readonly IJellyfinSecretStore _jellyfinSecretStore;
     private readonly IJellyfinTelevisionLibraryScanner _jellyfinTelevisionLibraryScanner;
+    private readonly ChannelWriter<IJellyfinBackgroundServiceRequest> _jellyfinWorkerChannel;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeJellyfinLibraryByIdHandler> _logger;
 
@@ -31,6 +33,7 @@ public class SynchronizeJellyfinLibraryByIdHandler :
         ILibraryRepository libraryRepository,
         IEntityLocker entityLocker,
         IConfigElementRepository configElementRepository,
+        ChannelWriter<IJellyfinBackgroundServiceRequest> jellyfinWorkerChannel,
         ILogger<SynchronizeJellyfinLibraryByIdHandler> logger)
     {
         _mediaSourceRepository = mediaSourceRepository;
@@ -40,6 +43,7 @@ public class SynchronizeJellyfinLibraryByIdHandler :
         _libraryRepository = libraryRepository;
         _entityLocker = entityLocker;
         _configElementRepository = configElementRepository;
+        _jellyfinWorkerChannel = jellyfinWorkerChannel;
         _logger = logger;
     }
 
@@ -65,28 +69,33 @@ public class SynchronizeJellyfinLibraryByIdHandler :
             DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
             if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
-                switch (parameters.Library.MediaKind)
+                Either<BaseError, Unit> result = parameters.Library.MediaKind switch
                 {
-                    case LibraryMediaKind.Movies:
+                    LibraryMediaKind.Movies =>
                         await _jellyfinMovieLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection.Address,
                             parameters.ConnectionParameters.ApiKey,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath);
-                        break;
-                    case LibraryMediaKind.Shows:
+                            parameters.FFprobePath),
+                    LibraryMediaKind.Shows =>
                         await _jellyfinTelevisionLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection.Address,
                             parameters.ConnectionParameters.ApiKey,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath);
-                        break;
-                }
+                            parameters.FFprobePath),
+                    _ => BaseError.New("Unsupported library media kind")
+                };
 
-                parameters.Library.LastScan = DateTime.UtcNow;
-                await _libraryRepository.UpdateLastScan(parameters.Library);
+                if (result.IsRight)
+                {
+                    parameters.Library.LastScan = DateTime.UtcNow;
+                    await _libraryRepository.UpdateLastScan(parameters.Library);
+
+                    await _jellyfinWorkerChannel.WriteAsync(
+                        new SynchronizeJellyfinCollections(parameters.Library.MediaSourceId));
+                }
             }
             else
             {

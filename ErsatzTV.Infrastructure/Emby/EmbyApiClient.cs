@@ -4,6 +4,7 @@ using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Infrastructure.Emby.Models;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Refit;
 
@@ -13,10 +14,15 @@ public class EmbyApiClient : IEmbyApiClient
 {
     private readonly IFallbackMetadataProvider _fallbackMetadataProvider;
     private readonly ILogger<EmbyApiClient> _logger;
+    private readonly IMemoryCache _memoryCache;
 
-    public EmbyApiClient(IFallbackMetadataProvider fallbackMetadataProvider, ILogger<EmbyApiClient> logger)
+    public EmbyApiClient(
+        IFallbackMetadataProvider fallbackMetadataProvider,
+        IMemoryCache memoryCache,
+        ILogger<EmbyApiClient> logger)
     {
         _fallbackMetadataProvider = fallbackMetadataProvider;
+        _memoryCache = memoryCache;
         _logger = logger;
     }
 
@@ -65,7 +71,6 @@ public class EmbyApiClient : IEmbyApiClient
     public async Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
         string libraryId)
     {
         try
@@ -87,7 +92,6 @@ public class EmbyApiClient : IEmbyApiClient
     public async Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
         string libraryId)
     {
         try
@@ -109,7 +113,6 @@ public class EmbyApiClient : IEmbyApiClient
     public async Task<Either<BaseError, List<EmbySeason>>> GetSeasonLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
         string showId)
     {
         try
@@ -131,7 +134,6 @@ public class EmbyApiClient : IEmbyApiClient
     public async Task<Either<BaseError, List<EmbyEpisode>>> GetEpisodeLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
         string seasonId)
     {
         try
@@ -150,7 +152,91 @@ public class EmbyApiClient : IEmbyApiClient
         }
     }
 
-    private static Option<EmbyLibrary> Project(EmbyLibraryResponse response) =>
+    public async Task<Either<BaseError, List<EmbyCollection>>> GetCollectionLibraryItems(string address, string apiKey)
+    {
+        try
+        {
+            // TODO: should we enumerate collection libraries here?
+
+            if (_memoryCache.TryGetValue("emby_collections_library_item_id", out string itemId))
+            {
+                IEmbyApi service = RestService.For<IEmbyApi>(address);
+                EmbyLibraryItemsResponse items = await service.GetCollectionLibraryItems(apiKey, itemId);
+                return items.Items
+                    .Map(ProjectToCollection)
+                    .Somes()
+                    .ToList();
+            }
+
+            return BaseError.New("Emby collection item id is not available");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting Emby collection library items");
+            return BaseError.New(ex.Message);
+        }
+    }
+
+    public async Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
+        string address,
+        string apiKey,
+        string collectionId)
+    {
+        try
+        {
+            IEmbyApi service = RestService.For<IEmbyApi>(address);
+            EmbyLibraryItemsResponse items = await service.GetCollectionItems(apiKey, collectionId);
+            return items.Items
+                .Map(ProjectToCollectionMediaItem)
+                .Somes()
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting Emby collection items");
+            return BaseError.New(ex.Message);
+        }
+    }
+
+    private Option<EmbyCollection> ProjectToCollection(EmbyLibraryItemResponse item)
+    {
+        try
+        {
+            return new EmbyCollection
+            {
+                ItemId = item.Id,
+                Etag = item.Etag,
+                Name = item.Name
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Emby collection");
+            return None;
+        }
+    }
+
+    private Option<MediaItem> ProjectToCollectionMediaItem(EmbyLibraryItemResponse item)
+    {
+        try
+        {
+            return item.Type switch
+            {
+                "Movie" => new EmbyMovie { ItemId = item.Id },
+                "Series" => new EmbyShow { ItemId = item.Id },
+                "Season" => new EmbySeason { ItemId = item.Id },
+                "Episode" => new EmbyEpisode { ItemId = item.Id },
+                _ => None
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Error projecting Emby collection media item");
+            return None;
+        }
+    }
+
+    private Option<EmbyLibrary> Project(EmbyLibraryResponse response) =>
         response.CollectionType?.ToLowerInvariant() switch
         {
             "tvshows" => new EmbyLibrary
@@ -170,8 +256,15 @@ public class EmbyApiClient : IEmbyApiClient
                 Paths = new List<LibraryPath> { new() { Path = $"emby://{response.ItemId}" } }
             },
             // TODO: ??? for music libraries
+            "boxsets" => CacheCollectionLibraryId(response.ItemId),
             _ => None
         };
+
+    private Option<EmbyLibrary> CacheCollectionLibraryId(string itemId)
+    {
+        _memoryCache.Set("emby_collections_library_item_id", itemId);
+        return None;
+    }
 
     private Option<EmbyMovie> ProjectToMovie(EmbyLibraryItemResponse item)
     {

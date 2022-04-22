@@ -24,4 +24,5 @@ public class EmbyLibraryItemResponse
     public EmbyImageTagsResponse ImageTags { get; set; }
     public List<string> BackdropImageTags { get; set; }
     public int? IndexNumber { get; set; }
+    public string Type { get; set; }
 }

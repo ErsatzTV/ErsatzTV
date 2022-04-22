@@ -1,4 +1,5 @@
-﻿using ErsatzTV.Core;
+﻿using System.Threading.Channels;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Emby;
@@ -17,6 +18,7 @@ public class SynchronizeEmbyLibraryByIdHandler :
 
     private readonly IEmbySecretStore _embySecretStore;
     private readonly IEmbyTelevisionLibraryScanner _embyTelevisionLibraryScanner;
+    private readonly ChannelWriter<IEmbyBackgroundServiceRequest> _embyWorkerChannel;
     private readonly IEntityLocker _entityLocker;
     private readonly ILibraryRepository _libraryRepository;
     private readonly ILogger<SynchronizeEmbyLibraryByIdHandler> _logger;
@@ -31,6 +33,7 @@ public class SynchronizeEmbyLibraryByIdHandler :
         ILibraryRepository libraryRepository,
         IEntityLocker entityLocker,
         IConfigElementRepository configElementRepository,
+        ChannelWriter<IEmbyBackgroundServiceRequest> embyWorkerChannel,
         ILogger<SynchronizeEmbyLibraryByIdHandler> logger)
     {
         _mediaSourceRepository = mediaSourceRepository;
@@ -40,6 +43,7 @@ public class SynchronizeEmbyLibraryByIdHandler :
         _libraryRepository = libraryRepository;
         _entityLocker = entityLocker;
         _configElementRepository = configElementRepository;
+        _embyWorkerChannel = embyWorkerChannel;
         _logger = logger;
     }
 
@@ -65,28 +69,33 @@ public class SynchronizeEmbyLibraryByIdHandler :
             DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
             if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
-                switch (parameters.Library.MediaKind)
+                Either<BaseError, Unit> result = parameters.Library.MediaKind switch
                 {
-                    case LibraryMediaKind.Movies:
+                    LibraryMediaKind.Movies =>
                         await _embyMovieLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection.Address,
                             parameters.ConnectionParameters.ApiKey,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath);
-                        break;
-                    case LibraryMediaKind.Shows:
+                            parameters.FFprobePath),
+                    LibraryMediaKind.Shows =>
                         await _embyTelevisionLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection.Address,
                             parameters.ConnectionParameters.ApiKey,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath);
-                        break;
-                }
+                            parameters.FFprobePath),
+                    _ => BaseError.New("Unsupported library media kind")
+                };
 
-                parameters.Library.LastScan = DateTime.UtcNow;
-                await _libraryRepository.UpdateLastScan(parameters.Library);
+                if (result.IsRight)
+                {
+                    parameters.Library.LastScan = DateTime.UtcNow;
+                    await _libraryRepository.UpdateLastScan(parameters.Library);
+
+                    await _embyWorkerChannel.WriteAsync(
+                        new SynchronizeEmbyCollections(parameters.Library.MediaSourceId));
+                }
             }
             else
             {

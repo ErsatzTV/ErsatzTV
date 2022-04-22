@@ -399,12 +399,12 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = collection.Tag });
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
         }
 
         foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = label.Tag });
+            metadata.Tags.Add(new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString() });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Studio))
@@ -586,12 +586,12 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = collection.Tag });
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
         }
 
         foreach (PlexLabelResponse label in Optional(response.Label).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = label.Tag });
+            metadata.Tags.Add(new Tag { Name = label.Tag, ExternalCollectionId = label.Id.ToString() });
         }
 
         if (DateTime.TryParse(response.OriginallyAvailableAt, out DateTime releaseDate))
@@ -663,7 +663,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = collection.Tag });
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
@@ -799,7 +799,7 @@ public class PlexServerApiClient : IPlexServerApiClient
 
         foreach (PlexCollectionResponse collection in Optional(response.Collection).Flatten())
         {
-            metadata.Tags.Add(new Tag { Name = collection.Tag });
+            metadata.Tags.Add(new Tag { Name = collection.Tag, ExternalCollectionId = collection.Id.ToString() });
         }
 
         if (!string.IsNullOrWhiteSpace(response.Thumb))
