@@ -427,7 +427,8 @@ public class EmbyApiClient : IEmbyApiClient
                 Year = item.ProductionYear,
                 DateAdded = dateAdded,
                 Artwork = new List<Artwork>(),
-                Guids = GuidsFromProviderIds(item.ProviderIds)
+                Guids = GuidsFromProviderIds(item.ProviderIds),
+                Tags = new List<Tag>()
             };
 
             if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
