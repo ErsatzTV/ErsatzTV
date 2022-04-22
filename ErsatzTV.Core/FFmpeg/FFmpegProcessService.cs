@@ -204,7 +204,7 @@ public class FFmpegProcessService
         {
             string outputFile = _tempFilePool.GetNextTempFile(TempFileCategory.SongBackground);
 
-            MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
+            MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
 
             Option<ChannelWatermark> watermarkOverride =
                 videoVersion is FallbackMediaVersion or CoverArtMediaVersion

@@ -25,7 +25,10 @@ public abstract record ProgramScheduleItemViewModel(
     FillerPresetViewModel PostRollFiller,
     FillerPresetViewModel TailFiller,
     FillerPresetViewModel FallbackFiller,
-    WatermarkViewModel Watermark)
+    WatermarkViewModel Watermark,
+    string PreferredAudioLanguageCode,
+    string PreferredSubtitleLanguageCode,
+    ChannelSubtitleMode? SubtitleMode)
 {
     public string Name => CollectionType switch
     {

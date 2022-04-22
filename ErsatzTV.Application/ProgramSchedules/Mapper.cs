@@ -60,7 +60,10 @@ internal static class Mapper
                         : null,
                     duration.Watermark != null
                         ? Watermarks.Mapper.ProjectToViewModel(duration.Watermark)
-                        : null),
+                        : null,
+                    duration.PreferredAudioLanguageCode,
+                    duration.PreferredSubtitleLanguageCode,
+                    duration.SubtitleMode),
             ProgramScheduleItemFlood flood =>
                 new ProgramScheduleItemFloodViewModel(
                     flood.Id,
@@ -104,7 +107,10 @@ internal static class Mapper
                         : null,
                     flood.Watermark != null
                         ? Watermarks.Mapper.ProjectToViewModel(flood.Watermark)
-                        : null),
+                        : null,
+                    flood.PreferredAudioLanguageCode,
+                    flood.PreferredSubtitleLanguageCode,
+                    flood.SubtitleMode),
             ProgramScheduleItemMultiple multiple =>
                 new ProgramScheduleItemMultipleViewModel(
                     multiple.Id,
@@ -149,7 +155,10 @@ internal static class Mapper
                         : null,
                     multiple.Watermark != null
                         ? Watermarks.Mapper.ProjectToViewModel(multiple.Watermark)
-                        : null),
+                        : null,
+                    multiple.PreferredAudioLanguageCode,
+                    multiple.PreferredSubtitleLanguageCode,
+                    multiple.SubtitleMode),
             ProgramScheduleItemOne one =>
                 new ProgramScheduleItemOneViewModel(
                     one.Id,
@@ -193,7 +202,10 @@ internal static class Mapper
                         : null,
                     one.Watermark != null
                         ? Watermarks.Mapper.ProjectToViewModel(one.Watermark)
-                        : null),
+                        : null,
+                    one.PreferredAudioLanguageCode,
+                    one.PreferredSubtitleLanguageCode,
+                    one.SubtitleMode),
             _ => throw new NotSupportedException(
                 $"Unsupported program schedule item type {programScheduleItem.GetType().Name}")
         };

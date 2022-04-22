@@ -41,7 +41,10 @@ public class PlayoutModeSchedulerOne : PlayoutModeSchedulerBase<ProgramScheduleI
                 FillerKind = scheduleItem.GuideMode == GuideMode.Filler
                     ? FillerKind.Tail
                     : FillerKind.None,
-                WatermarkId = scheduleItem.WatermarkId
+                WatermarkId = scheduleItem.WatermarkId,
+                PreferredAudioLanguageCode = scheduleItem.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = scheduleItem.PreferredSubtitleLanguageCode,
+                SubtitleMode = scheduleItem.SubtitleMode
             };
 
             DateTimeOffset itemEndTimeWithFiller = CalculateEndTimeWithFiller(
