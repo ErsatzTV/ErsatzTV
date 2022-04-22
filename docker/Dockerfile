@@ -2,7 +2,7 @@
 
 FROM jasongdove/ffmpeg:5.0-ubuntu2004 AS runtime-base
 COPY --from=dotnet-runtime /usr/share/dotnet /usr/share/dotnet
-RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev tzdata
+RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu-dev tzdata  fontconfig fonts-dejavu
 
 # https://hub.docker.com/_/microsoft-dotnet
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
@@ -36,6 +36,8 @@ RUN dotnet publish ErsatzTV.csproj -c release -o /app -r linux-x64 --self-contai
 
 # final stage/image
 FROM runtime-base
+ENV FONTCONFIG_PATH=/etc/fonts
+RUN fc-cache update
 WORKDIR /app
 EXPOSE 8409
 COPY --from=build /app ./

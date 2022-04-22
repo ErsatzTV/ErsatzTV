@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - Fix unlocking libraries when scanning fails for any reason
+- Fix software overlay of actual size watermark
 
 ### Added
 - Add support for burning in embedded text subtitles
