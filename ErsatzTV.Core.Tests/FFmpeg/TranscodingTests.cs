@@ -473,6 +473,9 @@ public class TranscodingTests
             file,
             file,
             subtitles,
+            string.Empty,
+            string.Empty,
+            subtitleMode,
             now,
             now + TimeSpan.FromSeconds(5),
             now,
@@ -550,16 +553,24 @@ public class TranscodingTests
 
     private class FakeStreamSelector : IFFmpegStreamSelector
     {
-        public Task<MediaStream> SelectVideoStream(Channel channel, MediaVersion version) =>
+        public Task<MediaStream> SelectVideoStream(MediaVersion version) =>
             version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video).AsTask();
 
-        public Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version) =>
+        public Task<Option<MediaStream>> SelectAudioStream(
+            MediaVersion version,
+            StreamingMode streamingMode,
+            string channelNumber,
+            string preferredAudioLanguage) =>
             Optional(version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Audio)).AsTask();
 
         public Task<Option<Domain.Subtitle>> SelectSubtitleStream(
-            Channel channel,
             MediaVersion version,
-            List<Domain.Subtitle> subtitles) => subtitles.HeadOrNone().AsTask();
+            List<Domain.Subtitle> subtitles,
+            StreamingMode streamingMode,
+            string channelNumber,
+            string preferredSubtitleLanguage,
+            ChannelSubtitleMode subtitleMode) =>
+            subtitles.HeadOrNone().AsTask();
     }
 
     private static string ExecutableName(string baseName) =>
