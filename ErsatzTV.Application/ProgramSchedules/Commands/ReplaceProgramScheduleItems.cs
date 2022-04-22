@@ -24,7 +24,10 @@ public record ReplaceProgramScheduleItem(
     int? PostRollFillerId,
     int? TailFillerId,
     int? FallbackFillerId,
-    int? WatermarkId) : IProgramScheduleItemRequest;
+    int? WatermarkId,
+    string PreferredAudioLanguageCode,
+    string PreferredSubtitleLanguageCode,
+    ChannelSubtitleMode? SubtitleMode) : IProgramScheduleItemRequest;
 
 public record ReplaceProgramScheduleItems
     (int ProgramScheduleId, List<ReplaceProgramScheduleItem> Items) : IRequest<

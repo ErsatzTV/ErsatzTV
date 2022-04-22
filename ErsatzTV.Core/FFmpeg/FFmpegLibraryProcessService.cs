@@ -41,6 +41,9 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         string videoPath,
         string audioPath,
         List<Subtitle> subtitles,
+        string preferredAudioLanguage,
+        string preferredSubtitleLanguage,
+        ChannelSubtitleMode subtitleMode,
         DateTimeOffset start,
         DateTimeOffset finish,
         DateTimeOffset now,
@@ -55,10 +58,21 @@ public class FFmpegLibraryProcessService : IFFmpegProcessService
         long ptsOffset,
         Option<int> targetFramerate)
     {
-        MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(channel, videoVersion);
-        Option<MediaStream> maybeAudioStream = await _ffmpegStreamSelector.SelectAudioStream(channel, audioVersion);
+        MediaStream videoStream = await _ffmpegStreamSelector.SelectVideoStream(videoVersion);
+        Option<MediaStream> maybeAudioStream =
+            await _ffmpegStreamSelector.SelectAudioStream(
+                audioVersion,
+                channel.StreamingMode,
+                channel.Number,
+                preferredAudioLanguage);
         Option<Subtitle> maybeSubtitle =
-            await _ffmpegStreamSelector.SelectSubtitleStream(channel, videoVersion, subtitles);
+            await _ffmpegStreamSelector.SelectSubtitleStream(
+                videoVersion,
+                subtitles,
+                channel.StreamingMode,
+                channel.Number,
+                preferredSubtitleLanguage,
+                subtitleMode);
 
         FFmpegPlaybackSettings playbackSettings = _playbackSettingsCalculator.CalculateSettings(
             channel.StreamingMode,

@@ -178,7 +178,10 @@ public abstract class ProgramScheduleItemCommandBase
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
                 FallbackFillerId = item.FallbackFillerId,
-                WatermarkId = item.WatermarkId
+                WatermarkId = item.WatermarkId,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
             },
             PlayoutMode.One => new ProgramScheduleItemOne
             {
@@ -198,7 +201,10 @@ public abstract class ProgramScheduleItemCommandBase
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
                 FallbackFillerId = item.FallbackFillerId,
-                WatermarkId = item.WatermarkId
+                WatermarkId = item.WatermarkId,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
             },
             PlayoutMode.Multiple => new ProgramScheduleItemMultiple
             {
@@ -219,7 +225,10 @@ public abstract class ProgramScheduleItemCommandBase
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
                 FallbackFillerId = item.FallbackFillerId,
-                WatermarkId = item.WatermarkId
+                WatermarkId = item.WatermarkId,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
             },
             PlayoutMode.Duration => new ProgramScheduleItemDuration
             {
@@ -241,7 +250,10 @@ public abstract class ProgramScheduleItemCommandBase
                 PostRollFillerId = item.PostRollFillerId,
                 TailFillerId = item.TailFillerId,
                 FallbackFillerId = item.FallbackFillerId,
-                WatermarkId = item.WatermarkId
+                WatermarkId = item.WatermarkId,
+                PreferredAudioLanguageCode = item.PreferredAudioLanguageCode,
+                PreferredSubtitleLanguageCode = item.PreferredSubtitleLanguageCode,
+                SubtitleMode = item.SubtitleMode
             },
             _ => throw new NotSupportedException($"Unsupported playout mode {item.PlayoutMode}")
         };

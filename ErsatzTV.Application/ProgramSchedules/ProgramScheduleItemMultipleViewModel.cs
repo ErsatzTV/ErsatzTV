@@ -27,7 +27,10 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         FillerPresetViewModel postRollFiller,
         FillerPresetViewModel tailFiller,
         FillerPresetViewModel fallbackFiller,
-        WatermarkViewModel watermark) : base(
+        WatermarkViewModel watermark,
+        string preferredAudioLanguageCode,
+        string preferredSubtitleLanguageCode,
+        ChannelSubtitleMode? subtitleMode) : base(
         id,
         index,
         startType,
@@ -46,7 +49,10 @@ public record ProgramScheduleItemMultipleViewModel : ProgramScheduleItemViewMode
         postRollFiller,
         tailFiller,
         fallbackFiller,
-        watermark) =>
+        watermark,
+        preferredAudioLanguageCode,
+        preferredSubtitleLanguageCode,
+        subtitleMode) =>
         Count = count;
 
     public int Count { get; }

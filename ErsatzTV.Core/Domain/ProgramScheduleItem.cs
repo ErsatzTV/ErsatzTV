@@ -34,4 +34,7 @@ public abstract class ProgramScheduleItem
     public FillerPreset FallbackFiller { get; set; }
     public ChannelWatermark Watermark { get; set; }
     public int? WatermarkId { get; set; }
+    public string PreferredAudioLanguageCode { get; set; }
+    public string PreferredSubtitleLanguageCode { get; set; }
+    public ChannelSubtitleMode? SubtitleMode { get; set; }
 }

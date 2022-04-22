@@ -21,26 +21,30 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
         _configElementRepository = configElementRepository;
     }
 
-    public Task<MediaStream> SelectVideoStream(Channel channel, MediaVersion version) =>
+    public Task<MediaStream> SelectVideoStream(MediaVersion version) =>
         version.Streams.First(s => s.MediaStreamKind == MediaStreamKind.Video).AsTask();
 
-    public async Task<Option<MediaStream>> SelectAudioStream(Channel channel, MediaVersion version)
+    public async Task<Option<MediaStream>> SelectAudioStream(
+        MediaVersion version,
+        StreamingMode streamingMode,
+        string channelNumber,
+        string preferredAudioLanguage)
     {
-        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
-            string.IsNullOrWhiteSpace(channel.PreferredAudioLanguageCode))
+        if (streamingMode == StreamingMode.HttpLiveStreamingDirect &&
+            string.IsNullOrWhiteSpace(preferredAudioLanguage))
         {
             _logger.LogDebug(
                 "Channel {Number} is HLS Direct with no preferred audio language; using all audio streams",
-                channel.Number);
+                channelNumber);
             return None;
         }
 
         var audioStreams = version.Streams.Filter(s => s.MediaStreamKind == MediaStreamKind.Audio).ToList();
 
-        string language = (channel.PreferredAudioLanguageCode ?? string.Empty).ToLowerInvariant();
+        string language = (preferredAudioLanguage ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
         {
-            _logger.LogDebug("Channel {Number} has no preferred audio language code", channel.Number);
+            _logger.LogDebug("Channel {Number} has no preferred audio language code", channelNumber);
             Option<string> maybeDefaultLanguage = await _configElementRepository.GetValue<string>(
                 ConfigElementKey.FFmpegPreferredLanguageCode);
             maybeDefaultLanguage.Match(
@@ -82,17 +86,20 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
     }
 
     public async Task<Option<Subtitle>> SelectSubtitleStream(
-        Channel channel,
         MediaVersion version,
-        List<Subtitle> subtitles)
+        List<Subtitle> subtitles,
+        StreamingMode streamingMode,
+        string channelNumber,
+        string preferredSubtitleLanguage,
+        ChannelSubtitleMode subtitleMode)
     {
-        if (channel.SubtitleMode == ChannelSubtitleMode.None)
+        if (subtitleMode == ChannelSubtitleMode.None)
         {
             return None;
         }
 
-        if (channel.StreamingMode == StreamingMode.HttpLiveStreamingDirect &&
-            string.IsNullOrWhiteSpace(channel.PreferredSubtitleLanguageCode))
+        if (streamingMode == StreamingMode.HttpLiveStreamingDirect &&
+            string.IsNullOrWhiteSpace(preferredSubtitleLanguage))
         {
             // _logger.LogDebug(
             //     "Channel {Number} is HLS Direct with no preferred subtitle language; using all subtitle streams",
@@ -100,10 +107,10 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
             return None;
         }
 
-        string language = (channel.PreferredSubtitleLanguageCode ?? string.Empty).ToLowerInvariant();
+        string language = (preferredSubtitleLanguage ?? string.Empty).ToLowerInvariant();
         if (string.IsNullOrWhiteSpace(language))
         {
-            _logger.LogDebug("Channel {Number} has no preferred subtitle language code", channel.Number);
+            _logger.LogDebug("Channel {Number} has no preferred subtitle language code", channelNumber);
         }
         else
         {
@@ -117,7 +124,7 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         if (subtitles.Count > 0)
         {
-            switch (channel.SubtitleMode)
+            switch (subtitleMode)
             {
                 case ChannelSubtitleMode.Forced:
                     foreach (Subtitle subtitle in subtitles.OrderBy(s => s.StreamIndex).Find(s => s.Forced))
@@ -145,9 +152,9 @@ public class FFmpegStreamSelector : IFFmpegStreamSelector
 
         _logger.LogDebug(
             "Found no subtitles for channel {ChannelNumber} with mode {Mode} matching language {Language}",
-            channel.Number,
-            channel.SubtitleMode,
-            channel.PreferredSubtitleLanguageCode);
+            channelNumber,
+            subtitleMode,
+            preferredSubtitleLanguage);
 
         return None;
     }

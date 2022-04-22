@@ -26,7 +26,10 @@ public record ProgramScheduleItemOneViewModel : ProgramScheduleItemViewModel
         FillerPresetViewModel postRollFiller,
         FillerPresetViewModel tailFiller,
         FillerPresetViewModel fallbackFiller,
-        WatermarkViewModel watermark) : base(
+        WatermarkViewModel watermark,
+        string preferredAudioLanguageCode,
+        string preferredSubtitleLanguageCode,
+        ChannelSubtitleMode? subtitleMode) : base(
         id,
         index,
         startType,
@@ -45,7 +48,10 @@ public record ProgramScheduleItemOneViewModel : ProgramScheduleItemViewModel
         postRollFiller,
         tailFiller,
         fallbackFiller,
-        watermark)
+        watermark,
+        preferredAudioLanguageCode,
+        preferredSubtitleLanguageCode,
+        subtitleMode)
     {
     }
 }
