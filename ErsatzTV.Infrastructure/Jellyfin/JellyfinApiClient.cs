@@ -196,7 +196,7 @@ public class JellyfinApiClient : IJellyfinApiClient
         }
     }
 
-    private static Option<JellyfinLibrary> Project(JellyfinLibraryResponse response) =>
+    private Option<JellyfinLibrary> Project(JellyfinLibraryResponse response) =>
         response.CollectionType?.ToLowerInvariant() switch
         {
             "tvshows" => new JellyfinLibrary
@@ -216,8 +216,15 @@ public class JellyfinApiClient : IJellyfinApiClient
                 Paths = new List<LibraryPath> { new() { Path = $"jellyfin://{response.ItemId}" } }
             },
             // TODO: ??? for music libraries
+            "boxsets" => CacheCollectionLibraryId(response.ItemId),
             _ => None
         };
+
+    private Option<JellyfinLibrary> CacheCollectionLibraryId(string itemId)
+    {
+        _memoryCache.Set("jellyfin_collections_library_item_id", itemId);
+        return None;
+    }
 
     private Option<JellyfinMovie> ProjectToMovie(JellyfinLibraryItemResponse item)
     {
@@ -479,7 +486,8 @@ public class JellyfinApiClient : IJellyfinApiClient
                 Year = item.ProductionYear,
                 DateAdded = dateAdded,
                 Artwork = new List<Artwork>(),
-                Guids = GuidsFromProviderIds(item.ProviderIds)
+                Guids = GuidsFromProviderIds(item.ProviderIds),
+                Tags = new List<Tag>()
             };
 
             if (!string.IsNullOrWhiteSpace(item.ImageTags.Primary))
