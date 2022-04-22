@@ -68,7 +68,6 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         Either<BaseError, List<EmbyShow>> maybeShows = await _embyApiClient.GetShowLibraryItems(
             address,
             apiKey,
-            library.MediaSourceId,
             library.ItemId);
 
         await maybeShows.Match(
@@ -167,11 +166,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                 await _televisionRepository.GetExistingSeasons(library, incoming.ItemId);
 
             Either<BaseError, List<EmbySeason>> maybeSeasons =
-                await _embyApiClient.GetSeasonLibraryItems(
-                    address,
-                    apiKey,
-                    library.MediaSourceId,
-                    incoming.ItemId);
+                await _embyApiClient.GetSeasonLibraryItems(address, apiKey, incoming.ItemId);
 
             await maybeSeasons.Match(
                 async seasons =>
@@ -268,11 +263,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                 await _televisionRepository.GetExistingEpisodes(library, incoming.ItemId);
 
             Either<BaseError, List<EmbyEpisode>> maybeEpisodes =
-                await _embyApiClient.GetEpisodeLibraryItems(
-                    address,
-                    apiKey,
-                    library.MediaSourceId,
-                    incoming.ItemId);
+                await _embyApiClient.GetEpisodeLibraryItems(address, apiKey, incoming.ItemId);
 
             await maybeEpisodes.Match(
                 async episodes =>

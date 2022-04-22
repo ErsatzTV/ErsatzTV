@@ -75,4 +75,32 @@ public interface IEmbyApi
         string excludeLocationTypes = "Virtual",
         [Query]
         bool recursive = true);
+
+    [Get("/Items")]
+    public Task<EmbyLibraryItemsResponse> GetCollectionLibraryItems(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string parentId,
+        [Query]
+        string fields = "Etag",
+        [Query]
+        string includeItemTypes = "BoxSet",
+        [Query]
+        bool recursive = true);
+
+    [Get("/Items")]
+    public Task<EmbyLibraryItemsResponse> GetCollectionItems(
+        [Header("X-Emby-Token")]
+        string apiKey,
+        [Query]
+        string parentId,
+        [Query]
+        string fields = "Etag",
+        [Query]
+        string includeItemTypes = "Movie,Series,Season,Episode",
+        [Query]
+        string excludeLocationTypes = "Virtual",
+        [Query]
+        bool recursive = true);
 }

@@ -12,8 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add support for burning in embedded text subtitles
 - Add support for burning in external text subtitles
   - **This requires a one-time full library scan, which may take a long time with large libraries.**
-- Sync Plex collections as tags on movies, shows, seasons and episodes
-  - This allows smart collections that use queries like `tag:"Plex Collection Name"`
+- Sync Plex, Jellyfin and Emby collections as tags on movies, shows, seasons and episodes
+  - This allows smart collections that use queries like `tag:"Collection Name"`
+  - Note that Emby has an outstanding collections bug that prevents updates when removing items from a collection
 - Sync Plex labels as tags on movies and shows
   - This allows smart collections that use queries like `tag:"Plex Label Name"`
 - Add `Deep Scan` button for Plex libraries

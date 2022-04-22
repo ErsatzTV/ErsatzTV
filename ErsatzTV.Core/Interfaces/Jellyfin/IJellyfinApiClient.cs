@@ -32,4 +32,15 @@ public interface IJellyfinApiClient
         string apiKey,
         int mediaSourceId,
         string seasonId);
+
+    Task<Either<BaseError, List<JellyfinCollection>>> GetCollectionLibraryItems(
+        string address,
+        string apiKey,
+        int mediaSourceId);
+
+    Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
+        string address,
+        string apiKey,
+        int mediaSourceId,
+        string collectionId);
 }
