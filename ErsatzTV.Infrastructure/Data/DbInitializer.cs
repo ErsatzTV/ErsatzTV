@@ -84,7 +84,7 @@ public static class DbInitializer
             Number = "1",
             Name = "ErsatzTV",
             FFmpegProfile = defaultProfile,
-            StreamingMode = StreamingMode.TransportStream
+            StreamingMode = StreamingMode.TransportStreamHybrid
         };
         await context.Channels.AddAsync(defaultChannel, cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
