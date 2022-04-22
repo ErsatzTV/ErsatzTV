@@ -374,14 +374,18 @@ public class Startup
         services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
         services.AddScoped<IJellyfinMovieLibraryScanner, JellyfinMovieLibraryScanner>();
         services.AddScoped<IJellyfinTelevisionLibraryScanner, JellyfinTelevisionLibraryScanner>();
+        services.AddScoped<IJellyfinCollectionScanner, JellyfinCollectionScanner>();
         services.AddScoped<IJellyfinApiClient, JellyfinApiClient>();
         services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
         services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
+        services.AddScoped<IJellyfinCollectionRepository, JellyfinCollectionRepository>();
         services.AddScoped<IEmbyApiClient, EmbyApiClient>();
         services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
         services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
+        services.AddScoped<IEmbyCollectionScanner, EmbyCollectionScanner>();
         services.AddScoped<IEmbyPathReplacementService, EmbyPathReplacementService>();
         services.AddScoped<IEmbyTelevisionRepository, EmbyTelevisionRepository>();
+        services.AddScoped<IEmbyCollectionRepository, EmbyCollectionRepository>();
         services.AddScoped<IRuntimeInfo, RuntimeInfo>();
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();

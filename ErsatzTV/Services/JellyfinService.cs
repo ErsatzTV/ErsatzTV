@@ -59,6 +59,11 @@ public class JellyfinService : BackgroundService
                         case ISynchronizeJellyfinLibraryById synchronizeJellyfinLibraryById:
                             requestTask = SynchronizeJellyfinLibrary(synchronizeJellyfinLibraryById, cancellationToken);
                             break;
+                        case SynchronizeJellyfinCollections synchronizeJellyfinCollections:
+                            requestTask = SynchronizeJellyfinCollections(
+                                synchronizeJellyfinCollections,
+                                cancellationToken);
+                            break;
                         default:
                             throw new NotSupportedException($"Unsupported request type: {request.GetType().Name}");
                     }
@@ -163,6 +168,22 @@ public class JellyfinService : BackgroundService
             error => _logger.LogWarning(
                 "Unable to synchronize jellyfin library {LibraryId}: {Error}",
                 request.JellyfinLibraryId,
+                error.Value));
+    }
+
+    private async Task SynchronizeJellyfinCollections(
+        SynchronizeJellyfinCollections request,
+        CancellationToken cancellationToken)
+    {
+        using IServiceScope scope = _serviceScopeFactory.CreateScope();
+        IMediator mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+        Either<BaseError, Unit> result = await mediator.Send(request, cancellationToken);
+        result.BiIter(
+            _ => _logger.LogDebug("Done synchronizing jellyfin collections"),
+            error => _logger.LogWarning(
+                "Unable to synchronize jellyfin collections for source {MediaSourceId}: {Error}",
+                request.JellyfinMediaSourceId,
                 error.Value));
     }
 }

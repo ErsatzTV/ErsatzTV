@@ -11,24 +11,29 @@ public interface IEmbyApiClient
     Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
         string libraryId);
 
     Task<Either<BaseError, List<EmbyShow>>> GetShowLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
         string libraryId);
 
     Task<Either<BaseError, List<EmbySeason>>> GetSeasonLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
         string showId);
 
     Task<Either<BaseError, List<EmbyEpisode>>> GetEpisodeLibraryItems(
         string address,
         string apiKey,
-        int mediaSourceId,
         string seasonId);
+
+    Task<Either<BaseError, List<EmbyCollection>>> GetCollectionLibraryItems(
+        string address,
+        string apiKey);
+
+    Task<Either<BaseError, List<MediaItem>>> GetCollectionItems(
+        string address,
+        string apiKey,
+        string collectionId);
 }
