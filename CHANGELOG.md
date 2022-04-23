@@ -4,13 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.5.2-beta] - 2022-04-22
 ### Fixed
 - Fix unlocking libraries when scanning fails for any reason
 - Fix software overlay of actual size watermark
 
 ### Added
-- Add support for burning in embedded text subtitles
-- Add support for burning in external text subtitles
+- Add support for burning in embedded and external text subtitles
   - **This requires a one-time full library scan, which may take a long time with large libraries.**
 - Sync Plex, Jellyfin and Emby collections as tags on movies, shows, seasons and episodes
   - This allows smart collections that use queries like `tag:"Collection Name"`
@@ -1100,7 +1101,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.1-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.2-beta...HEAD
+[0.5.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.1-beta...v0.5.2-beta
 [0.5.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.0-beta...v0.5.1-beta
 [0.5.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.5-alpha...v0.5.0-beta
 [0.4.5-alpha]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.4-alpha...v0.4.5-alpha
