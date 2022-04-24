@@ -89,6 +89,12 @@
                                 <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Size="Size.Large"/>
                             </div>
                         }
+                        else if (episode.State == MediaItemState.Unavailable)
+                        {
+                            <div style="position: absolute; right: 10px; top: 8px;">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Size="Size.Large"/>
+                            </div>
+                        }
                     </MudPaper>
                 }
                 <MudCardContent Class="ml-3">
@@ -113,6 +119,14 @@
                         <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error" Class="mr-2"/>
                         <MudText>File Not Found:&nbsp;</MudText>
                         <MudText>@episode.Path</MudText>
+                    </div>
+                }
+                else if (episode.State == MediaItemState.Unavailable)
+                {
+                    <div class="mb-3" style="display: flex; flex-direction: row; flex-wrap: wrap">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" Class="mr-2"/>
+                        <MudText>Unavailable:&nbsp;</MudText>
+                        <MudText>@episode.LocalPath</MudText>
                     </div>
                 }
                 <div style="display: flex; flex-direction: row; flex-wrap: wrap">

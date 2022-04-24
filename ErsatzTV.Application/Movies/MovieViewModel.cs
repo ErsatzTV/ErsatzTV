@@ -17,6 +17,7 @@ public record MovieViewModel(
     List<string> Directors,
     List<string> Writers,
     string Path,
+    string LocalPath,
     MediaItemState MediaItemState)
 {
     public string Poster { get; set; }

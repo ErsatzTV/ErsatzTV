@@ -3,7 +3,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Core.Plex;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
@@ -537,38 +536,6 @@ public class TelevisionRepository : ITelevisionRepository
             async () => await AddPlexEpisode(dbContext, library, item));
     }
 
-    public async Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            @"DELETE FROM MediaItem WHERE Id IN
-                (SELECT m.Id FROM MediaItem m
-                INNER JOIN Season s ON m.Id = s.Id
-                INNER JOIN PlexSeason ps ON ps.Id = m.Id
-                INNER JOIN PlexShow P on P.Id = s.ShowId
-                WHERE P.Key = @ShowKey AND ps.Key not in @Keys)",
-            new { ShowKey = showKey, Keys = seasonKeys }).ToUnit();
-    }
-
-    public async Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-
-        List<int> ids = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN Episode e ON m.Id = e.Id
-                INNER JOIN PlexEpisode pe ON pe.Id = m.Id
-                INNER JOIN PlexSeason P on P.Id = e.SeasonId
-                WHERE P.Key = @SeasonKey AND pe.Key not in @Keys",
-            new { SeasonKey = seasonKey, Keys = episodeKeys }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            "DELETE FROM MediaItem WHERE Id IN @Ids",
-            new { Ids = ids });
-
-        return ids;
-    }
-
     public async Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -601,45 +568,6 @@ public class TelevisionRepository : ITelevisionRepository
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
             new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
-    }
-
-    public async Task<Unit> SetPlexEtag(PlexShow show, string etag)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexShow SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, show.Id }).Map(_ => Unit.Default);
-    }
-
-    public async Task<Unit> SetPlexEtag(PlexSeason season, string etag)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexSeason SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, season.Id }).Map(_ => Unit.Default);
-    }
-
-    public async Task<Unit> SetPlexEtag(PlexEpisode episode, string etag)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexEpisode SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, episode.Id }).Map(_ => Unit.Default);
-    }
-
-    public async Task<List<PlexItemEtag>> GetExistingPlexEpisodes(PlexLibrary library, PlexSeason season)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<PlexItemEtag>(
-                @"SELECT PlexEpisode.Key, PlexEpisode.Etag FROM PlexEpisode
-                      INNER JOIN Episode E on PlexEpisode.Id = E.Id
-                      INNER JOIN MediaItem MI on E.Id = MI.Id
-                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
-                      INNER JOIN Season S2 on E.SeasonId = S2.Id
-                      INNER JOIN PlexSeason PS on S2.Id = PS.Id
-                      WHERE LP.LibraryId = @LibraryId AND PS.Key = @Key",
-                new { LibraryId = library.Id, season.Key })
-            .Map(result => result.ToList());
     }
 
     public async Task<List<Episode>> GetShowItems(int showId)
@@ -775,24 +703,6 @@ public class TelevisionRepository : ITelevisionRepository
                 "INSERT INTO Actor (Name, Role, \"Order\", EpisodeMetadataId, ArtworkId) VALUES (@Name, @Role, @Order, @MetadataId, @ArtworkId)",
                 new { actor.Name, actor.Role, actor.Order, MetadataId = metadata.Id, ArtworkId = artworkId })
             .Map(result => result > 0);
-    }
-
-    public async Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-
-        List<int> ids = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                WHERE lp.LibraryId = @LibraryId AND ps.Key not in @Keys",
-            new { LibraryId = library.Id, Keys = showKeys }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            "DELETE FROM MediaItem WHERE Id IN @Ids",
-            new { Ids = ids });
-
-        return ids;
     }
 
     private static async Task<Either<BaseError, Season>> AddSeason(

@@ -36,7 +36,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
             await _slim.WaitAsync();
             try
             {
-                _languageCodes.AddRange(await _mediaItemRepository.GetAllLanguageCodeCultures());
+                _languageCodes.AddRange(await _mediaItemRepository.GetAllKnownCultures());
             }
             finally
             {
