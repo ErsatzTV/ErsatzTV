@@ -23,12 +23,12 @@ public class EmbyPathReplacementService : IEmbyPathReplacementService
         _logger = logger;
     }
 
-    public async Task<string> GetReplacementEmbyPath(int libraryPathId, string path)
+    public async Task<string> GetReplacementEmbyPath(int libraryPathId, string path, bool log = true)
     {
         List<EmbyPathReplacement> replacements =
             await _mediaSourceRepository.GetEmbyPathReplacementsByLibraryId(libraryPathId);
 
-        return GetReplacementEmbyPath(replacements, path);
+        return GetReplacementEmbyPath(replacements, path, log);
     }
 
     public string GetReplacementEmbyPath(

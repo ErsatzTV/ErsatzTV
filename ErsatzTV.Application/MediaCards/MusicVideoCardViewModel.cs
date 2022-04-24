@@ -12,7 +12,8 @@ public record MusicVideoCardViewModel
     string Album,
     string Poster,
     MediaItemState State,
-    string Path) : MediaCardViewModel(
+    string Path,
+    string LocalPath) : MediaCardViewModel(
     MusicVideoId,
     Title,
     Subtitle,

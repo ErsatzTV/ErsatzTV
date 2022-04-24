@@ -43,19 +43,24 @@ public class
 
     public Task<Either<BaseError, string>> Handle(
         ForceSynchronizePlexLibraryById request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
     public Task<Either<BaseError, string>> Handle(
         SynchronizePlexLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
-    private Task<Either<BaseError, string>>
-        Handle(ISynchronizePlexLibraryById request) =>
-        Validate(request)
-            .MapT(parameters => Synchronize(parameters).Map(_ => parameters.Library.Name))
-            .Bind(v => v.ToEitherAsync());
+    private async Task<Either<BaseError, string>>
+        HandleImpl(ISynchronizePlexLibraryById request, CancellationToken cancellationToken)
+    {
+        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        return await validation.Match(
+            parameters => Synchronize(parameters, cancellationToken),
+            error => Task.FromResult<Either<BaseError, string>>(error.Join()));
+    }
 
-    private async Task<Unit> Synchronize(RequestParameters parameters)
+    private async Task<Either<BaseError, string>> Synchronize(
+        RequestParameters parameters,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -63,30 +68,35 @@ public class
             DateTimeOffset nextScan = lastScan + TimeSpan.FromHours(parameters.LibraryRefreshInterval);
             if (parameters.ForceScan || nextScan < DateTimeOffset.Now)
             {
-                switch (parameters.Library.MediaKind)
+                Either<BaseError, Unit> result = parameters.Library.MediaKind switch
                 {
-                    case LibraryMediaKind.Movies:
+                    LibraryMediaKind.Movies =>
                         await _plexMovieLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection,
                             parameters.ConnectionParameters.PlexServerAuthToken,
                             parameters.Library,
                             parameters.FFmpegPath,
                             parameters.FFprobePath,
-                            parameters.DeepScan);
-                        break;
-                    case LibraryMediaKind.Shows:
+                            parameters.DeepScan,
+                            cancellationToken),
+                    LibraryMediaKind.Shows =>
                         await _plexTelevisionLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection,
                             parameters.ConnectionParameters.PlexServerAuthToken,
                             parameters.Library,
                             parameters.FFmpegPath,
                             parameters.FFprobePath,
-                            parameters.DeepScan);
-                        break;
+                            parameters.DeepScan),
+                    _ => Unit.Default
+                };
+
+                if (result.IsRight)
+                {
+                    parameters.Library.LastScan = DateTime.UtcNow;
+                    await _libraryRepository.UpdateLastScan(parameters.Library);
                 }
 
-                parameters.Library.LastScan = DateTime.UtcNow;
-                await _libraryRepository.UpdateLastScan(parameters.Library);
+                return result.Map(_ => parameters.Library.Name);
             }
             else
             {
@@ -95,7 +105,7 @@ public class
                     parameters.Library.Name);
             }
 
-            return Unit.Default;
+            return parameters.Library.Name;
         }
         finally
         {

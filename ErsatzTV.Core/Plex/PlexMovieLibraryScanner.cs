@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -19,6 +20,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
     private readonly IMediator _mediator;
     private readonly IMetadataRepository _metadataRepository;
     private readonly IMovieRepository _movieRepository;
+    private readonly IPlexMovieRepository _plexMovieRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly IPlexServerApiClient _plexServerApiClient;
     private readonly ISearchIndex _searchIndex;
@@ -32,6 +34,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         ISearchRepository searchRepository,
         IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
+        IPlexMovieRepository plexMovieRepository,
         IPlexPathReplacementService plexPathReplacementService,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
@@ -46,6 +49,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         _searchRepository = searchRepository;
         _mediator = mediator;
         _mediaSourceRepository = mediaSourceRepository;
+        _plexMovieRepository = plexMovieRepository;
         _plexPathReplacementService = plexPathReplacementService;
         _localFileSystem = localFileSystem;
         _localStatisticsProvider = localStatisticsProvider;
@@ -59,113 +63,190 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         PlexLibrary library,
         string ffmpegPath,
         string ffprobePath,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
-        List<PlexItemEtag> existingMovies = await _movieRepository.GetExistingPlexMovies(library);
+        try
+        {
+            Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetMovieLibraryContents(
+                library,
+                connection,
+                token);
 
-        List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
-            .GetPlexPathReplacements(library.MediaSourceId);
-
-        Either<BaseError, List<PlexMovie>> entries = await _plexServerApiClient.GetMovieLibraryContents(
-            library,
-            connection,
-            token);
-
-        await entries.Match(
-            async movieEntries =>
-            {
-                var validMovies = new List<PlexMovie>();
-                foreach (PlexMovie movie in movieEntries.OrderBy(m => m.MovieMetadata.Head().Title))
-                {
-                    string localPath = _plexPathReplacementService.GetReplacementPlexPath(
-                        pathReplacements,
-                        movie.MediaVersions.Head().MediaFiles.Head().Path,
-                        false);
-
-                    if (!_localFileSystem.FileExists(localPath))
-                    {
-                        _logger.LogWarning("Skipping plex movie that does not exist at {Path}", localPath);
-                    }
-                    else
-                    {
-                        validMovies.Add(movie);
-                    }
-                }
-
-                foreach (PlexMovie incoming in validMovies)
-                {
-                    decimal percentCompletion = (decimal)validMovies.IndexOf(incoming) / validMovies.Count;
-                    await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
-
-                    // deep scan will pull every movie from the plex api
-                    if (!deepScan)
-                    {
-                        Option<PlexItemEtag> maybeExisting = existingMovies.Find(ie => ie.Key == incoming.Key);
-                        if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
-                            incoming.Etag)
-                        {
-                            // _logger.LogDebug("NOOP: etag has not changed for plex movie with key {Key}", incoming.Key);
-                            continue;
-                        }
-
-                        _logger.LogDebug(
-                            "UPDATE: Etag has changed for movie {Movie}",
-                            incoming.MovieMetadata.Head().Title);
-                    }
-
-                    // TODO: figure out how to rebuild playlists
-                    Either<BaseError, MediaItemScanResult<PlexMovie>> maybeMovie = await _movieRepository
-                        .GetOrAdd(library, incoming)
-                        .BindT(
-                            existing => UpdateStatistics(pathReplacements, existing, incoming, ffmpegPath, ffprobePath))
-                        .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
-                        .BindT(existing => UpdateSubtitles(pathReplacements, existing, incoming))
-                        .BindT(existing => UpdateArtwork(existing, incoming));
-
-                    await maybeMovie.Match(
-                        async result =>
-                        {
-                            await _movieRepository.SetPlexEtag(result.Item, incoming.Etag);
-
-                            if (result.IsAdded)
-                            {
-                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                            }
-                            else if (result.IsUpdated)
-                            {
-                                await _searchIndex.UpdateItems(
-                                    _searchRepository,
-                                    new List<MediaItem> { result.Item });
-                            }
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error processing plex movie at {Key}: {Error}",
-                                incoming.Key,
-                                error.Value);
-                            return Task.CompletedTask;
-                        });
-                }
-
-                var movieKeys = validMovies.Map(s => s.Key).ToList();
-                List<int> ids = await _movieRepository.RemoveMissingPlexMovies(library, movieKeys);
-                await _searchIndex.RemoveItems(ids);
-
-                await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
-            },
-            error =>
+            foreach (BaseError error in entries.LeftToSeq())
             {
                 _logger.LogWarning(
                     "Error synchronizing plex library {Path}: {Error}",
                     library.Name,
                     error.Value);
 
-                return Task.CompletedTask;
-            });
+                return error;
+            }
 
-        _searchIndex.Commit();
+            return await ScanLibrary(
+                connection,
+                token,
+                library,
+                ffmpegPath,
+                ffprobePath,
+                deepScan,
+                entries.RightToSeq().Flatten().ToList(),
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
+        finally
+        {
+            // always commit the search index to prevent corruption
+            _searchIndex.Commit();
+        }
+    }
+
+    private async Task<Either<BaseError, Unit>> ScanLibrary(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexLibrary library,
+        string ffmpegPath,
+        string ffprobePath,
+        bool deepScan,
+        List<PlexMovie> movieEntries,
+        CancellationToken cancellationToken)
+    {
+        List<PlexItemEtag> existingMovies = await _movieRepository.GetExistingPlexMovies(library);
+
+        List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
+            .GetPlexPathReplacements(library.MediaSourceId);
+
+        foreach (PlexMovie incoming in movieEntries)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ScanCanceled();
+            }
+
+            decimal percentCompletion = (decimal)movieEntries.IndexOf(incoming) / movieEntries.Count;
+            await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
+
+            if (await ShouldScanItem(library, pathReplacements, existingMovies, incoming, deepScan) == false)
+            {
+                continue;
+            }
+
+            // TODO: figure out how to rebuild playlists
+            Either<BaseError, MediaItemScanResult<PlexMovie>> maybeMovie = await _movieRepository
+                .GetOrAdd(library, incoming)
+                .BindT(
+                    existing => UpdateStatistics(pathReplacements, existing, incoming, ffmpegPath, ffprobePath))
+                .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token))
+                .BindT(existing => UpdateSubtitles(pathReplacements, existing, incoming))
+                .BindT(existing => UpdateArtwork(existing, incoming));
+
+            if (maybeMovie.IsLeft)
+            {
+                foreach (BaseError error in maybeMovie.LeftToSeq())
+                {
+                    _logger.LogWarning(
+                        "Error processing plex movie at {Key}: {Error}",
+                        incoming.Key,
+                        error.Value);
+                }
+
+                continue;
+            }
+
+            foreach (MediaItemScanResult<PlexMovie> result in maybeMovie.RightToSeq())
+            {
+                await _movieRepository.SetPlexEtag(result.Item, incoming.Etag);
+
+                string plexPath = incoming.MediaVersions.Head().MediaFiles.Head().Path;
+
+                string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                    pathReplacements,
+                    plexPath,
+                    false);
+
+                if (_localFileSystem.FileExists(localPath))
+                {
+                    await _plexMovieRepository.FlagNormal(library, result.Item);
+                }
+                else
+                {
+                    await _plexMovieRepository.FlagUnavailable(library, result.Item);
+                }
+
+                if (result.IsAdded)
+                {
+                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
+                }
+                else if (result.IsUpdated)
+                {
+                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                }
+            }
+        }
+
+        // trash items that are no longer present on the media server
+        var fileNotFoundKeys = existingMovies.Map(m => m.Key).Except(movieEntries.Map(m => m.Key)).ToList();
+        List<int> ids = await _plexMovieRepository.FlagFileNotFound(library, fileNotFoundKeys);
+        await _searchIndex.RebuildItems(_searchRepository, ids);
+
+        await _mediator.Publish(new LibraryScanProgress(library.Id, 0), cancellationToken);
+
         return Unit.Default;
+    }
+
+    private async Task<bool> ShouldScanItem(
+        PlexLibrary library,
+        List<PlexPathReplacement> pathReplacements,
+        List<PlexItemEtag> existingMovies,
+        PlexMovie incoming,
+        bool deepScan)
+    {
+        // deep scan will pull every movie individually from the plex api
+        if (!deepScan)
+        {
+            Option<PlexItemEtag> maybeExisting = existingMovies.Find(ie => ie.Key == incoming.Key);
+            string existingEtag = await maybeExisting
+                .Map(e => e.Etag ?? string.Empty)
+                .IfNoneAsync(string.Empty);
+            MediaItemState existingState = await maybeExisting
+                .Map(e => e.State)
+                .IfNoneAsync(MediaItemState.Normal);
+
+            string plexPath = incoming.MediaVersions.Head().MediaFiles.Head().Path;
+
+            string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                pathReplacements,
+                plexPath,
+                false);
+
+            // if media is unavailable, only scan if file now exists
+            if (existingState == MediaItemState.Unavailable)
+            {
+                if (!_localFileSystem.FileExists(localPath))
+                {
+                    return false;
+                }
+            }
+            else if (existingEtag == incoming.Etag)
+            {
+                if (!_localFileSystem.FileExists(localPath))
+                {
+                    await _plexMovieRepository.FlagUnavailable(library, incoming);
+                }
+
+                // _logger.LogDebug("NOOP: etag has not changed for plex movie with key {Key}", incoming.Key);
+                return false;
+            }
+
+            _logger.LogDebug(
+                "UPDATE: Etag has changed for movie {Movie}",
+                incoming.MovieMetadata.Head().Title);
+        }
+
+        return true;
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> UpdateStatistics(
@@ -179,7 +260,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         MediaVersion existingVersion = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
-        if (existing.Etag != incoming.Etag)
+        if (existing.Etag != incoming.Etag || existingVersion.Streams.Count == 0)
         {
             foreach (MediaFile incomingFile in incomingVersion.MediaFiles.HeadOrNone())
             {
@@ -204,32 +285,36 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                 incoming.MediaVersions.Head().MediaFiles.Head().Path,
                 false);
 
-            _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
-            Either<BaseError, bool> refreshResult =
-                await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, existing, localPath);
+            // only refresh statistics if the file exists
+            if (_localFileSystem.FileExists(localPath))
+            {
+                _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
+                Either<BaseError, bool> refreshResult =
+                    await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, existing, localPath);
 
-            await refreshResult.Match(
-                async _ =>
-                {
-                    foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
+                await refreshResult.Match(
+                    async _ =>
                     {
-                        await _searchIndex.UpdateItems(
-                            _searchRepository,
-                            new List<MediaItem> { updated });
-                    }
+                        foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
+                        {
+                            await _searchIndex.UpdateItems(
+                                _searchRepository,
+                                new List<MediaItem> { updated });
+                        }
 
-                    await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, incomingVersion);
-                },
-                error =>
-                {
-                    _logger.LogWarning(
-                        "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
-                        "Statistics",
-                        localPath,
-                        error.Value);
+                        await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, incomingVersion);
+                    },
+                    error =>
+                    {
+                        _logger.LogWarning(
+                            "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                            "Statistics",
+                            localPath,
+                            error.Value);
 
-                    return Task.CompletedTask;
-                });
+                        return Task.CompletedTask;
+                    });
+            }
         }
 
         return result;

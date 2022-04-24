@@ -14,18 +14,28 @@ public class MediaItemRepository : IMediaItemRepository
 
     public MediaItemRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
 
-    public async Task<List<string>> GetAllLanguageCodes()
+    public async Task<List<CultureInfo>> GetAllKnownCultures()
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<string>(
-                @"SELECT LanguageCode FROM
-                    (SELECT Language AS LanguageCode
-                    FROM MediaStream WHERE Language IS NOT NULL
-                    UNION ALL SELECT PreferredAudioLanguageCode AS LanguageCode
-                    FROM Channel WHERE PreferredAudioLanguageCode IS NOT NULL)
-                    GROUP BY LanguageCode
-                    ORDER BY COUNT(LanguageCode) DESC")
-            .Map(result => result.ToList());
+
+        var result = new System.Collections.Generic.HashSet<CultureInfo>();
+
+        CultureInfo[] allCultures = CultureInfo.GetCultures(CultureTypes.NeutralCultures);
+        foreach (LanguageCode code in await dbContext.LanguageCodes.ToListAsync())
+        {
+            Option<CultureInfo> maybeCulture = allCultures.Find(
+                c => string.Equals(code.ThreeCode1, c.ThreeLetterISOLanguageName, StringComparison.OrdinalIgnoreCase)
+                     || string.Equals(
+                         code.ThreeCode2,
+                         c.ThreeLetterISOLanguageName,
+                         StringComparison.OrdinalIgnoreCase));
+            foreach (CultureInfo culture in maybeCulture)
+            {
+                result.Add(culture);
+            }
+        }
+
+        return result.ToList();
     }
 
     public async Task<List<CultureInfo>> GetAllLanguageCodeCultures()
@@ -95,5 +105,19 @@ public class MediaItemRepository : IMediaItemRepository
         }
 
         return Unit.Default;
+    }
+
+    private async Task<List<string>> GetAllLanguageCodes()
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<string>(
+                @"SELECT LanguageCode FROM
+                    (SELECT Language AS LanguageCode
+                    FROM MediaStream WHERE Language IS NOT NULL
+                    UNION ALL SELECT PreferredAudioLanguageCode AS LanguageCode
+                    FROM Channel WHERE PreferredAudioLanguageCode IS NOT NULL)
+                    GROUP BY LanguageCode
+                    ORDER BY COUNT(LanguageCode) DESC")
+            .Map(result => result.ToList());
     }
 }
