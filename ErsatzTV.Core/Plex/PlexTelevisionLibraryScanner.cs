@@ -747,83 +747,79 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                     localPath);
             }
 
-            await refreshResult.Match(
-                async _ =>
+            foreach (BaseError error in refreshResult.LeftToSeq())
+            {
+                _logger.LogWarning(
+                    "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                    "Statistics",
+                    localPath,
+                    error.Value);
+            }
+
+            foreach (var _ in refreshResult.RightToSeq())
+            {
+                foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
                 {
-                    foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
+                    await _searchIndex.UpdateItems(
+                        _searchRepository,
+                        new List<MediaItem> { updated });
+                }
+
+                Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeStatistics =
+                    await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
+                        library,
+                        incoming.Key.Split("/").Last(),
+                        connection,
+                        token);
+
+                foreach (Tuple<EpisodeMetadata, MediaVersion> tuple in maybeStatistics.RightToSeq())
+                {
+                    (EpisodeMetadata incomingMetadata, MediaVersion mediaVersion) = tuple;
+
+                    Option<EpisodeMetadata> maybeExisting = existing.EpisodeMetadata
+                        .Find(em => em.EpisodeNumber == incomingMetadata.EpisodeNumber);
+                    foreach (EpisodeMetadata existingMetadata in maybeExisting)
                     {
-                        await _searchIndex.UpdateItems(
-                            _searchRepository,
-                            new List<MediaItem> { updated });
+                        foreach (MetadataGuid guid in existingMetadata.Guids
+                                     .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                                     .ToList())
+                        {
+                            existingMetadata.Guids.Remove(guid);
+                            await _metadataRepository.RemoveGuid(guid);
+                        }
+
+                        foreach (MetadataGuid guid in incomingMetadata.Guids
+                                     .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                                     .ToList())
+                        {
+                            existingMetadata.Guids.Add(guid);
+                            await _metadataRepository.AddGuid(existingMetadata, guid);
+                        }
+
+                        foreach (Tag tag in existingMetadata.Tags
+                                     .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                                     .ToList())
+                        {
+                            existingMetadata.Tags.Remove(tag);
+                            await _metadataRepository.RemoveTag(tag);
+                        }
+
+                        foreach (Tag tag in incomingMetadata.Tags
+                                     .Filter(g => existingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                                     .ToList())
+                        {
+                            existingMetadata.Tags.Add(tag);
+                            await _televisionRepository.AddTag(existingMetadata, tag);
+                        }
                     }
 
-                    Either<BaseError, Tuple<EpisodeMetadata, MediaVersion>> maybeStatistics =
-                        await _plexServerApiClient.GetEpisodeMetadataAndStatistics(
-                            library,
-                            incoming.Key.Split("/").Last(),
-                            connection,
-                            token);
+                    existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
+                    existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
+                    existingVersion.DateUpdated = mediaVersion.DateUpdated;
 
-                    await maybeStatistics.Match(
-                        async tuple =>
-                        {
-                            (EpisodeMetadata incomingMetadata, MediaVersion mediaVersion) = tuple;
-
-                            Option<EpisodeMetadata> maybeExisting = existing.EpisodeMetadata
-                                .Find(em => em.EpisodeNumber == incomingMetadata.EpisodeNumber);
-                            foreach (EpisodeMetadata existingMetadata in maybeExisting)
-                            {
-                                foreach (MetadataGuid guid in existingMetadata.Guids
-                                             .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                                             .ToList())
-                                {
-                                    existingMetadata.Guids.Remove(guid);
-                                    await _metadataRepository.RemoveGuid(guid);
-                                }
-
-                                foreach (MetadataGuid guid in incomingMetadata.Guids
-                                             .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                                             .ToList())
-                                {
-                                    existingMetadata.Guids.Add(guid);
-                                    await _metadataRepository.AddGuid(existingMetadata, guid);
-                                }
-
-                                foreach (Tag tag in existingMetadata.Tags
-                                             .Filter(g => incomingMetadata.Tags.All(g2 => g2.Name != g.Name))
-                                             .ToList())
-                                {
-                                    existingMetadata.Tags.Remove(tag);
-                                    await _metadataRepository.RemoveTag(tag);
-                                }
-
-                                foreach (Tag tag in incomingMetadata.Tags
-                                             .Filter(g => existingMetadata.Tags.All(g2 => g2.Name != g.Name))
-                                             .ToList())
-                                {
-                                    existingMetadata.Tags.Add(tag);
-                                    await _televisionRepository.AddTag(existingMetadata, tag);
-                                }
-                            }
-
-                            existingVersion.SampleAspectRatio = mediaVersion.SampleAspectRatio;
-                            existingVersion.VideoScanKind = mediaVersion.VideoScanKind;
-                            existingVersion.DateUpdated = mediaVersion.DateUpdated;
-
-                            await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, mediaVersion);
-                        },
-                        _ => Task.CompletedTask);
-                },
-                error =>
-                {
-                    _logger.LogWarning(
-                        "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
-                        "Statistics",
-                        localPath,
-                        error.Value);
-
-                    return Task.CompletedTask;
-                });
+                    await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, mediaVersion);
+                }
+            }
         }
 
         return result;

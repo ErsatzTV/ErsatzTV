@@ -88,7 +88,8 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         {
             decimal percentCompletion = (decimal)foldersCompleted / (foldersCompleted + folderQueue.Count);
             await _mediator.Publish(
-                new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
+                new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                cancellationToken);
 
             string movieFolder = folderQueue.Dequeue();
             foldersCompleted++;
@@ -142,25 +143,24 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
                     .BindT(UpdateSubtitles)
                     .BindT(FlagNormal);
 
-                await maybeMovie.Match(
-                    async result =>
-                    {
-                        if (result.IsAdded)
-                        {
-                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                        }
-                        else if (result.IsUpdated)
-                        {
-                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
-                        }
+                foreach (BaseError error in maybeMovie.LeftToSeq())
+                {
+                    _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value);
+                }
 
-                        await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);
-                    },
-                    error =>
+                foreach (MediaItemScanResult<Movie> result in maybeMovie.RightToSeq())
+                {
+                    if (result.IsAdded)
                     {
-                        _logger.LogWarning("Error processing movie at {Path}: {Error}", file, error.Value);
-                        return Task.CompletedTask;
-                    });
+                        await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
+                    }
+                    else if (result.IsUpdated)
+                    {
+                        await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                    }
+
+                    await _libraryRepository.SetEtag(libraryPath, knownFolder, movieFolder, etag);
+                }
             }
         }
 
@@ -192,35 +192,37 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         try
         {
             Movie movie = result.Item;
-            await LocateNfoFile(movie).Match(
-                async nfoFile =>
+            
+            Option<string> maybeNfoFile = LocateNfoFile(movie);
+            if (maybeNfoFile.IsNone)
+            {
+                if (!Optional(movie.MovieMetadata).Flatten().Any())
                 {
-                    bool shouldUpdate = Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
-                        m => m.MetadataKind == MetadataKind.Fallback ||
-                             m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
-                        true);
+                    string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
+                    if (await _localMetadataProvider.RefreshFallbackMetadata(movie))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+            }
 
-                    if (shouldUpdate)
-                    {
-                        _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                        if (await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile))
-                        {
-                            result.IsUpdated = true;
-                        }
-                    }
-                },
-                async () =>
+            foreach (string nfoFile in maybeNfoFile)
+            {
+                bool shouldUpdate = Optional(movie.MovieMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
+                    true);
+
+                if (shouldUpdate)
                 {
-                    if (!Optional(movie.MovieMetadata).Flatten().Any())
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                    if (await _localMetadataProvider.RefreshSidecarMetadata(movie, nfoFile))
                     {
-                        string path = movie.MediaVersions.Head().MediaFiles.Head().Path;
-                        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
-                        if (await _localMetadataProvider.RefreshFallbackMetadata(movie))
-                        {
-                            result.IsUpdated = true;
-                        }
+                        result.IsUpdated = true;
                     }
-                });
+                }
+            }
 
             return result;
         }
@@ -239,12 +241,12 @@ public class MovieFolderScanner : LocalFolderScanner, IMovieFolderScanner
         try
         {
             Movie movie = result.Item;
-            await LocateArtwork(movie, artworkKind).IfSomeAsync(
-                async posterFile =>
-                {
-                    MovieMetadata metadata = movie.MovieMetadata.Head();
-                    await RefreshArtwork(posterFile, metadata, artworkKind, None, None, cancellationToken);
-                });
+            Option<string> maybeArtwork = LocateArtwork(movie, artworkKind);
+            foreach (string posterFile in maybeArtwork)
+            {
+                MovieMetadata metadata = movie.MovieMetadata.Head();
+                await RefreshArtwork(posterFile, metadata, artworkKind, None, None, cancellationToken);
+            }
 
             return result;
         }
