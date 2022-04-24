@@ -336,6 +336,7 @@ public class Startup
         services.AddScoped<IEpisodeMetadataHealthCheck, EpisodeMetadataHealthCheck>();
         services.AddScoped<IZeroDurationHealthCheck, ZeroDurationHealthCheck>();
         services.AddScoped<IFileNotFoundHealthCheck, FileNotFoundHealthCheck>();
+        services.AddScoped<IUnavailableHealthCheck, UnavailableHealthCheck>();
         services.AddScoped<IVaapiDriverHealthCheck, VaapiDriverHealthCheck>();
         services.AddScoped<IErrorReportsHealthCheck, ErrorReportsHealthCheck>();
         services.AddScoped<IHealthCheckService, HealthCheckService>();

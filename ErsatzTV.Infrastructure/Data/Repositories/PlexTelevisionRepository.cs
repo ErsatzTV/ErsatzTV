@@ -68,19 +68,27 @@ public class PlexTelevisionRepository : IPlexTelevisionRepository
             new { LibraryId = library.Id, episode.Key }).Map(count => count > 0);
     }
 
-    public async Task<bool> FlagUnavailable(PlexLibrary library, PlexEpisode episode)
+    public async Task<Option<int>> FlagUnavailable(PlexLibrary library, PlexEpisode episode)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         episode.State = MediaItemState.Unavailable;
 
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 2 WHERE Id IN
-            (SELECT PlexEpisode.Id FROM PlexEpisode
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT PlexEpisode.Id FROM PlexEpisode
             INNER JOIN MediaItem MI ON MI.Id = PlexEpisode.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexEpisode.Key = @Key)",
-            new { LibraryId = library.Id, episode.Key }).Map(count => count > 0);
+            WHERE PlexEpisode.Key = @Key",
+            new { LibraryId = library.Id, episode.Key });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 2 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
     public async Task<List<int>> FlagFileNotFoundShows(PlexLibrary library, List<string> plexShowKeys)

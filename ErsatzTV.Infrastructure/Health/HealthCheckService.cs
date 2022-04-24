@@ -15,6 +15,7 @@ public class HealthCheckService : IHealthCheckService
         IEpisodeMetadataHealthCheck episodeMetadataHealthCheck,
         IZeroDurationHealthCheck zeroDurationHealthCheck,
         IFileNotFoundHealthCheck fileNotFoundHealthCheck,
+        IUnavailableHealthCheck unavailableHealthCheck,
         IVaapiDriverHealthCheck vaapiDriverHealthCheck,
         IErrorReportsHealthCheck errorReportsHealthCheck) =>
         _checks = new List<IHealthCheck>
@@ -26,6 +27,7 @@ public class HealthCheckService : IHealthCheckService
             episodeMetadataHealthCheck,
             zeroDurationHealthCheck,
             fileNotFoundHealthCheck,
+            unavailableHealthCheck,
             vaapiDriverHealthCheck,
             errorReportsHealthCheck
         };
