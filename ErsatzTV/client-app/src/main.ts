@@ -6,6 +6,7 @@ import { createPinia, PiniaVuePlugin } from 'pinia';
 import autoPageTitleMixin from './mixins/autoPageTitle';
 import 'roboto-fontface/css/roboto/roboto-fontface.css';
 import '@mdi/font/css/materialdesignicons.css';
+import i18n from './i18n';
 
 Vue.config.productionTip = false;
 
@@ -19,5 +20,6 @@ new Vue({
     vuetify,
     router,
     pinia,
+    i18n,
     render: (h) => h(App)
 }).$mount('#app');
