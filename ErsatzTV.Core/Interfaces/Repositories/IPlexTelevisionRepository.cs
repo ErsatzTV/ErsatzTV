@@ -9,7 +9,7 @@ public interface IPlexTelevisionRepository
     Task<List<PlexItemEtag>> GetExistingPlexSeasons(PlexLibrary library, PlexShow show);
     Task<List<PlexItemEtag>> GetExistingPlexEpisodes(PlexLibrary library, PlexSeason season);
     Task<bool> FlagNormal(PlexLibrary library, PlexEpisode episode);
-    Task<bool> FlagUnavailable(PlexLibrary library, PlexEpisode episode);
+    Task<Option<int>> FlagUnavailable(PlexLibrary library, PlexEpisode episode);
     Task<List<int>> FlagFileNotFoundShows(PlexLibrary library, List<string> plexShowKeys);
     Task<List<int>> FlagFileNotFoundSeasons(PlexLibrary library, List<string> plexSeasonKeys);
     Task<List<int>> FlagFileNotFoundEpisodes(PlexLibrary library, List<string> plexEpisodeKeys);

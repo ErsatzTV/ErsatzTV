@@ -643,7 +643,10 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
             {
                 if (!_localFileSystem.FileExists(localPath))
                 {
-                    await _plexTelevisionRepository.FlagUnavailable(library, incoming);
+                    foreach (int id in await _plexTelevisionRepository.FlagUnavailable(library, incoming))
+                    {
+                        await _searchIndex.RebuildItems(_searchRepository, new List<int> { id });
+                    }
                 }
 
                 // _logger.LogDebug("NOOP: etag has not changed for plex episode with key {Key}", incoming.Key);

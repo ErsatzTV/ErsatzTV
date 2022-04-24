@@ -26,19 +26,27 @@ public class PlexMovieRepository : IPlexMovieRepository
             new { LibraryId = library.Id, movie.Key }).Map(count => count > 0);
     }
 
-    public async Task<bool> FlagUnavailable(PlexLibrary library, PlexMovie movie)
+    public async Task<Option<int>> FlagUnavailable(PlexLibrary library, PlexMovie movie)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         movie.State = MediaItemState.Unavailable;
 
-        return await dbContext.Connection.ExecuteAsync(
-            @"UPDATE MediaItem SET State = 2 WHERE Id IN
-            (SELECT PlexMovie.Id FROM PlexMovie
-            INNER JOIN MediaItem MI ON MI.Id = PlexMovie.Id
-            INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE PlexMovie.Key = @Key)",
-            new { LibraryId = library.Id, movie.Key }).Map(count => count > 0);
+        Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
+            @"SELECT PlexMovie.Id FROM PlexMovie
+              INNER JOIN MediaItem MI ON MI.Id = PlexMovie.Id
+              INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
+              WHERE PlexMovie.Key = @Key",
+            new { LibraryId = library.Id, movie.Key });
+
+        foreach (int id in maybeId)
+        {
+            return await dbContext.Connection.ExecuteAsync(
+                @"UPDATE MediaItem SET State = 2 WHERE Id = @Id",
+                new { Id = id }).Map(count => count > 0 ? Some(id) : None);
+        }
+
+        return None;
     }
 
     public async Task<List<int>> FlagFileNotFound(PlexLibrary library, List<string> plexMovieKeys)
