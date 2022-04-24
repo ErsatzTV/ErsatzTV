@@ -85,56 +85,56 @@ public class ScanLocalLibraryHandler : IRequestHandler<ForceScanLocalLibrary, Ei
                 {
                     scanned = true;
 
-                    switch (localLibrary.MediaKind)
+                    Either<BaseError, Unit> result = localLibrary.MediaKind switch
                     {
-                        case LibraryMediaKind.Movies:
+                        LibraryMediaKind.Movies =>
                             await _movieFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffmpegPath,
                                 ffprobePath,
                                 progressMin,
                                 progressMax,
-                                cancellationToken);
-                            break;
-                        case LibraryMediaKind.Shows:
+                                cancellationToken),
+                        LibraryMediaKind.Shows =>
                             await _televisionFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffmpegPath,
                                 ffprobePath,
                                 progressMin,
                                 progressMax,
-                                cancellationToken);
-                            break;
-                        case LibraryMediaKind.MusicVideos:
+                                cancellationToken),
+                        LibraryMediaKind.MusicVideos =>
                             await _musicVideoFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffmpegPath,
                                 ffprobePath,
                                 progressMin,
                                 progressMax,
-                                cancellationToken);
-                            break;
-                        case LibraryMediaKind.OtherVideos:
+                                cancellationToken),
+                        LibraryMediaKind.OtherVideos =>
                             await _otherVideoFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffmpegPath,
                                 ffprobePath,
                                 progressMin,
-                                progressMax);
-                            break;
-                        case LibraryMediaKind.Songs:
+                                progressMax,
+                                cancellationToken),
+                        LibraryMediaKind.Songs =>
                             await _songFolderScanner.ScanFolder(
                                 libraryPath,
                                 ffprobePath,
                                 ffmpegPath,
                                 progressMin,
                                 progressMax,
-                                cancellationToken);
-                            break;
-                    }
+                                cancellationToken),
+                        _ => Unit.Default
+                    };
 
-                    libraryPath.LastScan = DateTime.UtcNow;
-                    await _libraryRepository.UpdateLastScan(libraryPath);
+                    if (result.IsRight)
+                    {
+                        libraryPath.LastScan = DateTime.UtcNow;
+                        await _libraryRepository.UpdateLastScan(libraryPath);
+                    }
                 }
 
                 await _mediator.Publish(new LibraryScanProgress(libraryPath.LibraryId, progressMax), cancellationToken);
