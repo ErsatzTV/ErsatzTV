@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.5.3-beta] - 2022-04-24
 ### Fixed
 - Cleanly stop Plex library scan when service termination is requested
 - Fix bug introduced with 0.5.2-beta that prevented some Plex content from being played
@@ -1111,7 +1113,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Initial release to facilitate testing outside of Docker.
 
 
-[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.2-beta...HEAD
+[Unreleased]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.3-beta...HEAD
+[0.5.3-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.2-beta...v0.5.3-beta
 [0.5.2-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.1-beta...v0.5.2-beta
 [0.5.1-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.5.0-beta...v0.5.1-beta
 [0.5.0-beta]: https://github.com/jasongdove/ErsatzTV/compare/v0.4.5-alpha...v0.5.0-beta
