@@ -6,6 +6,7 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y libicu
     tzdata \
     fontconfig \
     fonts-dejavu \
+    libgdiplus \
     autoconf \
     libtool \
     libdrm-dev \
