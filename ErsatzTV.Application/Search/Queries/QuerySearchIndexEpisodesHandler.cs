@@ -1,24 +1,23 @@
 ﻿using ErsatzTV.Application.MediaCards;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Extensions;
+using ErsatzTV.Core.Interfaces.Emby;
+using ErsatzTV.Core.Interfaces.Jellyfin;
+using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
-using ErsatzTV.Core.Jellyfin;
-using ErsatzTV.Core.Plex;
 using ErsatzTV.Core.Search;
 using static ErsatzTV.Application.MediaCards.Mapper;
 
 namespace ErsatzTV.Application.Search;
 
 public class
-    QuerySearchIndexEpisodesHandler : IRequestHandler<QuerySearchIndexEpisodes,
-        TelevisionEpisodeCardResultsViewModel>
+    QuerySearchIndexEpisodesHandler : IRequestHandler<QuerySearchIndexEpisodes, TelevisionEpisodeCardResultsViewModel>
 {
-    private readonly EmbyPathReplacementService _embyPathReplacementService;
-    private readonly JellyfinPathReplacementService _jellyfinPathReplacementService;
+    private readonly IEmbyPathReplacementService _embyPathReplacementService;
+    private readonly IJellyfinPathReplacementService _jellyfinPathReplacementService;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly PlexPathReplacementService _plexPathReplacementService;
+    private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly ISearchIndex _searchIndex;
     private readonly ITelevisionRepository _televisionRepository;
 
@@ -26,9 +25,9 @@ public class
         ISearchIndex searchIndex,
         ITelevisionRepository televisionRepository,
         IMediaSourceRepository mediaSourceRepository,
-        PlexPathReplacementService plexPathReplacementService,
-        JellyfinPathReplacementService jellyfinPathReplacementService,
-        EmbyPathReplacementService embyPathReplacementService)
+        IPlexPathReplacementService plexPathReplacementService,
+        IJellyfinPathReplacementService jellyfinPathReplacementService,
+        IEmbyPathReplacementService embyPathReplacementService)
     {
         _searchIndex = searchIndex;
         _televisionRepository = televisionRepository;

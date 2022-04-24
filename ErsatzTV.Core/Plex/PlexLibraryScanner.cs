@@ -15,7 +15,7 @@ public abstract class PlexLibraryScanner
         _logger = logger;
     }
 
-    protected async Task<Unit> UpdateArtworkIfNeeded(
+    protected async Task<bool> UpdateArtworkIfNeeded(
         Domain.Metadata existingMetadata,
         Domain.Metadata incomingMetadata,
         ArtworkKind artworkKind)
@@ -53,8 +53,10 @@ public abstract class PlexLibraryScanner
                     existingMetadata.Artwork.RemoveAll(a => a.ArtworkKind == artworkKind);
                     await _metadataRepository.RemoveArtwork(existingMetadata, artworkKind);
                 });
+
+            return true;
         }
 
-        return Unit.Default;
+        return false;
     }
 }

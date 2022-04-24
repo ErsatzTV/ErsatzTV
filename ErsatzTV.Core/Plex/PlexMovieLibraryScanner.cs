@@ -75,11 +75,6 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
 
             foreach (BaseError error in entries.LeftToSeq())
             {
-                _logger.LogWarning(
-                    "Error synchronizing plex library {Path}: {Error}",
-                    library.Name,
-                    error.Value);
-
                 return error;
             }
 
@@ -260,7 +255,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         MediaVersion existingVersion = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
-        if (existing.Etag != incoming.Etag || existingVersion.Streams.Count == 0)
+        if (result.IsAdded || existing.Etag != incoming.Etag || existingVersion.Streams.Count == 0)
         {
             foreach (MediaFile incomingFile in incomingVersion.MediaFiles.HeadOrNone())
             {
@@ -565,9 +560,12 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
         MovieMetadata existingMetadata = existing.MovieMetadata.Head();
         MovieMetadata incomingMetadata = incoming.MovieMetadata.Head();
 
-        await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
-        await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
-        await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
+        bool poster = await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
+        bool fanArt = await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
+        if (poster || fanArt)
+        {
+            await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
+        }
 
         return result;
     }

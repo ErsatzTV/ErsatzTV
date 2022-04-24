@@ -54,8 +54,8 @@ public class PlexMovieRepository : IPlexMovieRepository
                 @"SELECT M.Id
                 FROM MediaItem M
                 INNER JOIN PlexMovie ON PlexMovie.Id = M.Id
-                INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id
-                WHERE LP.LibraryId = @LibraryId AND PlexMovie.Key IN @MovieKeys",
+                INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
+                WHERE PlexMovie.Key IN @MovieKeys",
                 new { LibraryId = library.Id, MovieKeys = plexMovieKeys })
             .Map(result => result.ToList());
 

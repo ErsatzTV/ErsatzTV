@@ -86,7 +86,8 @@ public class
                             parameters.Library,
                             parameters.FFmpegPath,
                             parameters.FFprobePath,
-                            parameters.DeepScan),
+                            parameters.DeepScan,
+                            cancellationToken),
                     _ => Unit.Default
                 };
 

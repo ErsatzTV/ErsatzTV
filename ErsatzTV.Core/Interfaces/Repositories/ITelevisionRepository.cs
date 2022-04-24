@@ -1,6 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Core.Plex;
 
 namespace ErsatzTV.Core.Interfaces.Repositories;
 
@@ -46,15 +45,8 @@ public interface ITelevisionRepository
     Task<bool> AddStudio(ShowMetadata metadata, Studio studio);
     Task<bool> AddActor(ShowMetadata metadata, Actor actor);
     Task<bool> AddActor(EpisodeMetadata metadata, Actor actor);
-    Task<List<int>> RemoveMissingPlexShows(PlexLibrary library, List<string> showKeys);
-    Task<Unit> RemoveMissingPlexSeasons(string showKey, List<string> seasonKeys);
-    Task<List<int>> RemoveMissingPlexEpisodes(string seasonKey, List<string> episodeKeys);
     Task<Unit> RemoveMetadata(Episode episode, EpisodeMetadata metadata);
     Task<bool> AddDirector(EpisodeMetadata metadata, Director director);
     Task<bool> AddWriter(EpisodeMetadata metadata, Writer writer);
     Task<Unit> UpdatePath(int mediaFileId, string path);
-    Task<Unit> SetPlexEtag(PlexShow show, string etag);
-    Task<Unit> SetPlexEtag(PlexSeason season, string etag);
-    Task<Unit> SetPlexEtag(PlexEpisode episode, string etag);
-    Task<List<PlexItemEtag>> GetExistingPlexEpisodes(PlexLibrary library, PlexSeason season);
 }

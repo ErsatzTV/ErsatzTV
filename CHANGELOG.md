@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Cleanly stop Plex library scan when service termination is requested
+- Fix bug introduced with 0.5.2-beta that prevented some Plex content from being played
+- Fix spammy subtitle error message
 
 ## [0.5.2-beta] - 2022-04-22
 ### Fixed
