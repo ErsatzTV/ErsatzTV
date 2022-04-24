@@ -11,6 +11,7 @@ internal static class Mapper
 {
     internal static MovieViewModel ProjectToViewModel(
         Movie movie,
+        string localPath,
         List<string> languageCodes,
         Option<JellyfinMediaSource> maybeJellyfin,
         Option<EmbyMediaSource> maybeEmby)
@@ -32,6 +33,7 @@ internal static class Mapper
             metadata.Directors.Map(d => d.Name).ToList(),
             metadata.Writers.Map(w => w.Name).ToList(),
             movie.GetHeadVersion().MediaFiles.Head().Path,
+            localPath,
             movie.State)
         {
             Poster = Artwork(metadata, ArtworkKind.Poster, maybeJellyfin, maybeEmby),

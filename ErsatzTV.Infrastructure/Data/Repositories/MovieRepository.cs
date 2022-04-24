@@ -245,31 +245,13 @@ public class MovieRepository : IMovieRepository
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.QueryAsync<PlexItemEtag>(
-                @"SELECT Key, Etag FROM PlexMovie
+                @"SELECT Key, Etag, MI.State FROM PlexMovie
                       INNER JOIN Movie M on PlexMovie.Id = M.Id
                       INNER JOIN MediaItem MI on M.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
                       WHERE LP.LibraryId = @LibraryId",
                 new { LibraryId = library.Id })
             .Map(result => result.ToList());
-    }
-
-    public async Task<List<int>> RemoveMissingPlexMovies(PlexLibrary library, List<string> movieKeys)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-
-        List<int> ids = await dbContext.Connection.QueryAsync<int>(
-            @"SELECT m.Id FROM MediaItem m
-                INNER JOIN PlexMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                WHERE lp.LibraryId = @LibraryId AND pm.Key not in @Keys",
-            new { LibraryId = library.Id, Keys = movieKeys }).Map(result => result.ToList());
-
-        await dbContext.Connection.ExecuteAsync(
-            "DELETE FROM MediaItem WHERE Id IN @Ids",
-            new { Ids = ids });
-
-        return ids;
     }
 
     public async Task<bool> UpdateSortTitle(MovieMetadata movieMetadata)

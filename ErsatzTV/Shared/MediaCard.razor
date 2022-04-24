@@ -29,6 +29,12 @@
                     <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Error"/>
                 </div>
             }
+            else if (Data.State == MediaItemState.Unavailable)
+            {
+                <div style="position: absolute; right: 12px; top: 12px;">
+                    <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning"/>
+                </div>
+            }
             <div class="media-card-overlay" style="">
                 <MudButton Link="@(IsSelectMode ? null : Link)"
                            Style="height: 100%; width: 100%"

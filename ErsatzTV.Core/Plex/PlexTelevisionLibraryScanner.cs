@@ -1,4 +1,5 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Plex;
 using ErsatzTV.Core.Interfaces.Repositories;
@@ -21,6 +22,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
     private readonly IMetadataRepository _metadataRepository;
     private readonly IPlexPathReplacementService _plexPathReplacementService;
     private readonly IPlexServerApiClient _plexServerApiClient;
+    private readonly IPlexTelevisionRepository _plexTelevisionRepository;
     private readonly ISearchIndex _searchIndex;
     private readonly ISearchRepository _searchRepository;
     private readonly ITelevisionRepository _televisionRepository;
@@ -34,6 +36,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         IMediator mediator,
         IMediaSourceRepository mediaSourceRepository,
         IPlexPathReplacementService plexPathReplacementService,
+        IPlexTelevisionRepository plexTelevisionRepository,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
@@ -48,6 +51,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         _mediator = mediator;
         _mediaSourceRepository = mediaSourceRepository;
         _plexPathReplacementService = plexPathReplacementService;
+        _plexTelevisionRepository = plexTelevisionRepository;
         _localFileSystem = localFileSystem;
         _localStatisticsProvider = localStatisticsProvider;
         _localSubtitlesProvider = localSubtitlesProvider;
@@ -60,85 +64,129 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexLibrary library,
         string ffmpegPath,
         string ffprobePath,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
+        try
+        {
+            Either<BaseError, List<PlexShow>> entries = await _plexServerApiClient.GetShowLibraryContents(
+                library,
+                connection,
+                token);
+
+            foreach (BaseError error in entries.LeftToSeq())
+            {
+                return error;
+            }
+
+            return await ScanLibrary(
+                connection,
+                token,
+                library,
+                ffmpegPath,
+                ffprobePath,
+                deepScan,
+                entries.RightToSeq().Flatten().ToList(),
+                cancellationToken);
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
+        finally
+        {
+            // always commit the search index to prevent corruption
+            _searchIndex.Commit();
+        }
+    }
+
+    private async Task<Either<BaseError, Unit>> ScanLibrary(
+        PlexConnection connection,
+        PlexServerAuthToken token,
+        PlexLibrary library,
+        string ffmpegPath,
+        string ffprobePath,
+        bool deepScan,
+        List<PlexShow> showEntries,
+        CancellationToken cancellationToken)
+    {
+        List<PlexItemEtag> existingShows = await _plexTelevisionRepository.GetExistingPlexShows(library);
+
         List<PlexPathReplacement> pathReplacements = await _mediaSourceRepository
             .GetPlexPathReplacements(library.MediaSourceId);
 
-        Either<BaseError, List<PlexShow>> entries = await _plexServerApiClient.GetShowLibraryContents(
-            library,
-            connection,
-            token);
-
-        return await entries.Match<Task<Either<BaseError, Unit>>>(
-            async showEntries =>
+        foreach (PlexShow incoming in showEntries)
+        {
+            if (cancellationToken.IsCancellationRequested)
             {
-                foreach (PlexShow incoming in showEntries)
+                return new ScanCanceled();
+            }
+
+            decimal percentCompletion = (decimal)showEntries.IndexOf(incoming) / showEntries.Count;
+            await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
+
+            // TODO: figure out how to rebuild playlists
+            Either<BaseError, MediaItemScanResult<PlexShow>> maybeShow = await _televisionRepository
+                .GetOrAddPlexShow(library, incoming)
+                .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token, deepScan))
+                .BindT(existing => UpdateArtwork(existing, incoming));
+
+            if (maybeShow.IsLeft)
+            {
+                foreach (BaseError error in maybeShow.LeftToSeq())
                 {
-                    decimal percentCompletion = (decimal)showEntries.IndexOf(incoming) / showEntries.Count;
-                    await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
-
-                    // TODO: figure out how to rebuild playlists
-                    Either<BaseError, MediaItemScanResult<PlexShow>> maybeShow = await _televisionRepository
-                        .GetOrAddPlexShow(library, incoming)
-                        .BindT(existing => UpdateMetadata(existing, incoming, library, connection, token, deepScan))
-                        .BindT(existing => UpdateArtwork(existing, incoming));
-
-                    await maybeShow.Match(
-                        async result =>
-                        {
-                            await ScanSeasons(
-                                library,
-                                pathReplacements,
-                                result.Item,
-                                connection,
-                                token,
-                                ffmpegPath,
-                                ffprobePath,
-                                deepScan);
-
-                            await _televisionRepository.SetPlexEtag(result.Item, incoming.Etag);
-
-                            if (result.IsAdded)
-                            {
-                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                            }
-                            else if (result.IsUpdated)
-                            {
-                                await _searchIndex.UpdateItems(
-                                    _searchRepository,
-                                    new List<MediaItem> { result.Item });
-                            }
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error processing plex show at {Key}: {Error}",
-                                incoming.Key,
-                                error.Value);
-                            return Task.CompletedTask;
-                        });
+                    _logger.LogWarning(
+                        "Error processing plex show at {Key}: {Error}",
+                        incoming.Key,
+                        error.Value);
                 }
 
-                var showKeys = showEntries.Map(s => s.Key).ToList();
-                List<int> ids =
-                    await _televisionRepository.RemoveMissingPlexShows(library, showKeys);
-                await _searchIndex.RemoveItems(ids);
+                continue;
+            }
 
-                await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
-
-                _searchIndex.Commit();
-                return Unit.Default;
-            },
-            error =>
+            foreach (MediaItemScanResult<PlexShow> result in maybeShow.RightToSeq())
             {
-                _logger.LogWarning(
-                    "Error synchronizing plex library {Path}: {Error}",
-                    library.Name,
-                    error.Value);
+                Either<BaseError, Unit> scanResult = await ScanSeasons(
+                    library,
+                    pathReplacements,
+                    result.Item,
+                    connection,
+                    token,
+                    ffmpegPath,
+                    ffprobePath,
+                    deepScan,
+                    cancellationToken);
 
-                return Left<BaseError, Unit>(error).AsTask();
-            });
+                foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                {
+                    return error;
+                }
+
+                await _plexTelevisionRepository.SetPlexEtag(result.Item, incoming.Etag);
+
+                // TODO: if any seasons are unavailable or not found, flag show as unavailable/not found
+
+                if (result.IsAdded)
+                {
+                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
+                }
+                else if (result.IsUpdated)
+                {
+                    await _searchIndex.UpdateItems(
+                        _searchRepository,
+                        new List<MediaItem> { result.Item });
+                }
+            }
+        }
+
+        // trash items that are no longer present on the media server
+        var fileNotFoundKeys = existingShows.Map(m => m.Key).Except(showEntries.Map(m => m.Key)).ToList();
+        List<int> ids = await _plexTelevisionRepository.FlagFileNotFoundShows(library, fileNotFoundKeys);
+        await _searchIndex.RebuildItems(_searchRepository, ids);
+
+        await _mediator.Publish(new LibraryScanProgress(library.Id, 0), cancellationToken);
+
+        return Unit.Default;
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<PlexShow>>> UpdateMetadata(
@@ -152,7 +200,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexShow existing = result.Item;
         ShowMetadata existingMetadata = existing.ShowMetadata.Head();
 
-        if (existing.Etag != incoming.Etag || deepScan)
+        if (result.IsAdded || existing.Etag != incoming.Etag || deepScan)
         {
             Either<BaseError, ShowMetadata> maybeMetadata =
                 await _plexServerApiClient.GetShowMetadata(
@@ -308,10 +356,10 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         ShowMetadata existingMetadata = existing.ShowMetadata.Head();
         ShowMetadata incomingMetadata = incoming.ShowMetadata.Head();
 
-        if (existing.Etag != incoming.Etag)
+        bool poster = await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
+        bool fanArt = await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
+        if (poster || fanArt)
         {
-            await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.Poster);
-            await UpdateArtworkIfNeeded(existingMetadata, incomingMetadata, ArtworkKind.FanArt);
             await _metadataRepository.MarkAsUpdated(existingMetadata, incomingMetadata.DateUpdated);
         }
 
@@ -326,79 +374,86 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexServerAuthToken token,
         string ffmpegPath,
         string ffprobePath,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
+        List<PlexItemEtag> existingSeasons = await _plexTelevisionRepository.GetExistingPlexSeasons(library, show);
+
         Either<BaseError, List<PlexSeason>> entries = await _plexServerApiClient.GetShowSeasons(
             library,
             show,
             connection,
             token);
 
-        return await entries.Match<Task<Either<BaseError, Unit>>>(
-            async seasonEntries =>
-            {
-                foreach (PlexSeason incoming in seasonEntries)
-                {
-                    incoming.ShowId = show.Id;
+        foreach (BaseError error in entries.LeftToSeq())
+        {
+            return error;
+        }
 
-                    // TODO: figure out how to rebuild playlists
-                    Either<BaseError, PlexSeason> maybeSeason = await _televisionRepository
-                        .GetOrAddPlexSeason(library, incoming)
-                        .BindT(existing => UpdateMetadataAndArtwork(existing, incoming));
+        var seasonEntries = entries.RightToSeq().Flatten().ToList();
+        foreach (PlexSeason incoming in seasonEntries)
+        {
+            incoming.ShowId = show.Id;
 
-                    await maybeSeason.Match(
-                        async season =>
-                        {
-                            await ScanEpisodes(
-                                library,
-                                pathReplacements,
-                                season,
-                                connection,
-                                token,
-                                ffmpegPath,
-                                ffprobePath,
-                                deepScan);
+            // TODO: figure out how to rebuild playlists
+            Either<BaseError, PlexSeason> maybeSeason = await _televisionRepository
+                .GetOrAddPlexSeason(library, incoming)
+                .BindT(existing => UpdateMetadataAndArtwork(existing, incoming, deepScan));
 
-                            await _televisionRepository.SetPlexEtag(season, incoming.Etag);
-
-                            season.Show = show;
-
-                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { season });
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error processing plex show at {Key}: {Error}",
-                                incoming.Key,
-                                error.Value);
-                            return Task.CompletedTask;
-                        });
-                }
-
-                var seasonKeys = seasonEntries.Map(s => s.Key).ToList();
-                await _televisionRepository.RemoveMissingPlexSeasons(show.Key, seasonKeys);
-
-                return Unit.Default;
-            },
-            error =>
+            foreach (BaseError error in maybeSeason.LeftToSeq())
             {
                 _logger.LogWarning(
-                    "Error synchronizing plex library {Path}: {Error}",
-                    library.Name,
+                    "Error processing plex season at {Key}: {Error}",
+                    incoming.Key,
                     error.Value);
 
-                return Left<BaseError, Unit>(error).AsTask();
-            });
+                return error;
+            }
+
+            foreach (PlexSeason season in maybeSeason.RightToSeq())
+            {
+                Either<BaseError, Unit> scanResult = await ScanEpisodes(
+                    library,
+                    pathReplacements,
+                    season,
+                    connection,
+                    token,
+                    ffmpegPath,
+                    ffprobePath,
+                    deepScan,
+                    cancellationToken);
+
+                foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                {
+                    return error;
+                }
+
+                await _plexTelevisionRepository.SetPlexEtag(season, incoming.Etag);
+
+                season.Show = show;
+
+                // TODO: if any seasons are unavailable or not found, flag show as unavailable/not found
+
+                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { season });
+            }
+        }
+
+        var fileNotFoundKeys = existingSeasons.Map(m => m.Key).Except(seasonEntries.Map(m => m.Key)).ToList();
+        List<int> ids = await _plexTelevisionRepository.FlagFileNotFoundSeasons(library, fileNotFoundKeys);
+        await _searchIndex.RebuildItems(_searchRepository, ids);
+
+        return Unit.Default;
     }
 
     private async Task<Either<BaseError, PlexSeason>> UpdateMetadataAndArtwork(
         PlexSeason existing,
-        PlexSeason incoming)
+        PlexSeason incoming,
+        bool deepScan)
     {
         SeasonMetadata existingMetadata = existing.SeasonMetadata.Head();
         SeasonMetadata incomingMetadata = incoming.SeasonMetadata.Head();
 
-        if (existing.Etag != incoming.Etag)
+        if (existing.Etag != incoming.Etag || deepScan)
         {
             foreach (MetadataGuid guid in existingMetadata.Guids
                          .Filter(g => incomingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
@@ -447,9 +502,10 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         PlexServerAuthToken token,
         string ffmpegPath,
         string ffprobePath,
-        bool deepScan)
+        bool deepScan,
+        CancellationToken cancellationToken)
     {
-        List<PlexItemEtag> existingEpisodes = await _televisionRepository.GetExistingPlexEpisodes(library, season);
+        List<PlexItemEtag> existingEpisodes = await _plexTelevisionRepository.GetExistingPlexEpisodes(library, season);
 
         Either<BaseError, List<PlexEpisode>> entries = await _plexServerApiClient.GetSeasonEpisodes(
             library,
@@ -457,106 +513,149 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
             connection,
             token);
 
-        return await entries.Match<Task<Either<BaseError, Unit>>>(
-            async episodeEntries =>
+        foreach (BaseError error in entries.LeftToSeq())
+        {
+            return error;
+        }
+
+        var episodeEntries = entries.RightToSeq().Flatten().ToList();
+        foreach (PlexEpisode incoming in episodeEntries)
+        {
+            if (cancellationToken.IsCancellationRequested)
             {
-                var validEpisodes = new List<PlexEpisode>();
-                foreach (PlexEpisode episode in episodeEntries)
-                {
-                    string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                return new ScanCanceled();
+            }
+
+            if (await ShouldScanItem(library, pathReplacements, existingEpisodes, incoming, deepScan) == false)
+            {
+                continue;
+            }
+
+            incoming.SeasonId = season.Id;
+
+            // TODO: figure out how to rebuild playlists
+            Either<BaseError, MediaItemScanResult<PlexEpisode>> maybeEpisode = await _televisionRepository
+                .GetOrAddPlexEpisode(library, incoming)
+                .BindT(existing => UpdateMetadata(existing, incoming))
+                .BindT(
+                    existing => UpdateStatistics(
                         pathReplacements,
-                        episode.MediaVersions.Head().MediaFiles.Head().Path,
-                        false);
+                        existing,
+                        incoming,
+                        library,
+                        connection,
+                        token,
+                        ffmpegPath,
+                        ffprobePath,
+                        deepScan))
+                .BindT(existing => UpdateSubtitles(pathReplacements, existing, incoming))
+                .BindT(existing => UpdateArtwork(existing, incoming));
 
-                    if (!_localFileSystem.FileExists(localPath))
-                    {
-                        _logger.LogWarning(
-                            "Skipping plex episode that does not exist at {Path}",
-                            localPath);
-                    }
-                    else
-                    {
-                        validEpisodes.Add(episode);
-                    }
-                }
-
-                foreach (PlexEpisode incoming in validEpisodes)
-                {
-                    if (!deepScan)
-                    {
-                        Option<PlexItemEtag> maybeExisting = existingEpisodes.Find(ie => ie.Key == incoming.Key);
-                        if (await maybeExisting.Map(e => e.Etag ?? string.Empty).IfNoneAsync(string.Empty) ==
-                            incoming.Etag)
-                        {
-                            // _logger.LogDebug("NOOP: etag has not changed for plex episode with key {Key}", incoming.Key);
-                            continue;
-                        }
-
-                        // _logger.LogDebug(
-                        //     "UPDATE: Etag has changed for episode {Episode}",
-                        //     $"s{season.SeasonNumber}e{incoming.EpisodeMetadata.Head().EpisodeNumber}");
-                    }
-
-                    incoming.SeasonId = season.Id;
-
-                    // TODO: figure out how to rebuild playlists
-                    Either<BaseError, MediaItemScanResult<PlexEpisode>> maybeEpisode = await _televisionRepository
-                        .GetOrAddPlexEpisode(library, incoming)
-                        .BindT(existing => UpdateMetadata(existing, incoming))
-                        .BindT(
-                            existing => UpdateStatistics(
-                                pathReplacements,
-                                existing,
-                                incoming,
-                                library,
-                                connection,
-                                token,
-                                ffmpegPath,
-                                ffprobePath,
-                                deepScan))
-                        .BindT(existing => UpdateSubtitles(pathReplacements, existing, incoming))
-                        .BindT(existing => UpdateArtwork(existing, incoming));
-
-                    await maybeEpisode.Match(
-                        async result =>
-                        {
-                            await _televisionRepository.SetPlexEtag(result.Item, incoming.Etag);
-
-                            if (result.IsAdded)
-                            {
-                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                            }
-                            else
-                            {
-                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
-                            }
-                        },
-                        error =>
-                        {
-                            _logger.LogWarning(
-                                "Error processing plex episode at {Key}: {Error}",
-                                incoming.Key,
-                                error.Value);
-                            return Task.CompletedTask;
-                        });
-                }
-
-                var episodeKeys = validEpisodes.Map(s => s.Key).ToList();
-                List<int> ids = await _televisionRepository.RemoveMissingPlexEpisodes(season.Key, episodeKeys);
-                await _searchIndex.RemoveItems(ids);
-                _searchIndex.Commit();
-
-                return Unit.Default;
-            },
-            error =>
+            foreach (BaseError error in maybeEpisode.LeftToSeq())
             {
-                _logger.LogWarning(
-                    "Error synchronizing plex library {Path}: {Error}",
-                    library.Name,
-                    error.Value);
+                switch (error)
+                {
+                    case ScanCanceled:
+                        return error;
+                    default:
+                        _logger.LogWarning(
+                            "Error processing plex episode at {Key}: {Error}",
+                            incoming.Key,
+                            error.Value);
+                        break;
+                }
+            }
 
-                return Left<BaseError, Unit>(error).AsTask();
-            });
+            foreach (MediaItemScanResult<PlexEpisode> result in maybeEpisode.RightToSeq())
+            {
+                await _plexTelevisionRepository.SetPlexEtag(result.Item, incoming.Etag);
+
+                string plexPath = incoming.MediaVersions.Head().MediaFiles.Head().Path;
+
+                string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                    pathReplacements,
+                    plexPath,
+                    false);
+
+                if (_localFileSystem.FileExists(localPath))
+                {
+                    await _plexTelevisionRepository.FlagNormal(library, result.Item);
+                }
+                else
+                {
+                    await _plexTelevisionRepository.FlagUnavailable(library, result.Item);
+                }
+
+                if (result.IsAdded)
+                {
+                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
+                }
+                else
+                {
+                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                }
+            }
+        }
+
+        var fileNotFoundKeys = existingEpisodes.Map(m => m.Key).Except(episodeEntries.Map(m => m.Key)).ToList();
+        List<int> ids = await _plexTelevisionRepository.FlagFileNotFoundEpisodes(library, fileNotFoundKeys);
+        await _searchIndex.RebuildItems(_searchRepository, ids);
+
+        _searchIndex.Commit();
+
+        return Unit.Default;
+    }
+
+    private async Task<bool> ShouldScanItem(
+        PlexLibrary library,
+        List<PlexPathReplacement> pathReplacements,
+        List<PlexItemEtag> existingEpisodes,
+        PlexEpisode incoming,
+        bool deepScan)
+    {
+        // deep scan will pull every episode individually from the plex api
+        if (!deepScan)
+        {
+            Option<PlexItemEtag> maybeExisting = existingEpisodes.Find(ie => ie.Key == incoming.Key);
+            string existingTag = await maybeExisting
+                .Map(e => e.Etag ?? string.Empty)
+                .IfNoneAsync(string.Empty);
+            MediaItemState existingState = await maybeExisting
+                .Map(e => e.State)
+                .IfNoneAsync(MediaItemState.Normal);
+
+            string plexPath = incoming.MediaVersions.Head().MediaFiles.Head().Path;
+
+            string localPath = _plexPathReplacementService.GetReplacementPlexPath(
+                pathReplacements,
+                plexPath,
+                false);
+
+            // if media is unavailable, only scan if file now exists
+            if (existingState == MediaItemState.Unavailable)
+            {
+                if (!_localFileSystem.FileExists(localPath))
+                {
+                    return false;
+                }
+            }
+            else if (existingTag == incoming.Etag)
+            {
+                if (!_localFileSystem.FileExists(localPath))
+                {
+                    await _plexTelevisionRepository.FlagUnavailable(library, incoming);
+                }
+
+                // _logger.LogDebug("NOOP: etag has not changed for plex episode with key {Key}", incoming.Key);
+                return false;
+            }
+
+            // _logger.LogDebug(
+            //     "UPDATE: Etag has changed for episode {Episode}",
+            //     $"s{season.SeasonNumber}e{incoming.EpisodeMetadata.Head().EpisodeNumber}");
+        }
+
+        return true;
     }
 
     private async Task<Either<BaseError, MediaItemScanResult<PlexEpisode>>> UpdateMetadata(
@@ -607,7 +706,7 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
         MediaVersion existingVersion = existing.MediaVersions.Head();
         MediaVersion incomingVersion = incoming.MediaVersions.Head();
 
-        if (existing.Etag != incoming.Etag || deepScan)
+        if (result.IsAdded || existing.Etag != incoming.Etag || deepScan || existingVersion.Streams.Count == 0)
         {
             foreach (MediaFile incomingFile in incomingVersion.MediaFiles.HeadOrNone())
             {
@@ -634,7 +733,8 @@ public class PlexTelevisionLibraryScanner : PlexLibraryScanner, IPlexTelevisionL
                 incoming.MediaVersions.Head().MediaFiles.Head().Path,
                 false);
 
-            if (existing.Etag != incoming.Etag)
+            if ((existing.Etag != incoming.Etag || existingVersion.Streams.Count == 0) &&
+                _localFileSystem.FileExists(localPath))
             {
                 _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
                 refreshResult = await _localStatisticsProvider.RefreshStatistics(

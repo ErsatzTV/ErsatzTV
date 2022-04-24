@@ -5,7 +5,7 @@ namespace ErsatzTV.Core.Interfaces.Repositories;
 
 public interface IMediaItemRepository
 {
-    Task<List<string>> GetAllLanguageCodes();
+    Task<List<CultureInfo>> GetAllKnownCultures();
     Task<List<CultureInfo>> GetAllLanguageCodeCultures();
     Task<List<int>> FlagFileNotFound(LibraryPath libraryPath, string path);
     Task<Unit> FlagNormal(MediaItem mediaItem);

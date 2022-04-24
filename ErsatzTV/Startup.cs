@@ -372,6 +372,8 @@ public class Startup
         services.AddScoped<IPlexMovieLibraryScanner, PlexMovieLibraryScanner>();
         services.AddScoped<IPlexTelevisionLibraryScanner, PlexTelevisionLibraryScanner>();
         services.AddScoped<IPlexServerApiClient, PlexServerApiClient>();
+        services.AddScoped<IPlexMovieRepository, PlexMovieRepository>();
+        services.AddScoped<IPlexTelevisionRepository, PlexTelevisionRepository>();
         services.AddScoped<IJellyfinMovieLibraryScanner, JellyfinMovieLibraryScanner>();
         services.AddScoped<IJellyfinTelevisionLibraryScanner, JellyfinTelevisionLibraryScanner>();
         services.AddScoped<IJellyfinCollectionScanner, JellyfinCollectionScanner>();

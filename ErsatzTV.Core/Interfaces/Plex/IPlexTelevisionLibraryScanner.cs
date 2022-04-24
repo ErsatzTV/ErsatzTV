@@ -11,5 +11,6 @@ public interface IPlexTelevisionLibraryScanner
         PlexLibrary library,
         string ffmpegPath,
         string ffprobePath,
-        bool deepScan);
+        bool deepScan,
+        CancellationToken cancellationToken);
 }
