@@ -62,7 +62,8 @@ public class
             string localPath = await episodeMetadata.Episode.GetLocalPath(
                 _plexPathReplacementService,
                 _jellyfinPathReplacementService,
-                _embyPathReplacementService);
+                _embyPathReplacementService,
+                false);
 
             items.Add(ProjectToViewModel(episodeMetadata, maybeJellyfin, maybeEmby, true, localPath));
         }

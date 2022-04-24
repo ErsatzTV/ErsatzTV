@@ -43,7 +43,8 @@ public class GetMusicVideoCardsHandler : IRequestHandler<GetMusicVideoCards, Mus
             string localPath = await musicVideoMetadata.MusicVideo.GetLocalPath(
                 _plexPathReplacementService,
                 _jellyfinPathReplacementService,
-                _embyPathReplacementService);
+                _embyPathReplacementService,
+                false);
 
             results.Add(ProjectToViewModel(musicVideoMetadata, localPath));
         }
