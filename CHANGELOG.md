@@ -9,6 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix bug introduced with 0.5.2-beta that prevented some Plex content from being played
 - Fix spammy subtitle error message
 
+### Changed
+- No longer remove Plex movies and episodes from ErsatzTV when they do not exist on disk
+  - Instead, a new `unavailable` media state will be used to indicate this condition
+  - After updating mounts, path replacements, etc - a library scan can be used to resolve this state
+
 ## [0.5.2-beta] - 2022-04-22
 ### Fixed
 - Fix unlocking libraries when scanning fails for any reason
