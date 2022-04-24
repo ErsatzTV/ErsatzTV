@@ -20,51 +20,34 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        List<Episode> episodes = await dbContext.Episodes
-            .Filter(e => e.State == MediaItemState.FileNotFound)
-            .Include(e => e.MediaVersions)
+        IQueryable<MediaItem> mediaItems = dbContext.MediaItems
+            .Filter(mi => mi.State == MediaItemState.FileNotFound)
+            .Include(mi => (mi as Episode).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as Movie).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as MusicVideo).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as OtherVideo).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as Song).MediaVersions)
+            .ThenInclude(mv => mv.MediaFiles);
+
+        List<MediaItem> five = await mediaItems
+            .OrderBy(mi => mi.Id)
+            .Take(5)
             .ToListAsync(cancellationToken);
 
-        List<Movie> movies = await dbContext.Movies
-            .Filter(m => m.State == MediaItemState.FileNotFound)
-            .Include(m => m.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync(cancellationToken);
-
-        List<MusicVideo> musicVideos = await dbContext.MusicVideos
-            .Filter(mv => mv.State == MediaItemState.FileNotFound)
-            .Include(mv => mv.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync(cancellationToken);
-
-        List<OtherVideo> otherVideos = await dbContext.OtherVideos
-            .Filter(ov => ov.State == MediaItemState.FileNotFound)
-            .Include(ov => ov.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync(cancellationToken);
-
-        List<Song> songs = await dbContext.Songs
-            .Filter(s => s.State == MediaItemState.FileNotFound)
-            .Include(s => s.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .ToListAsync(cancellationToken);
-
-        var all = movies.Map(m => m.MediaVersions.Head().MediaFiles.Head().Path)
-            .Append(episodes.Map(e => e.MediaVersions.Head().MediaFiles.Head().Path))
-            .Append(musicVideos.Map(mv => mv.GetHeadVersion().MediaFiles.Head().Path))
-            .Append(otherVideos.Map(ov => ov.GetHeadVersion().MediaFiles.Head().Path))
-            .Append(songs.Map(s => s.GetHeadVersion().MediaFiles.Head().Path))
-            .ToList();
-
-        if (all.Any())
+        if (five.Any())
         {
-            var paths = all.Take(5).ToList();
+            IEnumerable<string> paths = five.Map(mi => mi.GetHeadVersion().MediaFiles.Head().Path);
 
             var files = string.Join(", ", paths);
 
+            int count = await mediaItems.CountAsync(cancellationToken);
+
             return WarningResult(
-                $"There are {all.Count} files that do not exist on disk, including the following: {files}",
+                $"There are {count} files that do not exist on disk, including the following: {files}",
                 "/media/trash");
         }
 

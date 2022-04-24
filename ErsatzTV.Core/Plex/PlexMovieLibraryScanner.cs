@@ -229,7 +229,10 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
             {
                 if (!_localFileSystem.FileExists(localPath))
                 {
-                    await _plexMovieRepository.FlagUnavailable(library, incoming);
+                    foreach (int id in await _plexMovieRepository.FlagUnavailable(library, incoming))
+                    {
+                        await _searchIndex.RebuildItems(_searchRepository, new List<int> { id });
+                    }
                 }
 
                 // _logger.LogDebug("NOOP: etag has not changed for plex movie with key {Key}", incoming.Key);
