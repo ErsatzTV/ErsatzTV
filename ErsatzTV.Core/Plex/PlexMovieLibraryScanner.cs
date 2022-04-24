@@ -290,28 +290,26 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                 Either<BaseError, bool> refreshResult =
                     await _localStatisticsProvider.RefreshStatistics(ffmpegPath, ffprobePath, existing, localPath);
 
-                await refreshResult.Match(
-                    async _ =>
-                    {
-                        foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
-                        {
-                            await _searchIndex.UpdateItems(
-                                _searchRepository,
-                                new List<MediaItem> { updated });
-                        }
+                foreach (BaseError error in refreshResult.LeftToSeq())
+                {
+                    _logger.LogWarning(
+                        "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                        "Statistics",
+                        localPath,
+                        error.Value);
+                }
 
-                        await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, incomingVersion);
-                    },
-                    error =>
+                foreach (bool _ in refreshResult.RightToSeq())
+                {
+                    foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
                     {
-                        _logger.LogWarning(
-                            "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
-                            "Statistics",
-                            localPath,
-                            error.Value);
+                        await _searchIndex.UpdateItems(
+                            _searchRepository,
+                            new List<MediaItem> { updated });
+                    }
 
-                        return Task.CompletedTask;
-                    });
+                    await _metadataRepository.UpdatePlexStatistics(existingVersion.Id, incomingVersion);
+                }
             }
         }
 
@@ -340,193 +338,191 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
                 connection,
                 token);
 
-        await maybeMetadata.Match(
-            async fullMetadata =>
+        foreach (MovieMetadata fullMetadata in maybeMetadata.RightToSeq())
+        {
+            if (existingMetadata.MetadataKind != MetadataKind.External)
             {
-                if (existingMetadata.MetadataKind != MetadataKind.External)
-                {
-                    existingMetadata.MetadataKind = MetadataKind.External;
-                    await _metadataRepository.MarkAsExternal(existingMetadata);
-                }
+                existingMetadata.MetadataKind = MetadataKind.External;
+                await _metadataRepository.MarkAsExternal(existingMetadata);
+            }
 
-                if (existingMetadata.ContentRating != fullMetadata.ContentRating)
+            if (existingMetadata.ContentRating != fullMetadata.ContentRating)
+            {
+                existingMetadata.ContentRating = fullMetadata.ContentRating;
+                await _metadataRepository.SetContentRating(existingMetadata, fullMetadata.ContentRating);
+                result.IsUpdated = true;
+            }
+
+            foreach (Genre genre in existingMetadata.Genres
+                         .Filter(g => fullMetadata.Genres.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Genres.Remove(genre);
+                if (await _metadataRepository.RemoveGenre(genre))
                 {
-                    existingMetadata.ContentRating = fullMetadata.ContentRating;
-                    await _metadataRepository.SetContentRating(existingMetadata, fullMetadata.ContentRating);
                     result.IsUpdated = true;
                 }
+            }
 
-                foreach (Genre genre in existingMetadata.Genres
-                             .Filter(g => fullMetadata.Genres.All(g2 => g2.Name != g.Name))
-                             .ToList())
+            foreach (Genre genre in fullMetadata.Genres
+                         .Filter(g => existingMetadata.Genres.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Genres.Add(genre);
+                if (await _movieRepository.AddGenre(existingMetadata, genre))
                 {
-                    existingMetadata.Genres.Remove(genre);
-                    if (await _metadataRepository.RemoveGenre(genre))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Genre genre in fullMetadata.Genres
-                             .Filter(g => existingMetadata.Genres.All(g2 => g2.Name != g.Name))
-                             .ToList())
+            foreach (Studio studio in existingMetadata.Studios
+                         .Filter(s => fullMetadata.Studios.All(s2 => s2.Name != s.Name))
+                         .ToList())
+            {
+                existingMetadata.Studios.Remove(studio);
+                if (await _metadataRepository.RemoveStudio(studio))
                 {
-                    existingMetadata.Genres.Add(genre);
-                    if (await _movieRepository.AddGenre(existingMetadata, genre))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Studio studio in existingMetadata.Studios
-                             .Filter(s => fullMetadata.Studios.All(s2 => s2.Name != s.Name))
-                             .ToList())
+            foreach (Studio studio in fullMetadata.Studios
+                         .Filter(s => existingMetadata.Studios.All(s2 => s2.Name != s.Name))
+                         .ToList())
+            {
+                existingMetadata.Studios.Add(studio);
+                if (await _movieRepository.AddStudio(existingMetadata, studio))
                 {
-                    existingMetadata.Studios.Remove(studio);
-                    if (await _metadataRepository.RemoveStudio(studio))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Studio studio in fullMetadata.Studios
-                             .Filter(s => existingMetadata.Studios.All(s2 => s2.Name != s.Name))
-                             .ToList())
+            foreach (Actor actor in existingMetadata.Actors
+                         .Filter(
+                             a => fullMetadata.Actors.All(
+                                 a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
+                         .ToList())
+            {
+                existingMetadata.Actors.Remove(actor);
+                if (await _metadataRepository.RemoveActor(actor))
                 {
-                    existingMetadata.Studios.Add(studio);
-                    if (await _movieRepository.AddStudio(existingMetadata, studio))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Actor actor in existingMetadata.Actors
-                             .Filter(
-                                 a => fullMetadata.Actors.All(
-                                     a2 => a2.Name != a.Name || a.Artwork == null && a2.Artwork != null))
-                             .ToList())
+            foreach (Actor actor in fullMetadata.Actors
+                         .Filter(a => existingMetadata.Actors.All(a2 => a2.Name != a.Name))
+                         .ToList())
+            {
+                existingMetadata.Actors.Add(actor);
+                if (await _movieRepository.AddActor(existingMetadata, actor))
                 {
-                    existingMetadata.Actors.Remove(actor);
-                    if (await _metadataRepository.RemoveActor(actor))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Actor actor in fullMetadata.Actors
-                             .Filter(a => existingMetadata.Actors.All(a2 => a2.Name != a.Name))
-                             .ToList())
+            foreach (Director director in existingMetadata.Directors
+                         .Filter(g => fullMetadata.Directors.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Directors.Remove(director);
+                if (await _metadataRepository.RemoveDirector(director))
                 {
-                    existingMetadata.Actors.Add(actor);
-                    if (await _movieRepository.AddActor(existingMetadata, actor))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Director director in existingMetadata.Directors
-                             .Filter(g => fullMetadata.Directors.All(g2 => g2.Name != g.Name))
-                             .ToList())
+            foreach (Director director in fullMetadata.Directors
+                         .Filter(g => existingMetadata.Directors.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Directors.Add(director);
+                if (await _movieRepository.AddDirector(existingMetadata, director))
                 {
-                    existingMetadata.Directors.Remove(director);
-                    if (await _metadataRepository.RemoveDirector(director))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Director director in fullMetadata.Directors
-                             .Filter(g => existingMetadata.Directors.All(g2 => g2.Name != g.Name))
-                             .ToList())
+            foreach (Writer writer in existingMetadata.Writers
+                         .Filter(g => fullMetadata.Writers.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Writers.Remove(writer);
+                if (await _metadataRepository.RemoveWriter(writer))
                 {
-                    existingMetadata.Directors.Add(director);
-                    if (await _movieRepository.AddDirector(existingMetadata, director))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Writer writer in existingMetadata.Writers
-                             .Filter(g => fullMetadata.Writers.All(g2 => g2.Name != g.Name))
-                             .ToList())
+            foreach (Writer writer in fullMetadata.Writers
+                         .Filter(g => existingMetadata.Writers.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Writers.Add(writer);
+                if (await _movieRepository.AddWriter(existingMetadata, writer))
                 {
-                    existingMetadata.Writers.Remove(writer);
-                    if (await _metadataRepository.RemoveWriter(writer))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Writer writer in fullMetadata.Writers
-                             .Filter(g => existingMetadata.Writers.All(g2 => g2.Name != g.Name))
-                             .ToList())
+            foreach (MetadataGuid guid in existingMetadata.Guids
+                         .Filter(g => fullMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                         .ToList())
+            {
+                existingMetadata.Guids.Remove(guid);
+                if (await _metadataRepository.RemoveGuid(guid))
                 {
-                    existingMetadata.Writers.Add(writer);
-                    if (await _movieRepository.AddWriter(existingMetadata, writer))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (MetadataGuid guid in existingMetadata.Guids
-                             .Filter(g => fullMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                             .ToList())
+            foreach (MetadataGuid guid in fullMetadata.Guids
+                         .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
+                         .ToList())
+            {
+                existingMetadata.Guids.Add(guid);
+                if (await _metadataRepository.AddGuid(existingMetadata, guid))
                 {
-                    existingMetadata.Guids.Remove(guid);
-                    if (await _metadataRepository.RemoveGuid(guid))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (MetadataGuid guid in fullMetadata.Guids
-                             .Filter(g => existingMetadata.Guids.All(g2 => g2.Guid != g.Guid))
-                             .ToList())
+            foreach (Tag tag in existingMetadata.Tags
+                         .Filter(g => fullMetadata.Tags.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Tags.Remove(tag);
+                if (await _metadataRepository.RemoveTag(tag))
                 {
-                    existingMetadata.Guids.Add(guid);
-                    if (await _metadataRepository.AddGuid(existingMetadata, guid))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Tag tag in existingMetadata.Tags
-                             .Filter(g => fullMetadata.Tags.All(g2 => g2.Name != g.Name))
-                             .ToList())
+            foreach (Tag tag in fullMetadata.Tags
+                         .Filter(g => existingMetadata.Tags.All(g2 => g2.Name != g.Name))
+                         .ToList())
+            {
+                existingMetadata.Tags.Add(tag);
+                if (await _movieRepository.AddTag(existingMetadata, tag))
                 {
-                    existingMetadata.Tags.Remove(tag);
-                    if (await _metadataRepository.RemoveTag(tag))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                foreach (Tag tag in fullMetadata.Tags
-                             .Filter(g => existingMetadata.Tags.All(g2 => g2.Name != g.Name))
-                             .ToList())
+            if (fullMetadata.SortTitle != existingMetadata.SortTitle)
+            {
+                existingMetadata.SortTitle = fullMetadata.SortTitle;
+                if (await _movieRepository.UpdateSortTitle(existingMetadata))
                 {
-                    existingMetadata.Tags.Add(tag);
-                    if (await _movieRepository.AddTag(existingMetadata, tag))
-                    {
-                        result.IsUpdated = true;
-                    }
+                    result.IsUpdated = true;
                 }
+            }
 
-                if (fullMetadata.SortTitle != existingMetadata.SortTitle)
-                {
-                    existingMetadata.SortTitle = fullMetadata.SortTitle;
-                    if (await _movieRepository.UpdateSortTitle(existingMetadata))
-                    {
-                        result.IsUpdated = true;
-                    }
-                }
-
-                if (result.IsUpdated)
-                {
-                    await _metadataRepository.MarkAsUpdated(existingMetadata, fullMetadata.DateUpdated);
-                }
-            },
-            _ => Task.CompletedTask);
+            if (result.IsUpdated)
+            {
+                await _metadataRepository.MarkAsUpdated(existingMetadata, fullMetadata.DateUpdated);
+            }
+        }
 
         // TODO: update other metadata?
 

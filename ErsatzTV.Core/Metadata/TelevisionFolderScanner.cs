@@ -83,7 +83,8 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         {
             decimal percentCompletion = (decimal)allShowFolders.IndexOf(showFolder) / allShowFolders.Count;
             await _mediator.Publish(
-                new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread));
+                new LibraryScanProgress(libraryPath.LibraryId, progressMin + percentCompletion * progressSpread),
+                cancellationToken);
 
             Either<BaseError, MediaItemScanResult<Show>> maybeShow =
                 await FindOrCreateShow(libraryPath.Id, showFolder)
@@ -92,34 +93,27 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.FanArt, cancellationToken))
                     .BindT(show => UpdateArtworkForShow(show, showFolder, ArtworkKind.Thumbnail, cancellationToken));
 
-            await maybeShow.Match(
-                async result =>
-                {
-                    await ScanSeasons(
-                        libraryPath,
-                        ffmpegPath,
-                        ffprobePath,
-                        result.Item,
-                        showFolder,
-                        cancellationToken);
+            foreach (BaseError error in maybeShow.LeftToSeq())
+            {
+                _logger.LogWarning(
+                    "Error processing show in folder {Folder}: {Error}",
+                    showFolder,
+                    error.Value);
+            }
 
-                    if (result.IsAdded)
-                    {
-                        await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                    }
-                    else if (result.IsUpdated)
-                    {
-                        await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
-                    }
-                },
-                error =>
+            foreach (MediaItemScanResult<Show> result in maybeShow.RightToSeq())
+            {
+                await ScanSeasons(libraryPath, ffmpegPath, ffprobePath, result.Item, showFolder, cancellationToken);
+
+                if (result.IsAdded)
                 {
-                    _logger.LogWarning(
-                        "Error processing show in folder {Folder}: {Error}",
-                        showFolder,
-                        error.Value);
-                    return Task.FromResult(Unit.Default);
-                });
+                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
+                }
+                else if (result.IsUpdated)
+                {
+                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                }
+            }
         }
 
         foreach (string path in await _televisionRepository.FindEpisodePaths(libraryPath))
@@ -249,16 +243,15 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                 .BindT(e => FlagNormal(new MediaItemScanResult<Episode>(e)))
                 .MapT(r => r.Item);
 
-            await maybeEpisode.Match(
-                async episode =>
-                {
-                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
-                },
-                error =>
-                {
-                    _logger.LogWarning("Error processing episode at {Path}: {Error}", file, error.Value);
-                    return Task.CompletedTask;
-                });
+            foreach (BaseError error in maybeEpisode.LeftToSeq())
+            {
+                _logger.LogWarning("Error processing episode at {Path}: {Error}", file, error.Value);
+            }
+
+            foreach (Episode episode in maybeEpisode.RightToSeq())
+            {
+                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
+            }
         }
 
         // TODO: remove missing episodes?
@@ -273,34 +266,36 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         try
         {
             Show show = result.Item;
-            await LocateNfoFileForShow(showFolder).Match(
-                async nfoFile =>
+            
+            Option<string> maybeNfo = LocateNfoFileForShow(showFolder);
+            if (maybeNfo.IsNone)
+            {
+                if (!Optional(show.ShowMetadata).Flatten().Any())
                 {
-                    bool shouldUpdate = Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
-                        m => m.MetadataKind == MetadataKind.Fallback ||
-                             m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
-                        true);
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", showFolder);
+                    if (await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder))
+                    {
+                        result.IsUpdated = true;
+                    }
+                }
+            }
 
-                    if (shouldUpdate)
-                    {
-                        _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                        if (await _localMetadataProvider.RefreshSidecarMetadata(show, nfoFile))
-                        {
-                            result.IsUpdated = true;
-                        }
-                    }
-                },
-                async () =>
+            foreach (string nfoFile in maybeNfo)
+            {
+                bool shouldUpdate = Optional(show.ShowMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
+                    true);
+
+                if (shouldUpdate)
                 {
-                    if (!Optional(show.ShowMetadata).Flatten().Any())
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                    if (await _localMetadataProvider.RefreshSidecarMetadata(show, nfoFile))
                     {
-                        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", showFolder);
-                        if (await _localMetadataProvider.RefreshFallbackMetadata(show, showFolder))
-                        {
-                            result.IsUpdated = true;
-                        }
+                        result.IsUpdated = true;
                     }
-                });
+                }
+            }
 
             return result;
         }
@@ -337,33 +332,34 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         try
         {
-            await LocateNfoFile(episode).Match(
-                async nfoFile =>
-                {
-                    bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
-                        m => m.MetadataKind == MetadataKind.Fallback ||
-                             m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
-                        true);
+            Option<string> maybeNfo = LocateNfoFile(episode);
+            if (maybeNfo.IsNone)
+            {
+                bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
+                    m => m.DateUpdated == SystemTime.MinValueUtc,
+                    true);
 
-                    if (shouldUpdate)
-                    {
-                        _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
-                        await _localMetadataProvider.RefreshSidecarMetadata(episode, nfoFile);
-                    }
-                },
-                async () =>
+                if (shouldUpdate)
                 {
-                    bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
-                        m => m.DateUpdated == SystemTime.MinValueUtc,
-                        true);
+                    string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
+                    _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
+                    await _localMetadataProvider.RefreshFallbackMetadata(episode);
+                }
+            }
 
-                    if (shouldUpdate)
-                    {
-                        string path = episode.MediaVersions.Head().MediaFiles.Head().Path;
-                        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Fallback Metadata", path);
-                        await _localMetadataProvider.RefreshFallbackMetadata(episode);
-                    }
-                });
+            foreach (string nfoFile in maybeNfo)
+            {
+                bool shouldUpdate = Optional(episode.EpisodeMetadata).Flatten().HeadOrNone().Match(
+                    m => m.MetadataKind == MetadataKind.Fallback ||
+                         m.DateUpdated != _localFileSystem.GetLastWriteTime(nfoFile),
+                    true);
+
+                if (shouldUpdate)
+                {
+                    _logger.LogDebug("Refreshing {Attribute} from {Path}", "Sidecar Metadata", nfoFile);
+                    await _localMetadataProvider.RefreshSidecarMetadata(episode, nfoFile);
+                }
+            }
 
             return episode;
         }
@@ -383,12 +379,12 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
         try
         {
             Show show = result.Item;
-            await LocateArtworkForShow(showFolder, artworkKind).IfSomeAsync(
-                async artworkFile =>
-                {
-                    ShowMetadata metadata = show.ShowMetadata.Head();
-                    await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
-                });
+            Option<string> maybeArtwork = LocateArtworkForShow(showFolder, artworkKind);
+            foreach (string artworkFile in maybeArtwork)
+            {
+                ShowMetadata metadata = show.ShowMetadata.Head();
+                await RefreshArtwork(artworkFile, metadata, artworkKind, None, None, cancellationToken);
+            }
 
             return result;
         }
@@ -406,12 +402,12 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         try
         {
-            await LocatePoster(season, seasonFolder).IfSomeAsync(
-                async posterFile =>
-                {
-                    SeasonMetadata metadata = season.SeasonMetadata.Head();
-                    await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None, cancellationToken);
-                });
+            Option<string> maybePoster = LocatePoster(season, seasonFolder);
+            foreach (string posterFile in maybePoster)
+            {
+                SeasonMetadata metadata = season.SeasonMetadata.Head();
+                await RefreshArtwork(posterFile, metadata, ArtworkKind.Poster, None, None, cancellationToken);
+            }
 
             return season;
         }
@@ -426,20 +422,20 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
     {
         try
         {
-            await LocateThumbnail(episode).IfSomeAsync(
-                async posterFile =>
+            Option<string> maybeThumbnail = LocateThumbnail(episode);
+            foreach (string thumbnailFile in maybeThumbnail)
+            {
+                foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
                 {
-                    foreach (EpisodeMetadata metadata in episode.EpisodeMetadata)
-                    {
-                        await RefreshArtwork(
-                            posterFile,
-                            metadata,
-                            ArtworkKind.Thumbnail,
-                            None,
-                            None,
-                            cancellationToken);
-                    }
-                });
+                    await RefreshArtwork(
+                        thumbnailFile,
+                        metadata,
+                        ArtworkKind.Thumbnail,
+                        None,
+                        None,
+                        cancellationToken);
+                }
+            }
 
             return episode;
         }

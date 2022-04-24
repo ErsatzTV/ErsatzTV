@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Cleanly stop Plex library scan when service termination is requested
 - Fix bug introduced with 0.5.2-beta that prevented some Plex content from being played
 - Fix spammy subtitle error message
+- Fix generating blur hashes for song backgrounds in Docker
 
 ### Changed
 - No longer remove Plex movies and episodes from ErsatzTV when they do not exist on disk
