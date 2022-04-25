@@ -811,16 +811,12 @@ public class TelevisionRepository : ITelevisionRepository
         try
         {
             // blank out etag for initial save in case stats/metadata/etc updates fail
-            string etag = item.Etag;
             item.Etag = string.Empty;
 
             item.LibraryPathId = library.Paths.Head().Id;
 
             await dbContext.PlexShows.AddAsync(item);
             await dbContext.SaveChangesAsync();
-
-            // restore etag
-            item.Etag = etag;
 
             await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
@@ -840,16 +836,12 @@ public class TelevisionRepository : ITelevisionRepository
         try
         {
             // blank out etag for initial save in case stats/metadata/etc updates fail
-            string etag = item.Etag;
             item.Etag = string.Empty;
 
             item.LibraryPathId = library.Paths.Head().Id;
 
             await dbContext.PlexSeasons.AddAsync(item);
             await dbContext.SaveChangesAsync();
-
-            // restore etag
-            item.Etag = etag;
 
             await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
@@ -874,7 +866,6 @@ public class TelevisionRepository : ITelevisionRepository
             }
 
             // blank out etag for initial save in case stats/metadata/etc updates fail
-            string etag = item.Etag;
             item.Etag = string.Empty;
 
             item.LibraryPathId = library.Paths.Head().Id;
@@ -890,9 +881,6 @@ public class TelevisionRepository : ITelevisionRepository
 
             await dbContext.PlexEpisodes.AddAsync(item);
             await dbContext.SaveChangesAsync();
-
-            // restore etag
-            item.Etag = etag;
 
             await dbContext.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await dbContext.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();

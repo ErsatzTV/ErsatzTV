@@ -334,16 +334,12 @@ public class MovieRepository : IMovieRepository
         try
         {
             // blank out etag for initial save in case stats/metadata/etc updates fail
-            string etag = item.Etag;
             item.Etag = string.Empty;
 
             item.LibraryPathId = library.Paths.Head().Id;
 
             await context.PlexMovies.AddAsync(item);
             await context.SaveChangesAsync();
-
-            // restore etag
-            item.Etag = etag;
 
             await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
             await context.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
