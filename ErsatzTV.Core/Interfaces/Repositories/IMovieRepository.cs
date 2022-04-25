@@ -26,9 +26,6 @@ public interface IMovieRepository
     Task<bool> AddJellyfin(JellyfinMovie movie);
     Task<Option<JellyfinMovie>> UpdateJellyfin(JellyfinMovie movie);
     Task<List<EmbyItemEtag>> GetExistingEmbyMovies(EmbyLibrary library);
-    Task<List<int>> RemoveMissingEmbyMovies(EmbyLibrary library, List<string> movieIds);
-    Task<bool> AddEmby(EmbyMovie movie);
-    Task<Option<EmbyMovie>> UpdateEmby(EmbyMovie movie);
     Task<bool> AddDirector(MovieMetadata metadata, Director director);
     Task<bool> AddWriter(MovieMetadata metadata, Writer writer);
     Task<Unit> UpdatePath(int mediaFileId, string path);

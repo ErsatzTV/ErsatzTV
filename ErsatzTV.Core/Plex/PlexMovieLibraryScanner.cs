@@ -212,10 +212,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
 
             string plexPath = incoming.MediaVersions.Head().MediaFiles.Head().Path;
 
-            string localPath = _plexPathReplacementService.GetReplacementPlexPath(
-                pathReplacements,
-                plexPath,
-                false);
+            string localPath = _plexPathReplacementService.GetReplacementPlexPath(pathReplacements, plexPath, false);
 
             // if media is unavailable, only scan if file now exists
             if (existingState == MediaItemState.Unavailable)
@@ -301,6 +298,7 @@ public class PlexMovieLibraryScanner : PlexLibraryScanner, IPlexMovieLibraryScan
 
                 foreach (bool _ in refreshResult.RightToSeq())
                 {
+                    // TODO : is this a double index? do we also update when this item is fully processed?
                     foreach (MediaItem updated in await _searchRepository.GetItemToIndex(incoming.Id))
                     {
                         await _searchIndex.UpdateItems(

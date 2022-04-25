@@ -109,9 +109,7 @@ public class SynchronizeEmbyLibraryByIdHandler :
             }
             else
             {
-                _logger.LogDebug(
-                    "Skipping unforced scan of emby media library {Name}",
-                    parameters.Library.Name);
+                _logger.LogDebug("Skipping unforced scan of emby media library {Name}", parameters.Library.Name);
             }
 
             return parameters.Library.Name;

@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Cleanly stop local library scan when service termination is requested
 
+### Added
+- Add `unavailable` state for Emby movie libraries
+
 ## [0.5.3-beta] - 2022-04-24
 ### Fixed
 - Cleanly stop Plex library scan when service termination is requested

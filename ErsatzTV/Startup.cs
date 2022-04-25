@@ -389,6 +389,7 @@ public class Startup
         services.AddScoped<IEmbyPathReplacementService, EmbyPathReplacementService>();
         services.AddScoped<IEmbyTelevisionRepository, EmbyTelevisionRepository>();
         services.AddScoped<IEmbyCollectionRepository, EmbyCollectionRepository>();
+        services.AddScoped<IEmbyMovieRepository, EmbyMovieRepository>();
         services.AddScoped<IRuntimeInfo, RuntimeInfo>();
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();
