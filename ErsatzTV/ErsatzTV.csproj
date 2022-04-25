@@ -76,7 +76,7 @@
       <PackageReference Include="NaturalSort.Extension" Version="3.2.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="5.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
-      <PackageReference Include="Serilog" Version="2.10.0" />
+      <PackageReference Include="Serilog" Version="2.11.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
       <PackageReference Include="Serilog.Sinks.SQLite" Version="6.0.1" />
