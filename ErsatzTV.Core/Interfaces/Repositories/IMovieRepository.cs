@@ -1,5 +1,4 @@
 ﻿using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Core.Plex;
@@ -25,7 +24,6 @@ public interface IMovieRepository
     Task<List<int>> RemoveMissingJellyfinMovies(JellyfinLibrary library, List<string> movieIds);
     Task<bool> AddJellyfin(JellyfinMovie movie);
     Task<Option<JellyfinMovie>> UpdateJellyfin(JellyfinMovie movie);
-    Task<List<EmbyItemEtag>> GetExistingEmbyMovies(EmbyLibrary library);
     Task<bool> AddDirector(MovieMetadata metadata, Director director);
     Task<bool> AddWriter(MovieMetadata metadata, Writer writer);
     Task<Unit> UpdatePath(int mediaFileId, string path);

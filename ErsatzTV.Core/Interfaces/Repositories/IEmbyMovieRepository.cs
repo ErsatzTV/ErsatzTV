@@ -1,13 +1,8 @@
 ﻿using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Metadata;
+using ErsatzTV.Core.Emby;
 
 namespace ErsatzTV.Core.Interfaces.Repositories;
 
-public interface IEmbyMovieRepository
+public interface IEmbyMovieRepository : IMediaServerMovieRepository<EmbyLibrary, EmbyMovie, EmbyItemEtag>
 {
-    Task<bool> FlagNormal(EmbyLibrary library, EmbyMovie movie);
-    Task<Option<int>> FlagUnavailable(EmbyLibrary library, EmbyMovie movie);
-    Task<List<int>> FlagFileNotFound(EmbyLibrary library, List<string> embyMovieItemIds);
-    Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> GetOrAdd(EmbyLibrary library, EmbyMovie item);
-    Task<Unit> SetEtag(EmbyMovie movie, string etag);
 }

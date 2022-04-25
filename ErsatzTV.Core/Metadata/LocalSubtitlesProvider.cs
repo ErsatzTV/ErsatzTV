@@ -69,7 +69,7 @@ public class LocalSubtitlesProvider : ILocalSubtitlesProvider
             var subtitles = subtitleStreams.Map(Subtitle.FromMediaStream).ToList();
             string mediaItemPath = await localPath.IfNoneAsync(() => mediaItem.GetHeadVersion().MediaFiles.Head().Path);
             subtitles.AddRange(LocateExternalSubtitles(_languageCodes, mediaItemPath, saveFullPath));
-            await _metadataRepository.UpdateSubtitles(metadata, subtitles);
+            return await _metadataRepository.UpdateSubtitles(metadata, subtitles);
         }
 
         return false;

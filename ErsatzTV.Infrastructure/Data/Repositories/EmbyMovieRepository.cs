@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Extensions;
@@ -13,6 +14,19 @@ public class EmbyMovieRepository : IEmbyMovieRepository
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
     public EmbyMovieRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+
+    public async Task<List<EmbyItemEtag>> GetExistingMovies(EmbyLibrary library)
+    {
+        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
+        return await dbContext.Connection.QueryAsync<EmbyItemEtag>(
+                @"SELECT ItemId, Etag, MI.State FROM EmbyMovie
+                      INNER JOIN Movie M on EmbyMovie.Id = M.Id
+                      INNER JOIN MediaItem MI on M.Id = MI.Id
+                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
+                      WHERE LP.LibraryId = @LibraryId",
+                new { LibraryId = library.Id })
+            .Map(result => result.ToList());
+    }
 
     public async Task<bool> FlagNormal(EmbyLibrary library, EmbyMovie movie)
     {

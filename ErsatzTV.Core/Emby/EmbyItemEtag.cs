@@ -2,9 +2,10 @@
 
 namespace ErsatzTV.Core.Emby;
 
-public class EmbyItemEtag
+public class EmbyItemEtag : MediaServerItemEtag
 {
     public string ItemId { get; set; }
-    public string Etag { get; set; }
-    public MediaItemState State { get; set; }
+    public override string MediaServerItemId => ItemId;
+    public override string Etag { get; set; }
+    public override MediaItemState State { get; set; }
 }
