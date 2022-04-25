@@ -382,6 +382,7 @@ public class Startup
         services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
         services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
         services.AddScoped<IJellyfinCollectionRepository, JellyfinCollectionRepository>();
+        services.AddScoped<IJellyfinMovieRepository, JellyfinMovieRepository>();
         services.AddScoped<IEmbyApiClient, EmbyApiClient>();
         services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
         services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();

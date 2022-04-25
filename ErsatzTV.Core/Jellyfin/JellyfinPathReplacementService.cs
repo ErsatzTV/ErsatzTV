@@ -28,7 +28,7 @@ public class JellyfinPathReplacementService : IJellyfinPathReplacementService
         List<JellyfinPathReplacement> replacements =
             await _mediaSourceRepository.GetJellyfinPathReplacementsByLibraryId(libraryPathId);
 
-        return GetReplacementJellyfinPath(replacements, path);
+        return GetReplacementJellyfinPath(replacements, path, log);
     }
 
     public string GetReplacementJellyfinPath(

@@ -1,26 +1,27 @@
 ﻿using Dapper;
 using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
-using ErsatzTV.Core.Emby;
 using ErsatzTV.Core.Interfaces.Repositories;
+using ErsatzTV.Core.Jellyfin;
 using ErsatzTV.Core.Metadata;
 using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
 
-public class EmbyMovieRepository : IEmbyMovieRepository
+public class JellyfinMovieRepository : IJellyfinMovieRepository
 {
     private readonly IDbContextFactory<TvContext> _dbContextFactory;
 
-    public EmbyMovieRepository(IDbContextFactory<TvContext> dbContextFactory) => _dbContextFactory = dbContextFactory;
+    public JellyfinMovieRepository(IDbContextFactory<TvContext> dbContextFactory) =>
+        _dbContextFactory = dbContextFactory;
 
-    public async Task<List<EmbyItemEtag>> GetExistingMovies(EmbyLibrary library)
+    public async Task<List<JellyfinItemEtag>> GetExistingMovies(JellyfinLibrary library)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<EmbyItemEtag>(
-                @"SELECT ItemId, Etag, MI.State FROM EmbyMovie
-                      INNER JOIN Movie M on EmbyMovie.Id = M.Id
+        return await dbContext.Connection.QueryAsync<JellyfinItemEtag>(
+                @"SELECT ItemId, Etag, MI.State FROM JellyfinMovie
+                      INNER JOIN Movie M on JellyfinMovie.Id = M.Id
                       INNER JOIN MediaItem MI on M.Id = MI.Id
                       INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
                       WHERE LP.LibraryId = @LibraryId",
@@ -28,7 +29,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             .Map(result => result.ToList());
     }
 
-    public async Task<bool> FlagNormal(EmbyLibrary library, EmbyMovie movie)
+    public async Task<bool> FlagNormal(JellyfinLibrary library, JellyfinMovie movie)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
@@ -36,24 +37,24 @@ public class EmbyMovieRepository : IEmbyMovieRepository
 
         return await dbContext.Connection.ExecuteAsync(
             @"UPDATE MediaItem SET State = 0 WHERE Id IN
-            (SELECT EmbyMovie.Id FROM EmbyMovie
-            INNER JOIN MediaItem MI ON MI.Id = EmbyMovie.Id
+            (SELECT JellyfinMovie.Id FROM JellyfinMovie
+            INNER JOIN MediaItem MI ON MI.Id = JellyfinMovie.Id
             INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-            WHERE EmbyMovie.ItemId = @ItemId)",
+            WHERE JellyfinMovie.ItemId = @ItemId)",
             new { LibraryId = library.Id, movie.ItemId }).Map(count => count > 0);
     }
 
-    public async Task<Option<int>> FlagUnavailable(EmbyLibrary library, EmbyMovie movie)
+    public async Task<Option<int>> FlagUnavailable(JellyfinLibrary library, JellyfinMovie movie)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
 
         movie.State = MediaItemState.Unavailable;
 
         Option<int> maybeId = await dbContext.Connection.ExecuteScalarAsync<int>(
-            @"SELECT EmbyMovie.Id FROM EmbyMovie
-              INNER JOIN MediaItem MI ON MI.Id = EmbyMovie.Id
+            @"SELECT JellyfinMovie.Id FROM JellyfinMovie
+              INNER JOIN MediaItem MI ON MI.Id = JellyfinMovie.Id
               INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id AND LibraryId = @LibraryId
-              WHERE EmbyMovie.ItemId = @ItemId",
+              WHERE JellyfinMovie.ItemId = @ItemId",
             new { LibraryId = library.Id, movie.ItemId });
 
         foreach (int id in maybeId)
@@ -66,7 +67,7 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         return None;
     }
 
-    public async Task<List<int>> FlagFileNotFound(EmbyLibrary library, List<string> movieItemIds)
+    public async Task<List<int>> FlagFileNotFound(JellyfinLibrary library, List<string> movieItemIds)
     {
         if (movieItemIds.Count == 0)
         {
@@ -78,9 +79,9 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         List<int> ids = await dbContext.Connection.QueryAsync<int>(
                 @"SELECT M.Id
                 FROM MediaItem M
-                INNER JOIN EmbyMovie ON EmbyMovie.Id = M.Id
+                INNER JOIN JellyfinMovie ON JellyfinMovie.Id = M.Id
                 INNER JOIN LibraryPath LP on M.LibraryPathId = LP.Id AND LP.LibraryId = @LibraryId
-                WHERE EmbyMovie.ItemId IN @MovieItemIds",
+                WHERE JellyfinMovie.ItemId IN @MovieItemIds",
                 new { LibraryId = library.Id, MovieItemIds = movieItemIds })
             .Map(result => result.ToList());
 
@@ -91,10 +92,12 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         return ids;
     }
 
-    public async Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> GetOrAdd(EmbyLibrary library, EmbyMovie item)
+    public async Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> GetOrAdd(
+        JellyfinLibrary library,
+        JellyfinMovie item)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        Option<EmbyMovie> maybeExisting = await dbContext.EmbyMovies
+        Option<JellyfinMovie> maybeExisting = await dbContext.JellyfinMovies
             .Include(m => m.LibraryPath)
             .ThenInclude(lp => lp.Library)
             .Include(m => m.MediaVersions)
@@ -121,12 +124,12 @@ public class EmbyMovieRepository : IEmbyMovieRepository
             .ThenInclude(tli => tli.TraktList)
             .SelectOneAsync(m => m.ItemId, m => m.ItemId == item.ItemId);
 
-        foreach (EmbyMovie embyMovie in maybeExisting)
+        foreach (JellyfinMovie jellyfinMovie in maybeExisting)
         {
-            var result = new MediaItemScanResult<EmbyMovie>(embyMovie) { IsAdded = false };
-            if (embyMovie.Etag != item.Etag)
+            var result = new MediaItemScanResult<JellyfinMovie>(jellyfinMovie) { IsAdded = false };
+            if (jellyfinMovie.Etag != item.Etag)
             {
-                await UpdateMovie(dbContext, embyMovie, item);
+                await UpdateMovie(dbContext, jellyfinMovie, item);
                 result.IsUpdated = true;
             }
 
@@ -136,44 +139,21 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         return await AddMovie(dbContext, library, item);
     }
 
-    public async Task<Unit> SetEtag(EmbyMovie movie, string etag)
+    public async Task<Unit> SetEtag(JellyfinMovie movie, string etag)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
         return await dbContext.Connection.ExecuteAsync(
-            "UPDATE EmbyMovie SET Etag = @Etag WHERE Id = @Id",
+            "UPDATE JellyfinMovie SET Etag = @Etag WHERE Id = @Id",
             new { Etag = etag, movie.Id }).Map(_ => Unit.Default);
     }
 
-    private async Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> AddMovie(
-        TvContext dbContext,
-        EmbyLibrary library,
-        EmbyMovie movie)
-    {
-        try
-        {
-            // blank out etag for initial save in case other updates fail
-            movie.Etag = string.Empty;
-
-            movie.LibraryPathId = library.Paths.Head().Id;
-
-            await dbContext.AddAsync(movie);
-            await dbContext.SaveChangesAsync();
-
-            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
-            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            return new MediaItemScanResult<EmbyMovie>(movie) { IsAdded = true };
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.ToString());
-        }
-    }
-
-    private async Task UpdateMovie(TvContext dbContext, EmbyMovie existing, EmbyMovie incoming)
+    private async Task UpdateMovie(TvContext dbContext, JellyfinMovie existing, JellyfinMovie incoming)
     {
         // library path is used for search indexing later
         incoming.LibraryPath = existing.LibraryPath;
         incoming.Id = existing.Id;
+
+        existing.Etag = incoming.Etag;
 
         // metadata
         MovieMetadata metadata = existing.MovieMetadata.Head();
@@ -344,5 +324,30 @@ public class EmbyMovieRepository : IEmbyMovieRepository
         file.Path = incomingFile.Path;
 
         await dbContext.SaveChangesAsync();
+    }
+
+    private async Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> AddMovie(
+        TvContext dbContext,
+        JellyfinLibrary library,
+        JellyfinMovie movie)
+    {
+        try
+        {
+            // blank out etag for initial save in case other updates fail
+            movie.Etag = string.Empty;
+
+            movie.LibraryPathId = library.Paths.Head().Id;
+
+            await dbContext.AddAsync(movie);
+            await dbContext.SaveChangesAsync();
+
+            await dbContext.Entry(movie).Reference(m => m.LibraryPath).LoadAsync();
+            await dbContext.Entry(movie.LibraryPath).Reference(lp => lp.Library).LoadAsync();
+            return new MediaItemScanResult<JellyfinMovie>(movie) { IsAdded = true };
+        }
+        catch (Exception ex)
+        {
+            return BaseError.New(ex.ToString());
+        }
     }
 }
