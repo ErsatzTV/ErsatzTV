@@ -1,10 +1,10 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
-using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -55,61 +55,81 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         string apiKey,
         EmbyLibrary library,
         string ffmpegPath,
-        string ffprobePath)
+        string ffprobePath,
+        CancellationToken cancellationToken)
     {
-        List<EmbyItemEtag> existingShows = await _televisionRepository.GetExistingShows(library);
-
-        // TODO: maybe get quick list of item ids and etags from api to compare first
-        // TODO: paging?
-
-        List<EmbyPathReplacement> pathReplacements = await _mediaSourceRepository
-            .GetEmbyPathReplacements(library.MediaSourceId);
-
-        Either<BaseError, List<EmbyShow>> maybeShows = await _embyApiClient.GetShowLibraryItems(
-            address,
-            apiKey,
-            library.ItemId);
-
-        foreach (BaseError error in maybeShows.LeftToSeq())
+        try
         {
-            _logger.LogWarning(
-                "Error synchronizing emby library {Path}: {Error}",
-                library.Name,
-                error.Value);
-        }
+            List<EmbyItemEtag> existingShows = await _televisionRepository.GetExistingShows(library);
 
-        foreach (List<EmbyShow> shows in maybeShows.RightToSeq())
-        {
-            await ProcessShows(
+            // TODO: maybe get quick list of item ids and etags from api to compare first
+            // TODO: paging?
+
+            List<EmbyPathReplacement> pathReplacements = await _mediaSourceRepository
+                .GetEmbyPathReplacements(library.MediaSourceId);
+
+            Either<BaseError, List<EmbyShow>> maybeShows = await _embyApiClient.GetShowLibraryItems(
                 address,
                 apiKey,
-                library,
-                ffmpegPath,
-                ffprobePath,
-                pathReplacements,
-                existingShows,
-                shows);
+                library.ItemId);
 
-            var incomingShowIds = shows.Map(s => s.ItemId).ToList();
-            var showIds = existingShows
-                .Filter(i => !incomingShowIds.Contains(i.ItemId))
-                .Map(m => m.ItemId)
-                .ToList();
-            List<int> missingShowIds = await _televisionRepository.RemoveMissingShows(library, showIds);
-            await _searchIndex.RemoveItems(missingShowIds);
+            foreach (BaseError error in maybeShows.LeftToSeq())
+            {
+                _logger.LogWarning(
+                    "Error synchronizing emby library {Path}: {Error}",
+                    library.Name,
+                    error.Value);
+            }
 
-            await _televisionRepository.DeleteEmptySeasons(library);
-            List<int> emptyShowIds = await _televisionRepository.DeleteEmptyShows(library);
-            await _searchIndex.RemoveItems(emptyShowIds);
+            foreach (List<EmbyShow> shows in maybeShows.RightToSeq())
+            {
+                Either<BaseError, Unit> scanResult = await ProcessShows(
+                    address,
+                    apiKey,
+                    library,
+                    ffmpegPath,
+                    ffprobePath,
+                    pathReplacements,
+                    existingShows,
+                    shows,
+                    cancellationToken);
 
-            await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
+                foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                {
+                    return error;
+                }
+
+                foreach (Unit _ in scanResult.RightToSeq())
+                {
+                    var incomingShowIds = shows.Map(s => s.ItemId).ToList();
+                    var showIds = existingShows
+                        .Filter(i => !incomingShowIds.Contains(i.ItemId))
+                        .Map(m => m.ItemId)
+                        .ToList();
+                    List<int> missingShowIds = await _televisionRepository.RemoveMissingShows(library, showIds);
+                    await _searchIndex.RemoveItems(missingShowIds);
+
+                    await _televisionRepository.DeleteEmptySeasons(library);
+                    List<int> emptyShowIds = await _televisionRepository.DeleteEmptyShows(library);
+                    await _searchIndex.RemoveItems(emptyShowIds);
+
+                    await _mediator.Publish(new LibraryScanProgress(library.Id, 0), cancellationToken);
+                }
+            }
+
+            return Unit.Default;
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
+        finally
+        {
             _searchIndex.Commit();
         }
-
-        return Unit.Default;
     }
 
-    private async Task ProcessShows(
+    private async Task<Either<BaseError, Unit>> ProcessShows(
         string address,
         string apiKey,
         EmbyLibrary library,
@@ -117,13 +137,19 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         string ffprobePath,
         List<EmbyPathReplacement> pathReplacements,
         List<EmbyItemEtag> existingShows,
-        List<EmbyShow> shows)
+        List<EmbyShow> shows,
+        CancellationToken cancellationToken)
     {
         var sortedShows = shows.OrderBy(s => s.ShowMetadata.Head().Title).ToList();
         foreach (EmbyShow incoming in sortedShows)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ScanCanceled();
+            }
+
             decimal percentCompletion = (decimal)sortedShows.IndexOf(incoming) / shows.Count;
-            await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
+            await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
 
             Option<EmbyItemEtag> maybeExisting = existingShows.Find(ie => ie.ItemId == incoming.ItemId);
             if (maybeExisting.IsNone)
@@ -140,19 +166,17 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
 
             foreach (EmbyItemEtag existing in maybeExisting)
             {
-                if (existing.Etag == incoming.Etag)
+                if (existing.Etag != incoming.Etag)
                 {
-                    return;
-                }
+                    _logger.LogDebug("UPDATE: Etag has changed for show {Show}", incoming.ShowMetadata.Head().Title);
 
-                _logger.LogDebug("UPDATE: Etag has changed for show {Show}", incoming.ShowMetadata.Head().Title);
+                    incoming.LibraryPathId = library.Paths.Head().Id;
 
-                incoming.LibraryPathId = library.Paths.Head().Id;
-
-                Option<EmbyShow> updated = await _televisionRepository.Update(incoming);
-                if (updated.IsSome)
-                {
-                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated.ValueUnsafe() });
+                    Option<EmbyShow> maybeUpdated = await _televisionRepository.Update(incoming);
+                    foreach (EmbyShow updated in maybeUpdated)
+                    {
+                        await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated });
+                    }
                 }
             }
 
@@ -172,7 +196,7 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
 
             foreach (List<EmbySeason> seasons in maybeSeasons.RightToSeq())
             {
-                await ProcessSeasons(
+                Either<BaseError, Unit> scanResult = await ProcessSeasons(
                     address,
                     apiKey,
                     library,
@@ -181,19 +205,30 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                     pathReplacements,
                     incoming,
                     existingSeasons,
-                    seasons);
+                    seasons,
+                    cancellationToken);
 
-                var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
-                var seasonIds = existingSeasons
-                    .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
-                    .Map(m => m.ItemId)
-                    .ToList();
-                await _televisionRepository.RemoveMissingSeasons(library, seasonIds);
+                foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                {
+                    return error;
+                }
+
+                foreach (Unit _ in scanResult.RightToSeq())
+                {
+                    var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
+                    var seasonIds = existingSeasons
+                        .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
+                        .Map(m => m.ItemId)
+                        .ToList();
+                    await _televisionRepository.RemoveMissingSeasons(library, seasonIds);
+                }
             }
         }
+
+        return Unit.Default;
     }
 
-    private async Task ProcessSeasons(
+    private async Task<Either<BaseError, Unit>> ProcessSeasons(
         string address,
         string apiKey,
         EmbyLibrary library,
@@ -202,19 +237,37 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         List<EmbyPathReplacement> pathReplacements,
         EmbyShow show,
         List<EmbyItemEtag> existingSeasons,
-        List<EmbySeason> seasons)
+        List<EmbySeason> seasons,
+        CancellationToken cancellationToken)
     {
         foreach (EmbySeason incoming in seasons)
         {
-            Option<EmbyItemEtag> maybeExisting = existingSeasons.Find(ie => ie.ItemId == incoming.ItemId);
-            await maybeExisting.Match(
-                async existing =>
-                {
-                    if (existing.Etag == incoming.Etag)
-                    {
-                        return;
-                    }
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ScanCanceled();
+            }
 
+            Option<EmbyItemEtag> maybeExisting = existingSeasons.Find(ie => ie.ItemId == incoming.ItemId);
+            if (maybeExisting.IsNone)
+            {
+                incoming.LibraryPathId = library.Paths.Head().Id;
+
+                _logger.LogDebug(
+                    "INSERT: Item id is new for show {Show} season {Season}",
+                    show.ShowMetadata.Head().Title,
+                    incoming.SeasonMetadata.Head().Title);
+
+                if (await _televisionRepository.AddSeason(show, incoming))
+                {
+                    incoming.Show = show;
+                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                }
+            }
+
+            foreach (EmbyItemEtag existing in maybeExisting)
+            {
+                if (existing.Etag != incoming.Etag)
+                {
                     _logger.LogDebug(
                         "UPDATE: Etag has changed for show {Show} season {Season}",
                         show.ShowMetadata.Head().Title,
@@ -232,22 +285,8 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                             await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { toIndex });
                         }
                     }
-                },
-                async () =>
-                {
-                    incoming.LibraryPathId = library.Paths.Head().Id;
-
-                    _logger.LogDebug(
-                        "INSERT: Item id is new for show {Show} season {Season}",
-                        show.ShowMetadata.Head().Title,
-                        incoming.SeasonMetadata.Head().Title);
-
-                    if (await _televisionRepository.AddSeason(show, incoming))
-                    {
-                        incoming.Show = show;
-                        await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
-                    }
-                });
+                }
+            }
 
             List<EmbyItemEtag> existingEpisodes =
                 await _televisionRepository.GetExistingEpisodes(library, incoming.ItemId);
@@ -255,40 +294,55 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
             Either<BaseError, List<EmbyEpisode>> maybeEpisodes =
                 await _embyApiClient.GetEpisodeLibraryItems(address, apiKey, incoming.ItemId);
 
-            await maybeEpisodes.Match(
-                async episodes =>
+            foreach (BaseError error in maybeEpisodes.LeftToSeq())
+            {
+                _logger.LogWarning(
+                    "Error synchronizing emby library {Path}: {Error}",
+                    library.Name,
+                    error.Value);
+            }
+
+            foreach (List<EmbyEpisode> episodes in maybeEpisodes.RightToSeq())
+            {
+                var validEpisodes = new List<EmbyEpisode>();
+                foreach (EmbyEpisode episode in episodes)
                 {
-                    var validEpisodes = new List<EmbyEpisode>();
-                    foreach (EmbyEpisode episode in episodes)
-                    {
-                        string localPath = _pathReplacementService.GetReplacementEmbyPath(
-                            pathReplacements,
-                            episode.MediaVersions.Head().MediaFiles.Head().Path,
-                            false);
-
-                        if (!_localFileSystem.FileExists(localPath))
-                        {
-                            _logger.LogWarning(
-                                "Skipping emby episode that does not exist at {Path}",
-                                localPath);
-                        }
-                        else
-                        {
-                            validEpisodes.Add(episode);
-                        }
-                    }
-
-                    await ProcessEpisodes(
-                        show.ShowMetadata.Head().Title,
-                        incoming.SeasonMetadata.Head().Title,
-                        library,
-                        ffmpegPath,
-                        ffprobePath,
+                    string localPath = _pathReplacementService.GetReplacementEmbyPath(
                         pathReplacements,
-                        incoming,
-                        existingEpisodes,
-                        validEpisodes);
+                        episode.MediaVersions.Head().MediaFiles.Head().Path,
+                        false);
 
+                    if (!_localFileSystem.FileExists(localPath))
+                    {
+                        _logger.LogWarning(
+                            "Skipping emby episode that does not exist at {Path}",
+                            localPath);
+                    }
+                    else
+                    {
+                        validEpisodes.Add(episode);
+                    }
+                }
+
+                Either<BaseError, Unit> scanResult = await ProcessEpisodes(
+                    show.ShowMetadata.Head().Title,
+                    incoming.SeasonMetadata.Head().Title,
+                    library,
+                    ffmpegPath,
+                    ffprobePath,
+                    pathReplacements,
+                    incoming,
+                    existingEpisodes,
+                    validEpisodes,
+                    cancellationToken);
+
+                foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                {
+                    return error;
+                }
+
+                foreach (Unit _ in scanResult.RightToSeq())
+                {
                     var incomingEpisodeIds = episodes.Map(s => s.ItemId).ToList();
                     var episodeIds = existingEpisodes
                         .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))
@@ -298,20 +352,14 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                         await _televisionRepository.RemoveMissingEpisodes(library, episodeIds);
                     await _searchIndex.RemoveItems(missingEpisodeIds);
                     _searchIndex.Commit();
-                },
-                error =>
-                {
-                    _logger.LogWarning(
-                        "Error synchronizing emby library {Path}: {Error}",
-                        library.Name,
-                        error.Value);
-
-                    return Task.CompletedTask;
-                });
+                }
+            }
         }
+
+        return Unit.Default;
     }
 
-    private async Task ProcessEpisodes(
+    private async Task<Either<BaseError, Unit>> ProcessEpisodes(
         string showName,
         string seasonName,
         EmbyLibrary library,
@@ -320,24 +368,54 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
         List<EmbyPathReplacement> pathReplacements,
         EmbySeason season,
         List<EmbyItemEtag> existingEpisodes,
-        List<EmbyEpisode> episodes)
+        List<EmbyEpisode> episodes,
+        CancellationToken cancellationToken)
     {
         foreach (EmbyEpisode incoming in episodes)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ScanCanceled();
+            }
+
             EmbyEpisode incomingEpisode = incoming;
             var updateStatistics = false;
 
             Option<EmbyItemEtag> maybeExisting = existingEpisodes.Find(ie => ie.ItemId == incoming.ItemId);
-            await maybeExisting.Match(
-                async existing =>
+            if (maybeExisting.IsNone)
+            {
+                try
                 {
-                    try
-                    {
-                        if (existing.Etag == incoming.Etag)
-                        {
-                            return;
-                        }
+                    updateStatistics = true;
+                    incoming.LibraryPathId = library.Paths.Head().Id;
 
+                    _logger.LogDebug(
+                        "INSERT: Item id is new for show {Show} season {Season} episode {Episode}",
+                        showName,
+                        seasonName,
+                        incoming.EpisodeMetadata.HeadOrNone().Map(em => em.EpisodeNumber));
+
+                    if (await _televisionRepository.AddEpisode(season, incoming))
+                    {
+                        await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    updateStatistics = false;
+                    _logger.LogError(
+                        ex,
+                        "Error adding episode {Path}",
+                        incoming.MediaVersions.Head().MediaFiles.Head().Path);
+                }
+            }
+
+            foreach (EmbyItemEtag existing in maybeExisting)
+            {
+                try
+                {
+                    if (existing.Etag != incoming.Etag)
+                    {
                         _logger.LogDebug(
                             "UPDATE: Etag has changed for show {Show} season {Season} episode {Episode}",
                             showName,
@@ -352,46 +430,19 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                         foreach (EmbyEpisode updated in maybeUpdated)
                         {
                             await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated });
-
                             incomingEpisode = updated;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        updateStatistics = false;
-                        _logger.LogError(
-                            ex,
-                            "Error updating episode {Path}",
-                            incoming.MediaVersions.Head().MediaFiles.Head().Path);
-                    }
-                },
-                async () =>
+                }
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        updateStatistics = true;
-                        incoming.LibraryPathId = library.Paths.Head().Id;
-
-                        _logger.LogDebug(
-                            "INSERT: Item id is new for show {Show} season {Season} episode {Episode}",
-                            showName,
-                            seasonName,
-                            incoming.EpisodeMetadata.HeadOrNone().Map(em => em.EpisodeNumber));
-
-                        if (await _televisionRepository.AddEpisode(season, incoming))
-                        {
-                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        updateStatistics = false;
-                        _logger.LogError(
-                            ex,
-                            "Error adding episode {Path}",
-                            incoming.MediaVersions.Head().MediaFiles.Head().Path);
-                    }
-                });
+                    updateStatistics = false;
+                    _logger.LogError(
+                        ex,
+                        "Error updating episode {Path}",
+                        incoming.MediaVersions.Head().MediaFiles.Head().Path);
+                }
+            }
 
             if (updateStatistics)
             {
@@ -423,6 +474,8 @@ public class EmbyTelevisionLibraryScanner : IEmbyTelevisionLibraryScanner
                 }
             }
         }
+
+        return Unit.Default;
     }
 
     private async Task<Either<BaseError, bool>> UpdateSubtitles(EmbyEpisode episode, string localPath)

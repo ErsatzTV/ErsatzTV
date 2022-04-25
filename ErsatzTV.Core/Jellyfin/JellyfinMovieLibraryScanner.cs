@@ -1,10 +1,10 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
-using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -55,24 +55,34 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
         string apiKey,
         JellyfinLibrary library,
         string ffmpegPath,
-        string ffprobePath)
+        string ffprobePath,
+        CancellationToken cancellationToken)
     {
-        List<JellyfinItemEtag> existingMovies = await _movieRepository.GetExistingJellyfinMovies(library);
+        try
+        {
+            List<JellyfinItemEtag> existingMovies = await _movieRepository.GetExistingJellyfinMovies(library);
 
-        // TODO: maybe get quick list of item ids and etags from api to compare first
-        // TODO: paging?
+            // TODO: maybe get quick list of item ids and etags from api to compare first
+            // TODO: paging?
 
-        List<JellyfinPathReplacement> pathReplacements = await _mediaSourceRepository
-            .GetJellyfinPathReplacements(library.MediaSourceId);
+            List<JellyfinPathReplacement> pathReplacements = await _mediaSourceRepository
+                .GetJellyfinPathReplacements(library.MediaSourceId);
 
-        Either<BaseError, List<JellyfinMovie>> maybeMovies = await _jellyfinApiClient.GetMovieLibraryItems(
-            address,
-            apiKey,
-            library.MediaSourceId,
-            library.ItemId);
+            Either<BaseError, List<JellyfinMovie>> maybeMovies = await _jellyfinApiClient.GetMovieLibraryItems(
+                address,
+                apiKey,
+                library.MediaSourceId,
+                library.ItemId);
 
-        await maybeMovies.Match(
-            async movies =>
+            foreach (BaseError error in maybeMovies.LeftToSeq())
+            {
+                _logger.LogWarning(
+                    "Error synchronizing jellyfin library {Path}: {Error}",
+                    library.Name,
+                    error.Value);
+            }
+
+            foreach (List<JellyfinMovie> movies in maybeMovies.RightToSeq())
             {
                 var validMovies = new List<JellyfinMovie>();
                 foreach (JellyfinMovie movie in movies.OrderBy(m => m.MovieMetadata.Head().Title))
@@ -94,28 +104,46 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
 
                 foreach (JellyfinMovie incoming in validMovies)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return new ScanCanceled();
+                    }
+
                     JellyfinMovie incomingMovie = incoming;
 
                     decimal percentCompletion = (decimal)validMovies.IndexOf(incoming) / validMovies.Count;
-                    await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
-
-                    Option<JellyfinItemEtag> maybeExisting =
-                        existingMovies.Find(ie => ie.ItemId == incoming.ItemId);
+                    await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
 
                     var updateStatistics = false;
 
-                    await maybeExisting.Match(
-                        async existing =>
+                    Option<JellyfinItemEtag> maybeExisting = existingMovies.Find(ie => ie.ItemId == incoming.ItemId);
+                    if (maybeExisting.IsNone)
+                    {
+                        try
                         {
-                            try
-                            {
-                                if (existing.Etag == incoming.Etag)
-                                {
-                                    // _logger.LogDebug(
-                                    //     $"NOOP: Etag has not changed for movie {incoming.MovieMetadata.Head().Title}");
-                                    return;
-                                }
+                            // _logger.LogDebug(
+                            //     $"INSERT: Item id is new for movie {incoming.MovieMetadata.Head().Title}");
 
+                            updateStatistics = true;
+                            incoming.LibraryPathId = library.Paths.Head().Id;
+                            if (await _movieRepository.AddJellyfin(incoming))
+                            {
+                                await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            updateStatistics = false;
+                            _logger.LogError(ex, "Error adding movie {Movie}", incoming.MovieMetadata.Head().Title);
+                        }
+                    }
+
+                    foreach (JellyfinItemEtag existing in maybeExisting)
+                    {
+                        try
+                        {
+                            if (existing.Etag != incoming.Etag)
+                            {
                                 _logger.LogDebug(
                                     "UPDATE: Etag has changed for movie {Movie}",
                                     incoming.MovieMetadata.Head().Title);
@@ -125,47 +153,17 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
                                 Option<JellyfinMovie> maybeUpdated = await _movieRepository.UpdateJellyfin(incoming);
                                 foreach (JellyfinMovie updated in maybeUpdated)
                                 {
-                                    await _searchIndex.UpdateItems(
-                                        _searchRepository,
-                                        new List<MediaItem> { updated });
-
+                                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated });
                                     incomingMovie = updated;
                                 }
                             }
-                            catch (Exception ex)
-                            {
-                                updateStatistics = false;
-                                _logger.LogError(
-                                    ex,
-                                    "Error updating movie {Movie}",
-                                    incoming.MovieMetadata.Head().Title);
-                            }
-                        },
-                        async () =>
+                        }
+                        catch (Exception ex)
                         {
-                            try
-                            {
-                                // _logger.LogDebug(
-                                //     $"INSERT: Item id is new for movie {incoming.MovieMetadata.Head().Title}");
-
-                                updateStatistics = true;
-                                incoming.LibraryPathId = library.Paths.Head().Id;
-                                if (await _movieRepository.AddJellyfin(incoming))
-                                {
-                                    await _searchIndex.AddItems(
-                                        _searchRepository,
-                                        new List<MediaItem> { incoming });
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                updateStatistics = false;
-                                _logger.LogError(
-                                    ex,
-                                    "Error adding movie {Movie}",
-                                    incoming.MovieMetadata.Head().Title);
-                            }
-                        });
+                            updateStatistics = false;
+                            _logger.LogError(ex, "Error updating movie {Movie}", incoming.MovieMetadata.Head().Title);
+                        }
+                    }
 
                     if (updateStatistics)
                     {
@@ -187,27 +185,23 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
                             refreshResult = await UpdateSubtitles(incomingMovie, localPath);
                         }
 
-                        await refreshResult.Match(
-                            async _ =>
-                            {
-                                Option<MediaItem> updated = await _searchRepository.GetItemToIndex(incomingMovie.Id);
-                                if (updated.IsSome)
-                                {
-                                    await _searchIndex.UpdateItems(
-                                        _searchRepository,
-                                        new List<MediaItem> { updated.ValueUnsafe() });
-                                }
-                            },
-                            error =>
-                            {
-                                _logger.LogWarning(
-                                    "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
-                                    "Statistics",
-                                    localPath,
-                                    error.Value);
+                        foreach (BaseError error in refreshResult.LeftToSeq())
+                        {
+                            _logger.LogWarning(
+                                "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
+                                "Statistics",
+                                localPath,
+                                error.Value);
+                        }
 
-                                return Task.CompletedTask;
-                            });
+                        foreach (bool _ in refreshResult.RightToSeq())
+                        {
+                            Option<MediaItem> maybeUpdated = await _searchRepository.GetItemToIndex(incomingMovie.Id);
+                            foreach (MediaItem updated in maybeUpdated)
+                            {
+                                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated });
+                            }
+                        }
                     }
 
                     // TODO: figure out how to rebuild playlists
@@ -221,21 +215,19 @@ public class JellyfinMovieLibraryScanner : IJellyfinMovieLibraryScanner
                 List<int> ids = await _movieRepository.RemoveMissingJellyfinMovies(library, movieIds);
                 await _searchIndex.RemoveItems(ids);
 
-                await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
-                _searchIndex.Commit();
-            },
-            error =>
-            {
-                _logger.LogWarning(
-                    "Error synchronizing jellyfin library {Path}: {Error}",
-                    library.Name,
-                    error.Value);
+                await _mediator.Publish(new LibraryScanProgress(library.Id, 0), cancellationToken);
+            }
 
-                return Task.CompletedTask;
-            });
-
-        _searchIndex.Commit();
-        return Unit.Default;
+            return Unit.Default;
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
+        finally
+        {
+            _searchIndex.Commit();
+        }
     }
 
     private async Task<Either<BaseError, bool>> UpdateSubtitles(JellyfinMovie movie, string localPath)

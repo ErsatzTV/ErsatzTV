@@ -1,10 +1,10 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Errors;
 using ErsatzTV.Core.Interfaces.Jellyfin;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
-using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -55,26 +55,36 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         string apiKey,
         JellyfinLibrary library,
         string ffmpegPath,
-        string ffprobePath)
+        string ffprobePath,
+        CancellationToken cancellationToken)
     {
-        List<JellyfinItemEtag> existingShows = await _televisionRepository.GetExistingShows(library);
+        try
+        {
+            List<JellyfinItemEtag> existingShows = await _televisionRepository.GetExistingShows(library);
 
-        // TODO: maybe get quick list of item ids and etags from api to compare first
-        // TODO: paging?
+            // TODO: maybe get quick list of item ids and etags from api to compare first
+            // TODO: paging?
 
-        List<JellyfinPathReplacement> pathReplacements = await _mediaSourceRepository
-            .GetJellyfinPathReplacements(library.MediaSourceId);
+            List<JellyfinPathReplacement> pathReplacements = await _mediaSourceRepository
+                .GetJellyfinPathReplacements(library.MediaSourceId);
 
-        Either<BaseError, List<JellyfinShow>> maybeShows = await _jellyfinApiClient.GetShowLibraryItems(
-            address,
-            apiKey,
-            library.MediaSourceId,
-            library.ItemId);
+            Either<BaseError, List<JellyfinShow>> maybeShows = await _jellyfinApiClient.GetShowLibraryItems(
+                address,
+                apiKey,
+                library.MediaSourceId,
+                library.ItemId);
 
-        await maybeShows.Match(
-            async shows =>
+            foreach (BaseError error in maybeShows.LeftToSeq())
             {
-                await ProcessShows(
+                _logger.LogWarning(
+                    "Error synchronizing jellyfin library {Path}: {Error}",
+                    library.Name,
+                    error.Value);
+            }
+
+            foreach (List<JellyfinShow> shows in maybeShows.RightToSeq())
+            {
+                Either<BaseError, Unit> scanResult = await ProcessShows(
                     address,
                     apiKey,
                     library,
@@ -82,37 +92,45 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
                     ffprobePath,
                     pathReplacements,
                     existingShows,
-                    shows);
+                    shows,
+                    cancellationToken);
 
-                var incomingShowIds = shows.Map(s => s.ItemId).ToList();
-                var showIds = existingShows
-                    .Filter(i => !incomingShowIds.Contains(i.ItemId))
-                    .Map(m => m.ItemId)
-                    .ToList();
-                List<int> missingShowIds = await _televisionRepository.RemoveMissingShows(library, showIds);
-                await _searchIndex.RemoveItems(missingShowIds);
+                foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                {
+                    return error;
+                }
 
-                await _televisionRepository.DeleteEmptySeasons(library);
-                List<int> emptyShowIds = await _televisionRepository.DeleteEmptyShows(library);
-                await _searchIndex.RemoveItems(emptyShowIds);
+                foreach (Unit _ in scanResult.RightToSeq())
+                {
+                    var incomingShowIds = shows.Map(s => s.ItemId).ToList();
+                    var showIds = existingShows
+                        .Filter(i => !incomingShowIds.Contains(i.ItemId))
+                        .Map(m => m.ItemId)
+                        .ToList();
+                    List<int> missingShowIds = await _televisionRepository.RemoveMissingShows(library, showIds);
+                    await _searchIndex.RemoveItems(missingShowIds);
 
-                await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
-                _searchIndex.Commit();
-            },
-            error =>
-            {
-                _logger.LogWarning(
-                    "Error synchronizing jellyfin library {Path}: {Error}",
-                    library.Name,
-                    error.Value);
+                    await _televisionRepository.DeleteEmptySeasons(library);
+                    List<int> emptyShowIds = await _televisionRepository.DeleteEmptyShows(library);
+                    await _searchIndex.RemoveItems(emptyShowIds);
 
-                return Task.CompletedTask;
-            });
+                    await _mediator.Publish(new LibraryScanProgress(library.Id, 0), cancellationToken);
+                }
+            }
 
-        return Unit.Default;
+            return Unit.Default;
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new ScanCanceled();
+        }
+        finally
+        {
+            _searchIndex.Commit();
+        }
     }
 
-    private async Task ProcessShows(
+    private async Task<Either<BaseError, Unit>> ProcessShows(
         string address,
         string apiKey,
         JellyfinLibrary library,
@@ -120,93 +138,98 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         string ffprobePath,
         List<JellyfinPathReplacement> pathReplacements,
         List<JellyfinItemEtag> existingShows,
-        List<JellyfinShow> shows)
+        List<JellyfinShow> shows,
+        CancellationToken cancellationToken)
     {
         var sortedShows = shows.OrderBy(s => s.ShowMetadata.Head().Title).ToList();
         foreach (JellyfinShow incoming in sortedShows)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ScanCanceled();
+            }
+
             decimal percentCompletion = (decimal)sortedShows.IndexOf(incoming) / shows.Count;
-            await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
+            await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion), cancellationToken);
 
             Option<JellyfinItemEtag> maybeExisting = existingShows.Find(ie => ie.ItemId == incoming.ItemId);
-            await maybeExisting.Match(
-                async existing =>
-                {
-                    if (existing.Etag == incoming.Etag)
-                    {
-                        return;
-                    }
+            if (maybeExisting.IsNone)
+            {
+                incoming.LibraryPathId = library.Paths.Head().Id;
 
-                    _logger.LogDebug(
-                        "UPDATE: Etag has changed for show {Show}",
-                        incoming.ShowMetadata.Head().Title);
+                // _logger.LogDebug("INSERT: Item id is new for show {Show}", incoming.ShowMetadata.Head().Title);
+
+                if (await _televisionRepository.AddShow(incoming))
+                {
+                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                }
+            }
+
+            foreach (JellyfinItemEtag existing in maybeExisting)
+            {
+                if (existing.Etag != incoming.Etag)
+                {
+                    _logger.LogDebug("UPDATE: Etag has changed for show {Show}", incoming.ShowMetadata.Head().Title);
 
                     incoming.LibraryPathId = library.Paths.Head().Id;
 
-                    Option<JellyfinShow> updated = await _televisionRepository.Update(incoming);
-                    if (updated.IsSome)
+                    Option<JellyfinShow> maybeUpdated = await _televisionRepository.Update(incoming);
+                    foreach (JellyfinShow updated in maybeUpdated)
                     {
-                        await _searchIndex.UpdateItems(
-                            _searchRepository,
-                            new List<MediaItem> { updated.ValueUnsafe() });
+                        await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated });
                     }
-                },
-                async () =>
-                {
-                    incoming.LibraryPathId = library.Paths.Head().Id;
-
-                    // _logger.LogDebug("INSERT: Item id is new for show {Show}", incoming.ShowMetadata.Head().Title);
-
-                    if (await _televisionRepository.AddShow(incoming))
-                    {
-                        await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
-                    }
-                });
+                }
+            }
 
             List<JellyfinItemEtag> existingSeasons =
                 await _televisionRepository.GetExistingSeasons(library, incoming.ItemId);
 
             Either<BaseError, List<JellyfinSeason>> maybeSeasons =
-                await _jellyfinApiClient.GetSeasonLibraryItems(
+                await _jellyfinApiClient.GetSeasonLibraryItems(address, apiKey, library.MediaSourceId, incoming.ItemId);
+
+            foreach (BaseError error in maybeSeasons.LeftToSeq())
+            {
+                _logger.LogWarning(
+                    "Error synchronizing jellyfin library {Path}: {Error}",
+                    library.Name,
+                    error.Value);
+            }
+
+            foreach (List<JellyfinSeason> seasons in maybeSeasons.RightToSeq())
+            {
+                Either<BaseError, Unit> scanResult = await ProcessSeasons(
                     address,
                     apiKey,
-                    library.MediaSourceId,
-                    incoming.ItemId);
+                    library,
+                    ffmpegPath,
+                    ffprobePath,
+                    pathReplacements,
+                    incoming,
+                    existingSeasons,
+                    seasons,
+                    cancellationToken);
 
-            await maybeSeasons.Match(
-                async seasons =>
+                foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
                 {
-                    await ProcessSeasons(
-                        address,
-                        apiKey,
-                        library,
-                        ffmpegPath,
-                        ffprobePath,
-                        pathReplacements,
-                        incoming,
-                        existingSeasons,
-                        seasons);
+                    return error;
+                }
 
+                foreach (Unit _ in scanResult.RightToSeq())
+                {
                     var incomingSeasonIds = seasons.Map(s => s.ItemId).ToList();
                     var seasonIds = existingSeasons
                         .Filter(i => !incomingSeasonIds.Contains(i.ItemId))
                         .Map(m => m.ItemId)
                         .ToList();
                     await _televisionRepository.RemoveMissingSeasons(library, seasonIds);
-                },
-                error =>
-                {
-                    _logger.LogWarning(
-                        "Error synchronizing jellyfin library {Path}: {Error}",
-                        library.Name,
-                        error.Value);
-
-                    return Task.CompletedTask;
-                });
+                }
+            }
         }
+
+        return Unit.Default;
     }
 
-    private async Task ProcessSeasons(
+    private async Task<Either<BaseError, Unit>> ProcessSeasons(
         string address,
         string apiKey,
         JellyfinLibrary library,
@@ -215,19 +238,37 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         List<JellyfinPathReplacement> pathReplacements,
         JellyfinShow show,
         List<JellyfinItemEtag> existingSeasons,
-        List<JellyfinSeason> seasons)
+        List<JellyfinSeason> seasons,
+        CancellationToken cancellationToken)
     {
         foreach (JellyfinSeason incoming in seasons)
         {
-            Option<JellyfinItemEtag> maybeExisting = existingSeasons.Find(ie => ie.ItemId == incoming.ItemId);
-            await maybeExisting.Match(
-                async existing =>
-                {
-                    if (existing.Etag == incoming.Etag)
-                    {
-                        return;
-                    }
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ScanCanceled();
+            }
 
+            Option<JellyfinItemEtag> maybeExisting = existingSeasons.Find(ie => ie.ItemId == incoming.ItemId);
+            if (maybeExisting.IsNone)
+            {
+                incoming.LibraryPathId = library.Paths.Head().Id;
+
+                _logger.LogDebug(
+                    "INSERT: Item id is new for show {Show} season {Season}",
+                    show.ShowMetadata.Head().Title,
+                    incoming.SeasonMetadata.Head().Title);
+
+                if (await _televisionRepository.AddSeason(show, incoming))
+                {
+                    incoming.Show = show;
+                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                }
+            }
+
+            foreach (JellyfinItemEtag existing in maybeExisting)
+            {
+                if (existing.Etag != incoming.Etag)
+                {
                     _logger.LogDebug(
                         "UPDATE: Etag has changed for show {Show} season {Season}",
                         show.ShowMetadata.Head().Title,
@@ -242,27 +283,11 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
 
                         foreach (MediaItem toIndex in await _searchRepository.GetItemToIndex(updated.Id))
                         {
-                            await _searchIndex.UpdateItems(
-                                _searchRepository,
-                                new List<MediaItem> { toIndex });
+                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { toIndex });
                         }
                     }
-                },
-                async () =>
-                {
-                    incoming.LibraryPathId = library.Paths.Head().Id;
-
-                    _logger.LogDebug(
-                        "INSERT: Item id is new for show {Show} season {Season}",
-                        show.ShowMetadata.Head().Title,
-                        incoming.SeasonMetadata.Head().Title);
-
-                    if (await _televisionRepository.AddSeason(show, incoming))
-                    {
-                        incoming.Show = show;
-                        await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
-                    }
-                });
+                }
+            }
 
             List<JellyfinItemEtag> existingEpisodes =
                 await _televisionRepository.GetExistingEpisodes(library, incoming.ItemId);
@@ -274,64 +299,72 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
                     library.MediaSourceId,
                     incoming.ItemId);
 
-            await maybeEpisodes.Match(
-                async episodes =>
+            foreach (BaseError error in maybeEpisodes.LeftToSeq())
+            {
+                _logger.LogWarning(
+                    "Error synchronizing jellyfin library {Path}: {Error}",
+                    library.Name,
+                    error.Value);
+            }
+
+            foreach (List<JellyfinEpisode> episodes in maybeEpisodes.RightToSeq())
+            {
+                var validEpisodes = new List<JellyfinEpisode>();
+                foreach (JellyfinEpisode episode in episodes)
                 {
-                    var validEpisodes = new List<JellyfinEpisode>();
-                    foreach (JellyfinEpisode episode in episodes)
-                    {
-                        string localPath = _pathReplacementService.GetReplacementJellyfinPath(
-                            pathReplacements,
-                            episode.MediaVersions.Head().MediaFiles.Head().Path,
-                            false);
-
-                        if (!_localFileSystem.FileExists(localPath))
-                        {
-                            _logger.LogWarning(
-                                "Skipping jellyfin episode that does not exist at {Path}",
-                                localPath);
-                        }
-                        else
-                        {
-                            validEpisodes.Add(episode);
-                        }
-                    }
-
-                    await ProcessEpisodes(
-                        show.ShowMetadata.Head().Title,
-                        incoming.SeasonMetadata.Head().Title,
-                        library,
-                        ffmpegPath,
-                        ffprobePath,
+                    string localPath = _pathReplacementService.GetReplacementJellyfinPath(
                         pathReplacements,
-                        incoming,
-                        existingEpisodes,
-                        validEpisodes);
+                        episode.MediaVersions.Head().MediaFiles.Head().Path,
+                        false);
 
+                    if (!_localFileSystem.FileExists(localPath))
+                    {
+                        _logger.LogWarning(
+                            "Skipping jellyfin episode that does not exist at {Path}",
+                            localPath);
+                    }
+                    else
+                    {
+                        validEpisodes.Add(episode);
+                    }
+                }
+
+                Either<BaseError, Unit> scanResult = await ProcessEpisodes(
+                    show.ShowMetadata.Head().Title,
+                    incoming.SeasonMetadata.Head().Title,
+                    library,
+                    ffmpegPath,
+                    ffprobePath,
+                    pathReplacements,
+                    incoming,
+                    existingEpisodes,
+                    validEpisodes,
+                    cancellationToken);
+
+                foreach (ScanCanceled error in scanResult.LeftToSeq().OfType<ScanCanceled>())
+                {
+                    return error;
+                }
+
+                foreach (Unit _ in scanResult.RightToSeq())
+                {
                     var incomingEpisodeIds = episodes.Map(s => s.ItemId).ToList();
                     var episodeIds = existingEpisodes
                         .Filter(i => !incomingEpisodeIds.Contains(i.ItemId))
                         .Map(m => m.ItemId)
                         .ToList();
-
                     List<int> missingEpisodeIds =
                         await _televisionRepository.RemoveMissingEpisodes(library, episodeIds);
                     await _searchIndex.RemoveItems(missingEpisodeIds);
                     _searchIndex.Commit();
-                },
-                error =>
-                {
-                    _logger.LogWarning(
-                        "Error synchronizing jellyfin library {Path}: {Error}",
-                        library.Name,
-                        error.Value);
-
-                    return Task.CompletedTask;
-                });
+                }
+            }
         }
+
+        return Unit.Default;
     }
 
-    private async Task ProcessEpisodes(
+    private async Task<Either<BaseError, Unit>> ProcessEpisodes(
         string showName,
         string seasonName,
         JellyfinLibrary library,
@@ -340,25 +373,54 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
         List<JellyfinPathReplacement> pathReplacements,
         JellyfinSeason season,
         List<JellyfinItemEtag> existingEpisodes,
-        List<JellyfinEpisode> episodes)
+        List<JellyfinEpisode> episodes,
+        CancellationToken cancellationToken)
     {
         foreach (JellyfinEpisode incoming in episodes)
         {
-            JellyfinEpisode incomingEpisode = incoming;
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return new ScanCanceled();
+            }
 
+            JellyfinEpisode incomingEpisode = incoming;
             var updateStatistics = false;
 
             Option<JellyfinItemEtag> maybeExisting = existingEpisodes.Find(ie => ie.ItemId == incoming.ItemId);
-            await maybeExisting.Match(
-                async existing =>
+            if (maybeExisting.IsNone)
+            {
+                try
                 {
-                    try
-                    {
-                        if (existing.Etag == incoming.Etag)
-                        {
-                            return;
-                        }
+                    updateStatistics = true;
+                    incoming.LibraryPathId = library.Paths.Head().Id;
 
+                    _logger.LogDebug(
+                        "INSERT: Item id is new for show {Show} season {Season} episode {Episode}",
+                        showName,
+                        seasonName,
+                        incoming.EpisodeMetadata.HeadOrNone().Map(em => em.EpisodeNumber));
+
+                    if (await _televisionRepository.AddEpisode(season, incoming))
+                    {
+                        await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    updateStatistics = false;
+                    _logger.LogError(
+                        ex,
+                        "Error adding episode {Path}",
+                        incoming.MediaVersions.Head().MediaFiles.Head().Path);
+                }
+            }
+
+            foreach (JellyfinItemEtag existing in maybeExisting)
+            {
+                try
+                {
+                    if (existing.Etag != incoming.Etag)
+                    {
                         _logger.LogDebug(
                             "UPDATE: Etag has changed for show {Show} season {Season} episode {Episode}",
                             showName,
@@ -372,49 +434,20 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
                         Option<JellyfinEpisode> maybeUpdated = await _televisionRepository.Update(incoming);
                         foreach (JellyfinEpisode updated in maybeUpdated)
                         {
-                            await _searchIndex.UpdateItems(
-                                _searchRepository,
-                                new List<MediaItem> { updated });
-
+                            await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { updated });
                             incomingEpisode = updated;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        updateStatistics = false;
-                        _logger.LogError(
-                            ex,
-                            "Error updating episode {Path}",
-                            incoming.MediaVersions.Head().MediaFiles.Head().Path);
-                    }
-                },
-                async () =>
+                }
+                catch (Exception ex)
                 {
-                    try
-                    {
-                        updateStatistics = true;
-                        incoming.LibraryPathId = library.Paths.Head().Id;
-
-                        _logger.LogDebug(
-                            "INSERT: Item id is new for show {Show} season {Season} episode {Episode}",
-                            showName,
-                            seasonName,
-                            incoming.EpisodeMetadata.HeadOrNone().Map(em => em.EpisodeNumber));
-
-                        if (await _televisionRepository.AddEpisode(season, incoming))
-                        {
-                            await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { incoming });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        updateStatistics = false;
-                        _logger.LogError(
-                            ex,
-                            "Error adding episode {Path}",
-                            incoming.MediaVersions.Head().MediaFiles.Head().Path);
-                    }
-                });
+                    updateStatistics = false;
+                    _logger.LogError(
+                        ex,
+                        "Error updating episode {Path}",
+                        incoming.MediaVersions.Head().MediaFiles.Head().Path);
+                }
+            }
 
             if (updateStatistics)
             {
@@ -436,15 +469,18 @@ public class JellyfinTelevisionLibraryScanner : IJellyfinTelevisionLibraryScanne
                     refreshResult = await UpdateSubtitles(incomingEpisode, localPath);
                 }
 
-                refreshResult.Match(
-                    _ => { },
-                    error => _logger.LogWarning(
+                foreach (BaseError error in refreshResult.LeftToSeq())
+                {
+                    _logger.LogWarning(
                         "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
                         "Statistics",
                         localPath,
-                        error.Value));
+                        error.Value);
+                }
             }
         }
+
+        return Unit.Default;
     }
 
     private async Task<Either<BaseError, bool>> UpdateSubtitles(JellyfinEpisode episode, string localPath)
