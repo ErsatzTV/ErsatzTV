@@ -12,7 +12,7 @@ public class ErrorReportsHealthCheck : BaseHealthCheck, IErrorReportsHealthCheck
     public ErrorReportsHealthCheck(IOptions<BugsnagConfiguration> bugsnagConfiguration) =>
         _bugsnagConfiguration = bugsnagConfiguration;
 
-    protected override string Title => "Error Reports";
+    public override string Title => "Error Reports";
 
     public Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {

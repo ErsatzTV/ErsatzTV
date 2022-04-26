@@ -29,7 +29,7 @@ public class UnavailableHealthCheck : BaseHealthCheck, IUnavailableHealthCheck
         _embyPathReplacementService = embyPathReplacementService;
     }
 
-    protected override string Title => "Unavailable";
+    public override string Title => "Unavailable";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
@@ -49,11 +49,15 @@ public class UnavailableHealthCheck : BaseHealthCheck, IUnavailableHealthCheck
             .ThenInclude(mv => mv.MediaFiles);
 
         List<MediaItem> five = await mediaItems
+
+            // shows and seasons don't have paths to display
+            .Filter(mi => !(mi is Show))
+            .Filter(mi => !(mi is Season))
             .OrderBy(mi => mi.Id)
             .Take(5)
             .ToListAsync(cancellationToken);
 
-        if (five.Any())
+        if (mediaItems.Any())
         {
             var paths = new List<string>();
 
@@ -73,7 +77,7 @@ public class UnavailableHealthCheck : BaseHealthCheck, IUnavailableHealthCheck
             int count = await mediaItems.CountAsync(cancellationToken);
 
             return WarningResult(
-                $"There are {count} files that are unavailable because ErsatzTV cannot find them on disk, including the following: {files}",
+                $"There are {count} items that are unavailable because ErsatzTV cannot find them on disk, including the following: {files}",
                 "/search?query=state%3aUnavailable");
         }
 

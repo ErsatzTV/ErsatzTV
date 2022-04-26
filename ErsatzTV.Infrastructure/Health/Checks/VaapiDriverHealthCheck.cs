@@ -14,7 +14,7 @@ public class VaapiDriverHealthCheck : BaseHealthCheck, IVaapiDriverHealthCheck
     public VaapiDriverHealthCheck(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    protected override string Title => "VAAPI Driver";
+    public override string Title => "VAAPI Driver";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {

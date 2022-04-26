@@ -13,7 +13,7 @@ public class EpisodeMetadataHealthCheck : BaseHealthCheck, IEpisodeMetadataHealt
     public EpisodeMetadataHealthCheck(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    protected override string Title => "Episode Metadata";
+    public override string Title => "Episode Metadata";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {

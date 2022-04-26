@@ -14,7 +14,7 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
     public FileNotFoundHealthCheck(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    protected override string Title => "File Not Found";
+    public override string Title => "File Not Found";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
@@ -34,11 +34,15 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
             .ThenInclude(mv => mv.MediaFiles);
 
         List<MediaItem> five = await mediaItems
+
+            // shows and seasons don't have paths to display
+            .Filter(mi => !(mi is Show))
+            .Filter(mi => !(mi is Season))
             .OrderBy(mi => mi.Id)
             .Take(5)
             .ToListAsync(cancellationToken);
 
-        if (five.Any())
+        if (mediaItems.Any())
         {
             IEnumerable<string> paths = five.Map(mi => mi.GetHeadVersion().MediaFiles.Head().Path);
 
@@ -47,7 +51,7 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
             int count = await mediaItems.CountAsync(cancellationToken);
 
             return WarningResult(
-                $"There are {count} files that do not exist on disk, including the following: {files}",
+                $"There are {count} items that do not exist on disk, including the following: {files}",
                 "/media/trash");
         }
 

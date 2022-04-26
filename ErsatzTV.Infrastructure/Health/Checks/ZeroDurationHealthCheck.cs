@@ -14,7 +14,7 @@ public class ZeroDurationHealthCheck : BaseHealthCheck, IZeroDurationHealthCheck
     public ZeroDurationHealthCheck(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    protected override string Title => "Zero Duration";
+    public override string Title => "Zero Duration";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
