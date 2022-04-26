@@ -12,7 +12,7 @@ public class FFmpegReportsHealthCheck : BaseHealthCheck, IFFmpegReportsHealthChe
     public FFmpegReportsHealthCheck(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
 
-    protected override string Title => "FFmpeg Reports";
+    public override string Title => "FFmpeg Reports";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {

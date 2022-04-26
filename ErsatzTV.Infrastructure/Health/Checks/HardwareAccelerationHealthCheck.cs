@@ -22,7 +22,7 @@ public class HardwareAccelerationHealthCheck : BaseHealthCheck, IHardwareAcceler
         _configElementRepository = configElementRepository;
     }
 
-    protected override string Title => "Hardware Acceleration";
+    public override string Title => "Hardware Acceleration";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {

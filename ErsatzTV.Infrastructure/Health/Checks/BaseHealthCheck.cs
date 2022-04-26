@@ -7,7 +7,7 @@ namespace ErsatzTV.Infrastructure.Health.Checks;
 
 public abstract class BaseHealthCheck
 {
-    protected abstract string Title { get; }
+    public abstract string Title { get; }
 
     protected HealthCheckResult Result(HealthCheckStatus status, string message) =>
         new(Title, status, message, None);

@@ -2,5 +2,6 @@
 
 public interface IHealthCheck
 {
+    string Title { get; }
     Task<HealthCheckResult> Check(CancellationToken cancellationToken);
 }
