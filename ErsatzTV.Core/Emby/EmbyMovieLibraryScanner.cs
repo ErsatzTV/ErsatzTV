@@ -72,6 +72,7 @@ public class EmbyMovieLibraryScanner :
             GetLocalPath,
             ffmpegPath,
             ffprobePath,
+            false,
             cancellationToken);
     }
 
@@ -85,4 +86,17 @@ public class EmbyMovieLibraryScanner :
             connectionParameters.Address,
             connectionParameters.ApiKey,
             library.ItemId);
+
+    protected override Task<Option<MovieMetadata>> GetFullMetadata(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library,
+        MediaItemScanResult<EmbyMovie> result,
+        EmbyMovie incoming,
+        bool deepScan) =>
+        Task.FromResult<Option<MovieMetadata>>(None);
+
+    protected override Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> UpdateMetadata(
+        MediaItemScanResult<EmbyMovie> result,
+        MovieMetadata fullMetadata) =>
+        Task.FromResult<Either<BaseError, MediaItemScanResult<EmbyMovie>>>(result);
 }

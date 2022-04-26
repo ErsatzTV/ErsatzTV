@@ -72,6 +72,7 @@ public class JellyfinMovieLibraryScanner :
             GetLocalPath,
             ffmpegPath,
             ffprobePath,
+            false,
             cancellationToken);
     }
 
@@ -87,4 +88,17 @@ public class JellyfinMovieLibraryScanner :
             connectionParameters.ApiKey,
             connectionParameters.MediaSourceId,
             library.ItemId);
+
+    protected override Task<Option<MovieMetadata>> GetFullMetadata(
+        JellyfinConnectionParameters connectionParameters,
+        JellyfinLibrary library,
+        MediaItemScanResult<JellyfinMovie> result,
+        JellyfinMovie incoming,
+        bool deepScan) =>
+        Task.FromResult<Option<MovieMetadata>>(None);
+
+    protected override Task<Either<BaseError, MediaItemScanResult<JellyfinMovie>>> UpdateMetadata(
+        MediaItemScanResult<JellyfinMovie> result,
+        MovieMetadata fullMetadata) =>
+        Task.FromResult<Either<BaseError, MediaItemScanResult<JellyfinMovie>>>(result);
 }

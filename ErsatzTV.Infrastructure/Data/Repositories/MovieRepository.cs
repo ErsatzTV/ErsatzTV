@@ -3,8 +3,6 @@ using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Metadata;
-using ErsatzTV.Core.Plex;
-using ErsatzTV.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace ErsatzTV.Infrastructure.Data.Repositories;
@@ -91,47 +89,6 @@ public class MovieRepository : IMovieRepository
                 Right<BaseError, MediaItemScanResult<Movie>>(
                     new MediaItemScanResult<Movie>(mediaItem) { IsAdded = false }).AsTask(),
             async () => await AddMovie(dbContext, libraryPath.Id, path));
-    }
-
-    public async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> GetOrAdd(
-        PlexLibrary library,
-        PlexMovie item)
-    {
-        await using TvContext context = await _dbContextFactory.CreateDbContextAsync();
-        Option<PlexMovie> maybeExisting = await context.PlexMovies
-            .AsNoTracking()
-            .Include(i => i.MovieMetadata)
-            .ThenInclude(mm => mm.Genres)
-            .Include(i => i.MovieMetadata)
-            .ThenInclude(mm => mm.Tags)
-            .Include(i => i.MovieMetadata)
-            .ThenInclude(mm => mm.Studios)
-            .Include(i => i.MovieMetadata)
-            .ThenInclude(mm => mm.Actors)
-            .ThenInclude(a => a.Artwork)
-            .Include(i => i.MovieMetadata)
-            .ThenInclude(mm => mm.Artwork)
-            .Include(i => i.MovieMetadata)
-            .ThenInclude(mm => mm.Directors)
-            .Include(i => i.MovieMetadata)
-            .ThenInclude(mm => mm.Writers)
-            .Include(i => i.MovieMetadata)
-            .ThenInclude(mm => mm.Guids)
-            .Include(i => i.MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles)
-            .Include(i => i.MediaVersions)
-            .ThenInclude(mv => mv.Streams)
-            .Include(i => i.LibraryPath)
-            .ThenInclude(lp => lp.Library)
-            .Include(i => i.TraktListItems)
-            .ThenInclude(tli => tli.TraktList)
-            .SelectOneAsync(i => i.Key, i => i.Key == item.Key);
-
-        return await maybeExisting.Match(
-            plexMovie =>
-                Right<BaseError, MediaItemScanResult<PlexMovie>>(
-                    new MediaItemScanResult<PlexMovie>(plexMovie) { IsAdded = false }).AsTask(),
-            async () => await AddPlexMovie(context, library, item));
     }
 
     public async Task<List<MovieMetadata>> GetMoviesForCards(List<int> ids)
@@ -238,19 +195,6 @@ public class MovieRepository : IMovieRepository
             .Map(result => result > 0);
     }
 
-    public async Task<List<PlexItemEtag>> GetExistingPlexMovies(PlexLibrary library)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.QueryAsync<PlexItemEtag>(
-                @"SELECT Key, Etag, MI.State FROM PlexMovie
-                      INNER JOIN Movie M on PlexMovie.Id = M.Id
-                      INNER JOIN MediaItem MI on M.Id = MI.Id
-                      INNER JOIN LibraryPath LP on MI.LibraryPathId = LP.Id
-                      WHERE LP.LibraryId = @LibraryId",
-                new { LibraryId = library.Id })
-            .Map(result => result.ToList());
-    }
-
     public async Task<bool> UpdateSortTitle(MovieMetadata movieMetadata)
     {
         await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
@@ -281,14 +225,6 @@ public class MovieRepository : IMovieRepository
         return await dbContext.Connection.ExecuteAsync(
             "UPDATE MediaFile SET Path = @Path WHERE Id = @MediaFileId",
             new { Path = path, MediaFileId = mediaFileId }).Map(_ => Unit.Default);
-    }
-
-    public async Task<Unit> SetPlexEtag(PlexMovie movie, string etag)
-    {
-        await using TvContext dbContext = await _dbContextFactory.CreateDbContextAsync();
-        return await dbContext.Connection.ExecuteAsync(
-            "UPDATE PlexMovie SET Etag = @Etag WHERE Id = @Id",
-            new { Etag = etag, movie.Id }).Map(_ => Unit.Default);
     }
 
     private static async Task<Either<BaseError, MediaItemScanResult<Movie>>> AddMovie(
@@ -323,31 +259,6 @@ public class MovieRepository : IMovieRepository
         catch (Exception ex)
         {
             return BaseError.New(ex.Message);
-        }
-    }
-
-    private async Task<Either<BaseError, MediaItemScanResult<PlexMovie>>> AddPlexMovie(
-        TvContext context,
-        PlexLibrary library,
-        PlexMovie item)
-    {
-        try
-        {
-            // blank out etag for initial save in case stats/metadata/etc updates fail
-            item.Etag = string.Empty;
-
-            item.LibraryPathId = library.Paths.Head().Id;
-
-            await context.PlexMovies.AddAsync(item);
-            await context.SaveChangesAsync();
-
-            await context.Entry(item).Reference(i => i.LibraryPath).LoadAsync();
-            await context.Entry(item.LibraryPath).Reference(lp => lp.Library).LoadAsync();
-            return new MediaItemScanResult<PlexMovie>(item) { IsAdded = true };
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.ToString());
         }
     }
 }

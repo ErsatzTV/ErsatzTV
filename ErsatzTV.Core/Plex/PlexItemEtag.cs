@@ -2,9 +2,10 @@
 
 namespace ErsatzTV.Core.Plex;
 
-public class PlexItemEtag
+public class PlexItemEtag : MediaServerItemEtag
 {
     public string Key { get; set; }
-    public string Etag { get; set; }
-    public MediaItemState State { get; set; }
+    public override string MediaServerItemId => Key;
+    public override string Etag { get; set; }
+    public override MediaItemState State { get; set; }
 }
