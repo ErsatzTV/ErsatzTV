@@ -1,53 +1,49 @@
 ﻿using ErsatzTV.Core.Domain;
+using ErsatzTV.Core.Extensions;
 using ErsatzTV.Core.Interfaces.Emby;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
 using ErsatzTV.Core.Metadata;
-using LanguageExt.UnsafeValueAccess;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Core.Emby;
 
-public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
+public class EmbyMovieLibraryScanner :
+    MediaServerMovieLibraryScanner<EmbyConnectionParameters, EmbyLibrary, EmbyMovie, EmbyItemEtag>,
+    IEmbyMovieLibraryScanner
 {
     private readonly IEmbyApiClient _embyApiClient;
-    private readonly ILocalFileSystem _localFileSystem;
-    private readonly ILocalStatisticsProvider _localStatisticsProvider;
-    private readonly ILocalSubtitlesProvider _localSubtitlesProvider;
-    private readonly ILogger<EmbyMovieLibraryScanner> _logger;
+    private readonly IEmbyMovieRepository _embyMovieRepository;
     private readonly IMediaSourceRepository _mediaSourceRepository;
-    private readonly IMediator _mediator;
-    private readonly IMovieRepository _movieRepository;
     private readonly IEmbyPathReplacementService _pathReplacementService;
-    private readonly ISearchIndex _searchIndex;
-    private readonly ISearchRepository _searchRepository;
 
     public EmbyMovieLibraryScanner(
         IEmbyApiClient embyApiClient,
         ISearchIndex searchIndex,
         IMediator mediator,
-        IMovieRepository movieRepository,
+        IMediaSourceRepository mediaSourceRepository,
+        IEmbyMovieRepository embyMovieRepository,
         ISearchRepository searchRepository,
         IEmbyPathReplacementService pathReplacementService,
-        IMediaSourceRepository mediaSourceRepository,
         ILocalFileSystem localFileSystem,
         ILocalStatisticsProvider localStatisticsProvider,
         ILocalSubtitlesProvider localSubtitlesProvider,
         ILogger<EmbyMovieLibraryScanner> logger)
+        : base(
+            localStatisticsProvider,
+            localSubtitlesProvider,
+            localFileSystem,
+            mediator,
+            searchIndex,
+            searchRepository,
+            logger)
     {
         _embyApiClient = embyApiClient;
-        _searchIndex = searchIndex;
-        _mediator = mediator;
-        _movieRepository = movieRepository;
-        _searchRepository = searchRepository;
-        _pathReplacementService = pathReplacementService;
         _mediaSourceRepository = mediaSourceRepository;
-        _localFileSystem = localFileSystem;
-        _localStatisticsProvider = localStatisticsProvider;
-        _localSubtitlesProvider = localSubtitlesProvider;
-        _logger = logger;
+        _embyMovieRepository = embyMovieRepository;
+        _pathReplacementService = pathReplacementService;
     }
 
     public async Task<Either<BaseError, Unit>> ScanLibrary(
@@ -55,197 +51,52 @@ public class EmbyMovieLibraryScanner : IEmbyMovieLibraryScanner
         string apiKey,
         EmbyLibrary library,
         string ffmpegPath,
-        string ffprobePath)
+        string ffprobePath,
+        CancellationToken cancellationToken)
     {
-        List<EmbyItemEtag> existingMovies = await _movieRepository.GetExistingEmbyMovies(library);
+        List<EmbyPathReplacement> pathReplacements =
+            await _mediaSourceRepository.GetEmbyPathReplacements(library.MediaSourceId);
 
-        // TODO: maybe get quick list of item ids and etags from api to compare first
-        // TODO: paging?
+        string GetLocalPath(EmbyMovie movie)
+        {
+            return _pathReplacementService.GetReplacementEmbyPath(
+                pathReplacements,
+                movie.GetHeadVersion().MediaFiles.Head().Path,
+                false);
+        }
 
-        List<EmbyPathReplacement> pathReplacements = await _mediaSourceRepository
-            .GetEmbyPathReplacements(library.MediaSourceId);
+        return await ScanLibrary(
+            _embyMovieRepository,
+            new EmbyConnectionParameters(address, apiKey),
+            library,
+            GetLocalPath,
+            ffmpegPath,
+            ffprobePath,
+            false,
+            cancellationToken);
+    }
 
-        Either<BaseError, List<EmbyMovie>> maybeMovies = await _embyApiClient.GetMovieLibraryItems(
-            address,
-            apiKey,
+    protected override string MediaServerItemId(EmbyMovie movie) => movie.ItemId;
+    protected override string MediaServerEtag(EmbyMovie movie) => movie.Etag;
+
+    protected override Task<Either<BaseError, List<EmbyMovie>>> GetMovieLibraryItems(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library) =>
+        _embyApiClient.GetMovieLibraryItems(
+            connectionParameters.Address,
+            connectionParameters.ApiKey,
             library.ItemId);
 
-        await maybeMovies.Match(
-            async movies =>
-            {
-                var validMovies = new List<EmbyMovie>();
-                foreach (EmbyMovie movie in movies.OrderBy(m => m.MovieMetadata.Head().Title))
-                {
-                    string localPath = _pathReplacementService.GetReplacementEmbyPath(
-                        pathReplacements,
-                        movie.MediaVersions.Head().MediaFiles.Head().Path,
-                        false);
+    protected override Task<Option<MovieMetadata>> GetFullMetadata(
+        EmbyConnectionParameters connectionParameters,
+        EmbyLibrary library,
+        MediaItemScanResult<EmbyMovie> result,
+        EmbyMovie incoming,
+        bool deepScan) =>
+        Task.FromResult<Option<MovieMetadata>>(None);
 
-                    if (!_localFileSystem.FileExists(localPath))
-                    {
-                        _logger.LogWarning("Skipping emby movie that does not exist at {Path}", localPath);
-                    }
-                    else
-                    {
-                        validMovies.Add(movie);
-                    }
-                }
-
-                foreach (EmbyMovie incoming in validMovies)
-                {
-                    EmbyMovie incomingMovie = incoming;
-
-                    decimal percentCompletion = (decimal)validMovies.IndexOf(incoming) / validMovies.Count;
-                    await _mediator.Publish(new LibraryScanProgress(library.Id, percentCompletion));
-
-                    Option<EmbyItemEtag> maybeExisting =
-                        existingMovies.Find(ie => ie.ItemId == incoming.ItemId);
-
-                    var updateStatistics = false;
-
-                    await maybeExisting.Match(
-                        async existing =>
-                        {
-                            try
-                            {
-                                if (existing.Etag == incoming.Etag)
-                                {
-                                    // _logger.LogDebug(
-                                    //     $"NOOP: Etag has not changed for movie {incoming.MovieMetadata.Head().Title}");
-                                    return;
-                                }
-
-                                _logger.LogDebug(
-                                    "UPDATE: Etag has changed for movie {Movie}",
-                                    incoming.MovieMetadata.Head().Title);
-
-                                updateStatistics = true;
-                                incoming.LibraryPathId = library.Paths.Head().Id;
-                                Option<EmbyMovie> maybeUpdated = await _movieRepository.UpdateEmby(incoming);
-                                foreach (EmbyMovie updated in maybeUpdated)
-                                {
-                                    await _searchIndex.UpdateItems(
-                                        _searchRepository,
-                                        new List<MediaItem> { updated });
-
-                                    incomingMovie = updated;
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                updateStatistics = false;
-                                _logger.LogError(
-                                    ex,
-                                    "Error updating movie {Movie}",
-                                    incoming.MovieMetadata.Head().Title);
-                            }
-                        },
-                        async () =>
-                        {
-                            try
-                            {
-                                // _logger.LogDebug(
-                                //     $"INSERT: Item id is new for movie {incoming.MovieMetadata.Head().Title}");
-
-                                updateStatistics = true;
-                                incoming.LibraryPathId = library.Paths.Head().Id;
-                                if (await _movieRepository.AddEmby(incoming))
-                                {
-                                    await _searchIndex.AddItems(
-                                        _searchRepository,
-                                        new List<MediaItem> { incoming });
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                updateStatistics = false;
-                                _logger.LogError(
-                                    ex,
-                                    "Error adding movie {Movie}",
-                                    incoming.MovieMetadata.Head().Title);
-                            }
-                        });
-
-                    if (updateStatistics)
-                    {
-                        string localPath = _pathReplacementService.GetReplacementEmbyPath(
-                            pathReplacements,
-                            incoming.MediaVersions.Head().MediaFiles.Head().Path,
-                            false);
-
-                        _logger.LogDebug("Refreshing {Attribute} for {Path}", "Statistics", localPath);
-                        Either<BaseError, bool> refreshResult =
-                            await _localStatisticsProvider.RefreshStatistics(
-                                ffmpegPath,
-                                ffprobePath,
-                                incomingMovie,
-                                localPath);
-
-                        if (refreshResult.Map(t => t).IfLeft(false))
-                        {
-                            refreshResult = await UpdateSubtitles(incomingMovie, localPath);
-                        }
-
-                        await refreshResult.Match(
-                            async _ =>
-                            {
-                                Option<MediaItem> updated = await _searchRepository.GetItemToIndex(incomingMovie.Id);
-                                if (updated.IsSome)
-                                {
-                                    await _searchIndex.UpdateItems(
-                                        _searchRepository,
-                                        new List<MediaItem> { updated.ValueUnsafe() });
-                                }
-                            },
-                            error =>
-                            {
-                                _logger.LogWarning(
-                                    "Unable to refresh {Attribute} for media item {Path}. Error: {Error}",
-                                    "Statistics",
-                                    localPath,
-                                    error.Value);
-
-                                return Task.CompletedTask;
-                            });
-                    }
-
-                    // TODO: figure out how to rebuild playlists
-                }
-
-                var incomingMovieIds = validMovies.Map(s => s.ItemId).ToList();
-                var movieIds = existingMovies
-                    .Filter(i => !incomingMovieIds.Contains(i.ItemId))
-                    .Map(m => m.ItemId)
-                    .ToList();
-                List<int> ids = await _movieRepository.RemoveMissingEmbyMovies(library, movieIds);
-                await _searchIndex.RemoveItems(ids);
-
-                await _mediator.Publish(new LibraryScanProgress(library.Id, 0));
-                _searchIndex.Commit();
-            },
-            error =>
-            {
-                _logger.LogWarning(
-                    "Error synchronizing emby library {Path}: {Error}",
-                    library.Name,
-                    error.Value);
-
-                return Task.CompletedTask;
-            });
-
-        _searchIndex.Commit();
-        return Unit.Default;
-    }
-
-    private async Task<Either<BaseError, bool>> UpdateSubtitles(EmbyMovie movie, string localPath)
-    {
-        try
-        {
-            return await _localSubtitlesProvider.UpdateSubtitles(movie, localPath, false);
-        }
-        catch (Exception ex)
-        {
-            return BaseError.New(ex.ToString());
-        }
-    }
+    protected override Task<Either<BaseError, MediaItemScanResult<EmbyMovie>>> UpdateMetadata(
+        MediaItemScanResult<EmbyMovie> result,
+        MovieMetadata fullMetadata) =>
+        Task.FromResult<Either<BaseError, MediaItemScanResult<EmbyMovie>>>(result);
 }

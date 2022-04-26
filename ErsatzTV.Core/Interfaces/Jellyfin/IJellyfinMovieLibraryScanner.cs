@@ -9,5 +9,6 @@ public interface IJellyfinMovieLibraryScanner
         string apiKey,
         JellyfinLibrary library,
         string ffmpegPath,
-        string ffprobePath);
+        string ffprobePath,
+        CancellationToken cancellationToken);
 }

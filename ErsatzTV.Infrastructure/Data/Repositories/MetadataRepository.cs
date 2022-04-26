@@ -513,30 +513,37 @@ public class MetadataRepository : IMetadataRepository
                 .ToList();
             var toUpdate = subtitles.Except(toAdd).ToList();
 
-            // add
-            existing.Subtitles.AddRange(toAdd);
-
-            // remove
-            existing.Subtitles.RemoveAll(s => toRemove.Contains(s));
-
-            // update
-            foreach (Subtitle incomingSubtitle in toUpdate)
+            if (toAdd.Any() || toRemove.Any() || toUpdate.Any())
             {
-                Subtitle existingSubtitle =
-                    existing.Subtitles.First(s => s.StreamIndex == incomingSubtitle.StreamIndex);
+                // add
+                existing.Subtitles.AddRange(toAdd);
 
-                existingSubtitle.Codec = incomingSubtitle.Codec;
-                existingSubtitle.Default = incomingSubtitle.Default;
-                existingSubtitle.Forced = incomingSubtitle.Forced;
-                existingSubtitle.SDH = incomingSubtitle.SDH;
-                existingSubtitle.Language = incomingSubtitle.Language;
-                existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
-                existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
+                // remove
+                existing.Subtitles.RemoveAll(s => toRemove.Contains(s));
+
+                // update
+                foreach (Subtitle incomingSubtitle in toUpdate)
+                {
+                    Subtitle existingSubtitle =
+                        existing.Subtitles.First(s => s.StreamIndex == incomingSubtitle.StreamIndex);
+
+                    existingSubtitle.Codec = incomingSubtitle.Codec;
+                    existingSubtitle.Default = incomingSubtitle.Default;
+                    existingSubtitle.Forced = incomingSubtitle.Forced;
+                    existingSubtitle.SDH = incomingSubtitle.SDH;
+                    existingSubtitle.Language = incomingSubtitle.Language;
+                    existingSubtitle.SubtitleKind = incomingSubtitle.SubtitleKind;
+                    existingSubtitle.DateUpdated = incomingSubtitle.DateUpdated;
+                }
+
+                return await dbContext.SaveChangesAsync() > 0;
             }
 
-            return await dbContext.SaveChangesAsync() > 0;
+            // nothing to do
+            return true;
         }
 
+        // no metadata
         return false;
     }
 
