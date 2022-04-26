@@ -49,19 +49,24 @@ public class SynchronizeJellyfinLibraryByIdHandler :
 
     public Task<Either<BaseError, string>> Handle(
         ForceSynchronizeJellyfinLibraryById request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
     public Task<Either<BaseError, string>> Handle(
         SynchronizeJellyfinLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
-    private Task<Either<BaseError, string>>
-        Handle(ISynchronizeJellyfinLibraryById request) =>
-        Validate(request)
-            .MapT(parameters => Synchronize(parameters).Map(_ => parameters.Library.Name))
-            .Bind(v => v.ToEitherAsync());
+    private async Task<Either<BaseError, string>>
+        HandleImpl(ISynchronizeJellyfinLibraryById request, CancellationToken cancellationToken)
+    {
+        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        return await validation.Match(
+            parameters => Synchronize(parameters, cancellationToken),
+            error => Task.FromResult<Either<BaseError, string>>(error.Join()));
+    }
 
-    private async Task<Unit> Synchronize(RequestParameters parameters)
+    private async Task<Either<BaseError, string>> Synchronize(
+        RequestParameters parameters,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -77,15 +82,17 @@ public class SynchronizeJellyfinLibraryByIdHandler :
                             parameters.ConnectionParameters.ApiKey,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath),
+                            parameters.FFprobePath,
+                            cancellationToken),
                     LibraryMediaKind.Shows =>
                         await _jellyfinTelevisionLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection.Address,
                             parameters.ConnectionParameters.ApiKey,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath),
-                    _ => BaseError.New("Unsupported library media kind")
+                            parameters.FFprobePath,
+                            cancellationToken),
+                    _ => Unit.Default
                 };
 
                 if (result.IsRight)
@@ -94,17 +101,18 @@ public class SynchronizeJellyfinLibraryByIdHandler :
                     await _libraryRepository.UpdateLastScan(parameters.Library);
 
                     await _jellyfinWorkerChannel.WriteAsync(
-                        new SynchronizeJellyfinCollections(parameters.Library.MediaSourceId));
+                        new SynchronizeJellyfinCollections(parameters.Library.MediaSourceId),
+                        cancellationToken);
                 }
+
+                return result.Map(_ => parameters.Library.Name);
             }
             else
             {
-                _logger.LogDebug(
-                    "Skipping unforced scan of jellyfin media library {Name}",
-                    parameters.Library.Name);
+                _logger.LogDebug("Skipping unforced scan of jellyfin media library {Name}", parameters.Library.Name);
             }
 
-            return Unit.Default;
+            return parameters.Library.Name;
         }
         finally
         {

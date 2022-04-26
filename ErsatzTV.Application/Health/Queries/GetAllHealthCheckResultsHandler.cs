@@ -13,7 +13,14 @@ public class GetAllHealthCheckResultsHandler : IRequestHandler<GetAllHealthCheck
         GetAllHealthCheckResults request,
         CancellationToken cancellationToken)
     {
-        List<HealthCheckResult> results = await _healthCheckService.PerformHealthChecks(cancellationToken);
-        return results.Filter(r => r.Status != HealthCheckStatus.NotApplicable).ToList();
+        try
+        {
+            List<HealthCheckResult> results = await _healthCheckService.PerformHealthChecks(cancellationToken);
+            return results.Filter(r => r.Status != HealthCheckStatus.NotApplicable).ToList();
+        }
+        catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
+        {
+            return new List<HealthCheckResult>();
+        }
     }
 }

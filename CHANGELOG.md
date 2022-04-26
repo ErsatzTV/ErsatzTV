@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Cleanly stop local library scan when service termination is requested
+
+### Changed
+- Update Plex, Jellyfin and Emby movie library scanners to share a significant amount of code
+  - This should help maintain feature parity going forward
+
+### Added
+- Add `unavailable` state for Emby movie libraries
 
 ## [0.5.3-beta] - 2022-04-24
 ### Fixed

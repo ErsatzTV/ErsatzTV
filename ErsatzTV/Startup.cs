@@ -382,6 +382,7 @@ public class Startup
         services.AddScoped<IJellyfinPathReplacementService, JellyfinPathReplacementService>();
         services.AddScoped<IJellyfinTelevisionRepository, JellyfinTelevisionRepository>();
         services.AddScoped<IJellyfinCollectionRepository, JellyfinCollectionRepository>();
+        services.AddScoped<IJellyfinMovieRepository, JellyfinMovieRepository>();
         services.AddScoped<IEmbyApiClient, EmbyApiClient>();
         services.AddScoped<IEmbyMovieLibraryScanner, EmbyMovieLibraryScanner>();
         services.AddScoped<IEmbyTelevisionLibraryScanner, EmbyTelevisionLibraryScanner>();
@@ -389,6 +390,7 @@ public class Startup
         services.AddScoped<IEmbyPathReplacementService, EmbyPathReplacementService>();
         services.AddScoped<IEmbyTelevisionRepository, EmbyTelevisionRepository>();
         services.AddScoped<IEmbyCollectionRepository, EmbyCollectionRepository>();
+        services.AddScoped<IEmbyMovieRepository, EmbyMovieRepository>();
         services.AddScoped<IRuntimeInfo, RuntimeInfo>();
         services.AddScoped<IPlexPathReplacementService, PlexPathReplacementService>();
         services.AddScoped<IFFmpegStreamSelector, FFmpegStreamSelector>();

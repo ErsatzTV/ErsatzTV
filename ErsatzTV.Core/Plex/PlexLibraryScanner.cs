@@ -25,34 +25,34 @@ public abstract class PlexLibraryScanner
             Option<Artwork> maybeIncomingArtwork = Optional(incomingMetadata.Artwork).Flatten()
                 .Find(a => a.ArtworkKind == artworkKind);
 
-            await maybeIncomingArtwork.Match(
-                async incomingArtwork =>
-                {
-                    _logger.LogDebug("Refreshing Plex {Attribute} from {Path}", artworkKind, incomingArtwork.Path);
+            if (maybeIncomingArtwork.IsNone)
+            {
+                existingMetadata.Artwork ??= new List<Artwork>();
+                existingMetadata.Artwork.RemoveAll(a => a.ArtworkKind == artworkKind);
+                await _metadataRepository.RemoveArtwork(existingMetadata, artworkKind);
+            }
 
-                    Option<Artwork> maybeExistingArtwork = Optional(existingMetadata.Artwork).Flatten()
-                        .Find(a => a.ArtworkKind == artworkKind);
+            foreach (Artwork incomingArtwork in maybeIncomingArtwork)
+            {
+                _logger.LogDebug("Refreshing Plex {Attribute} from {Path}", artworkKind, incomingArtwork.Path);
 
-                    await maybeExistingArtwork.Match(
-                        async existingArtwork =>
-                        {
-                            existingArtwork.Path = incomingArtwork.Path;
-                            existingArtwork.DateUpdated = incomingArtwork.DateUpdated;
-                            await _metadataRepository.UpdateArtworkPath(existingArtwork);
-                        },
-                        async () =>
-                        {
-                            existingMetadata.Artwork ??= new List<Artwork>();
-                            existingMetadata.Artwork.Add(incomingArtwork);
-                            await _metadataRepository.AddArtwork(existingMetadata, incomingArtwork);
-                        });
-                },
-                async () =>
+                Option<Artwork> maybeExistingArtwork = Optional(existingMetadata.Artwork).Flatten()
+                    .Find(a => a.ArtworkKind == artworkKind);
+
+                if (maybeExistingArtwork.IsNone)
                 {
                     existingMetadata.Artwork ??= new List<Artwork>();
-                    existingMetadata.Artwork.RemoveAll(a => a.ArtworkKind == artworkKind);
-                    await _metadataRepository.RemoveArtwork(existingMetadata, artworkKind);
-                });
+                    existingMetadata.Artwork.Add(incomingArtwork);
+                    await _metadataRepository.AddArtwork(existingMetadata, incomingArtwork);
+                }
+
+                foreach (Artwork existingArtwork in maybeExistingArtwork)
+                {
+                    existingArtwork.Path = incomingArtwork.Path;
+                    existingArtwork.DateUpdated = incomingArtwork.DateUpdated;
+                    await _metadataRepository.UpdateArtworkPath(existingArtwork);
+                }
+            }
 
             return true;
         }

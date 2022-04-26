@@ -49,19 +49,24 @@ public class SynchronizeEmbyLibraryByIdHandler :
 
     public Task<Either<BaseError, string>> Handle(
         ForceSynchronizeEmbyLibraryById request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
     public Task<Either<BaseError, string>> Handle(
         SynchronizeEmbyLibraryByIdIfNeeded request,
-        CancellationToken cancellationToken) => Handle(request);
+        CancellationToken cancellationToken) => HandleImpl(request, cancellationToken);
 
-    private Task<Either<BaseError, string>>
-        Handle(ISynchronizeEmbyLibraryById request) =>
-        Validate(request)
-            .MapT(parameters => Synchronize(parameters).Map(_ => parameters.Library.Name))
-            .Bind(v => v.ToEitherAsync());
+    private async Task<Either<BaseError, string>>
+        HandleImpl(ISynchronizeEmbyLibraryById request, CancellationToken cancellationToken)
+    {
+        Validation<BaseError, RequestParameters> validation = await Validate(request);
+        return await validation.Match(
+            parameters => Synchronize(parameters, cancellationToken),
+            error => Task.FromResult<Either<BaseError, string>>(error.Join()));
+    }
 
-    private async Task<Unit> Synchronize(RequestParameters parameters)
+    private async Task<Either<BaseError, string>> Synchronize(
+        RequestParameters parameters,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -77,15 +82,17 @@ public class SynchronizeEmbyLibraryByIdHandler :
                             parameters.ConnectionParameters.ApiKey,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath),
+                            parameters.FFprobePath,
+                            cancellationToken),
                     LibraryMediaKind.Shows =>
                         await _embyTelevisionLibraryScanner.ScanLibrary(
                             parameters.ConnectionParameters.ActiveConnection.Address,
                             parameters.ConnectionParameters.ApiKey,
                             parameters.Library,
                             parameters.FFmpegPath,
-                            parameters.FFprobePath),
-                    _ => BaseError.New("Unsupported library media kind")
+                            parameters.FFprobePath,
+                            cancellationToken),
+                    _ => Unit.Default
                 };
 
                 if (result.IsRight)
@@ -94,17 +101,18 @@ public class SynchronizeEmbyLibraryByIdHandler :
                     await _libraryRepository.UpdateLastScan(parameters.Library);
 
                     await _embyWorkerChannel.WriteAsync(
-                        new SynchronizeEmbyCollections(parameters.Library.MediaSourceId));
+                        new SynchronizeEmbyCollections(parameters.Library.MediaSourceId),
+                        cancellationToken);
                 }
+
+                return result.Map(_ => parameters.Library.Name);
             }
             else
             {
-                _logger.LogDebug(
-                    "Skipping unforced scan of emby media library {Name}",
-                    parameters.Library.Name);
+                _logger.LogDebug("Skipping unforced scan of emby media library {Name}", parameters.Library.Name);
             }
 
-            return Unit.Default;
+            return parameters.Library.Name;
         }
         finally
         {
