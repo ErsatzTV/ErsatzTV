@@ -13,7 +13,7 @@ public class MovieMetadataHealthCheck : BaseHealthCheck, IMovieMetadataHealthChe
     public MovieMetadataHealthCheck(IDbContextFactory<TvContext> dbContextFactory) =>
         _dbContextFactory = dbContextFactory;
 
-    protected override string Title => "Movie Metadata";
+    public override string Title => "Movie Metadata";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {

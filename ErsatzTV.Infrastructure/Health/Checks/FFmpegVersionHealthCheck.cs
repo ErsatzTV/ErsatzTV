@@ -14,7 +14,7 @@ public class FFmpegVersionHealthCheck : BaseHealthCheck, IFFmpegVersionHealthChe
     public FFmpegVersionHealthCheck(IConfigElementRepository configElementRepository) =>
         _configElementRepository = configElementRepository;
 
-    protected override string Title => "FFmpeg Version";
+    public override string Title => "FFmpeg Version";
 
     public async Task<HealthCheckResult> Check(CancellationToken cancellationToken)
     {
