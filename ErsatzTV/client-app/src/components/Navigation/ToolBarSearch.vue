@@ -2,7 +2,7 @@
     <v-text-field
         outlined
         class="ml-5"
-        label="Search..."
+        :label="$t('tool-bar.search')"
         prepend-inner-icon="mdi-magnify"
         hide-details
         dense

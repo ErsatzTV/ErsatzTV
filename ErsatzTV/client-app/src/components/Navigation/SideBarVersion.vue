@@ -1,7 +1,7 @@
 ﻿<template>
     <span v-if="!isNavigationMini" class="text-center">
         <v-divider inset></v-divider>
-        <h4 class="pt-2">ErsatzTV Version</h4>
+        <h4 class="pt-2">ErsatzTV {{ $t('sidebar.version') }}</h4>
 
         <p>{{ currentServerVersion }}</p>
     </span>

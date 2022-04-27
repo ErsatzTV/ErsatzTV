@@ -1,0 +1,168 @@
+{
+  "$vuetify": {
+    "badge": "Badge",
+    "close": "Close",
+    "dataIterator": {
+      "noResultsText": "No matching records found",
+      "loadingText": "Loading items..."
+    },
+    "dataTable": {
+      "itemsPerPageText": "Rows per page:",
+      "ariaLabel": {
+        "sortDescending": "Sorted descending.",
+        "sortAscending": "Sorted ascending.",
+        "sortNone": "Not sorted.",
+        "activateNone": "Activate to remove sorting.",
+        "activateDescending": "Activate to sort descending.",
+        "activateAscending": "Activate to sort ascending."
+      },
+      "sortBy": "Sort by"
+    },
+    "dataFooter": {
+      "itemsPerPageText": "Items per page:",
+      "itemsPerPageAll": "All",
+      "nextPage": "Next page",
+      "prevPage": "Previous page",
+      "firstPage": "First page",
+      "lastPage": "Last page",
+      "pageText": "{0}-{1} of {2}"
+    },
+    "datePicker": {
+      "itemsSelected": "{0} selected",
+      "nextMonthAriaLabel": "Next month",
+      "nextYearAriaLabel": "Next year",
+      "prevMonthAriaLabel": "Previous month",
+      "prevYearAriaLabel": "Previous year"
+    },
+    "noDataText": "No data available",
+    "carousel": {
+      "prev": "Previous visual",
+      "next": "Next visual",
+      "ariaLabel": {
+        "delimiter": "Carousel slide {0} of {1}"
+      }
+    },
+    "calendar": {
+      "moreEvents": "{0} more"
+    },
+    "fileInput": {
+      "counter": "{0} files",
+      "counterSize": "{0} files ({1} in total)"
+    },
+    "timePicker": {
+      "am": "AM",
+      "pm": "PM"
+    },
+    "pagination": {
+      "ariaLabel": {
+        "wrapper": "Pagination Navigation",
+        "next": "Next page",
+        "previous": "Previous page",
+        "page": "Goto Page {0}",
+        "currentPage": "Current Page, Page {0}"
+      }
+    },
+    "rating": {
+      "ariaLabel": {
+        "icon": "Rating {0} of {1}"
+      }
+    }
+  },
+  "languages-code": {
+    "en": "English",
+    "pt-br": "Portuguese (Brazil)"
+  },
+  "tool-bar": {
+    "search": "Search...",
+    "click-to-copy": "Click to copy to clipboard!",
+    "copy-success": "Successfully copied text to clipboard!",
+    "copy-failure": "Failed to copy text to clipboard! Error: {message}"
+  },
+  "sidebar": {
+    "languages": "Languages",
+    "version": "Version"
+  },
+  "home": {
+    "title": "Home"
+  },
+  "ffmpeg-profiles": {
+    "title": "FFmpeg Profiles"
+  },
+  "watermarks": {
+    "title": "Watermarks"
+  },
+  "media-sources": {
+    "title": "Media Sources",
+    "local": {
+      "title": "Local"
+    },
+    "emby": {
+      "title": "Emby"
+    },
+    "jellyfin": {
+      "title": "Jellyfin"
+    },
+    "plex": {
+      "title": "Plex"
+    }
+  },
+  "lists": {
+    "title": "Lists",
+    "collections": {
+      "title": "Collections"
+    },
+    "trakt-lists": {
+      "title": "Trakt Lists"
+    },
+    "filler-presets": {
+      "title": "Filler Presets"
+    }
+  },
+  "schedules": {
+    "title": "Schedules"
+  },
+  "playouts": {
+    "title": "Playouts"
+  },
+  "settings": {
+    "title": "Settings"
+  },
+  "logs": {
+    "title": "Logs"
+  },
+  "media": {
+    "title": "Media",
+    "libraries": {
+      "title": "Libraries"
+    },
+    "trash": {
+      "title": "Trash"
+    },
+    "tv-shows": {
+      "title": "TV Shows"
+    },
+    "movies": {
+      "title": "Movies"
+    },
+    "music-videos": {
+      "title": "Music Videos"
+    },
+    "other-videos": {
+      "title": "Other Videos"
+    },
+    "songs": {
+      "title": "Songs"
+    }
+  },
+  "channels": {
+    "title": "Channels",
+    "table": {
+      "number": "Number",
+      "logo": "Logo",
+      "name": "Name",
+      "language": "Language",
+      "mode": "Mode",
+      "ffmpeg-profile": "FFmpeg Profile"
+    }
+  }
+}
