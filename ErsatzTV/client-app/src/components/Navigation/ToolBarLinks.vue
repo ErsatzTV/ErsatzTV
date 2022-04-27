@@ -14,7 +14,7 @@
                     <v-icon>mdi-playlist-play</v-icon> M3U
                 </v-btn>
             </template>
-            <span>{{ clickToCopyText }}</span>
+            <span>{{ $t('tool-bar.click-to-copy') }}</span>
         </v-tooltip>
 
         <v-tooltip bottom>
@@ -31,7 +31,7 @@
                     <v-icon>mdi-xml</v-icon> XML
                 </v-btn>
             </template>
-            <span>{{ clickToCopyText }}</span>
+            <span>{{ $t('tool-bar.click-to-copy') }}</span>
         </v-tooltip>
 
         <v-btn
@@ -71,10 +71,7 @@ import { snackbarState } from '@/stores/snackbarState';
 export default {
     name: 'ToolBarLinks.vue',
     data: () => ({
-        toast: false,
-        clickToCopyText: 'Click to copy to clipboard!',
-        successCopyText: 'Successfully copied text to clipboard!',
-        failedCopyText: 'Failed to copy text to clipboard! Error: '
+        toast: false
     }),
     computed: {
         ...mapState(applicationState, ['navBarURLs']),
@@ -84,10 +81,12 @@ export default {
         copyTextToClipboard(text) {
             try {
                 navigator.clipboard.writeText(text);
-                this.showSnackbar(this.successCopyText);
-            } catch (e) {
-                console.error(e);
-                this.showSnackbar(`${this.failedCopyText}${e}`);
+                this.showSnackbar(this.$t('tool-bar.copy-success'));
+            } catch (error) {
+                console.error(error);
+                this.showSnackbar(
+                    this.$t('tool-bar.copy-failure', { message: error })
+                );
             }
         }
     }
