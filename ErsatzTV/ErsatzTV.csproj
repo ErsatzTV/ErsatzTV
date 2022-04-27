@@ -59,7 +59,7 @@
       <PackageReference Include="FluentValidation.AspNetCore" Version="10.4.0" />
       <PackageReference Include="HtmlSanitizer" Version="7.1.488" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.4" />
-      <PackageReference Include="Markdig" Version="0.30.0" />
+      <PackageReference Include="Markdig" Version="0.30.2" />
       <PackageReference Include="MediatR.Courier.DependencyInjection" Version="5.0.0" />
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
       <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.4" />
@@ -76,7 +76,7 @@
       <PackageReference Include="NaturalSort.Extension" Version="3.2.0" />
       <PackageReference Include="PPioli.FluentValidation.Blazor" Version="5.0.0" />
       <PackageReference Include="Refit.HttpClientFactory" Version="6.3.2" />
-      <PackageReference Include="Serilog" Version="2.10.0" />
+      <PackageReference Include="Serilog" Version="2.11.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
       <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
       <PackageReference Include="Serilog.Sinks.SQLite" Version="6.0.1" />
