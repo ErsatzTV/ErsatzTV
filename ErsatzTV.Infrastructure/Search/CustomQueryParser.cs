@@ -10,6 +10,15 @@ namespace ErsatzTV.Infrastructure.Search;
 
 public class CustomQueryParser : QueryParser
 {
+    internal static readonly List<string> NumericFields = new()
+    {
+        SearchIndex.MinutesField,
+        SearchIndex.HeightField,
+        SearchIndex.WidthField,
+        SearchIndex.SeasonNumberField,
+        SearchIndex.EpisodeNumberField
+    };
+
     public CustomQueryParser(LuceneVersion matchVersion, string f, Analyzer a) : base(matchVersion, f, a)
     {
     }
@@ -30,11 +39,11 @@ public class CustomQueryParser : QueryParser
             return base.GetWildcardQuery("release_date", todayString);
         }
 
-        if (field == "minutes" && int.TryParse(queryText, out int val))
+        if (NumericFields.Contains(field) && int.TryParse(queryText, out int val))
         {
             var bytesRef = new BytesRef();
             NumericUtils.Int32ToPrefixCoded(val, 0, bytesRef);
-            return NewTermQuery(new Term("minutes", bytesRef));
+            return NewTermQuery(new Term(field, bytesRef));
         }
 
         return base.GetFieldQuery(field, queryText, quoted);
@@ -82,7 +91,7 @@ public class CustomQueryParser : QueryParser
         bool startInclusive,
         bool endInclusive)
     {
-        if (field == "minutes" && int.TryParse(part1, out int min) && int.TryParse(part2, out int max))
+        if (NumericFields.Contains(field) && int.TryParse(part1, out int min) && int.TryParse(part2, out int max))
         {
             return NumericRangeQuery.NewInt32Range(field, 1, min, max, startInclusive, endInclusive);
         }
