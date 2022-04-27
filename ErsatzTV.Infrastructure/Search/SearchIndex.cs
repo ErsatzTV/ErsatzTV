@@ -453,7 +453,8 @@ public sealed class SearchIndex : ISearchIndex
                     new TextField(LibraryNameField, show.LibraryPath.Library.Name, Field.Store.NO),
                     new StringField(LibraryIdField, show.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
-                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES)
+                    new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
+                    new StringField(StateField, show.State.ToString(), Field.Store.NO)
                 };
 
                 List<string> languages = await searchRepository.GetLanguagesForShow(show);
@@ -545,7 +546,8 @@ public sealed class SearchIndex : ISearchIndex
                     new TextField(LibraryNameField, season.LibraryPath.Library.Name, Field.Store.NO),
                     new StringField(LibraryIdField, season.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, titleAndYear, Field.Store.NO),
-                    new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES)
+                    new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES),
+                    new StringField(StateField, season.State.ToString(), Field.Store.NO)
                 };
 
                 List<string> languages = await searchRepository.GetLanguagesForSeason(season);

@@ -100,7 +100,9 @@ public class PlexServerApiClient : IPlexServerApiClient
             IPlexServerApi service = RestService.For<IPlexServerApi>(connection.Uri);
             return await service.GetLibrarySectionContents(library.Key, token.AuthToken)
                 .Map(r => r.MediaContainer.Metadata)
-                .Map(list => list.Map(metadata => ProjectToShow(metadata, library.MediaSourceId)).ToList());
+                .Map(
+                    list => (list ?? new List<PlexMetadataResponse>())
+                        .Map(metadata => ProjectToShow(metadata, library.MediaSourceId)).ToList());
         }
         catch (Exception ex)
         {
