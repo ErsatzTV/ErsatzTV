@@ -197,11 +197,16 @@ public sealed class SearchIndex : ISearchIndex
         _directory?.Dispose();
     }
 
-    public async Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds)
+    public async Task<Unit> Rebuild(ISearchRepository searchRepository)
     {
         _writer.DeleteAll();
+        _writer.Commit();
 
-        await RebuildItems(searchRepository, itemIds);
+        await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems())
+        {
+            _logger.LogInformation("Rebuilding item {Id}", mediaItem.Id);
+            await RebuildItem(searchRepository, mediaItem);
+        }
 
         _writer.Commit();
         return Unit.Default;
@@ -213,37 +218,42 @@ public sealed class SearchIndex : ISearchIndex
         {
             foreach (MediaItem mediaItem in await searchRepository.GetItemToIndex(id))
             {
-                switch (mediaItem)
-                {
-                    case Movie movie:
-                        await UpdateMovie(searchRepository, movie);
-                        break;
-                    case Show show:
-                        await UpdateShow(searchRepository, show);
-                        break;
-                    case Season season:
-                        await UpdateSeason(searchRepository, season);
-                        break;
-                    case Artist artist:
-                        await UpdateArtist(searchRepository, artist);
-                        break;
-                    case MusicVideo musicVideo:
-                        await UpdateMusicVideo(searchRepository, musicVideo);
-                        break;
-                    case Episode episode:
-                        await UpdateEpisode(searchRepository, episode);
-                        break;
-                    case OtherVideo otherVideo:
-                        await UpdateOtherVideo(searchRepository, otherVideo);
-                        break;
-                    case Song song:
-                        await UpdateSong(searchRepository, song);
-                        break;
-                }
+                await RebuildItem(searchRepository, mediaItem);
             }
         }
 
         return Unit.Default;
+    }
+
+    private async Task RebuildItem(ISearchRepository searchRepository, MediaItem mediaItem)
+    {
+        switch (mediaItem)
+        {
+            case Movie movie:
+                await UpdateMovie(searchRepository, movie);
+                break;
+            case Show show:
+                await UpdateShow(searchRepository, show);
+                break;
+            case Season season:
+                await UpdateSeason(searchRepository, season);
+                break;
+            case Artist artist:
+                await UpdateArtist(searchRepository, artist);
+                break;
+            case MusicVideo musicVideo:
+                await UpdateMusicVideo(searchRepository, musicVideo);
+                break;
+            case Episode episode:
+                await UpdateEpisode(searchRepository, episode);
+                break;
+            case OtherVideo otherVideo:
+                await UpdateOtherVideo(searchRepository, otherVideo);
+                break;
+            case Song song:
+                await UpdateSong(searchRepository, song);
+                break;
+        }
     }
 
     private static Option<SearchPageMap> GetSearchPageMap(
