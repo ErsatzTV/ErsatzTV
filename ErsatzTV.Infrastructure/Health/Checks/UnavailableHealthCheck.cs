@@ -46,13 +46,13 @@ public class UnavailableHealthCheck : BaseHealthCheck, IUnavailableHealthCheck
             .Include(mi => (mi as OtherVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles);
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as Show).ShowMetadata)
+            .Include(mi => (mi as Season).Show)
+            .ThenInclude(s => s.ShowMetadata)
+            .Include(mi => (mi as Season).SeasonMetadata);
 
         List<MediaItem> five = await mediaItems
-
-            // shows and seasons don't have paths to display
-            .Filter(mi => !(mi is Show))
-            .Filter(mi => !(mi is Season))
             .OrderBy(mi => mi.Id)
             .Take(5)
             .ToListAsync(cancellationToken);
@@ -63,11 +63,16 @@ public class UnavailableHealthCheck : BaseHealthCheck, IUnavailableHealthCheck
 
             foreach (MediaItem mediaItem in five)
             {
-                string path = await mediaItem.GetLocalPath(
-                    _plexPathReplacementService,
-                    _jellyfinPathReplacementService,
-                    _embyPathReplacementService,
-                    false);
+                string path = mediaItem switch
+                {
+                    Show s => s.ShowMetadata.Head().Title,
+                    Season s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}",
+                    _ => await mediaItem.GetLocalPath(
+                        _plexPathReplacementService,
+                        _jellyfinPathReplacementService,
+                        _embyPathReplacementService,
+                        false)
+                };
 
                 paths.Add(path);
             }

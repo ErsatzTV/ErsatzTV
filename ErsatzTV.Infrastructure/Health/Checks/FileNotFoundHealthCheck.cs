@@ -31,20 +31,26 @@ public class FileNotFoundHealthCheck : BaseHealthCheck, IFileNotFoundHealthCheck
             .Include(mi => (mi as OtherVideo).MediaVersions)
             .ThenInclude(mv => mv.MediaFiles)
             .Include(mi => (mi as Song).MediaVersions)
-            .ThenInclude(mv => mv.MediaFiles);
+            .ThenInclude(mv => mv.MediaFiles)
+            .Include(mi => (mi as Show).ShowMetadata)
+            .Include(mi => (mi as Season).Show)
+            .ThenInclude(s => s.ShowMetadata)
+            .Include(mi => (mi as Season).SeasonMetadata);
 
         List<MediaItem> five = await mediaItems
-
-            // shows and seasons don't have paths to display
-            .Filter(mi => !(mi is Show))
-            .Filter(mi => !(mi is Season))
             .OrderBy(mi => mi.Id)
             .Take(5)
             .ToListAsync(cancellationToken);
 
         if (mediaItems.Any())
         {
-            IEnumerable<string> paths = five.Map(mi => mi.GetHeadVersion().MediaFiles.Head().Path);
+            IEnumerable<string> paths = five.Map(
+                mi => mi switch
+                {
+                    Show s => s.ShowMetadata.Head().Title,
+                    Season s => $"{s.Show.ShowMetadata.Head().Title} Season {s.SeasonNumber}",
+                    _ => mi.GetHeadVersion().MediaFiles.Head().Path
+                });
 
             var files = string.Join(", ", paths);
 
