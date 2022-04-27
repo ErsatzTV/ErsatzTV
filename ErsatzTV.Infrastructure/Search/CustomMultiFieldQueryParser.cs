@@ -32,11 +32,11 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
             return base.GetWildcardQuery("release_date", todayString);
         }
 
-        if (field == "minutes" && int.TryParse(queryText, out int val))
+        if (CustomQueryParser.NumericFields.Contains(field) && int.TryParse(queryText, out int val))
         {
             var bytesRef = new BytesRef();
             NumericUtils.Int32ToPrefixCoded(val, 0, bytesRef);
-            return NewTermQuery(new Term("minutes", bytesRef));
+            return NewTermQuery(new Term(field, bytesRef));
         }
 
         return base.GetFieldQuery(field, queryText, quoted);
@@ -84,9 +84,10 @@ public class CustomMultiFieldQueryParser : MultiFieldQueryParser
         bool startInclusive,
         bool endInclusive)
     {
-        if (field == "minutes" && int.TryParse(part1, out int min) && int.TryParse(part2, out int max))
+        if (CustomQueryParser.NumericFields.Contains(field) && int.TryParse(part1, out int min) &&
+            int.TryParse(part2, out int max))
         {
-            return NumericRangeQuery.NewInt32Range(field, min, max, startInclusive, endInclusive);
+            return NumericRangeQuery.NewInt32Range(field, 1, min, max, startInclusive, endInclusive);
         }
 
         return base.GetRangeQuery(field, part1, part2, startInclusive, endInclusive);

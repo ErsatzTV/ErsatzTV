@@ -49,10 +49,14 @@ public sealed class SearchIndex : ISearchIndex
     private const string WriterField = "writer";
     private const string TraktListField = "trakt_list";
     private const string AlbumField = "album";
-    private const string MinutesField = "minutes";
+    internal const string MinutesField = "minutes";
     private const string ArtistField = "artist";
     private const string StateField = "state";
     private const string AlbumArtistField = "album_artist";
+    internal const string HeightField = "height";
+    internal const string WidthField = "width";
+    internal const string SeasonNumberField = "season_number";
+    internal const string EpisodeNumberField = "episode_number";
 
     public const string MovieType = "movie";
     public const string ShowType = "show";
@@ -77,7 +81,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 20;
+    public int Version => 21;
 
     public Task<bool> Initialize(ILocalFileSystem localFileSystem)
     {
@@ -329,6 +333,9 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(
                         new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 if (!string.IsNullOrWhiteSpace(metadata.ContentRating))
@@ -672,6 +679,9 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(
                         new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 if (metadata.ReleaseDate.HasValue)
@@ -755,7 +765,9 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(LibraryIdField, episode.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, GetTitleAndYear(metadata), Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
-                    new StringField(StateField, episode.State.ToString(), Field.Store.NO)
+                    new StringField(StateField, episode.State.ToString(), Field.Store.NO),
+                    new Int32Field(SeasonNumberField, episode.Season?.SeasonNumber ?? 0, Field.Store.NO),
+                    new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO)
                 };
 
                 await AddLanguages(searchRepository, doc, episode.MediaVersions);
@@ -764,6 +776,9 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(
                         new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 if (metadata.ReleaseDate.HasValue)
@@ -855,6 +870,9 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(
                         new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
@@ -902,6 +920,9 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(
                         new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
+
+                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
+                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
