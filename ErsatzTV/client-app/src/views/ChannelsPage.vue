@@ -19,12 +19,15 @@ export default class Channels extends Vue {
     private channels: Channel[] = [];
 
     private headers = [
-        { text: 'Number', value: 'number' },
-        { text: 'Logo', value: 'logo' },
-        { text: 'Name', value: 'name' },
-        { text: 'Language', value: 'language' },
-        { text: 'Mode', value: 'streamingMode' },
-        { text: 'FFmpeg Profile', value: 'ffmpegProfile' }
+        { text: this.$t('channels.table.number'), value: 'number' },
+        { text: this.$t('channels.table.logo'), value: 'logo' },
+        { text: this.$t('channels.table.name'), value: 'name' },
+        { text: this.$t('channels.table.language'), value: 'language' },
+        { text: this.$t('channels.table.mode'), value: 'streamingMode' },
+        {
+            text: this.$t('channels.table.ffmpeg-profile'),
+            value: 'ffmpegProfile'
+        }
     ];
 
     title: string = 'Channels';

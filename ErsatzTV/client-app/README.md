@@ -10,6 +10,8 @@ npm install
 npm run serve
 ```
 
+To set a custom ErsatzTV api URL, use the following environment variable `VUE_APP_ETV_BASE_URL`.
+
 ### Compiles and minifies for production
 ```
 npm run build

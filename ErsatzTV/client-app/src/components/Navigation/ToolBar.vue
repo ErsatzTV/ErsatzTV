@@ -14,7 +14,9 @@
             </template>
 
             <SideBarMenu />
+
             <template v-slot:append>
+                <SideBarLanguageSelect />
                 <SideBarVersion />
             </template>
         </v-navigation-drawer>
@@ -29,6 +31,7 @@ import ToolBarLinks from './ToolBarLinks';
 import ToolBarSearch from './ToolBarSearch';
 import { mapState } from 'pinia';
 import { applicationState } from '@/stores/applicationState';
+import SideBarLanguageSelect from './SideBarLanguageSelect.vue';
 
 export default {
     name: 'NavToolbar',
@@ -37,7 +40,8 @@ export default {
         SideBarLogo,
         SideBarVersion,
         ToolBarLinks,
-        ToolBarSearch
+        ToolBarSearch,
+        SideBarLanguageSelect
     },
     computed: {
         ...mapState(applicationState, [
