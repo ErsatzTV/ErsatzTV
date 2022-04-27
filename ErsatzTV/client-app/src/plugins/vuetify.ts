@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Vuetify from 'vuetify';
 import colors from 'vuetify/lib/util/colors';
+import VueI18n from './i18n';
 
 Vue.use(Vuetify);
 
@@ -25,5 +26,8 @@ export default new Vuetify({
             customProperties: true
         },
         dark: true
+    },
+    lang: {
+        t: (key, ...params) => VueI18n.t(key, params).toString()
     }
 });
