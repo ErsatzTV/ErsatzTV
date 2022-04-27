@@ -920,9 +920,6 @@ public sealed class SearchIndex : ISearchIndex
                 {
                     doc.Add(
                         new Int32Field(MinutesField, (int)Math.Ceiling(version.Duration.TotalMinutes), Field.Store.NO));
-
-                    doc.Add(new Int32Field(HeightField, version.Height, Field.Store.NO));
-                    doc.Add(new Int32Field(WidthField, version.Width, Field.Store.NO));
                 }
 
                 doc.Add(new StringField(AddedDateField, metadata.DateAdded.ToString("yyyyMMdd"), Field.Store.NO));
