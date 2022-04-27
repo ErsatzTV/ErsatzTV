@@ -9,7 +9,7 @@ public interface ISearchIndex : IDisposable
 {
     public int Version { get; }
     Task<bool> Initialize(ILocalFileSystem localFileSystem);
-    Task<Unit> Rebuild(ISearchRepository searchRepository, List<int> itemIds);
+    Task<Unit> Rebuild(ISearchRepository searchRepository);
     Task<Unit> RebuildItems(ISearchRepository searchRepository, List<int> itemIds);
     Task<Unit> AddItems(ISearchRepository searchRepository, List<MediaItem> items);
     Task<Unit> UpdateItems(ISearchRepository searchRepository, List<MediaItem> items);

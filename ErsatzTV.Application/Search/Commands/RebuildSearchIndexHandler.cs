@@ -1,8 +1,10 @@
-﻿using ErsatzTV.Core;
+﻿using System.Diagnostics;
+using ErsatzTV.Core;
 using ErsatzTV.Core.Domain;
 using ErsatzTV.Core.Interfaces.Metadata;
 using ErsatzTV.Core.Interfaces.Repositories;
 using ErsatzTV.Core.Interfaces.Search;
+using Humanizer;
 using Microsoft.Extensions.Logging;
 
 namespace ErsatzTV.Application.Search;
@@ -41,12 +43,13 @@ public class RebuildSearchIndexHandler : IRequestHandler<RebuildSearchIndex, Uni
         {
             _logger.LogInformation("Migrating search index to version {Version}", _searchIndex.Version);
 
-            List<int> itemIds = await _searchRepository.GetItemIdsToIndex();
-            await _searchIndex.Rebuild(_searchRepository, itemIds);
+            var sw = Stopwatch.StartNew();
+            await _searchIndex.Rebuild(_searchRepository);
 
             await _configElementRepository.Upsert(ConfigElementKey.SearchIndexVersion, _searchIndex.Version);
+            sw.Stop();
 
-            _logger.LogInformation("Done migrating search index");
+            _logger.LogInformation("Done migrating search index in {Duration}", sw.Elapsed.Humanize());
         }
         else
         {

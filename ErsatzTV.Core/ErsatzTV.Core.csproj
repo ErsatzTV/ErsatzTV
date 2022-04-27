@@ -9,7 +9,7 @@
     <ItemGroup>
       <PackageReference Include="Bugsnag" Version="3.0.1" />
       <PackageReference Include="Destructurama.Attributed" Version="3.0.0" />
-      <PackageReference Include="Flurl" Version="3.0.4" />
+      <PackageReference Include="Flurl" Version="3.0.5" />
       <PackageReference Include="LanguageExt.Core" Version="4.0.4" />
       <PackageReference Include="MediatR" Version="10.0.1" />
       <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
@@ -21,7 +21,7 @@
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
       <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-      <PackageReference Include="Serilog" Version="2.10.0" />
+      <PackageReference Include="Serilog" Version="2.11.0" />
       <PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
     </ItemGroup>
     

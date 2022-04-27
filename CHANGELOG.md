@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - Update Plex, Jellyfin and Emby movie library scanners to share a significant amount of code
   - This should help maintain feature parity going forward
+- Optimize search-index rebuilding to complete 100x faster
 
 ### Added
 - Add `unavailable` state for Emby movie libraries
