@@ -204,7 +204,6 @@ public sealed class SearchIndex : ISearchIndex
 
         await foreach (MediaItem mediaItem in searchRepository.GetAllMediaItems())
         {
-            _logger.LogInformation("Rebuilding item {Id}", mediaItem.Id);
             await RebuildItem(searchRepository, mediaItem);
         }
 
