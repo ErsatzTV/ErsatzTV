@@ -901,69 +901,109 @@ public class MediaSourceRepository : IMediaSourceRepository
         List<int> movieIds = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN EmbyMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids",
             new { ids = libraryIds }).Map(result => result.ToList());
+
+        await dbContext.Connection.ExecuteAsync(
+            @"DELETE FROM EmbyMovie WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
+            new { ids = libraryIds });
+
+        await dbContext.Connection.ExecuteAsync(
+            @"DELETE FROM Movie WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyMovie pm ON pm.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
+            new { ids = libraryIds });
 
         await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
                 INNER JOIN EmbyMovie pm ON pm.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
             new { ids = libraryIds });
 
         List<int> episodeIds = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids",
             new { ids = libraryIds }).Map(result => result.ToList());
+
+        await dbContext.Connection.ExecuteAsync(
+            @"DELETE FROM EmbyEpisode WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
+            new { ids = libraryIds });
+
+        await dbContext.Connection.ExecuteAsync(
+            @"DELETE FROM Episode WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
+            new { ids = libraryIds });
 
         await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
                 INNER JOIN EmbyEpisode pe ON pe.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
             new { ids = libraryIds });
 
         List<int> seasonIds = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN EmbySeason es ON es.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids",
             new { ids = libraryIds }).Map(result => result.ToList());
+
+        await dbContext.Connection.ExecuteAsync(
+            @"DELETE FROM EmbySeason WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbySeason es ON es.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
+            new { ids = libraryIds });
+
+        await dbContext.Connection.ExecuteAsync(
+            @"DELETE FROM Season WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbySeason es ON es.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
+            new { ids = libraryIds });
 
         await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
-                INNER JOIN EmbySeason ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
+                INNER JOIN EmbySeason es ON es.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
             new { ids = libraryIds });
 
         List<int> showIds = await dbContext.Connection.QueryAsync<int>(
             @"SELECT m.Id FROM MediaItem m
                 INNER JOIN EmbyShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids",
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids",
             new { ids = libraryIds }).Map(result => result.ToList());
+
+        await dbContext.Connection.ExecuteAsync(
+            @"DELETE FROM EmbyShow WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
+            new { ids = libraryIds });
+
+        await dbContext.Connection.ExecuteAsync(
+            @"DELETE FROM Show WHERE Id IN
+                (SELECT m.Id FROM MediaItem m
+                INNER JOIN EmbyShow ps ON ps.Id = m.Id
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
+            new { ids = libraryIds });
 
         await dbContext.Connection.ExecuteAsync(
             @"DELETE FROM MediaItem WHERE Id IN
                 (SELECT m.Id FROM MediaItem m
                 INNER JOIN EmbyShow ps ON ps.Id = m.Id
-                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId
-                INNER JOIN Library l ON l.Id = lp.LibraryId
-                WHERE l.Id IN @ids)",
+                INNER JOIN LibraryPath lp ON lp.Id = m.LibraryPathId AND lp.LibraryId IN @ids)",
             new { ids = libraryIds });
 
         return movieIds.Append(showIds).Append(seasonIds).Append(episodeIds).ToList();

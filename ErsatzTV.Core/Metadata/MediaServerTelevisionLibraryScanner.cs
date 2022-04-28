@@ -167,13 +167,9 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 await televisionRepository.SetEtag(result.Item, MediaServerEtag(incoming));
 
-                if (result.IsAdded)
+                if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                }
-                else if (result.IsUpdated)
-                {
-                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                    await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
                 }
             }
         }
@@ -308,13 +304,9 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
 
                 result.Item.Show = show;
 
-                if (result.IsAdded)
+                if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                }
-                else if (result.IsUpdated)
-                {
-                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                    await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
                 }
             }
         }
@@ -414,13 +406,9 @@ public abstract class MediaServerTelevisionLibraryScanner<TConnectionParameters,
                     }
                 }
 
-                if (result.IsAdded)
+                if (result.IsAdded || result.IsUpdated)
                 {
-                    await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                }
-                else if (result.IsUpdated)
-                {
-                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                    await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
                 }
             }
         }
