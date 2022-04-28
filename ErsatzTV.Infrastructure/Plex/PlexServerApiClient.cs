@@ -120,7 +120,7 @@ public class PlexServerApiClient : IPlexServerApiClient
         {
             IPlexServerApi service = XmlServiceFor(connection.Uri);
             return await service.GetShowChildren(show.Key.Split("/").Reverse().Skip(1).Head(), token.AuthToken)
-                .Map(r => r.Metadata)
+                .Map(r => r.Metadata.Filter(m => !m.Key.Contains("allLeaves")))
                 .Map(list => list.Map(metadata => ProjectToSeason(metadata, library.MediaSourceId)).ToList());
         }
         catch (Exception ex)
