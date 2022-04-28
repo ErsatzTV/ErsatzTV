@@ -125,13 +125,9 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                         return error;
                     }
 
-                    if (result.IsAdded)
+                    if (result.IsAdded || result.IsUpdated)
                     {
-                        await _searchIndex.AddItems(_searchRepository, new List<MediaItem> { result.Item });
-                    }
-                    else if (result.IsUpdated)
-                    {
-                        await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { result.Item });
+                        await _searchIndex.RebuildItems(_searchRepository, new List<int> { result.Item.Id });
                     }
                 }
             }
@@ -245,7 +241,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
                     await _libraryRepository.SetEtag(libraryPath, knownFolder, seasonFolder, etag);
 
                     season.Show = show;
-                    await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { season });
+                    await _searchIndex.RebuildItems(_searchRepository, new List<int> { season.Id });
                 }
             }
         }
@@ -291,7 +287,7 @@ public class TelevisionFolderScanner : LocalFolderScanner, ITelevisionFolderScan
 
             foreach (Episode episode in maybeEpisode.RightToSeq())
             {
-                await _searchIndex.UpdateItems(_searchRepository, new List<MediaItem> { episode });
+                await _searchIndex.RebuildItems(_searchRepository, new List<int> { episode.Id });
             }
         }
 

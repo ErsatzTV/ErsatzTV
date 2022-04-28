@@ -49,10 +49,12 @@ public sealed class SearchIndex : ISearchIndex
     private const string WriterField = "writer";
     private const string TraktListField = "trakt_list";
     private const string AlbumField = "album";
-    internal const string MinutesField = "minutes";
     private const string ArtistField = "artist";
     private const string StateField = "state";
     private const string AlbumArtistField = "album_artist";
+    private const string ShowTitleField = "show_title";
+
+    internal const string MinutesField = "minutes";
     internal const string HeightField = "height";
     internal const string WidthField = "width";
     internal const string SeasonNumberField = "season_number";
@@ -66,6 +68,7 @@ public sealed class SearchIndex : ISearchIndex
     public const string EpisodeType = "episode";
     public const string OtherVideoType = "other_video";
     public const string SongType = "song";
+
     private readonly List<CultureInfo> _cultureInfos;
 
     private readonly ILogger<SearchIndex> _logger;
@@ -81,7 +84,7 @@ public sealed class SearchIndex : ISearchIndex
         _initialized = false;
     }
 
-    public int Version => 21;
+    public int Version => 22;
 
     public Task<bool> Initialize(ILocalFileSystem localFileSystem)
     {
@@ -99,9 +102,6 @@ public sealed class SearchIndex : ISearchIndex
 
         return Task.FromResult(_initialized);
     }
-
-    public Task<Unit> AddItems(ISearchRepository searchRepository, List<MediaItem> items) =>
-        UpdateItems(searchRepository, items);
 
     public async Task<Unit> UpdateItems(ISearchRepository searchRepository, List<MediaItem> items)
     {
@@ -554,7 +554,9 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(LibraryIdField, season.LibraryPath.Library.Id.ToString(), Field.Store.NO),
                     new StringField(TitleAndYearField, titleAndYear, Field.Store.NO),
                     new StringField(JumpLetterField, GetJumpLetter(showMetadata), Field.Store.YES),
-                    new StringField(StateField, season.State.ToString(), Field.Store.NO)
+                    new StringField(StateField, season.State.ToString(), Field.Store.NO),
+                    new Int32Field(SeasonNumberField, season.SeasonNumber, Field.Store.NO),
+                    new TextField(ShowTitleField, season.Show?.ShowMetadata.Head().Title, Field.Store.NO)
                 };
 
                 List<string> languages = await searchRepository.GetLanguagesForSeason(season);
@@ -767,7 +769,8 @@ public sealed class SearchIndex : ISearchIndex
                     new StringField(JumpLetterField, GetJumpLetter(metadata), Field.Store.YES),
                     new StringField(StateField, episode.State.ToString(), Field.Store.NO),
                     new Int32Field(SeasonNumberField, episode.Season?.SeasonNumber ?? 0, Field.Store.NO),
-                    new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO)
+                    new Int32Field(EpisodeNumberField, metadata.EpisodeNumber, Field.Store.NO),
+                    new TextField(ShowTitleField, episode.Season?.Show?.ShowMetadata.Head().Title, Field.Store.NO)
                 };
 
                 await AddLanguages(searchRepository, doc, episode.MediaVersions);

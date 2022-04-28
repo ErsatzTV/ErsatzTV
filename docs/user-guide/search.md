@@ -47,6 +47,16 @@ The following fields are available for searching shows:
 - `added_date`: The date the show was added to ErsatzTV (YYYYMMDD)
 - `type`: Always `show`
 
+### Seasons
+
+The following fields are available for searching seasons:
+
+- `title`: The season title
+- `library_name`: The name of the library that contains the season
+- `season_number`: The season number
+- `show_title`: The title of the show that contains the season
+- `type`: Always `season`
+
 ### Episodes
 
 The following fields are available for searching episodes:
@@ -64,6 +74,7 @@ The following fields are available for searching episodes:
 - `width`: The episode width
 - `season_number`: The episode season number
 - `episode_number`: The episode number
+- `show_title`: The title of the show that contains the episode
 - `type`: Always `episode`
 
 ### Artists
