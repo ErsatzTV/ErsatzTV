@@ -56,13 +56,7 @@ public class DeleteTraktListHandler : TraktCommandBase, IRequestHandler<DeleteTr
         dbContext.TraktLists.Remove(traktList);
         if (await dbContext.SaveChangesAsync() > 0)
         {
-            foreach (int mediaItemId in mediaItemIds)
-            {
-                foreach (MediaItem mediaItem in await _searchRepository.GetItemToIndex(mediaItemId))
-                {
-                    await _searchIndex.UpdateItems(_searchRepository, new[] { mediaItem }.ToList());
-                }
-            }
+            await _searchIndex.RebuildItems(_searchRepository, mediaItemIds);
         }
 
         _searchIndex.Commit();

@@ -156,15 +156,9 @@ public abstract class TraktCommandBase
                 }
             }
 
-            await dbContext.SaveChangesAsync();
-
-            foreach (int mediaItemId in ids)
+            if (await dbContext.SaveChangesAsync() > 0)
             {
-                Option<MediaItem> maybeItem = await _searchRepository.GetItemToIndex(mediaItemId);
-                foreach (MediaItem item in maybeItem)
-                {
-                    await _searchIndex.UpdateItems(_searchRepository, new[] { item }.ToList());
-                }
+                await _searchIndex.RebuildItems(_searchRepository, ids.ToList());
             }
 
             _searchIndex.Commit();
