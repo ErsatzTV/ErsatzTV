@@ -18,17 +18,19 @@ import { channelApiService } from '@/services/ChannelService';
 export default class Channels extends Vue {
     private channels: Channel[] = [];
 
-    private headers = [
-        { text: this.$t('channels.table.number'), value: 'number' },
-        { text: this.$t('channels.table.logo'), value: 'logo' },
-        { text: this.$t('channels.table.name'), value: 'name' },
-        { text: this.$t('channels.table.language'), value: 'language' },
-        { text: this.$t('channels.table.mode'), value: 'streamingMode' },
-        {
-            text: this.$t('channels.table.ffmpeg-profile'),
-            value: 'ffmpegProfile'
-        }
-    ];
+    get headers() {
+        return [
+            { text: this.$t('channels.table.number'), value: 'number' },
+            { text: this.$t('channels.table.logo'), value: 'logo' },
+            { text: this.$t('channels.table.name'), value: 'name' },
+            { text: this.$t('channels.table.language'), value: 'language' },
+            { text: this.$t('channels.table.mode'), value: 'streamingMode' },
+            {
+                text: this.$t('channels.table.ffmpeg-profile'),
+                value: 'ffmpegProfile'
+            }
+        ];
+    }
 
     title: string = 'Channels';
 

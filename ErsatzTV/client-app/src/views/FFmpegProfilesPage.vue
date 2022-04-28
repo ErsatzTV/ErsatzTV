@@ -19,15 +19,17 @@ import { ffmpegProfileApiService } from '@/services/FFmpegProfileService';
 export default class FFmpegProfiles extends Vue {
     private ffmpegProfiles: FFmpegProfile[] = [];
 
-    private headers = [
-        { text: this.$t('ffmpeg-profiles.table.name'), value: 'name' },
-        {
-            text: this.$t('ffmpeg-profiles.table.resolution'),
-            value: 'resolution'
-        },
-        { text: this.$t('ffmpeg-profiles.table.video'), value: 'video' },
-        { text: this.$t('ffmpeg-profiles.table.audio'), value: 'audio' }
-    ];
+    get headers() {
+        return [
+            { text: this.$t('ffmpeg-profiles.table.name'), value: 'name' },
+            {
+                text: this.$t('ffmpeg-profiles.table.resolution'),
+                value: 'resolution'
+            },
+            { text: this.$t('ffmpeg-profiles.table.video'), value: 'video' },
+            { text: this.$t('ffmpeg-profiles.table.audio'), value: 'audio' }
+        ];
+    }
 
     title: string = 'FFMpeg Profiles';
 
